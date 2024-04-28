@@ -90,10 +90,10 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
 
     Parameters
     ----------
-    items : typing.Union[typing.Mapping[KeyT, ValueT], typing.Mapping[KeyT, DataT]]
+    items
         A mapping of keys to the values in their raw forms, wrapped by a ref
         wrapper or in a data form.
-    builder : typing.Optional[typing.Callable[[DataT], ValueT]]
+    builder
         The callable used to build entities before they're returned by the
         mapping. This is used to cover the case when items stores [`DataT`][] objects.
     """
@@ -290,7 +290,7 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
 
         Parameters
         ----------
-        app : hikari.traits.RESTAware
+        app
             The hikari application the built object should be bound to.
 
         Returns
@@ -306,7 +306,7 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
 
         Parameters
         ----------
-        entity : ValueT
+        entity
             The entity object to build a data class from.
 
         Returns
@@ -993,7 +993,7 @@ def unwrap_ref_cell(cell: RefCell[ValueT]) -> ValueT:
 
     Parameters
     ----------
-    cell : RefCell[ValueT]
+    cell
         The reference cell instance to unwrap.
 
     Returns

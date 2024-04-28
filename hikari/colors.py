@@ -236,11 +236,11 @@ class Color(int):
 
         Parameters
         ----------
-        red : int
+        red
             Red channel.
-        green : int
+        green
             Green channel.
-        blue : int
+        blue
             Blue channel.
 
         Returns
@@ -270,11 +270,11 @@ class Color(int):
 
         Parameters
         ----------
-        red : float
+        red
             Red channel.
-        green : float
+        green
             Green channel.
-        blue : float
+        blue
             Blue channel.
 
         Returns
@@ -305,7 +305,7 @@ class Color(int):
 
         Parameters
         ----------
-        hex_code : str
+        hex_code
             A hexadecimal color code to parse. This may optionally start with
             a case insensitive `0x` or `#`.
 
@@ -343,7 +343,7 @@ class Color(int):
 
         Parameters
         ----------
-        integer : typing.SupportsInt
+        integer
             The raw color integer.
 
         Returns
@@ -393,7 +393,7 @@ class Color(int):
 
         Parameters
         ----------
-        tuple_str : str
+        tuple_str
             The string to parse.
 
         Returns
@@ -432,7 +432,7 @@ class Color(int):
 
         Parameters
         ----------
-        value : Colorish
+        value
             A color compatible values.
 
         Examples
@@ -514,12 +514,12 @@ class Color(int):
 
         Parameters
         ----------
-        length : int
+        length
             The number of bytes to produce. Should be around `3`, but not less.
-        byteorder : str
+        byteorder
             The endianness of the value represented by the bytes.
             Can be `"big"` endian or `"little"` endian.
-        signed : bool
+        signed
             Whether the value is signed or unsigned.
 
         Returns

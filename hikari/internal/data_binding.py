@@ -214,14 +214,14 @@ class StringMapBuilder(multidict.MultiDict[str]):
 
         Parameters
         ----------
-        key : str
+        key
             The string key.
-        value : hikari.undefined.UndefinedOr[typing.Any]
+        value
             The value to set.
 
         Other Parameters
         ----------------
-        conversion : typing.Optional[typing.Callable[[typing.Any], typing.Any]]
+        conversion
             An optional conversion to perform.
         """
         if value is undefined.UNDEFINED:
@@ -291,16 +291,16 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : str
+        key
             The key to give the element.
-        value : hikari.undefined.UndefinedOr[typing.Any]
+        value
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
 
         Other Parameters
         ----------------
-        conversion : typing.Optional[typing.Callable[[typing.Any], JSONish]]
+        conversion
             The optional conversion to apply.
         """
         if value is undefined.UNDEFINED:
@@ -340,16 +340,16 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : str
+        key
             The key to give the element.
-        values : hikari.undefined.UndefinedOr[typing.Iterable[T_co]]
+        values
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
 
         Other Parameters
         ----------------
-        conversion : typing.Optional[typing.Callable[[typing.Any], JSONType]]
+        conversion
             The optional conversion to apply.
         """
         if values is not undefined.UNDEFINED:
@@ -367,9 +367,9 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : str
+        key
             The key to give the element.
-        value : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]
+        value
             The JSON type to put. This may alternatively be undefined, in this
             case, nothing is performed. This may also be [`None`][], in this
             case the value isn't cast.
@@ -390,9 +390,9 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : str
+        key
             The key to give the element.
-        values : hikari.undefined.UndefinedOr[typing.Iterable[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]]
+        values
             The JSON snowflakes to put. This may alternatively be undefined.
             In the latter case, nothing is performed.
         """
@@ -405,12 +405,12 @@ def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Ite
 
     Parameters
     ----------
-    cast : typing.Callable[[T_co], T]
+    cast
         Callback to cast each variant to.
 
         This will ignore any variants which raises
         [`hikari.errors.UnrecognisedEntityError`][] on cast.
-    raw_values : typing.Iterable[T_co]
+    raw_values
         Iterable of the raw values to cast.
 
     Returns

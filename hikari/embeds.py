@@ -82,11 +82,11 @@ class EmbedResource(files.Resource[files.AsyncReader]):
 
         Parameters
         ----------
-        executor : typing.Optional[concurrent.futures.Executor]
+        executor
             The executor to run in for blocking operations.
             If [`None`][], then the default executor is used for the
             current event loop.
-        head_only : bool
+        head_only
             If [`True`][], then the implementation may only retrieve
             HEAD information if supported. This currently only has
             any effect for web requests.
@@ -622,11 +622,11 @@ class Embed:
 
         Parameters
         ----------
-        name : typing.Optional[str]
+        name
             The optional name of the author.
-        url : typing.Optional[str]
+        url
             The optional URL of the author.
-        icon : typing.Optional[hikari.files.Resourceish]
+        icon
             The optional image to show next to the embed author.
 
             This can be many different things, to aid in convenience.
@@ -666,10 +666,10 @@ class Embed:
 
         Parameters
         ----------
-        text : typing.Optional[str]
+        text
             The mandatory text string to set in the footer.
             If [`None`][], the footer is removed.
-        icon : typing.Optional[hikari.files.Resourceish]
+        icon
             The optional image to show next to the embed footer.
 
             This can be many different things, to aid in convenience.
@@ -715,7 +715,7 @@ class Embed:
 
         Parameters
         ----------
-        image : typing.Optional[hikari.files.Resourceish]
+        image
             The optional resource to show for the embed image.
 
             This can be many different things, to aid in convenience.
@@ -755,7 +755,7 @@ class Embed:
 
         Parameters
         ----------
-        image : typing.Optional[hikari.files.Resourceish]
+        image
             The optional resource to show for the embed thumbnail.
 
             This can be many different things, to aid in convenience.
@@ -794,16 +794,16 @@ class Embed:
 
         Parameters
         ----------
-        name : str
+        name
             The mandatory non-empty field name. This must contain at least one
             non-whitespace character to be valid.
-        value : str
+        value
             The mandatory non-empty field value. This must contain at least one
             non-whitespace character to be valid.
 
         Other Parameters
         ----------------
-        inline : bool
+        inline
             If [`True`][], the embed field may be shown "inline" on some
             Discord clients with other fields. If [`False`][], it is always placed
             on a separate line. This will default to [`False`][].
@@ -831,18 +831,18 @@ class Embed:
 
         Parameters
         ----------
-        index : int
+        index
             The index of the field to edit.
 
         Other Parameters
         ----------------
-        name : hikari.undefined.UndefinedOr[str]
+        name
             The new field name to use. If left to the default ([`hikari.undefined.UNDEFINED`][]),
             then it will not be changed.
-        value : hikari.undefined.UndefinedOr[str]
+        value
             The new field value to use. If left to the default ([`hikari.undefined.UNDEFINED`][]),
             then it will not be changed.
-        inline : hikari.undefined.UndefinedOr[bool]
+        inline
             [`True`][] to inline the field, or [`False`][] to force
             it to be on a separate line. If left to the default ([`hikari.undefined.UNDEFINED`][]),
             then it will not be changed.
@@ -875,7 +875,7 @@ class Embed:
 
         Parameters
         ----------
-        index : int
+        index
             The index of the embed field to remove.
 
         Returns

@@ -186,20 +186,20 @@ class InteractionServer(interaction_server.InteractionServer):
 
     Parameters
     ----------
-    entity_factory : hikari.api.entity_factory.EntityFactory
+    entity_factory
         The entity factory instance this server should use.
 
     Other Parameters
     ----------------
-    dumps : hikari.internal.data_binding.JSONEncoder
+    dumps
         The JSON encoder this server should use.
-    loads : hikari.internal.data_binding.JSONDecoder
+    loads
         The JSON decoder this server should use.
-    public_key : typing.Optional[bytes]
+    public_key
         The public key this server should use for verifying request payloads from
         Discord. If left as [`None`][] then the client will try to work this
         out using `rest_client`.
-    rest_client : hikari.api.rest.RESTClient
+    rest_client
         The client this should use for making REST requests.
     """
 
@@ -287,7 +287,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         Parameters
         ----------
-        request : aiohttp.web.Request
+        request
             The received request.
 
         Returns
@@ -408,11 +408,11 @@ class InteractionServer(interaction_server.InteractionServer):
 
         Parameters
         ----------
-        body : bytes
+        body
             The interaction payload.
-        signature : bytes
+        signature
             Value of the `"X-Signature-Ed25519"` header used to verify the body.
-        timestamp : bytes
+        timestamp
             Value of the `"X-Signature-Timestamp"` header used to verify the body.
 
         Returns
@@ -510,27 +510,27 @@ class InteractionServer(interaction_server.InteractionServer):
 
         Other Parameters
         ----------------
-        backlog : int
+        backlog
             The number of unaccepted connections that the system will allow before
             refusing new connections.
-        host : typing.Optional[typing.Union[str, aiohttp.web.HostSequence]]
+        host
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[int]
+        port
             TCP/IP port for the HTTP server.
-        path : typing.Optional[str]
+        path
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[bool]
+        reuse_address
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[bool]
+        reuse_port
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
-        socket : typing.Optional[socket.socket]
+        socket
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : float
+        shutdown_timeout
             A delay to wait, in seconds, for graceful server shutdown
             before forcefully disconnecting all open client sockets.
-        ssl_context : typing.Optional[ssl.SSLContext]
+        ssl_context
             SSL context for HTTPS servers.
         """
         if self._server:

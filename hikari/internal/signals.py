@@ -84,14 +84,14 @@ def handle_interrupts(
 
     Parameters
     ----------
-    enabled : typing.Optional[bool]
+    enabled
         Whether to enable the signal interrupts.
 
         If set to [`None`][], then it will be enabled or not based on whether the running
         thread is the main one or not.
-    loop : asyncio.AbstractEventLoop
+    loop
         The event loop the interrupt will be raised in.
-    propagate_interrupts : bool
+    propagate_interrupts
         Whether to propagate interrupts.
     """
     if enabled is None:

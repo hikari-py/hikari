@@ -332,11 +332,11 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         Parameters
         ----------
-        remaining : int
+        remaining
             The calls remaining in this time window.
-        limit : int
+        limit
             The total calls allowed in this time window.
-        reset_at : float
+        reset_at
             The epoch at which to reset the limit.
         """
         self.remaining: int = remaining
@@ -349,7 +349,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         Parameters
         ----------
-        real_bucket_hash : str
+        real_bucket_hash
             The real bucket hash for this bucket.
 
         Raises
@@ -380,7 +380,7 @@ class RESTBucketManager:
 
     Parameters
     ----------
-    max_rate_limit : float
+    max_rate_limit
         The max number of seconds to backoff for when rate limited. Anything
         greater than this will instead raise an error.
     """
@@ -418,9 +418,9 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        poll_period : float
+        poll_period
             Period to poll the garbage collector at in seconds.
-        expire_after : float
+        expire_after
             Time after which the last [`hikari.impl.buckets.RESTBucket.reset_at`][] was hit for a bucket to
             remove it. Higher values will retain unneeded ratelimit info for
             longer, but may produce more effective rate-limiting logic as a
@@ -513,9 +513,9 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        compiled_route : hikari.internal.routes.CompiledRoute
+        compiled_route
             The route to get the bucket for.
-        authentication : typing.Optional[str]
+        authentication
             The authentication that will be used in the request.
 
         Returns
@@ -555,17 +555,17 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        compiled_route : hikari.internal.routes.CompiledRoute
+        compiled_route
             The compiled route to get the bucket for.
-        authentication : typing.Optional[str]
+        authentication
             The authentication that was used in the request.
-        bucket_header : str
+        bucket_header
             The `X-RateLimit-Bucket` header that was provided in the response.
-        remaining_header : int
+        remaining_header
             The `X-RateLimit-Remaining` header cast to an [`int`][].
-        limit_header : int
+        limit_header
             The `X-RateLimit-Limit` header cast to an [`int`][].
-        reset_after : float
+        reset_after
             The `X-RateLimit-Reset-After` header cast to a [`float`][].
         """
         if not self._gc_task:
@@ -619,7 +619,7 @@ class RESTBucketManager:
 
         Parameters
         ----------
-        retry_after : float
+        retry_after
             How long to throttle for.
         """
         self._global_ratelimit.throttle(retry_after)

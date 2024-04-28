@@ -136,10 +136,10 @@ class InviteGuild(guilds.PartialGuild):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -170,14 +170,14 @@ class InviteGuild(guilds.PartialGuild):
 
         Parameters
         ----------
-        ext : typing.Optional[str]
+        ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
             If [`None`][], then the correct default extension is
             determined based on whether the banner is animated or not.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 

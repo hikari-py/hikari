@@ -68,7 +68,7 @@ def get_fields_definition(
 
     Parameters
     ----------
-    cls : typing.Type[attrs.AttrsInstance]
+    cls
         The attrs class to get the fields definition for.
 
     Returns
@@ -95,7 +95,7 @@ def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls
         The attrs class to generate a shallow copying function for.
 
     Returns
@@ -121,7 +121,7 @@ def get_or_generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls
         The class to get or generate and cache a shallow copying function for.
 
     Returns
@@ -142,7 +142,7 @@ def copy_attrs(model: ModelT) -> ModelT:
 
     Parameters
     ----------
-    model : ModelT
+    model
         The attrs model to shallow copy.
 
     Returns
@@ -170,7 +170,7 @@ def generate_deep_copier(
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls
         The attrs class to generate a deep copying function for.
 
     Returns
@@ -204,7 +204,7 @@ def get_or_generate_deep_copier(
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls
         The class to get or generate and cache a shallow copying function for.
 
     Returns
@@ -229,9 +229,9 @@ def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[i
 
     Parameters
     ----------
-    model : ModelT
+    model
         The attrs model to deep copy.
-    memo : typing.Optional[typing.MutableMapping[int, typing.Any]]
+    memo
         A memo dictionary of objects already copied during the current copying
         pass, see <https://docs.python.org/3/library/copy.html> for more details.
 

@@ -163,7 +163,7 @@ class ComponentInteraction(
 
         Parameters
         ----------
-        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
+        type_
             The type of immediate response this should be.
 
             This may be one of the following:
@@ -208,7 +208,7 @@ class ComponentInteraction(
 
         Parameters
         ----------
-        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
+        type_
             The type of deferred response this should be.
 
             This may be one of the following:

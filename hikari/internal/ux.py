@@ -86,7 +86,7 @@ def init_logging(
 
     Parameters
     ----------
-    flavor : typing.Optional[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]]
+    flavor
         The hint for configuring logging.
 
         This can be [`None`][] to not enable logging automatically.
@@ -107,10 +107,10 @@ def init_logging(
 
         Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
-    allow_color : bool
+    allow_color
         If [`False`][], no colour is allowed. If [`True`][], the
         output device must be supported for colour to be enabled.
-    force_color : bool
+    force_color
         If [`True`][], always force colour.
 
     Examples
@@ -266,15 +266,15 @@ def print_banner(
 
     Parameters
     ----------
-    package : typing.Optional[str]
+    package
         The package to find the `banner.txt` in, or [`None`][] if no
         banner should be shown.
-    allow_color : bool
+    allow_color
         If [`False`][], no colour is allowed. If [`True`][], the
         output device must be supported for colour to be enabled.
-    force_color : bool
+    force_color
         If [`True`][], always force colour.
-    extra_args : typing.Optional[typing.Dict[str, str]]
+    extra_args
         If provided, extra $-substitutions to use when printing the banner.
         Default substitutions can not be overwritten.
 
@@ -340,10 +340,10 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
 
     Parameters
     ----------
-    allow_color : bool
+    allow_color
         If [`False`][], no color is allowed. If [`True`][], the
         output device must be supported for this to return [`True`][].
-    force_color : bool
+    force_color
         If [`True`][], return [`True`][] always, otherwise only
         return [`True`][] if the device supports color output and the
         `allow_color` flag is not [`False`][].

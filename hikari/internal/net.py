@@ -83,17 +83,17 @@ def create_tcp_connector(
 
     Parameters
     ----------
-    http_settings : config.HTTPSettings
+    http_settings
         HTTP settings to use for the connector.
 
     Optional Parameters
     -------------------
-    dns_cache : typing.Union[None, bool, int]
+    dns_cache
         If [`True`][], DNS caching is used with a default TTL of 10 seconds.
         If [`False`][], DNS caching is disabled. If an [`int`][] is
         given, then DNS caching is enabled with an explicit TTL set. If
         [`None`][], the cache will be enabled and never invalidate.
-    limit : int
+    limit
         Number of connections to allow in the pool at any given time.
 
     Returns
@@ -131,16 +131,16 @@ def create_client_session(
 
     Parameters
     ----------
-    connector : aiohttp.BaseConnector
+    connector
         The connector to use.
-    connector_owner : bool
+    connector_owner
         If [`True`][], then the client session will close the
         connector on shutdown. Otherwise, you must do it manually.
-    http_settings : hikari.impl.config.HTTPSettings
+    http_settings
         HTTP settings to use.
-    raise_for_status : bool
+    raise_for_status
         Whether to raise an exception when a request fails
-    trust_env : bool
+    trust_env
         Whether to trust anything in environment variables
         and the `netrc` file.
 

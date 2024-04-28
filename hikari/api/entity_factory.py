@@ -133,7 +133,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -148,7 +148,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -165,7 +165,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -180,7 +180,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -197,7 +197,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -214,7 +214,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -231,7 +231,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        record : hikari.applications.ApplicationRoleConnectionMetadataRecord
+        record
             The record object to serialize.
 
         Returns
@@ -246,7 +246,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -263,7 +263,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -278,7 +278,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        query : hikari.internal.data_binding.Query
+        query
             The query parameters to deserialize.
 
         Returns
@@ -299,9 +299,9 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this audit log belongs to.
 
         Returns
@@ -321,12 +321,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this entry belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
@@ -352,7 +352,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -367,7 +367,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -382,7 +382,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        overwrite : hikari.channels.PermissionOverwrite
+        overwrite
             The permission overwrite object to serialize.
 
         Returns
@@ -397,7 +397,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -412,7 +412,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -427,7 +427,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -447,12 +447,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
@@ -482,12 +482,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
@@ -517,12 +517,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.snowflakes.Snowflake
+        guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
@@ -552,12 +552,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.snowflakes.Snowflake
+        guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
@@ -587,12 +587,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.snowflakes.Snowflake
+        guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
@@ -622,12 +622,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.snowflakes.Snowflake
+        guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
@@ -652,7 +652,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        tag : hikari.channels.ForumTag
+        tag
             The forum tag object to serialize.
 
         Returns
@@ -672,12 +672,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        thread_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        thread_id
             ID of the thread this member belongs to. This will be
             prioritised over `"id"` in the payload when passed.
 
@@ -709,14 +709,14 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
 
             !!! note
                 `guild_id` currently only covers the gateway `GUILD_CREATE` event
                 where `"guild_id"` is not included in the channel's payload.
-        member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
+        member
             The member object for the thread. If passed then this will be
             prioritised over `"member"` in the payload when passed.
 
@@ -744,19 +744,19 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this channel belongs to. This will be
             prioritised over `"guild_id"` in the payload when passed.
 
             !!! note
                 `guild_id` currently only covers the gateway `GUILD_CREATE` event
                 where `"guild_id"` is not included in the channel's payload.
-        member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
+        member
             The member object for the thread. If passed then this will be
             prioritised over `"member"` in the payload when passed.
 
@@ -784,19 +784,19 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this channel belongs to. This will be
             prioritised over `"guild_id"` in the payload when passed.
 
             !!! note
                 `guild_id` currently only covers the gateway `GUILD_CREATE` event
                 where `"guild_id"` is not included in the channel's payload.
-        member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
+        member
             The member object for the thread. If passed then this will be
             prioritised over `"member"` in the payload when passed.
 
@@ -824,19 +824,19 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this channel belongs to. This will be
             prioritised over `"guild_id"` in the payload when passed.
 
             !!! note
                 `guild_id` currently only covers the gateway `GUILD_CREATE` event
                 where `"guild_id"` is not included in the channel's payload.
-        member : hikari.undefined.UndefinedNoneOr[hikari.channels.ThreadMember]
+        member
             The member object for the thread. If passed then this will be
             prioritised over `"member"` in the payload when passed.
 
@@ -866,12 +866,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this channel belongs to. This will be ignored
             for DM and group DM channels and will be prioritised over
             `"guild_id"` in the payload when passed.
@@ -904,7 +904,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -921,7 +921,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        embed : hikari.embeds.Embed
+        embed
             The embed object to serialize.
 
         Returns
@@ -942,7 +942,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -957,7 +957,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -974,9 +974,9 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
-        guild_id : hikari.snowflakes.Snowflake
+        guild_id
             The ID of the guild this emoji belongs to. This is used to ensure
             that the guild a known custom emoji belongs to is remembered by
             allowing for a context based artificial `guild_id` attribute.
@@ -995,7 +995,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1014,7 +1014,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1033,7 +1033,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1048,7 +1048,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1063,7 +1063,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        welcome_channel : hikari.guilds.WelcomeChannel
+        welcome_channel
             The guild welcome channel object to serialize.
 
         Returns
@@ -1089,15 +1089,15 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        user : hikari.undefined.UndefinedOr[hikari.users.User]
+        user
             The user to attach to this member, should only be passed in
             situations where "user" is not included in the payload.
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this member belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
 
@@ -1121,9 +1121,9 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
-        guild_id : hikari.snowflakes.Snowflake
+        guild_id
             The ID of the guild this role belongs to. This is used to ensure
             that the guild a role belongs to is remembered by allowing for a
             context based artificial `guild_id` attribute.
@@ -1140,7 +1140,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1160,12 +1160,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this integration belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
 
@@ -1188,7 +1188,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1203,7 +1203,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1218,7 +1218,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1235,9 +1235,9 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
-        user_id : hikari.snowflakes.Snowflake
+        user_id
             The current user's ID.
 
         Returns
@@ -1271,12 +1271,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this command belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
 
@@ -1304,12 +1304,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this command belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
 
@@ -1337,12 +1337,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this command belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
 
@@ -1369,7 +1369,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1384,7 +1384,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        permission : hikari.commands.CommandPermission
+        permission
             The command permission object to serialize.
 
         Returns
@@ -1399,7 +1399,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1416,7 +1416,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1433,7 +1433,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1448,7 +1448,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1468,7 +1468,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1488,7 +1488,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        option : hikari.commands.CommandOption
+        option
             The command option object to serialize.
 
         Returns
@@ -1505,7 +1505,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1524,7 +1524,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1539,7 +1539,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1554,7 +1554,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1573,7 +1573,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1588,7 +1588,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1603,7 +1603,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1618,7 +1618,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1637,7 +1637,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1652,7 +1652,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1682,12 +1682,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild the presence belongs to. If this is specified
             then it is prioritised over `guild_id` in the payload.
 
@@ -1715,7 +1715,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1732,7 +1732,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1749,7 +1749,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1764,7 +1764,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1789,12 +1789,12 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild the user belongs to. If this is specified
             then it is prioritised over `guild_id` in the payload.
 
@@ -1814,7 +1814,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1833,7 +1833,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1848,7 +1848,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1879,15 +1879,15 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Other Parameters
         ----------------
-        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        guild_id
             The ID of the guild this voice state belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
-        member : hikari.undefined.UndefinedOr[hikari.guilds.Member]
+        member
             The object of the member this voice state belongs to. If this is
             specified then this will be prioritised over `"member"` in the
             payload.
@@ -1914,7 +1914,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1933,7 +1933,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1950,7 +1950,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1965,7 +1965,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -1980,7 +1980,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -2004,7 +2004,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -2019,7 +2019,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
