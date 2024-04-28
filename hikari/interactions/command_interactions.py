@@ -335,13 +335,13 @@ class CommandInteraction(
         Examples
         --------
         ```py
-            async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
-                return (
-                    interaction
-                    .build_response()
-                    .add_embed(Embed(description="Hi there"))
-                    .set_content("Konnichiwa")
-                )
+        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+            return (
+                interaction
+                .build_response()
+                .add_embed(Embed(description="Hi there"))
+                .set_content("Konnichiwa")
+            )
         ```
 
         Returns
@@ -367,10 +367,10 @@ class CommandInteraction(
         Examples
         --------
         ```py
-            async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
-                yield interaction.build_deferred_response()
+        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+            yield interaction.build_deferred_response()
 
-                await interaction.edit_initial_response("Pong!")
+            await interaction.edit_initial_response("Pong!")
         ```
 
         Returns
@@ -401,23 +401,23 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
         Parameters
         ----------
-        choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
+        choices
             The choices for the autocomplete.
 
         Examples
         --------
         ```py
-            async def handle_autocomplete_interaction(interaction: AutocompleteInteraction) -> InteractionAutocompleteBuilder:
-                return (
-                    interaction
-                    .build_response(
-                        [
-                            AutocompleteChoiceBuilder(name="foo", value="a"),
-                            AutocompleteChoiceBuilder(name="bar", value="b"),
-                            AutocompleteChoiceBuilder(name="baz", value="c"),
-                        ]
-                    )
+        async def handle_autocomplete_interaction(interaction: AutocompleteInteraction) -> InteractionAutocompleteBuilder:
+            return (
+                interaction
+                .build_response(
+                    [
+                        AutocompleteChoiceBuilder(name="foo", value="a"),
+                        AutocompleteChoiceBuilder(name="bar", value="b"),
+                        AutocompleteChoiceBuilder(name="baz", value="c"),
+                    ]
                 )
+            )
         ```
 
         Returns
@@ -432,7 +432,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
         Parameters
         ----------
-        choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
+        choices
             The choices for the autocomplete.
         """
         await self.app.rest.create_autocomplete_response(self.id, self.token, choices)

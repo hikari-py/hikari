@@ -46,17 +46,17 @@ def generate_allowed_mentions(
 
     Parameters
     ----------
-    mentions_everyone : hikari.undefined.UndefinedOr[bool]
+    mentions_everyone
         Whether @everyone and @here mentions are enabled. If
         [`hikari.undefined.UNDEFINED`][] or [`False`][] then this will be disabled.
-    mentions_reply : hikari.undefined.UndefinedOr[bool]
+    mentions_reply
         Whether the reply mention should be enabled. If [`hikari.undefined.UNDEFINED`][]
         or [`False`][] then this will be disabled.
-    user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+    user_mentions
         Either a sequence of objects/IDs of the users to enabled mentions for,
         [`True`][] to allow all mentions or [`False`][]/[`hikari.undefined.UNDEFINED`][]
         to disable all user mentions.
-    role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+    role_mentions
         Either a sequence of objects/IDs of the roles to enabled mentions for,
         [`True`][] to allow all mentions or [`False`][]/[`hikari.undefined.UNDEFINED`][]
         to disable all user mentions.
@@ -65,7 +65,7 @@ def generate_allowed_mentions(
     -------
     hikari.internal.data_binding.JSONObject
         The allowed mentions JSON Object.
-    """  # noqa: E501 - Line too long
+    """
     parsed_mentions: typing.List[str] = []
     allowed_mentions: typing.Dict[str, typing.Any] = {"parse": parsed_mentions}
 

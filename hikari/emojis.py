@@ -86,7 +86,7 @@ class Emoji(files.WebResource, abc.ABC):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji object to parse.
 
         Returns
@@ -179,9 +179,9 @@ class UnicodeEmoji(str, Emoji):
         Examples
         --------
         ```py
-            >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
-            >>> emoji.url
-            'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
+        >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
+        >>> emoji.url
+        'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
         ```
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
@@ -221,7 +221,7 @@ class UnicodeEmoji(str, Emoji):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji object to parse.
 
         Returns
@@ -302,7 +302,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji mention to parse.
 
         Returns

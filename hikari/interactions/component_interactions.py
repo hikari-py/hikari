@@ -163,7 +163,7 @@ class ComponentInteraction(
 
         Parameters
         ----------
-        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
+        type_
             The type of immediate response this should be.
 
             This may be one of the following:
@@ -174,13 +174,13 @@ class ComponentInteraction(
         Examples
         --------
         ```py
-            async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
-                return (
-                    interaction
-                    .build_response(ResponseType.MESSAGE_UPDATE)
-                    .add_embed(Embed(description="Hi there"))
-                    .set_content("Konnichiwa")
-                )
+        async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
+            return (
+                interaction
+                .build_response(ResponseType.MESSAGE_UPDATE)
+                .add_embed(Embed(description="Hi there"))
+                .set_content("Konnichiwa")
+            )
         ```
 
         Returns
@@ -208,7 +208,7 @@ class ComponentInteraction(
 
         Parameters
         ----------
-        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
+        type_
             The type of deferred response this should be.
 
             This may be one of the following:

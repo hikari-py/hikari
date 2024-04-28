@@ -71,7 +71,7 @@ def slow_iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.date
 
     Parameters
     ----------
-    datetime_str : str
+    datetime_str
         The date string to parse.
 
     Returns
@@ -110,7 +110,7 @@ def discord_epoch_to_datetime(epoch: int, /) -> datetime.datetime:
 
     Parameters
     ----------
-    epoch : int
+    epoch
         Number of milliseconds since [1/1/2015 00:00:00 UTC][].
 
     Returns
@@ -126,7 +126,7 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
 
     Parameters
     ----------
-    timestamp : datetime.datetime
+    timestamp
         Number of seconds since `1/1/1970 00:00:00 UTC`.
 
     Returns
@@ -147,9 +147,9 @@ def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: boo
 
     Parameters
     ----------
-    epoch : typing.Union[int, float]
+    epoch
         Number of seconds/milliseconds since [1/1/1970 00:00:00 UTC][].
-    is_millis : bool
+    is_millis
         [`True`][] by default, indicates the input timestamp is measured in
         milliseconds rather than seconds.
 
@@ -175,7 +175,7 @@ def timespan_to_int(value: Intervalish, /) -> int:
 
     Parameters
     ----------
-    value : Intervalish
+    value
         The number of seconds.
 
     Returns

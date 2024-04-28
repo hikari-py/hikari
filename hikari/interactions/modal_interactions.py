@@ -231,13 +231,13 @@ class ModalInteraction(
         Examples
         --------
         ```py
-            async def handle_modal_interaction(interaction: ModalInteraction) -> InteractionMessageBuilder:
-                return (
-                    interaction
-                    .build_response()
-                    .add_embed(Embed(description="Hi there"))
-                    .set_content("Konnichiwa")
-                )
+        async def handle_modal_interaction(interaction: ModalInteraction) -> InteractionMessageBuilder:
+            return (
+                interaction
+                .build_response()
+                .add_embed(Embed(description="Hi there"))
+                .set_content("Konnichiwa")
+            )
         ```
 
         Returns

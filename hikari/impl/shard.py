@@ -386,49 +386,49 @@ class GatewayShardImpl(shard.GatewayShard):
 
     Parameters
     ----------
-    token : str
+    token
         The bot token to use.
-    url : str
+    url
         The gateway URL to use. This should not contain a query-string or
         fragments.
-    event_manager : hikari.api.event_manager.EventManager
+    event_manager
         The event manager this shard should make calls to.
-    event_factory : hikari.api.event_factory.EventFactory
+    event_factory
         The event factory this shard should use.
 
     Other Parameters
     ----------------
-    compression : typing.Optional[str]
+    compression
         Compression format to use for the shard. Only supported values are
         `"transport_zlib_stream"` or [`None`][] to disable it.
-    dumps : hikari.internal.data_binding.JSONEncoder
+    dumps
         The JSON encoder this application should use.
-    loads : hikari.internal.data_binding.JSONDecoder
+    loads
         The JSON decoder this application should use.
-    initial_activity : typing.Optional[hikari.presences.Activity]
+    initial_activity
         The initial activity to appear to have for this shard, or
         [`None`][] if no activity should be set initially. This is the
         default.
-    initial_idle_since : typing.Optional[datetime.datetime]
+    initial_idle_since
         The datetime to appear to be idle since, or [`None`][] if the
         shard should not provide this. The default is [`None`][].
-    initial_is_afk : bool
+    initial_is_afk
         Whether to appear to be AFK or not on login.
-    initial_status : hikari.presences.Status
+    initial_status
         The initial status to set on login for the shard.
-    intents : hikari.intents.Intents
+    intents
         Collection of intents to use.
-    large_threshold : int
+    large_threshold
         The number of members to have in a guild for it to be considered large.
-    shard_id : int
+    shard_id
         The shard ID.
-    shard_count : int
+    shard_count
         The shard count.
-    http_settings : hikari.impl.config.HTTPSettings
+    http_settings
         The HTTP-related settings to use while negotiating a websocket.
-    proxy_settings : hikari.impl.config.ProxySettings
+    proxy_settings
         The proxy settings to use while negotiating a websocket.
-    data_format : str
+    data_format
         Data format to use for inbound data. Only supported format is `"json"`.
     """
 

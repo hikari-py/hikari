@@ -161,10 +161,10 @@ class ScheduledEvent(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 

@@ -350,10 +350,10 @@ class MessageApplication(guilds.PartialApplication):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -698,7 +698,7 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        guild : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+        guild
             Object or ID of the guild this message is in or [`None`][]
             to generate a DM message link.
 
@@ -789,7 +789,7 @@ class PartialMessage(snowflakes.Unique):
 
         Parameters
         ----------
-        content : hikari.undefined.UndefinedOr[typing.Any]
+        content
             If provided, the message content to update with. If
             [`hikari.undefined.UNDEFINED`][], then the content will not
             be changed. If [`None`][], then the content will be removed.
@@ -805,51 +805,51 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        attachment : hikari.undefined.UndefinedNoneOr[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]
+        attachment
             If provided, the attachment to set on the message. If
             [`hikari.undefined.UNDEFINED`][], the previous attachment, if
             present, is not changed. If this is [`None`][], then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
-        attachments : hikari.undefined.UndefinedNoneOr[typing.Sequence[typing.Union[hikari.files.Resourceish, hikari.messages.Attachment]]]
+        attachments
             If provided, the attachments to set on the message. If
             [`hikari.undefined.UNDEFINED`][], the previous attachments, if
             present, are not changed. If this is [`None`][], then the
             attachments is removed, if present. Otherwise, the new attachments
             that were provided will be attached.
-        component : hikari.undefined.UndefinedNoneOr[hikari.api.special_endpoints.ComponentBuilder]
+        component
             If provided, builder object of the component to set for this message.
             This component will replace any previously set components and passing
             [`None`][] will remove all components.
-        components : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+        components
             If provided, a sequence of the component builder objects set for
             this message. These components will replace any previously set
             components and passing [`None`][] or an empty sequence will
             remove all components.
-        embed : hikari.undefined.UndefinedNoneOr[hikari.embeds.Embed]
+        embed
             If provided, the embed to set on the message. If
             [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embed that was provided will be used as the
             replacement.
-        embeds : hikari.undefined.UndefinedNoneOr[typing.Sequence[hikari.embeds.Embed]]
+        embeds
             If provided, the embeds to set on the message. If
             [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        mentions_everyone : hikari.undefined.UndefinedOr[bool]
+        mentions_everyone
             Sanitation for `@everyone` mentions. If
             [`hikari.undefined.UNDEFINED`][], then the previous setting is
             not changed. If [`True`][], then `@everyone`/`@here` mentions
             in the message content will show up as mentioning everyone that can
             view the chat.
-        mentions_reply : hikari.undefined.UndefinedOr[bool]
+        mentions_reply
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if this is not a reply message.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+        user_mentions
             Sanitation for user mentions. If
             [`hikari.undefined.UNDEFINED`][], then the previous setting is
             not changed. If [`True`][], all valid user mentions will behave
@@ -859,7 +859,7 @@ class PartialMessage(snowflakes.Unique):
             You may alternatively pass a collection of
             [`hikari.snowflakes.Snowflake`][] user IDs, or
             [`hikari.users.PartialUser`][]-derived objects.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+        role_mentions
             Sanitation for role mentions. If
             [`hikari.undefined.UNDEFINED`][], then the previous setting is
             not changed. If [`True`][], all valid role mentions will behave
@@ -869,14 +869,15 @@ class PartialMessage(snowflakes.Unique):
             You may alternatively pass a collection of
             [`hikari.snowflakes.Snowflake`][] role IDs, or
             [`hikari.guilds.PartialRole`][]-derived objects.
-        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+        flags
             Optional flags to set on the message. If
             [`hikari.undefined.UNDEFINED`][], then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are [`hikari.messages.MessageFlag.NONE`][] and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][]. If you
-            have [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] permissions, you can use this call to
-            suppress embeds on another user's message.
+            flags that can be set are [`hikari.messages.MessageFlag.NONE`][] and
+            [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][]. If you have
+            [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] permissions,
+            you can use this call to suppress embeds on another user's message.
 
         Returns
         -------
@@ -901,7 +902,7 @@ class PartialMessage(snowflakes.Unique):
             If the channel or message is not found.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.edit_message(
             message=self.id,
             channel=self.channel_id,
@@ -952,7 +953,7 @@ class PartialMessage(snowflakes.Unique):
 
         Parameters
         ----------
-        content : hikari.undefined.UndefinedOr[typing.Any]
+        content
             If provided, the message contents. If
             [`hikari.undefined.UNDEFINED`][], then nothing will be sent
             in the content. Any other value here will be cast to a
@@ -968,7 +969,7 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish],
+        attachment
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
 
@@ -997,63 +998,64 @@ class PartialMessage(snowflakes.Unique):
                 type of [`concurrent.futures.Executor`][] that is being used for
                 the application (default is a thread pool which supports this
                 behaviour).
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]],
+        attachments
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
+        component
             If provided, builder object of the component to include in this message.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+        components
             If provided, a sequence of the component builder objects to include
             in this message.
-        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+        embed
             If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+        embeds
             If provided, the message embeds.
-        sticker : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]]
+        sticker
             If provided, object or ID of a sticker to send on the message.
 
             As of writing, bots can only send custom stickers from the current guild.
-        stickers : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.stickers.PartialSticker]]
+        stickers
             If provided, object or ID of up to 3 stickers to send on the message.
 
             As of writing, bots can only send custom stickers from the current guild.
-        tts : hikari.undefined.UndefinedOr[bool]
+        tts
             If provided, whether the message will be TTS (Text To Speech).
-        reply : typing.Union[hikari.undefined.UndefinedType, hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage], bool]
+        reply
             If provided and [`True`][], reply to this message.
             If provided and not [`bool`][], the message to reply to.
-        reply_must_exist : hikari.undefined.UndefinedOr[bool]
+        reply_must_exist
             If provided, whether to error if the message being replied to does
             not exist instead of sending as a normal (non-reply) message.
 
             This will not do anything if not being used with `reply`.
-        mentions_everyone : hikari.undefined.UndefinedOr[bool]
+        mentions_everyone
             If provided, whether the message should parse @everyone/@here
             mentions.
-        mentions_reply : hikari.undefined.UndefinedOr[bool]
+        mentions_reply
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if not being used with `reply`.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+        user_mentions
             If provided, and [`True`][], all mentions will be parsed.
             If provided, and [`False`][], no mentions will be parsed.
             Alternatively this may be a collection of
             [`hikari.snowflakes.Snowflake`][], or [`hikari.users.PartialUser`][]
             derivatives to enforce mentioning specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+        role_mentions
             If provided, and [`True`][], all mentions will be parsed.
             If provided, and [`False`][], no mentions will be parsed.
             Alternatively this may be a collection of
             [`hikari.snowflakes.Snowflake`][], or
             [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
-        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+        flags
             If provided, optional flags to set on the message. If
             [`hikari.undefined.UNDEFINED`][], then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are [`hikari.messages.MessageFlag.NONE`][] and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
+            flags that can be set are [`hikari.messages.MessageFlag.NONE`][] and
+            [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
 
         Returns
         -------
@@ -1082,7 +1084,7 @@ class PartialMessage(snowflakes.Unique):
             `role_mentions` or `user_mentions`.
         TypeError
             If both `attachment` and `attachments` are specified.
-        """  # noqa: E501 - Line too long
+        """
         if reply is True:
             reply = self
 
@@ -1138,7 +1140,7 @@ class PartialMessage(snowflakes.Unique):
 
         Parameters
         ----------
-        emoji : typing.Union[str, hikari.emojis.Emoji]
+        emoji
             Object or name of the emoji to react with.
 
             Note that if the emoji is an [`hikari.emojis.CustomEmoji`][]
@@ -1146,7 +1148,7 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
+        emoji_id
             ID of the custom emoji to react with.
             This should only be provided when a custom emoji's name is passed
             for `emoji`.
@@ -1157,17 +1159,17 @@ class PartialMessage(snowflakes.Unique):
         Examples
         --------
         ```py
-            # Using a unicode emoji.
-            await message.add_reaction("👌")
+        # Using a unicode emoji.
+        await message.add_reaction("👌")
 
-            # Using a unicode emoji name.
-            await message.add_reaction("\N{OK HAND SIGN}")
+        # Using a unicode emoji name.
+        await message.add_reaction("\N{OK HAND SIGN}")
 
-            # Using the name and id.
-            await message.add_reaction("rooAYAYA", 705837374319493284)
+        # Using the name and id.
+        await message.add_reaction("rooAYAYA", 705837374319493284)
 
-            # Using an Emoji-derived object.
-            await message.add_reaction(some_emoji_object)
+        # Using an Emoji-derived object.
+        await message.add_reaction(some_emoji_object)
         ```
 
         Raises
@@ -1216,40 +1218,40 @@ class PartialMessage(snowflakes.Unique):
 
         Parameters
         ----------
-        emoji : typing.Union[str, hikari.emojis.Emoji]
+        emoji
             Object or name of the emoji to remove the reaction for.
 
         Other Parameters
         ----------------
-        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
+        emoji_id
             ID of the custom emoji to remove the reaction for.
             This should only be provided when a custom emoji's name is passed
             for `emoji`.
-        user : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]
+        user
             The user of the reaction to remove. If unspecified, then the bot's
             reaction is removed instead.
 
         Examples
         --------
         ```py
-            # Using a unicode emoji and removing the bot's reaction from this
-            # reaction.
-            await message.remove_reaction("\N{OK HAND SIGN}")
+        # Using a unicode emoji and removing the bot's reaction from this
+        # reaction.
+        await message.remove_reaction("\N{OK HAND SIGN}")
 
-            # Using a custom emoji's name and ID to remove a specific user's
-            # reaction from this reaction.
-            await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
+        # Using a custom emoji's name and ID to remove a specific user's
+        # reaction from this reaction.
+        await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
 
-            # Using a unicode emoji and removing a specific user from this
-            # reaction.
-            await message.remove_reaction("\N{OK HAND SIGN}", user=some_user)
+        # Using a unicode emoji and removing a specific user from this
+        # reaction.
+        await message.remove_reaction("\N{OK HAND SIGN}", user=some_user)
 
-            # Using the name and id.
-            await message.add_reaction("rooAYAYA", 705837374319493284)
+        # Using the name and id.
+        await message.add_reaction("rooAYAYA", 705837374319493284)
 
-            # Using an Emoji object and removing a specific user from this
-            # reaction.
-            await message.remove_reaction(some_emoji_object, user=some_user)
+        # Using an Emoji object and removing a specific user from this
+        # reaction.
+        await message.remove_reaction(some_emoji_object, user=some_user)
         ```
 
         Raises
@@ -1297,10 +1299,10 @@ class PartialMessage(snowflakes.Unique):
 
         Other Parameters
         ----------------
-        emoji : hikari.undefined.UndefinedOr[typing.Union[str, hikari.emojis.Emoji]]
+        emoji
             Object or name of the emoji to get the reactions for. If not specified
             then all reactions are removed.
-        emoji_id : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]]
+        emoji_id
             ID of the custom emoji to react with.
             This should only be provided when a custom emoji's name is passed
             for `emoji`.
@@ -1308,15 +1310,15 @@ class PartialMessage(snowflakes.Unique):
         Examples
         --------
         ```py
-            # Using a unicode emoji and removing all 👌 reacts from the message.
-            # reaction.
-            await message.remove_all_reactions("\N{OK HAND SIGN}")
+        # Using a unicode emoji and removing all 👌 reacts from the message.
+        # reaction.
+        await message.remove_all_reactions("\N{OK HAND SIGN}")
 
-            # Using the name and id.
-            await message.add_reaction("rooAYAYA", 705837374319493284)
+        # Using the name and id.
+        await message.add_reaction("rooAYAYA", 705837374319493284)
 
-            # Removing all reactions entirely.
-            await message.remove_all_reactions()
+        # Removing all reactions entirely.
+        await message.remove_all_reactions()
         ```
 
         Raises

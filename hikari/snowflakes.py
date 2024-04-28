@@ -138,10 +138,10 @@ def calculate_shard_id(
 
     Parameters
     ----------
-    app_or_count : typing.Union[hikari.traits.ShardAware, int]
+    app_or_count
         The shard aware app of the current application or the integer count of
         the current app's shards.
-    guild : SnowflakeishOr[hikari.guilds.PartialGuild]
+    guild
         The object or ID of the guild to get the shard ID of.
 
     Returns
