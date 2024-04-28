@@ -43,7 +43,7 @@ theme:
       primary: deep purple
       accent: deep purple
       toggle:
-        icon: material/toggle-switch
+        icon: material/lightbulb
         name: Switch to dark mode
 
     - media: "(prefers-color-scheme: dark)"
@@ -51,7 +51,7 @@ theme:
       primary: deep purple
       accent: deep purple
       toggle:
-        icon: material/toggle-switch-off-outline
+        icon: material/lightbulb-outline
         name: Switch to light mode
 
   features:
@@ -63,9 +63,6 @@ theme:
     - navigation.tabs
     - navigation.indexes
     - navigation.top
-    - navigation.prune
-    - navigation.tracking
-    - content.tooltips
     - toc.follow
 
 markdown_extensions:
