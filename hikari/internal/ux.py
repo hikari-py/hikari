@@ -118,32 +118,32 @@ def init_logging(
     Simple logging setup:
 
     ```py
-        init_logging("INFO")  # Registered logging level
-        # or
-        init_logging(20)  # Logging level as an int
+    init_logging("INFO")  # Registered logging level
+    # or
+    init_logging(20)  # Logging level as an int
     ```
 
     File config:
 
     ```py
-        # See https://docs.python.org/3/library/logging.config.html#configuration-file-format for more info
-        init_logging("path/to/file.ini")
+    # See https://docs.python.org/3/library/logging.config.html#configuration-file-format for more info
+    init_logging("path/to/file.ini")
     ```
 
     Setting up logging through a dict config:
 
     ```py
-        # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
-        init_logging(
-            {
-                "version": 1,
-                "incremental": True,  # In incremental setups, the default stream handler will be setup
-                "loggers": {
-                    "hikari.gateway": {"level": "DEBUG"},
-                    "hikari.ratelimits": {"level": "TRACE_HIKARI"},
-                },
-            }
-        )
+    # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
+    init_logging(
+        {
+            "version": 1,
+            "incremental": True,  # In incremental setups, the default stream handler will be setup
+            "loggers": {
+                "hikari.gateway": {"level": "DEBUG"},
+                "hikari.ratelimits": {"level": "TRACE_HIKARI"},
+            },
+        }
+    )
     ```
     """
     # One observation that has been repeatedly made from seeing beginners writing

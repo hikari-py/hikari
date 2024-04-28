@@ -428,13 +428,13 @@ class Embed:
             snippets:
 
             ```py
-                # Use UTC.
-                >>> datetime.datetime.now(tz=datetime.timezone.utc)
-                datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
+            # Use UTC.
+            >>> datetime.datetime.now(tz=datetime.timezone.utc)
+            datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
 
-                # Use your current timezone.
-                >>> datetime.datetime.now().astimezone()
-                datetime.datetime(2020, 7, 7, 8, 57, 9, 775328, tzinfo=..., 'BST'))
+            # Use your current timezone.
+            >>> datetime.datetime.now().astimezone()
+            datetime.datetime(2020, 7, 7, 8, 57, 9, 775328, tzinfo=..., 'BST'))
             ```
 
             By specifying a timezone, Hikari can automatically adjust the given
@@ -445,25 +445,25 @@ class Embed:
             timezone if the timestamp is non timezone-naive and fix it for you:
 
             ```py
-                # I am British, and it is June, so we are in daylight saving
-                # (UTC+1 or GMT+1, specifically).
-                >>> import datetime
+            # I am British, and it is June, so we are in daylight saving
+            # (UTC+1 or GMT+1, specifically).
+            >>> import datetime
 
-                # This is timezone naive, notice no timezone in the repr that
-                # gets printed. This is no good to us, as Discord will interpret it
-                # as being in the future!
-                >>> datetime.datetime.now()
-                datetime.datetime(2020, 6, 5, 19, 29, 48, 281716)
+            # This is timezone naive, notice no timezone in the repr that
+            # gets printed. This is no good to us, as Discord will interpret it
+            # as being in the future!
+            >>> datetime.datetime.now()
+            datetime.datetime(2020, 6, 5, 19, 29, 48, 281716)
 
-                # Instead, this is a timezone-aware timestamp, and we can use this
-                # correctly. This will always return the current time in UTC.
-                >>> datetime.datetime.now(tz=datetime.timezone.utc)
-                datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
+            # Instead, this is a timezone-aware timestamp, and we can use this
+            # correctly. This will always return the current time in UTC.
+            >>> datetime.datetime.now(tz=datetime.timezone.utc)
+            datetime.datetime(2020, 6, 5, 18, 29, 56, 424744, tzinfo=datetime.timezone.utc)
 
-                # We could instead use a custom timezone. Since the timezone is
-                # explicitly specified, Hikari will convert it to UTC for you when
-                # you send the embed.
-                >>> ...
+            # We could instead use a custom timezone. Since the timezone is
+            # explicitly specified, Hikari will convert it to UTC for you when
+            # you send the embed.
+            >>> ...
             ```
 
             A library on PyPI called [tzlocal](https://pypi.org/project/tzlocal/)
@@ -471,23 +471,23 @@ class Embed:
             timezone for any reason:
 
             ```py
-                >>> import datetime
-                >>> import tzlocal
+            >>> import datetime
+            >>> import tzlocal
 
-                # Naive datetime that will show the wrong time on Discord.
-                >>> datetime.datetime.now()
-                datetime.datetime(2020, 6, 5, 19, 33, 21, 329950)
+            # Naive datetime that will show the wrong time on Discord.
+            >>> datetime.datetime.now()
+            datetime.datetime(2020, 6, 5, 19, 33, 21, 329950)
 
-                # Timezone-aware datetime that uses my local timezone correctly.
-                >>> datetime.datetime.now(tz=tzlocal.get_localzone())
-                datetime.datetime(2020, 6, 5, 19, 33, 40, 967939, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
+            # Timezone-aware datetime that uses my local timezone correctly.
+            >>> datetime.datetime.now(tz=tzlocal.get_localzone())
+            datetime.datetime(2020, 6, 5, 19, 33, 40, 967939, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
 
-                # Changing timezones.
-                >>> dt = datetime.datetime.now(tz=datetime.timezone.utc)
-                >>> print(dt)
-                datetime.datetime(2020, 6, 5, 18, 38, 27, 863990, tzinfo=datetime.timezone.utc)
-                >>> dt.astimezone(tzlocal.get_localzone())
-                datetime.datetime(2020, 6, 5, 19, 38, 27, 863990, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
+            # Changing timezones.
+            >>> dt = datetime.datetime.now(tz=datetime.timezone.utc)
+            >>> print(dt)
+            datetime.datetime(2020, 6, 5, 18, 38, 27, 863990, tzinfo=datetime.timezone.utc)
+            >>> dt.astimezone(tzlocal.get_localzone())
+            datetime.datetime(2020, 6, 5, 19, 38, 27, 863990, tzinfo=<DstTzInfo 'Europe/London' BST+1:00:00 DST>)
             ```
 
             ...this is not required, but you may find it more useful if using the

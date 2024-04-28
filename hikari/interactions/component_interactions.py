@@ -174,13 +174,13 @@ class ComponentInteraction(
         Examples
         --------
         ```py
-            async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
-                return (
-                    interaction
-                    .build_response(ResponseType.MESSAGE_UPDATE)
-                    .add_embed(Embed(description="Hi there"))
-                    .set_content("Konnichiwa")
-                )
+        async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
+            return (
+                interaction
+                .build_response(ResponseType.MESSAGE_UPDATE)
+                .add_embed(Embed(description="Hi there"))
+                .set_content("Konnichiwa")
+            )
         ```
 
         Returns

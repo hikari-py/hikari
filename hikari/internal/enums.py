@@ -275,12 +275,12 @@ class Enum(metaclass=_EnumMeta):
         Always the first type that the enum is derived from. For example:
 
     ```py
-        >>> class UserType(str, Enum):
-        ...     USER = "user"
-        ...     PARTIAL = "partial"
-        ...     MEMBER = "member"
-        >>> print(UserType.__objtype__)
-        <class 'str'>
+    >>> class UserType(str, Enum):
+    ...     USER = "user"
+    ...     PARTIAL = "partial"
+    ...     MEMBER = "member"
+    >>> print(UserType.__objtype__)
+    <class 'str'>
     ```
 
     Operators on the class

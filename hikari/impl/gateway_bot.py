@@ -253,33 +253,33 @@ class GatewayBot(traits.GatewayBotAware):
     Simple logging setup:
 
     ```py
-        hikari.GatewayBot("TOKEN", logs="INFO")  # Registered logging level
-        # or
-        hikari.GatewayBot("TOKEN", logs=20)  # Logging level as an int
+    hikari.GatewayBot("TOKEN", logs="INFO")  # Registered logging level
+    # or
+    hikari.GatewayBot("TOKEN", logs=20)  # Logging level as an int
     ```
 
     File config:
 
     ```py
-        # See https://docs.python.org/3/library/logging.config.html#configuration-file-format for more info
-        hikari.GatewayBot("TOKEN", logs="path/to/file.ini")
+    # See https://docs.python.org/3/library/logging.config.html#configuration-file-format for more info
+    hikari.GatewayBot("TOKEN", logs="path/to/file.ini")
     ```
 
     Setting up logging through a dict config:
 
     ```py
-        # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
-        hikari.GatewayBot(
-            "TOKEN",
-            logs={
-                "version": 1,
-                "incremental": True,  # In incremental setups, the default stream handler will be setup
-                "loggers": {
-                    "hikari.gateway": {"level": "DEBUG"},
-                    "hikari.ratelimits": {"level": "TRACE_HIKARI"},
-                },
-            }
-        )
+    # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
+    hikari.GatewayBot(
+        "TOKEN",
+        logs={
+            "version": 1,
+            "incremental": True,  # In incremental setups, the default stream handler will be setup
+            "loggers": {
+                "hikari.gateway": {"level": "DEBUG"},
+                "hikari.ratelimits": {"level": "TRACE_HIKARI"},
+            },
+        }
+    )
     ```
     """
 
@@ -505,55 +505,55 @@ class GatewayBot(traits.GatewayBotAware):
         derives from [`hikari.events.base_events.Event`][].
 
         ```py
-            import attrs
+        import attrs
 
-            from hikari.traits import RESTAware
-            from hikari.events.base_events import Event
-            from hikari.users import User
-            from hikari.snowflakes import Snowflake
+        from hikari.traits import RESTAware
+        from hikari.events.base_events import Event
+        from hikari.users import User
+        from hikari.snowflakes import Snowflake
 
-            @attrs.define()
-            class EveryoneMentionedEvent(Event):
-                app: RESTAware = attrs.field()
+        @attrs.define()
+        class EveryoneMentionedEvent(Event):
+            app: RESTAware = attrs.field()
 
-                author: User = attrs.field()
-                '''The user who mentioned everyone.'''
+            author: User = attrs.field()
+            '''The user who mentioned everyone.'''
 
-                content: str = attrs.field()
-                '''The message that was sent.'''
+            content: str = attrs.field()
+            '''The message that was sent.'''
 
-                message_id: Snowflake = attrs.field()
-                '''The message ID.'''
+            message_id: Snowflake = attrs.field()
+            '''The message ID.'''
 
-                channel_id: Snowflake = attrs.field()
-                '''The channel ID.'''
+            channel_id: Snowflake = attrs.field()
+            '''The channel ID.'''
         ```
 
         We can then dispatch our event as we see fit.
 
         ```py
-            from hikari.events.messages import MessageCreateEvent
+        from hikari.events.messages import MessageCreateEvent
 
-            @bot.listen(MessageCreateEvent)
-            async def on_message(event):
-                if "@everyone" in event.content or "@here" in event.content:
-                    event = EveryoneMentionedEvent(
-                        author=event.author,
-                        content=event.content,
-                        message_id=event.id,
-                        channel_id=event.channel_id,
-                    )
+        @bot.listen(MessageCreateEvent)
+        async def on_message(event):
+            if "@everyone" in event.content or "@here" in event.content:
+                event = EveryoneMentionedEvent(
+                    author=event.author,
+                    content=event.content,
+                    message_id=event.id,
+                    channel_id=event.channel_id,
+                )
 
-                    bot.dispatch(event)
+                bot.dispatch(event)
         ```
 
         This event can be listened to elsewhere by subscribing to it with
         [`hikari.impl.event_manager_base.EventManagerBase.subscribe`][].
 
         ```py
-            @bot.listen(EveryoneMentionedEvent)
-            async def on_everyone_mentioned(event):
-                print(event.user, "just pinged everyone in", event.channel_id)
+        @bot.listen(EveryoneMentionedEvent)
+        async def on_everyone_mentioned(event):
+            print(event.user, "just pinged everyone in", event.channel_id)
         ```
 
         Returns
@@ -1044,21 +1044,21 @@ class GatewayBot(traits.GatewayBotAware):
         Examples
         --------
         ```py
-            with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
-                async for user_id in stream.map("user_id").limit(50):
-                    ...
+        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+            async for user_id in stream.map("user_id").limit(50):
+                ...
         ```
 
         or using `open()` and `close()`
 
         ```py
-            stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
-            stream.open()
+        stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
+        stream.open()
 
-            async for user_id in stream.map("user_id").limit(50)
-                ...
+        async for user_id in stream.map("user_id").limit(50)
+            ...
 
-            stream.close()
+        stream.close()
         ```
 
         See Also
@@ -1096,12 +1096,12 @@ class GatewayBot(traits.GatewayBotAware):
         events.
 
         ```py
-            from hikari.events.messages import MessageCreateEvent
+        from hikari.events.messages import MessageCreateEvent
 
-            async def on_message(event):
-                ...
+        async def on_message(event):
+            ...
 
-            bot.subscribe(MessageCreateEvent, on_message)
+        bot.subscribe(MessageCreateEvent, on_message)
         ```
 
         See Also
@@ -1136,12 +1136,12 @@ class GatewayBot(traits.GatewayBotAware):
         creation event.
 
         ```py
-            from hikari.events.messages import MessageCreateEvent
+        from hikari.events.messages import MessageCreateEvent
 
-            async def on_message(event):
-                ...
+        async def on_message(event):
+            ...
 
-            bot.unsubscribe(MessageCreateEvent, on_message)
+        bot.unsubscribe(MessageCreateEvent, on_message)
         ```
 
         See Also

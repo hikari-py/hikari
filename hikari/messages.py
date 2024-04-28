@@ -1157,17 +1157,17 @@ class PartialMessage(snowflakes.Unique):
         Examples
         --------
         ```py
-            # Using a unicode emoji.
-            await message.add_reaction("👌")
+        # Using a unicode emoji.
+        await message.add_reaction("👌")
 
-            # Using a unicode emoji name.
-            await message.add_reaction("\N{OK HAND SIGN}")
+        # Using a unicode emoji name.
+        await message.add_reaction("\N{OK HAND SIGN}")
 
-            # Using the name and id.
-            await message.add_reaction("rooAYAYA", 705837374319493284)
+        # Using the name and id.
+        await message.add_reaction("rooAYAYA", 705837374319493284)
 
-            # Using an Emoji-derived object.
-            await message.add_reaction(some_emoji_object)
+        # Using an Emoji-derived object.
+        await message.add_reaction(some_emoji_object)
         ```
 
         Raises
@@ -1232,24 +1232,24 @@ class PartialMessage(snowflakes.Unique):
         Examples
         --------
         ```py
-            # Using a unicode emoji and removing the bot's reaction from this
-            # reaction.
-            await message.remove_reaction("\N{OK HAND SIGN}")
+        # Using a unicode emoji and removing the bot's reaction from this
+        # reaction.
+        await message.remove_reaction("\N{OK HAND SIGN}")
 
-            # Using a custom emoji's name and ID to remove a specific user's
-            # reaction from this reaction.
-            await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
+        # Using a custom emoji's name and ID to remove a specific user's
+        # reaction from this reaction.
+        await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
 
-            # Using a unicode emoji and removing a specific user from this
-            # reaction.
-            await message.remove_reaction("\N{OK HAND SIGN}", user=some_user)
+        # Using a unicode emoji and removing a specific user from this
+        # reaction.
+        await message.remove_reaction("\N{OK HAND SIGN}", user=some_user)
 
-            # Using the name and id.
-            await message.add_reaction("rooAYAYA", 705837374319493284)
+        # Using the name and id.
+        await message.add_reaction("rooAYAYA", 705837374319493284)
 
-            # Using an Emoji object and removing a specific user from this
-            # reaction.
-            await message.remove_reaction(some_emoji_object, user=some_user)
+        # Using an Emoji object and removing a specific user from this
+        # reaction.
+        await message.remove_reaction(some_emoji_object, user=some_user)
         ```
 
         Raises
@@ -1308,15 +1308,15 @@ class PartialMessage(snowflakes.Unique):
         Examples
         --------
         ```py
-            # Using a unicode emoji and removing all 👌 reacts from the message.
-            # reaction.
-            await message.remove_all_reactions("\N{OK HAND SIGN}")
+        # Using a unicode emoji and removing all 👌 reacts from the message.
+        # reaction.
+        await message.remove_all_reactions("\N{OK HAND SIGN}")
 
-            # Using the name and id.
-            await message.add_reaction("rooAYAYA", 705837374319493284)
+        # Using the name and id.
+        await message.add_reaction("rooAYAYA", 705837374319493284)
 
-            # Removing all reactions entirely.
-            await message.remove_all_reactions()
+        # Removing all reactions entirely.
+        await message.remove_all_reactions()
         ```
 
         Raises

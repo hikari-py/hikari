@@ -43,16 +43,16 @@ class Permissions(enums.Flag):
     --------
     You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
-    ```py
-       my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
+     ```py
+    my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
-       required_perms = (
-           Permissions.CREATE_INSTANT_INVITE
-           | Permissions.KICK_MEMBERS
-           | Permissions.BAN_MEMBERS
-           | Permissions.MANAGE_GUILD
-       )
-    ```
+    required_perms = (
+        Permissions.CREATE_INSTANT_INVITE
+        | Permissions.KICK_MEMBERS
+        | Permissions.BAN_MEMBERS
+        | Permissions.MANAGE_GUILD
+    )
+     ```
 
     To find the intersection of two sets of permissions, use the bitwise AND
     operator (`&`) between them. By then applying the `==` operator, you can check if all
@@ -60,10 +60,10 @@ class Permissions(enums.Flag):
     for checking if a user has all the required permissions
 
     ```py
-       if (my_perms & required_perms) == required_perms:
-           print("I have all of the required permissions!")
-       else:
-           print("I am missing at least one required permission!")
+    if (my_perms & required_perms) == required_perms:
+        print("I have all of the required permissions!")
+    else:
+        print("I am missing at least one required permission!")
     ```
 
     To determine which permissions from one set are missing from another, you can use the
@@ -71,17 +71,17 @@ class Permissions(enums.Flag):
     for instance, to find which of a user's permissions are missing from the required permissions.
 
     ```py
-        missing_perms = ~my_perms & required_perms
-        if (missing_perms):
-            print(f"I'm missing these permissions: {missing_perms}")
+    missing_perms = ~my_perms & required_perms
+    if (missing_perms):
+        print(f"I'm missing these permissions: {missing_perms}")
     ```
 
     Lastly, if you need all the permissions from a set except for a few,
     you can use the bitwise NOT operator (`~`).
 
     ```py
-        # All permissions except ADMINISTRATOR.
-        my_perms = ~Permissions.ADMINISTRATOR
+    # All permissions except ADMINISTRATOR.
+    my_perms = ~Permissions.ADMINISTRATOR
     ```
     """
 
