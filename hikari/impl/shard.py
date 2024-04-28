@@ -117,9 +117,9 @@ _RECONNECTABLE_CLOSE_CODES: typing.FrozenSet[errors.ShardCloseCode] = frozenset(
 _CUSTOM_STATUS_NAME = "Custom Status"
 
 
-def _log_filterer(token: str) -> typing.Callable[[str], str]:
-    def filterer(entry: str) -> str:
-        return entry.replace(token, "**REDACTED TOKEN**")
+def _log_filterer(token: bytes) -> typing.Callable[[bytes], bytes]:
+    def filterer(entry: bytes) -> bytes:
+        return entry.replace(token, b"**REDACTED TOKEN**")
 
     return filterer
 
@@ -153,7 +153,7 @@ class _GatewayTransport:
         transport_compression: bool,
         exit_stack: contextlib.AsyncExitStack,
         logger: logging.Logger,
-        log_filterer: typing.Callable[[str], str],
+        log_filterer: typing.Callable[[bytes], bytes],
         dumps: data_binding.JSONEncoder,
         loads: data_binding.JSONDecoder,
     ) -> None:
@@ -203,7 +203,7 @@ class _GatewayTransport:
     async def send_json(self, data: data_binding.JSONObject) -> None:
         pl = self._dumps(data)
         if self._logger.isEnabledFor(ux.TRACE):
-            filtered = self._log_filterer(pl.decode("utf-8"))
+            filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
 
         await self._ws.send_bytes(pl)
@@ -232,39 +232,40 @@ class _GatewayTransport:
         reason = f"{message.data!r} [extra={message.extra!r}, type={message.type}]"
         raise errors.GatewayTransportError(reason) from self._ws.exception()
 
-    async def _receive_and_check_text(self) -> str:
+    async def _receive_and_check_text(self) -> bytes:
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.TEXT:
             assert isinstance(message.data, str)
-            return message.data
+            return message.data.encode()
 
         self._handle_other_message(message)
 
-    async def _receive_and_check_zlib(self) -> str:
+    async def _receive_and_check_zlib(self) -> bytes:
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.BINARY:
             if message.data.endswith(_ZLIB_SUFFIX):
-                return self._zlib.decompress(message.data).decode("utf-8")
+                # Hot and fast path: we already have the full message
+                # in a single frame
+                return self._zlib.decompress(message.data)
 
-            return await self._receive_and_check_complete_zlib_package(message.data)
+            # Cold and slow path: we need to keep receiving frames to complete
+            # the whole message. Only then do we create a buffer
+            buff = bytearray(message.data)
+
+            while not buff.endswith(_ZLIB_SUFFIX):
+                message = await self._ws.receive()
+
+                if message.type == aiohttp.WSMsgType.BINARY:
+                    buff.extend(message.data)
+                    continue
+
+                self._handle_other_message(message)
+
+            return self._zlib.decompress(buff)
 
         self._handle_other_message(message)
-
-    async def _receive_and_check_complete_zlib_package(self, initial_data: bytes, /) -> str:
-        buff = bytearray(initial_data)
-
-        while not buff.endswith(_ZLIB_SUFFIX):
-            message = await self._ws.receive()
-
-            if message.type == aiohttp.WSMsgType.BINARY:
-                buff.extend(message.data)
-                continue
-
-            self._handle_other_message(message)
-
-        return self._zlib.decompress(buff).decode("utf-8")
 
     @classmethod
     async def connect(
@@ -273,7 +274,7 @@ class _GatewayTransport:
         http_settings: config.HTTPSettings,
         logger: logging.Logger,
         proxy_settings: config.ProxySettings,
-        log_filterer: typing.Callable[[str], str],
+        log_filterer: typing.Callable[[bytes], bytes],
         dumps: data_binding.JSONEncoder,
         loads: data_binding.JSONDecoder,
         transport_compression: bool,
@@ -810,7 +811,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         self._ws = await _GatewayTransport.connect(
             http_settings=self._http_settings,
-            log_filterer=_log_filterer(self._token),
+            log_filterer=_log_filterer(self._token.encode()),
             logger=self._logger,
             proxy_settings=self._proxy_settings,
             transport_compression=self._transport_compression,
