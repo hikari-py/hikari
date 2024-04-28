@@ -120,9 +120,6 @@ class GatewayBot(traits.GatewayBotAware):
     ----------
     token
         The bot token to sign in with.
-
-    Other Parameters
-    ----------------
     allow_color
         Whether enable coloured console logs will be enabled on any platform that is a TTY.
         Setting a `"CLICOLOR"` environment variable to any **non `0`** value
@@ -698,8 +695,8 @@ class GatewayBot(traits.GatewayBotAware):
     ) -> None:
         """Start the application and block until it's finished running.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         activity
             The initial activity to display in the bot user presence, or
             [`None`][] (default) to not show any.
@@ -864,8 +861,8 @@ class GatewayBot(traits.GatewayBotAware):
     ) -> None:
         """Start the bot, wait for all shards to become ready, and then return.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         activity
             The initial activity to display in the bot user presence, or
             [`None`][] (default) to not show any.

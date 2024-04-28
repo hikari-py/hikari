@@ -994,9 +994,6 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ----------
     type : hikari.interactions.base_interactions.MessageResponseTypesT
         The type of interaction response this is.
-
-    Other Parameters
-    ----------------
     content : hikari.undefined.UndefinedOr[str]
         The content of this response, if supplied. This follows the same rules
         as "content" on create message.

@@ -253,9 +253,6 @@ class InteractionServer(abc.ABC):
             async generator which should yield exactly once. This allows
             sending an initial response to the request, while still
             later executing further logic.
-
-        Other Parameters
-        ----------------
         replace
             Whether this call should replace the previously set listener or not.
 

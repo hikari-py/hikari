@@ -698,8 +698,8 @@ class Member(users.User):
     ) -> None:
         """Ban this member from this guild.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         delete_message_seconds
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
@@ -731,8 +731,8 @@ class Member(users.User):
     async def unban(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
         """Unban this member from the guild.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -758,8 +758,8 @@ class Member(users.User):
     async def kick(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
         """Kick this member from this guild.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -792,9 +792,6 @@ class Member(users.User):
         role
             The role to add. This may be the object or the
             ID of an existing role.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -825,9 +822,6 @@ class Member(users.User):
         role
             The role to remove. This may be the object or the
             ID of an existing role.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -863,8 +857,8 @@ class Member(users.User):
     ) -> Member:
         """Edit the member.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         nickname
             If provided, the new nick for the member. If [`None`][],
             will remove the members nick.
@@ -1425,9 +1419,6 @@ class PartialGuild(snowflakes.Unique):
         ----------
         user
             The user to ban from the guild.
-
-        Other Parameters
-        ----------------
         delete_message_seconds
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
@@ -1466,9 +1457,6 @@ class PartialGuild(snowflakes.Unique):
         ----------
         user
             The user to unban from the guild.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1503,9 +1491,6 @@ class PartialGuild(snowflakes.Unique):
         ----------
         user
             The user to kick from the guild.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1772,9 +1757,6 @@ class PartialGuild(snowflakes.Unique):
         image
             The 320x320 image for the sticker. Maximum upload size is 500kb.
             This can be a still PNG, an animated PNG, a Lottie, or a GIF.
-
-        Other Parameters
-        ----------------
         description
             If provided, the description of the sticker.
         reason
@@ -1822,9 +1804,6 @@ class PartialGuild(snowflakes.Unique):
         sticker
             The sticker to edit. This can be a sticker object or the ID of an
             existing sticker.
-
-        Other Parameters
-        ----------------
         name
             If provided, the new name for the sticker.
         description
@@ -1874,9 +1853,6 @@ class PartialGuild(snowflakes.Unique):
         sticker
             The sticker to delete. This can be a sticker object or the ID
             of an existing sticker.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1914,9 +1890,6 @@ class PartialGuild(snowflakes.Unique):
         ----------
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the category.
         permission_overwrites
@@ -1970,9 +1943,6 @@ class PartialGuild(snowflakes.Unique):
         ----------
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -2046,9 +2016,6 @@ class PartialGuild(snowflakes.Unique):
         ----------
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -2132,9 +2099,6 @@ class PartialGuild(snowflakes.Unique):
         ----------
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the category.
         category
@@ -2232,9 +2196,6 @@ class PartialGuild(snowflakes.Unique):
         ----------
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -2315,9 +2276,6 @@ class PartialGuild(snowflakes.Unique):
         ----------
         name
             The channel's name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).

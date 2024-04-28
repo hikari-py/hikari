@@ -301,8 +301,8 @@ class PartialCommand(snowflakes.Unique):
     ) -> PartialCommand:
         """Edit this command.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         name
             The name to set for the command. Leave as [`hikari.undefined.UNDEFINED`][]
             to not change.

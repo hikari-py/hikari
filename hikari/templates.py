@@ -289,9 +289,6 @@ class Template:
         ----------
         name
             The new guilds name.
-
-        Other Parameters
-        ----------------
         icon
             If provided, the guild icon to set.
             Must be a 1024x1024 image or can be an animated gif when the guild has the ANIMATED_ICON feature.

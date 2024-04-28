@@ -282,9 +282,6 @@ class GuildBuilder(abc.ABC):
         ----------
         name
             The role's name.
-
-        Other Parameters
-        ----------------
         permissions
             If provided, the permissions for the role.
         color
@@ -334,9 +331,6 @@ class GuildBuilder(abc.ABC):
         ----------
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the category.
         permission_overwrites
@@ -373,9 +367,6 @@ class GuildBuilder(abc.ABC):
         ----------
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -424,9 +415,6 @@ class GuildBuilder(abc.ABC):
         ----------
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -480,9 +468,6 @@ class GuildBuilder(abc.ABC):
         ----------
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -1171,9 +1156,6 @@ class CommandBuilder(abc.ABC):
             The REST client to use to make this request.
         application
             The application to create this command for.
-
-        Other Parameters
-        ----------------
         guild
             The guild to create this command for.
 
@@ -1280,9 +1262,6 @@ class SlashCommandBuilder(CommandBuilder):
             The REST client to use to make this request.
         application
             The application to create this command for.
-
-        Other Parameters
-        ----------------
         guild
             The guild to create this command for.
 
@@ -1321,9 +1300,6 @@ class ContextMenuCommandBuilder(CommandBuilder):
             The REST client to use to make this request.
         application
             The application to create this command for.
-
-        Other Parameters
-        ----------------
         guild
             The guild to create this command for.
 

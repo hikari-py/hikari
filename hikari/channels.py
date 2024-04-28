@@ -418,8 +418,8 @@ class TextableChannel(PartialChannel):
             thus any errors documented below will happen then.
             See [`hikari.iterators`][] for the full API for this iterator type.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         before
             If provided, fetch messages before this snowflakes. If you provide
             a datetime object, it will be transformed into a snowflakes. This
@@ -532,9 +532,6 @@ class TextableChannel(PartialChannel):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
         attachment
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
@@ -814,9 +811,6 @@ class TextableChannel(PartialChannel):
         messages
             Either the object/ID of an existing message to delete or an iterable
             (sync or async) of the objects and/or IDs of existing messages to delete.
-
-        Other Parameters
-        ----------------
         *other_messages
             The objects and/or IDs of other existing messages to delete.
 
@@ -1020,8 +1014,8 @@ class GuildChannel(PartialChannel):
     ) -> PartialChannel:
         """Edit the text channel.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         name
             If provided, the new name for the channel.
         position
@@ -1170,9 +1164,6 @@ class PermissibleGuildChannel(GuildChannel):
         target
             The channel overwrite to edit. This may be the object or the ID of an
             existing overwrite.
-
-        Other Parameters
-        ----------------
         target_type
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.

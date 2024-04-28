@@ -188,9 +188,6 @@ class InteractionServer(interaction_server.InteractionServer):
     ----------
     entity_factory
         The entity factory instance this server should use.
-
-    Other Parameters
-    ----------------
     dumps
         The JSON encoder this server should use.
     loads
@@ -508,8 +505,8 @@ class InteractionServer(interaction_server.InteractionServer):
             For more information on the other parameters such as defaults see
             AIOHTTP's documentation.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         backlog
             The number of unaccepted connections that the system will allow before
             refusing new connections.

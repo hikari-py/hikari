@@ -323,9 +323,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this entry belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -449,9 +446,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -484,9 +478,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -519,9 +510,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -554,9 +542,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -589,9 +574,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -624,9 +606,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. If passed then this
             will be prioritised over `"guild_id"` in the payload.
@@ -674,9 +653,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         thread_id
             ID of the thread this member belongs to. This will be
             prioritised over `"id"` in the payload when passed.
@@ -746,9 +722,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. This will be
             prioritised over `"guild_id"` in the payload when passed.
@@ -786,9 +759,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. This will be
             prioritised over `"guild_id"` in the payload when passed.
@@ -826,9 +796,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. This will be
             prioritised over `"guild_id"` in the payload when passed.
@@ -868,9 +835,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this channel belongs to. This will be ignored
             for DM and group DM channels and will be prioritised over
@@ -1091,9 +1055,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         user
             The user to attach to this member, should only be passed in
             situations where "user" is not included in the payload.
@@ -1162,9 +1123,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this integration belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
@@ -1273,9 +1231,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this command belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
@@ -1306,9 +1261,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this command belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
@@ -1339,9 +1291,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this command belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.
@@ -1684,9 +1633,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild the presence belongs to. If this is specified
             then it is prioritised over `guild_id` in the payload.
@@ -1791,9 +1737,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild the user belongs to. If this is specified
             then it is prioritised over `guild_id` in the payload.
@@ -1881,9 +1824,6 @@ class EntityFactory(abc.ABC):
         ----------
         payload
             The JSON payload to deserialize.
-
-        Other Parameters
-        ----------------
         guild_id
             The ID of the guild this voice state belongs to. If this is specified
             then this will be prioritised over `"guild_id"` in the payload.

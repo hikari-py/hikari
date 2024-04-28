@@ -146,9 +146,6 @@ class ExecutableWebhook(abc.ABC):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
         username
             If provided, the username to override the webhook's username
             for this request.
@@ -332,9 +329,6 @@ class ExecutableWebhook(abc.ABC):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` nor
             `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
         attachment
             If provided, the attachment to set on the message. If
             [`hikari.undefined.UNDEFINED`][], the previous attachment, if
@@ -602,8 +596,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     async def delete(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> None:
         """Delete this webhook.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         use_token
             If set to [`True`][] then the webhook's token will be used for
             this request; if set to [`False`][] then bot authorization will
@@ -643,8 +637,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     ) -> IncomingWebhook:
         """Edit this webhook.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         name
             If provided, the new name string.
         avatar
@@ -732,8 +726,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     async def fetch_self(self, *, use_token: undefined.UndefinedOr[bool] = undefined.UNDEFINED) -> IncomingWebhook:
         """Fetch this webhook.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         use_token
             If set to [`True`][] then the webhook's token will be used for
             this request; if set to [`False`][] then bot authorization will
@@ -831,8 +825,8 @@ class ChannelFollowerWebhook(PartialWebhook):
     ) -> ChannelFollowerWebhook:
         """Edit this webhook.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         name
             If provided, the new name string.
         avatar
