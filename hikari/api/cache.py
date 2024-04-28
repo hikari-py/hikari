@@ -95,7 +95,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user to get the DM channel ID for.
 
         Returns
@@ -123,7 +123,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+        emoji
             Object or ID of the emoji to get from the cache.
 
         Returns
@@ -151,7 +151,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get the cached emoji objects for.
 
         Returns
@@ -169,7 +169,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.GuildSticker]
+        sticker
             Object or ID of the sticker to get from the cache.
 
         Returns
@@ -196,7 +196,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get the cached sticker objects for.
 
         Returns
@@ -220,7 +220,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get from the cache.
 
         Returns
@@ -237,7 +237,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get from the cache.
 
         Returns
@@ -260,7 +260,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get from the cache.
 
         Returns
@@ -313,7 +313,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             Object or ID of the guild channel to get from the cache.
 
         Returns
@@ -342,7 +342,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get the cached channels for.
 
         Returns
@@ -360,7 +360,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        thread : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        thread
             Object or ID of the thread to get from the cache.
 
         Returns
@@ -392,9 +392,9 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get the cached thread channels for.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             Object or ID of the channel to get the cached thread channels for.
 
         Returns
@@ -412,7 +412,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get the cached thread channels for.
 
         Returns
@@ -428,7 +428,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        code : typing.Union[hikari.invites.InviteCode, str]
+        code
             The object or string code of the invite to get from the cache.
 
         Returns
@@ -456,7 +456,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get invite objects for.
 
         Returns
@@ -477,9 +477,9 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get invite objects for.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             Object or ID of the channel to get invite objects for.
 
         Returns
@@ -510,9 +510,9 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get a cached member for.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user to get a cached member for.
 
         Returns
@@ -540,7 +540,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild_id : hikari.snowflakes.Snowflakeish
+        guild_id
             The ID of the guild to get the cached member view for.
 
         Returns
@@ -557,7 +557,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+        message
             Object or ID of the message to get from the cache.
 
         Returns
@@ -587,9 +587,9 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get a presence for.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user to get a presence for.
 
         Returns
@@ -620,7 +620,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get the cached presence objects for.
 
         Returns
@@ -636,7 +636,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
+        role
             Object or ID of the role to get from the cache.
 
         Returns
@@ -663,7 +663,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get the cached roles for.
 
         Returns
@@ -679,7 +679,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user to get from the cache.
 
         Returns
@@ -710,9 +710,9 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get a voice state for.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user to get a voice state for.
 
         Returns
@@ -746,9 +746,9 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get the cached voice states for.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             Object or ID of the channel to get the cached voice states for.
 
         Returns
@@ -766,7 +766,7 @@ class Cache(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to get the cached voice states for.
 
         Returns
@@ -809,7 +809,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user to remove the cached DM channel ID for.
 
         Returns
@@ -830,9 +830,9 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user to add a DM channel ID to the cache for.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             Object or ID of the DM channel to add to the cache.
         """
 
@@ -863,7 +863,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove the cached emoji objects for.
 
         Returns
@@ -885,7 +885,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+        emoji
             Object or ID of the emoji to remove from the cache.
 
         Returns
@@ -901,7 +901,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        emoji : hikari.emojis.KnownCustomEmoji
+        emoji
             The object of the known custom emoji to add to the cache.
         """
 
@@ -913,7 +913,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        emoji : hikari.emojis.KnownCustomEmoji
+        emoji
             The object of the emoji to update in the cache.
 
         Returns
@@ -949,7 +949,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove the cached sticker objects for.
 
         Returns
@@ -970,7 +970,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.GuildSticker]
+        sticker
             Object or ID of the sticker to remove from the cache.
 
         Returns
@@ -986,7 +986,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        sticker : hikari.stickers.GuildSticker
+        sticker
             The object of the sticker to add to the cache.
         """
 
@@ -1009,7 +1009,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove from the cache.
 
         Returns
@@ -1025,7 +1025,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.guilds.GatewayGuild
+        guild
             The object of the guild to add to the cache.
         """
 
@@ -1037,9 +1037,9 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to set the availability for.
-        is_available : bool
+        is_available
             The availability to set for the guild.
         """
 
@@ -1051,7 +1051,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.guilds.GatewayGuild
+        guild
             The object of the guild to update in the cache.
 
         Returns
@@ -1081,7 +1081,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove cached channels for.
 
         Returns
@@ -1099,7 +1099,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             Object or ID of the guild channel to remove from the cache.
 
         Returns
@@ -1115,7 +1115,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.channels.PermissibleGuildChannel
+        channel
             The guild channel based object to add to the cache.
         """
 
@@ -1129,7 +1129,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.channels.PermissibleGuildChannel
+        channel
             The object of the channel to update in the cache.
 
         Returns
@@ -1162,9 +1162,9 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove cached threads for.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             Object or ID of the channel to remove cached threads for.
 
         Returns
@@ -1182,7 +1182,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove cached threads for.
 
         Returns
@@ -1200,7 +1200,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        thread : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        thread
             Object or ID of the thread to remove from the cache.
 
         Returns
@@ -1216,7 +1216,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        channel : hikari.channels.GuildThreadChannel
+        channel
             The thread channel based object to add to the cache.
         """
 
@@ -1228,7 +1228,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        thread : hikari.channels.GuildThreadChannel
+        thread
             The object of the thread channel to update in the cache.
 
         Returns
@@ -1258,7 +1258,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove invite objects for.
 
         Returns
@@ -1279,9 +1279,9 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove invite objects for.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             Object or ID of the channel to remove invite objects for.
 
         Returns
@@ -1299,7 +1299,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        code : typing.Union[hikari.invites.InviteCode, str]
+        code
             Object or string code of the invite to remove from the cache.
 
         Returns
@@ -1315,7 +1315,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        invite : hikari.invites.InviteWithMetadata
+        invite
             The object of the invite to add to the cache.
         """
 
@@ -1327,7 +1327,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        invite : hikari.invites.InviteWithMetadata
+        invite
             The object of the invite to update in the cache.
 
         Returns
@@ -1355,7 +1355,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        user : hikari.users.OwnUser
+        user
             The own user object to set in the cache.
         """
 
@@ -1367,7 +1367,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        user : hikari.users.OwnUser
+        user
             The own user object to update in the cache.
 
         Returns
@@ -1401,7 +1401,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove cached members for.
 
         Returns
@@ -1427,9 +1427,9 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove a member from the cache for.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user to remove a member from the cache for.
 
         Returns
@@ -1445,7 +1445,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        member : hikari.guilds.Member
+        member
             The object of the member to add to the cache.
         """
 
@@ -1457,7 +1457,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        member : hikari.guilds.Member
+        member
             The object of the member to update in the cache.
 
         Returns
@@ -1489,7 +1489,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove presences for.
 
         Returns
@@ -1510,9 +1510,9 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove a presence for.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user to remove a presence for.
 
         Returns
@@ -1528,7 +1528,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        presence : hikari.presences.MemberPresence
+        presence
             The object of the presence to add to the cache.
         """
 
@@ -1540,7 +1540,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        presence : hikari.presences.MemberPresence
+        presence
             The object of the presence to update in the cache.
 
         Returns
@@ -1570,7 +1570,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove roles for.
 
         Returns
@@ -1586,7 +1586,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
+        role
             Object or ID of the role to remove from the cache.
 
         Returns
@@ -1602,7 +1602,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        role : hikari.guilds.Role
+        role
             The object of the role to add to the cache.
         """
 
@@ -1614,7 +1614,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        role : hikari.guilds.Role
+        role
             The object of the role to update in the cache.
 
         Returns
@@ -1644,7 +1644,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove cached voice states for.
 
         Returns
@@ -1665,9 +1665,9 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to remove voice states for.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             Object or ID of the channel to remove voice states for.
 
         Returns
@@ -1688,9 +1688,9 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild the voice state to remove is related to.
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             Object or ID of the user who the voice state to remove belongs to.
 
         Returns
@@ -1706,7 +1706,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        voice_state : hikari.voices.VoiceState
+        voice_state
             The object of the voice state to add to the cache.
         """
 
@@ -1718,7 +1718,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        voice_state : hikari.voices.VoiceState
+        voice_state
             The object of the voice state to update in the cache.
 
         Returns
@@ -1747,7 +1747,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+        message
             Object or ID of the messages to remove the cache.
 
         Returns
@@ -1763,7 +1763,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        message : hikari.messages.Message
+        message
             The object of the message to add to the cache.
         """
 
@@ -1775,7 +1775,7 @@ class MutableCache(Cache, abc.ABC):
 
         Parameters
         ----------
-        message : typing.Union[hikari.messages.PartialMessage, hikari.messages.Message]
+        message
             The object of the message to update in the cache.
 
         Returns

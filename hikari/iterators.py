@@ -88,7 +88,7 @@ class All(typing.Generic[ValueT]):
 
     Parameters
     ----------
-    conditions : typing.Callable[[ValueT], bool]
+    conditions
         The predicates to wrap.
     """
 
@@ -123,14 +123,14 @@ class AttrComparator(typing.Generic[ValueT]):
 
     Parameters
     ----------
-    attr_name : str
+    attr_name
         The attribute name. Can be prepended with a `.` optionally.
         If the attribute name ends with a `()`, then the call is invoked
         rather than treated as a property (useful for methods like
         [`str.isupper`][], for example).
-    expected_value : typing.Any
+    expected_value
         The expected value.
-    cast : typing.Optional[typing.Callable[[ValueT], typing.Any]]
+    cast
         Optional cast to perform on the input value when being called before
         comparing it to the expected value but after accessing the attribute.
     """
@@ -217,7 +217,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        chunk_size : int
+        chunk_size
             The limit for how many results should be returned in each chunk.
 
         Returns
@@ -234,7 +234,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        transformation : typing.Union[typing.Callable[[ValueT], bool], str]
+        transformation
             The function to use to map the attribute. This may alternatively
             be a string attribute name to replace the input value with. You
             can provide nested attributes using the ``.`` operator.
@@ -274,7 +274,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
+        *predicates
             Predicates to invoke. These are functions that take a value and
             return [`True`][] if it is of interest, or [`False`][]
             otherwise. These may instead include 2-[`tuple`][] objects
@@ -282,7 +282,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.filter(("user.bot", True))`.
-        **attrs : typing.Any
+        **attrs
             Alternative to passing 2-tuples. Cannot specify nested attributes
             using this method.
 
@@ -304,7 +304,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
+        *predicates
             Predicates to invoke. These are functions that take a value and
             return [`True`][] if it is of interest, or [`False`][]
             otherwise. These may instead include 2-[`tuple`][] objects
@@ -312,7 +312,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_while(("user.bot", True))`.
-        **attrs : typing.Any
+        **attrs
             Alternative to passing 2-tuples. Cannot specify nested attributes
             using this method.
 
@@ -334,7 +334,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
+        *predicates
             Predicates to invoke. These are functions that take a value and
             return [`True`][] if it is of interest, or [`False`][]
             otherwise. These may instead include 2-[`tuple`][] objects
@@ -342,7 +342,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.take_until(("user.bot", True))`.
-        **attrs : typing.Any
+        **attrs
             Alternative to passing 2-tuples. Cannot specify nested attributes
             using this method.
 
@@ -366,7 +366,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
+        *predicates
             Predicates to invoke. These are functions that take a value and
             return [`True`][] if it is of interest, or [`False`][]
             otherwise. These may instead include 2-[`tuple`][] objects
@@ -374,7 +374,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             are referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_while(("user.bot", True))`.
-        **attrs : typing.Any
+        **attrs
             Alternative to passing 2-tuples. Cannot specify nested attributes
             using this method.
 
@@ -398,7 +398,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        *predicates : typing.Union[typing.Callable[[ValueT], bool], typing.Tuple[str, typing.Any]]
+        *predicates
             Predicates to invoke. These are functions that take a value and
             return [`True`][] if it is of interest, or [`False`][]
             otherwise. These may instead include 2-[`tuple`][] objects
@@ -406,7 +406,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             referred to using the ``.`` operator), and values to compare for
             equality. This allows you to specify conditions such as
             `members.skip_until(("user.bot", True))`.
-        **attrs : typing.Any
+        **attrs
             Alternative to passing 2-tuples. Cannot specify nested attributes
             using this method.
 
@@ -428,7 +428,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        start : int
+        start
             Optional int to start at. If omitted, this is `0`.
 
         Examples
@@ -470,7 +470,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        limit : int
+        limit
             The number of items to get. This must be greater than zero.
 
         Examples
@@ -493,7 +493,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        number : int
+        number
             The max number of items to drop before any items are yielded.
 
         Returns
@@ -657,7 +657,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         Parameters
         ----------
-        window_size : int
+        window_size
             The window size of how many tasks to await at once. You can set this
             to `0` to await everything at once, but see the below warning.
 

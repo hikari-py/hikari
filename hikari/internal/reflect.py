@@ -48,7 +48,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
     Parameters
     ----------
-    func : typing.Callable[..., typing.Any]
+    func
         The function to get the resolved annotations from.
 
     Returns

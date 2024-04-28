@@ -122,15 +122,15 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     Parameters
     ----------
-    client : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
+    client
         Object or ID of the application this client credentials strategy should
         authorize as.
-    client_secret : typing.Optional[str]
+    client_secret
         Client secret to use when authorizing.
 
     Other Parameters
     ----------------
-    scopes : typing.Sequence[str]
+    scopes
         The scopes to authorize for.
     """
 
@@ -258,18 +258,18 @@ class RESTApp(traits.ExecutorAware):
 
     Parameters
     ----------
-    executor : typing.Optional[concurrent.futures.Executor]
+    executor
         The executor to use for blocking file IO operations. If [`None`][]
         is passed, then the default [`concurrent.futures.ThreadPoolExecutor`][] for
         the [`asyncio.AbstractEventLoop`][] will be used instead.
-    http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
+    http_settings
         HTTP settings to use. Sane defaults are used if this is
         [`None`][].
-    dumps : hikari.internal.data_binding.JSONEncoder
+    dumps
         The JSON encoder this application should use.
-    loads : hikari.internal.data_binding.JSONDecoder
+    loads
         The JSON decoder this application should use.
-    max_rate_limit : float
+    max_rate_limit
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
         [`hikari.errors.RateLimitTooLongError`][] will be raised instead of waiting.
@@ -278,15 +278,15 @@ class RESTApp(traits.ExecutorAware):
         rate limits.
 
         Defaults to five minutes if unspecified.
-    max_retries : typing.Optional[int]
+    max_retries
         Maximum number of times a request will be retried if
         it fails with a `5xx` status.
 
         Defaults to 3 if set to [`None`][].
-    proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
+    proxy_settings
         Proxy settings to use. If [`None`][] then no proxy configuration
         will be used.
-    url : typing.Optional[str]
+    url
         The base URL for the API. You can generally leave this as being
         [`None`][] and the correct default API base URL will be generated.
     """
@@ -393,10 +393,10 @@ class RESTApp(traits.ExecutorAware):
 
         Parameters
         ----------
-        token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
+        token
             The bot or bearer token. If no token is to be used,
             this can be undefined.
-        token_type : typing.Union[str, hikari.applications.TokenType, None]
+        token_type
             The type of token in use. This should only be passed when [`str`][]
             is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
             defaulted to `"Bearer"` in this situation.
@@ -490,32 +490,32 @@ class RESTClientImpl(rest_api.RESTClient):
 
     Parameters
     ----------
-    entity_factory : hikari.api.entity_factory.EntityFactory
+    entity_factory
         The entity factory to use.
-    executor : typing.Optional[concurrent.futures.Executor]
+    executor
         The executor to use for blocking IO.
 
         Defaults to the [`asyncio`][] thread pool if set to [`None`][].
-    max_retries : typing.Optional[int]
+    max_retries
         Maximum number of times a request will be retried if
         it fails with a `5xx` status.
 
         Defaults to 3 if set to [`None`][].
-    dumps : hikari.internal.data_binding.JSONEncoder
+    dumps
         The JSON encoder this application should use.
-    loads : hikari.internal.data_binding.JSONDecoder
+    loads
         The JSON decoder this application should use.
-    token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
+    token
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : typing.Union[str, hikari.applications.TokenType, None]
+    token_type
         The type of token in use. This must be passed when a [`str`][] is
         passed for `token` but and can be `"Bot"` or `"Bearer"`.
 
         This should be left as [`None`][] when either
         [`hikari.api.rest.TokenStrategy`][] or [`None`][] is passed for
         `token`.
-    rest_url : str
+    rest_url
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
 

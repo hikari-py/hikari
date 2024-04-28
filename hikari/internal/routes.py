@@ -78,7 +78,7 @@ class CompiledRoute:
 
         Parameters
         ----------
-        base_url : str
+        base_url
             The base of the URL to prepend to the compiled path.
 
         Returns
@@ -96,10 +96,10 @@ class CompiledRoute:
 
         Parameters
         ----------
-        initial_bucket_hash : str
+        initial_bucket_hash
             The initial bucket hash provided by Discord in the HTTP headers
             for a given response.
-        authentication_hash : str
+        authentication_hash
             The token hash.
 
         Returns
@@ -125,9 +125,9 @@ class Route:
 
     Parameters
     ----------
-    method : str
+    method
         The HTTP method.
-    path_template : str
+    path_template
         The template string for the path to use.
     """
 
@@ -167,7 +167,7 @@ class Route:
 
         Parameters
         ----------
-        **kwargs : typing.Any
+        **kwargs
             Any parameters to interpolate into the route path.
 
         Returns
@@ -222,15 +222,15 @@ class CDNRoute:
 
         Parameters
         ----------
-        base_url : str
+        base_url
             The base URL for the CDN. The generated route is concatenated onto
             this.
-        file_format : str
+        file_format
             The file format to use for the asset.
-        size : typing.Optional[int]
+        size
             The custom size query parameter to set. If [`None`][],
             it is not passed.
-        **kwargs : typing.Any
+        **kwargs
             Parameters to interpolate into the path template.
 
         Returns

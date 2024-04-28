@@ -118,12 +118,12 @@ class GatewayBot(traits.GatewayBotAware):
 
     Parameters
     ----------
-    token : str
+    token
         The bot token to sign in with.
 
     Other Parameters
     ----------------
-    allow_color : bool
+    allow_color
         Whether enable coloured console logs will be enabled on any platform that is a TTY.
         Setting a `"CLICOLOR"` environment variable to any **non `0`** value
         will override this setting.
@@ -133,15 +133,15 @@ class GatewayBot(traits.GatewayBotAware):
         awkward or not support features in a standard way, the option to
         explicitly disable this is provided. See `force_color` for an
         alternative.
-    banner : typing.Optional[str]
+    banner
         The package to search for a `banner.txt` in.
 
         Setting this to [`None`][] will disable the banner being shown.
-    suppress_optimization_warning : bool
+    suppress_optimization_warning
         By default, hikari warns you if you are not running
         your bot using optimizations (`-O` or `-OO`). If this is [`True`][], you won't
         receive these warnings, even if you are not running using optimizations.
-    executor : typing.Optional[concurrent.futures.Executor]
+    executor
         If non-[`None`][], then this executor
         is used instead of the [`concurrent.futures.ThreadPoolExecutor`][] attached
         to the [`asyncio.AbstractEventLoop`][] that the bot will run on. This
@@ -153,25 +153,25 @@ class GatewayBot(traits.GatewayBotAware):
         relies on all objects used in IPC to be pickleable. Many third-party
         libraries will not support this fully though, so your mileage may vary
         on using ProcessPoolExecutor implementations with this parameter.
-    force_color : bool
+    force_color
         If [`True`][], then this application
         will __force__ colour to be used in console-based output. Specifying a
         `"CLICOLOR_FORCE"` environment variable with a non-`"0"` value will
         override this setting.
 
         This will take precedence over `allow_color` if both are specified.
-    cache_settings : typing.Optional[hikari.impl.config.CacheSettings]
+    cache_settings
         Optional cache settings. If unspecified, will use the defaults.
-    http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
+    http_settings
         Optional custom HTTP configuration settings to use. Allows you to
         customise functionality such as whether SSL-verification is enabled,
         what timeouts [`aiohttp`][] should expect to use for requests, and behavior
         regarding HTTP-redirects.
-    intents : hikari.intents.Intents
+    intents
         This allows you
         to change which intents your application will use on the gateway. This
         can be used to control and change the types of events you will receive.
-    auto_chunk_members : bool
+    auto_chunk_members
         If [`False`][], then no member chunks will be requested automatically,
         even if there are reasons to do so.
 
@@ -195,7 +195,7 @@ class GatewayBot(traits.GatewayBotAware):
                    payload).
                 2. The user is waiting for the member chunks (there is an event
                    listener for it).
-    logs : typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike]
+    logs
         The flavour to set the logging to.
 
         This can be [`None`][] to not enable logging automatically.
@@ -217,7 +217,7 @@ class GatewayBot(traits.GatewayBotAware):
         Note that `"TRACE_HIKARI"` is a library-specific logging level
         which is expected to be more verbose than `"DEBUG"`.
 
-    max_rate_limit : float
+    max_rate_limit
         The max number of seconds to backoff for when rate limited. Anything
         greater than this will instead raise an error.
 
@@ -230,19 +230,19 @@ class GatewayBot(traits.GatewayBotAware):
         Note that this only applies to the REST API component that communicates
         with Discord, and will not affect sharding or third party HTTP endpoints
         that may be in use.
-    max_retries : typing.Optional[int]
+    max_retries
         Maximum number of times a request will be retried if
         it fails with a `5xx` status.
 
         Will default to 3 if set to [`None`][].
-    proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
+    proxy_settings
         Custom proxy settings to use with network-layer logic
         in your application to get through an HTTP-proxy.
-    dumps : hikari.internal.data_binding.JSONEncoder
+    dumps
         The JSON encoder this application should use.
-    loads : hikari.internal.data_binding.JSONDecoder
+    loads
         The JSON decoder this application should use.
-    rest_url : typing.Optional[str]
+    rest_url
         Defaults to the Discord REST API URL if [`None`][]. Can be
         overridden if you are attempting to point to an unofficial endpoint, or
         if you are attempting to mock/stub the Discord API for any reason.
@@ -496,7 +496,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        event : hikari.events.base_events.Event
+        event
             The event to dispatch.
 
         Examples
@@ -581,10 +581,10 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        event_type : typing.Type[EventT]
+        event_type
             The event type to look for.
             `EventT` must be a subclass of [`hikari.events.base_events.Event`][].
-        polymorphic : bool
+        polymorphic
             If [`True`][], this will also return the listeners of the
             subclasses of the given event type. If [`False`][], then
             only listeners for this class specifically are returned.
@@ -612,7 +612,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        *event_types : typing.Optional[typing.Type[EventT]]
+        *event_types
             The event types to subscribe to. The implementation may allow this
             to be undefined. If this is the case, the event type will be inferred
             instead from the type hints on the function signature.
@@ -654,19 +654,19 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        banner : typing.Optional[str]
+        banner
             The package to find a `banner.txt` in.
-        allow_color : bool
+        allow_color
             A flag that allows advising whether to allow color if supported or
             not. Can be overridden by setting a `CLICOLOR` environment
             variable to a non-`"0"` string.
-        force_color : bool
+        force_color
             A flag that allows forcing color to always be output, even if the
             terminal device may not support it. Setting the `CLICOLOR_FORCE`
             environment variable to a non-`"0"` string will override this.
 
             This will take precedence over `allow_color` if both are specified.
-        extra_args : typing.Optional[typing.Dict[str, str]]
+        extra_args
             If provided, extra $-substitutions to use when printing the banner.
             Default substitutions can not be overwritten.
 
@@ -700,25 +700,25 @@ class GatewayBot(traits.GatewayBotAware):
 
         Other Parameters
         ----------------
-        activity : typing.Optional[hikari.presences.Activity]
+        activity
             The initial activity to display in the bot user presence, or
             [`None`][] (default) to not show any.
-        afk : bool
+        afk
             The initial AFK state to display in the bot user presence, or
             [`False`][] (default) to not show any.
-        asyncio_debug : bool
+        asyncio_debug
             If [`True`][], then debugging is enabled for the asyncio event
             loop in use.
-        check_for_updates : bool
+        check_for_updates
             If [`True`][], will check for newer versions of hikari on PyPI
             and notify if available.
-        close_passed_executor : bool
+        close_passed_executor
             If [`True`][], any custom [`concurrent.futures.Executor`][] passed
             to the constructor will be shut down when the application
             terminates. This does not affect the default executor associated
             with the event loop, and will not do anything if you do not
             provide a custom executor to the constructor.
-        close_loop : bool
+        close_loop
             If [`True`][], then once the bot enters a state where all components
             have shut down permanently during application shut down, then
             all asyncgens and background tasks will be destroyed, and the
@@ -728,13 +728,13 @@ class GatewayBot(traits.GatewayBotAware):
             had time to attempt to shut down correctly (around 250ms), and on
             Python 3.9 and newer, will also shut down the default event loop
             executor too.
-        coroutine_tracking_depth : typing.Optional[int]
+        coroutine_tracking_depth
             If an integer value and supported by
             the interpreter, then this many nested coroutine calls will be
             tracked with their call origin state. This allows you to determine
             where non-awaited coroutines may originate from, but generally you
             do not want to leave this enabled for performance reasons.
-        enable_signal_handlers : typing.Optional[bool]
+        enable_signal_handlers
             Defaults to [`True`][] if this is called in the main thread.
 
             If on a non-Windows OS with builtin support for kernel-level
@@ -744,20 +744,20 @@ class GatewayBot(traits.GatewayBotAware):
             rather than just killing the process in a dirty state immediately.
             You should leave this enabled unless you plan to implement your own
             signal handling yourself.
-        idle_since : typing.Optional[datetime.datetime]
+        idle_since
             The [`datetime.datetime`][] the user should be marked as being idle
             since, or [`None`][] to not show this.
-        ignore_session_start_limit : bool
+        ignore_session_start_limit
             If [`False`][], then attempting to start more sessions than
             you are allowed in a 24 hour window will throw a [`RuntimeError`][]
             rather than going ahead and hitting the IDENTIFY limit, which
             may result in your token being reset. Setting to [`True`][]
             disables this behavior.
-        large_threshold : int
+        large_threshold
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the [GUILD CREATE][]
             event.
-        propagate_interrupts : bool
+        propagate_interrupts
             If [`True`][], then any internal [`hikari.errors.HikariInterrupt`][]
             that is raises as a result of catching an OS level signal will
             result in the exception being rethrown once the application has
@@ -766,7 +766,7 @@ class GatewayBot(traits.GatewayBotAware):
             application received after it closes. When [`False`][], nothing
             is raised and the call will terminate cleanly and silently
             where possible instead.
-        shard_ids : typing.Optional[typing.Sequence[int]]
+        shard_ids
             The shard IDs to create shards for. If not [`None`][], then
             a non-[`None`][] `shard_count` must ALSO be provided.
 
@@ -774,12 +774,12 @@ class GatewayBot(traits.GatewayBotAware):
             is used for your application instead.
 
             Note that the sequence will be de-duplicated.
-        shard_count : typing.Optional[int]
+        shard_count
             The number of shards to use in the entire distributed application.
 
             Defaults to [`None`][] which results in the count being
             determined dynamically on startup.
-        status : hikari.presences.Status
+        status
             The initial status to show for the user presence on startup.
 
         Raises
@@ -866,41 +866,41 @@ class GatewayBot(traits.GatewayBotAware):
 
         Other Parameters
         ----------------
-        activity : typing.Optional[hikari.presences.Activity]
+        activity
             The initial activity to display in the bot user presence, or
             [`None`][] (default) to not show any.
-        afk : bool
+        afk
             The initial AFK state to display in the bot user presence, or
             [`False`][] (default) to not show any.
-        check_for_updates : bool
+        check_for_updates
             If [`True`][], will check for
             newer versions of `hikari` on PyPI and notify if available.
-        idle_since : typing.Optional[datetime.datetime]
+        idle_since
             The [`datetime.datetime`][] the user should be marked as being idle
             since, or [`None`][] (default) to not show this.
-        ignore_session_start_limit : bool
+        ignore_session_start_limit
             If [`False`][], then attempting to start more sessions than you
             are allowed in a 24 hour window will throw a [`RuntimeError`][]
             rather than going ahead and hitting the IDENTIFY limit,
             which may result in your token being reset. Setting to [`True`][]
             disables this behavior.
-        large_threshold : int
+        large_threshold
             Threshold for members in a guild before it is treated as being
             "large" and no longer sending member details in the `GUILD CREATE`
             event.
-        shard_ids : typing.Optional[typing.Sequence[int]]
+        shard_ids
             The shard IDs to create shards for. If not [`None`][], then
             a non-[`None`][] `shard_count` must ALSO be provided. Defaults to
             [`None`][], which means the Discord-recommended count is used
             for your application instead.
 
             Note that the sequence will be de-duplicated.
-        shard_count : typing.Optional[int]
+        shard_count
             The number of shards to use in the entire distributed application.
 
             Defaults to [`None`][] which results in the count being
             determined dynamically on startup.
-        status : hikari.presences.Status
+        status
             The initial status to show for the user presence on startup.
 
         Raises
@@ -1022,14 +1022,14 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.base_events.Event]
+        event_type
             The event type to listen for. This will listen for subclasses of
             this type additionally.
-        timeout : typing.Optional[int, float]
+        timeout
             How long this streamer should wait for the next event before
             ending the iteration. If [`None`][] then this will continue
             until explicitly broken from.
-        limit : typing.Optional[int]
+        limit
             The limit for how many events this should queue at one time before
             dropping extra incoming events, leave this as [`None`][] for
             the cache size to be unlimited.
@@ -1081,7 +1081,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        event_type : typing.Type[T]
+        event_type
             The event type to listen for. This will also listen for any
             subclasses of the given type.
             `T` must be a subclass of [`hikari.events.base_events.Event`][].
@@ -1123,7 +1123,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        event_type : typing.Type[T]
+        event_type
             The event type to unsubscribe from. This must be the same exact
             type as was originally subscribed with to be removed correctly.
             `T` must derive from [`hikari.events.base_events.Event`][].
@@ -1168,7 +1168,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         Parameters
         ----------
-        event_type : typing.Type[hikari.events.base_events.Event]
+        event_type
             The event type to listen for. This will listen for subclasses of
             this type additionally.
         predicate
@@ -1177,7 +1177,7 @@ class GatewayBot(traits.GatewayBotAware):
             return, or [`False`][] if the event should not be returned.
             If left as [`None`][] (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
-        timeout : typing.Union[float, int, None]
+        timeout
             The amount of time to wait before raising an [`asyncio.TimeoutError`][]
             and giving up instead. This is measured in seconds. If
             [`None`][], then no timeout will be waited for (no timeout can

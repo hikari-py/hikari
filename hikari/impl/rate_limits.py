@@ -204,7 +204,7 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        retry_after : float
+        retry_after
             How long to sleep for before unlocking and releasing any futures
             in the queue.
         """
@@ -228,7 +228,7 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        retry_after : float
+        retry_after
             How long to sleep for before unlocking and releasing any futures
             in the queue.
         """
@@ -248,7 +248,7 @@ class ManualRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        now : float
+        now
             The monotonic [`time.monotonic`][] timestamp.
 
         Returns
@@ -352,7 +352,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        now : float
+        now
             The monotonic [`time.monotonic`][] timestamp.
 
         Returns
@@ -377,7 +377,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
         Parameters
         ----------
-        now : float
+        now
             The monotonic [`time.monotonic`][] timestamp.
 
         Returns
@@ -438,17 +438,17 @@ class ExponentialBackOff:
 
     Parameters
     ----------
-    base : float
+    base
         The base to use.
-    maximum : float
+    maximum
         The max value the backoff can be in a single iteration.
 
         All values will be capped to this base value plus some random jitter.
-    jitter_multiplier : float
+    jitter_multiplier
         The multiplier for the random jitter.
 
         Set to `0` to disable jitter.
-    initial_increment : int
+    initial_increment
         The initial increment to start at.
 
     Raises

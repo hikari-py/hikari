@@ -86,7 +86,7 @@ class Emoji(files.WebResource, abc.ABC):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji object to parse.
 
         Returns
@@ -221,7 +221,7 @@ class UnicodeEmoji(str, Emoji):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji object to parse.
 
         Returns
@@ -302,7 +302,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji mention to parse.
 
         Returns

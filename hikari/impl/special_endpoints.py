@@ -1470,7 +1470,7 @@ def _build_emoji(
 
     Parameters
     ----------
-    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+    emoji
         The ID, object or raw string of an emoji to set on a component.
 
     Returns

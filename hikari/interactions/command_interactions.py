@@ -401,7 +401,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
         Parameters
         ----------
-        choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
+        choices
             The choices for the autocomplete.
 
         Examples
@@ -432,7 +432,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
         Parameters
         ----------
-        choices : typing.Sequence[hikari.api.special_endpoints.AutocompleteChoiceBuilder]
+        choices
             The choices for the autocomplete.
         """
         await self.app.rest.create_autocomplete_response(self.id, self.token, choices)

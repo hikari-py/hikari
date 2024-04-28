@@ -487,10 +487,10 @@ class Team(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between 16 and 4096 inclusive.
 
@@ -539,10 +539,10 @@ class InviteApplication(guilds.PartialApplication):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -645,10 +645,10 @@ class Application(guilds.PartialApplication):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 

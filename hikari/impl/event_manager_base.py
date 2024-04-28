@@ -275,7 +275,7 @@ def filtered(
 
     Other Parameters
     ----------------
-    cache_components : hikari.api.config.CacheComponents
+    cache_components
         Bitfield of the cache components this event may make altering calls to.
     """
     if isinstance(event_types, typing.Sequence):

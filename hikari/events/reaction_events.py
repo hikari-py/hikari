@@ -133,7 +133,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.emojis.Emoji, str]
+        emoji
             The emoji to check.
 
             Passing [`str`][] here indicates a unicode emoji.
@@ -178,7 +178,7 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.emojis.Emoji, str]
+        emoji
             The emoji to check.
 
             Passing [`str`][] here indicates a unicode emoji.
@@ -225,7 +225,7 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.emojis.Emoji, str]
+        emoji
             The emoji to check.
 
             Passing [`str`][] here indicates a unicode emoji.
