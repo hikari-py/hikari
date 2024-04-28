@@ -752,12 +752,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Examples
         --------
         ```py
-            # Trigger typing just once.
-            await rest.trigger_typing(channel)
+        # Trigger typing just once.
+        await rest.trigger_typing(channel)
 
-            # Trigger typing repeatedly for 1 minute.
-            async with rest.trigger_typing(channel):
-                await asyncio.sleep(60)
+        # Trigger typing repeatedly for 1 minute.
+        async with rest.trigger_typing(channel):
+            await asyncio.sleep(60)
         ```
 
         !!! warning

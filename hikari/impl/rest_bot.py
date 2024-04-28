@@ -190,33 +190,33 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     Simple logging setup:
 
     ```py
-        hikari.RESTBot("TOKEN", logs="INFO")  # Registered logging level
-        # or
-        hikari.RESTBot("TOKEN", logs=20)  # Logging level as an int
+    hikari.RESTBot("TOKEN", logs="INFO")  # Registered logging level
+    # or
+    hikari.RESTBot("TOKEN", logs=20)  # Logging level as an int
     ```
 
     File config:
 
     ```py
-        # See https://docs.python.org/3/library/logging.config.html#configuration-file-format for more info
-        hikari.RESTBot("TOKEN", logs="path/to/file.ini")
+    # See https://docs.python.org/3/library/logging.config.html#configuration-file-format for more info
+    hikari.RESTBot("TOKEN", logs="path/to/file.ini")
     ```
 
     Setting up logging through a dict config:
 
     ```py
-        # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
-        hikari.RESTBot(
-            "TOKEN",
-            logs={
-                "version": 1,
-                "incremental": True,  # In incremental setups, the default stream handler will be setup
-                "loggers": {
-                    "hikari.gateway": {"level": "DEBUG"},
-                    "hikari.ratelimits": {"level": "TRACE_HIKARI"},
-                },
-            }
-        )
+    # See https://docs.python.org/3/library/logging.config.html#dictionary-schema-details for more info
+    hikari.RESTBot(
+        "TOKEN",
+        logs={
+            "version": 1,
+            "incremental": True,  # In incremental setups, the default stream handler will be setup
+            "loggers": {
+                "hikari.gateway": {"level": "DEBUG"},
+                "hikari.ratelimits": {"level": "TRACE_HIKARI"},
+            },
+        }
+    )
     ```
     """
 

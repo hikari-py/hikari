@@ -506,8 +506,8 @@ class PartialWebhook(snowflakes.Unique):
         Examples
         --------
         ```py
-            >>> some_webhook.mention
-            '<@123456789123456789>'
+        >>> some_webhook.mention
+        '<@123456789123456789>'
         ```
         """
         return f"<@{self.id}>"

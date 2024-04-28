@@ -60,9 +60,9 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     [`hikari.api.event_manager.EventStream.close`][] are implicitly called based on context.
 
     ```py
-        with EventStream(app, EventType, timeout=50) as stream:
-            async for entry in stream:
-                ...
+    with EventStream(app, EventType, timeout=50) as stream:
+        async for entry in stream:
+            ...
     ```
 
     A streamer may also be directly started and closed using the [`hikari.api.event_manager.EventStream.close`][]
@@ -71,12 +71,12 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     you're finished with it then it may queue events in memory indefinitely.
 
     ```py
-        stream = EventStream(app, EventType, timeout=50)
-        await stream.open()
-        async for event in stream:
-            ...
+    stream = EventStream(app, EventType, timeout=50)
+    await stream.open()
+    async for event in stream:
+        ...
 
-        await stream.close()
+    await stream.close()
     ```
 
     See Also
@@ -203,55 +203,55 @@ class EventManager(abc.ABC):
         derives from [`hikari.events.base_events.Event`][].
 
         ```py
-            import attrs
+        import attrs
 
-            from hikari.traits import RESTAware
-            from hikari.events.base_events import Event
-            from hikari.users import User
-            from hikari.snowflakes import Snowflake
+        from hikari.traits import RESTAware
+        from hikari.events.base_events import Event
+        from hikari.users import User
+        from hikari.snowflakes import Snowflake
 
-            @attrs.define()
-            class EveryoneMentionedEvent(Event):
-                app: RESTAware = attrs.field()
+        @attrs.define()
+        class EveryoneMentionedEvent(Event):
+            app: RESTAware = attrs.field()
 
-                author: User = attrs.field()
-                '''The user who mentioned everyone.'''
+            author: User = attrs.field()
+            '''The user who mentioned everyone.'''
 
-                content: str = attrs.field()
-                '''The message that was sent.'''
+            content: str = attrs.field()
+            '''The message that was sent.'''
 
-                message_id: Snowflake = attrs.field()
-                '''The message ID.'''
+            message_id: Snowflake = attrs.field()
+            '''The message ID.'''
 
-                channel_id: Snowflake = attrs.field()
-                '''The channel ID.'''
+            channel_id: Snowflake = attrs.field()
+            '''The channel ID.'''
         ```
 
         We can then dispatch our event as we see fit.
 
         ```py
-            from hikari.events.messages import MessageCreateEvent
+        from hikari.events.messages import MessageCreateEvent
 
-            @bot.listen(MessageCreateEvent)
-            async def on_message(event):
-                if "@everyone" in event.content or "@here" in event.content:
-                    event = EveryoneMentionedEvent(
-                        author=event.author,
-                        content=event.content,
-                        message_id=event.id,
-                        channel_id=event.channel_id,
-                    )
+        @bot.listen(MessageCreateEvent)
+        async def on_message(event):
+            if "@everyone" in event.content or "@here" in event.content:
+                event = EveryoneMentionedEvent(
+                    author=event.author,
+                    content=event.content,
+                    message_id=event.id,
+                    channel_id=event.channel_id,
+                )
 
-                    bot.dispatch(event)
+                bot.dispatch(event)
         ```
 
         This event can be listened to elsewhere by subscribing to it with
         [`hikari.api.event_manager.EventManager.subscribe`][].
 
         ```py
-            @bot.listen(EveryoneMentionedEvent)
-            async def on_everyone_mentioned(event):
-                print(event.user, "just pinged everyone in", event.channel_id)
+        @bot.listen(EveryoneMentionedEvent)
+        async def on_everyone_mentioned(event):
+            print(event.user, "just pinged everyone in", event.channel_id)
         ```
 
         Returns
@@ -296,12 +296,12 @@ class EventManager(abc.ABC):
         events.
 
         ```py
-            from hikari.events.messages import MessageCreateEvent
+        from hikari.events.messages import MessageCreateEvent
 
-            async def on_message(event):
-                ...
+        async def on_message(event):
+            ...
 
-            bot.subscribe(MessageCreateEvent, on_message)
+        bot.subscribe(MessageCreateEvent, on_message)
         ```
 
         See Also
@@ -336,12 +336,12 @@ class EventManager(abc.ABC):
         creation event.
 
         ```py
-            from hikari.events.messages import MessageCreateEvent
+        from hikari.events.messages import MessageCreateEvent
 
-            async def on_message(event):
-                ...
+        async def on_message(event):
+            ...
 
-            bot.unsubscribe(MessageCreateEvent, on_message)
+        bot.unsubscribe(MessageCreateEvent, on_message)
         ```
 
         See Also
@@ -448,21 +448,21 @@ class EventManager(abc.ABC):
         Examples
         --------
         ```py
-            with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
-                async for user_id in stream.map("user_id").limit(50):
-                    ...
+        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+            async for user_id in stream.map("user_id").limit(50):
+                ...
         ```
 
         or using `open()` and `close()`
 
         ```py
-            stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
-            stream.open()
+        stream = bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id))
+        stream.open()
 
-            async for user_id in stream.map("user_id").limit(50)
-                ...
+        async for user_id in stream.map("user_id").limit(50)
+            ...
 
-            stream.close()
+        stream.close()
         ```
 
         See Also

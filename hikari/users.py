@@ -207,8 +207,8 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         Examples
         --------
         ```py
-            >>> some_user.mention
-            '<@123456789123456789>'
+        >>> some_user.mention
+        '<@123456789123456789>'
         ```
         """
 
@@ -542,8 +542,8 @@ class User(PartialUser, abc.ABC):
         Examples
         --------
         ```py
-            >>> some_user.mention
-            '<@123456789123456789>'
+        >>> some_user.mention
+        '<@123456789123456789>'
         ```
         """
 
@@ -704,8 +704,8 @@ class PartialUserImpl(PartialUser):
         Examples
         --------
         ```py
-            >>> some_user.mention
-            '<@123456789123456789>'
+        >>> some_user.mention
+        '<@123456789123456789>'
         ```
         """
         return f"<@{self.id}>"

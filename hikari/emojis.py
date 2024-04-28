@@ -179,9 +179,9 @@ class UnicodeEmoji(str, Emoji):
         Examples
         --------
         ```py
-            >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
-            >>> emoji.url
-            'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
+        >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
+        >>> emoji.url
+        'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
         ```
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename

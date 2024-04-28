@@ -380,15 +380,15 @@ class RESTApp(traits.ExecutorAware):
         Examples
         --------
         ```py
-            rest_app = RESTApp()
-            await rest_app.start()
+        rest_app = RESTApp()
+        await rest_app.start()
 
-            # Using the returned client as a context manager to implicitly start
-            # and stop it.
-            async with rest_app.acquire("A token", "Bot") as client:
-                user = await client.fetch_my_user()
+        # Using the returned client as a context manager to implicitly start
+        # and stop it.
+        async with rest_app.acquire("A token", "Bot") as client:
+            user = await client.fetch_my_user()
 
-            await rest_app.close()
+        await rest_app.close()
         ```
 
         Parameters

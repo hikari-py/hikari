@@ -258,8 +258,8 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
     Examples
     --------
     ```py
-        >>> guess_file_extension("image/png")
-        ".png"
+    >>> guess_file_extension("image/png")
+    ".png"
     ```
 
     Returns
@@ -453,10 +453,10 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         """Read the entire resource at once into memory.
 
         ```py
-            data = await resource.read(...)
-            # ^-- This is a shortcut for the following --v
-            async with resource.stream(...) as reader:
-                data = await reader.read()
+        data = await resource.read(...)
+        # ^-- This is a shortcut for the following --v
+        async with resource.stream(...) as reader:
+            data = await reader.read()
         ```
 
         !!! warning
@@ -698,29 +698,29 @@ class WebResource(Resource[WebReader], abc.ABC):
         Downloading an entire resource at once into memory:
 
         ```py
-            async with obj.stream() as stream:
-                data = await stream.read()
+        async with obj.stream() as stream:
+            data = await stream.read()
         ```
 
         Checking the metadata:
 
         ```py
-            async with obj.stream() as stream:
-                mimetype = stream.mimetype
+        async with obj.stream() as stream:
+            mimetype = stream.mimetype
 
-            if mimetype is None:
-                ...
-            elif mimetype not in whitelisted_mimetypes:
-                ...
-            else:
-                ...
+        if mimetype is None:
+            ...
+        elif mimetype not in whitelisted_mimetypes:
+            ...
+        else:
+            ...
         ```
 
         Fetching the data-uri of a resource:
 
         ```py
-            async with obj.stream() as stream:
-                data_uri = await stream.data_uri()
+        async with obj.stream() as stream:
+            data_uri = await stream.data_uri()
         ```
 
         Returns
