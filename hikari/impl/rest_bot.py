@@ -81,9 +81,6 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         This should be left as [`None`][] when [`hikari.api.rest.TokenStrategy`][]
         is passed for [`token`][].
-
-    Other Parameters
-    ----------------
     allow_color
         Whether to enable coloured console logs on any platform that is a TTY.
         Setting a `"CLICOLOR"` environment variable to any **non `0`** value
@@ -489,8 +486,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     ) -> None:
         """Open this REST server and block until it closes.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         asyncio_debug
             If [`True`][], then debugging is enabled for the asyncio event loop in use.
         backlog
@@ -626,8 +623,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             For more information on the other parameters such as defaults see
             AIOHTTP's documentation.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         backlog
             The number of unaccepted connections that the system will allow before
             refusing new connections.

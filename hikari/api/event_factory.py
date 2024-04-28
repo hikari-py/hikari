@@ -126,9 +126,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_channel
             The guild channel object or [`None`][].
 
@@ -344,9 +341,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_invite
             The invite object or [`None`][].
 
@@ -437,9 +431,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_guild
             The guild object or [`None`][].
 
@@ -465,9 +456,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_guild
             The guild object or [`None`][].
 
@@ -550,9 +538,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_emojis
             The sequence of emojis or [`None`][].
 
@@ -578,9 +563,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_stickers
             The sequence of stickers or [`None`][].
 
@@ -663,9 +645,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_presence
             The presence object or [`None`][].
 
@@ -756,9 +735,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_member
             The member object or [`None`][].
 
@@ -784,9 +760,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_member
             The member object or [`None`][].
 
@@ -835,9 +808,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_role
             The role object or [`None`][].
 
@@ -863,9 +833,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_role
             The role object or [`None`][].
 
@@ -1057,9 +1024,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_message
             The message object or [`None`][].
 
@@ -1085,9 +1049,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_message
             The old message object.
 
@@ -1113,9 +1074,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_messages
             A mapping of the old message objects.
 
@@ -1333,9 +1291,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_user
             The OwnUser object or [`None`][].
 
@@ -1365,9 +1320,6 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
         old_state
             The VoiceState object or [`None`][].
 

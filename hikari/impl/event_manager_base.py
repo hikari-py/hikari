@@ -272,9 +272,6 @@ def filtered(
     event_types
         Types of the events this raw consumer method may dispatch.
         This may either be a singular type of a sequence of types.
-
-    Other Parameters
-    ----------------
     cache_components
         Bitfield of the cache components this event may make altering calls to.
     """

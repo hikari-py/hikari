@@ -127,9 +127,6 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
         authorize as.
     client_secret
         Client secret to use when authorizing.
-
-    Other Parameters
-    ----------------
     scopes
         The scopes to authorize for.
     """

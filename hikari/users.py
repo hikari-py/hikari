@@ -294,9 +294,6 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
         attachment
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.

@@ -800,9 +800,6 @@ class Embed:
         value
             The mandatory non-empty field value. This must contain at least one
             non-whitespace character to be valid.
-
-        Other Parameters
-        ----------------
         inline
             If [`True`][], the embed field may be shown "inline" on some
             Discord clients with other fields. If [`False`][], it is always placed
@@ -833,9 +830,6 @@ class Embed:
         ----------
         index
             The index of the field to edit.
-
-        Other Parameters
-        ----------------
         name
             The new field name to use. If left to the default ([`hikari.undefined.UNDEFINED`][]),
             then it will not be changed.

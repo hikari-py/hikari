@@ -229,9 +229,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel
             The channel to edit. This may be the object or the ID of an
             existing channel.
-
-        Other Parameters
-        ----------------
         name
             If provided, the new name for the channel.
         flags
@@ -429,9 +426,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or Id of the guild to edit a voice state in.
         channel
             Object or Id of the channel to edit a voice state in.
-
-        Other Parameters
-        ----------------
         suppress
             If specified, whether the user should be allowed to become a speaker
             in the target stage channel with [`True`][] suppressing them from
@@ -485,9 +479,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the channel to edit a voice state in.
         user
             Object or ID of the user to edit the voice state of.
-
-        Other Parameters
-        ----------------
         suppress
             If defined, whether the user should be allowed to become a speaker
             in the target stage channel.
@@ -559,9 +550,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target
             The channel overwrite to edit. This may be the object or the ID of an
             existing overwrite.
-
-        Other Parameters
-        ----------------
         target_type
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
@@ -684,9 +672,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel
             The channel to create a invite for. This may be the object
             or the ID of an existing channel.
-
-        Other Parameters
-        ----------------
         max_age
             If provided, the duration of the invite before expiry.
         max_uses
@@ -911,9 +896,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel
             The channel to fetch messages in. This may be the object or
             the ID of an existing channel.
-
-        Other Parameters
-        ----------------
         before
             If provided, fetch messages before this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -1038,9 +1020,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
         attachment
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
@@ -1280,9 +1259,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `attachment` or `attachments` kwargs are provided, the values will
             be overwritten. This allows for simpler syntax when sending an
             embed or an attachment alone.
-
-        Other Parameters
-        ----------------
         attachment
             If provided, the attachment to set on the message. If
             [`hikari.undefined.UNDEFINED`][], the previous attachment, if
@@ -1464,9 +1440,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         messages
             Either the object/ID of an existing message to delete or an iterable
             (sync or async) of the objects and/or IDs of existing messages to delete.
-
-        Other Parameters
-        ----------------
         *other_messages
             The objects and/or IDs of other existing messages to delete.
 
@@ -1500,9 +1473,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing message.
         emoji
             Object or name of the emoji to react with.
-
-        Other Parameters
-        ----------------
         emoji_id
             ID of the custom emoji to react with.
             This should only be provided when a custom emoji's name is passed
@@ -1547,9 +1517,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing message.
         emoji
             Object or name of the emoji to remove your reaction for.
-
-        Other Parameters
-        ----------------
         emoji_id
             ID of the custom emoji to remove your reaction for.
             This should only be provided when a custom emoji's name is passed
@@ -1591,9 +1558,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing message.
         emoji
             Object or name of the emoji to remove all the reactions for.
-
-        Other Parameters
-        ----------------
         emoji_id
             ID of the custom emoji to remove all the reactions for.
             This should only be provided when a custom emoji's name is passed
@@ -1643,9 +1607,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the user to remove the reaction of.
         emoji
             Object or name of the emoji to react with.
-
-        Other Parameters
-        ----------------
         emoji_id
             ID of the custom emoji to react with.
             This should only be provided when a custom emoji's name is passed
@@ -1731,9 +1692,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing message.
         emoji
             Object or name of the emoji to get the reactions for.
-
-        Other Parameters
-        ----------------
         emoji_id
             ID of the custom emoji to get the reactions for.
             This should only be provided when a custom emoji's name is passed
@@ -1778,9 +1736,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the object or the ID of an existing channel.
         name
             The name for the webhook. This cannot be `clyde`.
-
-        Other Parameters
-        ----------------
         avatar
             If provided, the avatar for the webhook.
         reason
@@ -1823,9 +1778,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook
             The webhook to fetch. This may be the object or the ID
             of an existing webhook.
-
-        Other Parameters
-        ----------------
         token
             If provided, the webhook token that will be used to fetch
             the webhook instead of the token the client was initialized with.
@@ -1934,9 +1886,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook
             The webhook to edit. This may be the object or the
             ID of an existing webhook.
-
-        Other Parameters
-        ----------------
         token
             If provided, the webhook token that will be used to edit
             the webhook instead of the token the client was initialized with.
@@ -1986,9 +1935,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook
             The webhook to delete. This may be the object or the
             ID of an existing webhook.
-
-        Other Parameters
-        ----------------
         token
             If provided, the webhook token that will be used to delete
             the webhook instead of the token the client was initialized with.
@@ -2071,9 +2017,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
         thread
             If provided then the message will be created in the target thread
             within the webhook's channel, otherwise it will be created in
@@ -2204,9 +2147,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message
             The message to fetch. This may be the object or the ID of an
             existing channel.
-
-        Other Parameters
-        ----------------
         thread
             If provided then the message will be fetched from the target thread
             within the webhook's channel, otherwise it will be fetched from
@@ -2303,9 +2243,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `attachments` kwargs are provided, the values will be overwritten.
             This allows for simpler syntax when sending an embed or an
             attachment alone.
-
-        Other Parameters
-        ----------------
         thread
             If provided then the message will be edited in the target thread
             within the webhook's channel, otherwise it will be edited in
@@ -2419,9 +2356,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message
             The message to delete. This may be the object or the ID of
             an existing message.
-
-        Other Parameters
-        ----------------
         thread
             If provided then the message will be deleted from the target thread
             within the webhook's channel, otherwise it will be deleted from
@@ -2574,8 +2508,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> users.OwnUser:
         """Edit the token's associated user.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         username
             If provided, the new username.
         avatar
@@ -2639,8 +2573,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             See [`hikari.iterators`][] for the full API for this iterator type.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         newest_first
             Whether to fetch the newest first or the oldest first.
         start_at
@@ -2743,9 +2677,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application
             The application to set the application role connections for.
-
-        Other Parameters
-        ----------------
         platform_name
             If provided, the name of the platform that will be connected.
         platform_username
@@ -3034,9 +2965,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Secret of the application to authorize with.
         refresh_token
             The refresh token to use.
-
-        Other Parameters
-        ----------------
         scopes
             The scope of the access request.
 
@@ -3118,9 +3046,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user
             The user to add to the guild. This may be the object
             or the ID of an existing user.
-
-        Other Parameters
-        ----------------
         nickname
             If provided, the nick to add to the user when he joins the guild.
 
@@ -3237,9 +3162,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to fetch the audit logs from. This can be a
             guild object or the ID of an existing guild.
-
-        Other Parameters
-        ----------------
         before
             If provided, filter to only actions before this snowflake. If you provide
             a datetime object, it will be transformed into a snowflake. This
@@ -3357,9 +3279,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         image
             The 128x128 image for the emoji. Maximum upload size is 256kb.
             This can be a still or an animated image.
-
-        Other Parameters
-        ----------------
         roles
             If provided, a collection of the roles that will be able to
             use this emoji. This can be a [`hikari.guilds.PartialRole`][] or
@@ -3412,9 +3331,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         emoji
             The emoji to edit. This can be a [`hikari.emojis.CustomEmoji`][]
             or the ID of an existing emoji.
-
-        Other Parameters
-        ----------------
         name
             If provided, the new name for the emoji.
         roles
@@ -3466,9 +3382,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         emoji
             The emoji to delete. This can be a [`hikari.emojis.CustomEmoji`][]
             or the ID of an existing emoji.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -3635,9 +3548,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             !!! note
                 Lottie support is only available for verified and partnered
                 servers.
-
-        Other Parameters
-        ----------------
         description
             If provided, the description of the sticker.
         reason
@@ -3689,9 +3599,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         sticker
             The sticker to edit. This can be a sticker object or the ID of an
             existing sticker.
-
-        Other Parameters
-        ----------------
         name
             If provided, the new name for the sticker.
         description
@@ -3743,9 +3650,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         sticker
             The sticker to delete. This can be a sticker object or the ID
             of an existing sticker.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -3911,9 +3815,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to edit. This may be the object
             or the ID of an existing guild.
-
-        Other Parameters
-        ----------------
         name
             If provided, the new name for the guild.
         verification_level
@@ -4067,9 +3968,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -4145,9 +4043,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -4232,9 +4127,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the category.
         category
@@ -4320,9 +4212,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -4396,9 +4285,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name
             The channel's name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the channel (relative to the
             category, if any).
@@ -4466,9 +4352,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object or the ID of an existing guild.
         name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
         position
             If provided, the position of the category.
         permission_overwrites
@@ -4527,9 +4410,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the message to attach the created thread to.
         name
             Name of the thread channel.
-
-        Other Parameters
-        ----------------
         auto_archive_duration
             If provided, how long the thread should remain inactive until it's archived.
 
@@ -4594,9 +4474,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The thread type to create.
         name
             Name of the thread channel.
-
-        Other Parameters
-        ----------------
         auto_archive_duration
             If provided, how long the thread should remain inactive until it's archived.
 
@@ -4692,9 +4569,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
         attachment
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
@@ -5055,9 +4929,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         channel
             Object or ID of the channel to fetch the archived threads of.
-
-        Other Parameters
-        ----------------
         before
             The date to fetch threads before.
 
@@ -5107,9 +4978,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         channel
             Object or ID of the channel to fetch the private archived threads of.
-
-        Other Parameters
-        ----------------
         before
             The date to fetch threads before.
 
@@ -5161,9 +5029,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         channel
             Object or ID of the channel to fetch the private archived threads of.
-
-        Other Parameters
-        ----------------
         before
             If provided, fetch joined threads before this snowflake. If you
             provide a datetime object, it will be transformed into a snowflake.
@@ -5390,9 +5255,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user
             The user to edit. This may be the object
             or the ID of an existing user.
-
-        Other Parameters
-        ----------------
         nickname
             If provided, the new nick for the member. If [`None`][],
             will remove the members nick.
@@ -5469,9 +5331,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to edit the member in. This may be the object
             or the ID of an existing guild.
-
-        Other Parameters
-        ----------------
         nickname
             If provided, the new nickname for the member. If
             [`None`][], will remove the members nickname.
@@ -5527,9 +5386,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role
             The role to add. This may be the object or the
             ID of an existing role.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -5571,9 +5427,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role
             The role to remove. This may be the object or the
             ID of an existing role.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -5611,9 +5464,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user
             The user to kick. This may be the object
             or the ID of an existing user.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -5662,9 +5512,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user
             The user to kick. This may be the object
             or the ID of an existing user.
-
-        Other Parameters
-        ----------------
         delete_message_seconds
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
@@ -5719,9 +5566,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         user
             The user to unban. This may be the object
             or the ID of an existing user.
-
-        Other Parameters
-        ----------------
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -5808,9 +5652,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to fetch the bans from. This may be the
             object or the ID of an existing guild.
-
-        Other Parameters
-        ----------------
         newest_first
             Whether to fetch the newest first or the oldest first.
         start_at
@@ -5889,9 +5730,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to create the role in. This may be the
             object or the ID of an existing guild.
-
-        Other Parameters
-        ----------------
         name
             If provided, the name for the role.
         permissions
@@ -5997,9 +5835,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role
             The role to edit. This may be the object or the
             ID of an existing role.
-
-        Other Parameters
-        ----------------
         name
             If provided, the new name for the role.
         permissions
@@ -6091,9 +5926,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to estimate the guild prune count for. This may be the object
             or the ID of an existing guild.
-
-        Other Parameters
-        ----------------
         days
             If provided, number of days to count prune for.
         include_roles
@@ -6141,9 +5973,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to begin the guild prune in. This may be the object
             or the ID of an existing guild.
-
-        Other Parameters
-        ----------------
         days
             If provided, number of days to count prune for.
         compute_prune_count
@@ -6321,9 +6150,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to edit the widget in. This can be the object
             or the ID of an existing guild.
-
-        Other Parameters
-        ----------------
         channel
             If provided, the channel to set the widget to. If [`None`][],
             will not set to any.
@@ -6397,9 +6223,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         guild
             ID or object of the guild to edit the welcome screen for.
-
-        Other Parameters
-        ----------------
         description
             If provided, the description to set for the guild's welcome screen.
             This may be [`None`][] to unset the description.
@@ -6487,9 +6310,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to create a template from.
         name
             The name to use for the created template.
-
-        Other Parameters
-        ----------------
         description
             The description to set for the template.
 
@@ -6533,9 +6353,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The object or string code of the template to create a guild based on.
         name
             The new guilds name.
-
-        Other Parameters
-        ----------------
         icon
             If provided, the guild icon to set. Must be a 1024x1024 image or can
             be an animated gif when the guild has the [`hikari.guilds.GuildFeature.ANIMATED_ICON`][] feature.
@@ -6610,9 +6427,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to edit a template in.
         template
             Object or string code of the template to modify.
-
-        Other Parameters
-        ----------------
         name
             The name to set for this template.
         description
@@ -6785,9 +6599,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to fetch a command for.
         command
             Object or ID of the command to fetch.
-
-        Other Parameters
-        ----------------
         guild
             Object or ID of the guild to fetch the command for. If left as
             [`hikari.undefined.UNDEFINED`][] then this will return a global command,
@@ -6825,9 +6636,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application
             Object or ID of the application to fetch the commands for.
-
-        Other Parameters
-        ----------------
         guild
             Object or ID of the guild to fetch the commands for. If left as
             [`hikari.undefined.UNDEFINED`][] then this will only return the global
@@ -6890,9 +6698,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description
             The description to set for the command.
             This should be inclusively between 1-100 characters in length.
-
-        Other Parameters
-        ----------------
         guild
             Object or ID of the specific guild this should be made for.
             If left as [`hikari.undefined.UNDEFINED`][] then this call will create
@@ -6966,9 +6771,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Only USER and MESSAGE are valid here.
         name
             The command's name.
-
-        Other Parameters
-        ----------------
         guild
             Object or ID of the specific guild this should be made for.
             If left as [`hikari.undefined.UNDEFINED`][] then this call will create
@@ -7029,9 +6831,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         commands
             A sequence of up to 100 initialised command builder objects of the
             commands to set for this the application.
-
-        Other Parameters
-        ----------------
         guild
             Object or ID of the specific guild to set the commands for.
             If left as [`hikari.undefined.UNDEFINED`][] then this set the global
@@ -7082,9 +6881,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to edit a command for.
         command
             Object or ID of the command to modify.
-
-        Other Parameters
-        ----------------
         guild
             Object or ID of the guild to edit a command for if this is a guild
             specific command. Leave this as [`hikari.undefined.UNDEFINED`][] to delete
@@ -7145,9 +6941,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to delete a command for.
         command
             Object or ID of the command to delete.
-
-        Other Parameters
-        ----------------
         guild
             Object or ID of the guild to delete a command for if this is a guild
             specific command. Leave this as [`hikari.undefined.UNDEFINED`][] to
@@ -7446,9 +7239,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The interaction's token.
         response_type
             The type of interaction response this is.
-
-        Other Parameters
-        ----------------
         content
             If provided, the message contents. If
             [`hikari.undefined.UNDEFINED`][], then nothing will be sent
@@ -7577,9 +7367,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to edit a command response for.
         token
             The interaction's token.
-
-        Other Parameters
-        ----------------
         content
             If provided, the message content to update with. If
             [`hikari.undefined.UNDEFINED`][], then the content will not
@@ -7754,9 +7541,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The title that will show up in the modal.
         custom_id
             Developer set custom ID used for identifying interactions with this modal.
-
-        Other Parameters
-        ----------------
         component
             A component builders to send in this modal.
         components
@@ -7907,9 +7691,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The name of the event.
         start_time
             When the event is scheduled to start.
-
-        Other Parameters
-        ----------------
         description
             The event's description.
         end_time
@@ -7980,9 +7761,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The name of the event.
         start_time
             When the event is scheduled to start.
-
-        Other Parameters
-        ----------------
         description
             The event's description.
         end_time
@@ -8055,9 +7833,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             When the event is scheduled to start.
         end_time
             When the event is scheduled to end.
-
-        Other Parameters
-        ----------------
         description
             The event's description.
         image
@@ -8123,9 +7898,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to edit the event in.
         event
             The scheduled event to edit.
-
-        Other Parameters
-        ----------------
         channel
             The channel a `VOICE` or `STAGE` event should be associated with.
         description
@@ -8244,9 +8016,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to fetch the scheduled event users from.
         event
             The scheduled event to fetch the subscribed users for.
-
-        Other Parameters
-        ----------------
         newest_first
             Whether to fetch the newest first or the oldest first.
         start_at
@@ -8327,9 +8096,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ----------
         application
             The application to fetch entitlements for.
-
-        Other Parameters
-        ----------------
         user
             The user to look up entitlements for.
         guild

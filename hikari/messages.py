@@ -696,8 +696,8 @@ class PartialMessage(snowflakes.Unique):
     def make_link(self, guild: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialGuild]]) -> str:
         """Generate a jump link to this message.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         guild
             Object or ID of the guild this message is in or [`None`][]
             to generate a DM message link.
@@ -802,9 +802,6 @@ class PartialMessage(snowflakes.Unique):
             `attachment` or `attachments` kwargs are provided, the values will
             be overwritten. This allows for simpler syntax when sending an
             embed or an attachment alone.
-
-        Other Parameters
-        ----------------
         attachment
             If provided, the attachment to set on the message. If
             [`hikari.undefined.UNDEFINED`][], the previous attachment, if
@@ -966,9 +963,6 @@ class PartialMessage(snowflakes.Unique):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
         attachment
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
@@ -1145,9 +1139,6 @@ class PartialMessage(snowflakes.Unique):
 
             Note that if the emoji is an [`hikari.emojis.CustomEmoji`][]
             and is not from a guild the bot user is in, then this will fail.
-
-        Other Parameters
-        ----------------
         emoji_id
             ID of the custom emoji to react with.
             This should only be provided when a custom emoji's name is passed
@@ -1220,9 +1211,6 @@ class PartialMessage(snowflakes.Unique):
         ----------
         emoji
             Object or name of the emoji to remove the reaction for.
-
-        Other Parameters
-        ----------------
         emoji_id
             ID of the custom emoji to remove the reaction for.
             This should only be provided when a custom emoji's name is passed
@@ -1297,8 +1285,8 @@ class PartialMessage(snowflakes.Unique):
     ) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         emoji
             Object or name of the emoji to get the reactions for. If not specified
             then all reactions are removed.

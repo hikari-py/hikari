@@ -395,9 +395,6 @@ class GatewayShardImpl(shard.GatewayShard):
         The event manager this shard should make calls to.
     event_factory
         The event factory this shard should use.
-
-    Other Parameters
-    ----------------
     compression
         Compression format to use for the shard. Only supported values are
         `"transport_zlib_stream"` or [`None`][] to disable it.

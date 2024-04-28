@@ -40,9 +40,6 @@ def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
     ----------
     what
         What is being deprecated.
-
-    Other Parameters
-    ----------------
     removal_version
         The version it will be removed in.
 
@@ -66,9 +63,6 @@ def warn_deprecated(
     ----------
     what
         What is being deprecated.
-
-    Other Parameters
-    ----------------
     removal_version
         The version it will be removed in.
     additional_info

@@ -314,9 +314,6 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         ----------
         response_type
             The type of interaction response this is.
-
-        Other Parameters
-        ----------------
         content
             If provided, the message contents. If
             [`hikari.undefined.UNDEFINED`][], then nothing will be sent
@@ -453,8 +450,8 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             This is a limitation of Discord's design. If in doubt, specify all
             four of them each time.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         content
             If provided, the message contents. If
             [`hikari.undefined.UNDEFINED`][], then nothing will be sent
@@ -605,9 +602,6 @@ class ModalResponseMixin(PartialInteraction):
             The title that will show up in the modal.
         custom_id
             Developer set custom ID used for identifying interactions with this modal.
-
-        Other Parameters
-        ----------------
         component
             A component builder to send in this modal.
         components

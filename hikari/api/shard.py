@@ -145,8 +145,8 @@ class GatewayShard(abc.ABC):
         the new presence settings will be remembered for when the shard
         does connect.
 
-        Other Parameters
-        ----------------
+        Parameters
+        ----------
         idle_since
             The datetime that the user started being idle. If undefined, this
             will not be changed.
@@ -208,9 +208,6 @@ class GatewayShard(abc.ABC):
         ----------
         guild
             The guild to request chunk for.
-
-        Other Parameters
-        ----------------
         include_presences
             If provided, whether to request presences.
         query

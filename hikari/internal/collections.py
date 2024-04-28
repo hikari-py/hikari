@@ -233,8 +233,8 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         This is not thread-safe and must not be iterated across whilst being
         concurrently modified.
 
-    Other Parameters
-    ----------------
+    Parameters
+    ----------
     *ids
         The IDs to fill this table with.
     """

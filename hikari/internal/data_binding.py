@@ -218,9 +218,6 @@ class StringMapBuilder(multidict.MultiDict[str]):
             The string key.
         value
             The value to set.
-
-        Other Parameters
-        ----------------
         conversion
             An optional conversion to perform.
         """
@@ -297,9 +294,6 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
-
-        Other Parameters
-        ----------------
         conversion
             The optional conversion to apply.
         """
@@ -346,9 +340,6 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
-
-        Other Parameters
-        ----------------
         conversion
             The optional conversion to apply.
         """
