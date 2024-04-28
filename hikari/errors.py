@@ -182,7 +182,7 @@ class GatewayTransportError(GatewayError):
     """An exception thrown if an issue occurs at the transport layer."""
 
     def __str__(self) -> str:
-        return f"Gateway transport error: {self.reason!r}"
+        return f"Gateway transport error: {self.reason}"
 
 
 @attrs.define(auto_exc=True, repr=False, slots=False)

@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import asyncio
-import builtins
 import contextlib
 import datetime
 import platform
@@ -287,18 +286,15 @@ class TestGatewayTransport:
 
     @pytest.mark.asyncio
     async def test__receive_and_check_text_when_message_type_is_unknown(self, transport_impl):
-        mock_exception = errors.GatewayError("aye")
         transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.BINARY))
 
-        with mock.patch.object(
-            shard._GatewayTransport, "_handle_other_message", side_effect=mock_exception
-        ) as handle_other_message:
-            with pytest.raises(errors.GatewayError) as exc_info:
-                await transport_impl._receive_and_check_text()
+        with pytest.raises(
+            errors.GatewayTransportError,
+            match="Gateway transport error: Unexpected message type received BINARY, expected TEXT",
+        ):
+            await transport_impl._receive_and_check_text()
 
-        assert exc_info.value is mock_exception
         transport_impl._ws.receive.assert_awaited_once_with()
-        handle_other_message.assert_called_once_with(transport_impl._ws.receive.return_value)
 
     @pytest.mark.asyncio
     async def test__receive_and_check_zlib_when_payload_split_across_frames(self, transport_impl):
@@ -324,18 +320,23 @@ class TestGatewayTransport:
     async def test__receive_and_check_zlib_when_message_type_is_unknown(self, transport_impl):
         transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.TEXT))
 
-        with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
+        with pytest.raises(
+            errors.GatewayTransportError,
+            match="Gateway transport error: Unexpected message type received TEXT, expected BINARY",
+        ):
             await transport_impl._receive_and_check_zlib()
 
     @pytest.mark.asyncio
     async def test__receive_and_check_zlib_when_issue_during_reception_of_multiple_frames(self, transport_impl):
         response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
-        response2 = StubResponse(type=aiohttp.WSMsgType.ERROR, data=b"Oh no! Something broke!")
+        response2 = StubResponse(type=aiohttp.WSMsgType.ERROR, data="Something broke!")
         response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
         transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
         transport_impl._ws.exception = mock.Mock(return_value=None)
 
-        with pytest.raises(errors.GatewayError, match="Unexpected websocket exception from gateway"):
+        with pytest.raises(
+            errors.GatewayTransportError, match=r"Gateway transport error: 'Something broke!' \[extra=None, type=258\]"
+        ):
             await transport_impl._receive_and_check_zlib()
 
     @pytest.mark.parametrize("transport_compression", [True, False])
