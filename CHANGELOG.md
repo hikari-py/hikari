@@ -1,3 +1,22 @@
+## 2.0.0.dev125 (2024-04-28)
+
+### Features
+
+- Add monetization support. ([#1803](https://github.com/hikari-py/hikari/issues/1803))
+- - Add `message_link` property to `MessageReference`
+  - Add `channel_link` property to `MessageReference` ([#1877](https://github.com/hikari-py/hikari/issues/1877))
+- Add missing `video_quality_mode` field to `GuildStageChannel` ([#1891](https://github.com/hikari-py/hikari/issues/1891))
+- Optimize gateway transport
+  - Merge cold path for zlib compression into main path to avoid additional call
+  - Handle data in `bytes`, rather than in `str` to make good use of speedups (similar to `RESTClient`) ([#1898](https://github.com/hikari-py/hikari/issues/1898))
+
+### Bugfixes
+
+- Fix warning raised in aiohttp 3.9.4 when using `FormData` (most commonly, when uploading attachments) ([#1881](https://github.com/hikari-py/hikari/issues/1881))
+- Properly handle websocket transport errors and recover
+  - Additionally, errors will now include additional information ([#1897](https://github.com/hikari-py/hikari/issues/1897))
+
+---
 ## 2.0.0.dev124 (2024-04-07)
 
 ### Features
