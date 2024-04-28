@@ -83,7 +83,6 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.caret
   - pymdownx.details
-  - pymdownx.inlinehilite
   - pymdownx.keys
   - pymdownx.mark
   - pymdownx.superfences
@@ -105,6 +104,11 @@ markdown_extensions:
 plugins:
   - autorefs
   - search
+  - minify:
+      minify_html: true
+      htmlmin_opts:
+          remove_comments: true
+      cache_safe: true
 #  - glightbox:
 #      touchNavigation: true
 #      loop: false
