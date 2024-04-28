@@ -65,8 +65,6 @@ theme:
     - navigation.top
     - navigation.prune
     - navigation.tracking
-    - navigation.instant
-    - navigation.instant.progress
     - content.tooltips
     - toc.follow
 
