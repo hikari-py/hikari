@@ -3,7 +3,8 @@
 ### Features
 
 - Add monetization support. ([#1803](https://github.com/hikari-py/hikari/issues/1803))
-- - Add `message_link` property to `MessageReference`
+- Add missing link properties
+  - Add `message_link` property to `MessageReference`
   - Add `channel_link` property to `MessageReference` ([#1877](https://github.com/hikari-py/hikari/issues/1877))
 - Add missing `video_quality_mode` field to `GuildStageChannel` ([#1891](https://github.com/hikari-py/hikari/issues/1891))
 - Optimize gateway transport
