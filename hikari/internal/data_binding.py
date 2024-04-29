@@ -136,16 +136,16 @@ class URLEncodedFormBuilder:
     __slots__: typing.Sequence[str] = ("_fields", "_resources")
 
     def __init__(self) -> None:
-        self._fields: typing.List[typing.Tuple[str, aiohttp.BytesPayload, typing.Optional[str]]] = []
+        self._fields: typing.List[typing.Tuple[str, typing.Union[str, aiohttp.BytesPayload], typing.Optional[str]]] = []
         self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
 
     def add_field(
         self, name: str, data: typing.Union[str, bytes], *, content_type: typing.Optional[str] = None
     ) -> None:
-        if isinstance(data, str):
-            data = data.encode()
-
-        self._fields.append((name, aiohttp.BytesPayload(data), content_type))
+        field_data: typing.Union[str, aiohttp.BytesPayload] = (
+            aiohttp.BytesPayload(data) if isinstance(data, bytes) else data
+        )
+        self._fields.append((name, field_data, content_type))
 
     def add_resource(self, name: str, resource: files.Resource[files.AsyncReader]) -> None:
         self._resources.append((name, resource))
