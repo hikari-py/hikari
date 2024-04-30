@@ -62,7 +62,7 @@ class TestURLEncodedFormBuilder:
             form_builder.add_field("test_name2", b"test_data2", content_type="mimetype2")
 
         assert form_builder._fields == [
-            ("test_name", TestBytesPayload(b"test_data"), "mimetype"),
+            ("test_name", "test_data", "mimetype"),
             ("test_name2", TestBytesPayload(b"test_data2"), "mimetype2"),
         ]
 
