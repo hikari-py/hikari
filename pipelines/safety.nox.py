@@ -27,5 +27,12 @@ from pipelines import nox
 @nox.session()
 def safety(session: nox.Session) -> None:
     """Perform dependency scanning."""
-    session.install("-r", "requirements.txt", *nox.dev_requirements("safety"))
+    requirements = ("-r", "requirements.txt", *nox.dev_requirements("safety"))
+
+    # At the time of writing, safety 3.2.0 relies on dparse, which is only available as a pre-release package (0.6.4b0)
+    # so allow pre-releases for now
+    if session.venv_backend == "uv":
+        requirements += ("--prerelease=allow",)
+
+    session.install(*requirements)
     session.run("safety", "check", "--full-report")
