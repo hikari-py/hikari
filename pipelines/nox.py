@@ -29,8 +29,19 @@ from nox.sessions import Session
 
 from pipelines import config as _pipelines_config
 
+try:
+    import uv
+
+    del uv
+
+    venv_backend = "uv"
+except ModuleNotFoundError:
+    venv_backend = "venv"
+
+
 # Default sessions should be defined here
 _options.sessions = ["reformat-code", "pytest-all-features", "flake8", "slotscheck", "mypy", "verify-types"]
+_options.default_venv_backend = venv_backend
 
 _NoxCallbackSig = _typing.Callable[[Session], None]
 
