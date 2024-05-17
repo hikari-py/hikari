@@ -129,10 +129,10 @@ jobs:
             exit 1
           fi
 
-      - name: Safety
+      - name: Audit
         if: always()
         run: |
-          nox -s safety
+          nox -s audit
 
       - name: Mypy
         if: always()
