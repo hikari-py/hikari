@@ -109,14 +109,9 @@ class PollLayoutType(int, enums.Enum):
 class PartialPoll:
     """Base class for all poll objects."""
 
-    __slots__: typing.Sequence[str] = ("_question", "_answers", "_allow_multiselect", "_layout_type", "_counter",)
+    __slots__: typing.Sequence[str] = ("_question", "_answers", "_allow_multiselect", "_layout_type", "_counter")
 
-    def __init__(
-        self,
-        question: str,
-        allow_multiselect: bool,
-        layout_type: typing.Union[int, PollLayoutType],
-    ):
+    def __init__(self, question: str, allow_multiselect: bool, layout_type: typing.Union[int, PollLayoutType]):
         self._question = PollMedia(text=question)  # Only text is supported for question
         self._allow_multiselect = allow_multiselect
         self._layout_type = layout_type
@@ -189,11 +184,7 @@ class PollCreate(PartialPoll):
         layout_type: typing.Union[int, PollLayoutType] = PollLayoutType.DEFAULT,
     ):
 
-        super().__init__(
-            question=question,
-            allow_multiselect=allow_multiselect,
-            layout_type=layout_type
-        )
+        super().__init__(question=question, allow_multiselect=allow_multiselect, layout_type=layout_type)
         self._duration = duration
 
     @property
@@ -291,10 +282,7 @@ class PollCreate(PartialPoll):
 class PollObject(PartialPoll):
     """Represents an existing poll."""
 
-    __slots__: typing.Sequence[str] = (
-        "_expiry",
-        "_results",
-    )
+    __slots__: typing.Sequence[str] = ("_expiry", "_results")
 
     def __init__(
         self,
@@ -305,11 +293,7 @@ class PollObject(PartialPoll):
         results: typing.Optional[PollResult],
         layout_type: typing.Union[int, PollLayoutType] = PollLayoutType.DEFAULT,
     ):
-        super().__init__(
-            question=question,
-            allow_multiselect=allow_multiselect,
-            layout_type=layout_type
-        )
+        super().__init__(question=question, allow_multiselect=allow_multiselect, layout_type=layout_type)
         self._answers = answers
         self._expiry = expiry
         self._results = results
@@ -326,7 +310,8 @@ class PollObject(PartialPoll):
         !!! note
             According to Discord, their backend does not always return `results`,
             this is meant to be interpreted as "unknown result" rather than "no
-            result". Please refer to the [official documentation](https://discord.com/developers/docs/resources/poll#poll-results-object)
+            result". Please refer to the
+            [official documentation](https://discord.com/developers/docs/resources/poll#poll-results-object)
             for more information.
         """
         return self._results
