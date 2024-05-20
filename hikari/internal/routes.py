@@ -342,7 +342,7 @@ GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webh
 
 # Polls
 GET_ANSWER_VOTERS: typing.Final[Route] = Route(GET, "/channels/{channel}/polls/{message}/answer/{answer}")
-END_POLL: typing.Final[Route] = Route(POST, "/channels/{channel}/polls/{message}/expire")
+POST_END_POLL: typing.Final[Route] = Route(POST, "/channels/{channel}/polls/{message}/expire")
 
 # Reactions
 GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
