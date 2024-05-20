@@ -76,8 +76,6 @@ class PollAnswer:
 class PollResult:
     """Represents a poll result."""
 
-    __slots__: typing.Sequence[str] = ("_is_finalized", "_answer_counts")
-
     is_finalized: bool = attrs.field(repr=True)
     """Whether the poll is finalized and the votes are precisely counted."""
 
