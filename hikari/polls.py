@@ -211,12 +211,16 @@ class PollCreate(PartialPoll):
         PartialPoll
             This poll. Allows for call chaining.
         """
+        # Raise an exception when user tries to add an answer with an already
+        # existing ID. While this is against the "spirit" of hikari, we want
+        # add_answer to only "add" answers, not "edit" them. That job is for
+        # edit_answer.g
+        if answer_id in self._answers:
+            raise KeyError(f"Answer ID {answer_id} already exists in the poll.")
 
         new_answer = PollAnswer(
             answer_id=answer_id, poll_media=PollMedia(text=text, emoji=_ensure_optional_emoji(emoji))
         )
-
-        # FIXME: Not sure if this is ideal, but this will override an item, if it has the same answer id.
         self._answers.update({answer_id: new_answer})
 
         return self
