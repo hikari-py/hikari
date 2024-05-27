@@ -48,6 +48,7 @@ from hikari import locales
 from hikari import messages as message_models
 from hikari import monetization as monetization_models
 from hikari import permissions as permission_models
+from hikari import polls as poll_models
 from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_events_models
 from hikari import sessions as gateway_models
@@ -3744,3 +3745,77 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             slug=payload["slug"],
             flags=monetization_models.SKUFlags(payload["flags"]),
         )
+
+    ###############
+    # POLL MODELS #
+    ###############
+    def _deserialize_poll_media(self, payload: data_binding.JSONObject) -> poll_models.PollMedia:
+        emoji_payload = payload.get("emoji")
+        return poll_models.PollMedia(
+            text=payload.get("text"), emoji=self.deserialize_emoji(emoji_payload) if emoji_payload else None
+        )
+
+    def _deserialize_poll_answer_count(self, payload: data_binding.JSONObject) -> poll_models.PollAnswerCount:
+        return poll_models.PollAnswerCount(
+            answer_id=payload["answer_id"], count=payload["count"], me_voted=payload["me_voted"]
+        )
+
+    def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.PollObject:
+        question = payload["question"]
+        expiry = time.iso8601_datetime_string_to_datetime(payload["expiry"])
+        allow_multiselect = payload["allow_multiple_options"]
+        layout_type = poll_models.PollLayoutType(payload["layout_type"])
+
+        answers: typing.MutableMapping[int, poll_models.PollAnswer] = {}
+        for _answer_payload in payload["answers"]:
+            answer_id = _answer_payload["answer_id"]
+            poll_media = self._deserialize_poll_media(_answer_payload)
+
+            answers[answer_id] = poll_models.PollAnswer(answer_id=answer_id, poll_media=poll_media)
+
+        _result_payload: typing.Optional[data_binding.JSONObject] = None
+        if (_result_payload := payload.get("result")) is not None:
+            is_finalized = _result_payload.get("is_finalized")
+
+            answer_counts = tuple(
+                self._deserialize_poll_answer_count(item) for item in _result_payload.get("answer_counts")
+            )
+            results = poll_models.PollResult(is_finalized=is_finalized, answer_counts=answer_counts)
+        else:
+            results = None
+
+        return poll_models.PollObject(
+            question=question,
+            answers=answers,
+            expiry=expiry,
+            allow_multiselect=allow_multiselect,
+            layout_type=layout_type,
+            results=results,
+        )
+
+    def _serialize_poll_partial_emoji(self, emoji: typing.Optional[emoji_models.Emoji]) -> data_binding.JSONObject:
+        if isinstance(emoji, emoji_models.UnicodeEmoji):
+            return {"name": emoji.name}
+        elif isinstance(emoji, emoji_models.CustomEmoji):
+            return {"name": emoji.name, "id": emoji.name}
+        return {}
+
+    def serialize_poll(self, poll: poll_models.PollCreate) -> data_binding.JSONObject:
+        answers = []
+        for answer_id, answer in poll.answers.items():
+            # FIXME: Typing is **very** dodgy here. Revise this before shipping.
+            poll_media: typing.MutableMapping[str, typing.Any] = {"text": answer.poll_media.text}
+
+            answer_emoji = self._serialize_poll_partial_emoji(answer.poll_media.emoji)
+            if answer_emoji:
+                poll_media["emoji"] = answer_emoji
+
+            answers.append({"answer_id": answer_id, "poll_media": poll_media})
+
+        return {
+            "question": poll.question.text,
+            "answers": answers,
+            "expiry": poll.duration,
+            "allow_multiple_options": poll.allow_multiselect,
+            "layout_type": poll.layout_type,
+        }

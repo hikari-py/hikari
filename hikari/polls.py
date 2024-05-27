@@ -47,6 +47,13 @@ if typing.TYPE_CHECKING:
     from hikari.emojis import Emoji
 
 
+def _ensure_optional_emoji(emoji: typing.Optional[typing.Union[str, Emoji]]) -> Emoji | None:
+    """Ensure the object is a [hikari.emojis.Emoji][]."""
+    if emoji is not None:
+        return Emoji.parse(emoji) if isinstance(emoji, str) else emoji
+    return None
+
+
 @attrs_extensions.with_copy
 @attrs.define(hash=False, kw_only=True, weakref_slot=False)
 class PollMedia:
@@ -214,12 +221,14 @@ class PollCreate(PartialPoll):
         answer_id = self._counter
         self._counter += 1
 
-        new_answer = PollAnswer(answer_id=answer_id, poll_media=PollMedia(text=text, emoji=emoji))
+        new_answer = PollAnswer(
+            answer_id=answer_id, poll_media=PollMedia(text=text, emoji=_ensure_optional_emoji(emoji))
+        )
         self._answers[answer_id] = new_answer
 
         return self
 
-    def edit_answer(self, answer_id: int, text: str, emoji: typing.Optional[Emoji]) -> PartialPoll:
+    def edit_answer(self, answer_id: int, text: str, emoji: typing.Optional[typing.Union[str, Emoji]]) -> PartialPoll:
         """
         Edit an answer in the poll.
 
@@ -246,7 +255,7 @@ class PollCreate(PartialPoll):
         if answer is None:
             raise KeyError(f"Answer ID {answer_id} not found in the poll.")
 
-        new_poll_media = PollMedia(text=text, emoji=emoji)
+        new_poll_media = PollMedia(text=text, emoji=_ensure_optional_emoji(emoji))
         answer.poll_media = new_poll_media
 
         return self
