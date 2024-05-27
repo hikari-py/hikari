@@ -3800,20 +3800,24 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return {"name": emoji.name, "id": emoji.name}
         return {}
 
+    def _serialize_poll_media(self, poll_media: poll_models.PollMedia) -> data_binding.JSONObject:
+        # FIXME: Typing is **very** dodgy here. Revise this before shipping.
+
+        serialised_poll_media: typing.MutableMapping[str, typing.Any] = {"text": poll_media.text}
+
+        answer_emoji = self._serialize_poll_partial_emoji(poll_media.emoji)
+        if answer_emoji:
+            serialised_poll_media["emoji"] = answer_emoji
+
+        return serialised_poll_media
+
     def serialize_poll(self, poll: poll_models.PollCreate) -> data_binding.JSONObject:
-        answers = []
+        answers: typing.MutableSequence[typing.Any] = []
         for answer_id, answer in poll.answers.items():
-            # FIXME: Typing is **very** dodgy here. Revise this before shipping.
-            poll_media: typing.MutableMapping[str, typing.Any] = {"text": answer.poll_media.text}
-
-            answer_emoji = self._serialize_poll_partial_emoji(answer.poll_media.emoji)
-            if answer_emoji:
-                poll_media["emoji"] = answer_emoji
-
-            answers.append({"answer_id": answer_id, "poll_media": poll_media})
+            answers.append({"answer_id": answer_id, "poll_media": self._serialize_poll_media(answer.poll_media)})
 
         return {
-            "question": poll.question.text,
+            "question": self._serialize_poll_media(poll.question),
             "answers": answers,
             "expiry": poll.duration,
             "allow_multiple_options": poll.allow_multiselect,
