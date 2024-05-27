@@ -1452,10 +1452,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     final_attachments.extend(embed_attachments)
                     serialized_embeds.append(embed_payload)
 
-        serialized_poll: undefined.UndefinedOr[data_binding.JSONObject] = undefined.UNDEFINED
-        if poll is not undefined.UNDEFINED:
-            if poll is not None:
-                serialized_poll = self._entity_factory.serialize_poll(poll)
+        body.put("poll", serialized_poll, conversion=self._entity_factory.serialize_poll)
 
         body = data_binding.JSONObjectBuilder()
         body.put("content", content, conversion=lambda v: v if v is None else str(v))

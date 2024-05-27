@@ -46,7 +46,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
 
-def _ensure_optional_emoji(emoji: typing.Optional[typing.Union[str, Emoji]]) -> Emoji | None:
+def _ensure_optional_emoji(emoji: typing.Union[str, Emoji, None])  -> typing.Optional[emojis.Emoji]:
     """Ensure the object is a [hikari.emojis.Emoji][]."""
     if emoji is not None:
         return Emoji.parse(emoji) if isinstance(emoji, str) else emoji
