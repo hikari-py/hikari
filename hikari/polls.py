@@ -201,6 +201,8 @@ class PollCreate(PartialPoll):
 
         Parameters
         ----------
+        answer_id
+            The ID of the answer to add.
         text
             The text of the answer to add.
         emoji
@@ -210,6 +212,11 @@ class PollCreate(PartialPoll):
         -------
         PartialPoll
             This poll. Allows for call chaining.
+
+        Raises
+        ------
+        KeyError
+            If the answer ID already exists in the poll.
         """
         # Raise an exception when user tries to add an answer with an already
         # existing ID. While this is against the "spirit" of hikari, we want
@@ -245,8 +252,8 @@ class PollCreate(PartialPoll):
 
         Raises
         ------
-            KeyError
-                Raised when the answer ID is not found in the poll.
+        KeyError
+            Raised when the answer ID is not found in the poll.
         """
         answer = self._answers.get(answer_id, None)
         if answer is None:
@@ -273,8 +280,8 @@ class PollCreate(PartialPoll):
 
         Raises
         ------
-            KeyError
-                Raised when the answer ID is not found in the poll.
+        KeyError
+            Raised when the answer ID is not found in the poll.
         """
         if answer_id not in self._answers:
             raise KeyError(f"Answer ID {answer_id} not found in the poll.")
