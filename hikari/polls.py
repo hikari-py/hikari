@@ -131,12 +131,6 @@ class PartialPoll:
         # due to hashmap overhead.
         self._answers: typing.MutableMapping[int, PollAnswer] = {}  # TODO: Do we need to set to None?
 
-        # Counter to keep track of the answer IDs
-        #
-        # Discord (at the time of writing this) starts at 1, I'm opting to follow
-        # the behaviour.
-        self._counter = 1
-
     @property
     def question(self) -> PollMedia:
         """Returns the question of the poll."""
@@ -201,7 +195,7 @@ class PollCreate(PartialPoll):
     def duration(self, value: int) -> None:
         self._duration = value
 
-    def add_answer(self, text: str, emoji: typing.Optional[Emoji]) -> PartialPoll:
+    def add_answer(self, answer_id: int, text: str, emoji: typing.Optional[Emoji]) -> PartialPoll:
         """
         Add an answer to the poll.
 
@@ -217,13 +211,13 @@ class PollCreate(PartialPoll):
         PartialPoll
             This poll. Allows for call chaining.
         """
-        answer_id = self._counter
-        self._counter += 1
 
         new_answer = PollAnswer(
             answer_id=answer_id, poll_media=PollMedia(text=text, emoji=_ensure_optional_emoji(emoji))
         )
-        self._answers[answer_id] = new_answer
+
+        # FIXME: Not sure if this is ideal, but this will override an item, if it has the same answer id.
+        self._answers.update({answer_id: new_answer})
 
         return self
 
