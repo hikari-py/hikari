@@ -38,13 +38,12 @@ import typing
 
 import attrs
 
+from hikari.emojis import Emoji
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     import datetime
-
-    from hikari.emojis import Emoji
 
 
 def _ensure_optional_emoji(emoji: typing.Optional[typing.Union[str, Emoji]]) -> Emoji | None:
