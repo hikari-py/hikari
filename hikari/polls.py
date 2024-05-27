@@ -129,7 +129,7 @@ class PartialPoll:
         # would decrease long-term maintainability. I'm opting to use a `dict`
         # here to simplify the implementation with some performance trade-off
         # due to hashmap overhead.
-        self._answers: typing.MutableMapping[int, PollAnswer] = {}  # TODO: Do we need to set to None?
+        self._answers: typing.MutableMapping[int, PollAnswer] = {}
 
     @property
     def question(self) -> PollMedia:
