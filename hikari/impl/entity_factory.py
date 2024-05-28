@@ -3777,9 +3777,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (result_payload := payload.get("result")) is not None:
             is_finalized = result_payload["is_finalized"]
 
-            answer_counts = tuple(
-                self._deserialize_poll_answer_count(item) for item in result_payload["answer_counts"]
-            )
+            answer_counts = tuple(self._deserialize_poll_answer_count(item) for item in result_payload["answer_counts"])
             results = poll_models.PollResult(is_finalized=is_finalized, answer_counts=answer_counts)
 
         return poll_models.Poll(
