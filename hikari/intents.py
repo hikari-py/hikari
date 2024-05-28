@@ -366,6 +366,7 @@ class Intents(enums.Flag):
         | GUILD_MESSAGE_TYPING
         | GUILD_MODERATION
         | GUILD_SCHEDULED_EVENTS
+        | GUILD_MESSAGE_POLLS
     )
     """All unprivileged guild-related intents."""
 
@@ -388,7 +389,7 @@ class Intents(enums.Flag):
         use.
     """
 
-    ALL_DMS = DM_MESSAGES | DM_MESSAGE_TYPING | DM_MESSAGE_REACTIONS
+    ALL_DMS = DM_MESSAGES | DM_MESSAGE_TYPING | DM_MESSAGE_REACTIONS | DIRECT_MESSAGE_POLLS
     """All direct message channel (non-guild bound) intents."""
 
     ALL_MESSAGES = DM_MESSAGES | GUILD_MESSAGES
