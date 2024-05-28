@@ -62,7 +62,7 @@ class PollVoteCreate(shard_events.ShardEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     """ID of the message that the poll is in."""
 
-    guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(default=undefined.UNDEFINED)
+    guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field()
     """ID of the guild that the poll is in.
 
     This will be [hikari.undefined.UNDEFINED][] if the poll is in a DM channel.
