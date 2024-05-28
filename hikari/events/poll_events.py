@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("PollVoteAdd", "PollVoteRemove")
+__all__: typing.Sequence[str] = ("PollVoteCreate", "PollVoteDelete")
 
 import typing
 
