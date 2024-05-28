@@ -30,7 +30,7 @@ __all__: typing.Sequence[str] = (
     "PollAnswerCount",
     "PollLayoutType",
     "PartialPoll",
-    "PollCreate",
+    "PollBuilder",
     "Poll",
 )
 

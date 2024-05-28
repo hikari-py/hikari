@@ -1985,7 +1985,7 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def serialize_poll(self, poll: poll_models.PollCreate) -> data_binding.JSONObject:
+    def serialize_poll(self, poll: poll_models.PollBuilder) -> data_binding.JSONObject:
         """Serialize a poll object to a json serializable dict.
 
         Parameters
