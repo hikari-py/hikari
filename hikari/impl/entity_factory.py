@@ -3768,17 +3768,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         answers: typing.MutableMapping[int, poll_models.PollAnswer] = {}
         for answer_payload in payload["answers"]:
-            answer_id = _answer_payload["answer_id"]
+            answer_id = answer_payload["answer_id"]
             poll_media = self._deserialize_poll_media(answer_payload)
 
             answers[answer_id] = poll_models.PollAnswer(answer_id=answer_id, poll_media=poll_media)
 
         results = None
         if (result_payload := payload.get("result")) is not None:
-            is_finalized = result_payload["is_finalized")
+            is_finalized = result_payload["is_finalized"]
 
             answer_counts = tuple(
-                self._deserialize_poll_answer_count(item) for item in _result_payload["answer_counts"]
+                self._deserialize_poll_answer_count(item) for item in result_payload["answer_counts"]
             )
             results = poll_models.PollResult(is_finalized=is_finalized, answer_counts=answer_counts)
 
