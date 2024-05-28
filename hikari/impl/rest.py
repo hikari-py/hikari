@@ -1452,15 +1452,13 @@ class RESTClientImpl(rest_api.RESTClient):
                     final_attachments.extend(embed_attachments)
                     serialized_embeds.append(embed_payload)
 
-        body.put("poll", serialized_poll, conversion=self._entity_factory.serialize_poll)
-
         body = data_binding.JSONObjectBuilder()
         body.put("content", content, conversion=lambda v: v if v is None else str(v))
         body.put("tts", tts)
         body.put("flags", flags)
         body.put("embeds", serialized_embeds)
         body.put("components", serialized_components)
-        body.put("poll", serialized_poll)
+        body.put("poll", poll, conversion=self._entity_factory.serialize_poll)
         body.put_snowflake_array("sticker_ids", (sticker,) if sticker else stickers)
 
         if not edit or not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
