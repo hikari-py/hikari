@@ -50,11 +50,11 @@ class StubModel(snowflakes.Unique):
 
 
 class TestCacheImpl:
-    @pytest.fixture()
+    @pytest.fixture
     def app_impl(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def cache_impl(self, app_impl):
         return hikari_test_helpers.mock_class_namespace(cache_impl_.CacheImpl, slots_=False)(
             app=app_impl, settings=config.CacheSettings()

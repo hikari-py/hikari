@@ -301,15 +301,15 @@ class PartialCommand(snowflakes.Unique):
     ) -> PartialCommand:
         """Edit this command.
 
-        Other Parameters
-        ----------------
-        name : hikari.undefined.UndefinedOr[str]
+        Parameters
+        ----------
+        name
             The name to set for the command. Leave as [`hikari.undefined.UNDEFINED`][]
             to not change.
-        description : hikari.undefined.UndefinedOr[str]
+        description
             The description to set for the command. Leave as [`hikari.undefined.UNDEFINED`][]
             to not change.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[CommandOption]]
+        options
             A sequence of up to 10 options to set for this command. Leave this as
             [`hikari.undefined.UNDEFINED`][] to not change.
 
@@ -372,7 +372,7 @@ class PartialCommand(snowflakes.Unique):
 
         Parameters
         ----------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+        guild
             Object or ID of the guild to fetch the command permissions for.
 
         Returns
@@ -408,9 +408,9 @@ class PartialCommand(snowflakes.Unique):
 
         Parameters
         ----------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+        guild
             Object or ID of the guild to set the command permissions in.
-        permissions : typing.Sequence[CommandPermission]
+        permissions
             Sequence of up to 10 of the permission objects to set.
 
         Returns

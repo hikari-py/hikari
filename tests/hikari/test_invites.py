@@ -37,7 +37,7 @@ class TestInviteCode:
 
 
 class TestInviteGuild:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self):
         return invites.InviteGuild(
             app=mock.Mock(),

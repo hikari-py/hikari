@@ -213,9 +213,9 @@ class Template:
 
         Parameters
         ----------
-        name : hikari.undefined.UndefinedOr[str]
+        name
             The name to set for this template.
-        description : hikari.undefined.UndefinedNoneOr[str]
+        description
             The description to set for the template.
 
         Returns
@@ -287,12 +287,9 @@ class Template:
 
         Parameters
         ----------
-        name : str
+        name
             The new guilds name.
-
-        Other Parameters
-        ----------------
-        icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        icon
             If provided, the guild icon to set.
             Must be a 1024x1024 image or can be an animated gif when the guild has the ANIMATED_ICON feature.
 

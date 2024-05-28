@@ -89,7 +89,7 @@ class TestExceptionEvent:
         except RuntimeError as ex:
             return ex
 
-    @pytest.fixture()
+    @pytest.fixture
     def event(self, error):
         return base_events.ExceptionEvent(
             exception=error, failed_event=mock.Mock(base_events.Event), failed_callback=mock.AsyncMock()
@@ -112,7 +112,7 @@ class TestExceptionEvent:
     def test_exc_info_property(self, event, error):
         assert event.exc_info == (type(error), error, error.__traceback__)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_retry(self, event):
         await event.retry()
         event.failed_callback.assert_awaited_once_with(event.failed_event)

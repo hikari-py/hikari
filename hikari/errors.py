@@ -41,6 +41,7 @@ __all__: typing.Sequence[str] = (
     "InternalServerError",
     "ShardCloseCode",
     "GatewayConnectionError",
+    "GatewayTransportError",
     "GatewayServerClosedConnectionError",
     "GatewayError",
     "MissingIntentWarning",
@@ -174,6 +175,14 @@ class ShardCloseCode(int, enums.Enum):
     def is_standard(self) -> bool:
         """Return [`True`][] if this is a standard code."""
         return (self.value // 1000) == 1
+
+
+@attrs.define(auto_exc=True, repr=False, slots=False)
+class GatewayTransportError(GatewayError):
+    """An exception thrown if an issue occurs at the transport layer."""
+
+    def __str__(self) -> str:
+        return f"Gateway transport error: {self.reason}"
 
 
 @attrs.define(auto_exc=True, repr=False, slots=False)

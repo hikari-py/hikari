@@ -43,7 +43,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestTypingIndicator:
-    @pytest.fixture()
+    @pytest.fixture
     def typing_indicator(self):
         return hikari_test_helpers.mock_class_namespace(special_endpoints.TypingIndicator, init_=False)
 
@@ -60,7 +60,7 @@ class TestTypingIndicator:
 
 
 class TestOwnGuildIterator:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter(self):
         mock_payload_1 = {"id": "123321123123"}
         mock_payload_2 = {"id": "123321123666"}
@@ -106,7 +106,7 @@ class TestOwnGuildIterator:
             ]
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_newest_first(self):
         mock_payload_1 = {"id": "1213321123123"}
         mock_payload_2 = {"id": "1213321123666"}
@@ -155,7 +155,7 @@ class TestOwnGuildIterator:
         )
 
     @pytest.mark.parametrize("newest_first", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_empty_chunk(self, newest_first: bool):
         expected_route = routes.GET_MY_GUILDS.compile()
         mock_entity_factory = mock.Mock()
@@ -174,7 +174,7 @@ class TestOwnGuildIterator:
 
 
 class TestGuildBanIterator:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter(self):
         expected_route = routes.GET_GUILD_BANS.compile(guild=10000)
         mock_entity_factory = mock.Mock()
@@ -222,7 +222,7 @@ class TestGuildBanIterator:
             ]
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_newest_first(self):
         expected_route = routes.GET_GUILD_BANS.compile(guild=10000)
         mock_entity_factory = mock.Mock()
@@ -275,7 +275,7 @@ class TestGuildBanIterator:
         )
 
     @pytest.mark.parametrize("newest_first", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_empty_chunk(self, newest_first: bool):
         expected_route = routes.GET_GUILD_BANS.compile(guild=10000)
         mock_entity_factory = mock.Mock()
@@ -297,7 +297,7 @@ class TestGuildBanIterator:
 
 
 class TestScheduledEventUserIterator:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter(self):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=54123, scheduled_event=564123)
         mock_entity_factory = mock.Mock()
@@ -354,7 +354,7 @@ class TestScheduledEventUserIterator:
             ]
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_newest_first(self):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=54123, scheduled_event=564123)
         mock_entity_factory = mock.Mock()
@@ -414,7 +414,7 @@ class TestScheduledEventUserIterator:
         )
 
     @pytest.mark.parametrize("newest_first", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_empty_chunk(self, newest_first: bool):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=543123, scheduled_event=541234)
         mock_entity_factory = mock.Mock()
@@ -436,10 +436,10 @@ class TestScheduledEventUserIterator:
         mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestGuildThreadIterator:
     @pytest.mark.parametrize("before_is_timestamp", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_empty_chunk(self, before_is_timestamp: bool):
         mock_deserialize = mock.Mock()
         mock_entity_factory = mock.Mock()
@@ -460,7 +460,7 @@ class TestGuildThreadIterator:
         mock_entity_factory.deserialize_thread_member.assert_not_called()
         mock_deserialize.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_before_is_timestamp(self):
         mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"}}
         mock_payload_2 = {"id": "6576234", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
@@ -1003,7 +1003,7 @@ class TestInteractionModalBuilder:
 
 
 class TestCommandBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def stub_command(self) -> typing.Type[special_endpoints.CommandBuilder]:
         return hikari_test_helpers.mock_class_namespace(special_endpoints.CommandBuilder)
 
@@ -1101,7 +1101,7 @@ class TestSlashCommandBuilder:
             "description_localizations": {},
         }
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create(self):
         builder = (
             special_endpoints.SlashCommandBuilder("we are number", "one")
@@ -1131,7 +1131,7 @@ class TestSlashCommandBuilder:
             nsfw=True,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_with_guild(self):
         builder = (
             special_endpoints.SlashCommandBuilder("we are number", "one")
@@ -1191,7 +1191,7 @@ class TestContextMenuBuilder:
 
         assert result == {"type": 3, "name": "nameeeee", "name_localizations": {}}
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create(self):
         builder = (
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
@@ -1216,7 +1216,7 @@ class TestContextMenuBuilder:
             nsfw=True,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_with_guild(self):
         builder = (
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
@@ -1263,7 +1263,7 @@ def test__build_emoji_when_undefined():
 
 
 class Test_ButtonBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def button(self):
         return special_endpoints._ButtonBuilder(
             style=components.ButtonStyle.DANGER,
@@ -1379,7 +1379,7 @@ class TestInteractiveButtonBuilder:
 
 
 class TestSelectOptionBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def option(self):
         return special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
 
@@ -1464,7 +1464,7 @@ class TestSelectOptionBuilder:
 
 
 class TestSelectMenuBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def menu(self):
         return special_endpoints.SelectMenuBuilder(custom_id="o2o2o2", type=5)
 
@@ -1526,7 +1526,7 @@ class TestSelectMenuBuilder:
 
 
 class TestTextSelectMenuBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def menu(self):
         return special_endpoints.TextSelectMenuBuilder(custom_id="o2o2o2")
 
@@ -1642,7 +1642,7 @@ class TestChannelSelectMenuBuilder:
 
 
 class TestTextInput:
-    @pytest.fixture()
+    @pytest.fixture
     def text_input(self):
         return special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
 

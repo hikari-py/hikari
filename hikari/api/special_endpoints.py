@@ -135,30 +135,30 @@ class GuildBuilder(abc.ABC):
     Creating an empty guild:
 
     ```py
-        guild = await rest.guild_builder("My Server!").create()
+    guild = await rest.guild_builder("My Server!").create()
     ```
 
     Creating a guild with an icon:
 
     ```py
-        from hikari.files import WebResourceStream
+    from hikari.files import WebResourceStream
 
-        guild_builder = rest.guild_builder("My Server!")
-        guild_builder.icon = WebResourceStream("cat.png", "http://...")
-        guild = await guild_builder.create()
+    guild_builder = rest.guild_builder("My Server!")
+    guild_builder.icon = WebResourceStream("cat.png", "http://...")
+    guild = await guild_builder.create()
     ```
 
     Adding roles to your guild:
 
     ```py
-        from hikari.permissions import Permissions
+    from hikari.permissions import Permissions
 
-        guild_builder = rest.guild_builder("My Server!")
+    guild_builder = rest.guild_builder("My Server!")
 
-        everyone_role_id = guild_builder.add_role("@everyone")
-        admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+    everyone_role_id = guild_builder.add_role("@everyone")
+    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
 
-        await guild_builder.create()
+    await guild_builder.create()
     ```
 
     !!! warning
@@ -167,12 +167,12 @@ class GuildBuilder(abc.ABC):
     Adding a text channel to your guild:
 
     ```py
-        guild_builder = rest.guild_builder("My Server!")
+    guild_builder = rest.guild_builder("My Server!")
 
-        category_id = guild_builder.add_category("My safe place")
-        channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+    category_id = guild_builder.add_category("My safe place")
+    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
 
-        await guild_builder.create()
+    await guild_builder.create()
     ```
     """
 
@@ -280,22 +280,19 @@ class GuildBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : str
+        name
             The role's name.
-
-        Other Parameters
-        ----------------
-        permissions : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+        permissions
             If provided, the permissions for the role.
-        color : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
+        color
             If provided, the role's color.
-        colour : hikari.undefined.UndefinedOr[hikari.colors.Colorish]
+        colour
             An alias for `color`.
-        hoist : hikari.undefined.UndefinedOr[bool]
+        hoist
             If provided, whether to hoist the role.
-        mentionable : hikari.undefined.UndefinedOr[bool]
+        mentionable
             If provided, whether to make the role mentionable.
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the role.
 
         Returns
@@ -332,14 +329,11 @@ class GuildBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the category.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the category.
 
         Returns
@@ -371,25 +365,22 @@ class GuildBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[str]
+        topic
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[bool]
+        nsfw
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[int]
+        rate_limit_per_user
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        parent_id
             The ID of the category to create the channel under.
 
         Returns
@@ -422,31 +413,28 @@ class GuildBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[int]
+        user_limit
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[int]
+        bitrate
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
+        video_quality_mode
             If provided, the new video quality mode for the channel.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
-             If provided, the voice region to for this channel. Passing
-             [`None`][] here will set it to "auto" mode where the used
-             region will be decided based on the first person who connects to it
-             when it's empty.
-        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        region
+            If provided, the voice region to for this channel. Passing
+            [`None`][] here will set it to "auto" mode where the used
+            region will be decided based on the first person who connects to it
+            when it's empty.
+        parent_id
             The ID of the category to create the channel under.
 
         Returns
@@ -478,29 +466,26 @@ class GuildBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[int]
+        user_limit
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[int]
+        bitrate
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
-             If provided, the voice region to for this channel. Passing
-             [`None`][] here will set it to "auto" mode where the used
-             region will be decided based on the first person who connects to it
-             when it's empty.
-        parent_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        region
+            If provided, the voice region to for this channel. Passing
+            [`None`][] here will set it to "auto" mode where the used
+            region will be decided based on the first person who connects to it
+            when it's empty.
+        parent_id
             The ID of the category to create the channel under.
 
         Returns
@@ -532,7 +517,7 @@ class InteractionResponseBuilder(abc.ABC):
 
         Parameters
         ----------
-        entity_factory : hikari.api.entity_factory.EntityFactory
+        entity_factory
             The entity factory to use to serialize entities within this builder.
 
         Returns
@@ -575,7 +560,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
+        flags
             The message flags to set for this response.
 
         Returns
@@ -647,7 +632,7 @@ class InteractionAutocompleteBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        choices : typing.Sequence[AutocompleteChoiceBuilder]
+        choices
             The choices to set.
 
         Returns
@@ -763,7 +748,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        attachment : hikari.files.Resourceish
+        attachment
             The attachment to add.
 
         Returns
@@ -778,7 +763,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        component : ComponentBuilder
+        component
             The component builder to add to this response.
 
         Returns
@@ -793,7 +778,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        embed : hikari.embeds.Embed
+        embed
             Object of the embed to add to this response.
 
         Returns
@@ -808,7 +793,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        content : hikari.undefined.UndefinedOr[str]
+        content
             The message content to set for this response.
 
         Returns
@@ -827,7 +812,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        flags : typing.Union[hikari.undefined.UndefinedType, int, hikari.messages.MessageFlag]
+        flags
             The message flags to set for this response.
 
         Returns
@@ -842,7 +827,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        tts : bool
+        tts
             Whether this response should trigger text-to-speech processing.
 
         Returns
@@ -857,7 +842,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        mentions : hikari.undefined.UndefinedOr[bool]
+        mentions
             Whether this response should be able to mention @everyone/@here.
 
         Returns
@@ -878,7 +863,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+        mentions
             Either a sequence of object/IDs of the roles mentions should be enabled for,
             [`False`][] or [`hikari.undefined.UNDEFINED`][] to disallow any role
             mentions or [`True`][] to allow all role mentions.
@@ -887,7 +872,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         -------
         InteractionMessageBuilder
             Object of this builder to allow for chained calls.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     def set_user_mentions(
@@ -901,7 +886,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+        mentions
             Either a sequence of object/IDs of the users mentions should be enabled for,
             [`False`][] or [`hikari.undefined.UNDEFINED`][] to disallow any user
             mentions or [`True`][] to allow all user mentions.
@@ -910,7 +895,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         -------
         InteractionMessageBuilder
             Object of this builder to allow for chained calls.
-        """  # noqa: E501 - Line too long
+        """
 
 
 class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
@@ -949,7 +934,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        title : str
+        title
             The title that will show up in the modal.
         """
 
@@ -959,7 +944,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : str
+        custom_id
             The developer set custom ID used for identifying interactions with this modal.
         """
 
@@ -969,9 +954,25 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
         Parameters
         ----------
-        component : ComponentBuilder
+        component
             The component builder to add to this modal.
         """
+
+
+class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
+    """Interface of an interaction premium required response builder used within REST servers.
+
+    This can be returned by the listener registered to
+    `hikari.api.interaction_server.InteractionServer` as a response to the interaction
+    create.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
+        """Type of this response."""
 
 
 class CommandBuilder(abc.ABC):
@@ -1032,7 +1033,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        name : str
+        name
             The name to set for this command.
 
         Returns
@@ -1047,7 +1048,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        id_ : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+        id_
             The ID to set for this command.
 
         Returns
@@ -1064,7 +1065,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        default_member_permissions : hikari.undefined.UndefinedOr[bool]
+        default_member_permissions
             The default member permissions to utilize this command by default.
 
             If `0`, then it will be available for all members. Note that this doesn't affect
@@ -1082,7 +1083,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        state : hikari.undefined.UndefinedOr[bool]
+        state
             Whether this command is enabled in DMs with the bot.
 
         Returns
@@ -1097,7 +1098,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        state : hikari.undefined.UndefinedOr[bool]
+        state
             Whether this command is age-restricted.
 
         Returns
@@ -1114,7 +1115,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        name_localizations : typing.Mapping[typing.Union[hikari.locales.Locale, str], str]
+        name_localizations
             The name localizations to set for this command.
 
         Returns
@@ -1129,7 +1130,7 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        entity_factory : hikari.api.entity_factory.EntityFactory
+        entity_factory
             The entity factory to use to serialize entities within this builder.
 
         Returns
@@ -1151,14 +1152,11 @@ class CommandBuilder(abc.ABC):
 
         Parameters
         ----------
-        rest : hikari.api.rest.RESTClient
+        rest
             The REST client to use to make this request.
-        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application
             The application to create this command for.
-
-        Other Parameters
-        ----------------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+        guild
             The guild to create this command for.
 
             If left undefined then this command will be declared globally.
@@ -1200,7 +1198,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Parameters
         ----------
-        description : str
+        description
             The description to set for this command.
 
         Returns
@@ -1217,7 +1215,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Parameters
         ----------
-        description_localizations : typing.Mapping[typing.Union[hikari.locales.Locale, str], str]
+        description_localizations
             The description localizations to set for this command.
 
         Returns
@@ -1235,7 +1233,7 @@ class SlashCommandBuilder(CommandBuilder):
 
         Parameters
         ----------
-        option : hikari.commands.CommandOption
+        option
             The option to add to this command.
 
         Returns
@@ -1260,14 +1258,11 @@ class SlashCommandBuilder(CommandBuilder):
 
         Parameters
         ----------
-        rest : hikari.api.rest.RESTClient
+        rest
             The REST client to use to make this request.
-        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application
             The application to create this command for.
-
-        Other Parameters
-        ----------------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+        guild
             The guild to create this command for.
 
             If left undefined then this command will be declared globally.
@@ -1301,14 +1296,11 @@ class ContextMenuCommandBuilder(CommandBuilder):
 
         Parameters
         ----------
-        rest : hikari.api.rest.RESTClient
+        rest
             The REST client to use to make this request.
-        application : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]
+        application
             The application to create this command for.
-
-        Other Parameters
-        ----------------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+        guild
             The guild to create this command for.
 
             If left undefined then this command will be declared globally.
@@ -1384,7 +1376,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+        emoji
             Object, ID or raw string of the emoji which should be displayed on
             this button.
 
@@ -1400,7 +1392,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        label : hikari.undefined.UndefinedOr[str]
+        label
             The text label to show on this button.
 
             This may be up to 80 characters long.
@@ -1417,7 +1409,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        state : bool
+        state
             Whether this button should be disabled.
 
         Returns
@@ -1454,7 +1446,7 @@ class InteractiveButtonBuilder(ButtonBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : str
+        custom_id
             Developer set custom ID used for identifying this button.
 
         Returns
@@ -1500,7 +1492,7 @@ class SelectOptionBuilder(abc.ABC):
 
         Parameters
         ----------
-        label : str
+        label
             Label to set for this option. This can be up to 100 characters
             long.
 
@@ -1516,7 +1508,7 @@ class SelectOptionBuilder(abc.ABC):
 
         Parameters
         ----------
-        value : str
+        value
             Value to set for this option. This can be up to 100 characters
             long.
 
@@ -1532,7 +1524,7 @@ class SelectOptionBuilder(abc.ABC):
 
         Parameters
         ----------
-        value : hikari.undefined.UndefinedOr[str]
+        value
             Description to set for this option. This can be up to 100 characters
             long.
 
@@ -1550,7 +1542,7 @@ class SelectOptionBuilder(abc.ABC):
 
         Parameters
         ----------
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+        emoji
             Object, ID or raw string of the emoji which should be displayed on
             this option.
 
@@ -1566,7 +1558,7 @@ class SelectOptionBuilder(abc.ABC):
 
         Parameters
         ----------
-        state : bool
+        state
             Whether this option should be selected by default.
 
         Returns
@@ -1632,7 +1624,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : str
+        custom_id
             Developer set custom ID used for identifying this menu.
 
         Returns
@@ -1647,7 +1639,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        state : bool
+        state
             Whether this option is disabled.
 
         Returns
@@ -1662,7 +1654,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        value : hikari.undefined.UndefinedOr[str]
+        value
             Place-holder text to be displayed when no option is selected.
             Max 100 characters.
 
@@ -1682,7 +1674,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        value : int
+        value
             The minimum amount of options which need to be selected for this menu.
 
         Returns
@@ -1701,7 +1693,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        value : int
+        value
             The maximum amount of options which can selected for this menu.
 
         Returns
@@ -1741,17 +1733,17 @@ class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT]
 
         Parameters
         ----------
-        label : str
+        label
             The user-facing name of this option, max 100 characters.
-        value : str
+        value
             The developer defined value of this option, max 100 characters.
-        description : hikari.undefined.UndefinedOr[str]
+        description
             The option's description.
 
             This can be up to 100 characters long.
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+        emoji
             The option's display emoji.
-        is_default : bool
+        is_default
             Whether this option should be selected by default.
 
         Returns
@@ -1777,7 +1769,7 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, abc.ABC):
 
         Parameters
         ----------
-        value : typing.Sequence[hikari.channels.ChannelType]
+        value
             The valid channel types for this menu.
 
         Returns
@@ -1848,7 +1840,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        style : typing.Union[hikari.modal_interactions.TextInputStyle, int]
+        style
             Style to use for the text input.
 
         Returns
@@ -1863,7 +1855,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : str
+        custom_id
             Developer set custom ID used for identifying this text input.
 
         Returns
@@ -1878,7 +1870,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        label : str
+        label
             Label above this text input.
 
         Returns
@@ -1893,7 +1885,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        placeholder : hikari.undefined.UndefinedOr[str]
+        placeholder
             Placeholder text that will disappear when the user types anything.
 
         Returns
@@ -1908,7 +1900,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        value : hikari.undefined.UndefinedOr[str]
+        value
             Pre-filled text that will be sent if the user does not write anything.
 
         Returns
@@ -1923,7 +1915,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        required : bool
+        required
             Whether this text input is required to be filled-in.
 
         Returns
@@ -1938,7 +1930,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        min_length : int
+        min_length
             The minimum length the text should have.
 
         Returns
@@ -1953,7 +1945,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        max_length : int
+        max_length
             The maximum length the text should have.
 
         Returns
@@ -1990,7 +1982,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        component : ComponentBuilder
+        component
             The component builder to add to the action row.
 
         Returns
@@ -2017,16 +2009,16 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        style : hikari.messages.InteractiveButtonTypesT
+        style
             The button's style.
-        custom_id : str
+        custom_id
             The developer-defined custom identifier used to identify which button
             triggered component interactions.
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+        emoji
             The button's display emoji.
-        label : hikari.undefined.UndefinedOr[str]
+        label
             The button's display label.
-        is_disabled : bool
+        is_disabled
             Whether the button should be marked as disabled.
 
         Returns
@@ -2052,13 +2044,13 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        url : str
+        url
             The URL the link button should redirect to.
-        emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+        emoji
             The button's display emoji.
-        label : hikari.undefined.UndefinedOr[str]
+        label
             The button's display label.
-        is_disabled : bool
+        is_disabled
             Whether the button should be marked as disabled.
 
         Returns
@@ -2087,18 +2079,18 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        type_ : typing.Union[hikari.components.ComponentType, int]
+        type_
             The type for the select menu.
-        custom_id : str
+        custom_id
             A developer-defined custom identifier used to identify which menu
             triggered component interactions.
-        placeholder : hikari.undefined.UndefinedOr[str]
+        placeholder
             Placeholder text to show when no entries have been selected.
-        min_values : int
+        min_values
             The minimum amount of entries which need to be selected.
-        max_values : int
+        max_values
             The maximum amount of entries which can be selected.
-        is_disabled : bool
+        is_disabled
             Whether this select menu should be marked as disabled.
 
         Returns
@@ -2128,21 +2120,21 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : str
+        custom_id
             A developer-defined custom identifier used to identify which menu
             triggered component interactions.
-        channel_types : typing.Sequence[hikari.channels.ChannelType]
+        channel_types
             The channel types this select menu should allow.
 
             If left as an empty sequence then there will be no
             channel type restriction.
-        placeholder : hikari.undefined.UndefinedOr[str]
+        placeholder
             Placeholder text to show when no entries have been selected.
-        min_values : int
+        min_values
             The minimum amount of entries which need to be selected.
-        max_values : int
+        max_values
             The maximum amount of entries which can be selected.
-        is_disabled : bool
+        is_disabled
             Whether this select menu should be marked as disabled.
 
         Returns
@@ -2171,16 +2163,16 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : str
+        custom_id
             A developer-defined custom identifier used to identify which menu
             triggered component interactions.
-        placeholder : hikari.undefined.UndefinedOr[str]
+        placeholder
             Placeholder text to show when no entries have been selected.
-        min_values : int
+        min_values
             The minimum amount of entries which need to be selected.
-        max_values : int
+        max_values
             The maximum amount of entries which can be selected.
-        is_disabled : bool
+        is_disabled
             Whether this select menu should be marked as disabled.
 
         Returns
@@ -2227,7 +2219,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        component : ComponentBuilder
+        component
             The component builder to add to the action row.
 
         Returns
@@ -2254,23 +2246,23 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
         Parameters
         ----------
-        custom_id : str
+        custom_id
             Developer set custom ID used for identifying this text input.
-        label : str
+        label
             Label above this text input.
-        style : hikari.components.TextInputStyle
+        style
             The text input's style.
-        placeholder : hikari.undefined.UndefinedOr[str]
+        placeholder
             Placeholder text to display when the text input is empty.
-        value : hikari.undefined.UndefinedOr[str]
+        value
             Default text to pre-fill the field with.
-        required : bool
+        required
             Whether text must be supplied for this text input.
-        min_length : int
+        min_length
             Minimum length the input text can be.
 
             This can be greater than or equal to 0 and less than or equal to 4000.
-        max_length : int
+        max_length
             Maximum length the input text can be.
 
             This can be greater than or equal to 1 and less than or equal to 4000.

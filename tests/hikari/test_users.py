@@ -32,7 +32,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestPartialUser:
-    @pytest.fixture()
+    @pytest.fixture
     def obj(self):
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.PartialUser, slots_=False)()
@@ -42,7 +42,7 @@ class TestPartialUser:
 
         assert obj.accent_colour is obj.accent_color
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_self(self, obj):
         obj.id = 123
         obj.app = mock.AsyncMock()
@@ -50,7 +50,7 @@ class TestPartialUser:
         assert await obj.fetch_self() is obj.app.rest.fetch_user.return_value
         obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send_uses_cached_id(self, obj):
         obj.id = 4123123
         embed = object()
@@ -108,7 +108,7 @@ class TestPartialUser:
             flags=34123342,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send_when_not_cached(self, obj):
         obj.id = 522234
         obj.app = mock.Mock(spec=traits.CacheAware, rest=mock.AsyncMock())
@@ -140,7 +140,7 @@ class TestPartialUser:
             flags=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send_when_not_cache_aware(self, obj):
         obj.id = 522234
         obj.app = mock.Mock(spec=traits.RESTAware, rest=mock.AsyncMock())
@@ -170,7 +170,7 @@ class TestPartialUser:
             flags=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_dm_channel(self, obj):
         obj.id = 123
         obj.app = mock.Mock()
@@ -182,7 +182,7 @@ class TestPartialUser:
 
 
 class TestUser:
-    @pytest.fixture()
+    @pytest.fixture
     def obj(self):
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.User, slots_=False)()
@@ -318,7 +318,7 @@ class TestUser:
 
 
 class TestPartialUserImpl:
-    @pytest.fixture()
+    @pytest.fixture
     def obj(self):
         return users.PartialUserImpl(
             id=snowflakes.Snowflake(123),
@@ -344,7 +344,7 @@ class TestPartialUserImpl:
     def test_mention_property(self, obj):
         assert obj.mention == "<@123>"
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_self(self, obj):
         user = object()
         obj.app.rest.fetch_user = mock.AsyncMock(return_value=user)
@@ -352,9 +352,9 @@ class TestPartialUserImpl:
         obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestOwnUser:
-    @pytest.fixture()
+    @pytest.fixture
     def obj(self):
         return users.OwnUser(
             id=snowflakes.Snowflake(12345),

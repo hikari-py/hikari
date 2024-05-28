@@ -302,18 +302,18 @@ class ShardAware(
             This method is simply a facade to make performing this in bulk
             simpler.
 
-        Other Parameters
-        ----------------
-        idle_since : hikari.undefined.UndefinedNoneOr[datetime.datetime]
+        Parameters
+        ----------
+        idle_since
             The datetime that the user started being idle. If undefined, this
             will not be changed.
-        afk : hikari.undefined.UndefinedOr[bool]
+        afk
             Whether to be marked as AFK. If undefined, this will not be
             changed.
-        activity : hikari.undefined.UndefinedNoneOr[hikari.presences.Activity]
+        activity
             The activity to appear to be playing. If undefined, this will not be
             changed.
-        status : hikari.undefined.UndefinedOr[hikari.presences.Status]
+        status
             The web status to show. If undefined, this will not be changed.
         """
         raise NotImplementedError
@@ -331,16 +331,16 @@ class ShardAware(
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             The guild or guild ID to update the voice state for.
-        channel : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
+        channel
             The channel or channel ID to update the voice state for. If [`None`][]
             then the bot will leave the voice channel that it is in for the
             given guild.
-        self_mute : bool
+        self_mute
             If specified and [`True`][], the bot will mute itself in that
             voice channel. If [`False`][], then it will unmute itself.
-        self_deaf : bool
+        self_deaf
             If specified and [`True`][], the bot will deafen itself in that
             voice channel. If [`False`][], then it will undeafen itself.
 
@@ -370,20 +370,17 @@ class ShardAware(
 
         Parameters
         ----------
-        guild : hikari.guilds.Guild
+        guild
             The guild to request chunk for.
-
-        Other Parameters
-        ----------------
-        include_presences : hikari.undefined.UndefinedOr[bool]
+        include_presences
             If provided, whether to request presences.
-        query : str
+        query
             If not `""`, request the members which username starts with the string.
-        limit : int
+        limit
             Maximum number of members to send matching the query.
-        users : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.users.User]]
+        users
             If provided, the users to request for.
-        nonce : hikari.undefined.UndefinedOr[str]
+        nonce
             If provided, the nonce to be sent with guild chunks.
 
         Raises
@@ -513,7 +510,7 @@ class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolC
 
         Parameters
         ----------
-        callback : typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]]
+        callback
             The asynchronous shutdown callback to add.
         """
         raise NotImplementedError
@@ -526,7 +523,7 @@ class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolC
 
         Parameters
         ----------
-        callback : typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]]
+        callback
             The shutdown callback to remove.
 
         Raises
@@ -544,7 +541,7 @@ class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolC
 
         Parameters
         ----------
-        callback : typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]]
+        callback
             The asynchronous startup callback to add.
         """
         raise NotImplementedError
@@ -557,7 +554,7 @@ class RESTBotAware(InteractionServerAware, Runnable, fast_protocol.FastProtocolC
 
         Parameters
         ----------
-        callback : typing.Callable[[RESTBotAware], typing.Coroutine[typing.Any, typing.Any, None]]
+        callback
             The asynchronous startup callback to remove.
 
         Raises

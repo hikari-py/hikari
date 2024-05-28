@@ -71,7 +71,7 @@ class VoiceComponent(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.Guild]
+        guild
             The guild to disconnect from.
         """
 
@@ -95,21 +95,21 @@ class VoiceComponent(abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.Guild]
+        guild
             The guild to connect to.
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]
+        channel
             The channel or channel ID to connect to.
-        voice_connection_type : typing.Type[VoiceConnection]
+        voice_connection_type
             The type of voice connection to use. This should be initialized
             internally using the [`hikari.api.voice.VoiceConnection.initialize`][]
             classmethod.
-        deaf : bool
+        deaf
             If [`True`][], the client will enter the voice channel deafened
             (thus unable to hear other users).
-        mute : bool
+        mute
             If [`True`][], the client will enter the voice channel muted
             (thus unable to send audio).
-        timeout : typing.Optional[int]
+        timeout
             The amount of time, in seconds, to wait before erroring when
             connecting to the voice channel. If timeout is [`None`][] there will be
             no timeout.
@@ -117,8 +117,7 @@ class VoiceComponent(abc.ABC):
             !!! warning
                 If timeout is [`None`][], this function will be awaited forever if an
                 invalid `guild_id` or `channel_id` is provided.
-
-        **kwargs : typing.Any
+        **kwargs
             Any arguments to provide to the
             [`hikari.api.voice.VoiceConnection.initialize`][] method.
 
@@ -165,30 +164,30 @@ class VoiceConnection(abc.ABC):
 
         Parameters
         ----------
-        channel_id : hikari.snowflakes.Snowflake
+        channel_id
             The channel ID that the voice connection is actively connected to.
-        endpoint : str
+        endpoint
             The voice websocket endpoint to connect to. Will contain the
             protocol at the start (i.e. [wss://][]), and end with the **correct**
             port (the port and protocol are sanitized since Discord still
             provide the wrong information four years later).
-        guild_id : hikari.snowflakes.Snowflake
+        guild_id
             The guild ID that the websocket should connect to.
-        on_close : typing.Callable[[T], typing.Awaitable[None]]
+        on_close
             A shutdown hook to invoke when closing a connection to ensure the
             connection is unregistered from the voice component safely.
-        owner : VoiceComponent
+        owner
             The component that made this connection object.
-        session_id : str
+        session_id
             The voice session ID to use.
-        shard_id : int
+        shard_id
             The associated shard ID that the voice connection was generated
             from.
-        token : str
+        token
             The voice token to use.
-        user_id : hikari.snowflakes.Snowflake
+        user_id
             The user ID of the account that just joined the voice channel.
-        **kwargs : typing.Any
+        **kwargs
             Any implementation-specific arguments to provide to the
             voice connection that is being initialized.
 

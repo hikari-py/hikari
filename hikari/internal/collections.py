@@ -143,12 +143,12 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
     Parameters
     ----------
-    source : typing.Optional[typing.Dict[KeyT, ValueT]]
+    source
         A source dictionary of keys to values to create this from.
-    limit : int
+    limit
         The limit for how many objects should be stored by this mapping before
         it starts removing the oldest entries.
-    on_expire : typing.Optional[typing.Callable[[ValueT], None]]
+    on_expire
         A function to call each time an item is garbage collected from this
         map. This should take one positional argument of the same type stored
         in this mapping as the value and should return [`None`][].
@@ -233,9 +233,9 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         This is not thread-safe and must not be iterated across whilst being
         concurrently modified.
 
-    Other Parameters
-    ----------------
-    *ids : int
+    Parameters
+    ----------
+    *ids
         The IDs to fill this table with.
     """
 
@@ -320,9 +320,9 @@ def get_index_or_slice(
 
     Parameters
     ----------
-    mapping : typing.Mapping[KeyT, ValueT]
+    mapping
         The mapping of entries to treat as a sequence.
-    index_or_slice : typing.Sequence[KeyT, ValueT]
+    index_or_slice
         The index to get an entry to get or slice of multiple entries to get.
 
     Returns

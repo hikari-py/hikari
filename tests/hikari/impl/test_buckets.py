@@ -34,15 +34,15 @@ from hikari.internal import time as hikari_date
 
 
 class TestRESTBucket:
-    @pytest.fixture()
+    @pytest.fixture
     def template(self):
         return routes.Route("GET", "/foo/bar")
 
-    @pytest.fixture()
+    @pytest.fixture
     def compiled_route(self, template):
         return routes.CompiledRoute("/foo/bar", template, "1a2b3c")
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_async_context_manager(self, compiled_route):
         with mock.patch.object(buckets.RESTBucket, "acquire", new=mock.AsyncMock()) as acquire:
             with mock.patch.object(buckets.RESTBucket, "release") as release:
@@ -80,7 +80,7 @@ class TestRESTBucket:
             assert rl.reset_at == 27
             assert rl.period == 27 - 4.20
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_when_unknown_bucket(self, compiled_route):
         with buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, object(), float("inf")) as rl:
             rl._lock = mock.AsyncMock()
@@ -90,7 +90,7 @@ class TestRESTBucket:
             rl._lock.acquire.assert_awaited_once_with()
             super_acquire.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_when_too_long_ratelimit(self, compiled_route):
         stack = contextlib.ExitStack()
         rl = stack.enter_context(buckets.RESTBucket("spaghetti", compiled_route, object(), 60))
@@ -105,7 +105,7 @@ class TestRESTBucket:
         rl._lock.acquire.assert_awaited_once_with()
         rl._lock.release.assert_called_once_with()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_when_too_long_global_ratelimit(self, compiled_route):
         global_ratelimit = mock.Mock(reset_at=time.perf_counter() + 999999999999999999999999999)
 
@@ -120,7 +120,7 @@ class TestRESTBucket:
             rl._lock.release.assert_called_once_with()
             global_ratelimit.acquire.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire(self, compiled_route):
         global_ratelimit = mock.Mock(acquire=mock.AsyncMock(), reset_at=None)
 
@@ -148,7 +148,7 @@ class TestRESTBucket:
 
 
 class TestRESTBucketManager:
-    @pytest.fixture()
+    @pytest.fixture
     def bucket_manager(self):
         manager = buckets.RESTBucketManager(max_rate_limit=float("inf"))
         manager._gc_task = object()
@@ -160,7 +160,7 @@ class TestRESTBucketManager:
 
         assert bucket_manager.max_rate_limit is bucket_manager._max_rate_limit
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close(self, bucket_manager):
         class GcTaskMock:
             def __init__(self):
@@ -194,7 +194,7 @@ class TestRESTBucketManager:
         gc_task.cancel.assert_called_once_with()
         gc_task.assert_awaited_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start(self, bucket_manager):
         bucket_manager._gc_task = None
 
@@ -208,14 +208,14 @@ class TestRESTBucketManager:
         except asyncio.CancelledError:
             pass
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_when_already_started(self, bucket_manager):
         bucket_manager._gc_task = object()
 
         with pytest.raises(errors.ComponentStateConflictError):
             bucket_manager.start()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_gc_makes_gc_pass(self, bucket_manager):
         class ExitError(Exception): ...
 
@@ -226,7 +226,7 @@ class TestRESTBucketManager:
 
         purge_stale_buckets.assert_called_with(33)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_purge_stale_buckets_any_buckets_that_are_empty_but_still_rate_limited_are_kept_alive(
         self, bucket_manager
     ):
@@ -242,7 +242,7 @@ class TestRESTBucketManager:
         assert "foobar" in bucket_manager._real_hashes_to_buckets
         bucket.close.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_purge_stale_buckets_any_buckets_that_are_empty_but_not_rate_limited_and_not_expired_are_kept_alive(
         self, bucket_manager
     ):
@@ -258,7 +258,7 @@ class TestRESTBucketManager:
         assert "foobar" in bucket_manager._real_hashes_to_buckets
         bucket.close.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_purge_stale_buckets_any_buckets_that_are_empty_but_not_rate_limited_and_expired_are_closed(
         self, bucket_manager
     ):
@@ -274,7 +274,7 @@ class TestRESTBucketManager:
         assert "foobar" not in bucket_manager._real_hashes_to_buckets
         bucket.close.assert_called_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_purge_stale_buckets_any_buckets_that_are_not_empty_are_kept_alive(self, bucket_manager):
         bucket = mock.Mock()
         bucket.is_empty = False
@@ -288,7 +288,7 @@ class TestRESTBucketManager:
         assert "foobar" in bucket_manager._real_hashes_to_buckets
         bucket.close.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_route_when_not_in_routes_to_real_hashes_makes_new_bucket_using_initial_hash(
         self, bucket_manager
     ):
@@ -304,7 +304,7 @@ class TestRESTBucketManager:
         assert isinstance(bucket_manager._real_hashes_to_buckets["UNKNOWN;auth_hash;bobs"], buckets.RESTBucket)
         create_unknown_hash.assert_called_once_with(route, "auth_hash")
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_route_when_not_in_routes_to_real_hashes_doesnt_cache_route(self, bucket_manager):
         route = mock.Mock()
         route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash, auth: initial_hash + ";" + auth + ";bobs")
@@ -313,7 +313,7 @@ class TestRESTBucketManager:
 
         assert bucket_manager._routes_to_hashes.get(route.route) is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_route_when_route_cached_already_obtains_hash_from_route_and_bucket_from_hash(
         self, bucket_manager
     ):
@@ -325,7 +325,7 @@ class TestRESTBucketManager:
 
         assert bucket_manager.acquire_bucket(route, "auth") is bucket
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_route_returns_context_manager(self, bucket_manager):
         route = mock.Mock()
 
@@ -337,7 +337,7 @@ class TestRESTBucketManager:
 
             assert bucket_manager.acquire_bucket(route, "auth") is bucket
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_unknown_route_returns_context_manager_for_new_bucket(self, bucket_manager):
         route = mock.Mock()
         route.create_real_bucket_hash = mock.Mock(return_value="eat pant;bobs")
@@ -347,7 +347,7 @@ class TestRESTBucketManager:
 
         assert bucket_manager.acquire_bucket(route, "auth") is bucket
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_update_rate_limits_if_wrong_bucket_hash_reroutes_route(self, bucket_manager):
         route = mock.Mock()
         route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash, auth: initial_hash + ";" + auth + ";bobs")
@@ -362,7 +362,7 @@ class TestRESTBucketManager:
         assert bucket_manager._real_hashes_to_buckets["blep;auth_hash;bobs"] is bucket.return_value
         bucket.return_value.update_rate_limit.assert_called_once_with(22, 23, 27 + 3.56)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_update_rate_limits_if_unknown_bucket_hash_reroutes_route(self, bucket_manager):
         route = mock.Mock()
         route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash, auth: initial_hash + ";" + auth + ";bobs")
@@ -389,7 +389,7 @@ class TestRESTBucketManager:
         create_unknown_hash.assert_called_once_with(route, "auth_hash")
         create_authentication_hash.assert_called_once_with("auth")
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_update_rate_limits_if_right_bucket_hash_does_nothing_to_hash(self, bucket_manager):
         route = mock.Mock()
         route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash, auth: initial_hash + ";" + auth + ";bobs")
@@ -405,7 +405,7 @@ class TestRESTBucketManager:
         assert bucket_manager._real_hashes_to_buckets["123;auth_hash;bobs"] is bucket
         bucket.update_rate_limit.assert_called_once_with(22, 23, 27 + 7.65)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_update_rate_limits_updates_params(self, bucket_manager):
         route = mock.Mock()
         route.create_real_bucket_hash = mock.Mock(wraps=lambda initial_hash, auth: initial_hash + ";" + auth + ";bobs")

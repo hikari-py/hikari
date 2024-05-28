@@ -207,8 +207,8 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         Examples
         --------
         ```py
-            >>> some_user.mention
-            '<@123456789123456789>'
+        >>> some_user.mention
+        '<@123456789123456789>'
         ```
         """
 
@@ -281,7 +281,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
         Parameters
         ----------
-        content : hikari.undefined.UndefinedOr[typing.Any]
+        content
             If provided, the message contents. If
             [`hikari.undefined.UNDEFINED`][], then nothing will be sent
             in the content. Any other value here will be cast to a
@@ -294,10 +294,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        attachment
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
 
@@ -326,37 +323,37 @@ class PartialUser(snowflakes.Unique, abc.ABC):
                 type of [`concurrent.futures.Executor`][] that is being used for
                 the application (default is a thread pool which supports this
                 behaviour).
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+        attachments
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
+        component
             If provided, builder object of the component to include in this message.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+        components
             If provided, a sequence of the component builder objects to include
             in this message.
-        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+        embed
             If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+        embeds
             If provided, the message embeds.
-        tts : hikari.undefined.UndefinedOr[bool]
+        tts
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
-        reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
+        reply
             If provided, the message to reply to.
-        reply_must_exist : hikari.undefined.UndefinedOr[bool]
+        reply_must_exist
             If provided, whether to error if the message being replied to does
             not exist instead of sending as a normal (non-reply) message.
 
             This will not do anything if not being used with `reply`.
-        mentions_everyone : hikari.undefined.UndefinedOr[bool]
+        mentions_everyone
             If provided, whether the message should parse @everyone/@here
             mentions.
-        mentions_reply : hikari.undefined.UndefinedOr[bool]
+        mentions_reply
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if not being used with `reply`.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+        user_mentions
             If provided, and [`True`][], all user mentions will be detected.
             If provided, and [`False`][], all user mentions will be ignored
             if appearing in the message body.
@@ -364,7 +361,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             [`hikari.snowflakes.Snowflake`][], or
             [`hikari.users.PartialUser`][] derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+        role_mentions
             If provided, and [`True`][], all role mentions will be detected.
             If provided, and [`False`][], all role mentions will be ignored
             if appearing in the message body.
@@ -372,12 +369,13 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             [`hikari.snowflakes.Snowflake`][], or
             [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
-        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+        flags
             If provided, optional flags to set on the message. If
             [`hikari.undefined.UNDEFINED`][], then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are [`hikari.messages.MessageFlag.NONE`][] and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
+            flags that can be set are [`hikari.messages.MessageFlag.NONE`][]
+            and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
 
         Returns
         -------
@@ -401,8 +399,8 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.SEND_MESSAGES`][] in the channel or the
-            person you are trying to message has the DM's disabled.
+            If you are missing the [`hikari.permissions.Permissions.SEND_MESSAGES`][] in
+            the channel or the person you are trying to message has the DM's disabled.
         hikari.errors.NotFoundError
             If the user is not found.
         hikari.errors.RateLimitTooLongError
@@ -410,7 +408,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         channel_id = None
         if isinstance(self.app, traits.CacheAware):
             channel_id = self.app.cache.get_dm_channel_id(self.id)
@@ -542,8 +540,8 @@ class User(PartialUser, abc.ABC):
         Examples
         --------
         ```py
-            >>> some_user.mention
-            '<@123456789123456789>'
+        >>> some_user.mention
+        '<@123456789123456789>'
         ```
         """
 
@@ -566,7 +564,7 @@ class User(PartialUser, abc.ABC):
 
         Parameters
         ----------
-        ext : typing.Optional[str]
+        ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated). Will be ignored for default avatars which can only be
@@ -574,7 +572,7 @@ class User(PartialUser, abc.ABC):
 
             If [`None`][], then the correct default extension is
             determined based on whether the icon is animated or not.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
             Will be ignored for default avatars.
@@ -609,14 +607,14 @@ class User(PartialUser, abc.ABC):
 
         Parameters
         ----------
-        ext : typing.Optional[str]
+        ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
             If [`None`][], then the correct default extension is
             determined based on whether the banner is animated or not.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -704,8 +702,8 @@ class PartialUserImpl(PartialUser):
         Examples
         --------
         ```py
-            >>> some_user.mention
-            '<@123456789123456789>'
+        >>> some_user.mention
+        '<@123456789123456789>'
         ```
         """
         return f"<@{self.id}>"

@@ -600,7 +600,7 @@ class Member(users.User):
 
         Parameters
         ----------
-        ext : typing.Optional[str]
+        ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
@@ -609,7 +609,7 @@ class Member(users.User):
 
             If [`None`][], then the correct default extension is
             determined based on whether the icon is animated or not.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
             Will be ignored for default avatars.
@@ -698,13 +698,13 @@ class Member(users.User):
     ) -> None:
         """Ban this member from this guild.
 
-        Other Parameters
-        ----------------
-        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+        Parameters
+        ----------
+        delete_message_seconds
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
             a [`datetime.timedelta`][] object.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -731,9 +731,9 @@ class Member(users.User):
     async def unban(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
         """Unban this member from the guild.
 
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        Parameters
+        ----------
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -758,9 +758,9 @@ class Member(users.User):
     async def kick(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
         """Kick this member from this guild.
 
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        Parameters
+        ----------
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -789,13 +789,10 @@ class Member(users.User):
 
         Parameters
         ----------
-        role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
+        role
             The role to add. This may be the object or the
             ID of an existing role.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -822,13 +819,10 @@ class Member(users.User):
 
         Parameters
         ----------
-        role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
+        role
             The role to remove. This may be the object or the
             ID of an existing role.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -863,26 +857,26 @@ class Member(users.User):
     ) -> Member:
         """Edit the member.
 
-        Other Parameters
-        ----------------
-        nickname : hikari.undefined.UndefinedNoneOr[str]
+        Parameters
+        ----------
+        nickname
             If provided, the new nick for the member. If [`None`][],
             will remove the members nick.
 
             Requires the [`hikari.permissions.Permissions.MANAGE_NICKNAMES`][] permission.
-        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
+        roles
             If provided, the new roles for the member.
 
             Requires the [`hikari.permissions.Permissions.MANAGE_ROLES`][] permission.
-        mute : hikari.undefined.UndefinedOr[bool]
+        mute
             If provided, the new server mute state for the member.
 
             Requires the [`hikari.permissions.Permissions.MUTE_MEMBERS`][] permission.
-        deaf : hikari.undefined.UndefinedOr[bool]
+        deaf
             If provided, the new server deaf state for the member.
 
             Requires the [`hikari.permissions.Permissions.DEAFEN_MEMBERS`][] permission.
-        voice_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]]
+        voice_channel
             If provided, [`None`][] or the object or the ID of
             an existing voice channel to move the member to.
             If [`None`][], will disconnect the member from voice.
@@ -894,13 +888,13 @@ class Member(users.User):
             !!! note
                 If the member is not in a voice channel, this will
                 take no effect.
-        communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
+        communication_disabled_until
             If provided, the datetime when the timeout (disable communication)
             of the member expires, up to 28 days in the future, or [`None`][]
             to remove the timeout from the member.
 
             Requires the [`hikari.permissions.Permissions.MODERATE_MEMBERS`][] permission.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1072,10 +1066,10 @@ class Role(PartialRole):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -1171,10 +1165,10 @@ class PartialApplication(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -1378,14 +1372,14 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : typing.Optional[str]
+        ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
             If [`None`][], then the correct default extension is
             determined based on whether the icon is animated or not.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -1423,16 +1417,13 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+        user
             The user to ban from the guild.
-
-        Other Parameters
-        ----------------
-        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+        delete_message_seconds
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
             a [`datetime.timedelta`][] object.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1464,12 +1455,9 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+        user
             The user to unban from the guild.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1501,12 +1489,9 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+        user
             The user to kick from the guild.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1560,44 +1545,44 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : hikari.undefined.UndefinedOr[str]
+        name
             If provided, the new name for the guild.
-        verification_level : hikari.undefined.UndefinedOr[hikari.guilds.GuildVerificationLevel]
+        verification_level
             If provided, the new verification level.
-        default_message_notifications : hikari.undefined.UndefinedOr[hikari.guilds.GuildMessageNotificationsLevel]
+        default_message_notifications
             If provided, the new default message notifications level.
-        explicit_content_filter_level : hikari.undefined.UndefinedOr[hikari.guilds.GuildExplicitContentFilterLevel]
+        explicit_content_filter_level
             If provided, the new explicit content filter level.
-        afk_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
+        afk_channel
             If provided, the new afk channel. Requires `afk_timeout` to
             be set to work.
-        afk_timeout : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        afk_timeout
             If provided, the new afk timeout.
-        icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        icon
             If provided, the new guild icon. Must be a 1024x1024 image or can be
             an animated gif when the guild has the [`hikari.guilds.GuildFeature.ANIMATED_ICON`][] feature.
-        owner : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]]
+        owner
             If provided, the new guild owner.
 
             !!! warning
                 You need to be the owner of the server to use this.
-        splash : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
+        splash
             If provided, the new guild splash. Must be a 16:9 image and the
             guild must have the [`hikari.guilds.GuildFeature.INVITE_SPLASH`][] feature.
-        banner : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
+        banner
             If provided, the new guild banner. Must be a 16:9 image and the
             guild must have the [`hikari.guilds.GuildFeature.BANNER`][] feature.
-        system_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
+        system_channel
             If provided, the new system channel.
-        rules_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
+        rules_channel
             If provided, the new rules channel.
-        public_updates_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
+        public_updates_channel
             If provided, the new public updates channel.
-        preferred_locale : hikari.undefined.UndefinedNoneOr[str]
+        preferred_locale
             If provided, the new preferred locale.
-        features : hikari.undefined.UndefinedOr[typing.Sequence[hikari.guilds.GuildFeatures]]
+        features
             If provided, the guild features to be enabled. Features not provided will be disabled.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1612,8 +1597,8 @@ class PartialGuild(snowflakes.Unique):
             If any of the fields that are passed have an invalid value. Or
             you are missing the
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission or if you tried to
-            pass ownership without being the server owner.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission
+            or if you tried to pass ownership without being the server owner.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -1623,7 +1608,7 @@ class PartialGuild(snowflakes.Unique):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.edit_guild(
             self.id,
             name=name,
@@ -1671,7 +1656,7 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+        emoji
             The emoji to fetch. This can be a [`hikari.emojis.CustomEmoji`][]
             or the ID of an existing emoji.
 
@@ -1723,7 +1708,7 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        sticker : snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
+        sticker
             The sticker to fetch. This can be a sticker object or the
             ID of an existing sticker.
 
@@ -1765,19 +1750,16 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The name for the sticker.
-        tag : str
+        tag
             The tag for the sticker.
-        image : hikari.files.Resourceish
+        image
             The 320x320 image for the sticker. Maximum upload size is 500kb.
             This can be a still PNG, an animated PNG, a Lottie, or a GIF.
-
-        Other Parameters
-        ----------------
-        description : hikari.undefined.UndefinedOr[str]
+        description
             If provided, the description of the sticker.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1819,19 +1801,16 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
+        sticker
             The sticker to edit. This can be a sticker object or the ID of an
             existing sticker.
-
-        Other Parameters
-        ----------------
-        name : hikari.undefined.UndefinedOr[str]
+        name
             If provided, the new name for the sticker.
-        description : hikari.undefined.UndefinedOr[str]
+        description
             If provided, the new description for the sticker.
-        tag : hikari.undefined.UndefinedOr[str]
+        tag
             If provided, the new sticker tag.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1871,13 +1850,10 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
+        sticker
             The sticker to delete. This can be a sticker object or the ID
             of an existing sticker.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1912,16 +1888,13 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the category.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1968,28 +1941,25 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[str]
+        topic
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[bool]
+        nsfw
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        rate_limit_per_user
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2044,28 +2014,25 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[str]
+        topic
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[bool]
+        nsfw
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        rate_limit_per_user
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2130,45 +2097,42 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the category.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the category.
-        topic : hikari.undefined.UndefinedOr[str]
+        topic
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[bool]
+        nsfw
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        rate_limit_per_user
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
-        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        default_auto_archive_duration
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
             This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
             when passed as [`hikari.undefined.UNDEFINED`][].
-        default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        default_thread_rate_limit_per_user
             If provided, the ratelimit that should be set in threads created
             from the forum.
-        default_forum_layout : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumLayoutType, int]]
+        default_forum_layout
             If provided, the default forum layout to show in the client.
-        default_sort_order : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumSortOrderType, int]]
+        default_sort_order
             If provided, the default sort order to show in the client.
-        available_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
+        available_tags
             If provided, the available tags to select from when creating a thread.
-        default_reaction_emoji : typing.Union[str, hikari.emojis.Emoji, hikari.undefined.UndefinedType, hikari.snowflakes.Snowflake]
+        default_reaction_emoji
             If provided, the new default reaction emoji for threads created in a forum channel.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2192,7 +2156,7 @@ class PartialGuild(snowflakes.Unique):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.create_guild_forum_channel(
             self.id,
             name,
@@ -2230,34 +2194,31 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[int]
+        user_limit
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[int]
+        bitrate
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
+        video_quality_mode
             If provided, the new video quality mode for the channel.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
+        region
             If provided, the voice region to for this channel. Passing
             [`None`][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2313,32 +2274,29 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channel's name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[int]
+        user_limit
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[int]
+        bitrate
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
+        region
             If provided, the voice region to for this channel. Passing
             [`None`][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2389,7 +2347,7 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
+        channel
             The channel or category to delete. This may be the object or the ID of an
             existing channel.
 
@@ -2506,10 +2464,10 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -2535,10 +2493,10 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -2809,14 +2767,14 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        ext : typing.Optional[str]
+        ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
             If [`None`][], then the correct default extension is
             determined based on whether the banner is animated or not.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -2849,10 +2807,10 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between `16` and `4096`.
 
@@ -2878,10 +2836,10 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL, defaults to `4096`.
             Can be any power of two between `16` and `4096`.
 
@@ -2909,7 +2867,7 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             The object or ID of the guild channel to get from the cache.
 
         Returns
@@ -2931,7 +2889,7 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             The object or ID of the user to get the cached member for.
 
         Returns
@@ -2968,7 +2926,7 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             The object or ID of the user to get the cached presence for.
 
         Returns
@@ -2988,7 +2946,7 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             The object or ID of the user to get the cached voice state for.
 
         Returns
@@ -3008,7 +2966,7 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+        emoji
             The object or ID of the emoji to get from the cache.
 
         Returns
@@ -3033,7 +2991,7 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.GuildSticker]
+        sticker
             The object or ID of the sticker to get from the cache.
 
         Returns
@@ -3056,7 +3014,7 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        role : hikari.snowflakes.SnowflakeishOr[PartialRole]
+        role
             The object or ID of the role to get for this guild from the cache.
 
         Returns

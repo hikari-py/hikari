@@ -287,19 +287,19 @@ class PermissionOverwrite:
     Creating a permission overwrite.
 
     ```py
-        overwrite = PermissionOverwrite(
-            id=163979124820541440,
-            type=PermissionOverwriteType.MEMBER,
-            allow=(
-                Permissions.VIEW_CHANNEL
-                | Permissions.READ_MESSAGE_HISTORY
-                | Permissions.SEND_MESSAGES
-            ),
-            deny=(
-                Permissions.MANAGE_MESSAGES
-                | Permissions.SPEAK
-            ),
-        )
+    overwrite = PermissionOverwrite(
+        id=163979124820541440,
+        type=PermissionOverwriteType.MEMBER,
+        allow=(
+            Permissions.VIEW_CHANNEL
+            | Permissions.READ_MESSAGE_HISTORY
+            | Permissions.SEND_MESSAGES
+        ),
+        deny=(
+            Permissions.MANAGE_MESSAGES
+            | Permissions.SPEAK
+        ),
+    )
     ```
     """
 
@@ -418,19 +418,19 @@ class TextableChannel(PartialChannel):
             thus any errors documented below will happen then.
             See [`hikari.iterators`][] for the full API for this iterator type.
 
-        Other Parameters
-        ----------------
-        before : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
+        Parameters
+        ----------
+        before
             If provided, fetch messages before this snowflakes. If you provide
             a datetime object, it will be transformed into a snowflakes. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
-        after : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
+        after
             If provided, fetch messages after this snowflakes. If you provide
             a datetime object, it will be transformed into a snowflakes. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
-        around : hikari.undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[hikari.snowflakes.Unique]]
+        around
             If provided, fetch messages around this snowflakes. If you provide
             a datetime object, it will be transformed into a snowflakes. This
             may be any other Discord entity that has an ID. In this case, the
@@ -462,7 +462,7 @@ class TextableChannel(PartialChannel):
 
         Parameters
         ----------
-        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+        message
             The message to fetch. This may be the object or the ID of an
             existing channel.
 
@@ -519,7 +519,7 @@ class TextableChannel(PartialChannel):
 
         Parameters
         ----------
-        content : hikari.undefined.UndefinedOr[typing.Any]
+        content
             If provided, the message contents. If
             [`hikari.undefined.UNDEFINED`][], then nothing will be sent
             in the content. Any other value here will be cast to a
@@ -532,10 +532,7 @@ class TextableChannel(PartialChannel):
             Likewise, if this is a [`hikari.files.Resource`][], then the
             content is instead treated as an attachment if no `attachment` and
             no `attachments` kwargs are provided.
-
-        Other Parameters
-        ----------------
-        attachment : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        attachment
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
 
@@ -564,64 +561,65 @@ class TextableChannel(PartialChannel):
                 type of [`concurrent.futures.Executor`][] that is being used for
                 the application (default is a thread pool which supports this
                 behaviour).
-        attachments : hikari.undefined.UndefinedOr[typing.Sequence[hikari.files.Resourceish]]
+        attachments
             If provided, the message attachments. These can be resources, or
             strings consisting of paths on your computer or URLs.
-        component : hikari.undefined.UndefinedOr[hikari.api.special_endpoints.ComponentBuilder]
+        component
             If provided, builder object of the component to include in this message.
-        components : hikari.undefined.UndefinedOr[typing.Sequence[hikari.api.special_endpoints.ComponentBuilder]]
+        components
             If provided, a sequence of the component builder objects to include
             in this message.
-        embed : hikari.undefined.UndefinedOr[hikari.embeds.Embed]
+        embed
             If provided, the message embed.
-        embeds : hikari.undefined.UndefinedOr[typing.Sequence[hikari.embeds.Embed]]
+        embeds
             If provided, the message embeds.
-        sticker : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]]
+        sticker
             If provided, the object or ID of a sticker to send on the message.
 
             As of writing, bots can only send custom stickers from the current guild.
-        stickers : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.stickers.PartialSticker]]
+        stickers
             If provided, a sequence of the objects and IDs of up to 3 stickers
             to send on the message.
 
             As of writing, bots can only send custom stickers from the current guild.
-        tts : hikari.undefined.UndefinedOr[bool]
+        tts
             If provided, whether the message will be TTS (Text To Speech).
-        reply : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]]
+        reply
             If provided, the message to reply to.
-        reply_must_exist : hikari.undefined.UndefinedOr[bool]
+        reply_must_exist
             If provided, whether to error if the message being replied to does
             not exist instead of sending as a normal (non-reply) message.
 
             This will not do anything if not being used with `reply`.
-        mentions_everyone : hikari.undefined.UndefinedOr[bool]
+        mentions_everyone
             If provided, whether the message should parse @everyone/@here
             mentions.
-        mentions_reply : hikari.undefined.UndefinedOr[bool]
+        mentions_reply
             If provided, whether to mention the author of the message
             that is being replied to.
 
             This will not do anything if not being used with `reply`.
-        user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+        user_mentions
             If provided, and [`True`][], all mentions will be parsed.
             If provided, and [`False`][], no mentions will be parsed.
             Alternatively this may be a collection of
             [`hikari.snowflakes.Snowflake`][], or
             [`hikari.users.PartialUser`][] derivatives to enforce mentioning
             specific users.
-        role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+        role_mentions
             If provided, and [`True`][], all mentions will be parsed.
             If provided, and [`False`][], no mentions will be parsed.
             Alternatively this may be a collection of
             [`hikari.snowflakes.Snowflake`][], or
             [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
-        flags : hikari.undefined.UndefinedOr[hikari.messages.MessageFlag]
+        flags
             If provided, optional flags to set on the message. If
             [`hikari.undefined.UNDEFINED`][], then nothing is changed.
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are [`hikari.messages.MessageFlag.NONE`][] and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
+            flags that can be set are [`hikari.messages.MessageFlag.NONE`][] and
+            [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
 
         Returns
         -------
@@ -650,7 +648,7 @@ class TextableChannel(PartialChannel):
             `role_mentions` or `user_mentions`.
         TypeError
             If both `attachment` and `attachments` are specified.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.create_message(
             channel=self.id,
             content=content,
@@ -680,10 +678,10 @@ class TextableChannel(PartialChannel):
         block completes.
 
         ```py
-            await channel.trigger_typing()   # type for 10s
+        await channel.trigger_typing()   # type for 10s
 
-            async with channel.trigger_typing():
-                await asyncio.sleep(35)            # keep typing until this finishes
+        async with channel.trigger_typing():
+            await asyncio.sleep(35)            # keep typing until this finishes
         ```
 
         !!! note
@@ -728,7 +726,7 @@ class TextableChannel(PartialChannel):
 
         Parameters
         ----------
-        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+        message
             The message to pin. This may be the object or the ID
             of an existing message.
 
@@ -754,7 +752,7 @@ class TextableChannel(PartialChannel):
 
         Parameters
         ----------
-        message : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+        message
             The message to unpin. This may be the object or the ID of an
             existing message.
 
@@ -813,10 +811,7 @@ class TextableChannel(PartialChannel):
         messages
             Either the object/ID of an existing message to delete or an iterable
             (sync or async) of the objects and/or IDs of existing messages to delete.
-
-        Other Parameters
-        ----------------
-        *other_messages : hikari.snowflakes.SnowflakeishOr[hikari.messages.PartialMessage]
+        *other_messages
             The objects and/or IDs of other existing messages to delete.
 
         Raises
@@ -903,10 +898,10 @@ class GroupDMChannel(PrivateChannel):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL.
             Can be any power of two between `16` and `4096`.
 
@@ -1019,64 +1014,64 @@ class GuildChannel(PartialChannel):
     ) -> PartialChannel:
         """Edit the text channel.
 
-        Other Parameters
-        ----------------
-        name : hikari.undefined.UndefinedOr[[str]
+        Parameters
+        ----------
+        name
             If provided, the new name for the channel.
-        position : hikari.undefined.UndefinedOr[[int]
+        position
             If provided, the new position for the channel.
-        topic : hikari.undefined.UndefinedOr[str]
+        topic
             If provided, the new topic for the channel.
-        nsfw : hikari.undefined.UndefinedOr[bool]
+        nsfw
             If provided, whether the channel should be marked as NSFW or not.
-        bitrate : hikari.undefined.UndefinedOr[int]
+        bitrate
             If provided, the new bitrate for the channel.
         video_quality_mode: hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
             If provided, the new video quality mode for the channel.
-        user_limit : hikari.undefined.UndefinedOr[int]
+        user_limit
             If provided, the new user limit in the channel.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        rate_limit_per_user
             If provided, the new rate limit per user in the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
+        region
             If provided, the voice region to set for this channel. Passing
             [`None`][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the new permission overwrites for the channel.
-        parent_category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        parent_category
             If provided, the new guild category for the channel.
-        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        default_auto_archive_duration
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
             This should be either 60, 1440, 4320 or 10080 minutes, as of
             writing.
-        flags : hikari.undefined.UndefinedOr[ChannelFlag]
+        flags
             If provided, the new channel flags to use for the channel. This can
             only be used on a forum channel to apply ChannelFlag.REQUIRE_TAG, or
             on a forum thread to apply ChannelFlag.PINNED.
-        archived : hikari.undefined.UndefinedOr[bool]
+        archived
             If provided, the new archived state for the thread. This only
             applies to threads.
-        auto_archive_duration : hikari.undefined.UndefinedOr[time.Intervalish]
+        auto_archive_duration
             If provided, the new auto archive duration for this thread. This
             only applies to threads.
 
             This should be either 60, 1440, 4320 or 10080 minutes, as of
             writing.
-        locked : hikari.undefined.UndefinedOr[bool]
+        locked
             If provided, the new locked state for the thread. This only applies
             to threads.
 
             If it's locked then only people with [`hikari.permissions.Permissions.MANAGE_THREADS`][] can unarchive it.
-        invitable : hikari.undefined.UndefinedOr[bool]
+        invitable
             If provided, the new setting for whether non-moderators can invite
             new members to a private thread. This only applies to threads.
-        applied_tags : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.ForumTag]]
+        applied_tags
             If provided, the new tags to apply to the thread. This only applies
             to threads in a forum channel.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1166,20 +1161,17 @@ class PermissibleGuildChannel(GuildChannel):
 
         Parameters
         ----------
-        target : typing.Union[hikari.users.PartialUser, hikari.guilds.PartialRole, hikari.channels.PermissionOverwrite, hikari.snowflakes.Snowflakeish]
+        target
             The channel overwrite to edit. This may be the object or the ID of an
             existing overwrite.
-
-        Other Parameters
-        ----------------
-        target_type : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.PermissionOverwriteType, int]]
+        target_type
             If provided, the type of the target to update. If unset, will attempt to get
             the type from `target`.
-        allow : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+        allow
             If provided, the new value of all allowed permissions.
-        deny : hikari.undefined.UndefinedOr[hikari.permissions.Permissions]
+        deny
             If provided, the new value of all disallowed permissions.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1203,7 +1195,7 @@ class PermissibleGuildChannel(GuildChannel):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         if target_type is undefined.UNDEFINED:
             assert not isinstance(
                 target, int
@@ -1221,7 +1213,7 @@ class PermissibleGuildChannel(GuildChannel):
 
         Parameters
         ----------
-        target : typing.Union[hikari.users.PartialUser, hikari.guilds.PartialRole, hikari.channels.PermissionOverwrite, hikari.snowflakes.Snowflakeish]
+        target
             The channel overwrite to delete.
 
         Raises
@@ -1238,7 +1230,7 @@ class PermissibleGuildChannel(GuildChannel):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.delete_permission_overwrite(self.id, target)
 
 
@@ -1358,7 +1350,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     """
 
     video_quality_mode: typing.Union[VideoQualityMode, int] = attrs.field(eq=False, hash=False, repr=False)
-    """The video quality mode for the voice channel."""
+    """The video quality mode for this channel."""
 
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.
@@ -1389,6 +1381,9 @@ class GuildStageChannel(PermissibleGuildChannel, TextableGuildChannel):
 
     If this is `0`, then assume no limit.
     """
+
+    video_quality_mode: typing.Union[VideoQualityMode, int] = attrs.field(eq=False, hash=False, repr=False)
+    """The video quality mode for this channel."""
 
     last_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last message sent in this channel.

@@ -63,7 +63,7 @@ class Intents(enums.Flag):
     simply a case of accessing it normally.
 
     ```py
-        my_intents = Intents.GUILDS
+    my_intents = Intents.GUILDS
     ```
 
     If we wanted to have several intents grouped together, we would use the
@@ -71,19 +71,19 @@ class Intents(enums.Flag):
     with the `|=` operator if needed.
 
     ```py
-        # One or two values that fit on one line.
-        my_intents = Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES
+    # One or two values that fit on one line.
+    my_intents = Intents.GUILD_MESSAGES | Intents.DM_MESSAGES
 
-        # Several intents together. You may find it useful to format these like
-        # so to keep your code readable.
-        my_intents = (
-            Intents.GUILDS             |
-            Intents.GUILD_EMOJIS       |
-            Intents.GUILD_INTEGRATIONS |
-            Intents.GUILD_MESSAGES     |
-            Intents.GUILD_MODERATION   |
-            Intents.PRIVATE_MESSAGES
-        )
+    # Several intents together. You may find it useful to format these like
+    # so to keep your code readable.
+    my_intents = (
+        Intents.GUILDS             |
+        Intents.GUILD_EMOJIS       |
+        Intents.GUILD_INTEGRATIONS |
+        Intents.GUILD_MESSAGES     |
+        Intents.GUILD_MODERATION   |
+        Intents.DM_MESSAGES
+    )
     ```
 
     To check if an intent **is present** in a given intents bitfield, you can
@@ -93,34 +93,34 @@ class Intents(enums.Flag):
     check in-place with the `&=` operator if needed.
 
     ```py
-        # Check if an intent is set:
-        if (my_intents & Intents.GUILD_MESSAGES) == Intents.GUILD_MESSAGES:
-            print("Guild messages are enabled")
+    # Check if an intent is set:
+    if (my_intents & Intents.GUILD_MESSAGES) == Intents.GUILD_MESSAGES:
+        print("Guild messages are enabled")
 
-        # Checking if ALL in a combination are set:
-        expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
-        if (my_intents & expected_intents) == expected_intents:
-            print("Messages are enabled in guilds and private messages.")
+    # Checking if ALL in a combination are set:
+    expected_intents = (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
+    if (my_intents & expected_intents) == expected_intents:
+        print("Messages are enabled in guilds and private messages.")
 
-        # Checking if AT LEAST ONE in a combination is set:
-        expected_intents = (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
-        if my_intents & expected_intents:
-            print("Messages are enabled in guilds or private messages.")
+    # Checking if AT LEAST ONE in a combination is set:
+    expected_intents = (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
+    if my_intents & expected_intents:
+        print("Messages are enabled in guilds or private messages.")
     ```
 
     Removing one or more intents from a combination can be done with the
     bitwise-xor (`^`) operator. The `^=` operator can do this in-place.
 
     ```py
-        # Remove GUILD_MESSAGES
-        my_intents = my_intents ^ Intents.GUILD_MESSAGES
-        # or, simplifying:
-        my_intents ^= Intents.GUILD_MESSAGES
+    # Remove GUILD_MESSAGES
+    my_intents = my_intents ^ Intents.GUILD_MESSAGES
+    # or, simplifying:
+    my_intents ^= Intents.GUILD_MESSAGES
 
-        # Remove all messages events.
-        my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
-        # or, simplifying
-        my_intents ^= (Intents.GUILD_MESSAGES | Intents.PRIVATE_MESSAGES)
+    # Remove all messages events.
+    my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
+    # or, simplifying
+    my_intents ^= (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
     ```
 
     What is and is not covered by intents?
@@ -296,24 +296,24 @@ class Intents(enums.Flag):
     DM_MESSAGES = 1 << 12
     """Subscribes to the events listed below.
 
-    * `MESSAGE_CREATE` (in private message channels (non-guild bound) only)
-    * `MESSAGE_UPDATE` (in private message channels (non-guild bound) only)
-    * `MESSAGE_DELETE` (in private message channels (non-guild bound) only)
+    * `MESSAGE_CREATE` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_UPDATE` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_DELETE` (in direct message channels (non-guild bound) only)
     """
 
     DM_MESSAGE_REACTIONS = 1 << 13
     """Subscribes to the events listed below.
 
-    * `MESSAGE_REACTION_ADD` (in private message channels (non-guild bound) only)
-    * `MESSAGE_REACTION_REMOVE` (in private message channels (non-guild bound) only)
-    * `MESSAGE_REACTION_REMOVE_ALL` (in private message channels (non-guild bound) only)
-    * `MESSAGE_REACTION_REMOVE_EMOJI` (in private message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_ADD` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_REMOVE` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_REMOVE_ALL` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_REACTION_REMOVE_EMOJI` (in direct message channels (non-guild bound) only)
     """
 
     DM_MESSAGE_TYPING = 1 << 14
     """Subscribes to the events listed below.
 
-    * `TYPING_START` (in private message channels (non-guild bound) only)
+    * `TYPING_START` (in direct message channels (non-guild bound) only)
     """
 
     MESSAGE_CONTENT = 1 << 15
@@ -375,7 +375,7 @@ class Intents(enums.Flag):
     """
 
     ALL_DMS = DM_MESSAGES | DM_MESSAGE_TYPING | DM_MESSAGE_REACTIONS
-    """All private message channel (non-guild bound) intents."""
+    """All direct message channel (non-guild bound) intents."""
 
     ALL_MESSAGES = DM_MESSAGES | GUILD_MESSAGES
     """All message intents."""

@@ -38,12 +38,9 @@ def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
 
     Parameters
     ----------
-    what : str
+    what
         What is being deprecated.
-
-    Other Parameters
-    ----------------
-    removal_version : str
+    removal_version
         The version it will be removed in.
 
     Raises
@@ -64,18 +61,15 @@ def warn_deprecated(
 
     Parameters
     ----------
-    what : str
+    what
         What is being deprecated.
-
-    Other Parameters
-    ----------------
-    removal_version : str
+    removal_version
         The version it will be removed in.
-    additional_info : str
+    additional_info
         Additional information on the deprecation for the user.
-    stack_level : int
+    stack_level
         The stack level to issue the warning in.
-    quote : bool
+    quote
         Whether to quote [`what`][] when displaying the deprecation
 
     Raises

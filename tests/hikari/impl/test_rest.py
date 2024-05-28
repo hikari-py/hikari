@@ -70,7 +70,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestRestProvider:
-    @pytest.fixture()
+    @pytest.fixture
     def rest_client(self):
         class StubRestClient:
             http_settings = object()
@@ -78,15 +78,15 @@ class TestRestProvider:
 
         return StubRestClient()
 
-    @pytest.fixture()
+    @pytest.fixture
     def executor(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def entity_factory(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def rest_provider(self, rest_client, executor, entity_factory):
         return rest._RESTProvider(lambda: entity_factory, executor, lambda: rest_client)
 
@@ -112,7 +112,7 @@ class TestRestProvider:
 
 
 class TestClientCredentialsStrategy:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_token(self):
         return mock.Mock(
             applications.PartialOAuth2Token,
@@ -137,7 +137,7 @@ class TestClientCredentialsStrategy:
 
         assert token.token_type is applications.TokenType.BEARER
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_on_new_instance(self, mock_token):
         mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_token))
 
@@ -149,7 +149,7 @@ class TestClientCredentialsStrategy:
             client=54123123, client_secret="123123123", scopes=("applications.commands.update", "identify")
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_handles_out_of_date_token(self, mock_token):
         mock_old_token = mock.Mock(
             applications.PartialOAuth2Token,
@@ -172,7 +172,7 @@ class TestClientCredentialsStrategy:
         assert new_token != token
         assert new_token == "Bearer okokok.fofofo.ddd"
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_handles_token_being_set_before_lock_is_acquired(self, mock_token):
         lock = asyncio.Lock()
         mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(side_effect=[mock_token]))
@@ -192,7 +192,7 @@ class TestClientCredentialsStrategy:
         )
         assert results == ["Bearer okokok.fofofo.ddd", "Bearer okokok.fofofo.ddd", "Bearer okokok.fofofo.ddd"]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_after_invalidation(self, mock_token):
         mock_old_token = mock.Mock(
             applications.PartialOAuth2Token,
@@ -215,7 +215,7 @@ class TestClientCredentialsStrategy:
         assert new_token != token
         assert new_token == "Bearer okokok.fofofo.ddd"
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self):
         class MockLock:
             def __init__(self, strategy):
@@ -240,7 +240,7 @@ class TestClientCredentialsStrategy:
 
         mock_rest.authorize_client_credentials_token.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_caches_client_http_response_error(self):
         mock_rest = mock.AsyncMock()
         error = errors.ClientHTTPResponseError(
@@ -296,7 +296,7 @@ class TestClientCredentialsStrategy:
 
 
 class TestRESTApp:
-    @pytest.fixture()
+    @pytest.fixture
     def rest_app(self):
         return hikari_test_helpers.mock_class_namespace(rest.RESTApp, slots_=False)(
             executor=None,
@@ -399,12 +399,12 @@ def rest_client_class():
     return hikari_test_helpers.mock_class_namespace(rest.RESTClientImpl, slots_=False)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_cache():
     return mock.Mock()
 
 
-@pytest.fixture()
+@pytest.fixture
 def rest_client(rest_client_class, mock_cache):
     obj = rest_client_class(
         cache=mock_cache,
@@ -427,7 +427,7 @@ def rest_client(rest_client_class, mock_cache):
     return obj
 
 
-@pytest.fixture()
+@pytest.fixture
 def file_resource():
     class Stream:
         def __init__(self, data):
@@ -460,7 +460,7 @@ def file_resource():
     return FileResource
 
 
-@pytest.fixture()
+@pytest.fixture
 def file_resource_patch(file_resource):
     resource = file_resource("some data")
     with mock.patch.object(files, "ensure_resource", return_value=resource):
@@ -668,7 +668,7 @@ class TestRESTClientImpl:
 
     @pytest.mark.parametrize("client_session_owner", [True, False])
     @pytest.mark.parametrize("bucket_manager_owner", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close(self, rest_client, client_session_owner, bucket_manager_owner):
         rest_client._close_event = mock_close_event = mock.Mock()
         rest_client._client_session.close = client_close = mock.AsyncMock()
@@ -695,7 +695,7 @@ class TestRESTClientImpl:
 
     @pytest.mark.parametrize("client_session_owner", [True, False])
     @pytest.mark.parametrize("bucket_manager_owner", [True, False])
-    @pytest.mark.asyncio()  # Function needs to be executed in a running loop
+    @pytest.mark.asyncio  # Function needs to be executed in a running loop
     async def test_start(self, rest_client, client_session_owner, bucket_manager_owner):
         rest_client._client_session = None
         rest_client._close_event = None
@@ -1626,9 +1626,9 @@ class TestRESTClientImpl:
         assert iterator is iterator_cls.return_value
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestRESTClientImplAsync:
-    @pytest.fixture()
+    @pytest.fixture
     def exit_exception(self):
         class ExitException(Exception): ...
 
@@ -3515,6 +3515,30 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_my_user = mock.Mock(return_value=user)
 
         assert await rest_client.edit_my_user(username="new username", avatar="someavatar.png") is user
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})
+
+    async def test_edit_my_user_when_banner_is_None(self, rest_client):
+        user = StubModel(123)
+        expected_route = routes.PATCH_MY_USER.compile()
+        expected_json = {"username": "new username", "banner": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_my_user = mock.Mock(return_value=user)
+
+        assert await rest_client.edit_my_user(username="new username", banner=None) is user
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})
+
+    async def test_edit_my_user_when_banner_is_file(self, rest_client, file_resource_patch):
+        user = StubModel(123)
+        expected_route = routes.PATCH_MY_USER.compile()
+        expected_json = {"username": "new username", "banner": "some data"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_my_user = mock.Mock(return_value=user)
+
+        assert await rest_client.edit_my_user(username="new username", banner="somebanner.png") is user
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})

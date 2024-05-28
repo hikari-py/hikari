@@ -81,17 +81,17 @@ class Emoji(files.WebResource, abc.ABC):
         """Mention string to use to mention the emoji with."""
 
     @classmethod
-    def parse(cls, string: str, /) -> Emoji:
+    def parse(cls, string: str, /) -> typing.Union[UnicodeEmoji, CustomEmoji]:
         """Parse a given string into an emoji object.
 
         Parameters
         ----------
-        string : str
+        string
             The emoji object to parse.
 
         Returns
         -------
-        Emoji
+        typing.Union[UnicodeEmoji, CustomEmoji]
             The parsed emoji object. This will be a [`hikari.emojis.CustomEmoji`][] if a custom
             emoji mention, or a [`hikari.emojis.UnicodeEmoji`][] otherwise.
 
@@ -179,9 +179,9 @@ class UnicodeEmoji(str, Emoji):
         Examples
         --------
         ```py
-            >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
-            >>> emoji.url
-            'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
+        >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
+        >>> emoji.url
+        'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
         ```
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
@@ -221,7 +221,7 @@ class UnicodeEmoji(str, Emoji):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji object to parse.
 
         Returns
@@ -302,7 +302,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji mention to parse.
 
         Returns

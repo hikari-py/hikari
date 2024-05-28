@@ -1,3 +1,40 @@
+## 2.0.0.dev125 (2024-04-28)
+
+### Features
+
+- Add monetization support. ([#1803](https://github.com/hikari-py/hikari/issues/1803))
+- Add missing link properties
+  - Add `message_link` property to `MessageReference`
+  - Add `channel_link` property to `MessageReference` ([#1877](https://github.com/hikari-py/hikari/issues/1877))
+- Add missing `video_quality_mode` field to `GuildStageChannel` ([#1891](https://github.com/hikari-py/hikari/issues/1891))
+- Optimize gateway transport
+  - Merge cold path for zlib compression into main path to avoid additional call
+  - Handle data in `bytes`, rather than in `str` to make good use of speedups (similar to `RESTClient`) ([#1898](https://github.com/hikari-py/hikari/issues/1898))
+
+### Bugfixes
+
+- Fix warning raised in aiohttp 3.9.4 when using `FormData` (most commonly, when uploading attachments) ([#1881](https://github.com/hikari-py/hikari/issues/1881))
+- Properly handle websocket transport errors and recover
+  - Additionally, errors will now include additional information ([#1897](https://github.com/hikari-py/hikari/issues/1897))
+
+---
+## 2.0.0.dev124 (2024-04-07)
+
+### Features
+
+- Improve `Emoji.parse` typing to make it more explicit ([#1870](https://github.com/hikari-py/hikari/issues/1870))
+- Add ability to edit own user banner ([#1871](https://github.com/hikari-py/hikari/issues/1871))
+
+### Bugfixes
+
+- Fix incorrectly formatted error strings ([#1866](https://github.com/hikari-py/hikari/issues/1866))
+- Properly handle initial opcode as being RECONNECT (7) ([#1867](https://github.com/hikari-py/hikari/issues/1867))
+
+### Documentation Improvements
+
+- Replace mentions of `PRIVATE_MESSAGES` with `DM_MESSAGES` ([#1874](https://github.com/hikari-py/hikari/issues/1874))
+
+---
 ## 2.0.0.dev123 (2024-03-31)
 
 ### Breaking Changes

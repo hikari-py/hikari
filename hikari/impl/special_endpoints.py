@@ -229,30 +229,30 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     Creating an empty guild:
 
     ```py
-        guild = await rest.guild_builder("My Server!").create()
+    guild = await rest.guild_builder("My Server!").create()
     ```
 
     Creating a guild with an icon:
 
     ```py
-        from hikari.files import WebResourceStream
+    from hikari.files import WebResourceStream
 
-        guild_builder = rest.guild_builder("My Server!")
-        guild_builder.icon = WebResourceStream("cat.png", "http://...")
-        guild = await guild_builder.create()
+    guild_builder = rest.guild_builder("My Server!")
+    guild_builder.icon = WebResourceStream("cat.png", "http://...")
+    guild = await guild_builder.create()
     ```
 
     Adding roles to your guild:
 
     ```py
-        from hikari.permissions import Permissions
+    from hikari.permissions import Permissions
 
-        guild_builder = rest.guild_builder("My Server!")
+    guild_builder = rest.guild_builder("My Server!")
 
-        everyone_role_id = guild_builder.add_role("@everyone")
-        admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+    everyone_role_id = guild_builder.add_role("@everyone")
+    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
 
-        await guild_builder.create()
+    await guild_builder.create()
     ```
 
     !!! warning
@@ -261,12 +261,12 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     Adding a text channel to your guild:
 
     ```py
-        guild_builder = rest.guild_builder("My Server!")
+    guild_builder = rest.guild_builder("My Server!")
 
-        category_id = guild_builder.add_category("My safe place")
-        channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
+    category_id = guild_builder.add_category("My safe place")
+    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
 
-        await guild_builder.create()
+    await guild_builder.create()
     ```
     """
 
@@ -994,9 +994,6 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ----------
     type : hikari.interactions.base_interactions.MessageResponseTypesT
         The type of interaction response this is.
-
-    Other Parameters
-    ----------------
     content : hikari.undefined.UndefinedOr[str]
         The content of this response, if supplied. This follows the same rules
         as "content" on create message.
@@ -1253,6 +1250,20 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
 
 @attrs.define(kw_only=False, weakref_slot=False)
+class InteractionPremiumRequiredBuilder(special_endpoints.InteractionPremiumRequiredBuilder):
+    """Standard implementation of `hikari.api.special_endpoints.InteractionPremiumRequiredBuilder`."""
+
+    @property
+    def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
+        return base_interactions.ResponseType.PREMIUM_REQUIRED
+
+    def build(
+        self, entity_factory: entity_factory_.EntityFactory, /
+    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        return {"type": self.type}, ()
+
+
+@attrs.define(kw_only=False, weakref_slot=False)
 class CommandBuilder(special_endpoints.CommandBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.CommandBuilder`][]."""
 
@@ -1422,7 +1433,7 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
     """Builder class for context menu commands."""
 
     _type: commands.CommandType = attrs.field(alias="type")
-    # name is re-declared here to ensure type is before it in the initializer's args.
+    # name is redeclared here to ensure type is before it in the initializer's args.
     _name: str = attrs.field(alias="name")
 
     @property
@@ -1456,7 +1467,7 @@ def _build_emoji(
 
     Parameters
     ----------
-    emoji : typing.Union[hikari.snowflakes.Snowflakeish, hikari.emojis.Emoji, str, hikari.undefined.UndefinedType]
+    emoji
         The ID, object or raw string of an emoji to set on a component.
 
     Returns

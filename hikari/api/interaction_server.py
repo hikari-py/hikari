@@ -39,7 +39,9 @@ if typing.TYPE_CHECKING:
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _ResponseT_co = typing.TypeVar("_ResponseT_co", bound=special_endpoints.InteractionResponseBuilder, covariant=True)
     _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
+        special_endpoints.InteractionDeferredBuilder,
+        special_endpoints.InteractionMessageBuilder,
+        special_endpoints.InteractionPremiumRequiredBuilder,
     ]
     _ModalOrMessageResponseBuilder = typing.Union[_MessageResponseBuilderT, special_endpoints.InteractionModalBuilder]
 
@@ -117,11 +119,11 @@ class InteractionServer(abc.ABC):
 
         Parameters
         ----------
-        body : bytes
+        body
             The interaction payload.
-        signature : bytes
+        signature
             Value of the `"X-Signature-Ed25519"` header used to verify the body.
-        timestamp : bytes
+        timestamp
             Value of the `"X-Signature-Timestamp"` header used to verify the body.
 
         Returns
@@ -171,7 +173,7 @@ class InteractionServer(abc.ABC):
 
         Parameters
         ----------
-        interaction_type : typing.Type[hikari.interactions.base_interactions.PartialInteraction]
+        interaction_type
             Type of the interaction to get the registered listener for.
 
         Returns
@@ -242,23 +244,20 @@ class InteractionServer(abc.ABC):
 
         Parameters
         ----------
-        interaction_type : typing.Type[hikari.interactions.base_interactions.PartialInteraction]
+        interaction_type
             The type of interaction this listener should be registered for.
-        listener : typing.Optional[ListenerT[hikari.interactions.base_interactions.PartialInteraction, hikari.api.special_endpoints.InteractionResponseBuilder]]
+        listener
             The asynchronous listener callback to set or [`None`][] to unset the previous listener.
 
             An asynchronous listener can be either a normal coroutine or an
             async generator which should yield exactly once. This allows
             sending an initial response to the request, while still
             later executing further logic.
-
-        Other Parameters
-        ----------------
-        replace : bool
+        replace
             Whether this call should replace the previously set listener or not.
 
         Raises
         ------
         TypeError
             If `replace` is [`False`][] when a listener is already set.
-        """  # noqa: E501 - Line too long
+        """

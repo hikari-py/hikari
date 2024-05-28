@@ -23,6 +23,7 @@ import mock
 import pytest
 
 from hikari import channels
+from hikari import monetization
 from hikari import snowflakes
 from hikari import traits
 from hikari.impl import special_endpoints
@@ -30,13 +31,13 @@ from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
 
 
 class TestCommandInteraction:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_command_interaction(self, mock_app):
         return command_interactions.CommandInteraction(
             app=mock_app,
@@ -57,6 +58,20 @@ class TestCommandInteraction:
             locale="es-ES",
             guild_locale="en-US",
             app_permissions=543123,
+            entitlements=[
+                monetization.Entitlement(
+                    id=snowflakes.Snowflake(123123),
+                    sku_id=snowflakes.Snowflake(123123),
+                    application_id=snowflakes.Snowflake(123123),
+                    guild_id=snowflakes.Snowflake(123123),
+                    user_id=snowflakes.Snowflake(123123),
+                    type=monetization.EntitlementType.APPLICATION_SUBSCRIPTION,
+                    starts_at=None,
+                    ends_at=None,
+                    is_deleted=False,
+                    subscription_id=None,
+                )
+            ],
         )
 
     def test_build_response(self, mock_command_interaction, mock_app):
@@ -75,7 +90,7 @@ class TestCommandInteraction:
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_channel(self, mock_command_interaction, mock_app):
         mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableGuildChannel)
         assert await mock_command_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
@@ -101,7 +116,7 @@ class TestCommandInteraction:
 
 
 class TestAutocompleteInteraction:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_autocomplete_interaction(self, mock_app):
         return command_interactions.AutocompleteInteraction(
             app=mock_app,
@@ -120,9 +135,23 @@ class TestAutocompleteInteraction:
             command_name="OKOKOK",
             command_type=1,
             options=[],
+            entitlements=[
+                monetization.Entitlement(
+                    id=snowflakes.Snowflake(123123),
+                    sku_id=snowflakes.Snowflake(123123),
+                    application_id=snowflakes.Snowflake(123123),
+                    guild_id=snowflakes.Snowflake(123123),
+                    user_id=snowflakes.Snowflake(123123),
+                    type=monetization.EntitlementType.APPLICATION_SUBSCRIPTION,
+                    starts_at=None,
+                    ends_at=None,
+                    is_deleted=False,
+                    subscription_id=None,
+                )
+            ],
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_command_choices(self):
         return [
             special_endpoints.AutocompleteChoiceBuilder(name="a", value="b"),
@@ -136,7 +165,7 @@ class TestAutocompleteInteraction:
         assert builder is mock_app.rest.interaction_autocomplete_builder.return_value
         mock_app.rest.interaction_autocomplete_builder.assert_called_once_with(mock_command_choices)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_response(
         self,
         mock_autocomplete_interaction: command_interactions.AutocompleteInteraction,

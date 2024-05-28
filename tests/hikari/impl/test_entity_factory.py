@@ -39,6 +39,7 @@ from hikari import guilds as guild_models
 from hikari import invites as invite_models
 from hikari import locales
 from hikari import messages as message_models
+from hikari import monetization as monetization_models
 from hikari import permissions as permission_models
 from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_event_models
@@ -58,12 +59,12 @@ from hikari.interactions import modal_interactions
 from tests.hikari import hikari_test_helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def permission_overwrite_payload():
     return {"id": "4242", "type": 1, "allow": 65, "deny": 49152, "allow_new": "65", "deny_new": "49152"}
 
 
-@pytest.fixture()
+@pytest.fixture
 def guild_text_channel_payload(permission_overwrite_payload):
     return {
         "id": "123",
@@ -82,7 +83,7 @@ def guild_text_channel_payload(permission_overwrite_payload):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def guild_voice_channel_payload(permission_overwrite_payload):
     return {
         "id": "555",
@@ -101,7 +102,7 @@ def guild_voice_channel_payload(permission_overwrite_payload):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def guild_news_channel_payload(permission_overwrite_payload):
     return {
         "id": "7777",
@@ -119,7 +120,7 @@ def guild_news_channel_payload(permission_overwrite_payload):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def thread_member_payload() -> typing.Dict[str, typing.Any]:
     return {
         "id": "123321",
@@ -131,7 +132,7 @@ def thread_member_payload() -> typing.Dict[str, typing.Any]:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def guild_news_thread_payload(thread_member_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
     return {
         "id": "946900871160164393",
@@ -156,7 +157,7 @@ def guild_news_thread_payload(thread_member_payload: typing.Dict[str, typing.Any
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def guild_public_thread_payload(thread_member_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
     return {
         "id": "947643783913308301",
@@ -182,7 +183,7 @@ def guild_public_thread_payload(thread_member_payload: typing.Dict[str, typing.A
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def guild_private_thread_payload(thread_member_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
     return {
         "id": "947690637610844210",
@@ -208,7 +209,7 @@ def guild_private_thread_payload(thread_member_payload: typing.Dict[str, typing.
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def user_payload():
     return {
         "id": "115590097100865541",
@@ -223,12 +224,12 @@ def user_payload():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def custom_emoji_payload():
     return {"id": "691225175349395456", "name": "test", "animated": True}
 
 
-@pytest.fixture()
+@pytest.fixture
 def known_custom_emoji_payload(user_payload):
     return {
         "id": "12345",
@@ -242,7 +243,7 @@ def known_custom_emoji_payload(user_payload):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def member_payload(user_payload):
     return {
         "nick": "foobarbaz",
@@ -258,7 +259,7 @@ def member_payload(user_payload):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def presence_activity_payload(custom_emoji_payload):
     return {
         "name": "an activity",
@@ -284,7 +285,7 @@ def presence_activity_payload(custom_emoji_payload):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def member_presence_payload(user_payload, presence_activity_payload):
     return {
         "user": user_payload,
@@ -296,7 +297,7 @@ def member_presence_payload(user_payload, presence_activity_payload):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def guild_role_payload():
     return {
         "id": "41771983423143936",
@@ -320,7 +321,7 @@ def guild_role_payload():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def voice_state_payload(member_payload):
     return {
         "guild_id": "929292929292992",
@@ -373,12 +374,12 @@ def test__deserialize_max_age_returns_null():
     assert entity_factory._deserialize_max_age(0) is None
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app() -> traits.RESTAware:
     return mock.Mock()
 
 
-@pytest.fixture()
+@pytest.fixture
 def entity_factory_impl(mock_app) -> entity_factory.EntityFactoryImpl:
     return hikari_test_helpers.mock_class_namespace(entity_factory.EntityFactoryImpl, slots_=False)(mock_app)
 
@@ -836,7 +837,7 @@ class TestEntityFactoryImpl:
     # APPLICATION MODELS #
     ######################
 
-    @pytest.fixture()
+    @pytest.fixture
     def partial_integration(self):
         return {
             "id": "123123123123123",
@@ -845,7 +846,7 @@ class TestEntityFactoryImpl:
             "account": {"name": "twitchUsername", "id": "123123"},
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def own_connection_payload(self, partial_integration):
         return {
             "friend_sync": False,
@@ -889,7 +890,7 @@ class TestEntityFactoryImpl:
         assert own_connection.visibility == application_models.ConnectionVisibility.NONE
         assert isinstance(own_connection, application_models.OwnConnection)
 
-    @pytest.fixture()
+    @pytest.fixture
     def own_guild_payload(self):
         return {
             "id": "152559372126519269",
@@ -929,7 +930,7 @@ class TestEntityFactoryImpl:
         )
         assert own_guild.icon_hash is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def role_connection_payload(self):
         return {
             "platform_name": "Muck",
@@ -945,11 +946,11 @@ class TestEntityFactoryImpl:
         assert role_connection.metadata == {"key": "value", "key2": "value2"}
         assert isinstance(role_connection, application_models.OwnApplicationRoleConnection)
 
-    @pytest.fixture()
+    @pytest.fixture
     def owner_payload(self, user_payload):
         return {**user_payload, "flags": 1 << 10}
 
-    @pytest.fixture()
+    @pytest.fixture
     def application_payload(self, owner_payload, user_payload):
         return {
             "id": "209333111222",
@@ -1082,7 +1083,7 @@ class TestEntityFactoryImpl:
         assert application.install_parameters is None
         assert application.tags == []
 
-    @pytest.fixture()
+    @pytest.fixture
     def invite_application_payload(self):
         return {
             "id": "773336526917861400",
@@ -1093,7 +1094,7 @@ class TestEntityFactoryImpl:
             "verify_key": "1bf78fdbfcbabe2e1256f9b133818976591203a22febabba5ff89f86f24760ff",
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def authorization_information_payload(self, user_payload):
         return {
             "application": {
@@ -1158,7 +1159,7 @@ class TestEntityFactoryImpl:
         assert authorization_information.application.terms_of_service_url is None
         assert authorization_information.application.privacy_policy_url is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def application_connection_metadata_record_payload(self):
         return {
             "type": 7,
@@ -1223,7 +1224,7 @@ class TestEntityFactoryImpl:
 
         assert entity_factory_impl.serialize_application_connection_metadata_record(record) == expected_result
 
-    @pytest.fixture()
+    @pytest.fixture
     def client_credentials_payload(self):
         return {
             "access_token": "6qrZcUqja7812RVdnEKjpzOL4CvHBFG",
@@ -1244,7 +1245,7 @@ class TestEntityFactoryImpl:
         ]
         assert isinstance(partial_token, application_models.PartialOAuth2Token)
 
-    @pytest.fixture()
+    @pytest.fixture
     def access_token_payload(self, rest_guild_payload, incoming_webhook_payload):
         return {
             "token_type": "Bearer",
@@ -1281,7 +1282,7 @@ class TestEntityFactoryImpl:
         assert access_token.guild is None
         assert access_token.webhook is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def implicit_token_payload(self):
         return {
             "access_token": "RTfP0OK99U3kbRtHOoKLmJbOn45PjL",
@@ -1336,7 +1337,7 @@ class TestEntityFactoryImpl:
             ),
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def overwrite_info_payload(self):
         return {"id": "123123123", "type": 0, "role_name": "aRole"}
 
@@ -1347,7 +1348,7 @@ class TestEntityFactoryImpl:
         assert overwrite_entry_info.role_name == "aRole"
         assert isinstance(overwrite_entry_info, audit_log_models.ChannelOverwriteEntryInfo)
 
-    @pytest.fixture()
+    @pytest.fixture
     def message_pin_info_payload(self):
         return {"channel_id": "123123123", "message_id": "69696969"}
 
@@ -1357,7 +1358,7 @@ class TestEntityFactoryImpl:
         assert message_pin_info.message_id == 69696969
         assert isinstance(message_pin_info, audit_log_models.MessagePinEntryInfo)
 
-    @pytest.fixture()
+    @pytest.fixture
     def member_prune_info_payload(self):
         return {"delete_member_days": "7", "members_removed": "1"}
 
@@ -1367,7 +1368,7 @@ class TestEntityFactoryImpl:
         assert member_prune_info.members_removed == 1
         assert isinstance(member_prune_info, audit_log_models.MemberPruneEntryInfo)
 
-    @pytest.fixture()
+    @pytest.fixture
     def message_bulk_delete_info_payload(self):
         return {"count": "42"}
 
@@ -1378,7 +1379,7 @@ class TestEntityFactoryImpl:
         assert message_bulk_delete_entry_info.count == 42
         assert isinstance(message_bulk_delete_entry_info, audit_log_models.MessageBulkDeleteEntryInfo)
 
-    @pytest.fixture()
+    @pytest.fixture
     def message_delete_info_payload(self):
         return {"count": "42", "channel_id": "4206942069"}
 
@@ -1390,7 +1391,7 @@ class TestEntityFactoryImpl:
         assert message_delete_entry_info.channel_id == 4206942069
         assert isinstance(message_delete_entry_info, audit_log_models.MessageDeleteEntryInfo)
 
-    @pytest.fixture()
+    @pytest.fixture
     def member_disconnect_info_payload(self):
         return {"count": "42"}
 
@@ -1401,7 +1402,7 @@ class TestEntityFactoryImpl:
         assert member_disconnect_entry_info.count == 42
         assert isinstance(member_disconnect_entry_info, audit_log_models.MemberDisconnectEntryInfo)
 
-    @pytest.fixture()
+    @pytest.fixture
     def member_move_info_payload(self):
         return {"count": "42", "channel_id": "22222222"}
 
@@ -1410,7 +1411,7 @@ class TestEntityFactoryImpl:
         assert member_move_entry_info.channel_id == 22222222
         assert isinstance(member_move_entry_info, audit_log_models.MemberMoveEntryInfo)
 
-    @pytest.fixture()
+    @pytest.fixture
     def audit_log_entry_payload(self):
         return {
             "action_type": 14,
@@ -1428,7 +1429,7 @@ class TestEntityFactoryImpl:
             "reason": "An artificial insanity.",
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def partial_integration_payload(self):
         return {"id": "4949494949", "name": "Blah blah", "type": "twitch", "account": {"id": "543453", "name": "Blam"}}
 
@@ -1533,7 +1534,7 @@ class TestEntityFactoryImpl:
                 audit_log_entry_payload, guild_id=snowflakes.Snowflake(341123)
             )
 
-    @pytest.fixture()
+    @pytest.fixture
     def audit_log_payload(
         self,
         audit_log_entry_payload,
@@ -1673,7 +1674,7 @@ class TestEntityFactoryImpl:
         payload = entity_factory_impl.serialize_permission_overwrite(overwrite)
         assert payload == {"id": "123123", "type": int(type), "allow": "42", "deny": "62"}
 
-    @pytest.fixture()
+    @pytest.fixture
     def partial_channel_payload(self):
         return {"id": "561884984214814750", "name": "general", "type": 0}
 
@@ -1688,7 +1689,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_channel_with_unset_fields(self, entity_factory_impl):
         assert entity_factory_impl.deserialize_partial_channel({"id": "22", "type": 0}).name is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def dm_channel_payload(self, user_payload):
         return {"id": "123", "last_message_id": "456", "type": 1, "recipients": [user_payload]}
 
@@ -1712,7 +1713,7 @@ class TestEntityFactoryImpl:
         dm_channel = entity_factory_impl.deserialize_dm({"id": "123", "type": 1, "recipients": [user_payload]})
         assert dm_channel.last_message_id is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def group_dm_channel_payload(self, user_payload):
         return {
             "id": "123",
@@ -1754,7 +1755,7 @@ class TestEntityFactoryImpl:
         assert group_dm.application_id is None
         assert group_dm.last_message_id is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def guild_category_payload(self, permission_overwrite_payload):
         return {
             "id": "123",
@@ -1999,7 +2000,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.is_nsfw is False
         assert voice_channel.region is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def guild_stage_channel_payload(self, permission_overwrite_payload):
         return {
             "id": "555",
@@ -2075,7 +2076,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.is_nsfw is False
         assert voice_channel.last_message_id is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def guild_forum_channel_payload(self, permission_overwrite_payload):
         return {
             "id": "961367432532987974",
@@ -2663,7 +2664,7 @@ class TestEntityFactoryImpl:
     # EMBED MODELS #
     ################
 
-    @pytest.fixture()
+    @pytest.fixture
     def embed_payload(self):
         return {
             "title": "embed title",
@@ -3070,7 +3071,7 @@ class TestEntityFactoryImpl:
     # GATEWAY MODELS #
     ##################
 
-    @pytest.fixture()
+    @pytest.fixture
     def gateway_bot_payload(self):
         return {
             "url": "wss://gateway.discord.gg",
@@ -3094,7 +3095,7 @@ class TestEntityFactoryImpl:
     # GUILD MODELS #
     ################
 
-    @pytest.fixture()
+    @pytest.fixture
     def guild_embed_payload(self):
         return {"channel_id": "123123123", "enabled": True}
 
@@ -3108,7 +3109,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_embed_with_null_fields(self, entity_factory_impl, mock_app):
         assert entity_factory_impl.deserialize_guild_widget({"channel_id": None, "enabled": True}).channel_id is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def guild_welcome_screen_payload(self):
         return {
             "description": "What does the fox say? Nico Nico Nico NIIIIIIIIIIIIIIIIIIIIIII!!!!",
@@ -3333,7 +3334,7 @@ class TestEntityFactoryImpl:
         assert partial_integration.account.name == "Blam"
         assert isinstance(partial_integration.account, guild_models.IntegrationAccount)
 
-    @pytest.fixture()
+    @pytest.fixture
     def integration_payload(self, user_payload):
         return {
             "id": "420",
@@ -3446,7 +3447,7 @@ class TestEntityFactoryImpl:
         )
         assert integration.application.bot is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def guild_member_ban_payload(self, user_payload):
         return {"reason": "Get nyaa'ed", "user": user_payload}
 
@@ -3459,7 +3460,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_member_ban_with_null_fields(self, entity_factory_impl, user_payload):
         assert entity_factory_impl.deserialize_guild_member_ban({"reason": None, "user": user_payload}).reason is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def guild_preview_payload(self, known_custom_emoji_payload):
         return {
             "id": "152559372126519269",
@@ -3515,7 +3516,7 @@ class TestEntityFactoryImpl:
         assert guild_preview.discovery_splash_hash is None
         assert guild_preview.description is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def rest_guild_payload(self, known_custom_emoji_payload, guild_sticker_payload, guild_role_payload):
         return {
             "afk_channel_id": "99998888777766",
@@ -3719,7 +3720,7 @@ class TestEntityFactoryImpl:
         assert guild.premium_subscription_count is None
         assert guild.public_updates_channel_id is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def gateway_guild_payload(
         self,
         guild_text_channel_payload,
@@ -3999,7 +4000,7 @@ class TestEntityFactoryImpl:
     # INTERACTION MODELS #
     ######################
 
-    @pytest.fixture()
+    @pytest.fixture
     def slash_command_payload(self):
         return {
             "id": "1231231231",
@@ -4166,7 +4167,7 @@ class TestEntityFactoryImpl:
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_command({"type": -111})
 
-    @pytest.fixture()
+    @pytest.fixture
     def guild_command_permissions_payload(self):
         return {
             "id": "123321",
@@ -4199,7 +4200,7 @@ class TestEntityFactoryImpl:
             "permission": True,
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def partial_interaction_payload(self):
         return {
             "id": "795459528803745843",
@@ -4220,7 +4221,7 @@ class TestEntityFactoryImpl:
         assert interaction.application_id == 1
         assert type(interaction) is base_interactions.PartialInteraction
 
-    @pytest.fixture()
+    @pytest.fixture
     def interaction_member_payload(self, user_payload):
         return {
             "user": user_payload,
@@ -4347,7 +4348,7 @@ class TestEntityFactoryImpl:
         assert resolved.users == {}
         assert resolved.messages == {}
 
-    @pytest.fixture()
+    @pytest.fixture
     def interaction_resolved_data_payload(
         self, interaction_member_payload, attachment_payload, guild_role_payload, user_payload, message_payload
     ):
@@ -4367,7 +4368,7 @@ class TestEntityFactoryImpl:
             "messages": {"123": message_payload},
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def command_interaction_payload(self, interaction_member_payload, interaction_resolved_data_payload):
         return {
             "id": "3490190239012093",
@@ -4397,6 +4398,20 @@ class TestEntityFactoryImpl:
             "version": 69420,
             "application_id": "76234234",
             "app_permissions": "54123",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_command_interaction(
@@ -4430,6 +4445,8 @@ class TestEntityFactoryImpl:
             interaction_resolved_data_payload, guild_id=43123123
         )
         assert interaction.app_permissions == 54123
+        assert len(interaction.entitlements) == 1
+        assert interaction.entitlements[0].id == 696969696969696
 
         # CommandInteractionOption
         assert len(interaction.options) == 1
@@ -4457,7 +4474,7 @@ class TestEntityFactoryImpl:
 
         assert isinstance(interaction, command_interactions.CommandInteraction)
 
-    @pytest.fixture()
+    @pytest.fixture
     def context_menu_command_interaction_payload(self, interaction_member_payload, user_payload):
         return {
             "id": "3490190239012093",
@@ -4478,6 +4495,20 @@ class TestEntityFactoryImpl:
             "version": 69420,
             "application_id": "76234234",
             "app_permissions": "54123123",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_command_interaction_with_context_menu_field(
@@ -4508,7 +4539,7 @@ class TestEntityFactoryImpl:
         assert interaction.guild_locale is None
         assert interaction.app_permissions is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def autocomplete_interaction_payload(self, member_payload, user_payload, interaction_resolved_data_payload):
         return {
             "id": "3490190239012093",
@@ -4537,6 +4568,20 @@ class TestEntityFactoryImpl:
             "guild_locale": "en-US",
             "version": 69420,
             "application_id": "76234234",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_autocomplete_interaction(
@@ -4704,7 +4749,7 @@ class TestEntityFactoryImpl:
             ],
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def context_menu_command_payload(self):
         return {
             "id": "1231231231",
@@ -4767,7 +4812,7 @@ class TestEntityFactoryImpl:
 
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
 
-    @pytest.fixture()
+    @pytest.fixture
     def component_interaction_payload(
         self, interaction_member_payload, message_payload, interaction_resolved_data_payload
     ):
@@ -4790,6 +4835,20 @@ class TestEntityFactoryImpl:
             "locale": "es-ES",
             "guild_locale": "en-US",
             "app_permissions": "5431234",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_component_interaction(
@@ -4830,6 +4889,9 @@ class TestEntityFactoryImpl:
         )
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
+        assert len(interaction.entitlements) == 1
+        assert interaction.entitlements[0].id == 696969696969696
+
     def test_deserialize_component_interaction_with_undefined_fields(
         self, entity_factory_impl, user_payload, message_payload
     ):
@@ -4845,6 +4907,20 @@ class TestEntityFactoryImpl:
                 "channel_id": "345626669114982999",
                 "application_id": "290926444748734465",
                 "locale": "es-ES",
+                "entitlements": [
+                    {
+                        "id": "696969696969696",
+                        "sku_id": "420420420420420",
+                        "application_id": "123123123123123",
+                        "type": 8,
+                        "deleted": False,
+                        "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                        "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                        "user_id": "115590097100865541",
+                        "guild_id": "1015034326372454400",
+                        "subscription_id": "1019653835926409216",
+                    }
+                ],
             }
         )
 
@@ -4856,7 +4932,7 @@ class TestEntityFactoryImpl:
         assert interaction.app_permissions is None
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
-    @pytest.fixture()
+    @pytest.fixture
     def modal_interaction_payload(self, interaction_member_payload, message_payload):
         return {
             "version": 1,
@@ -4877,6 +4953,20 @@ class TestEntityFactoryImpl:
             "application_id": "290926444748734465",
             "locale": "en-US",
             "guild_locale": "es-ES",
+            "entitlements": [
+                {
+                    "id": "696969696969696",
+                    "sku_id": "420420420420420",
+                    "application_id": "123123123123123",
+                    "type": 8,
+                    "deleted": False,
+                    "starts_at": "2022-09-14T17:00:18.704163+00:00",
+                    "ends_at": "2022-10-14T17:00:18.704163+00:00",
+                    "user_id": "115590097100865541",
+                    "guild_id": "1015034326372454400",
+                    "subscription_id": "1019653835926409216",
+                }
+            ],
         }
 
     def test_deserialize_modal_interaction(
@@ -4897,6 +4987,9 @@ class TestEntityFactoryImpl:
         )
         assert interaction.user is interaction.member.user
         assert isinstance(interaction, modal_interactions.ModalInteraction)
+
+        assert len(interaction.entitlements) == 1
+        assert interaction.entitlements[0].id == 696969696969696
 
         short_action_row = interaction.components[0]
         assert isinstance(short_action_row, component_models.ActionRowComponent)
@@ -4927,11 +5020,11 @@ class TestEntityFactoryImpl:
     # STICKER MODELS #
     ##################
 
-    @pytest.fixture()
+    @pytest.fixture
     def partial_sticker_payload(self):
         return {"id": "749046696482439188", "name": "Thinking", "format_type": 3}
 
-    @pytest.fixture()
+    @pytest.fixture
     def standard_sticker_payload(self):
         return {
             "id": "749046696482439188",
@@ -4943,7 +5036,7 @@ class TestEntityFactoryImpl:
             "tags": "thinking,thonkang",
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def guild_sticker_payload(self, user_payload):
         return {
             "id": "749046696482439188",
@@ -4956,7 +5049,7 @@ class TestEntityFactoryImpl:
             "user": user_payload,
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def sticker_pack_payload(self, standard_sticker_payload):
         return {
             "id": "123",
@@ -5061,7 +5154,7 @@ class TestEntityFactoryImpl:
     # INVITE MODELS #
     #################
 
-    @pytest.fixture()
+    @pytest.fixture
     def vanity_url_payload(self):
         return {"code": "iamacode", "uses": 42}
 
@@ -5072,11 +5165,11 @@ class TestEntityFactoryImpl:
         assert vanity_url.uses == 42
         assert isinstance(vanity_url, invite_models.VanityURL)
 
-    @pytest.fixture()
+    @pytest.fixture
     def alternative_user_payload(self):
         return {"id": "1231231", "username": "soad", "discriminator": "3333", "avatar": None}
 
-    @pytest.fixture()
+    @pytest.fixture
     def invite_payload(
         self,
         partial_channel_payload,
@@ -5225,7 +5318,7 @@ class TestEntityFactoryImpl:
         assert invite.guild is None
         assert invite.guild_id == 42
 
-    @pytest.fixture()
+    @pytest.fixture
     def invite_with_metadata_payload(
         self,
         partial_channel_payload,
@@ -5365,11 +5458,11 @@ class TestEntityFactoryImpl:
     # COMPONENT MODELS #
     ####################
 
-    @pytest.fixture()
+    @pytest.fixture
     def action_row_payload(self, button_payload):
         return {"type": 1, "components": [button_payload]}
 
-    @pytest.fixture()
+    @pytest.fixture
     def button_payload(self, custom_emoji_payload):
         return {
             "type": 2,
@@ -5405,7 +5498,7 @@ class TestEntityFactoryImpl:
         assert button.url is None
         assert button.is_disabled is False
 
-    @pytest.fixture()
+    @pytest.fixture
     def select_menu_payload(self, custom_emoji_payload):
         return {
             "type": 5,
@@ -5515,7 +5608,7 @@ class TestEntityFactoryImpl:
     # MESSAGE MODELS #
     ##################
 
-    @pytest.fixture()
+    @pytest.fixture
     def partial_application_payload(self):
         return {
             "id": "456",
@@ -5525,7 +5618,7 @@ class TestEntityFactoryImpl:
             "cover_image": "58982a23790c4f22787b05d3be38a026",
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def referenced_message(self, user_payload):
         return {
             "id": "12312312",
@@ -5545,7 +5638,7 @@ class TestEntityFactoryImpl:
             "flags": "222",
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def attachment_payload(self):
         return {
             "id": "690922406474154014",
@@ -5561,7 +5654,7 @@ class TestEntityFactoryImpl:
             "waveform": "some encoded string",
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def message_payload(
         self,
         user_payload,
@@ -6238,7 +6331,7 @@ class TestEntityFactoryImpl:
     # SCHEDULED EVENT MODELS #
     ##########################
 
-    @pytest.fixture()
+    @pytest.fixture
     def scheduled_external_event_payload(
         self, user_payload: typing.Dict[str, typing.Any]
     ) -> typing.Dict[str, typing.Any]:
@@ -6318,7 +6411,7 @@ class TestEntityFactoryImpl:
         assert event.creator is None
         assert event.user_count is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def scheduled_stage_event_payload(self, user_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
         return {
             "id": "9497014470822052443",
@@ -6399,7 +6492,7 @@ class TestEntityFactoryImpl:
         assert event.image_hash is None
         assert event.user_count is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def scheduled_voice_event_payload(self, user_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
         return {
             "id": "949760834287063133",
@@ -6500,7 +6593,7 @@ class TestEntityFactoryImpl:
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_scheduled_event({"entity_type": -1})
 
-    @pytest.fixture()
+    @pytest.fixture
     def scheduled_event_user_payload(
         self, user_payload: typing.Dict[str, typing.Any], member_payload: typing.Dict[str, typing.Any]
     ) -> typing.Dict[str, typing.Any]:
@@ -6542,7 +6635,7 @@ class TestEntityFactoryImpl:
     # TEMPLATE MODELS #
     ###################
 
-    @pytest.fixture()
+    @pytest.fixture
     def template_payload(self, guild_text_channel_payload, user_payload):
         return {
             "code": "4rDaewUKeYVj",
@@ -6707,7 +6800,7 @@ class TestEntityFactoryImpl:
         assert user.is_system is False
         assert user.flags == user_models.UserFlag.NONE
 
-    @pytest.fixture()
+    @pytest.fixture
     def my_user_payload(self):
         return {
             "id": "379953393319542784",
@@ -6848,7 +6941,7 @@ class TestEntityFactoryImpl:
         assert voice_state.is_streaming is False
         assert voice_state.requested_to_speak_at is None
 
-    @pytest.fixture()
+    @pytest.fixture
     def voice_region_payload(self):
         return {"id": "london", "name": "LONDON", "optimal": False, "deprecated": True, "custom": False}
 
@@ -6865,7 +6958,7 @@ class TestEntityFactoryImpl:
     # WEBHOOK MODELS #
     ##################
 
-    @pytest.fixture()
+    @pytest.fixture
     def incoming_webhook_payload(self, user_payload):
         return {
             "name": "test webhook",
@@ -6879,7 +6972,7 @@ class TestEntityFactoryImpl:
             "user": user_payload,
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def follower_webhook_payload(self, user_payload, partial_channel_payload):
         return {
             "type": 2,
@@ -6898,7 +6991,7 @@ class TestEntityFactoryImpl:
             "user": user_payload,
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def application_webhook_payload(self):
         return {
             "type": 3,
@@ -7044,3 +7137,59 @@ class TestEntityFactoryImpl:
     def test_deserialize_webhook_for_unexpected_webhook_type(self, entity_factory_impl):
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_webhook({"type": -7999})
+
+    ##################
+    #  MONETIZATION  #
+    ##################
+
+    @pytest.fixture
+    def entitlement_payload(self):
+        return {
+            "id": "696969696969696",
+            "sku_id": "420420420420420",
+            "application_id": "123123123123123",
+            "type": 8,
+            "deleted": False,
+            "starts_at": "2022-09-14T17:00:18.704163+00:00",
+            "ends_at": "2022-10-14T17:00:18.704163+00:00",
+            "guild_id": "1015034326372454400",
+            "user_id": "115590097100865541",
+            "subscription_id": "1019653835926409216",
+        }
+
+    @pytest.fixture
+    def sku_payload(self):
+        return {
+            "id": "420420420420420",
+            "type": 5,
+            "application_id": "123123123123123",
+            "name": "hashire sori yo kaze no you ni tsukimihara wo padoru padoru",
+            "slug": "hashire-sori-yo-kaze-no-you-ni-tsukimihara-wo-padoru-padoru",
+            "flags": 1 << 2 | 1 << 7,
+        }
+
+    def test_deserialize_entitlement(self, entity_factory_impl, entitlement_payload):
+        entitlement = entity_factory_impl.deserialize_entitlement(entitlement_payload)
+
+        assert entitlement.id == 696969696969696
+        assert entitlement.sku_id == 420420420420420
+        assert entitlement.application_id == 123123123123123
+        assert entitlement.type is monetization_models.EntitlementType.APPLICATION_SUBSCRIPTION
+        assert entitlement.is_deleted is False
+        assert entitlement.starts_at == datetime.datetime(2022, 9, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
+        assert entitlement.ends_at == datetime.datetime(2022, 10, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
+        assert entitlement.guild_id == 1015034326372454400
+        assert entitlement.user_id == 115590097100865541
+        assert entitlement.subscription_id == 1019653835926409216
+        assert isinstance(entitlement, monetization_models.Entitlement)
+
+    def test_deserialize_sku(self, entity_factory_impl, sku_payload):
+        sku = entity_factory_impl.deserialize_sku(sku_payload)
+
+        assert sku.id == 420420420420420
+        assert sku.type is monetization_models.SKUType.SUBSCRIPTION
+        assert sku.application_id == 123123123123123
+        assert sku.name == "hashire sori yo kaze no you ni tsukimihara wo padoru padoru"
+        assert sku.slug == "hashire-sori-yo-kaze-no-you-ni-tsukimihara-wo-padoru-padoru"
+        assert sku.flags == (monetization_models.SKUFlags.AVAILABLE | monetization_models.SKUFlags.GUILD_SUBSCRIPTION)
+        assert isinstance(sku, monetization_models.SKU)

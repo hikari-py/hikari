@@ -37,6 +37,7 @@ __all__: typing.Sequence[str] = (
     "URLEncodedFormBuilder",
 )
 
+import datetime
 import typing
 
 import aiohttp
@@ -72,7 +73,7 @@ JSONArray = typing.Sequence[typing.Any]
 JSONish = typing.Union[str, int, float, bool, None, JSONArray, JSONObject]
 """Type hint for any valid JSON-decoded type."""
 
-Stringish = typing.Union[str, int, bool, undefined.UndefinedType, None, snowflakes.Unique]
+Stringish = typing.Union[str, int, bool, datetime.datetime, undefined.UndefinedType, None, snowflakes.Unique]
 """Type hint for any valid that can be put in a StringMapBuilder"""
 
 JSONEncoder = typing.Callable[[typing.Union[JSONArray, JSONObject]], bytes]
@@ -95,7 +96,6 @@ _StringMapBuilderArg = typing.Union[
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
-_BINARY: typing.Final[str] = "binary"
 _UTF_8: typing.Final[str] = "utf-8"
 
 default_json_dumps: JSONEncoder
@@ -136,13 +136,16 @@ class URLEncodedFormBuilder:
     __slots__: typing.Sequence[str] = ("_fields", "_resources")
 
     def __init__(self) -> None:
-        self._fields: typing.List[typing.Tuple[str, typing.Union[str, bytes], typing.Optional[str]]] = []
+        self._fields: typing.List[typing.Tuple[str, typing.Union[str, aiohttp.BytesPayload], typing.Optional[str]]] = []
         self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
 
     def add_field(
         self, name: str, data: typing.Union[str, bytes], *, content_type: typing.Optional[str] = None
     ) -> None:
-        self._fields.append((name, data, content_type))
+        field_data: typing.Union[str, aiohttp.BytesPayload] = (
+            aiohttp.BytesPayload(data) if isinstance(data, bytes) else data
+        )
+        self._fields.append((name, field_data, content_type))
 
     def add_resource(self, name: str, resource: files.Resource[files.AsyncReader]) -> None:
         self._resources.append((name, resource))
@@ -153,7 +156,7 @@ class URLEncodedFormBuilder:
         form = aiohttp.FormData()
 
         for field in self._fields:
-            form.add_field(field[0], field[1], content_type=field[2], content_transfer_encoding=_BINARY)
+            form.add_field(field[0], field[1], content_type=field[2])
 
         for name, resource in self._resources:
             stream = await stack.enter_async_context(resource.stream(executor=executor))
@@ -211,33 +214,34 @@ class StringMapBuilder(multidict.MultiDict[str]):
 
         Parameters
         ----------
-        key : str
+        key
             The string key.
-        value : hikari.undefined.UndefinedOr[typing.Any]
+        value
             The value to set.
-
-        Other Parameters
-        ----------------
-        conversion : typing.Optional[typing.Callable[[typing.Any], typing.Any]]
+        conversion
             An optional conversion to perform.
         """
-        if value is not undefined.UNDEFINED:
-            if conversion is not None:
-                value = conversion(value)
+        if value is undefined.UNDEFINED:
+            return
 
-            if value is True:
-                value = "true"
-            elif value is False:
-                value = "false"
-            elif value is None:
-                value = "null"
-            elif isinstance(value, snowflakes.Unique):
-                value = str(value.id)
-            else:
-                value = str(value)
+        if conversion is not None:
+            value = conversion(value)
 
-            # __setitem__ just overwrites the previous value.
-            self.add(key, value)
+        if value is True:
+            value = "true"
+        elif value is False:
+            value = "false"
+        elif value is None:
+            value = "null"
+        elif isinstance(value, snowflakes.Unique):
+            value = str(value.id)
+        elif isinstance(value, datetime.datetime):
+            value = snowflakes.Snowflake.from_datetime(value)
+        else:
+            value = str(value)
+
+        # __setitem__ just overwrites the previous value.
+        self.add(key, value)
 
 
 @typing.final
@@ -284,16 +288,13 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : str
+        key
             The key to give the element.
-        value : hikari.undefined.UndefinedOr[typing.Any]
+        value
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
             case, nothing is performed.
-
-        Other Parameters
-        ----------------
-        conversion : typing.Optional[typing.Callable[[typing.Any], JSONish]]
+        conversion
             The optional conversion to apply.
         """
         if value is undefined.UNDEFINED:
@@ -333,16 +334,13 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : str
+        key
             The key to give the element.
-        values : hikari.undefined.UndefinedOr[typing.Iterable[T_co]]
+        values
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
             In the latter case, nothing is performed.
-
-        Other Parameters
-        ----------------
-        conversion : typing.Optional[typing.Callable[[typing.Any], JSONType]]
+        conversion
             The optional conversion to apply.
         """
         if values is not undefined.UNDEFINED:
@@ -360,9 +358,9 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : str
+        key
             The key to give the element.
-        value : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]
+        value
             The JSON type to put. This may alternatively be undefined, in this
             case, nothing is performed. This may also be [`None`][], in this
             case the value isn't cast.
@@ -370,7 +368,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
         if value is not undefined.UNDEFINED and value is not None:
             self[key] = str(int(value))
         elif value is None:
-            self[key] = value
+            self[key] = None
 
     def put_snowflake_array(
         self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]], /
@@ -383,9 +381,9 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
 
         Parameters
         ----------
-        key : str
+        key
             The key to give the element.
-        values : hikari.undefined.UndefinedOr[typing.Iterable[hikari.snowflakes.SnowflakeishOr[hikari.snowflakes.Unique]]]
+        values
             The JSON snowflakes to put. This may alternatively be undefined.
             In the latter case, nothing is performed.
         """
@@ -398,12 +396,12 @@ def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Ite
 
     Parameters
     ----------
-    cast : typing.Callable[[T_co], T]
+    cast
         Callback to cast each variant to.
 
         This will ignore any variants which raises
         [`hikari.errors.UnrecognisedEntityError`][] on cast.
-    raw_values : typing.Iterable[T_co]
+    raw_values
         Iterable of the raw values to cast.
 
     Returns

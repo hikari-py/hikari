@@ -38,6 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import locales
     from hikari import messages
+    from hikari import monetization
     from hikari import permissions
     from hikari import snowflakes
     from hikari import users
@@ -85,7 +86,9 @@ The following types are valid for this:
 
 @attrs.define(hash=True, weakref_slot=False)
 class ComponentInteraction(
-    base_interactions.MessageResponseMixin[ComponentResponseTypesT], base_interactions.ModalResponseMixin
+    base_interactions.MessageResponseMixin[ComponentResponseTypesT],
+    base_interactions.ModalResponseMixin,
+    base_interactions.PremiumResponseMixin,
 ):
     """Represents a component interaction on Discord."""
 
@@ -147,6 +150,9 @@ class ComponentInteraction(
     app_permissions: typing.Optional[permissions.Permissions] = attrs.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
 
+    entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
+    """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
+
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
@@ -157,7 +163,7 @@ class ComponentInteraction(
 
         Parameters
         ----------
-        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
+        type_
             The type of immediate response this should be.
 
             This may be one of the following:
@@ -168,13 +174,13 @@ class ComponentInteraction(
         Examples
         --------
         ```py
-            async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
-                return (
-                    interaction
-                    .build_response(ResponseType.MESSAGE_UPDATE)
-                    .add_embed(Embed(description="Hi there"))
-                    .set_content("Konnichiwa")
-                )
+        async def handle_component_interaction(interaction: ComponentInteraction) -> InteractionMessageBuilder:
+            return (
+                interaction
+                .build_response(ResponseType.MESSAGE_UPDATE)
+                .add_embed(Embed(description="Hi there"))
+                .set_content("Konnichiwa")
+            )
         ```
 
         Returns
@@ -202,7 +208,7 @@ class ComponentInteraction(
 
         Parameters
         ----------
-        type_ : typing.Union[int, hikari.interactions.base_interactions.ResponseType]
+        type_
             The type of deferred response this should be.
 
             This may be one of the following:

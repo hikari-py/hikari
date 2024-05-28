@@ -43,7 +43,7 @@ theme:
       primary: deep purple
       accent: deep purple
       toggle:
-        icon: material/toggle-switch
+        icon: material/lightbulb
         name: Switch to dark mode
 
     - media: "(prefers-color-scheme: dark)"
@@ -51,7 +51,7 @@ theme:
       primary: deep purple
       accent: deep purple
       toggle:
-        icon: material/toggle-switch-off-outline
+        icon: material/lightbulb-outline
         name: Switch to light mode
 
   features:
@@ -59,15 +59,10 @@ theme:
     - search.highlight
     - search.suggest
     - search.share
-    - content.code.copy
-    - content.code.select
-    - content.code.annotate
     - content.action.edit
     - navigation.tabs
     - navigation.indexes
     - navigation.top
-    - navigation.tracking
-    - content.tooltips
     - toc.follow
 
 markdown_extensions:
@@ -78,8 +73,6 @@ markdown_extensions:
   - footnotes
   - meta
   - md_in_html
-  - pymdownx.details
-  - pymdownx.superfences
   - toc:
       permalink: "#"
 
@@ -87,7 +80,6 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.caret
   - pymdownx.details
-  - pymdownx.inlinehilite
   - pymdownx.keys
   - pymdownx.mark
   - pymdownx.superfences
@@ -95,10 +87,6 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
   - pymdownx.betterem:
       smart_enable: all
   - pymdownx.tabbed:
@@ -113,19 +101,24 @@ markdown_extensions:
 plugins:
   - autorefs
   - search
-  - glightbox:
-      touchNavigation: true
-      loop: false
-      effect: zoom
-      slide_effect: slide
-      width: 100%
-      height: auto
-      zoomable: true
-      draggable: true
-      auto_caption: false
-      caption_position: bottom
-      skip_classes:
-         - no-lightbox
+  - minify:
+      minify_html: true
+      htmlmin_opts:
+          remove_comments: true
+      cache_safe: true
+#  - glightbox:
+#      touchNavigation: true
+#      loop: false
+#      effect: zoom
+#      slide_effect: slide
+#      width: 100%
+#      height: auto
+#      zoomable: true
+#      draggable: true
+#      auto_caption: false
+#      caption_position: bottom
+#      skip_classes:
+#         - no-lightbox
   - gen-files:
       scripts:
       - docs/gen_ref_pages.py

@@ -63,22 +63,22 @@ class TestCoroutineFunctionStubUsedInTests:
 
 
 class TestCompletedFuture:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_awaitable(self, args):
         await aio.completed_future(*args)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_completed(self, args):
         future = aio.completed_future(*args)
         assert future.done()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_default_result_is_none(self):
         assert aio.completed_future().result() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_non_default_result(self):
         assert aio.completed_future(...).result() is ...
 
@@ -98,7 +98,7 @@ class TestIsAsyncIterator:
 
         assert aio.is_async_iterator(AsyncIterator)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_genexp(self):
         async def genexp():
             yield ...
@@ -196,7 +196,7 @@ class TestIsAsyncIterable:
         assert not aio.is_async_iterable(AsyncIterator)
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestFirstCompleted:
     @hikari_test_helpers.timeout()
     async def test_first_future_completes(self):
@@ -314,7 +314,7 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)

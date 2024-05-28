@@ -104,7 +104,7 @@ def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collectio
 
     Parameters
     ----------
-    event_type : typing.Type[Event]
+    event_type
         The event type to get required intents for.
 
     Returns
@@ -123,10 +123,10 @@ def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.C
 
     Parameters
     ----------
-    first : hikari.intents.Intents
+    first
         First combination of intents that are acceptable in order to receive
         the decorated event type.
-    *rest : hikari.intents.Intents
+    *rest
         Zero or more additional combinations of intents to require for this
         event to be subscribed to.
     """

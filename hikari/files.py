@@ -168,7 +168,7 @@ def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
 
     Parameters
     ----------
-    url_or_resource : Resourceish
+    url_or_resource
         The item to convert. If a [`hikari.files.Resource`][] is passed, it is
         simply returned again. Anything else is converted to a [`hikari.files.Resource`][] first.
 
@@ -205,7 +205,7 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
 
     Parameters
     ----------
-    name : bytes
+    name
         The filename to inspect.
 
     Returns
@@ -227,7 +227,7 @@ def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
 
     Parameters
     ----------
-    data : bytes
+    data
         The byte content to inspect.
 
     Returns
@@ -252,14 +252,14 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
     Parameters
     ----------
-    mimetype : str
+    mimetype
         The mimetype to guess the extension for.
 
     Examples
     --------
     ```py
-        >>> guess_file_extension("image/png")
-        ".png"
+    >>> guess_file_extension("image/png")
+    ".png"
     ```
 
     Returns
@@ -281,11 +281,11 @@ def generate_filename_from_details(
 
     Parameters
     ----------
-    mimetype : typing.Optional[str]
+    mimetype
         The mimetype of the content, or [`None`][] if not known.
-    extension : typing.Optional[str]
+    extension
         The file extension to use, or [`None`][] if not known.
-    data : typing.Optional[bytes]
+    data
         The data to inspect, or [`None`][] if not known.
 
     Returns
@@ -313,9 +313,9 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
 
     Parameters
     ----------
-    data : bytes
+    data
         The data to encode as base64.
-    mimetype : typing.Optional[str]
+    mimetype
         The mimetype, or [`None`][] if we should attempt to guess it.
 
     Returns
@@ -453,10 +453,10 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         """Read the entire resource at once into memory.
 
         ```py
-            data = await resource.read(...)
-            # ^-- This is a shortcut for the following --v
-            async with resource.stream(...) as reader:
-                data = await reader.read()
+        data = await resource.read(...)
+        # ^-- This is a shortcut for the following --v
+        async with resource.stream(...) as reader:
+            data = await reader.read()
         ```
 
         !!! warning
@@ -468,7 +468,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
         Parameters
         ----------
-        executor : typing.Optional[concurrent.futures.Executor]
+        executor
             The executor to run in for blocking operations.
             If [`None`][], then the default executor is used for the
             current event loop.
@@ -491,14 +491,14 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
         Parameters
         ----------
-        path : Pathish
+        path
             The path to save this resource to. If this is a string, the
             path will be relative to the current working directory.
-        executor : typing.Optional[concurrent.futures.Executor]
+        executor
             The executor to run in for blocking operations.
             If [`None`][], then the default executor is used for
             the current event loop.
-        force : bool
+        force
             Whether to overwrite an existing file.
         """
         loop = asyncio.get_running_loop()
@@ -519,11 +519,11 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
         Parameters
         ----------
-        executor : typing.Optional[concurrent.futures.Executor]
+        executor
             The executor to run in for blocking operations.
             If [`None`][], then the default executor is used for the
             current event loop.
-        head_only : bool
+        head_only
             If [`True`][], then only the headers for the HTTP resource this
             object points to will be fetched without downloading the entire
             content, which can be significantly faster if you are scanning
@@ -686,9 +686,9 @@ class WebResource(Resource[WebReader], abc.ABC):
 
         Parameters
         ----------
-        executor : typing.Optional[concurrent.futures.Executor]
+        executor
             Not used. Provided only to match the underlying interface.
-        head_only : bool
+        head_only
             If [`True`][], then the implementation may only retrieve HEAD
             information if supported. This currently only has any
             effect for web requests.
@@ -698,29 +698,29 @@ class WebResource(Resource[WebReader], abc.ABC):
         Downloading an entire resource at once into memory:
 
         ```py
-            async with obj.stream() as stream:
-                data = await stream.read()
+        async with obj.stream() as stream:
+            data = await stream.read()
         ```
 
         Checking the metadata:
 
         ```py
-            async with obj.stream() as stream:
-                mimetype = stream.mimetype
+        async with obj.stream() as stream:
+            mimetype = stream.mimetype
 
-            if mimetype is None:
-                ...
-            elif mimetype not in whitelisted_mimetypes:
-                ...
-            else:
-                ...
+        if mimetype is None:
+            ...
+        elif mimetype not in whitelisted_mimetypes:
+            ...
+        else:
+            ...
         ```
 
         Fetching the data-uri of a resource:
 
         ```py
-            async with obj.stream() as stream:
-                data_uri = await stream.data_uri()
+        async with obj.stream() as stream:
+            data_uri = await stream.data_uri()
         ```
 
         Returns
@@ -763,9 +763,9 @@ class URL(WebResource):
 
     Parameters
     ----------
-    url : str
+    url
         The URL of the resource.
-    filename : typing.Optional[str]
+    filename
         The filename for the resource.
 
         If not specified, it will be obtained from the url.
@@ -862,7 +862,7 @@ class File(Resource[ThreadedFileReader]):
 
     Parameters
     ----------
-    path : typing.Union[str, os.PathLike, pathlib.Path]
+    path
         The path to use.
 
         If passing a [`pathlib.Path`][], this must not be a [`pathlib.PurePath`][]
@@ -871,10 +871,10 @@ class File(Resource[ThreadedFileReader]):
 
         This will all be performed as required in an executor to prevent
         blocking the event loop.
-    filename : typing.Optional[str]
+    filename
         The filename to use. If this is [`None`][], the name of the file is taken
         from the path instead.
-    spoiler : bool
+    spoiler
         Whether to mark the file as a spoiler in Discord.
     """
 
@@ -914,13 +914,13 @@ class File(Resource[ThreadedFileReader]):
 
         Parameters
         ----------
-        executor : typing.Optional[concurrent.futures.Executor]
+        executor
             The thread executor to run the blocking read operations in. If
             [`None`][], the default executor for the running event loop
             will be used instead.
 
             Only [`concurrent.futures.ThreadPoolExecutor`][] is supported.
-        head_only : bool
+        head_only
             Not used. Provided only to match the underlying interface.
 
         Returns
@@ -1041,15 +1041,15 @@ class Bytes(Resource[IteratorReader]):
 
     Parameters
     ----------
-    data : typing.Union[Rawish, LazyByteIteratorish]
+    data
         The raw data.
-    filename : str
+    filename
         The filename to use.
-    mimetype : typing.Optional[str]
+    mimetype
         The mimetype, or [`None`][] if you do not wish to specify this.
         If not provided, then this will be generated from the file extension
         of the filename instead.
-    spoiler : bool
+    spoiler
         Whether to mark the file as a spoiler in Discord.
     """
 
@@ -1103,9 +1103,9 @@ class Bytes(Resource[IteratorReader]):
 
         Parameters
         ----------
-        executor : typing.Optional[concurrent.futures.Executor]
+        executor
             Not used. Provided only to match the underlying interface.
-        head_only : bool
+        head_only
             Not used. Provided only to match the underlying interface.
 
         Returns
@@ -1134,9 +1134,9 @@ class Bytes(Resource[IteratorReader]):
 
         Parameters
         ----------
-        data_uri : str
+        data_uri
             The data URI to parse.
-        filename : typing.Optional[str]
+        filename
             Filename to use. If this is not provided, then this is generated
             instead.
 

@@ -25,7 +25,17 @@ from pipelines import nox
 
 
 @nox.session()
-def safety(session: nox.Session) -> None:
+def audit(session: nox.Session) -> None:
     """Perform dependency scanning."""
-    session.install("-r", "requirements.txt", *nox.dev_requirements("safety"))
-    session.run("safety", "check", "--full-report")
+    session.install(*nox.dev_requirements("audit"))
+    session.run(
+        "pip-audit",
+        "-r",
+        "requirements.txt",
+        "-r",
+        "server-requirements.txt",
+        "-r",
+        "speedup-requirements.txt",
+        "--aliases",
+        "on",
+    )
