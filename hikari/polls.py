@@ -239,8 +239,8 @@ class PollBuilder(PartialPoll):
 
         Parameters
         ----------
-        answer_id
-            The ID of the answer to edit.
+        index
+            The index of the answer you want to edit.
         text
             The new text of the answer.
         emoji
