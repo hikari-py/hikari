@@ -181,6 +181,9 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     command_type: typing.Union[commands.CommandType, int] = attrs.field(eq=False, hash=False, repr=True)
     """The type of the command."""
 
+    registered_guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    """ID of the guild the command is registered to."""
+
     entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
     """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
 
