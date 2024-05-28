@@ -888,3 +888,13 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_entitlement_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#entitlement-update for more info."""
         await self.dispatch(self._event_factory.deserialize_entitlement_update_event(shard, payload))
+
+    @event_manager_base.filtered(poll_events.PollVoteAdd)
+    async def on_message_poll_vote_add(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway-events#message-poll-vote-add for more info."""
+        await self.dispatch(self._event_factory.deserialize_poll_create_event(shard, payload))
+
+    @event_manager_base.filtered(poll_events.PollVoteRemove)
+    async def on_message_poll_vote_remove(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway-events#message-poll-vote-remove for more info."""
+        await self.dispatch(self._event_factory.deserialize_poll_delete_event(shard, payload))
