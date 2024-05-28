@@ -170,7 +170,7 @@ class PartialPoll:
         return self._answers
 
 
-class PollCreate(PartialPoll):
+class PollBuilder(PartialPoll):
     """Used to create a poll."""  # TODO: Improve this docstring
 
     __slots__: typing.Sequence[str] = ("_duration",)
