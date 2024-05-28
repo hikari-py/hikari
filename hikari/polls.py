@@ -39,6 +39,7 @@ import typing
 import attrs
 
 from hikari import emojis
+from hikari import undefined
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
@@ -71,7 +72,7 @@ class PollAnswer:
     """Represents an answer to a poll."""
 
     answer_id: int = attrs.field(repr=True)
-    """The ID that labels this answer."""  # Is this user-settable?
+    """The ID that labels this answer."""
 
     poll_media: PollMedia = attrs.field(repr=True)
     """The [media][hikari.polls.PollMedia] associated with this answer."""
@@ -129,7 +130,7 @@ class PartialPoll:
         # would decrease long-term maintainability. I'm opting to use a `dict`
         # here to simplify the implementation with some performance trade-off
         # due to hashmap overhead.
-        self._answers: typing.MutableMapping[int, PollAnswer] = {}
+        self._answers: typing.MutableSequence[PollAnswer] = []
 
     @property
     def question(self) -> PollMedia:
@@ -159,7 +160,7 @@ class PartialPoll:
         self._layout_type = value
 
     @property
-    def answers(self) -> typing.MutableMapping[int, PollAnswer]:
+    def answers(self) -> typing.Sequence[PollAnswer]:
         """Returns the answers of the poll.
 
         !!! note
@@ -171,7 +172,15 @@ class PartialPoll:
 
 
 class PollBuilder(PartialPoll):
-    """Used to create a poll."""  # TODO: Improve this docstring
+    """Poll Builder.
+
+    Build a new poll to send as a message to discord.
+
+    Parameters
+    ----------
+    question
+        The question you wish to ask.
+    """  # TODO: Improve this docstring
 
     __slots__: typing.Sequence[str] = ("_duration",)
 
@@ -195,14 +204,12 @@ class PollBuilder(PartialPoll):
     def duration(self, value: int) -> None:
         self._duration = value
 
-    def add_answer(self, answer_id: int, text: str, emoji: typing.Optional[emojis.Emoji]) -> PartialPoll:
+    def add_answer(self, text: str, emoji: typing.Optional[emojis.Emoji]) -> PartialPoll:
         """
         Add an answer to the poll.
 
         Parameters
         ----------
-        answer_id
-            The ID of the answer to add.
         text
             The text of the answer to add.
         emoji
@@ -212,28 +219,20 @@ class PollBuilder(PartialPoll):
         -------
         PartialPoll
             This poll. Allows for call chaining.
-
-        Raises
-        ------
-        KeyError
-            If the answer ID already exists in the poll.
         """
-        # Raise an exception when user tries to add an answer with an already
-        # existing ID. While this is against the "spirit" of hikari, we want
-        # add_answer to only "add" answers, not "edit" them. That job is for
-        # edit_answer.g
-        if answer_id in self._answers:
-            raise KeyError(f"Answer ID {answer_id} already exists in the poll.")
 
-        new_answer = PollAnswer(
-            answer_id=answer_id, poll_media=PollMedia(text=text, emoji=_ensure_optional_emoji(emoji))
+        self._answers.append(
+            PollAnswer(answer_id=-1, poll_media=PollMedia(text=text, emoji=_ensure_optional_emoji(emoji)))
         )
-        self._answers.update({answer_id: new_answer})
 
         return self
 
     def edit_answer(
-        self, answer_id: int, text: str, emoji: typing.Optional[typing.Union[str, emojis.Emoji]]
+        self,
+        index: int,
+        *,
+        text: typing.Optional[str] = None,
+        emoji: undefined.UndefinedNoneOr[typing.Union[str, emojis.Emoji]] = undefined.UNDEFINED,
     ) -> PartialPoll:
         """
         Edit an answer in the poll.
@@ -249,20 +248,14 @@ class PollBuilder(PartialPoll):
 
         Returns
         -------
-        PartialPoll
             This poll. Allows for call chaining.
-
-        Raises
-        ------
-        KeyError
-            Raised when the answer ID is not found in the poll.
         """
-        answer = self._answers.get(answer_id, None)
-        if answer is None:
-            raise KeyError(f"Answer ID {answer_id} not found in the poll.")
 
-        new_poll_media = PollMedia(text=text, emoji=_ensure_optional_emoji(emoji))
-        answer.poll_media = new_poll_media
+        answer = self._answers[index]
+        if text:
+            answer.poll_media.text = text
+        if emoji is not undefined.UNDEFINED:
+            answer.poll_media.emoji = _ensure_optional_emoji(emoji)
 
         return self
 
@@ -285,8 +278,6 @@ class PollBuilder(PartialPoll):
         KeyError
             Raised when the answer ID is not found in the poll.
         """
-        if answer_id not in self._answers:
-            raise KeyError(f"Answer ID {answer_id} not found in the poll.")
 
         del self._answers[answer_id]
 
@@ -301,7 +292,6 @@ class Poll(PartialPoll):
     def __init__(
         self,
         question: str,
-        answers: typing.MutableMapping[int, PollAnswer],
         allow_multiselect: bool,
         expiry: datetime.datetime,
         results: typing.Optional[PollResult],
