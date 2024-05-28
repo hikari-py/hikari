@@ -1970,7 +1970,7 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.PollObject:
+    def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
         """Parse a raw payload from Discord into a poll object.
 
         Parameters
@@ -1980,7 +1980,7 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.polls.PollObject
+        hikari.polls.Poll
             The deserialized poll object.
         """
 

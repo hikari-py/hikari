@@ -3760,7 +3760,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             answer_id=payload["answer_id"], count=payload["count"], me_voted=payload["me_voted"]
         )
 
-    def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.PollObject:
+    def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
         question = payload["question"]
         expiry = time.iso8601_datetime_string_to_datetime(payload["expiry"])
         allow_multiselect = payload["allow_multiple_options"]
@@ -3782,7 +3782,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             )
             results = poll_models.PollResult(is_finalized=is_finalized, answer_counts=answer_counts)
 
-        return poll_models.PollObject(
+        return poll_models.Poll(
             question=question,
             answers=answers,
             expiry=expiry,

@@ -31,7 +31,7 @@ __all__: typing.Sequence[str] = (
     "PollLayoutType",
     "PartialPoll",
     "PollCreate",
-    "PollObject",
+    "Poll",
 )
 
 import typing
@@ -293,7 +293,7 @@ class PollCreate(PartialPoll):
         return self
 
 
-class PollObject(PartialPoll):
+class Poll(PartialPoll):
     """Represents an existing poll."""
 
     __slots__: typing.Sequence[str] = ("_expiry", "_results")
