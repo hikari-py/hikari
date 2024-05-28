@@ -38,7 +38,7 @@ import typing
 
 import attrs
 
-from hikari.emojis import Emoji
+from hikari import emojis
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
@@ -46,10 +46,10 @@ if typing.TYPE_CHECKING:
     import datetime
 
 
-def _ensure_optional_emoji(emoji: typing.Union[str, Emoji, None])  -> typing.Optional[emojis.Emoji]:
+def _ensure_optional_emoji(emoji: typing.Optional[typing.Union[str, emojis.Emoji]]) -> emojis.Emoji | None:
     """Ensure the object is a [hikari.emojis.Emoji][]."""
     if emoji is not None:
-        return Emoji.parse(emoji) if isinstance(emoji, str) else emoji
+        return emojis.Emoji.parse(emoji) if isinstance(emoji, str) else emoji
     return None
 
 
@@ -61,7 +61,7 @@ class PollMedia:
     text: typing.Optional[str] = attrs.field(default=None, repr=True)
     """The text of the element, or [`None`][] if not present."""
 
-    emoji: typing.Optional[Emoji] = attrs.field(default=None, repr=True)
+    emoji: typing.Optional[emojis.Emoji] = attrs.field(default=None, repr=True)
     """The emoji of the element, or [`None`][] if not present."""
 
 
@@ -195,7 +195,7 @@ class PollCreate(PartialPoll):
     def duration(self, value: int) -> None:
         self._duration = value
 
-    def add_answer(self, answer_id: int, text: str, emoji: typing.Optional[Emoji]) -> PartialPoll:
+    def add_answer(self, answer_id: int, text: str, emoji: typing.Optional[emojis.Emoji]) -> PartialPoll:
         """
         Add an answer to the poll.
 
@@ -232,7 +232,9 @@ class PollCreate(PartialPoll):
 
         return self
 
-    def edit_answer(self, answer_id: int, text: str, emoji: typing.Optional[typing.Union[str, Emoji]]) -> PartialPoll:
+    def edit_answer(
+        self, answer_id: int, text: str, emoji: typing.Optional[typing.Union[str, emojis.Emoji]]
+    ) -> PartialPoll:
         """
         Edit an answer in the poll.
 
