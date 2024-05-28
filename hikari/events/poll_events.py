@@ -29,6 +29,7 @@ import typing
 
 import attrs
 
+from hikari import undefined
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
 
@@ -61,10 +62,10 @@ class PollVoteCreate(shard_events.ShardEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     """ID of the message that the poll is in."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(default=None)
+    guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(default=undefined.UNDEFINED)
     """ID of the guild that the poll is in.
 
-    This will be [None][] if the poll is in a DM channel.
+    This will be [hikari.undefined.UNDEFINED][] if the poll is in a DM channel.
     """
 
     answer_id: int = attrs.field()
@@ -94,10 +95,10 @@ class PollVoteDelete(shard_events.ShardEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     """ID of the message that the poll is in."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(default=None)
+    guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(default=undefined.UNDEFINED)
     """ID of the guild that the poll is in.
 
-    This will be [None][] if the poll is in a DM channel.
+    This will be [hikari.undefined.UNDEFINED][] if the poll is in a DM channel.
     """
 
     answer_id: int = attrs.field()
