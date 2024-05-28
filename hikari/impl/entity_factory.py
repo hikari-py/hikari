@@ -3817,7 +3817,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return {
             "question": self._serialize_poll_media(poll.question),
             "answers": answers,
-            "expiry": poll.duration,
+            "duration": poll.duration,
             "allow_multiple_options": poll.allow_multiselect,
             "layout_type": poll.layout_type,
         }
