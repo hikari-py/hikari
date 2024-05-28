@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-class PollVoteAdd(shard_events.ShardEvent):
+class PollVoteCreate(shard_events.ShardEvent):
     """Event that is fired when a user add their vote to a poll.
 
     If the poll allows multiple selection, one event will be fired for each vote.
@@ -73,7 +73,7 @@ class PollVoteAdd(shard_events.ShardEvent):
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-class PollVoteRemove(shard_events.ShardEvent):
+class PollVoteDelete(shard_events.ShardEvent):
     """Event that is fired when a user remove their vote to a poll.
 
     If the poll allows multiple selection, one event will be fired for each vote.
