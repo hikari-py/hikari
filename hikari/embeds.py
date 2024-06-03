@@ -889,6 +889,17 @@ class Embed:
             self._fields = None
         return self
 
+    def clear_fields(self) -> Embed:
+        """Remove all existing fields from this embed.
+
+        Returns
+        -------
+        Embed
+            This embed. Allows for call chaining.
+        """
+        self._fields = None
+        return self
+
     def __repr__(self) -> str:
         return f"Embed(title={self.title}, color={self.color}, timestamp={self.timestamp})"
 
