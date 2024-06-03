@@ -897,8 +897,7 @@ class Embed:
         Embed
             This embed. Allows for call chaining.
         """
-        if self._fields:
-            self._fields = None
+        self._fields = None
         return self
 
     def __repr__(self) -> str:
