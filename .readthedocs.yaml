@@ -4,13 +4,11 @@ build:
   os: ubuntu-22.04
   tools:
     # NOTE: This should be kept up to date with .ci.yml
-    python: "3.11"
-
-mkdocs:
-  configuration: mkdocs.yml
-
-python:
-   install:
-     - requirements: dev-requirements/mkdocs.txt
-     - method: pip
-       path: .
+    python: "3.12"
+  commands:
+    - asdf plugin add uv
+    - asdf install uv latest
+    - asdf global uv latest
+    - uv venv
+    - uv pip install nox
+    - nox -s mkdocs
