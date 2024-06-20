@@ -37,7 +37,7 @@ PYPROJECT_TOML = "pyproject.toml"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
 
 if "READTHEDOCS_OUTPUT" in _os.environ:
-    DOCUMENTATION_OUTPUT_PATH = _os.environ["READTHEDOCS_OUTPUT"]
+    DOCUMENTATION_OUTPUT_PATH = _os.environ["READTHEDOCS_OUTPUT"] + "/html"
 else:
     DOCUMENTATION_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "docs")
 
