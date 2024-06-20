@@ -1,3 +1,21 @@
+## 2.0.0.dev126 (2024-06-20)
+
+### Features
+
+- Add `registered_guild_id` field to `BaseCommandInteraction` ([#1930](https://github.com/hikari-py/hikari/issues/1930))
+- Add `clear_fields()` method to `Embed` ([#1933](https://github.com/hikari-py/hikari/issues/1933))
+- Add payload to deserialization error to make it easier to diagnose ([#1943](https://github.com/hikari-py/hikari/issues/1943))
+
+### Bugfixes
+
+- Fix incorrect form uploads with transport sensitive content ([#1909](https://github.com/hikari-py/hikari/issues/1909))
+
+### Documentation Improvements
+
+- Greatly optimize loading time ([#1901](https://github.com/hikari-py/hikari/issues/1901))
+- Remove extra indentation level from codeblocks ([#1902](https://github.com/hikari-py/hikari/issues/1902))
+
+---
 ## 2.0.0.dev125 (2024-04-28)
 
 ### Features
