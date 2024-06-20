@@ -10,5 +10,5 @@ build:
     - asdf install uv latest
     - asdf global uv latest
     - uv venv
-    - uv pip install nox
+    - uv pip install nox[uv]
     - .venv/bin/nox -s mkdocs
