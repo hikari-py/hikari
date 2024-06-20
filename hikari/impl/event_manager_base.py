@@ -614,6 +614,7 @@ class EventManagerBase(event_manager_.EventManager):
             asyncio.get_running_loop().call_exception_handler(
                 {
                     "message": "Exception occurred in raw event dispatch conduit",
+                    "payload": payload,
                     "exception": ex,
                     "task": asyncio.current_task(),
                 }
