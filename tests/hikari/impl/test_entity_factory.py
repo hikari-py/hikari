@@ -4388,6 +4388,7 @@ class TestEntityFactoryImpl:
                         ],
                     }
                 ],
+                "guild_id": "12345678",
                 "resolved": interaction_resolved_data_payload,
             },
             "channel_id": "49949494",
@@ -4447,6 +4448,7 @@ class TestEntityFactoryImpl:
         assert interaction.app_permissions == 54123
         assert len(interaction.entitlements) == 1
         assert interaction.entitlements[0].id == 696969696969696
+        assert interaction.registered_guild_id == 12345678
 
         # CommandInteractionOption
         assert len(interaction.options) == 1
@@ -4486,6 +4488,7 @@ class TestEntityFactoryImpl:
                 "type": 2,
                 "target_id": "115590097100865541",
                 "resolved": {"users": {"115590097100865541": user_payload}},
+                "guild_id": 12345678,
             },
             "channel_id": "49949494",
             "member": interaction_member_payload,
@@ -4528,6 +4531,7 @@ class TestEntityFactoryImpl:
         del command_interaction_payload["data"]["options"]
         del command_interaction_payload["guild_locale"]
         del command_interaction_payload["app_permissions"]
+        del command_interaction_payload["data"]["guild_id"]
 
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
 
@@ -4538,6 +4542,7 @@ class TestEntityFactoryImpl:
         assert interaction.resolved is None
         assert interaction.guild_locale is None
         assert interaction.app_permissions is None
+        assert interaction.registered_guild_id is None
 
     @pytest.fixture
     def autocomplete_interaction_payload(self, member_payload, user_payload, interaction_resolved_data_payload):
@@ -4560,6 +4565,7 @@ class TestEntityFactoryImpl:
                         ],
                     }
                 ],
+                "guild_id": 12345678,
             },
             "channel_id": "49949494",
             "user": user_payload,
@@ -4608,6 +4614,7 @@ class TestEntityFactoryImpl:
         entity_factory_impl._deserialize_interaction_member.assert_called_once_with(member_payload, guild_id=43123123)
         assert interaction.locale is locales.Locale.ES_ES
         assert interaction.guild_locale is locales.Locale.EN_US
+        assert interaction.registered_guild_id == 12345678
 
         # AutocompleteInteractionOption
         assert len(interaction.options) == 1

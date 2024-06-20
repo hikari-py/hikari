@@ -453,7 +453,11 @@ class InteractionServer(interaction_server.InteractionServer):
 
         except Exception as exc:
             asyncio.get_running_loop().call_exception_handler(
-                {"message": "Exception occurred during interaction deserialization", "exception": exc}
+                {
+                    "message": "Exception occurred during interaction deserialization",
+                    "payload": payload,
+                    "exception": exc,
+                }
             )
             return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction deserialization")
 

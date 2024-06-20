@@ -58,6 +58,7 @@ class TestCommandInteraction:
             locale="es-ES",
             guild_locale="en-US",
             app_permissions=543123,
+            registered_guild_id=snowflakes.Snowflake(12345678),
             entitlements=[
                 monetization.Entitlement(
                     id=snowflakes.Snowflake(123123),
@@ -135,6 +136,7 @@ class TestAutocompleteInteraction:
             command_name="OKOKOK",
             command_type=1,
             options=[],
+            registered_guild_id=snowflakes.Snowflake(12345678),
             entitlements=[
                 monetization.Entitlement(
                     id=snowflakes.Snowflake(123123),

@@ -592,7 +592,12 @@ class TestEventManagerBase:
 
         error_handler.assert_called_once_with(
             event_loop,
-            {"exception": exc, "message": "Exception occurred in raw event dispatch conduit", "task": mock_task},
+            {
+                "exception": exc,
+                "message": "Exception occurred in raw event dispatch conduit",
+                "payload": pl,
+                "task": mock_task,
+            },
         )
 
     @pytest.mark.asyncio
