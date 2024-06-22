@@ -616,37 +616,42 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
         ctx = client_session.request(method, self._web_resource.url, raise_for_status=False)
 
         try:
+            # Double try is needed to avoid calling __aexit__ if the __aenter__ raised the error
             resp: aiohttp.ClientResponse = await ctx.__aenter__()
 
-            if 200 <= resp.status < 400:
-                mimetype = None
-                filename = self._web_resource.filename
+            try:
+                if 200 <= resp.status < 400:
+                    mimetype = None
+                    filename = self._web_resource.filename
 
-                if resp.content_disposition is not None:
-                    mimetype = resp.content_disposition.type
+                    if resp.content_disposition is not None:
+                        mimetype = resp.content_disposition.type
 
-                if mimetype is None:
-                    mimetype = resp.content_type
+                    if mimetype is None:
+                        mimetype = resp.content_type
 
-                self._client_response_ctx = ctx
-                self._client_session = client_session
+                    self._client_response_ctx = ctx
+                    self._client_session = client_session
 
-                return WebReader(
-                    stream=resp.content,
-                    url=str(resp.real_url),
-                    status=resp.status,
-                    reason=str(resp.reason),
-                    filename=filename,
-                    charset=resp.charset,
-                    mimetype=mimetype,
-                    size=resp.content_length,
-                    head_only=self._head_only,
-                )
-            else:
-                raise await net.generate_error_response(resp)
+                    return WebReader(
+                        stream=resp.content,
+                        url=str(resp.real_url),
+                        status=resp.status,
+                        reason=str(resp.reason),
+                        filename=filename,
+                        charset=resp.charset,
+                        mimetype=mimetype,
+                        size=resp.content_length,
+                        head_only=self._head_only,
+                    )
+                else:
+                    raise await net.generate_error_response(resp)
 
-        except Exception as ex:
-            await ctx.__aexit__(type(ex), ex, ex.__traceback__)
+            except Exception as ex:
+                await ctx.__aexit__(type(ex), ex, ex.__traceback__)
+                raise
+
+        except Exception:
             await client_session.close()
             raise
 
