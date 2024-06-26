@@ -39,6 +39,8 @@ class TestAttachment:
         attachment = messages.Attachment(
             id=123,
             filename="super_cool_file.cool",
+            title="other title",
+            description="description!",
             media_type="image/png",
             height=222,
             width=555,

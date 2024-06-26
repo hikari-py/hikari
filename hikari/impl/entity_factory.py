@@ -2968,6 +2968,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return message_models.Attachment(
             id=snowflakes.Snowflake(payload["id"]),
             filename=payload["filename"],
+            title=payload.get("title"),
+            description=payload.get("description"),
             media_type=payload.get("content_type"),
             size=int(payload["size"]),
             url=payload["url"],
