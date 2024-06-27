@@ -49,6 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari import messages as messages_
     from hikari import monetization
     from hikari import permissions as permissions_
+    from hikari import polls
     from hikari import sessions
     from hikari import snowflakes
     from hikari import stickers as stickers_
@@ -984,6 +985,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[polls.PollCreate] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -1061,6 +1063,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to create.
         sticker
             If provided, the object or ID of a sticker to send on the message.
 
