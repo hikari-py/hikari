@@ -185,6 +185,15 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         """Global name for the user, if they have one, otherwise [`None`][]."""
 
     @property
+    def display_name(self) -> undefined.UndefinedNoneOr[str]:
+        """Return the user's display name.
+
+        If the user has a global name, this will return that global name.
+        If the user has neither, the username will be returned instead.
+        """
+        return self.global_name or self.username
+
+    @property
     @abc.abstractmethod
     def is_bot(self) -> undefined.UndefinedOr[bool]:
         """Whether this user is a bot account."""
@@ -505,15 +514,6 @@ class User(PartialUser, abc.ABC):
     def display_avatar_url(self) -> files.URL:
         """Display avatar URL for this user."""
         return self.make_avatar_url() or self.default_avatar_url
-
-    @property
-    def display_name(self) -> str:
-        """Return the user's display name.
-
-        If the user has a global name, this will return that global name.
-        If the user has neither, the username will be returned instead.
-        """
-        return self.global_name or self.username
 
     @property
     @abc.abstractmethod
