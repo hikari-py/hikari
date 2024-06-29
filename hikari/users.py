@@ -186,6 +186,15 @@ class PartialUser(snowflakes.Unique, abc.ABC):
 
     @property
     @abc.abstractmethod
+    def display_name(self) -> undefined.UndefinedNoneOr[str]:
+        """Return the user's display name.
+
+        If the user has a global name, this will return that global name.
+        If the user has neither, the username will be returned instead.
+        """
+
+    @property
+    @abc.abstractmethod
     def is_bot(self) -> undefined.UndefinedOr[bool]:
         """Whether this user is a bot account."""
 
@@ -555,6 +564,15 @@ class User(PartialUser, abc.ABC):
     def global_name(self) -> typing.Optional[str]:
         """Global name for the user, if they have one, otherwise [`None`][]."""
 
+    @property
+    @abc.abstractmethod
+    def display_name(self) -> str:
+        """Return the user's display name.
+
+        If the user has a global name, this will return that global name.
+        If the user has neither, the username will be returned instead.
+        """
+
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the avatar URL for this user, if set.
 
@@ -755,6 +773,15 @@ class UserImpl(PartialUserImpl, User):
 
     flags: UserFlag = attrs.field(eq=False, hash=False, repr=True)
     """The public flags for this user."""
+
+    @property
+    def display_name(self) -> str:
+        """Return the user's display name.
+
+        If the user has a global name, this will return that global name.
+        If the user has neither, the username will be returned instead.
+        """
+        return self.global_name or self.username
 
 
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
