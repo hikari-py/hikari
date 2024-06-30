@@ -349,6 +349,7 @@ class TestPartialUserImpl:
         assert obj.display_name == obj.global_name
 
     def test_display_name_property_when_no_global_name(self, obj):
+        obj.global_name = None
         assert obj.display_name == obj.username
 
     @pytest.mark.asyncio
