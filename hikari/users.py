@@ -188,8 +188,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     def display_name(self) -> undefined.UndefinedNoneOr[str]:
         """Return the user's display name.
 
-        If the user has a global name, this will return that global name.
-        If the user has neither, the username will be returned instead.
+        Either users global name (if set) or its username.
         """
         return self.global_name or self.username
 
