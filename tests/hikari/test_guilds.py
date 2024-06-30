@@ -232,7 +232,11 @@ class TestMember:
         )
 
     def test_str_operator(self, model, mock_user):
+        model.nickname = None
         assert str(model) == str(mock_user)
+
+    def test_str_operator_when_nickname_set(self, model, mock_user):
+        assert str(model) == "davb"
 
     def test_app_property(self, model, mock_user):
         assert model.app is mock_user.app
