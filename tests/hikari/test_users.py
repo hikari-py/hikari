@@ -345,7 +345,7 @@ class TestPartialUserImpl:
         assert obj.mention == "<@123>"
 
     def test_display_name_property_when_global_name(self, obj):
-        obj.global_name = "Thomm.o"
+        obj.global_name = "Thommo"
         assert obj.display_name == obj.global_name
 
     def test_display_name_property_when_no_global_name(self, obj):
