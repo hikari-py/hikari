@@ -1037,6 +1037,16 @@ class TestCommandBuilder:
 
         assert builder.name_localizations == {"aaa": "bbb", "ccc": "DDd"}
 
+    def test_set_integration_types(self, stub_command):
+        builder = stub_command("oksksksk").set_integration_types([commands.CommandIntegrationType.GUILD_INSTALL])
+
+        assert builder.integration_types == [commands.CommandIntegrationType.GUILD_INSTALL]
+
+    def test_set_contexts(self, stub_contexts):
+        builder = stub_command("oksksksk").set_contexts([commands.CommandInteractionContextType.BOT_DM])
+
+        assert builder.integration_types == [commands.CommandInteractionContextType.BOT_DM]
+
 
 class TestSlashCommandBuilder:
     def test_description_property(self):

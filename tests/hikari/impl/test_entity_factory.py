@@ -4056,6 +4056,8 @@ class TestEntityFactoryImpl:
         assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
+        assert command.integration_types == [commands.CommandIntegrationType.GUILD_INSTALL]
+        assert command.contexts == [commands.CommandInteractionContextType.GUILD, commands.CommandInteractionContextType.BOT_DM]
 
         # CommandOption
         assert len(command.options) == 1

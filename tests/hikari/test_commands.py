@@ -49,6 +49,15 @@ class TestPartialCommand:
             guild_id=snowflakes.Snowflake(31231235),
             version=snowflakes.Snowflake(43123123),
             name_localizations={},
+            integration_types=[
+                commands.CommandIntegrationType.GUILD_INSTALL,
+                commands.CommandIntegrationType.USER_INSTALL
+            ],
+            contexts=[
+                commands.CommandInteractionContextType.GUILD,
+                commands.CommandInteractionContextType.BOT_DM,
+                commands.CommandInteractionContextType.PRIVATE_CHANNEL
+            ]
         )
 
     @pytest.mark.asyncio

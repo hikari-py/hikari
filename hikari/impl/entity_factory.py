@@ -2279,6 +2279,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
+        integration_types: typing.Sequence[commands.CommandIntegrationType]
+        if raw_integration_types := payload.get("integration_types"):
+            integration_types = [commands.CommandIntegrationType(integration_type) for integration_type in raw_integration_types]
+        else:
+            integration_types = [commands.CommandIntegrationType.GUILD_INSTALL]
+
+        contexts: typing.Sequence[commands.CommandInteractionContextType]
+        if raw_contexts := payload.get("contexts"):
+            contexts = [commands.CommandInteractionContextType(context) for context in raw_contexts]
+        else:
+            contexts = [
+                commands.CommandInteractionContextType.GUILD,
+                commands.CommandInteractionContextType.BOT_DM
+            ]
+
         return commands.SlashCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2294,6 +2309,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=snowflakes.Snowflake(payload["version"]),
             name_localizations=name_localizations,
             description_localizations=description_localizations,
+            integration_types=integration_types,
+            contexts=contexts
         )
 
     def deserialize_context_menu_command(
@@ -2320,6 +2337,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
+        integration_types: typing.Sequence[commands.CommandIntegrationType]
+        if raw_integration_types := payload.get("integration_types"):
+            integration_types = [commands.CommandIntegrationType(integration_type) for integration_type in
+                                 raw_integration_types]
+        else:
+            integration_types = [commands.CommandIntegrationType.GUILD_INSTALL]
+
+        contexts: typing.Sequence[commands.CommandInteractionContextType]
+        if raw_contexts := payload.get("contexts"):
+            contexts = [commands.CommandInteractionContextType(context) for context in raw_contexts]
+        else:
+            contexts = [commands.CommandInteractionContextType.GUILD]
+
         return commands.ContextMenuCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2332,6 +2362,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
             name_localizations=name_localizations,
+            integration_types=integration_types,
+            contexts=contexts
         )
 
     def deserialize_command(
