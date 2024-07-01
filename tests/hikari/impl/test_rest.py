@@ -5517,6 +5517,8 @@ class TestRESTClientImplAsync:
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
             dm_enabled=False,
             nsfw=True,
+            integration_types=[commands.CommandIntegrationType.GUILD_INSTALL],
+            contexts=[commands.CommandInteractionContextType.GUILD, commands.CommandInteractionContextType.BOT_DM]
         )
 
         assert result is rest_client._request.return_value
