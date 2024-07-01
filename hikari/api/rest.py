@@ -6684,6 +6684,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        integration_types: typing.Sequence[commands.CommandIntegrationType] = undefined.UNDEFINED,
+        contexts: typing.Sequence[commands.CommandInteractionContextType]
     ) -> commands.SlashCommand:
         r"""Create an application slash command.
 
@@ -6758,6 +6760,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        integration_types: typing.Sequence[commands.CommandIntegrationType] = undefined.UNDEFINED,
+        contexts: typing.Sequence[commands.CommandInteractionContextType]
     ) -> commands.ContextMenuCommand:
         r"""Create an application context menu command.
 
@@ -6819,6 +6823,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> typing.Sequence[commands.PartialCommand]:
         """Set the commands for an application.
+
+        !!! note
+            If you want to add user install command, be aware if you removed guild argument.
+            Discord doesn't say anything about it when creating command
 
         !!! warning
             Any existing commands not included in the provided commands array

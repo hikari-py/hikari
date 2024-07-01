@@ -1284,6 +1284,14 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         alias="name_localizations", factory=dict, kw_only=True
     )
 
+    _integration_types: typing.Sequence[commands.CommandIntegrationType] = attrs.field(
+        alias="integration_types", default=undefined.UNDEFINED, kw_only=True
+    )
+
+    _contexts: typing.Sequence[commands.CommandInteractionContextType] = attrs.field(
+        alias="contexts", default=undefined.UNDEFINED, kw_only=True
+    )
+
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
@@ -1336,6 +1344,18 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._name_localizations = name_localizations
         return self
 
+    def set_integration_types(
+        self, integration_types: typing.Sequence[commands.CommandIntegrationType], /
+    ) -> Self:
+        self._integration_types = integration_types
+        return self
+
+    def set_contexts(
+        self, contexts: typing.Sequence[commands.CommandInteractionContextType], /
+    ) -> Self:
+        self._contexts = contexts
+        return self
+
     def build(self, _: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
@@ -1344,6 +1364,8 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data.put("name_localizations", self._name_localizations)
         data.put("dm_permission", self._is_dm_enabled)
         data.put("nsfw", self._is_nsfw)
+        data.put_array("integration_types", self._integration_types)
+        data.put_array("contexts", self._contexts)
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by using it correctly.

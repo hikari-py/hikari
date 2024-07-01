@@ -1125,6 +1125,40 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
+    def set_integration_types(
+        self, integration_types: typing.Sequence[commands.CommandIntegrationType], /
+    ) -> Self:
+        """Set the command integration types
+
+        Parameters
+        ----------
+        integration_types
+            Integration types that show where command would be shown up
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder for chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_contexts(
+        self, contexts: typing.Sequence[commands.CommandInteractionContextType], /
+    ) -> Self:
+        """Set the command contexts
+
+        Parameters
+        ----------
+        contexts
+            Where command can be used
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder for chained calls.
+        """
+
+    @abc.abstractmethod
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         """Build a JSON object from this builder.
 
