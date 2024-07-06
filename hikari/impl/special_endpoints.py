@@ -1284,11 +1284,11 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         alias="name_localizations", factory=dict, kw_only=True
     )
 
-    _integration_types: typing.Sequence[commands.CommandIntegrationType] = attrs.field(
+    _integration_types: typing.Sequence[applications.ApplicationIntegrationType] = attrs.field(
         alias="integration_types", default=undefined.UNDEFINED, kw_only=True
     )
 
-    _contexts: typing.Sequence[commands.CommandInteractionContextType] = attrs.field(
+    _contexts: typing.Sequence[applications.ApplicationInstallationContextType] = attrs.field(
         alias="contexts", default=undefined.UNDEFINED, kw_only=True
     )
 
@@ -1345,13 +1345,13 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self
 
     def set_integration_types(
-        self, integration_types: typing.Sequence[commands.CommandIntegrationType], /
+        self, integration_types: typing.Sequence[applications.ApplicationIntegrationType], /
     ) -> Self:
         self._integration_types = integration_types
         return self
 
     def set_contexts(
-        self, contexts: typing.Sequence[commands.CommandInteractionContextType], /
+        self, contexts: typing.Sequence[applications.ApplicationInstallationContextType], /
     ) -> Self:
         self._contexts = contexts
         return self

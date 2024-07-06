@@ -59,6 +59,7 @@ if typing.TYPE_CHECKING:
 
     from typing_extensions import Self
 
+    from hikari import applications
     from hikari import channels
     from hikari import colors
     from hikari import commands
@@ -1126,7 +1127,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_integration_types(
-        self, integration_types: typing.Sequence[commands.CommandIntegrationType], /
+        self, integration_types: typing.Sequence[applications.ApplicationIntegrationType], /
     ) -> Self:
         """Set the command integration types
 
@@ -1143,7 +1144,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_contexts(
-        self, contexts: typing.Sequence[commands.CommandInteractionContextType], /
+        self, contexts: typing.Sequence[applications.ApplicationInstallationContextType], /
     ) -> Self:
         """Set the command contexts
 

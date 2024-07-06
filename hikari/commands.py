@@ -33,9 +33,7 @@ __all__: typing.Sequence[str] = (
     "CommandPermissionType",
     "CommandType",
     "GuildCommandPermissions",
-    "OptionType",
-    "CommandIntegrationType",
-    "CommandInteractionContextType"
+    "OptionType"
 )
 
 import typing
@@ -53,6 +51,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import guilds
     from hikari import locales
+    from hikari import applications
 
 
 class CommandType(int, enums.Enum):
@@ -110,27 +109,6 @@ class OptionType(int, enums.Enum):
 
     ATTACHMENT = 11
     """Denotes a command option where the value will be an attachment."""
-
-
-@typing.final
-class CommandIntegrationType(int, enums.Enum):
-    GUILD_INSTALL = 0
-    """A guild install command integration type"""
-
-    USER_INSTALL = 1
-    """A user install command integration type"""
-
-
-@typing.final
-class CommandInteractionContextType(int, enums.Enum):
-    GUILD = 0
-    """Interaction can be used within server"""
-
-    BOT_DM = 1
-    """Interaction can be used within DM's"""
-
-    PRIVATE_CHANNEL = 2
-    """Interaction can be used within group DM's and DM's"""
 
 
 @attrs_extensions.with_copy
@@ -288,11 +266,11 @@ class PartialCommand(snowflakes.Unique):
     )
     """A mapping of name localizations for this command."""
 
-    integration_types: typing.Sequence[CommandIntegrationType] = attrs.field(eq=False, hash=False, repr=True)
-    """A sequence of command integration types"""
+    integration_types: typing.Sequence[applications.ApplicationIntegrationType] = attrs.field(eq=False, hash=False, repr=True)
+    """A sequence of command integration types."""
 
-    contexts: typing.Sequence[CommandInteractionContextType] = attrs.field(eq=False, hash=False, repr=True)
-    """A sequence of command contexts"""
+    contexts: typing.Sequence[applications.ApplicationInstallationContextType] = attrs.field(eq=False, hash=False, repr=True)
+    """A sequence of command contexts."""
 
     async def fetch_self(self) -> PartialCommand:
         """Fetch an up-to-date version of this command object.

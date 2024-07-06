@@ -23,6 +23,7 @@ import mock
 import pytest
 
 from hikari import commands
+from hikari import applications
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -40,7 +41,7 @@ class TestPartialCommand:
         return hikari_test_helpers.mock_class_namespace(commands.PartialCommand)(
             app=mock_app,
             id=snowflakes.Snowflake(34123123),
-            type=commands.CommandType.SLASH,
+            type=applications.CommandType.SLASH,
             application_id=snowflakes.Snowflake(65234123),
             name="Name",
             default_member_permissions=None,
@@ -50,13 +51,13 @@ class TestPartialCommand:
             version=snowflakes.Snowflake(43123123),
             name_localizations={},
             integration_types=[
-                commands.CommandIntegrationType.GUILD_INSTALL,
-                commands.CommandIntegrationType.USER_INSTALL
+                applications.ApplicationIntegrationType.GUILD_INSTALL,
+                applications.ApplicationIntegrationType.USER_INSTALL
             ],
             contexts=[
-                commands.CommandInteractionContextType.GUILD,
-                commands.CommandInteractionContextType.BOT_DM,
-                commands.CommandInteractionContextType.PRIVATE_CHANNEL
+                applications.ApplicationInstallationContextType.GUILD,
+                applications.ApplicationInstallationContextType.BOT_DM,
+                applications.ApplicationInstallationContext.PRIVATE_CHANNEL
             ]
         )
 
