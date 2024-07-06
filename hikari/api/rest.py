@@ -6684,8 +6684,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        integration_types: typing.Sequence[commands.ApplicationIntegrationType] = undefined.UNDEFINED,
-        contexts: typing.Sequence[commands.ApplicationInstallationContext]
+        integration_types: typing.Sequence[applications.ApplicationIntegrationType] = undefined.UNDEFINED,
+        contexts: typing.Sequence[applications.ApplicationInstallationContextType]
     ) -> commands.SlashCommand:
         r"""Create an application slash command.
 
