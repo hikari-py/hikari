@@ -185,6 +185,14 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         """Global name for the user, if they have one, otherwise [`None`][]."""
 
     @property
+    def display_name(self) -> undefined.UndefinedNoneOr[str]:
+        """Return the user's display name.
+
+        Either users global name (if set) or its username.
+        """
+        return self.global_name or self.username
+
+    @property
     @abc.abstractmethod
     def is_bot(self) -> undefined.UndefinedOr[bool]:
         """Whether this user is a bot account."""
