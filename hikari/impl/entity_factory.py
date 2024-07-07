@@ -2579,6 +2579,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             resolved=resolved,
             target_id=target_id,
             app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
+            registered_guild_id=snowflakes.Snowflake(data_payload["guild_id"]) if "guild_id" in data_payload else None,
             entitlements=entitlements,
         )
 
@@ -2621,6 +2622,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
+            registered_guild_id=snowflakes.Snowflake(data_payload["guild_id"]) if "guild_id" in data_payload else None,
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
         )
 
@@ -2966,6 +2968,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return message_models.Attachment(
             id=snowflakes.Snowflake(payload["id"]),
             filename=payload["filename"],
+            title=payload.get("title"),
+            description=payload.get("description"),
             media_type=payload.get("content_type"),
             size=int(payload["size"]),
             url=payload["url"],

@@ -848,7 +848,11 @@ class TestInteractionServer:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
             get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-                {"message": "Exception occurred during interaction deserialization", "exception": mock_exception}
+                {
+                    "message": "Exception occurred during interaction deserialization",
+                    "payload": {"type": 2},
+                    "exception": mock_exception,
+                }
             )
 
         assert result.content_type == "text/plain"

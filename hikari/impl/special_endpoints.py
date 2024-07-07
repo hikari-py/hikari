@@ -1433,7 +1433,7 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
     """Builder class for context menu commands."""
 
     _type: commands.CommandType = attrs.field(alias="type")
-    # name is re-declared here to ensure type is before it in the initializer's args.
+    # name is redeclared here to ensure type is before it in the initializer's args.
     _name: str = attrs.field(alias="name")
 
     @property

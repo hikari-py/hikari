@@ -1,1 +1,1 @@
-coverage[toml]==7.5.1
+coverage[toml]==7.5.4
