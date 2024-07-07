@@ -149,27 +149,92 @@ class ShardCloseCode(int, enums.Enum):
     """Reasons for a shard connection closure."""
 
     NORMAL_CLOSURE = 1_000
+    "Normal Closure."
     GOING_AWAY = 1_001
+    "Going Away."
     PROTOCOL_ERROR = 1_002
+    "Protocol error."
     TYPE_ERROR = 1_003
+    "Type error."
     ENCODING_ERROR = 1_007
+    "Encoding error."
     POLICY_VIOLATION = 1_008
+    "Policy Violation."
     TOO_BIG = 1_009
+    "Message Too Big."
     UNEXPECTED_CONDITION = 1_011
+    "Unexpected Condition."
     UNKNOWN_ERROR = 4_000
+    """Unknown error.
+
+    We're not sure what went wrong.
+    """
     UNKNOWN_OPCODE = 4_001
+    """Unknown opcode.
+
+    You sent an invalid Gateway opcode or an invalid payload for an opcode.
+    """
     DECODE_ERROR = 4_002
+    """Decode error.
+
+    You sent an invalid payload to Discord.
+    """
     NOT_AUTHENTICATED = 4_003
+    """Not authenticated.
+
+    You sent us a payload prior to identifying.
+    """
     AUTHENTICATION_FAILED = 4_004
+    """Authentication failed.
+
+    The account token sent with your identify payload is incorrect.
+    """
     ALREADY_AUTHENTICATED = 4_005
+    """Already authenticated.
+
+    You sent more than one identify payload.
+    """
     INVALID_SEQ = 4_007
+    """Invalid seq.
+
+    The sequence sent when resuming the session was invalid. Reconnect and start a new session.
+    """
     RATE_LIMITED = 4_008
+    """Rate limited.
+
+    You're sending payloads to us too quickly. Slow it down! You will be disconnected on receiving this.
+    """
     SESSION_TIMEOUT = 4_009
+    """Session timed out.
+
+    Your session timed out. Reconnect and start a new one.
+    """
     INVALID_SHARD = 4_010
+    """Invalid shard.
+
+    You sent us an invalid shard when identifying.
+    """
     SHARDING_REQUIRED = 4_011
+    """Sharding required.
+
+    The session would have handled too many guilds - you are required to shard your connection in order to connect.
+    """
     INVALID_VERSION = 4_012
+    """Invalid API version.
+
+    You sent an invalid version for the gateway.
+    """
     INVALID_INTENT = 4_013
+    """Invalid intent(s).
+
+    You sent an invalid intent for a Gateway Intent. You may have incorrectly calculated the bitwise value.
+    """
     DISALLOWED_INTENT = 4_014
+    """Disallowed intent(s).
+
+    You sent a disallowed intent for a Gateway Intent.
+    You may have tried to specify an intent that you have not enabled or are not approved for.
+    """
 
     @property
     def is_standard(self) -> bool:
