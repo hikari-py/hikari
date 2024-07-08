@@ -3915,6 +3915,7 @@ class RESTClientImpl(rest_api.RESTClient):
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
+        body.put("dm_permission", dm_enabled)
         body.put("integration_types", integration_types)
         body.put("contexts", contexts)
 

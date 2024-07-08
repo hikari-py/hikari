@@ -655,7 +655,8 @@ class Application(guilds.PartialApplication):
     install_parameters: typing.Optional[ApplicationInstallParameters] = attrs.field(eq=False, hash=False, repr=False)
     """Settings for the application's default in-app authorization link, if enabled."""
 
-    # integration_types_config: typing.Optional[typing.Mapping[]]
+    integration_types_config: typing.Optional[typing.Mapping[ApplicationIntegrationType, ApplicationInstallParameters]] = attrs.field(eq=False, hash=False, repr=False)
+    """Default scopes and permissions for each supported installation context."""
 
     approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of guilds this application is part of."""
