@@ -1304,7 +1304,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
         deprecation.warn_deprecated(
-            "dm_permission", additional_info="use contexts instead", removal_version="2.0.0.dev129"
+            "is_dm_enabled", additional_info="use contexts instead", removal_version="2.0.0.dev129"
         )
         return self._is_dm_enabled
 
