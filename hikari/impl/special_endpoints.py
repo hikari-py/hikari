@@ -71,6 +71,7 @@ from hikari.internal import data_binding
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
+from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -1311,6 +1312,14 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def integration_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]:
+        return self._integration_types
+
+    @property
+    def contexts(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationInstallationContextType]]:
+        return self._contexts
 
     def set_name(self, name: str, /) -> Self:
         self._name = name
