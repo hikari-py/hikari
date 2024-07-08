@@ -604,6 +604,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_install_parameters(self, payload: data_binding.JSONObject) -> application_models.ApplicationInstallParameters:
+
         return application_models.ApplicationInstallParameters(
             scopes=[application_models.OAuth2Scope(scope) for scope in payload["scopes"]],
             permissions=permission_models.Permissions(payload["permissions"]),
@@ -638,7 +639,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         integration_types_config: typing.Optional[typing.Mapping[application_models.ApplicationIntegrationType, application_models.ApplicationInstallParameters]] = {}
         if (integration_types_config_payload := payload.get("integration_types_config")) is not None:
             integration_types_config = {
-                application_models.ApplicationIntegrationType(k): self._deserialize_install_parameters(v)
+                application_models.ApplicationIntegrationType(k): self._deserialize_install_parameters(v["oauth2_install_params"])
                 for k, v in integration_types_config_payload.items()
             }
 
