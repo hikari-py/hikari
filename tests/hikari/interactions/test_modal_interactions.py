@@ -79,7 +79,7 @@ class TestModalInteraction:
                 )
             ],
             authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
-            context=applications.ApplicationInstallationContextType.GUILD
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     def test_build_response(self, mock_modal_interaction, mock_app):

@@ -4057,7 +4057,10 @@ class TestEntityFactoryImpl:
         assert command.is_nsfw is True
         assert command.version == 123321123
         assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
-        assert command.contexts == [application_models.ApplicationInstallationContextType.GUILD, application_models.ApplicationInstallationContextType.BOT_DM]
+        assert command.contexts == [
+            application_models.ApplicationInstallationContextType.GUILD,
+            application_models.ApplicationInstallationContextType.BOT_DM,
+        ]
 
         # CommandOption
         assert len(command.options) == 1
@@ -4211,7 +4214,7 @@ class TestEntityFactoryImpl:
             "version": 1,
             "application_id": "1",
             "authorizing_integration_owners": {0: 12345},
-            "context": 0
+            "context": 0,
         }
 
     def test_deserialize_partial_interaction(self, mock_app, entity_factory_impl, partial_interaction_payload):
@@ -4223,7 +4226,9 @@ class TestEntityFactoryImpl:
         assert interaction.type == 1
         assert interaction.version == 1
         assert interaction.application_id == 1
-        assert interaction.authorizing_integration_owners == {application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345}
+        assert interaction.authorizing_integration_owners == {
+            application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345
+        }
         assert interaction.context == application_models.ApplicationInstallationContextType.GUILD
         assert type(interaction) is base_interactions.PartialInteraction
 
@@ -4420,7 +4425,7 @@ class TestEntityFactoryImpl:
                 }
             ],
             "authorizing_integration_owners": {0: 12345},
-            "context": 0
+            "context": 0,
         }
 
     def test_deserialize_command_interaction(
@@ -4457,7 +4462,9 @@ class TestEntityFactoryImpl:
         assert len(interaction.entitlements) == 1
         assert interaction.entitlements[0].id == 696969696969696
         assert interaction.registered_guild_id == 12345678
-        assert interaction.authorizing_integration_owners == {application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345}
+        assert interaction.authorizing_integration_owners == {
+            application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345
+        }
         assert interaction.context == 0
 
         # CommandInteractionOption
@@ -4523,7 +4530,7 @@ class TestEntityFactoryImpl:
                 }
             ],
             "authorizing_integration_owners": {0: 12345},
-            "context": 0
+            "context": 0,
         }
 
     def test_deserialize_command_interaction_with_context_menu_field(
@@ -4601,7 +4608,7 @@ class TestEntityFactoryImpl:
                 }
             ],
             "authorizing_integration_owners": {0: 12345},
-            "context": 0
+            "context": 0,
         }
 
     def test_deserialize_autocomplete_interaction(
@@ -4629,7 +4636,9 @@ class TestEntityFactoryImpl:
         assert interaction.locale is locales.Locale.ES_ES
         assert interaction.guild_locale is locales.Locale.EN_US
         assert interaction.registered_guild_id == 12345678
-        assert interaction.authorizing_integration_owners == {application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345}
+        assert interaction.authorizing_integration_owners == {
+            application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345
+        }
         assert interaction.context == 0
 
         # AutocompleteInteractionOption
@@ -4873,7 +4882,7 @@ class TestEntityFactoryImpl:
                 }
             ],
             "authorizing_integration_owners": {0: 12345},
-            "context": 0
+            "context": 0,
         }
 
     def test_deserialize_component_interaction(
@@ -4908,7 +4917,9 @@ class TestEntityFactoryImpl:
         assert interaction.guild_locale == "en-US"
         assert interaction.guild_locale is locales.Locale.EN_US
         assert interaction.app_permissions == 5431234
-        assert interaction.authorizing_integration_owners == {application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345}
+        assert interaction.authorizing_integration_owners == {
+            application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345
+        }
         assert interaction.context == 0
 
         # ResolvedData
@@ -4920,7 +4931,9 @@ class TestEntityFactoryImpl:
 
         assert len(interaction.entitlements) == 1
         assert interaction.entitlements[0].id == 696969696969696
-        assert interaction.authorizing_integration_owners == {application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345}
+        assert interaction.authorizing_integration_owners == {
+            application_models.ApplicationIntegrationType.GUILD_INSTALL: 12345
+        }
         assert interaction.context == 0
 
     def test_deserialize_component_interaction_with_undefined_fields(

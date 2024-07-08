@@ -73,7 +73,7 @@ class TestComponentInteraction:
                 )
             ],
             authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
-            context=applications.ApplicationInstallationContextType.GUILD
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     def test_build_response(self, mock_component_interaction, mock_app):

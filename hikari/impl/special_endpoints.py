@@ -68,10 +68,10 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
-from hikari.internal import deprecation
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -1303,6 +1303,9 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @property
     def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
+        deprecation.warn_deprecated(
+            "dm_permission", additional_info="use contexts instead", removal_version="2.0.0.dev129"
+        )
         return self._is_dm_enabled
 
     @property
@@ -1359,9 +1362,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._integration_types = integration_types
         return self
 
-    def set_contexts(
-        self, contexts: typing.Sequence[applications.ApplicationInstallationContextType], /
-    ) -> Self:
+    def set_contexts(self, contexts: typing.Sequence[applications.ApplicationInstallationContextType], /) -> Self:
         self._contexts = contexts
         return self
 
@@ -1455,6 +1456,8 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             default_member_permissions=self._default_member_permissions,
             dm_enabled=self._is_dm_enabled,
             nsfw=self._is_nsfw,
+            integration_types=self._integration_types,
+            contexts=self._contexts,
         )
 
 
@@ -1488,6 +1491,8 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
             default_member_permissions=self._default_member_permissions,
             dm_enabled=self._is_dm_enabled,
             nsfw=self.is_nsfw,
+            integration_types=self._integration_types,
+            contexts=self._contexts,
         )
 
 

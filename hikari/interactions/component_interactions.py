@@ -147,7 +147,7 @@ class ComponentInteraction(
     locale: typing.Union[str, locales.Locale] = attrs.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this component interaction."""
 
-    app_permissions: permissions.Permissions = attrs.field(eq=False, hash=False, repr=False)
+    app_permissions: typing.Optional[permissions.Permissions] = attrs.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
 
     entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)

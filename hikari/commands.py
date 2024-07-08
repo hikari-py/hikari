@@ -33,7 +33,7 @@ __all__: typing.Sequence[str] = (
     "CommandPermissionType",
     "CommandType",
     "GuildCommandPermissions",
-    "OptionType"
+    "OptionType",
 )
 
 import typing
@@ -48,10 +48,10 @@ from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    from hikari import applications
     from hikari import channels
     from hikari import guilds
     from hikari import locales
-    from hikari import applications
 
 
 class CommandType(int, enums.Enum):
@@ -266,10 +266,14 @@ class PartialCommand(snowflakes.Unique):
     )
     """A mapping of name localizations for this command."""
 
-    integration_types: typing.Sequence[applications.ApplicationIntegrationType] = attrs.field(eq=False, hash=False, repr=True)
+    integration_types: typing.Sequence[applications.ApplicationIntegrationType] = attrs.field(
+        eq=False, hash=False, repr=True
+    )
     """A sequence of command integration types."""
 
-    contexts: typing.Sequence[applications.ApplicationInstallationContextType] = attrs.field(eq=False, hash=False, repr=True)
+    contexts: typing.Sequence[applications.ApplicationInstallationContextType] = attrs.field(
+        eq=False, hash=False, repr=True
+    )
     """A sequence of command contexts."""
 
     async def fetch_self(self) -> PartialCommand:

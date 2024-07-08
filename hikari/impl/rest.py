@@ -3760,8 +3760,12 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        integration_types: typing.Sequence[applications.ApplicationIntegrationType] = undefined.UNDEFINED,
-        contexts: typing.Sequence[applications.ApplicationInstallationContextType] = undefined.UNDEFINED
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -3809,8 +3813,12 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        integration_types: typing.Sequence[applications.ApplicationIntegrationType] = undefined.UNDEFINED,
-        contexts: typing.Sequence[applications.ApplicationInstallationContextType] = undefined.UNDEFINED
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
             application=application,
@@ -3825,7 +3833,7 @@ class RESTClientImpl(rest_api.RESTClient):
             dm_enabled=dm_enabled,
             nsfw=nsfw,
             integration_types=integration_types,
-            contexts=contexts
+            contexts=contexts,
         )
         return self._entity_factory.deserialize_slash_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3846,8 +3854,12 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        integration_types: typing.Sequence[applications.ApplicationIntegrationType] = undefined.UNDEFINED,
-        contexts: typing.Sequence[applications.ApplicationInstallationContextType] = undefined.UNDEFINED
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
             application=application,
@@ -3859,7 +3871,7 @@ class RESTClientImpl(rest_api.RESTClient):
             dm_enabled=dm_enabled,
             nsfw=nsfw,
             integration_types=integration_types,
-            contexts=contexts
+            contexts=contexts,
         )
         return self._entity_factory.deserialize_context_menu_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3896,8 +3908,12 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        integration_types: typing.Sequence[applications.ApplicationIntegrationType] = undefined.UNDEFINED,
-        contexts: typing.Sequence[applications.ApplicationInstallationContextType] = undefined.UNDEFINED
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
             route = routes.PATCH_APPLICATION_COMMAND.compile(application=application, command=command)

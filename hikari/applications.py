@@ -46,7 +46,7 @@ __all__: typing.Sequence[str] = (
     "ApplicationRoleConnectionMetadataRecord",
     "get_token_id",
     "ApplicationIntegrationType",
-    "ApplicationInstallationContextType"
+    "ApplicationInstallationContextType",
 )
 
 import base64
@@ -75,6 +75,8 @@ if typing.TYPE_CHECKING:
 
 @typing.final
 class ApplicationIntegrationType(int, enums.Enum):
+    """The known integration types."""
+
     GUILD_INSTALL = 0
     """A guild install command integration type"""
 
@@ -84,6 +86,8 @@ class ApplicationIntegrationType(int, enums.Enum):
 
 @typing.final
 class ApplicationInstallationContextType(int, enums.Enum):
+    """The known installation context types."""
+
     GUILD = 0
     """Interaction can be used within server"""
 
@@ -655,7 +659,9 @@ class Application(guilds.PartialApplication):
     install_parameters: typing.Optional[ApplicationInstallParameters] = attrs.field(eq=False, hash=False, repr=False)
     """Settings for the application's default in-app authorization link, if enabled."""
 
-    integration_types_config: typing.Optional[typing.Mapping[ApplicationIntegrationType, ApplicationInstallParameters]] = attrs.field(eq=False, hash=False, repr=False)
+    integration_types_config: typing.Optional[
+        typing.Mapping[ApplicationIntegrationType, ApplicationInstallParameters]
+    ] = attrs.field(eq=False, hash=False, repr=False)
     """Default scopes and permissions for each supported installation context."""
 
     approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)

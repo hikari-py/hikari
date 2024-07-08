@@ -5518,7 +5518,10 @@ class TestRESTClientImplAsync:
             dm_enabled=False,
             nsfw=True,
             integration_types=[applications.ApplicationIntegrationType.GUILD_INSTALL],
-            contexts=[applications.ApplicationInstallationContextType.GUILD, applications.ApplicationInstallationContextType.BOT_DM]
+            contexts=[
+                applications.ApplicationInstallationContextType.GUILD,
+                applications.ApplicationInstallationContextType.BOT_DM,
+            ],
         )
 
         assert result is rest_client._request.return_value
@@ -5534,7 +5537,7 @@ class TestRESTClientImplAsync:
                 "dm_permission": False,
                 "nsfw": True,
                 "integration_types": [0],
-                "contexts": [0, 1]
+                "contexts": [0, 1],
             },
         )
 
@@ -5589,7 +5592,10 @@ class TestRESTClientImplAsync:
             dm_enabled=False,
             nsfw=True,
             integration_types=[applications.ApplicationIntegrationType.GUILD_INSTALL],
-            contexts=[applications.ApplicationInstallationContextType.GUILD, applications.ApplicationInstallationContextType.BOT_DM]
+            contexts=[
+                applications.ApplicationInstallationContextType.GUILD,
+                applications.ApplicationInstallationContextType.BOT_DM,
+            ],
         )
 
         assert result is rest_client._entity_factory.deserialize_slash_command.return_value
@@ -5609,7 +5615,10 @@ class TestRESTClientImplAsync:
             dm_enabled=False,
             nsfw=True,
             integration_types=[applications.ApplicationIntegrationType.GUILD_INSTALL],
-            contexts=[applications.ApplicationInstallationContextType.GUILD, applications.ApplicationInstallationContextType.BOT_DM]
+            contexts=[
+                applications.ApplicationInstallationContextType.GUILD,
+                applications.ApplicationInstallationContextType.BOT_DM,
+            ],
         )
 
     async def test_create_context_menu_command(self, rest_client: rest.RESTClientImpl):
@@ -5627,8 +5636,10 @@ class TestRESTClientImplAsync:
             nsfw=True,
             name_localizations={locales.Locale.TR: "hhh"},
             integration_types=[applications.ApplicationIntegrationType.GUILD_INSTALL],
-            contexts=[applications.ApplicationInstallationContextType.GUILD,
-                      applications.ApplicationInstallationContextType.BOT_DM]
+            contexts=[
+                applications.ApplicationInstallationContextType.GUILD,
+                applications.ApplicationInstallationContextType.BOT_DM,
+            ],
         )
 
         assert result is rest_client._entity_factory.deserialize_context_menu_command.return_value
@@ -5645,7 +5656,10 @@ class TestRESTClientImplAsync:
             nsfw=True,
             name_localizations={"tr": "hhh"},
             integration_types=[applications.ApplicationIntegrationType.GUILD_INSTALL],
-            contexts=[applications.ApplicationInstallationContextType.GUILD, applications.ApplicationInstallationContextType.BOT_DM]
+            contexts=[
+                applications.ApplicationInstallationContextType.GUILD,
+                applications.ApplicationInstallationContextType.BOT_DM,
+            ],
         )
 
     async def test_set_application_commands_with_guild(self, rest_client):
@@ -5711,7 +5725,7 @@ class TestRESTClientImplAsync:
             options=[mock_option],
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             dm_enabled=True,
-            contexts=[applications.ApplicationInstallationContextType.GUILD]
+            contexts=[applications.ApplicationInstallationContextType.GUILD],
         )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
@@ -5726,7 +5740,7 @@ class TestRESTClientImplAsync:
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
                 "default_member_permissions": 4,
                 "dm_permission": True,
-                "contexts": [0]
+                "contexts": [0],
             },
         )
         rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)

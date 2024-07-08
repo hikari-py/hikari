@@ -1129,7 +1129,7 @@ class CommandBuilder(abc.ABC):
     def set_integration_types(
         self, integration_types: typing.Sequence[applications.ApplicationIntegrationType], /
     ) -> Self:
-        """Set the command integration types
+        """Set the command integration types.
 
         Parameters
         ----------
@@ -1143,10 +1143,8 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_contexts(
-        self, contexts: typing.Sequence[applications.ApplicationInstallationContextType], /
-    ) -> Self:
-        """Set the command contexts
+    def set_contexts(self, contexts: typing.Sequence[applications.ApplicationInstallationContextType], /) -> Self:
+        """Set the command contexts.
 
         Parameters
         ----------

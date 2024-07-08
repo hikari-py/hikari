@@ -45,7 +45,7 @@ class TestPartialInteraction:
             token="399393939doodsodso",
             version=3122312,
             authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
-            context=applications.ApplicationInstallationContextType.GUILD
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     def test_webhook_id_property(self, mock_partial_interaction):
@@ -63,7 +63,7 @@ class TestMessageResponseMixin:
             token="399393939doodsodso",
             version=3122312,
             authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
-            context=applications.ApplicationInstallationContextType.GUILD
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     @pytest.mark.asyncio
@@ -214,7 +214,7 @@ class TestModalResponseMixin:
             token="399393939doodsodso",
             version=3122312,
             authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
-            context=applications.ApplicationInstallationContextType.GUILD
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     @pytest.mark.asyncio
