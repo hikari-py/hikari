@@ -25,6 +25,7 @@ import typing
 import mock
 import pytest
 
+from hikari import applications
 from hikari import channels
 from hikari import commands
 from hikari import components
@@ -1038,14 +1039,14 @@ class TestCommandBuilder:
         assert builder.name_localizations == {"aaa": "bbb", "ccc": "DDd"}
 
     def test_set_integration_types(self, stub_command):
-        builder = stub_command("oksksksk").set_integration_types([commands.ApplicationIntegrationType.GUILD_INSTALL])
+        builder = stub_command("oksksksk").set_integration_types([applications.ApplicationIntegrationType.GUILD_INSTALL])
 
-        assert builder.integration_types == [commands.ApplicationIntegrationType.GUILD_INSTALL]
+        assert builder.integration_types == [applications.ApplicationIntegrationType.GUILD_INSTALL]
 
-    def test_set_contexts(self, stub_contexts):
-        builder = stub_command("oksksksk").set_contexts([commands.ApplicationInstallationContext.BOT_DM])
+    def test_set_contexts(self, stub_command):
+        builder = stub_command("oksksksk").set_contexts([applications.ApplicationInstallationContextType.BOT_DM])
 
-        assert builder.integration_types == [commands.ApplicationInstallationContext.BOT_DM]
+        assert builder.contexts == [applications.ApplicationInstallationContextType.BOT_DM]
 
 
 class TestSlashCommandBuilder:

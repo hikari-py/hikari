@@ -41,7 +41,7 @@ class TestPartialCommand:
         return hikari_test_helpers.mock_class_namespace(commands.PartialCommand)(
             app=mock_app,
             id=snowflakes.Snowflake(34123123),
-            type=applications.CommandType.SLASH,
+            type=commands.CommandType.SLASH,
             application_id=snowflakes.Snowflake(65234123),
             name="Name",
             default_member_permissions=None,
@@ -57,7 +57,7 @@ class TestPartialCommand:
             contexts=[
                 applications.ApplicationInstallationContextType.GUILD,
                 applications.ApplicationInstallationContextType.BOT_DM,
-                applications.ApplicationInstallationContext.PRIVATE_CHANNEL
+                applications.ApplicationInstallationContextType.PRIVATE_CHANNEL
             ]
         )
 
