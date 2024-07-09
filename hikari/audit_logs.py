@@ -358,8 +358,11 @@ class AuditLogEventType(int, enums.Enum):
     "Message was unpinned from a channel."
     INTEGRATION_CREATE = 80
     "App was added to server."
-    INTEGRATION_UPDATE = 81
-    "App was updated (as an example, its scopes were updated)."
+     INTEGRATION_UPDATE = 81
+    """An integration was updated.
+
+    For example, its scopes were updated.
+    """
     INTEGRATION_DELETE = 82
     "App was removed from server."
     STICKER_CREATE = 90
