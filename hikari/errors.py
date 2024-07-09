@@ -149,21 +149,21 @@ class ShardCloseCode(int, enums.Enum):
     """Reasons for a shard connection closure."""
 
     NORMAL_CLOSURE = 1_000
-    "Normal Closure."
+    """Normal Closure."""
     GOING_AWAY = 1_001
-    "Going Away."
+    """Going Away."""
     PROTOCOL_ERROR = 1_002
-    "Protocol error."
+    """Protocol error."""
     TYPE_ERROR = 1_003
-    "Type error."
+    """Type error."""
     ENCODING_ERROR = 1_007
-    "Encoding error."
+    """Encoding error."""
     POLICY_VIOLATION = 1_008
-    "Policy Violation."
+    """Policy Violation."""
     TOO_BIG = 1_009
-    "Message Too Big."
+    """Message Too Big."""
     UNEXPECTED_CONDITION = 1_011
-    "Unexpected Condition."
+    """Unexpected Condition."""
     UNKNOWN_ERROR = 4_000
     """Unknown error.
 
