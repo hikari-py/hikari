@@ -6460,6 +6460,6 @@ class TestRESTClientImplAsync:
         )
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_poll(StubModel(45874392), StubModel(398475938475))
+        await rest_client.end_poll(StubModel(45874392), StubModel(398475938475))
 
         rest_client._request.assert_awaited_once_with(expected_route)

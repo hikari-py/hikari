@@ -8222,7 +8222,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> typing.Sequence[users.User]:
-        """Fetch poll voters.
+        """Fetch users that voted for a specific answer.
 
         Parameters
         ----------
@@ -8258,13 +8258,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_poll(
+    async def end_poll(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         /,
     ) -> None:
-        """Delete poll.
+        """End a poll.
 
         Parameters
         ----------

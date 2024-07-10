@@ -4496,7 +4496,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return [self._entity_factory.deserialize_user(payload) for payload in response]
 
-    async def delete_poll(
+    async def end_poll(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
