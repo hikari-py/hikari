@@ -1416,7 +1416,7 @@ class EventFactory(abc.ABC):
     @abc.abstractmethod
     def deserialize_poll_vote_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> poll_events.PollVoteCreate:
+    ) -> poll_events.PollVoteCreateEvent:
         """Parse a raw payload from Discord into a poll vote create event object.
 
         Parameters
@@ -1428,14 +1428,14 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.poll_events.PollVoteCreate
+        hikari.events.poll_events.PollVoteCreateEvent
             The parsed poll vote create event object.
         """
 
     @abc.abstractmethod
     def deserialize_poll_vote_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> poll_events.PollVoteDelete:
+    ) -> poll_events.PollVoteDeleteEvent:
         """Parse a raw payload from Discord into a poll vote delete event object.
 
         Parameters
@@ -1447,6 +1447,6 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.poll_events.PollVoteDelete
+        hikari.events.poll_events.PollVoteDeleteEvent
             The parsed poll vote delete event object.
         """

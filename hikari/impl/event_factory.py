@@ -961,19 +961,17 @@ class EventFactoryImpl(event_factory.EventFactory):
     ################
     def deserialize_poll_vote_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> poll_events.PollVoteCreate:
+    ) -> poll_events.PollVoteCreateEvent:
         ...
         payload_guild_id = payload.get("guild_id")
 
-        # FIXME: Appeasing mypy for now. Is there a better to do this?
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake]
-
         if payload_guild_id is not None:
             guild_id = snowflakes.Snowflake(payload_guild_id)
         else:
             guild_id = undefined.UNDEFINED
 
-        return poll_events.PollVoteCreate(
+        return poll_events.PollVoteCreateEvent(
             app=self._app,
             shard=shard,
             user_id=snowflakes.Snowflake(payload["user_id"]),
@@ -985,18 +983,16 @@ class EventFactoryImpl(event_factory.EventFactory):
 
     def deserialize_poll_vote_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> poll_events.PollVoteDelete:
+    ) -> poll_events.PollVoteDeleteEvent:
         payload_guild_id = payload.get("guild_id")
 
-        # FIXME: Appeasing mypy for now. Is there a better to do this?
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake]
-
         if payload_guild_id is not None:
             guild_id = snowflakes.Snowflake(payload_guild_id)
         else:
             guild_id = undefined.UNDEFINED
 
-        return poll_events.PollVoteDelete(
+        return poll_events.PollVoteDeleteEvent(
             app=self._app,
             shard=shard,
             user_id=snowflakes.Snowflake(payload["user_id"]),
