@@ -8242,6 +8242,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         -------
         typing.Sequence[users.User]
             An sequence of Users.
+
         Raises
         ------
         hikari.errors.BadRequestError
