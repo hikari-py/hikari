@@ -3162,6 +3162,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
 
+        poll: typing.Optional[poll_models.Poll] = None
+        if "polls" in payload:
+            poll = self.deserialize_poll(payload["poll"])
+
         if "reactions" in payload:
             reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
         else:
@@ -3218,6 +3222,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_tts=payload["tts"],
             attachments=attachments,
             embeds=embeds,
+            poll=poll,
             reactions=reactions,
             is_pinned=payload["pinned"],
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else None,
