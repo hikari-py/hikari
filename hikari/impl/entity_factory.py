@@ -3162,7 +3162,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
 
-        poll: typing.Optional[poll_models.Poll] = None
+        poll: undefined.UndefinedOr[poll_models.Poll] = undefined.UNDEFINED
         if "polls" in payload:
             poll = self.deserialize_poll(payload["poll"])
 
