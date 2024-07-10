@@ -8220,9 +8220,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         /,
         *,
         after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
-        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED
-
-    ) -> typing.AsyncIterator[users.User]:
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> typing.Sequence[users.User]:
         """Fetch poll voters.
 
         Parameters
@@ -8240,8 +8239,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.AsyncIterator[users.User]
-            An async iterator of User objects.
+        typing.Sequence[users.User]
+            An sequence of Users.
         Raises
         ------
         hikari.errors.BadRequestError
@@ -8256,13 +8255,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-    
+
     @abc.abstractmethod
     async def delete_poll(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        /
+        /,
     ) -> None:
         """Delete poll.
 

@@ -4481,29 +4481,27 @@ class RESTClientImpl(rest_api.RESTClient):
         /,
         *,
         after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
-        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED
-
-    ) -> typing.AsyncIterator[users.User]:
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> typing.Sequence[users.User]:
         query = data_binding.StringMapBuilder()
 
         query.put("after", after)
         query.put("limit", limit)
-        
+
         route = routes.GET_POLL_ANSWER.compile(channel=channel, message=message, answer=answer_id)
-        
+
         response = await self._request(route, query=query)
 
         assert isinstance(response, list)
 
-        for user in response:
-            yield self._entity_factory.deserialize_user(user)
-    
+        return [self._entity_factory.deserialize_user(payload) for payload in response]
+
     async def delete_poll(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        /
+        /,
     ) -> None:
         route = routes.POST_END_POLL.compile(channel=channel, message=message)
-        
+
         await self._request(route)
