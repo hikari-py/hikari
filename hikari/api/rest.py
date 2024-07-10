@@ -8210,3 +8210,80 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
+
+    @abc.abstractmethod
+    async def fetch_poll_voters(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        answer_id: int,
+        /,
+        *,
+        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED
+
+    ) -> typing.AsyncIterator[users.User]:
+        """Fetch poll voters.
+
+        Parameters
+        ----------
+        channel
+            The channel the poll is in.
+        message
+            The message the poll is in.
+        answer_id
+            The answers id.
+        after
+            The votes to collect, after this user voted.
+        limit
+            The amount of votes to collect. Maximum 100, default 25
+
+        Returns
+        -------
+        typing.AsyncIterator[users.User]
+            An async iterator of User objects.
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+    
+    @abc.abstractmethod
+    async def delete_poll(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        /
+    ) -> None:
+        """Delete poll.
+
+        Parameters
+        ----------
+        channel
+            The channel the poll is in.
+        message
+            The message the poll is in.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
