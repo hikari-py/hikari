@@ -248,6 +248,7 @@ class PollBuilder(PartialPoll):
 
         Returns
         -------
+        PartialPoll
             This poll. Allows for call chaining.
         """
 
