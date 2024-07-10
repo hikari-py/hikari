@@ -3760,7 +3760,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         allow_multiselect = payload["allow_multiple_options"]
         layout_type = poll_models.PollLayoutType(payload["layout_type"])
 
-        answers: typing.MutableMapping[int, poll_models.PollAnswer] = {}
+        answers: typing.MutableSequence[poll_models.PollAnswer] = []
         for answer_payload in payload["answers"]:
             answer_id = answer_payload["answer_id"]
 
@@ -3769,7 +3769,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 text=answer_payload["text"], emoji=self.deserialize_emoji(emoji) if emoji else None
             )
 
-            answers[answer_id] = poll_models.PollAnswer(answer_id=answer_id, poll_media=poll_media)
+            answers.append(poll_models.PollAnswer(answer_id=answer_id, poll_media=poll_media))
 
         results = None
         if (result_payload := payload.get("result")) is not None:
@@ -3807,8 +3807,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def serialize_poll(self, poll: poll_models.PollBuilder) -> data_binding.JSONObject:
         answers: typing.MutableSequence[typing.Any] = []
-        for answer_id, answer in poll.answers.items():
-            answers.append({"answer_id": answer_id, "poll_media": self._serialize_poll_media(answer.poll_media)})
+        for answer in poll.answers:
+            answers.append({"poll_media": self._serialize_poll_media(answer.poll_media)})
 
         return {
             "question": self._serialize_poll_media(poll.question),

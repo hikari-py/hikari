@@ -985,7 +985,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        poll: undefined.UndefinedOr[polls.PollCreate] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[polls.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
