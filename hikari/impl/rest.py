@@ -1587,7 +1587,6 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        poll: undefined.UndefinedNoneOr[polls.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1607,7 +1606,6 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
-            poll=poll,
             flags=flags,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
