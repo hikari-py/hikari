@@ -3749,12 +3749,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ###############
     # POLL MODELS #
     ###############
-    def _deserialize_poll_media(self, payload: data_binding.JSONObject) -> poll_models.PollMedia:
-        emoji_payload = payload.get("emoji")
-        return poll_models.PollMedia(
-            text=payload.get("text"), emoji=self.deserialize_emoji(emoji_payload) if emoji_payload else None
-        )
-
     def _deserialize_poll_answer_count(self, payload: data_binding.JSONObject) -> poll_models.PollAnswerCount:
         return poll_models.PollAnswerCount(
             answer_id=payload["answer_id"], count=payload["count"], me_voted=payload["me_voted"]
@@ -3769,7 +3763,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         answers: typing.MutableMapping[int, poll_models.PollAnswer] = {}
         for answer_payload in payload["answers"]:
             answer_id = answer_payload["answer_id"]
-            poll_media = self._deserialize_poll_media(answer_payload)
+
+            emoji = answer_payload["emoji"]
+            poll_media = poll_models.PollMedia(
+                text=answer_payload["text"], emoji=self.deserialize_emoji(emoji) if emoji else None
+            )
 
             answers[answer_id] = poll_models.PollAnswer(answer_id=answer_id, poll_media=poll_media)
 
@@ -3777,7 +3775,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (result_payload := payload.get("result")) is not None:
             is_finalized = result_payload["is_finalized"]
 
-            answer_counts = tuple(self._deserialize_poll_answer_count(item) for item in result_payload["answer_counts"])
+            answer_counts = tuple(
+                poll_models.PollAnswerCount(
+                    answer_id=payload["answer_id"],
+                    count=payload["count"],
+                    me_voted=payload["me_voted"]
+                )
+                for payload in result_payload["answer_counts"]
+            )
             results = poll_models.PollResult(is_finalized=is_finalized, answer_counts=answer_counts)
 
         return poll_models.Poll(
