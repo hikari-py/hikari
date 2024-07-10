@@ -3777,9 +3777,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             answer_counts = tuple(
                 poll_models.PollAnswerCount(
-                    answer_id=payload["answer_id"],
-                    count=payload["count"],
-                    me_voted=payload["me_voted"]
+                    answer_id=payload["answer_id"], count=payload["count"], me_voted=payload["me_voted"]
                 )
                 for payload in result_payload["answer_counts"]
             )
