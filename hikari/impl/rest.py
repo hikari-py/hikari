@@ -1587,6 +1587,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[polls.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1606,6 +1607,7 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             flags=flags,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
@@ -4471,4 +4473,37 @@ class RESTClientImpl(rest_api.RESTClient):
         entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
     ) -> None:
         route = routes.DELETE_APPLICATION_TEST_ENTITLEMENT.compile(application=application, entitlement=entitlement)
+        await self._request(route)
+
+    async def fetch_poll_voters(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        answer_id: int,
+        /,
+        *,
+        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> typing.Sequence[users.User]:
+        query = data_binding.StringMapBuilder()
+
+        query.put("after", after)
+        query.put("limit", limit)
+
+        route = routes.GET_POLL_ANSWER.compile(channel=channel, message=message, answer=answer_id)
+
+        response = await self._request(route, query=query)
+
+        assert isinstance(response, list)
+
+        return [self._entity_factory.deserialize_user(payload) for payload in response]
+
+    async def delete_poll(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        /,
+    ) -> None:
+        route = routes.POST_END_POLL.compile(channel=channel, message=message)
+
         await self._request(route)

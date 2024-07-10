@@ -72,6 +72,7 @@ if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import channels as channels_
     from hikari import components as components_
+    from hikari import polls as polls_
     from hikari import traits
     from hikari import users as users_
     from hikari.interactions import base_interactions
@@ -715,6 +716,7 @@ class MessageData(BaseData[messages.Message]):
     mentions_everyone: undefined.UndefinedOr[bool] = attrs.field()
     attachments: typing.Tuple[messages.Attachment, ...] = attrs.field()
     embeds: typing.Tuple[embeds_.Embed, ...] = attrs.field()
+    poll: typing.Optional[polls_.Poll] = attrs.field()
     reactions: typing.Tuple[messages.Reaction, ...] = attrs.field()
     is_pinned: bool = attrs.field()
     webhook_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
@@ -783,6 +785,7 @@ class MessageData(BaseData[messages.Message]):
             mentions_everyone=message.mentions_everyone,
             attachments=tuple(map(copy.copy, message.attachments)),
             embeds=tuple(map(_copy_embed, message.embeds)),
+            poll=message.poll,
             reactions=tuple(map(copy.copy, message.reactions)),
             is_pinned=message.is_pinned,
             webhook_id=message.webhook_id,
@@ -828,6 +831,7 @@ class MessageData(BaseData[messages.Message]):
             mentions_everyone=self.mentions_everyone,
             attachments=tuple(map(copy.copy, self.attachments)),
             embeds=tuple(map(_copy_embed, self.embeds)),
+            poll=self.poll,
             reactions=tuple(map(copy.copy, self.reactions)),
             is_pinned=self.is_pinned,
             webhook_id=self.webhook_id,
