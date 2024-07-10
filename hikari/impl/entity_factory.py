@@ -3045,6 +3045,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "embeds" in payload:
             embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
 
+        poll: undefined.UndefinedOr[poll_models.Poll] = undefined.UNDEFINED
+        if "poll" in payload:
+            poll = self.deserialize_poll(payload["poll"])
+
         reactions: undefined.UndefinedOr[typing.List[message_models.Reaction]] = undefined.UNDEFINED
         if "reactions" in payload:
             reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
@@ -3118,6 +3122,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_tts=payload.get("tts", undefined.UNDEFINED),
             attachments=attachments,
             embeds=embeds,
+            poll=poll,
             reactions=reactions,
             is_pinned=payload.get("pinned", undefined.UNDEFINED),
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else undefined.UNDEFINED,
@@ -3761,15 +3766,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
-        question = payload["question"]
+        question = payload["question"]["text"]
         expiry = time.iso8601_datetime_string_to_datetime(payload["expiry"])
-        allow_multiselect = payload["allow_multiple_options"]
+        allow_multiselect = payload["allow_multiselect"]
         layout_type = poll_models.PollLayoutType(payload["layout_type"])
 
         answers: typing.MutableSequence[poll_models.PollAnswer] = []
         for answer_payload in payload["answers"]:
             answer_id = answer_payload["answer_id"]
-            poll_media = self._deserialize_poll_media(answer_payload)
+            _LOGGER.warning(answer_payload)
+            poll_media = self._deserialize_poll_media(answer_payload["poll_media"])
 
             answers.append(poll_models.PollAnswer(answer_id=answer_id, poll_media=poll_media))
 

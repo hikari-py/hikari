@@ -58,6 +58,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels as channels_
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
+    from hikari import polls as polls_
     from hikari import stickers as stickers_
     from hikari import users as users_
     from hikari.api import special_endpoints
@@ -528,6 +529,9 @@ class PartialMessage(snowflakes.Unique):
 
     embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
+
+    poll: undefined.UndefinedOr[polls_.Poll] = attrs.field(hash=False, eq=False, repr=False)
+    """The message poll."""
 
     reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attrs.field(hash=False, eq=False, repr=False)
     """The message reactions."""
