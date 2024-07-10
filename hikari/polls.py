@@ -198,9 +198,9 @@ class PollBuilder(PartialPoll):
         """Returns the answers of the poll.
 
         !!! note
-            Use [`hikari.polls.Poll.add_answer`][] to add a new answer,
-            [`hikari.polls.Poll.edit_answer`][] to edit an existing answer, or
-            [`hikari.polls.Poll.remove_answer`][] to remove an answer.
+            Use [`hikari.polls.PollBuilder.add_answer`][] to add a new answer,
+            [`hikari.polls.PollBuilder.edit_answer`][] to edit an existing answer, or
+            [`hikari.polls.PollBuilder.remove_answer`][] to remove an answer.
         """
         return self._answers
 
