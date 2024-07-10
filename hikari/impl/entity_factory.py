@@ -3807,7 +3807,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return serialised_poll_media
 
-    def serialize_poll(self, poll: poll_models.PollCreate) -> data_binding.JSONObject:
+    def serialize_poll(self, poll: poll_models.PollBuilder) -> data_binding.JSONObject:
         answers: typing.MutableSequence[typing.Any] = []
         for answer_id, answer in poll.answers.items():
             answers.append({"answer_id": answer_id, "poll_media": self._serialize_poll_media(answer.poll_media)})
