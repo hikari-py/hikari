@@ -122,16 +122,6 @@ class PartialPoll:
         self._allow_multiselect = allow_multiselect
         self._layout_type = layout_type
 
-        # Answer is required, but we want users to user add_answer() instead of
-        # providing at initialization.
-        #
-        # Considering that answer ID can be arbitrary, `list`-based approaches
-        # like that of hikari.embeds.Embed._fields, while feasible to implement,
-        # would decrease long-term maintainability. I'm opting to use a `dict`
-        # here to simplify the implementation with some performance trade-off
-        # due to hashmap overhead.
-        self._answers: typing.MutableSequence[PollAnswer] = []
-
     @property
     def question(self) -> PollMedia:
         """Returns the question of the poll."""
@@ -159,17 +149,6 @@ class PartialPoll:
     def layout_type(self, value: typing.Union[int, PollLayoutType]) -> None:
         self._layout_type = value
 
-    @property
-    def answers(self) -> typing.Sequence[PollAnswer]:
-        """Returns the answers of the poll.
-
-        !!! note
-            Use [`hikari.polls.Poll.add_answer`][] to add a new answer,
-            [`hikari.polls.Poll.edit_answer`][] to edit an existing answer, or
-            [`hikari.polls.Poll.remove_answer`][] to remove a answer.
-        """
-        return self._answers
-
 
 class PollBuilder(PartialPoll):
     """Poll Builder.
@@ -195,6 +174,16 @@ class PollBuilder(PartialPoll):
         super().__init__(question=question, allow_multiselect=allow_multiselect, layout_type=layout_type)
         self._duration = duration
 
+        # Answer is required, but we want users to user add_answer() instead of
+        # providing at initialization.
+        #
+        # Considering that answer ID can be arbitrary, `list`-based approaches
+        # like that of hikari.embeds.Embed._fields, while feasible to implement,
+        # would decrease long-term maintainability. I'm opting to use a `dict`
+        # here to simplify the implementation with some performance trade-off
+        # due to hashmap overhead.
+        self._answers: typing.MutableSequence[PollAnswer] = []
+
     @property
     def duration(self) -> int:
         """Returns the duration of the poll."""
@@ -203,6 +192,17 @@ class PollBuilder(PartialPoll):
     @duration.setter
     def duration(self, value: int) -> None:
         self._duration = value
+
+    @property
+    def answers(self) -> typing.Iterable[PollAnswer]:
+        """Returns the answers of the poll.
+
+        !!! note
+            Use [`hikari.polls.Poll.add_answer`][] to add a new answer,
+            [`hikari.polls.Poll.edit_answer`][] to edit an existing answer, or
+            [`hikari.polls.Poll.remove_answer`][] to remove an answer.
+        """
+        return self._answers
 
     def add_answer(self, text: str, emoji: typing.Optional[emojis.Emoji]) -> PartialPoll:
         """
@@ -220,7 +220,6 @@ class PollBuilder(PartialPoll):
         PartialPoll
             This poll. Allows for call chaining.
         """
-
         self._answers.append(
             PollAnswer(answer_id=-1, poll_media=PollMedia(text=text, emoji=_ensure_optional_emoji(emoji)))
         )
@@ -251,7 +250,6 @@ class PollBuilder(PartialPoll):
         PartialPoll
             This poll. Allows for call chaining.
         """
-
         answer = self._answers[index]
         if text:
             answer.poll_media.text = text
@@ -279,7 +277,6 @@ class PollBuilder(PartialPoll):
         KeyError
             Raised when the answer ID is not found in the poll.
         """
-
         del self._answers[answer_id]
 
         return self
@@ -303,6 +300,11 @@ class Poll(PartialPoll):
         self._answers = answers
         self._expiry = expiry
         self._results = results
+
+    @property
+    def answers(self) -> typing.Iterable[PollAnswer]:
+        """Returns the answers of the poll."""
+        return self._answers
 
     @property
     def expiry(self) -> datetime.datetime:
