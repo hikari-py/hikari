@@ -3794,21 +3794,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             results=results,
         )
 
-    def _serialize_poll_partial_emoji(self, emoji: typing.Optional[emoji_models.Emoji]) -> data_binding.JSONObject:
-        if isinstance(emoji, emoji_models.UnicodeEmoji):
-            return {"name": emoji.name}
-        elif isinstance(emoji, emoji_models.CustomEmoji):
-            return {"name": emoji.name, "id": emoji.name}
-        return {}
-
     def _serialize_poll_media(self, poll_media: poll_models.PollMedia) -> data_binding.JSONObject:
         # FIXME: Typing is **very** dodgy here. Revise this before shipping.
-
         serialised_poll_media: typing.MutableMapping[str, typing.Any] = {"text": poll_media.text}
 
-        answer_emoji = self._serialize_poll_partial_emoji(poll_media.emoji)
-        if answer_emoji:
-            serialised_poll_media["emoji"] = answer_emoji
+        if isinstance(poll_media.emoji, emoji_models.UnicodeEmoji):
+            serialised_poll_media["emoji"] = {"name": poll_media.emoji.name}
+        elif isinstance(poll_media.emoji, emoji_models.CustomEmoji):
+            serialised_poll_media["emoji"] = {"name": poll_media.emoji.name, "id": poll_media.emoji.id}
 
         return serialised_poll_media
 
