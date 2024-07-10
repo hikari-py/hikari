@@ -335,6 +335,20 @@ class Intents(enums.Flag):
     * `GUILD_SCHEDULED_EVENT_USER_REMOVE`
     """
 
+    GUILD_MESSAGE_POLLS = 1 << 24
+    """Subscribes to the events listed below.
+
+    * `MESSAGE_POLL_VOTE_ADD`
+    * `MESSAGE_POLL_VOTE_REMOVE`
+    """
+
+    DIRECT_MESSAGE_POLLS = 1 << 25
+    """Subscribes to the events listed below.
+
+    * `MESSAGE_POLL_VOTE_ADD`
+    * `MESSAGE_POLL_VOTE_REMOVE`
+    """
+
     # Annoyingly, enums hide classmethods and staticmethods from __dir__ in
     # EnumMeta which means if I make methods to generate these, then stuff
     # will not be documented by pdoc. Alas, my dream of being smart with
@@ -352,6 +366,7 @@ class Intents(enums.Flag):
         | GUILD_MESSAGE_TYPING
         | GUILD_MODERATION
         | GUILD_SCHEDULED_EVENTS
+        | GUILD_MESSAGE_POLLS
     )
     """All unprivileged guild-related intents."""
 
@@ -374,11 +389,14 @@ class Intents(enums.Flag):
         use.
     """
 
-    ALL_DMS = DM_MESSAGES | DM_MESSAGE_TYPING | DM_MESSAGE_REACTIONS
+    ALL_DMS = DM_MESSAGES | DM_MESSAGE_TYPING | DM_MESSAGE_REACTIONS | DIRECT_MESSAGE_POLLS
     """All direct message channel (non-guild bound) intents."""
 
     ALL_MESSAGES = DM_MESSAGES | GUILD_MESSAGES
     """All message intents."""
+
+    ALL_POLLS = GUILD_MESSAGE_POLLS | DIRECT_MESSAGE_POLLS
+    """All poll intents."""
 
     ALL_MESSAGE_REACTIONS = DM_MESSAGE_REACTIONS | GUILD_MESSAGE_REACTIONS
     """All message reaction intents."""

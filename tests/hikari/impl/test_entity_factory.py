@@ -5662,6 +5662,7 @@ class TestEntityFactoryImpl:
         custom_emoji_payload,
         partial_application_payload,
         embed_payload,
+        poll_payload,
         referenced_message,
         action_row_payload,
         partial_sticker_payload,
@@ -5687,6 +5688,7 @@ class TestEntityFactoryImpl:
             "mention_channels": [{"id": "456", "guild_id": "678", "type": 1, "name": "hikari-testing"}],
             "attachments": [attachment_payload],
             "embeds": [embed_payload],
+            "poll": poll_payload,
             "reactions": [{"emoji": custom_emoji_payload, "count": 100, "me": True}],
             "pinned": True,
             "webhook_id": "1234",
@@ -7193,3 +7195,43 @@ class TestEntityFactoryImpl:
         assert sku.slug == "hashire-sori-yo-kaze-no-you-ni-tsukimihara-wo-padoru-padoru"
         assert sku.flags == (monetization_models.SKUFlags.AVAILABLE | monetization_models.SKUFlags.GUILD_SUBSCRIPTION)
         assert isinstance(sku, monetization_models.SKU)
+
+    ###########
+    #  POLLS  #
+    ###########
+
+    @pytest.fixture
+    def poll_payload(self):
+        return {
+            "question": {"text": "fruit"},
+            "answers": [
+                {"answer_id": 1, "poll_media": {"text": "apple", "emoji": {"name": "🍏"}}},
+                {"answer_id": 2, "poll_media": {"text": "banana", "emoji": {"name": "🍌"}}},
+                {"answer_id": 3, "poll_media": {"text": "carrot", "emoji": {"name": "🥕"}}},
+            ],
+            "expiry": "2021-02-01T18:03:20.888000+00:00",
+            "allow_multiselect": True,
+            "layout_type": 1,
+        }
+
+    def test_deserialize_poll(self, entity_factory_impl, poll_payload):
+        poll = entity_factory_impl.deserialize_poll(poll_payload)
+
+        assert poll.question.text == "fruit"
+        assert poll.question.emoji is None
+        assert len(poll.answers) == 3
+        assert poll.answers[0].answer_id == 1
+        assert poll.answers[0].poll_media.text == "apple"
+        assert poll.answers[0].poll_media.emoji == "🍏"
+        assert poll.answers[1].answer_id == 2
+        assert poll.answers[1].poll_media.text == "banana"
+        assert poll.answers[1].poll_media.emoji == "🍌"
+        assert poll.answers[2].answer_id == 3
+        assert poll.answers[2].poll_media.text == "carrot"
+        assert poll.answers[2].poll_media.emoji == "🥕"
+
+        assert poll.expiry == datetime.datetime(2021, 2, 1, 18, 3, 20, 888000, tzinfo=datetime.timezone.utc)
+
+    def test_serialize_poll(self, entity_factory_impl):
+        # poll = entity_factory_impl.serialize_poll(sku_payload)
+        pass
