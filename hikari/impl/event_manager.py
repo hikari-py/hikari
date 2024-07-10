@@ -44,6 +44,7 @@ from hikari.events import interaction_events
 from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import monetization_events
+from hikari.events import poll_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
