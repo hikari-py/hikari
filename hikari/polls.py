@@ -293,6 +293,7 @@ class Poll(PartialPoll):
     def __init__(
         self,
         question: str,
+        answers: typing.Sequence[PollAnswer],
         allow_multiselect: bool,
         expiry: datetime.datetime,
         results: typing.Optional[PollResult],
