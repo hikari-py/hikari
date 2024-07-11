@@ -6440,7 +6440,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.GET_POLL_ANSWER.compile(
             channel=StubModel(45874392), message=StubModel(398475938475), answer=StubModel(4)
         )
-        rest_client._request = mock.AsyncMock()
+        # FIXME: Test that returned values get deserialized correctly
+        rest_client._request = mock.AsyncMock(return_value=[])
 
         await rest_client.fetch_poll_voters(
             StubModel(45874392), StubModel(398475938475), StubModel(4), after=StubModel(43587935), limit=6
