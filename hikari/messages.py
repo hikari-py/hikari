@@ -915,7 +915,6 @@ class PartialMessage(snowflakes.Unique):
             components=components,
             embed=embed,
             embeds=embeds,
-            poll=poll,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
             user_mentions=user_mentions,

@@ -198,7 +198,6 @@ class TestAsyncMessage:
             content="test content",
             embed=embed,
             embeds=embeds,
-            poll=poll,
             attachment=attachment,
             attachments=[attachment, attachment],
             component=component,
