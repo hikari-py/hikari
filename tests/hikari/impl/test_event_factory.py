@@ -1534,7 +1534,7 @@ class TestEventFactoryImpl:
 
         event = event_factory.deserialize_poll_vote_create_event(mock_shard, payload)
 
-        assert isinstance(event, poll_events.PollVoteCreate)
+        assert isinstance(event, poll_events.PollVoteCreateEvent)
 
     def test_deserialize_poll_vote_delete_event(self, event_factory, mock_app, mock_shard):
         payload = {
@@ -1547,4 +1547,4 @@ class TestEventFactoryImpl:
 
         event = event_factory.deserialize_poll_vote_delete_event(mock_shard, payload)
 
-        assert isinstance(event, poll_events.PollVoteDelete)
+        assert isinstance(event, poll_events.PollVoteDeleteEvent)
