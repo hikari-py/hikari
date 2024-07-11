@@ -3774,9 +3774,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         for answer_payload in payload["answers"]:
             answer_id = answer_payload["answer_id"]
 
-            emoji = answer_payload["emoji"]
+            emoji = answer_payload["poll_media"]["emoji"]
             poll_media = poll_models.PollMedia(
-                text=answer_payload["text"], emoji=self.deserialize_emoji(emoji) if emoji else None
+                text=answer_payload["poll_media"]["text"], emoji=self.deserialize_emoji(emoji) if emoji else None
             )
 
             answers.append(poll_models.PollAnswer(answer_id=answer_id, poll_media=poll_media))
