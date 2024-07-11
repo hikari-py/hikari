@@ -38,6 +38,7 @@ from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import monetization_events
+from hikari.events import poll_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
@@ -1517,3 +1518,33 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_entitlement_delete_event(mock_shard, payload)
 
         assert isinstance(event, monetization_events.EntitlementDeleteEvent)
+
+    ###########
+    #  POLLS  #
+    ###########
+
+    def test_deserialize_poll_vote_create_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "user_id": "3847382",
+            "channel_id": "4598743",
+            "message_id": "458437954",
+            "guild_id": "3589273",
+            "answer_id": 1,
+        }
+
+        event = event_factory.deserialize_poll_vote_create_event(mock_shard, payload)
+
+        assert isinstance(event, poll_events.PollVoteCreate)
+
+    def test_deserialize_poll_vote_delete_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "user_id": "3847382",
+            "channel_id": "4598743",
+            "message_id": "458437954",
+            "guild_id": "3589273",
+            "answer_id": 1,
+        }
+
+        event = event_factory.deserialize_poll_vote_delete_event(mock_shard, payload)
+
+        assert isinstance(event, poll_events.PollVoteDelete)

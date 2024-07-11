@@ -962,42 +962,29 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_poll_vote_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> poll_events.PollVoteCreateEvent:
-        ...
-        payload_guild_id = payload.get("guild_id")
-
-        guild_id: undefined.UndefinedOr[snowflakes.Snowflake]
-        if payload_guild_id is not None:
-            guild_id = snowflakes.Snowflake(payload_guild_id)
-        else:
-            guild_id = undefined.UNDEFINED
-
         return poll_events.PollVoteCreateEvent(
             app=self._app,
             shard=shard,
             user_id=snowflakes.Snowflake(payload["user_id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             message_id=snowflakes.Snowflake(payload["message_id"]),
-            guild_id=guild_id,
+            guild_id=(
+                snowflakes.Snowflake(payload["guild_id"]) if payload.get("guild_id", None) else undefined.UNDEFINED
+            ),
             answer_id=payload["answer_id"],
         )
 
     def deserialize_poll_vote_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> poll_events.PollVoteDeleteEvent:
-        payload_guild_id = payload.get("guild_id")
-
-        guild_id: undefined.UndefinedOr[snowflakes.Snowflake]
-        if payload_guild_id is not None:
-            guild_id = snowflakes.Snowflake(payload_guild_id)
-        else:
-            guild_id = undefined.UNDEFINED
-
         return poll_events.PollVoteDeleteEvent(
             app=self._app,
             shard=shard,
             user_id=snowflakes.Snowflake(payload["user_id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             message_id=snowflakes.Snowflake(payload["message_id"]),
-            guild_id=guild_id,
+            guild_id=(
+                snowflakes.Snowflake(payload["guild_id"]) if payload.get("guild_id", None) else undefined.UNDEFINED
+            ),
             answer_id=payload["answer_id"],
         )

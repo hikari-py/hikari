@@ -41,6 +41,7 @@ from hikari import locales
 from hikari import messages as message_models
 from hikari import monetization as monetization_models
 from hikari import permissions as permission_models
+from hikari import polls
 from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_event_models
 from hikari import sessions as gateway_models
@@ -7233,5 +7234,22 @@ class TestEntityFactoryImpl:
         assert poll.expiry == datetime.datetime(2021, 2, 1, 18, 3, 20, 888000, tzinfo=datetime.timezone.utc)
 
     def test_serialize_poll(self, entity_factory_impl):
-        # poll = entity_factory_impl.serialize_poll(sku_payload)
-        pass
+        poll = polls.PollBuilder("fruit", 1, allow_multiselect=True, layout_type=polls.PollLayoutType.DEFAULT)
+
+        poll.add_answer("apple", "🍏")
+        poll.add_answer("banana", "🍌")
+        poll.add_answer("carrot", "🥕")
+
+        payload = entity_factory_impl.serialize_poll(poll)
+
+        assert payload == {
+            "question": {"text": "fruit"},
+            "answers": [
+                {"poll_media": {"text": "apple", "emoji": {"name": "🍏"}}},
+                {"poll_media": {"text": "banana", "emoji": {"name": "🍌"}}},
+                {"poll_media": {"text": "carrot", "emoji": {"name": "🥕"}}},
+            ],
+            "duration": 1,
+            "allow_multiselect": True,
+            "layout_type": 1,
+        }
