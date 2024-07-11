@@ -49,6 +49,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import member_events
     from hikari.events import message_events
     from hikari.events import monetization_events
+    from hikari.events import poll_events
     from hikari.events import reaction_events
     from hikari.events import role_events
     from hikari.events import scheduled_events
@@ -1407,4 +1408,45 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.entitlement_events.EntitlementUpdateEvent
             The parsed entitlement update event object.
+        """
+
+    ################
+    #  POLL EVENTS #
+    ################
+    @abc.abstractmethod
+    def deserialize_poll_vote_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteCreate:
+        """Parse a raw payload from Discord into a poll vote create event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.poll_events.PollVoteCreate
+            The parsed poll vote create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_poll_vote_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteDelete:
+        """Parse a raw payload from Discord into a poll vote delete event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.poll_events.PollVoteDelete
+            The parsed poll vote delete event object.
         """

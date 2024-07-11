@@ -46,6 +46,7 @@ from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import monetization_events
+from hikari.events import poll_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
@@ -953,4 +954,37 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> monetization_events.EntitlementDeleteEvent:
         return monetization_events.EntitlementDeleteEvent(
             app=self._app, shard=shard, entitlement=self._app.entity_factory.deserialize_entitlement(payload)
+        )
+
+    ################
+    #  POLL EVENTS #
+    ################
+    def deserialize_poll_vote_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteCreate:
+        return poll_events.PollVoteCreate(
+            app=self._app,
+            shard=shard,
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            message_id=snowflakes.Snowflake(payload["message_id"]),
+            guild_id=(
+                snowflakes.Snowflake(payload["guild_id"]) if payload.get("guild_id", None) else undefined.UNDEFINED
+            ),
+            answer_id=payload["answer_id"],
+        )
+
+    def deserialize_poll_vote_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteDelete:
+        return poll_events.PollVoteDelete(
+            app=self._app,
+            shard=shard,
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            message_id=snowflakes.Snowflake(payload["message_id"]),
+            guild_id=(
+                snowflakes.Snowflake(payload["guild_id"]) if payload.get("guild_id", None) else undefined.UNDEFINED
+            ),
+            answer_id=payload["answer_id"],
         )

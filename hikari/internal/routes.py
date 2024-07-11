@@ -340,6 +340,10 @@ POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typi
 POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(POST, "/channels/{channel}/webhooks")
 GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webhooks")
 
+# Polls
+GET_POLL_ANSWER: typing.Final[Route] = Route(GET, "/channels/{channel}/polls/{message}/answer/{answer}")
+POST_END_POLL: typing.Final[Route] = Route(POST, "/channels/{channel}/polls/{message}/expire")
+
 # Reactions
 GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
 DELETE_ALL_REACTIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions")
