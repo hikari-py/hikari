@@ -716,7 +716,7 @@ class MessageData(BaseData[messages.Message]):
     mentions_everyone: undefined.UndefinedOr[bool] = attrs.field()
     attachments: typing.Tuple[messages.Attachment, ...] = attrs.field()
     embeds: typing.Tuple[embeds_.Embed, ...] = attrs.field()
-    poll: typing.Optional[polls_.Poll] = attrs.field()
+    poll: undefined.UndefinedOr[polls_.Poll] = attrs.field()
     reactions: typing.Tuple[messages.Reaction, ...] = attrs.field()
     is_pinned: bool = attrs.field()
     webhook_id: typing.Optional[snowflakes.Snowflake] = attrs.field()

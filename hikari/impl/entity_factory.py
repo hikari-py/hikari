@@ -3007,7 +3007,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=self.deserialize_user(payload["user"]),
         )
 
-    def deserialize_partial_message(  # noqa: C901 - Too complex
+    def deserialize_partial_message(  # noqa: C901, CFQ001 - Too complex, Exceeds allowed length
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
         author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
@@ -3162,7 +3162,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
 
-        poll: typing.Optional[poll_models.Poll] = None
+        poll: undefined.UndefinedOr[poll_models.Poll] = undefined.UNDEFINED
         if "polls" in payload:
             poll = self.deserialize_poll(payload["poll"])
 
@@ -3813,7 +3813,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         serialised_poll_media: typing.MutableMapping[str, typing.Any] = {"text": poll_media.text}
 
         answer_emoji = self._serialize_poll_partial_emoji(poll_media.emoji)
-        if answer_emoji:
+        if answer_emoji != {}:
             serialised_poll_media["emoji"] = answer_emoji
 
         return serialised_poll_media
@@ -3827,6 +3827,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "question": self._serialize_poll_media(poll.question),
             "answers": answers,
             "duration": poll.duration,
-            "allow_multiple_options": poll.allow_multiselect,
-            "layout_type": poll.layout_type,
+            "allow_multiselect": poll.allow_multiselect,
+            "layout_type": poll.layout_type.value,
         }

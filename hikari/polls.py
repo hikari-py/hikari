@@ -204,7 +204,7 @@ class PollBuilder(PartialPoll):
     def duration(self, value: int) -> None:
         self._duration = value
 
-    def add_answer(self, text: str, emoji: typing.Optional[emojis.Emoji]) -> PartialPoll:
+    def add_answer(self, text: str, emoji: typing.Optional[typing.Union[emojis.Emoji, str]]) -> PartialPoll:
         """
         Add an answer to the poll.
 
@@ -220,7 +220,6 @@ class PollBuilder(PartialPoll):
         PartialPoll
             This poll. Allows for call chaining.
         """
-
         self._answers.append(
             PollAnswer(answer_id=-1, poll_media=PollMedia(text=text, emoji=_ensure_optional_emoji(emoji)))
         )
@@ -250,7 +249,6 @@ class PollBuilder(PartialPoll):
         -------
             This poll. Allows for call chaining.
         """
-
         answer = self._answers[index]
         if text:
             answer.poll_media.text = text
@@ -278,7 +276,6 @@ class PollBuilder(PartialPoll):
         KeyError
             Raised when the answer ID is not found in the poll.
         """
-
         del self._answers[answer_id]
 
         return self
@@ -292,7 +289,7 @@ class Poll(PartialPoll):
     def __init__(
         self,
         question: str,
-        answers: typing.Sequence[PollAnswer],
+        answers: typing.MutableSequence[PollAnswer],
         allow_multiselect: bool,
         expiry: datetime.datetime,
         results: typing.Optional[PollResult],
