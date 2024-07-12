@@ -3759,11 +3759,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ###############
     # POLL MODELS #
     ###############
-    def _deserialize_poll_answer_count(self, payload: data_binding.JSONObject) -> poll_models.PollAnswerCount:
-        return poll_models.PollAnswerCount(
-            answer_id=payload["answer_id"], count=payload["count"], me_voted=payload["me_voted"]
-        )
-
     def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
         question = payload["question"]["text"]
         expiry = time.iso8601_datetime_string_to_datetime(payload["expiry"])
