@@ -2575,7 +2575,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
             command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
-            options=options,
+            options=options or (),
             resolved=resolved,
             target_id=target_id,
             app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
