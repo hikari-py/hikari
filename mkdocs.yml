@@ -6,7 +6,7 @@ repo_url: https://github.com/hikari-py/hikari/
 repo_name: hikari-py/hikari
 edit_uri: blob/master/docs/
 
-watch: [ hikari, README.md, CHANGELOG.md ]
+watch: [ hikari, README.md, CHANGELOG.md, scripts/docs ]
 copyright: © 2021-present davfsa
 
 #strict: true
