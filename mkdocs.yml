@@ -121,7 +121,7 @@ plugins:
 #         - no-lightbox
   - gen-files:
       scripts:
-      - docs/gen_ref_pages.py
+      - scripts/docs/gen_ref_pages.py
   - literate-nav:
       nav_file: summary.md
   - mkdocstrings:

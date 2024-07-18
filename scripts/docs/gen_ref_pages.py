@@ -16,10 +16,13 @@ for path in sorted(pathlib.Path("hikari").rglob("*.py")):
 
     parts = tuple(module_path.parts)
 
+    index = False
+
     # Ignore the internals module
     if "internal" in parts:
         continue
     elif parts[-1] == "__init__":
+        index = True
         parts = parts[:-1]
         # Make the __init__.py the index page of the module
         doc_path = doc_path.with_name("index.md")
@@ -42,6 +45,10 @@ for path in sorted(pathlib.Path("hikari").rglob("*.py")):
             f"# `{full_name}`\n"
             f"::: {full_name}\n"
         )
+
+        if index:
+            fd.write("    options:\n")
+            fd.write("      members: false\n")
 
     mkdocs_gen_files.set_edit_path(full_doc_path, pathlib.Path("..", path))
 
