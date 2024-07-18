@@ -49,7 +49,7 @@ for path in sorted(pathlib.Path("hikari").rglob("*.py")):
         # As of this commit b327b908 in griffe the idea of "exported" members has changed
         # when it comes to `__init__` files, but we can work around it by explicitly
         # removing all members from the init renders, leaving only the docstrings
-        # see: https://github.com/mkdocstrings/griffe/commit/d9546c8eb8f4ce5d3a216309937a6552
+        # see: https://github.com/mkdocstrings/griffe/commit/b327b908d9546c8eb8f4ce5d3a216309937a6552
         # see: https://github.com/mkdocstrings/python/issues/39
         if index:
             fd.write("    options:\n")
