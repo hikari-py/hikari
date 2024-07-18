@@ -16,10 +16,13 @@ for path in sorted(pathlib.Path("hikari").rglob("*.py")):
 
     parts = tuple(module_path.parts)
 
+    index = False
+
     # Ignore the internals module
     if "internal" in parts:
         continue
     elif parts[-1] == "__init__":
+        index = True
         parts = parts[:-1]
         # Make the __init__.py the index page of the module
         doc_path = doc_path.with_name("index.md")
@@ -42,6 +45,15 @@ for path in sorted(pathlib.Path("hikari").rglob("*.py")):
             f"# `{full_name}`\n"
             f"::: {full_name}\n"
         )
+
+        # As of this commit b327b908 in griffe the idea of "exported" members has changed
+        # when it comes to `__init__` files, but we can work around it by explicitly
+        # removing all members from the init renders, leaving only the docstrings
+        # see: https://github.com/mkdocstrings/griffe/commit/d9546c8eb8f4ce5d3a216309937a6552
+        # see: https://github.com/mkdocstrings/python/issues/39
+        if index:
+            fd.write("    options:\n")
+            fd.write("      members: false\n")
 
     mkdocs_gen_files.set_edit_path(full_doc_path, pathlib.Path("..", path))
 
