@@ -4557,7 +4557,7 @@ class TestEntityFactoryImpl:
         assert interaction.guild_id is None
         assert interaction.member is None
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
-        assert interaction.options is None
+        assert interaction.options == []
         assert interaction.resolved is None
         assert interaction.guild_locale is None
         assert interaction.app_permissions is None

@@ -2601,9 +2601,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_guild_id := payload.get("guild_id"):
             guild_id = snowflakes.Snowflake(raw_guild_id)
 
-        options: typing.Optional[typing.List[command_interactions.CommandInteractionOption]] = None
-        if raw_options := data_payload.get("options"):
-            options = [self._deserialize_interaction_command_option(option) for option in raw_options]
+        options = [self._deserialize_interaction_command_option(option) for option in data_payload.get("options", ())]
 
         member: typing.Optional[base_interactions.InteractionMember]
         if member_payload := payload.get("member"):

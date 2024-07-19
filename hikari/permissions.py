@@ -43,7 +43,7 @@ class Permissions(enums.Flag):
     --------
     You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
-     ```py
+    ```py
     my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
     required_perms = (
@@ -52,7 +52,7 @@ class Permissions(enums.Flag):
         | Permissions.BAN_MEMBERS
         | Permissions.MANAGE_GUILD
     )
-     ```
+    ```
 
     To find the intersection of two sets of permissions, use the bitwise AND
     operator (`&`) between them. By then applying the `==` operator, you can check if all
