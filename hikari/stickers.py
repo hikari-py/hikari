@@ -169,7 +169,11 @@ class PartialSticker(snowflakes.Unique):
         """
         ext = _STICKER_EXTENSIONS.get(self.format_type, "png")
 
-        return routes.CDN_STICKER.compile_to_file(urls.CDN_URL, sticker_id=self.id, file_format=ext)
+        # GIF Stickers have a different name under the CDN, so we need to use the Media Proxy instead
+        # see: https://github.com/discord/discord-api-docs/issues/6675
+        base_url = urls.MEDIA_PROXY_URL if ext == "gif" else urls.CDN_URL
+
+        return routes.CDN_STICKER.compile_to_file(base_url, sticker_id=self.id, file_format=ext)
 
 
 @attrs_extensions.with_copy
