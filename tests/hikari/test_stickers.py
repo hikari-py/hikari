@@ -94,4 +94,4 @@ class TestPartialSticker:
         ) as route:
             assert model.image_url == "file"
 
-        route.compile_to_file.assert_called_once_with(urls.MEDIA_URL, sticker_id=123, file_format="gif")
+        route.compile_to_file.assert_called_once_with(urls.MEDIA_PROXY_URL, sticker_id=123, file_format="gif")
