@@ -1695,9 +1695,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio
     async def test_on_message_poll_vote_add(
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: event_factory_.EventFactory,
+        event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: event_factory_.EventFactory
     ):
         mock_payload = mock.Mock()
 
@@ -1710,9 +1708,7 @@ class TestEventManagerImpl:
 
     @pytest.mark.asyncio
     async def test_on_message_poll_vote_remove(
-        event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
-        event_factory: event_factory_.EventFactory,
+        event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: event_factory_.EventFactory
     ):
         mock_payload = mock.Mock()
 
