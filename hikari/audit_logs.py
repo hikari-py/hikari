@@ -293,52 +293,99 @@ class AuditLogEventType(int, enums.Enum):
     """The type of event that occurred."""
 
     GUILD_UPDATE = 1
+    """Server settings were updated."""
     CHANNEL_CREATE = 10
+    """Channel was created."""
     CHANNEL_UPDATE = 11
+    """Channel settings were updated."""
     CHANNEL_DELETE = 12
+    """Channel was deleted."""
     CHANNEL_OVERWRITE_CREATE = 13
+    """Channel was deleted."""
     CHANNEL_OVERWRITE_UPDATE = 14
+    """Permission overwrite was added to a channel."""
     CHANNEL_OVERWRITE_DELETE = 15
+    """Permission overwrite was updated for a channel."""
     MEMBER_KICK = 20
+    """Member was removed from server."""
     MEMBER_PRUNE = 21
+    """Member was removed from server."""
     MEMBER_BAN_ADD = 22
+    """Members were pruned from server."""
     MEMBER_BAN_REMOVE = 23
+    """Server ban was lifted for a member."""
     MEMBER_UPDATE = 24
+    """Member was updated in server."""
     MEMBER_ROLE_UPDATE = 25
+    """Member was added or removed from a role."""
     MEMBER_MOVE = 26
+    """Member was moved to a different voice channel."""
     MEMBER_DISCONNECT = 27
+    """Member was disconnected from a voice channel."""
     BOT_ADD = 28
+    """Bot user was added to server."""
     ROLE_CREATE = 30
+    """Role was created."""
     ROLE_UPDATE = 31
+    """Role was edited."""
     ROLE_DELETE = 32
+    """Role was deleted."""
     INVITE_CREATE = 40
+    """Server invite was created."""
     INVITE_UPDATE = 41
+    """Server invite was updated."""
     INVITE_DELETE = 42
+    """Server invite was deleted."""
     WEBHOOK_CREATE = 50
+    """Webhook was created."""
     WEBHOOK_UPDATE = 51
+    """Webhook properties or channel were updated."""
     WEBHOOK_DELETE = 52
+    """Webhook was deleted."""
     EMOJI_CREATE = 60
+    """Emoji was created."""
     EMOJI_UPDATE = 61
+    """Emoji name was updated."""
     EMOJI_DELETE = 62
+    """Emoji was deleted."""
     MESSAGE_DELETE = 72
+    """Single message was deleted."""
     MESSAGE_BULK_DELETE = 73
+    """Multiple messages were deleted."""
     MESSAGE_PIN = 74
+    """Message was pinned to a channel."""
     MESSAGE_UNPIN = 75
+    """Message was unpinned from a channel."""
     INTEGRATION_CREATE = 80
+    """App was added to server."""
     INTEGRATION_UPDATE = 81
+    """App was updated (as an example, its scopes were updated)."""
     INTEGRATION_DELETE = 82
+    """App was removed from server."""
     STICKER_CREATE = 90
+    """Sticker was created."""
     STICKER_UPDATE = 91
+    """Sticker details were updated."""
     STICKER_DELETE = 92
+    """Sticker was deleted."""
     GUILD_SCHEDULED_EVENT_CREATE = 100
+    """Event was created."""
     GUILD_SCHEDULED_EVENT_UPDATE = 101
+    """Event was updated."""
     GUILD_SCHEDULED_EVENT_DELETE = 102
-    APPLICATION_COMMAND_PERMISSION_UPDATE = 121
+    """Event was cancelled."""
     THREAD_CREATE = 110
+    """Thread was created in a channel."""
     THREAD_UPDATE = 111
+    """Thread was updated."""
     THREAD_DELETE = 112
+    """Thread was deleted."""
+    APPLICATION_COMMAND_PERMISSION_UPDATE = 121
+    """Permissions were updated for a command."""
     CREATOR_MONETIZATION_REQUEST_CREATED = 150
+    """Creator monetization request was created."""
     CREATOR_MONETIZATION_TERMS_ACCEPTED = 151
+    """Creator monetization terms were accepted."""
 
 
 @attrs.define(hash=False, kw_only=True, weakref_slot=False)
