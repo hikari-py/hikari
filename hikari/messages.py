@@ -213,7 +213,17 @@ class Attachment(snowflakes.Unique, files.WebResource):
     """The source URL of file."""
 
     filename: str = attrs.field(hash=False, eq=False, repr=True)
-    """The name of the file."""
+    """The filename of the file."""
+
+    title: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=True)
+    """The title of the file.
+
+    This will be the original filename of the attachment if it contained
+    non-unicode characters.
+    """
+
+    description: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=True)
+    """The description of the file."""
 
     media_type: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=True)
     """The media type of the file."""

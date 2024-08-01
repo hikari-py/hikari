@@ -2532,9 +2532,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_guild_id := payload.get("guild_id"):
             guild_id = snowflakes.Snowflake(raw_guild_id)
 
-        options: typing.Optional[typing.List[command_interactions.CommandInteractionOption]] = None
-        if raw_options := data_payload.get("options"):
-            options = [self._deserialize_interaction_command_option(option) for option in raw_options]
+        options = [self._deserialize_interaction_command_option(option) for option in data_payload.get("options", ())]
 
         member: typing.Optional[base_interactions.InteractionMember]
         if member_payload := payload.get("member"):
@@ -2968,6 +2966,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return message_models.Attachment(
             id=snowflakes.Snowflake(payload["id"]),
             filename=payload["filename"],
+            title=payload.get("title"),
+            description=payload.get("description"),
             media_type=payload.get("content_type"),
             size=int(payload["size"]),
             url=payload["url"],

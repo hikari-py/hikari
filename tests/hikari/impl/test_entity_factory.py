@@ -4538,7 +4538,7 @@ class TestEntityFactoryImpl:
         assert interaction.guild_id is None
         assert interaction.member is None
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
-        assert interaction.options is None
+        assert interaction.options == []
         assert interaction.resolved is None
         assert interaction.guild_locale is None
         assert interaction.app_permissions is None
@@ -5650,6 +5650,8 @@ class TestEntityFactoryImpl:
         return {
             "id": "690922406474154014",
             "filename": "IMG.jpg",
+            "title": "IMGA",
+            "description": "description",
             "content_type": "image/png",
             "size": 660521,
             "url": "https://somewhere.com/attachments/123/456/IMG.jpg",
@@ -5719,6 +5721,8 @@ class TestEntityFactoryImpl:
 
         assert attachment.id == 690922406474154014
         assert attachment.filename == "IMG.jpg"
+        assert attachment.title == "IMGA"
+        assert attachment.description == "description"
         assert attachment.size == 660521
         assert attachment.media_type == "image/png"
         assert attachment.url == "https://somewhere.com/attachments/123/456/IMG.jpg"
@@ -5741,6 +5745,8 @@ class TestEntityFactoryImpl:
         assert isinstance(attachment, message_models.Attachment)
 
     def test__deserialize_message_attachment_with_unset_fields(self, entity_factory_impl, attachment_payload):
+        del attachment_payload["title"]
+        del attachment_payload["description"]
         del attachment_payload["content_type"]
         del attachment_payload["height"]
         del attachment_payload["width"]
@@ -5750,6 +5756,8 @@ class TestEntityFactoryImpl:
 
         attachment = entity_factory_impl._deserialize_message_attachment(attachment_payload)
 
+        assert attachment.title is None
+        assert attachment.description is None
         assert attachment.media_type is None
         assert attachment.height is None
         assert attachment.width is None
@@ -5967,6 +5975,8 @@ class TestEntityFactoryImpl:
         attachment = message.attachments[0]
         assert attachment.id == 690922406474154014
         assert attachment.filename == "IMG.jpg"
+        assert attachment.title == "IMGA"
+        assert attachment.description == "description"
         assert attachment.size == 660521
         assert attachment.url == "https://somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"

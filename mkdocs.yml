@@ -6,7 +6,7 @@ repo_url: https://github.com/hikari-py/hikari/
 repo_name: hikari-py/hikari
 edit_uri: blob/master/docs/
 
-watch: [ hikari, README.md, CHANGELOG.md ]
+watch: [ hikari, README.md, CHANGELOG.md, scripts/docs ]
 copyright: © 2021-present davfsa
 
 #strict: true
@@ -121,7 +121,7 @@ plugins:
 #         - no-lightbox
   - gen-files:
       scripts:
-      - docs/gen_ref_pages.py
+      - scripts/docs/gen_ref_pages.py
   - literate-nav:
       nav_file: summary.md
   - mkdocstrings:
@@ -142,7 +142,7 @@ plugins:
             annotations_path: brief
             docstring_section_style: spacy
             docstring_style: numpy
-            inherited_members: true
+            inherited_members: false
             merge_init_into_class: true
             separate_signature: true
             show_signature_annotations: true
@@ -153,5 +153,6 @@ plugins:
             show_symbol_type_toc: true
 #            show_root_toc_entry: false
             line_length: 80
+            find_stubs_package: true
             extensions:
                 - griffe_inherited_docstrings

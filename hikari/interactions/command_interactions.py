@@ -318,7 +318,7 @@ class CommandInteraction(
     app_permissions: typing.Optional[permissions_.Permissions] = attrs.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
 
-    options: typing.Optional[typing.Sequence[CommandInteractionOption]] = attrs.field(eq=False, hash=False, repr=True)
+    options: typing.Sequence[CommandInteractionOption] = attrs.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
     resolved: typing.Optional[base_interactions.ResolvedOptionData] = attrs.field(eq=False, hash=False, repr=False)
