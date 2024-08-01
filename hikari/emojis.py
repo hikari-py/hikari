@@ -275,7 +275,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
     def __str__(self) -> str:
         return self.mention
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, CustomEmoji):
             return self.id == other.id
 
