@@ -104,10 +104,10 @@ required_plugins = ["pytest-asyncio"]
 package = "hikari"
 package_dir = "hikari"
 directory = "changes"
-template = "changes/.template.rst"
+template = "changes/.template.md.jinja"
 filename = "CHANGELOG.md"
 issue_format = "[#{issue}](https://github.com/hikari-py/hikari/issues/{issue})"
-# We use this differently in the template
+# We use these values for headers in the template
 underlines = [2, 3]
 type = [
     { name = "Breaking Changes",            directory = "breaking",      showcontent = true },
@@ -116,6 +116,9 @@ type = [
     { name = "Bugfixes",                    directory = "bugfix",        showcontent = true },
     { name = "Documentation Improvements",  directory = "documentation", showcontent = true },
 ]
+# TODO: Remove this when the next version to 24.7.1 is released
+# see: https://github.com/twisted/towncrier/pull/639
+ignore = [".template.md.jinja"]
 
 [tool.isort]
 profile = "black"
