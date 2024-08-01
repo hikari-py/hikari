@@ -604,4 +604,6 @@ CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
     "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
 
-SCHEDULED_EVENT_COVER: typing.Final[CDNRoute] = CDNRoute("/guilds/{scheduled_event_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+SCHEDULED_EVENT_COVER: typing.Final[CDNRoute] = CDNRoute(
+    "/guild-events/{scheduled_event_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
+)
