@@ -3869,6 +3869,72 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
 
+    async def test_fetch_application_emoji(self, rest_client):
+        emoji = StubModel(456)
+        expected_route = routes.GET_APPLICATION_EMOJI.compile(emoji=456, application=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+        rest_client._entity_factory.deserialize_application_emoji = mock.Mock(return_value=emoji)
+
+        assert await rest_client.fetch_application_emoji(StubModel(123), StubModel(456)) is emoji
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_application_emoji.assert_called_once_with(
+            {"id": "456"}, application_id=123
+        )
+
+    async def test_fetch_application_emojis(self, rest_client):
+        emoji1 = StubModel(456)
+        emoji2 = StubModel(789)
+        expected_route = routes.GET_APPLICATION_EMOJIS.compile(application=123)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._entity_factory.deserialize_application_emoji = mock.Mock(side_effect=[emoji1, emoji2])
+
+        assert await rest_client.fetch_application_emojis(StubModel(123)) == [emoji1, emoji2]
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_application_emoji.call_count == 2
+        rest_client._entity_factory.deserialize_application_emoji.assert_has_calls(
+            [mock.call({"id": "456"}, application_id=123), mock.call({"id": "789"}, application_id=123)]
+        )
+
+    async def test_create_application_emoji(self, rest_client, file_resource_patch):
+        emoji = StubModel(234)
+        expected_route = routes.POST_APPLICATION_EMOJIS.compile(application=123)
+        expected_json = {"name": "rooYay", "image": "some data"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "234"})
+        rest_client._entity_factory.deserialize_application_emoji = mock.Mock(return_value=emoji)
+
+        returned = await rest_client.create_application_emoji(StubModel(123), "rooYay", "rooYay.png")
+        assert returned is emoji
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_application_emoji.assert_called_once_with(
+            {"id": "234"}, application_id=123
+        )
+
+    async def test_edit_application_emoji(self, rest_client):
+        emoji = StubModel(234)
+        expected_route = routes.PATCH_APPLICATION_EMOJI.compile(application=123, emoji=456)
+        expected_json = {"name": "rooYay2"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "234"})
+        rest_client._entity_factory.deserialize_application_emoji = mock.Mock(return_value=emoji)
+
+        returned = await rest_client.edit_application_emoji(StubModel(123), StubModel(456), name="rooYay2")
+        assert returned is emoji
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_application_emoji.assert_called_once_with(
+            {"id": "234"}, application_id=123
+        )
+
+    async def test_delete_application_emoji(self, rest_client):
+        expected_route = routes.DELETE_APPLICATION_EMOJI.compile(application=123, emoji=456)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_application_emoji(StubModel(123), StubModel(456))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_fetch_sticker_packs(self, rest_client):
         pack1 = object()
         pack2 = object()
