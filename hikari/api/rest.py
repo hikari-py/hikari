@@ -3476,7 +3476,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def create_application_emoji(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
     ) -> emojis.ApplicationEmoji:
-        """Create an emoji for an application.
+        """Create an application emoji.
 
         Parameters
         ----------
