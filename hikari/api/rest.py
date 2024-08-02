@@ -3520,7 +3520,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
         name: str,
     ) -> emojis.ApplicationEmoji:
-        """Edit an emoji in an application.
+        """Edit an application emoji.
 
         Parameters
         ----------
