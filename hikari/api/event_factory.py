@@ -1422,9 +1422,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -1434,21 +1434,21 @@ class EventFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_stage_instance_edit_event(
+    def deserialize_stage_instance_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> stage_events.StageInstanceEditEvent:
+    ) -> stage_events.StageInstanceUpdateEvent:
         """Parse a raw payload from Discord into a stage instance update event object.
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
         -------
-        hikari.events.voice_events.StageInstanceEditEvent
+        hikari.events.voice_events.StageInstanceUpdateEvent
             The parsed stage instance update event object.
         """
 
@@ -1460,9 +1460,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns

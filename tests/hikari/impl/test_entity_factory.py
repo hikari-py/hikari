@@ -7215,7 +7215,7 @@ class TestEntityFactoryImpl:
     # Stage instance models #
     #########################
 
-    @pytest.fixture()
+    @pytest.fixture
     def stage_instance_payload(self):
         return {
             "id": "840647391636226060",

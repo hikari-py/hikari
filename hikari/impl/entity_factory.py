@@ -1472,9 +1472,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_stage_instance(self, payload: data_binding.JSONObject) -> stage_instances.StageInstance:
-        guild_scheduled_event_id = (
-            snowflakes.Snowflake(payload["guild_scheduled_event_id"]) if payload["guild_scheduled_event_id"] else None
-        )
+        raw_event_id = payload["guild_scheduled_event_id"]
+        guild_scheduled_event_id = snowflakes.Snowflake(raw_event_id) if raw_event_id else None
 
         return stage_instances.StageInstance(
             app=self._app,

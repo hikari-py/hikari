@@ -28,13 +28,13 @@ from hikari import snowflakes
 from hikari import stage_instances
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock()
 
 
 class TestStageInstance:
-    @pytest.fixture()
+    @pytest.fixture
     def stage_instance(self, mock_app):
         return stage_instances.StageInstance(
             app=mock_app,
@@ -79,7 +79,7 @@ class TestStageInstance:
 
         assert stage_instance.get_channel() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_channel(self, stage_instance):
         mock_stage_channel = mock.Mock(channels.GuildStageChannel)
         stage_instance.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_stage_channel)
@@ -99,14 +99,14 @@ class TestStageInstance:
 
         assert stage_instance.get_guild() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild(self, stage_instance):
         stage_instance.app.rest.fetch_guild = mock.AsyncMock()
 
         assert await stage_instance.fetch_guild() == stage_instance.app.rest.fetch_guild.return_value
         stage_instance.app.rest.fetch_guild.assert_awaited_once_with(420)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_scheduled_event(self, stage_instance):
         stage_instance.app.rest.fetch_scheduled_event = mock.AsyncMock()
 

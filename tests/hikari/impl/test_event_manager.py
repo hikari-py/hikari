@@ -1693,7 +1693,7 @@ class TestEventManagerImpl:
             event_factory.deserialize_audit_log_entry_create_event.return_value
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_stage_instance_create(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
@@ -1716,7 +1716,7 @@ class TestEventManagerImpl:
             event_factory.deserialize_stage_instance_create_event.return_value
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_stage_instance_update(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
@@ -1734,12 +1734,12 @@ class TestEventManagerImpl:
 
         await event_manager_impl.on_stage_instance_update(shard, payload)
 
-        event_factory.deserialize_stage_instance_edit_event.assert_called_once_with(shard, payload)
+        event_factory.deserialize_stage_instance_update_event.assert_called_once_with(shard, payload)
         event_manager_impl.dispatch.assert_awaited_once_with(
-            event_factory.deserialize_stage_instance_edit_event.return_value
+            event_factory.deserialize_stage_instance_update_event.return_value
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_stage_instance_delete(
         self,
         event_manager_impl: event_manager.EventManagerImpl,

@@ -1540,7 +1540,7 @@ class TestEventFactoryImpl:
         assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
         assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
 
-    def test_deserialize_stage_instance_edit_event(self, event_factory, mock_app, mock_shard):
+    def test_deserialize_stage_instance_update_event(self, event_factory, mock_app, mock_shard):
         mock_payload = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
@@ -1549,8 +1549,8 @@ class TestEventFactoryImpl:
             "privacy_level": 2,
             "discoverable_disabled": True,
         }
-        event = event_factory.deserialize_stage_instance_edit_event(mock_shard, mock_payload)
-        assert isinstance(event, stage_events.StageInstanceEditEvent)
+        event = event_factory.deserialize_stage_instance_update_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceUpdateEvent)
 
         assert event.shard is mock_shard
         assert event.app is event.stage_instance.app

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
-# Copyright (c) 2021 davfsa
+# Copyright (c) 2021-present davfsa
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -48,15 +48,9 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    @abc.abstractmethod
-    def stage_instance_id(self) -> snowflakes.Snowflake:
-        """ID of the stage instance that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the stage instance that this event relates to.
-        """
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.stage_instance.app
 
     @property
     @abc.abstractmethod
@@ -68,6 +62,17 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
         hikari.stage_instance.StageInstance
             The stage instance that this event relates to.
         """
+
+    @property
+    def stage_instance_id(self) -> snowflakes.Snowflake:
+        """ID of the stage instance that this event relates to.
+
+        Returns
+        -------
+        hikari.snowflakes.Snowflake
+            The ID of the stage instance that this event relates to.
+        """
+        return self.stage_instance.id
 
 
 @attrs_extensions.with_copy
@@ -82,37 +87,18 @@ class StageInstanceCreateEvent(StageInstanceEvent):
     stage_instance: StageInstance = attr.field()
     """The stage instance that was created."""
 
-    @property
-    def app(self) -> traits.RESTAware:
-        # <<inherited docstring from Event>>.
-        return self.stage_instance.app
-
-    @property
-    def stage_instance_id(self) -> snowflakes.Snowflake:
-        # <<inherited docstring from StageInstanceEvent>>.
-        return self.stage_instance.id
-
 
 @attrs_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
-class StageInstanceEditEvent(StageInstanceEvent):
-    """Event fired when a stage instance is edited."""
+class StageInstanceUpdateEvent(StageInstanceEvent):
+    """Event fired when a stage instance is updated."""
 
     shard: gateway_shard.GatewayShard = attr.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
     stage_instance: StageInstance = attr.field()
-    """The stage instance that was edited."""
-
-    @property
-    def app(self) -> traits.RESTAware:
-        # <<inherited docstring from Event>>.
-        return self.stage_instance.app
-
-    @property
-    def stage_instance_id(self) -> snowflakes.Snowflake:
-        return self.stage_instance.id
+    """The stage instance that was updated."""
 
 
 @attrs_extensions.with_copy
@@ -126,12 +112,3 @@ class StageInstanceDeleteEvent(StageInstanceEvent):
 
     stage_instance: StageInstance = attr.field()
     """The stage instance that was deleted."""
-
-    @property
-    def app(self) -> traits.RESTAware:
-        # <<inherited docstring from Event>>.
-        return self.stage_instance.app
-
-    @property
-    def stage_instance_id(self) -> snowflakes.Snowflake:
-        return self.stage_instance.id

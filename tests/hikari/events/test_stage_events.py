@@ -28,7 +28,7 @@ from hikari.events import stage_events
 
 
 class TestStageInstanceCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return stage_events.StageInstanceCreateEvent(shard=object(), stage_instance=mock.Mock())
 
@@ -40,10 +40,10 @@ class TestStageInstanceCreateEvent:
         assert event.stage_instance_id == 1234
 
 
-class TestStageInstanceEditEvent:
-    @pytest.fixture()
+class TestStageInstanceUpdateEvent:
+    @pytest.fixture
     def event(self):
-        return stage_events.StageInstanceEditEvent(
+        return stage_events.StageInstanceUpdateEvent(
             shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
         )
 
@@ -56,7 +56,7 @@ class TestStageInstanceEditEvent:
 
 
 class TestStageInstanceDeleteEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return stage_events.StageInstanceDeleteEvent(
             shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
