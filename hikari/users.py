@@ -119,6 +119,9 @@ class PremiumType(int, enums.Enum):
     NITRO = 2
     """Premium including all perks (e.g. 2 server boosts)."""
 
+    NITRO_BASIC = 3
+    """Premium including super basic perks like animated emojis and super reactions"""
+
 
 class PartialUser(snowflakes.Unique, abc.ABC):
     """A partial interface for a user.
