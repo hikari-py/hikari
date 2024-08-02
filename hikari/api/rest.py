@@ -3406,7 +3406,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_application_emoji(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji]
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
     ) -> emojis.CustomEmoji:
         """Fetch an application emoji.
 
@@ -3474,10 +3474,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def create_application_emoji(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        name: str,
-        image: files.Resourceish,
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
     ) -> emojis.CustomEmoji:
         """Create an emoji for an application.
 
@@ -3521,7 +3518,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
-        name: str
+        name: str,
     ) -> emojis.CustomEmoji:
         """Edit an emoji in a guild.
 
@@ -3563,7 +3560,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_application_emoji(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji]
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
     ) -> None:
         """Delete an emoji in a guild.
 

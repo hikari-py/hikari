@@ -2417,7 +2417,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_application_emoji(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji]
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
     ) -> emojis.CustomEmoji:
         route = routes.GET_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
         response = await self._request(route)
@@ -2430,16 +2430,10 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_APPLICATION_EMOJIS.compile(application=application)
         response = await self._request(route)
         assert isinstance(response, list)
-        return [
-            self._entity_factory.deserialize_custom_emoji(emoji_payload)
-            for emoji_payload in response
-        ]
+        return [self._entity_factory.deserialize_custom_emoji(emoji_payload) for emoji_payload in response]
 
     async def create_application_emoji(
-        self,
-        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        name: str,
-        image: files.Resourceish,
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
     ) -> emojis.CustomEmoji:
         route = routes.POST_APPLICATION_EMOJIS.compile(application=application)
         body = data_binding.JSONObjectBuilder()
@@ -2456,7 +2450,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
-        name: str
+        name: str,
     ) -> emojis.CustomEmoji:
         route = routes.PATCH_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
         body = data_binding.JSONObjectBuilder()
@@ -2469,7 +2463,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_application_emoji(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji]
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
     ) -> None:
         route = routes.DELETE_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
         await self._request(route)
