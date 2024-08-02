@@ -638,10 +638,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (install_payload := payload.get("install_params")) is not None:
             install_parameters = self._deserialize_install_parameters(install_payload)
 
-        integration_types_config: typing.Optional[
-            typing.Mapping[
-                application_models.ApplicationIntegrationType, application_models.ApplicationInstallParameters
-            ]
+        integration_types_config: typing.Mapping[
+            application_models.ApplicationIntegrationType, application_models.ApplicationInstallParameters
         ] = {}
         if (integration_types_config_payload := payload.get("integration_types_config")) is not None:
             integration_types_config = {

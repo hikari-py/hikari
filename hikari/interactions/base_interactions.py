@@ -225,7 +225,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     """Mapping installation contexts authorized for interaction to related user or guild IDs."""
 
     context: typing.Optional[applications.ApplicationInstallationContextType] = attrs.field(eq=False, repr=False)
-    """A context where interaction was triggerred"""
+    """A context on where interaction was triggered."""
 
     @property
     def webhook_id(self) -> snowflakes.Snowflake:

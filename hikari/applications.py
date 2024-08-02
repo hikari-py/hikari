@@ -78,10 +78,10 @@ class ApplicationIntegrationType(int, enums.Enum):
     """The known integration types."""
 
     GUILD_INSTALL = 0
-    """A guild install command integration type"""
+    """A guild install command integration type."""
 
     USER_INSTALL = 1
-    """A user install command integration type"""
+    """A user install command integration type."""
 
 
 @typing.final
@@ -89,13 +89,13 @@ class ApplicationInstallationContextType(int, enums.Enum):
     """The known installation context types."""
 
     GUILD = 0
-    """Interaction can be used within server"""
+    """Interaction can be used within server."""
 
     BOT_DM = 1
-    """Interaction can be used within DM's"""
+    """Interaction can be used within DM's."""
 
     PRIVATE_CHANNEL = 2
-    """Interaction can be used within group DM's and DM's"""
+    """Interaction can be used within group DM's and DM's."""
 
 
 @typing.final
@@ -659,9 +659,9 @@ class Application(guilds.PartialApplication):
     install_parameters: typing.Optional[ApplicationInstallParameters] = attrs.field(eq=False, hash=False, repr=False)
     """Settings for the application's default in-app authorization link, if enabled."""
 
-    integration_types_config: typing.Optional[
-        typing.Mapping[ApplicationIntegrationType, ApplicationInstallParameters]
-    ] = attrs.field(eq=False, hash=False, repr=False)
+    integration_types_config: typing.Mapping[ApplicationIntegrationType, ApplicationInstallParameters] = attrs.field(
+        eq=False, hash=False, repr=False
+    )
     """Default scopes and permissions for each supported installation context."""
 
     approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
