@@ -242,13 +242,14 @@ class CacheImpl(cache.MutableCache):
         if emoji_data.user:
             self._garbage_collect_user(emoji_data.user, decrement=1)
 
-        guild_record = self._guild_entries.get(emoji_data.guild_id)
-        if guild_record and guild_record.emojis:
-            guild_record.emojis.remove(emoji_id)
+        if emoji_data.guild_id is not None:
+            guild_record = self._guild_entries.get(emoji_data.guild_id)
+            if guild_record and guild_record.emojis:
+                guild_record.emojis.remove(emoji_id)
 
-            if not guild_record.emojis:
-                guild_record.emojis = None
-                self._remove_guild_record_if_empty(emoji_data.guild_id, guild_record)
+                if not guild_record.emojis:
+                    guild_record.emojis = None
+                    self._remove_guild_record_if_empty(emoji_data.guild_id, guild_record)
 
         return self._build_emoji(emoji_data)
 
@@ -292,12 +293,14 @@ class CacheImpl(cache.MutableCache):
 
         emoji_data = cache_utility.KnownCustomEmojiData.build_from_entity(emoji, user=user)
         self._emoji_entries[emoji.id] = emoji_data
-        guild_record = self._get_or_create_guild_record(emoji.guild_id)
 
-        if guild_record.emojis is None:  # TODO: add test cases when it is not None?
-            guild_record.emojis = collections.SnowflakeSet()
+        if emoji.guild_id is not None:
+            guild_record = self._get_or_create_guild_record(emoji.guild_id)
 
-        guild_record.emojis.add(emoji.id)
+            if guild_record.emojis is None:  # TODO: add test cases when it is not None?
+                guild_record.emojis = collections.SnowflakeSet()
+
+            guild_record.emojis.add(emoji.id)
 
     def update_emoji(
         self, emoji: emojis.KnownCustomEmoji, /
