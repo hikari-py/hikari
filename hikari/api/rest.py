@@ -3407,7 +3407,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
-    ) -> emojis.ApplicationEmoji:
+    ) -> emojis.KnownCustomEmoji:
         """Fetch an application emoji.
 
         Parameters
@@ -3443,7 +3443,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_application_emojis(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
-    ) -> typing.Sequence[emojis.ApplicationEmoji]:
+    ) -> typing.Sequence[emojis.KnownCustomEmoji]:
         """Fetch the emojis of an application.
 
         Parameters
@@ -3475,7 +3475,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def create_application_emoji(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
-    ) -> emojis.ApplicationEmoji:
+    ) -> emojis.KnownCustomEmoji:
         """Create an application emoji.
 
         Parameters
@@ -3519,7 +3519,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
         name: str,
-    ) -> emojis.ApplicationEmoji:
+    ) -> emojis.KnownCustomEmoji:
         """Edit an application emoji.
 
         Parameters
