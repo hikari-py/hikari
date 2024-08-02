@@ -52,7 +52,7 @@ _FLOAT_PATTERN: typing.Final[typing.Pattern[str]] = re.compile(r"0\.\d*|\.\d+|1\
 
 
 def _to_rgb_float(value: str, name: str) -> float:
-    # Floats are easier to handle, as they don't overflow, they just become `inf`.
+    # Floats are easier to handle, as they don't overflow, they just become [`inf`][].
 
     if value.count(".") != 1:
         raise ValueError(f'Expected exactly 1 decimal point "." in {name} channel')
@@ -66,7 +66,7 @@ class Color(int):
 
     This value is immutable.
 
-    This is a specialization of `int` which provides alternative overrides for
+    This is a specialization of [`int`][] which provides alternative overrides for
     common methods and color system conversions.
 
     This currently supports:
@@ -82,80 +82,80 @@ class Color(int):
     --------
     Examples of conversions to given formats include:
 
-    .. code-block:: python
+    ```py
+    >>> c = Color(0xFF051A)
+    Color(r=0xff, g=0x5, b=0x1a)
 
-        >>> c = Color(0xFF051A)
-        Color(r=0xff, g=0x5, b=0x1a)
+    >>> hex(c)
+    0xff051a
 
-        >>> hex(c)
-        0xff051a
+    >>> c.hex_code
+    #FF051A
 
-        >>> c.hex_code
-        #FF051A
+    >>> str(c)
+    #FF051A
 
-        >>> str(c)
-        #FF051A
+    >>> int(c)
+    16712986
 
-        >>> int(c)
-        16712986
+    >>> c.rgb
+    (255, 5, 26)
 
-        >>> c.rgb
-        (255, 5, 26)
-
-        >>> c.rgb_float
-        (1.0, 0.0196078431372549, 0.10196078431372549)
+    >>> c.rgb_float
+    (1.0, 0.0196078431372549, 0.10196078431372549)
+    ```
 
     Alternatively, if you have an arbitrary input in one of the above formats
-    that you wish to become a color, you can use `Color.of` on the class itself
-    to automatically attempt to resolve the color:
+    that you wish to become a color, you can use [`hikari.colors.Color.of`][] on
+    the class itself to automatically attempt to resolve the color:
 
-    .. code-block:: python
+    ```py
+    >>> Color.of(0xFF051A)
+    Color(r=0xff, g=0x5, b=0x1a)
 
-        >>> Color.of(0xFF051A)
-        Color(r=0xff, g=0x5, b=0x1a)
+    >>> Color.of(16712986)
+    Color(r=0xff, g=0x5, b=0x1a)
 
-        >>> Color.of(16712986)
-        Color(r=0xff, g=0x5, b=0x1a)
+    >>> c = Color.of((255, 5, 26))
+    Color(r=0xff, g=0x5, b=1xa)
 
-        >>> c = Color.of((255, 5, 26))
-        Color(r=0xff, g=0x5, b=1xa)
+    >>> c = Color.of(255, 5, 26)
+    Color(r=0xff, g=0x5, b=1xa)
 
-        >>> c = Color.of(255, 5, 26)
-        Color(r=0xff, g=0x5, b=1xa)
+    >>> c = Color.of([0xFF, 0x5, 0x1a])
+    Color(r=0xff, g=0x5, b=1xa)
 
-        >>> c = Color.of([0xFF, 0x5, 0x1a])
-        Color(r=0xff, g=0x5, b=1xa)
+    >>> c = Color.of("#1a2b3c")
+    Color(r=0x1a, g=0x2b, b=0x3c)
 
-        >>> c = Color.of("#1a2b3c")
-        Color(r=0x1a, g=0x2b, b=0x3c)
+    >>> c = Color.of("#1AB")
+    Color(r=0x11, g=0xaa, b=0xbb)
 
-        >>> c = Color.of("#1AB")
-        Color(r=0x11, g=0xaa, b=0xbb)
+    >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
+    Color(r=0xff, g=0x5, b=0x1a)
 
-        >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
-        Color(r=0xff, g=0x5, b=0x1a)
-
-        >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
-        Color(r=0xff, g=0x5, b=0x1a)
+    >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
+    Color(r=0xff, g=0x5, b=0x1a)
+    ```
 
     Examples of initialization of Color objects from given formats include:
 
-    .. code-block:: python
+    ```py
+    >>> c = Color(16712986)
+    Color(r=0xff, g=0x5, b=0x1a)
 
-        >>> c = Color(16712986)
-        Color(r=0xff, g=0x5, b=0x1a)
+    >>> c = Color.from_rgb(255, 5, 26)
+    Color(r=0xff, g=0x5, b=1xa)
 
-        >>> c = Color.from_rgb(255, 5, 26)
-        Color(r=0xff, g=0x5, b=1xa)
+    >>> c = Color.from_hex_code("#1a2b3c")
+    Color(r=0x1a, g=0x2b, b=0x3c)
 
-        >>> c = Color.from_hex_code("#1a2b3c")
-        Color(r=0x1a, g=0x2b, b=0x3c)
+    >>> c = Color.from_hex_code("#1AB")
+    Color(r=0x11, g=0xaa, b=0xbb)
 
-        >>> c = Color.from_hex_code("#1AB")
-        Color(r=0x11, g=0xaa, b=0xbb)
-
-        >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
-        Color(r=0xff, g=0x5, b=0x1a)
+    >>> c = Color.from_rgb_float(1.0, 0.0196078431372549, 0.10196078431372549)
+    Color(r=0xff, g=0x5, b=0x1a)
+    ```
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -163,7 +163,7 @@ class Color(int):
     def __init__(self, raw_rgb: typing.SupportsInt) -> None:
         if not (0 <= int(raw_rgb) <= 0xFFFFFF):
             raise ValueError(f"raw_rgb must be in the exclusive range of 0 and {0xFF_FF_FF}")
-        # The __new__ for `int` initializes the value for us, this super-call does nothing other
+        # The __new__ for [`int`][] initializes the value for us, this super-call does nothing other
         # than keeping the linter happy.
         super().__init__()
 
@@ -183,7 +183,7 @@ class Color(int):
 
         Examples
         --------
-        `(123, 234, 47)`
+        [(123, 234, 47)][]
         """
         return (self >> 16) & 0xFF, (self >> 8) & 0xFF, self & 0xFF
 
@@ -195,7 +195,7 @@ class Color(int):
 
         Examples
         --------
-        `(0.1, 0.2, 0.76)`
+        [(0.1, 0.2, 0.76)][]
         """
         r, g, b = self.rgb
         return r / 0xFF, g / 0xFF, b / 0xFF
@@ -230,17 +230,17 @@ class Color(int):
 
     @classmethod
     def from_rgb(cls, red: int, green: int, blue: int, /) -> Color:
-        """Convert the given RGB to a `Color` object.
+        """Convert the given RGB to a [`hikari.colors.Color`][] object.
 
         Each channel must be within the range [0, 255] (0x0, 0xFF).
 
         Parameters
         ----------
-        red : int
+        red
             Red channel.
-        green : int
+        green
             Green channel.
-        blue : int
+        blue
             Blue channel.
 
         Returns
@@ -263,18 +263,18 @@ class Color(int):
 
     @classmethod
     def from_rgb_float(cls, red: float, green: float, blue: float, /) -> Color:
-        """Convert the given RGB to a `Color` object.
+        """Convert the given RGB to a [`hikari.colors.Color`][] object.
 
         The color-space represented values have to be within the
         range [0, 1].
 
         Parameters
         ----------
-        red : float
+        red
             Red channel.
-        green : float
+        green
             Green channel.
-        blue : float
+        blue
             Blue channel.
 
         Returns
@@ -297,7 +297,7 @@ class Color(int):
 
     @classmethod
     def from_hex_code(cls, hex_code: str, /) -> Color:
-        """Convert the given hexadecimal color code to a `Color`.
+        """Convert the given hexadecimal color code to a [`hikari.colors.Color`][].
 
         The inputs may be of the following format (case insensitive):
         `1a2`, `#1a2`, `0x1a2` (for web-safe colors), or
@@ -305,7 +305,7 @@ class Color(int):
 
         Parameters
         ----------
-        hex_code : str
+        hex_code
             A hexadecimal color code to parse. This may optionally start with
             a case insensitive `0x` or `#`.
 
@@ -339,11 +339,11 @@ class Color(int):
 
     @classmethod
     def from_int(cls, integer: typing.SupportsInt, /) -> Color:
-        """Convert the given `typing.SupportsInt` to a `Color`.
+        """Convert the given [`typing.SupportsInt`][] to a [`hikari.colors.Color`][].
 
         Parameters
         ----------
-        integer : typing.SupportsInt
+        integer
             The raw color integer.
 
         Returns
@@ -355,11 +355,11 @@ class Color(int):
 
     @classmethod
     def from_tuple_string(cls, tuple_str: str, /) -> Color:
-        """Convert a string in a tuple-like format to a `Color`.
+        """Convert a string in a tuple-like format to a [`hikari.colors.Color`][].
 
-        This allows formats that are optionally enclosed by `()`, `{}`, or
-        `[]`, and contain three floats or ints, either space separated or
-        comma separated.
+        This allows formats that are optionally enclosed by `()`,
+        `{}`, `[]` or `<>`, and contain three floats or ints,
+        either space separated or comma separated.
 
         If comma separated, trailing and leading whitespace around each member
         is truncated.
@@ -369,8 +369,7 @@ class Color(int):
 
         Examples
         --------
-        .. code-block:: python
-
+        ```py
             # Floats
             "1.0 1.0 1.0"
             "(1.0 1.0 1.0)"
@@ -390,10 +389,11 @@ class Color(int):
             "(252, 252, 252)"
             "[252, 252, 252]"
             "{252, 252, 252}"
+        ```
 
         Parameters
         ----------
-        tuple_str : str
+        tuple_str
             The string to parse.
 
         Returns
@@ -425,55 +425,55 @@ class Color(int):
 
     @classmethod
     def of(cls, value: Colorish, /) -> Color:
-        """Convert the value to a `Color`.
+        """Convert the value to a [`hikari.colors.Color`][].
 
         This attempts to determine the correct data format based on the
         information provided.
 
         Parameters
         ----------
-        value : Colorish
+        value
             A color compatible values.
 
         Examples
         --------
-        .. code-block:: python
+        ```py
+        >>> Color.of(0xFF051A)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-            >>> Color.of(0xFF051A)
-            Color(r=0xff, g=0x5, b=0x1a)
+        >>> Color.of(16712986)
+        Color(r=0xff, g=0x5, b=0x1a)
 
-            >>> Color.of(16712986)
-            Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color.of((255, 5, 26))
+        Color(r=0xff, g=0x5, b=1xa)
 
-            >>> c = Color.of((255, 5, 26))
-            Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color.of([0xFF, 0x5, 0x1a])
+        Color(r=0xff, g=0x5, b=1xa)
 
-            >>> c = Color.of([0xFF, 0x5, 0x1a])
-            Color(r=0xff, g=0x5, b=1xa)
+        >>> c = Color.of("#1a2b3c")
+        Color(r=0x1a, g=0x2b, b=0x3c)
 
-            >>> c = Color.of("#1a2b3c")
-            Color(r=0x1a, g=0x2b, b=0x3c)
+        >>> c = Color.of("#1AB")
+        Color(r=0x11, g=0xaa, b=0xbb)
 
-            >>> c = Color.of("#1AB")
-            Color(r=0x11, g=0xaa, b=0xbb)
+        >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
+        Color(r=0xff, g=0x5, b=0x1a)
 
-            >>> c = Color.of((1.0, 0.0196078431372549, 0.10196078431372549))
-            Color(r=0xff, g=0x5, b=0x1a)
+        >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
+        Color(r=0xff, g=0x5, b=0x1a)
 
-            >>> c = Color.of([1.0, 0.0196078431372549, 0.10196078431372549])
-            Color(r=0xff, g=0x5, b=0x1a)
-
-            # Commas and brackets are optional, whitespace is ignored, and these
-            # are compatible with all-ints between 0-255 or all-floats between
-            # 0.0 and 1.0 only.
-            >>> c = Color.of("5, 22, 33")
-            Color(r=0x5, g=0x16, b=0x21)
-            >>> c = Color.of("(5, 22, 33)")
-            Color(r=0x5, g=0x16, b=0x21)
-            >>> c = Color.of("[5, 22, 33]")
-            Color(r=0x5, g=0x16, b=0x21)
-            >>> c = Color.of("{5, 22, 33}")
-            Color(r=0x5, g=0x16, b=0x21)
+        # Commas and brackets are optional, whitespace is ignored, and these
+        # are compatible with all-ints between 0-255 or all-floats between
+        # 0.0 and 1.0 only.
+        >>> c = Color.of("5, 22, 33")
+        Color(r=0x5, g=0x16, b=0x21)
+        >>> c = Color.of("(5, 22, 33)")
+        Color(r=0x5, g=0x16, b=0x21)
+        >>> c = Color.of("[5, 22, 33]")
+        Color(r=0x5, g=0x16, b=0x21)
+        >>> c = Color.of("{5, 22, 33}")
+        Color(r=0x5, g=0x16, b=0x21)
+        ```
 
         Returns
         -------
@@ -514,12 +514,12 @@ class Color(int):
 
         Parameters
         ----------
-        length : int
+        length
             The number of bytes to produce. Should be around `3`, but not less.
-        byteorder : str
+        byteorder
             The endianness of the value represented by the bytes.
             Can be `"big"` endian or `"little"` endian.
-        signed : bool
+        signed
             Whether the value is signed or unsigned.
 
         Returns
@@ -543,14 +543,14 @@ Colorish = typing.Union[
 
 This may be:
 
-1. `hikari.colors.Color`
-2. `hikari.colours.Colour` (an alias for `hikari.colors.Color`).
-3. A value that can be cast to an `int` (RGB hex-code).
-4. a 3-`tuple` of `int` (RGB integers in range 0 through 255).
-5. a 3-`tuple` of `float` (RGB floats in range 0 through 1).
-6. a list of `int`.
-7. a list of `float`.
-8. a `str` hex colour code.
+1. [`hikari.colors.Color`][]
+2. [`hikari.colours.Colour`][] (an alias for [`hikari.colors.Color`][]).
+3. A value that can be cast to an [`int`][] (RGB hex-code).
+4. a 3-[`tuple`][] of [`int`][] (RGB integers in range 0 through 255).
+5. a 3-[`tuple`][] of [`float`][] (RGB floats in range 0 through 1).
+6. a list of [`int`][].
+7. a list of [`float`][].
+8. a [`str`][] hex colour code.
 
 A hex colour code is expected to be in one of the following formats. Each of the
 following examples means the same thing semantically.

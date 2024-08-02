@@ -67,7 +67,7 @@ class BasicAuthHeader:
     username: str = attrs.field(validator=attrs.validators.instance_of(str))
     """Username for the header.
 
-    .. warning::
+    !!! warning
         This must not contain `":"`.
     """
 
@@ -100,14 +100,14 @@ class ProxySettings(config.ProxySettings):
     auth: typing.Any = attrs.field(default=None)
     """Authentication header value to use.
 
-    When cast to a `str`, this should provide the full value
+    When cast to a [`str`][], this should provide the full value
     for the authentication header.
 
     If you are using basic auth, you should consider using the
-    `BasicAuthHeader` helper object here, as this will provide any
-    transformations you may require into a base64 string.
+    [`hikari.impl.config.BasicAuthHeader`][] helper object here, as this will
+    provide any transformations you may require into a Base64 string.
 
-    The default is to have this set to `None`, which will
+    The default is to have this set to [`None`][], which will
     result in no authentication being provided.
     """
 
@@ -117,21 +117,21 @@ class ProxySettings(config.ProxySettings):
     url: typing.Union[None, str] = attrs.field(default=None)
     """Proxy URL to use.
 
-    Defaults to `None` which disables the use of an explicit proxy.
+    Defaults to [`None`][] which disables the use of an explicit proxy.
     """
 
     trust_env: bool = attrs.field(default=False, validator=attrs.validators.instance_of(bool))
     """Toggle whether to look for a `netrc` file or environment variables.
 
-    If `True`, and no `url` is given on this object, then
+    If [`True`][], and no `url` is given on this object, then
     `HTTP_PROXY` and `HTTPS_PROXY` will be used from the environment
     variables, or a `netrc` file may be read to determine credentials.
 
-    If `False`, then this information is instead ignored.
+    If [`False`][], then this information is instead ignored.
 
-    Defaults to `False` to prevent potentially unwanted behavior.
+    Defaults to [`False`][] to prevent potentially unwanted behavior.
 
-    .. note::
+    !!! note
         For more details of using `netrc`, visit:
         <https://www.gnu.org/software/inetutils/manual/html_node/The-_002enetrc-file.html>
     """
@@ -140,7 +140,7 @@ class ProxySettings(config.ProxySettings):
     def all_headers(self) -> typing.Optional[data_binding.Headers]:
         """Return all proxy headers.
 
-        Will be `None` if no headers are to be send with any request.
+        Will be [`None`][] if no headers are to be send with any request.
         """
         if self.headers is None:
             if self.auth is None:
@@ -160,28 +160,28 @@ class HTTPTimeoutSettings:
     acquire_and_connect: typing.Optional[float] = attrs.field(default=None)
     """Timeout for `request_socket_connect` PLUS connection acquisition.
 
-    By default, this has no timeout allocated. Setting it to `None`
+    By default, this has no timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
     request_socket_connect: typing.Optional[float] = attrs.field(default=None)
     """Timeout for connecting a socket.
 
-    By default, this has no timeout allocated. Setting it to `None`
+    By default, this has no timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
     request_socket_read: typing.Optional[float] = attrs.field(default=None)
     """Timeout for reading a socket.
 
-    By default, this has no timeout allocated. Setting it to `None`
+    By default, this has no timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
     total: typing.Optional[float] = attrs.field(default=30.0)
     """Total timeout for entire request.
 
-    By default, this has a 30 second timeout allocated. Setting it to `None`
+    By default, this has a 30 second timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
@@ -204,29 +204,29 @@ class HTTPSettings(config.HTTPSettings):
     enable_cleanup_closed: bool = attrs.field(default=False, validator=attrs.validators.instance_of(bool))
     """Toggle whether to clean up closed transports.
 
-    This defaults to `False` to combat various protocol and asyncio
+    This defaults to [`False`][] to combat various protocol and asyncio
     issues present. If you are sure you know  what you are doing,
-    you may instead set this to `True` to enable this
+    you may instead set this to [`True`][] to enable this
     behavior internally.
     """
 
     force_close_transports: bool = attrs.field(default=True, validator=attrs.validators.instance_of(bool))
     """Toggle whether to force close transports on shut down.
 
-    This defaults to `True` to combat various protocol and asyncio
+    This defaults to [`True`][] to combat various protocol and asyncio
     issues present when using Microsoft Windows. If you are sure you know
-    what you are doing, you may instead set this to `False` to disable this
+    what you are doing, you may instead set this to [`False`][] to disable this
     behavior internally.
     """
 
     max_redirects: typing.Optional[int] = attrs.field(default=10)
     """Behavior for handling redirect HTTP responses.
 
-    If a `int`, allow following redirects from `3xx` HTTP responses
+    If a [`int`][], allow following redirects from `3xx` HTTP responses
     for up to this many redirects. Exceeding this value will raise an
     exception.
 
-    If `None`, then disallow any redirects.
+    If [`None`][], then disallow any redirects.
 
     The default is to disallow this behavior for security reasons.
 
@@ -234,7 +234,7 @@ class HTTPSettings(config.HTTPSettings):
     future where you need to enable this if Discord change their URL without
     warning.
 
-    .. note::
+    !!! note
         This will only apply to the REST API. WebSockets remain unaffected
         by any value set here.
     """
@@ -253,24 +253,24 @@ class HTTPSettings(config.HTTPSettings):
     )
     """SSL context to use.
 
-    This may be assigned a `bool` or an `ssl.SSLContext` object.
+    This may be assigned a [`bool`][] or an [`ssl.SSLContext`][] object.
 
-    If assigned to `True`, a default SSL context is generated by
+    If assigned to [`True`][], a default SSL context is generated by
     this class that will enforce SSL verification. This is then stored in
     this field.
 
-    If `False`, then a default SSL context is generated by this
+    If [`False`][], then a default SSL context is generated by this
     class that will **NOT** enforce SSL verification. This is then stored
     in this field.
 
-    If an instance of `ssl.SSLContext`, then this context will be used.
+    If an instance of [`ssl.SSLContext`][], then this context will be used.
 
-    .. warning::
+    !!! warning
         Setting a custom value here may have security implications, or
         may result in the application being unable to connect to Discord
         at all.
 
-    .. warning::
+    !!! warning
         Disabling SSL verification is almost always unadvised. This
         is because your application will no longer check whether you are
         connecting to Discord, or to some third party spoof designed
@@ -307,7 +307,7 @@ class CacheSettings(config.CacheSettings):
     )
     """The cache components to use.
 
-    Defaults to `hikari.api.cache.CacheComponents.ALL`.
+    Defaults to [`hikari.api.config.CacheComponents.ALL`][].
     """
 
     max_messages: int = attrs.field(default=300)
@@ -332,5 +332,5 @@ class CacheSettings(config.CacheSettings):
     Useful when only the bot member is required (eg. permission checks).
     This will have no effect if the members cache is not enabled.
 
-    Defaults to `False`.
+    Defaults to [`False`][].
     """

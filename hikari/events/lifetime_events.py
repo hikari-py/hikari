@@ -46,18 +46,18 @@ if typing.TYPE_CHECKING:
 class StartingEvent(base_events.Event):
     """Event that is triggered before the application connects to Discord.
 
-    This will only fire once per `bot.run` / `bot.start`, so is suitable for
+    This will only fire once per startup, so is suitable for
     opening database connections and other resources that need to be
     initialized within a coroutine function.
 
-    .. warning::
+    !!! warning
         The application will not proceed to connect to Discord until all event
         handlers for this event have completed/terminated. This prevents the
         risk of race conditions occurring (e.g. allowing message events
         to try to access a database that has not yet connected fully).
 
     If you want to do something _after_ the application has initialized, you
-    should consider using `StartedEvent` instead.
+    should consider using [`hikari.events.lifetime_events.StartingEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -69,12 +69,12 @@ class StartingEvent(base_events.Event):
 class StartedEvent(base_events.Event):
     """Event that is triggered after the application has started.
 
-    This will only fire once per `bot.run` / `bot.start`, so is suitable for
+    This will only fire once per startup, so is suitable for
     opening database connections and other resources that need to be
     initialized within a coroutine function.
 
     If you want to do something _before_ the application connects, you should
-    consider using `StartingEvent` instead.
+    consider using [`hikari.events.lifetime_events.StartingEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -88,18 +88,18 @@ class StoppingEvent(base_events.Event):
 
     This will fire before the connection is physically disconnected.
 
-    This will only fire once per `bot.close`, so is suitable for
+    This will only fire once per close, so is suitable for
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
-    .. warning::
+    !!! warning
         The application will not proceed to disconnect from Discord until all
         event handlers for this event have completed/terminated. This
         prevents the risk of race conditions occurring from code that relies
         on a connection still being available to complete.
 
     If you want to do something _after_ the disconnection has occurred, you
-    should consider using `StoppedEvent` instead.
+    should consider using [`hikari.events.lifetime_events.StoppingEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -111,19 +111,19 @@ class StoppingEvent(base_events.Event):
 class StoppedEvent(base_events.Event):
     """Event that is triggered once the application has disconnected.
 
-    This will only fire once per `bot.close`, so is suitable for
+    This will only fire once per close, so is suitable for
     closing database connections and other resources that need to be
     closed within a coroutine function.
 
-    .. warning::
-        The application will not proceed to leave the `bot.run` call until all
+    !!! warning
+        The application will not proceed to leave the run call until all
         event handlers for this event have completed/terminated. This
         prevents the risk of race conditions occurring where a script may
         terminate the process before a callback can occur.
 
     If you want to do something when the application is preparing to shut down,
     but _before_ any connection to Discord is closed, you should consider using
-    `StoppingEvent` instead.
+    [`hikari.events.lifetime_events.StoppingEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})

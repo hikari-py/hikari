@@ -59,9 +59,9 @@ class CacheImpl(cache.MutableCache):
 
     Parameters
     ----------
-    app : hikari.traits.RESTAware
+    app
         The object of the REST aware app this is bound to.
-    settings : hikari.impl.config.CacheSettings
+    settings
         The cache settings to use.
     """
 

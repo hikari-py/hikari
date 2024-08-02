@@ -64,14 +64,12 @@ class TestFastProtocolChecking:
 
         with stack:
 
-            class NotProtocol(metaclass=fast_protocol._FastProtocolChecking):
-                ...
+            class NotProtocol(metaclass=fast_protocol._FastProtocolChecking): ...
 
     def test_new_when_first_protocol_is_FastProtocolChecking(self):
         with mock.patch.object(fast_protocol, "_Protocol", new=NotImplemented):
 
-            class FastProtocolChecking(metaclass=fast_protocol._FastProtocolChecking):
-                ...
+            class FastProtocolChecking(metaclass=fast_protocol._FastProtocolChecking): ...
 
             assert fast_protocol._Protocol is FastProtocolChecking
 
@@ -83,29 +81,24 @@ class TestFastProtocolChecking:
             match=r"FastProtocolChecking can only inherit from other fast checking protocols, got <class 'object'>",
         ):
 
-            class MyProtocol(object, fast_protocol.FastProtocolChecking, typing.Protocol):
-                ...
+            class MyProtocol(object, fast_protocol.FastProtocolChecking, typing.Protocol): ...
 
     def test_new_when_fastprotocolchecking_in_bases_but_not_protocol(self):
         with pytest.raises(TypeError, match=r"FastProtocolChecking can only be used with protocols"):
 
-            class MyProtocol(fast_protocol.FastProtocolChecking):
-                ...
+            class MyProtocol(fast_protocol.FastProtocolChecking): ...
 
     def test_new(self):
         class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
-            def test1():
-                ...
+            def test1(): ...
 
         class OtherProtocol(MyProtocol, fast_protocol.FastProtocolChecking, typing.Protocol):
-            def test2():
-                ...
+            def test2(): ...
 
         assert sorted(OtherProtocol._attributes_) == ["test1", "test2"]
 
     def test_init_subclass_does_not_overwrite_subclasshoook(self):
-        def subclass_hook():
-            ...
+        def subclass_hook(): ...
 
         class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
             __subclasshook__ = subclass_hook
@@ -113,11 +106,9 @@ class TestFastProtocolChecking:
         assert MyProtocol.__subclasshook__ is subclass_hook
 
     def test_isinstance_when_not_protocol(self):
-        class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
-            ...
+        class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol): ...
 
-        class Class:
-            ...
+        class Class: ...
 
         MyProtocol._is_protocol = False
         class_instance = Class()
@@ -129,31 +120,25 @@ class TestFastProtocolChecking:
 
     def test_isinstance_fastfail(self):
         class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
-            def test():
-                ...
+            def test(): ...
 
-        class Class:
-            ...
+        class Class: ...
 
         assert isinstance(Class(), MyProtocol) is False
 
     def test_isinstance(self):
         class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
-            def test():
-                ...
+            def test(): ...
 
         class Class:
-            def test():
-                ...
+            def test(): ...
 
         assert isinstance(Class(), MyProtocol) is True
 
     def test_issubclass_when_not_protocol(self):
-        class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
-            ...
+        class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol): ...
 
-        class Class:
-            ...
+        class Class: ...
 
         with mock.patch.object(type(typing.Protocol), "__subclasscheck__", return_value=True) as subclass_check:
             assert issubclass(Class, MyProtocol) is True
@@ -162,21 +147,17 @@ class TestFastProtocolChecking:
 
     def test_issubclass_fastfail(self):
         class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
-            def test():
-                ...
+            def test(): ...
 
-        class Class:
-            ...
+        class Class: ...
 
         assert issubclass(Class, MyProtocol) is False
 
     def test_issubclass(self):
         class MyProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
-            def test():
-                ...
+            def test(): ...
 
         class Class:
-            def test():
-                ...
+            def test(): ...
 
         assert issubclass(Class, MyProtocol) is True

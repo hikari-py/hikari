@@ -116,10 +116,10 @@ def _generate_weak_listener(
 
 
 class EventStream(event_manager_.EventStream[base_events.EventT]):
-    """An implementation of an event `EventStream` class.
+    """An implementation of an event [`hikari.api.event_manager.EventStream`][] class.
 
-    .. note::
-        While calling `EventStream.filter` on an active "opened" event stream
+    !!! note
+        While calling [`hikari.impl.event_manager_base.EventStream.filter`][] on an active "opened" event stream
         will return a wrapping lazy iterator, calling it on an inactive "closed"
         event stream will return the event stream and add the given predicates
         to the streamer.
@@ -272,12 +272,8 @@ def filtered(
     event_types
         Types of the events this raw consumer method may dispatch.
         This may either be a singular type of a sequence of types.
-
-    Other Parameters
-    ----------------
-    cache_components : hikari.api.config.CacheComponents
+    cache_components
         Bitfield of the cache components this event may make altering calls to.
-        This defaults to `hikari.api.config.CacheComponents.NONE`.
     """
     if isinstance(event_types, typing.Sequence):
         # dict.fromkeys is used to remove any duplicate entries here
@@ -379,6 +375,10 @@ class EventManagerBase(event_manager_.EventManager):
         return False
 
     def _check_event(self, event_type: typing.Type[typing.Any], nested: int) -> None:
+        # Extract the underlying type from generics
+        if (origin_type := typing.get_origin(event_type)) is not None:
+            event_type = origin_type
+
         try:
             is_event = issubclass(event_type, base_events.Event)
         except TypeError:
@@ -426,7 +426,7 @@ class EventManagerBase(event_manager_.EventManager):
         ):
             raise TypeError("Cannot subscribe a non-coroutine function callback")
 
-        # `_nested` is used to show the correct source code snippet if an intent
+        # [`_nested`][] is used to show the correct source code snippet if an intent
         # warning is triggered.
         self._check_event(event_type, _nested)
 
@@ -614,6 +614,7 @@ class EventManagerBase(event_manager_.EventManager):
             asyncio.get_running_loop().call_exception_handler(
                 {
                     "message": "Exception occurred in raw event dispatch conduit",
+                    "payload": payload,
                     "exception": ex,
                     "task": asyncio.current_task(),
                 }

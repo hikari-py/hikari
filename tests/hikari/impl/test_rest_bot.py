@@ -40,31 +40,31 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestRESTBot:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_interaction_server(self):
         return mock.Mock(interaction_server_impl.InteractionServer)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_rest_client(self):
         return mock.Mock(rest_impl.RESTClientImpl)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_entity_factory(self):
         return mock.Mock(entity_factory_impl.EntityFactoryImpl)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_http_settings(self):
         return mock.Mock(config.HTTPSettings)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_proxy_settings(self):
         return mock.Mock(config.ProxySettings)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_executor(self):
         return mock.Mock(concurrent.futures.Executor)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_rest_bot(
         self,
         mock_interaction_server,
@@ -284,7 +284,7 @@ class TestRESTBot:
         with pytest.raises(ValueError, match=".*"):
             mock_rest_bot.remove_startup_callback(callback)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close(
         self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
     ):
@@ -305,7 +305,7 @@ class TestRESTBot:
         mock_shutdown_1.assert_awaited_once_with(mock_rest_bot)
         mock_shutdown_2.assert_awaited_once_with(mock_rest_bot)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close_when_shutdown_callback_raises(
         self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
     ):
@@ -329,7 +329,7 @@ class TestRESTBot:
         mock_shutdown_1.assert_awaited_once_with(mock_rest_bot)
         mock_shutdown_2.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close_when_is_closing(
         self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
     ):
@@ -352,12 +352,12 @@ class TestRESTBot:
         mock_shutdown_1.assert_not_called()
         mock_shutdown_2.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close_when_inactive(self, mock_rest_bot):
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_rest_bot.close()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_join(self, mock_rest_bot):
         mock_rest_bot._close_event = mock.AsyncMock()
 
@@ -365,12 +365,12 @@ class TestRESTBot:
 
         mock_rest_bot._close_event.wait.assert_awaited_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_join_when_not_alive(self, mock_rest_bot):
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_rest_bot.join()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction(self, mock_rest_bot, mock_interaction_server):
         mock_interaction_server.on_interaction = mock.AsyncMock()
 
@@ -528,7 +528,7 @@ class TestRESTBot:
 
         assert mock_rest_bot.executor is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start(
         self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
     ):
@@ -573,7 +573,7 @@ class TestRESTBot:
         mock_callback_1.assert_awaited_once_with(mock_rest_bot)
         mock_callback_2.assert_awaited_once_with(mock_rest_bot)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_when_startup_callback_raises(
         self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
     ):
@@ -611,7 +611,7 @@ class TestRESTBot:
         mock_callback_1.assert_awaited_once_with(mock_rest_bot)
         mock_callback_2.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_checks_for_update(self, mock_rest_bot, mock_http_settings, mock_proxy_settings):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(asyncio, "create_task"))
@@ -636,7 +636,7 @@ class TestRESTBot:
             )
             ux.check_for_updates.assert_called_once_with(mock_http_settings, mock_proxy_settings)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_when_is_alive(self, mock_rest_bot):
         mock_rest_bot._close_event = object()
 

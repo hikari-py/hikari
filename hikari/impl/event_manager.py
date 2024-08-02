@@ -43,6 +43,7 @@ from hikari.events import guild_events
 from hikari.events import interaction_events
 from hikari.events import member_events
 from hikari.events import message_events
+from hikari.events import monetization_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
@@ -368,16 +369,16 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         # We only want to chunk if we are allowed and need to:
         #   Allowed?
         #       All the following must be true:
-        #           1. `auto_chunk_members` is true (the user wants us to).
-        #           2. We have the necessary intents (`GUILD_MEMBERS`).
-        #           3. The guild is marked as "large" or we do not have `GUILD_PRESENCES` intent
+        #           1. [`auto_chunk_members`][] is true (the user wants us to).
+        #           2. We have the necessary intents ([`GUILD_MEMBERS`][]).
+        #           3. The guild is marked as "large" or we do not have [`GUILD_PRESENCES`][] intent
         #              Discord will only send every other member objects on the `GUILD_CREATE`
         #              payload if presence intents are also declared, so if this isn't the case then we also
         #              want to chunk small guilds.
         #
         #   Need to?
         #       One of the following must be true:
-        #           1. We have a cache, and it requires it (it is enabled for `MEMBERS`), but we are
+        #           1. We have a cache, and it requires it (it is enabled for [`MEMBERS`][]), but we are
         #              not limited to only our own member (which is included in the `GUILD_CREATE` payload).
         #           2. The user is waiting for the member chunks (there is an event listener for it).
         presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
@@ -873,6 +874,21 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway-events#guild-audit-log-entry-create for more info."""
         await self.dispatch(self._event_factory.deserialize_audit_log_entry_create_event(shard, payload))
 
+    @event_manager_base.filtered(monetization_events.EntitlementCreateEvent)
+    async def on_entitlement_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway-events#entitlement-create for more info."""
+        await self.dispatch(self._event_factory.deserialize_entitlement_create_event(shard, payload))
+
+    @event_manager_base.filtered(monetization_events.EntitlementDeleteEvent)
+    async def on_entitlement_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway-events#entitlement-delete for more info."""
+        await self.dispatch(self._event_factory.deserialize_entitlement_delete_event(shard, payload))
+
+    @event_manager_base.filtered(monetization_events.EntitlementUpdateEvent)
+    async def on_entitlement_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/topics/gateway-events#entitlement-update for more info."""
+        await self.dispatch(self._event_factory.deserialize_entitlement_update_event(shard, payload))
+
     async def on_stage_instance_create(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
@@ -887,3 +903,4 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         await self.dispatch(self._event_factory.deserialize_stage_instance_delete_event(shard, payload))
+# TODO

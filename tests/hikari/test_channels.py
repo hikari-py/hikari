@@ -33,13 +33,13 @@ from hikari import webhooks
 from tests.hikari import hikari_test_helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock()
 
 
 class TestChannelFollow:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_channel(self, mock_app):
         mock_channel = mock.Mock(spec=channels.GuildNewsChannel)
         mock_app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
@@ -52,7 +52,7 @@ class TestChannelFollow:
         assert result is mock_channel
         mock_app.rest.fetch_channel.assert_awaited_once_with(9459234123)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_webhook(self, mock_app):
         mock_app.rest.fetch_webhook = mock.AsyncMock(return_value=mock.Mock(webhooks.ChannelFollowerWebhook))
         follow = channels.ChannelFollow(
@@ -95,7 +95,7 @@ class TestPermissionOverwrite:
 
 
 class TestPartialChannel:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, mock_app):
         return hikari_test_helpers.mock_class_namespace(channels.PartialChannel, rename_impl_=False)(
             app=mock_app, id=snowflakes.Snowflake(1234567), name="foo", type=channels.ChannelType.GUILD_NEWS
@@ -111,7 +111,7 @@ class TestPartialChannel:
     def test_mention_property(self, model):
         assert model.mention == "<#1234567>"
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_delete(self, model):
         model.app.rest.delete_channel = mock.AsyncMock()
 
@@ -121,7 +121,7 @@ class TestPartialChannel:
 
 
 class TestDMChannel:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, mock_app):
         return channels.DMChannel(
             id=snowflakes.Snowflake(12345),
@@ -140,7 +140,7 @@ class TestDMChannel:
 
 
 class TestGroupDMChannel:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, mock_app):
         return channels.GroupDMChannel(
             app=mock_app,
@@ -189,13 +189,13 @@ class TestGroupDMChannel:
 
 
 class TestTextChannel:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, mock_app):
         return hikari_test_helpers.mock_class_namespace(channels.TextableChannel)(
             app=mock_app, id=snowflakes.Snowflake(12345679), name="foo1", type=channels.ChannelType.GUILD_TEXT
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_history(self, model):
         model.app.rest.fetch_messages = mock.AsyncMock()
 
@@ -212,7 +212,7 @@ class TestTextChannel:
             around=datetime.datetime(2020, 4, 1, 0, 30, 0),
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_message(self, model):
         model.app.rest.fetch_message = mock.AsyncMock()
 
@@ -220,7 +220,7 @@ class TestTextChannel:
 
         model.app.rest.fetch_message.assert_awaited_once_with(12345679, 133742069)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_pins(self, model):
         model.app.rest.fetch_pins = mock.AsyncMock()
 
@@ -228,7 +228,7 @@ class TestTextChannel:
 
         model.app.rest.fetch_pins.assert_awaited_once_with(12345679)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_pin_message(self, model):
         model.app.rest.pin_message = mock.AsyncMock()
 
@@ -236,7 +236,7 @@ class TestTextChannel:
 
         model.app.rest.pin_message.assert_awaited_once_with(12345679, 77790)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_unpin_message(self, model):
         model.app.rest.unpin_message = mock.AsyncMock()
 
@@ -244,7 +244,7 @@ class TestTextChannel:
 
         model.app.rest.unpin_message.assert_awaited_once_with(12345679, 77790)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_delete_messages(self, model):
         model.app.rest.delete_messages = mock.AsyncMock()
 
@@ -252,7 +252,7 @@ class TestTextChannel:
 
         model.app.rest.delete_messages.assert_awaited_once_with(12345679, [77790, 88890, 1800], 1337)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send(self, model):
         model.app.rest.create_message = mock.AsyncMock()
         mock_attachment = object()
@@ -313,7 +313,7 @@ class TestTextChannel:
 
 
 class TestGuildChannel:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, mock_app):
         return hikari_test_helpers.mock_class_namespace(channels.GuildChannel)(
             app=mock_app,
@@ -333,7 +333,7 @@ class TestGuildChannel:
         model.app.shard_count = 3
         assert model.shard_id == 2
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild(self, model):
         model.app.rest.fetch_guild = mock.AsyncMock()
 
@@ -341,7 +341,7 @@ class TestGuildChannel:
 
         model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_edit(self, model):
         model.app.rest.edit_channel = mock.AsyncMock()
 
@@ -393,7 +393,7 @@ class TestGuildChannel:
 
 
 class TestPermissibleGuildChannel:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, mock_app):
         return hikari_test_helpers.mock_class_namespace(channels.PermissibleGuildChannel)(
             app=mock_app,
@@ -407,7 +407,7 @@ class TestPermissibleGuildChannel:
             permission_overwrites=[],
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_edit_overwrite(self, model):
         model.app.rest.edit_permission_overwrite = mock.AsyncMock()
         user = mock.Mock(users.PartialUser)
@@ -428,7 +428,7 @@ class TestPermissibleGuildChannel:
             reason="vrooom vroom",
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_edit_overwrite_target_type_none(self, model):
         model.app.rest.edit_permission_overwrite = mock.AsyncMock()
         user = mock.Mock(users.PartialUser)
@@ -444,7 +444,7 @@ class TestPermissibleGuildChannel:
             reason="vrooom vroom",
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_remove_overwrite(self, model):
         model.app.rest.delete_permission_overwrite = mock.AsyncMock()
 
@@ -472,7 +472,7 @@ class TestPermissibleGuildChannel:
 
         assert model.get_guild() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild(self, model):
         model.app.rest.fetch_guild = mock.AsyncMock()
 

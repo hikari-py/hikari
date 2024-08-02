@@ -55,15 +55,15 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
 
     Parameters
     ----------
-    result : T
+    result
         The value to set for the result of the future.
-        `T` is a generic type placeholder for the type that
-        the future will have set as the result. `T` may be `None`, in
-        which case, this will return `asyncio.Future[None]`.
+        [`T_inv`][] is a generic type placeholder for the type that
+        the future will have set as the result. `T_inv` may be [`None`][],
+        in which case, this will return [`asyncio.Future`][][[`None`][]].
 
     Returns
     -------
-    asyncio.Future[T]
+    asyncio.Future[T_inv]
         The completed future.
 
     Raises
@@ -116,16 +116,16 @@ async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: typing.Op
     If the first awaitable raises an exception, then that exception will be
     propagated.
 
-    .. note::
+    !!! note
         If more than one awaitable is completed before entering this call, then
         the first future is always returned.
 
     Parameters
     ----------
-    *aws : typing.Awaitable[typing.Any]
+    *aws
         Awaitables to wait for.
-    timeout : typing.Optional[float]
-        Optional timeout to wait for, or `None` to not use one.
+    timeout
+        Optional timeout to wait for, or [`None`][] to not use one.
         If the timeout is reached, all awaitables are cancelled immediately.
     """
     fs = tuple(map(asyncio.ensure_future, aws))
@@ -155,10 +155,10 @@ async def all_of(*aws: typing.Awaitable[T_co], timeout: typing.Optional[float] =
 
     Parameters
     ----------
-    *aws : typing.Awaitable[T_co]
+    *aws
         Awaitables to wait for.
-    timeout : typing.Optional[float]
-        Optional timeout to wait for, or `None` to not use one.
+    timeout
+        Optional timeout to wait for, or [`None`][] to not use one.
         If the timeout is reached, all awaitables are cancelled immediately.
 
     Returns
@@ -231,9 +231,9 @@ def destroy_loop(loop: asyncio.AbstractEventLoop, logger: logging.Logger) -> Non
 
     Parameters
     ----------
-    loop : asyncio.AbstractEventLoop
+    loop
         The loop to destroy
-    logger : logging.Logger
+    logger
         The logger to use for logging
     """
 

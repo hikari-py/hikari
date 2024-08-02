@@ -59,6 +59,7 @@ from hikari import guilds
 from hikari import iterators
 from hikari import locales
 from hikari import messages as messages_
+from hikari import monetization
 from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -122,15 +123,12 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     Parameters
     ----------
-    client : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
+    client
         Object or ID of the application this client credentials strategy should
         authorize as.
-    client_secret : typing.Optional[str]
+    client_secret
         Client secret to use when authorizing.
-
-    Other Parameters
-    ----------------
-    scopes : typing.Sequence[str]
+    scopes
         The scopes to authorize for.
     """
 
@@ -253,40 +251,42 @@ class RESTApp(traits.ExecutorAware):
     """The base for a HTTP-only Discord application.
 
     This comprises of a shared TCP connector connection pool, and can have
-    `RESTClientImpl` instances for specific credentials acquired
+    [`hikari.impl.rest.RESTClientImpl`][] instances for specific credentials acquired
     from it.
 
     Parameters
     ----------
-    executor : typing.Optional[concurrent.futures.Executor]
-        The executor to use for blocking file IO operations. If `None`
-        is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
-        the `asyncio.AbstractEventLoop` will be used instead.
-    http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
+    executor
+        The executor to use for blocking file IO operations. If [`None`][]
+        is passed, then the default [`concurrent.futures.ThreadPoolExecutor`][] for
+        the [`asyncio.AbstractEventLoop`][] will be used instead.
+    http_settings
         HTTP settings to use. Sane defaults are used if this is
-        `None`.
-    dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
-    loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
-    max_rate_limit : float
+        [`None`][].
+    dumps
+        The JSON encoder this application should use.
+    loads
+        The JSON decoder this application should use.
+    max_rate_limit
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
-        `hikari.errors.RateLimitTooLongError` will be raised instead of waiting.
+        [`hikari.errors.RateLimitTooLongError`][] will be raised instead of waiting.
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
 
         Defaults to five minutes if unspecified.
-    max_retries : typing.Optional[int]
+    max_retries
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `None`.
-    proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
-        Proxy settings to use. If `None` then no proxy configuration
+        it fails with a `5xx` status.
+
+        Defaults to 3 if set to [`None`][].
+    proxy_settings
+        Proxy settings to use. If [`None`][] then no proxy configuration
         will be used.
-    url : typing.Optional[str]
+    url
         The base URL for the API. You can generally leave this as being
-        `None` and the correct default API base URL will be generated.
+        [`None`][] and the correct default API base URL will be generated.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -356,14 +356,12 @@ class RESTApp(traits.ExecutorAware):
         await self._bucket_manager.close()
 
     @typing.overload
-    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl:
-        ...
+    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl: ...
 
     @typing.overload
     def acquire(
         self, token: str, token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER
-    ) -> RESTClientImpl:
-        ...
+    ) -> RESTClientImpl: ...
 
     def acquire(
         self,
@@ -372,37 +370,37 @@ class RESTApp(traits.ExecutorAware):
     ) -> RESTClientImpl:
         """Acquire an instance of this REST client.
 
-        .. note::
+        !!! note
             The returned REST client should be started before it can be used,
-            either by calling `RESTClientImpl.start` or by using it as an
+            either by calling [`hikari.impl.rest.RESTClientImpl.start`][] or by using it as an
             asynchronous context manager.
 
         Examples
         --------
-        .. code-block:: python
+        ```py
+        rest_app = RESTApp()
+        await rest_app.start()
 
-            rest_app = RESTApp()
-            await rest_app.start()
+        # Using the returned client as a context manager to implicitly start
+        # and stop it.
+        async with rest_app.acquire("A token", "Bot") as client:
+            user = await client.fetch_my_user()
 
-            # Using the returned client as a context manager to implicitly start
-            # and stop it.
-            async with rest_app.acquire("A token", "Bot") as client:
-                user = await client.fetch_my_user()
-
-            await rest_app.close()
+        await rest_app.close()
+        ```
 
         Parameters
         ----------
-        token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
+        token
             The bot or bearer token. If no token is to be used,
             this can be undefined.
-        token_type : typing.Union[str, hikari.applications.TokenType, None]
-            The type of token in use. This should only be passed when `str`
+        token_type
+            The type of token in use. This should only be passed when [`str`][]
             is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
             defaulted to `"Bearer"` in this situation.
 
-            This should be left as `None` when either
-            `hikari.api.rest.TokenStrategy` or `None` is passed for
+            This should be left as [`None`][] when either
+            [`hikari.api.rest.TokenStrategy`][] or [`None`][] is passed for
             `token`.
 
         Returns
@@ -490,29 +488,32 @@ class RESTClientImpl(rest_api.RESTClient):
 
     Parameters
     ----------
-    entity_factory : hikari.api.entity_factory.EntityFactory
+    entity_factory
         The entity factory to use.
-    executor : typing.Optional[concurrent.futures.Executor]
-        The executor to use for blocking IO. Defaults to the `asyncio` thread
-        pool if set to `None`.
-    max_retries : typing.Optional[int]
+    executor
+        The executor to use for blocking IO.
+
+        Defaults to the [`asyncio`][] thread pool if set to [`None`][].
+    max_retries
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `None`.
-    dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
-    loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
-    token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
+        it fails with a `5xx` status.
+
+        Defaults to 3 if set to [`None`][].
+    dumps
+        The JSON encoder this application should use.
+    loads
+        The JSON decoder this application should use.
+    token
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : typing.Union[str, hikari.applications.TokenType, None]
-        The type of token in use. This must be passed when a `str` is
+    token_type
+        The type of token in use. This must be passed when a [`str`][] is
         passed for `token` but and can be `"Bot"` or `"Bearer"`.
 
-        This should be left as `None` when either
-        `hikari.api.rest.TokenStrategy` or `None` is passed for
+        This should be left as [`None`][] when either
+        [`hikari.api.rest.TokenStrategy`][] or [`None`][] is passed for
         `token`.
-    rest_url : str
+    rest_url
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
 
@@ -520,7 +521,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ------
     ValueError
         If `token_type` is provided when a token strategy is passed for `token`, if
-        `token_type` is left as `None` when a string is passed for `token` or if a
+        `token_type` is left as [`None`][] when a string is passed for `token` or if a
         value greater than 5 is provided for `max_retries`.
     """
 
@@ -649,7 +650,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def start(self) -> None:
         """Start the HTTP client.
 
-        .. note::
+        !!! note
             This must be called within an active event loop.
 
         Raises
@@ -2060,6 +2061,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
     ) -> users.OwnUser:
         route = routes.PATCH_MY_USER.compile()
         body = data_binding.JSONObjectBuilder()
@@ -2071,6 +2073,13 @@ class RESTClientImpl(rest_api.RESTClient):
             avatar_resource = files.ensure_resource(avatar)
             async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
+
+        if banner is None:
+            body.put("banner", None)
+        elif banner is not undefined.UNDEFINED:
+            banner_resource = files.ensure_resource(banner)
+            async with banner_resource.stream(executor=self._executor) as stream:
+                body.put("banner", await stream.data_uri())
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -2547,6 +2556,7 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[typing.Sequence[typing.Union[str, guilds.GuildFeature]]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         route = routes.PATCH_GUILD.compile(guild=guild)
@@ -2557,6 +2567,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("explicit_content_filter", explicit_content_filter_level)
         body.put("afk_timeout", afk_timeout, conversion=time.timespan_to_int)
         body.put("preferred_locale", preferred_locale, conversion=str)
+        body.put_array("features", features, conversion=str)
         body.put_snowflake("afk_channel_id", afk_channel)
         body.put_snowflake("owner_id", owner)
         body.put_snowflake("system_channel_id", system_channel)
@@ -3972,6 +3983,9 @@ class RESTClientImpl(rest_api.RESTClient):
     def interaction_modal_builder(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
         return special_endpoints_impl.InteractionModalBuilder(title=title, custom_id=custom_id)
 
+    def interaction_premium_required_builder(self) -> special_endpoints.InteractionPremiumRequiredBuilder:
+        return special_endpoints_impl.InteractionPremiumRequiredBuilder()
+
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
@@ -4141,6 +4155,17 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
         return special_endpoints_impl.ModalActionRowBuilder()
+
+    async def create_premium_required_response(
+        self, interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction], token: str
+    ) -> None:
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.PREMIUM_REQUIRED)
+        body.put("data", {})
+
+        await self._request(route, json=body, auth=None)
 
     async def fetch_scheduled_event(
         self,
@@ -4378,6 +4403,71 @@ class RESTClientImpl(rest_api.RESTClient):
         return special_endpoints_impl.ScheduledEventUserIterator(
             self._entity_factory, self._request, newest_first, str(start_at), guild, event
         )
+
+    async def fetch_skus(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[monetization.SKU]:
+        route = routes.GET_APPLICATION_SKUS.compile(application=application)
+        response = await self._request(route)
+        assert isinstance(response, list)
+
+        return [self._entity_factory.deserialize_sku(payload) for payload in response]
+
+    async def fetch_entitlements(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> typing.Sequence[monetization.Entitlement]:
+        query = data_binding.StringMapBuilder()
+
+        query.put("user_id", user)
+        query.put("guild_id", guild)
+        query.put("limit", limit)
+        query.put("exclude_ended", exclude_ended)
+        query.put("before", before)
+        query.put("after", after)
+
+        route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=application)
+        response = await self._request(route, query=query)
+        assert isinstance(response, list)
+
+        return [self._entity_factory.deserialize_entitlement(payload) for payload in response]
+
+    async def create_test_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        sku: snowflakes.SnowflakeishOr[monetization.SKU],
+        owner_id: typing.Union[guilds.PartialGuild, users.PartialUser, snowflakes.Snowflakeish],
+        owner_type: typing.Union[int, monetization.EntitlementOwnerType],
+    ) -> monetization.Entitlement:
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("sku_id", sku)
+        body.put_snowflake("owner_id", owner_id)
+        body.put("owner_type", owner_type)
+
+        route = routes.POST_APPLICATION_TEST_ENTITLEMENT.compile(application=application)
+        response = await self._request(route, json=body)
+
+        assert isinstance(response, dict)
+
+        return self._entity_factory.deserialize_entitlement(response)
+
+    async def delete_test_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> None:
+        route = routes.DELETE_APPLICATION_TEST_ENTITLEMENT.compile(application=application, entitlement=entitlement)
+        await self._request(route)
 
     async def fetch_stage_instance(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]

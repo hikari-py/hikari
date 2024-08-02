@@ -38,7 +38,7 @@ def flake8_html(session: nox.Session) -> None:
 
 
 def _flake8(session: nox.Session, extra_args: typing.Sequence[str] = ()) -> None:
-    session.install("-r", "requirements.txt", *nox.dev_requirements("flake8"))
+    session.install("-r", "requirements.txt", *nox.dev_requirements("flake8"), *nox.dev_requirements("formatting"))
     session.run(
         "flake8",
         "--statistics",

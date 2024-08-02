@@ -55,8 +55,8 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
 
-    This is a similar representation to what `Route` provides, except
-    `Route` is treated as a template, this is treated as an instance.
+    This is a similar representation to what [`Route`][] provides, except
+    [`Route`][] is treated as a template, this is treated as an instance.
     """
 
     major_param_hash: str = attrs.field()
@@ -78,7 +78,7 @@ class CompiledRoute:
 
         Parameters
         ----------
-        base_url : str
+        base_url
             The base of the URL to prepend to the compiled path.
 
         Returns
@@ -96,10 +96,10 @@ class CompiledRoute:
 
         Parameters
         ----------
-        initial_bucket_hash : str
+        initial_bucket_hash
             The initial bucket hash provided by Discord in the HTTP headers
             for a given response.
-        authentication_hash : str
+        authentication_hash
             The token hash.
 
         Returns
@@ -125,9 +125,9 @@ class Route:
 
     Parameters
     ----------
-    method : str
+    method
         The HTTP method.
-    path_template : str
+    path_template
         The template string for the path to use.
     """
 
@@ -143,7 +143,7 @@ class Route:
     has_ratelimits: bool = attrs.field(hash=False, eq=False, repr=False)
     """Whether this route is affected by ratelimits.
 
-    This should be left as `True` (the default) for most routes. This
+    This should be left as [`True`][] (the default) for most routes. This
     only covers specific routes where no ratelimits exist, so we can
     be a bit more efficient with them.
     """
@@ -161,13 +161,13 @@ class Route:
                 break
 
     def compile(self, **kwargs: typing.Any) -> CompiledRoute:
-        """Generate a formatted `CompiledRoute` for this route.
+        """Generate a formatted [`CompiledRoute`][] for this route.
 
         This takes into account any URL parameters that have been passed.
 
         Parameters
         ----------
-        **kwargs : typing.Any
+        **kwargs
             Any parameters to interpolate into the route path.
 
         Returns
@@ -222,15 +222,15 @@ class CDNRoute:
 
         Parameters
         ----------
-        base_url : str
+        base_url
             The base URL for the CDN. The generated route is concatenated onto
             this.
-        file_format : str
+        file_format
             The file format to use for the asset.
-        size : typing.Optional[int]
-            The custom size query parameter to set. If `None`,
+        size
+            The custom size query parameter to set. If [`None`][],
             it is not passed.
-        **kwargs : typing.Any
+        **kwargs
             Parameters to interpolate into the path template.
 
         Returns
@@ -282,7 +282,7 @@ class CDNRoute:
     def compile_to_file(
         self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
     ) -> files.URL:
-        """Perform the same as `compile`, but return the URL as a `files.URL`."""
+        """Perform the same as `compile`, but return the URL as a [`hikari.files.URL`][]."""
         return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))
 
 
@@ -541,6 +541,14 @@ PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/role-connections/metadata"
 )
 
+# Entitlements (monetization)
+GET_APPLICATION_SKUS: typing.Final[Route] = Route(GET, "/applications/{application}/skus")
+GET_APPLICATION_ENTITLEMENTS: typing.Final[Route] = Route(GET, "/applications/{application}/entitlements")
+POST_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(POST, "/applications/{application}/entitlements")
+DELETE_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(
+    DELETE, "/applications/{application}/entitlements/{entitlement}"
+)
+
 # Interactions
 # For these endpoints "webhook" is the application ID.
 GET_INTERACTION_RESPONSE: typing.Final[Route] = Route(GET, "/webhooks/{webhook}/{token}/messages/@original")
@@ -602,4 +610,6 @@ CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
     "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
 
-SCHEDULED_EVENT_COVER: typing.Final[CDNRoute] = CDNRoute("/guilds/{scheduled_event_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+SCHEDULED_EVENT_COVER: typing.Final[CDNRoute] = CDNRoute(
+    "/guild-events/{scheduled_event_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
+)

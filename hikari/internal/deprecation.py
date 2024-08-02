@@ -24,7 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("warn_deprecated", "check_if_past_removal")
+__all__: typing.Sequence[str] = ("deprecated", "warn_deprecated", "check_if_past_removal")
 
 import typing
 import warnings
@@ -38,12 +38,9 @@ def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
 
     Parameters
     ----------
-    what : str
+    what
         What is being deprecated.
-
-    Other Parameters
-    ----------------
-    removal_version : str
+    removal_version
         The version it will be removed in.
 
     Raises
@@ -64,19 +61,16 @@ def warn_deprecated(
 
     Parameters
     ----------
-    what : str
+    what
         What is being deprecated.
-
-    Other Parameters
-    ----------------
-    removal_version : str
+    removal_version
         The version it will be removed in.
-    additional_info : str
+    additional_info
         Additional information on the deprecation for the user.
-    stack_level : int
+    stack_level
         The stack level to issue the warning in.
-    quote : bool
-        Whether to quote `what` when displaying the deprecation
+    quote
+        Whether to quote [`what`][] when displaying the deprecation
 
     Raises
     ------
@@ -93,3 +87,16 @@ def warn_deprecated(
         category=DeprecationWarning,
         stacklevel=stack_level,
     )
+
+
+if typing.TYPE_CHECKING:
+    from typing_extensions import deprecated
+
+else:
+
+    def deprecated(*args, **kwargs):
+        """Mark a function, overload, or class as deprecated for type-checkers.
+
+        This has no runtime side-effects.
+        """
+        return lambda value: value

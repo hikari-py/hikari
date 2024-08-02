@@ -45,7 +45,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestGenerateWeakListener:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__generate_weak_listener_when_method_is_None(self):
         def test():
             return None
@@ -58,7 +58,7 @@ class TestGenerateWeakListener:
         ):
             await call_weak_method(None)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__generate_weak_listener(self):
         mock_listener = mock.AsyncMock()
         mock_event = object()
@@ -73,7 +73,7 @@ class TestGenerateWeakListener:
         mock_listener.assert_awaited_once_with(mock_event)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock()
 
@@ -91,7 +91,7 @@ class TestEventStream:
         stub_stream.open.assert_called_once_with()
         stub_stream.close.assert_called_once_with()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__listener_when_filter_returns_false(self, mock_app):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None)
         stream.filter(lambda _: False)
@@ -101,7 +101,7 @@ class TestEventStream:
         assert not stream._queue
 
     @hikari_test_helpers.timeout()
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__listener_when_filter_passes_and_queue_full(self, mock_app):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=2)
         stream._queue.append(object())
@@ -116,7 +116,7 @@ class TestEventStream:
             assert not stream._queue
 
     @hikari_test_helpers.timeout()
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__listener_when_filter_passes_and_queue_not_full(self, mock_app):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=None)
         stream._queue.append(object())
@@ -130,7 +130,7 @@ class TestEventStream:
             assert await stream.next() is not mock_event
             assert await stream.next() is mock_event
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___when_stream_closed(self):
         streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=float("inf"))
@@ -139,7 +139,7 @@ class TestEventStream:
         with pytest.raises(TypeError):
             await streamer.__anext__()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___times_out(self):
         streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=0.001)
@@ -148,7 +148,7 @@ class TestEventStream:
             with pytest.raises(LookupError):
                 await streamer.next()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___waits_for_next_event(self):
         mock_event = object()
@@ -169,7 +169,7 @@ class TestEventStream:
             assert next_task.done()
             assert next_task.result() is mock_event
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext__(self):
         mock_event = object()
@@ -183,7 +183,7 @@ class TestEventStream:
         with streamer:
             assert await streamer.next() is mock_event
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test___await__(self):
         mock_event_0 = object()
         mock_event_1 = object()
@@ -262,7 +262,7 @@ class TestEventStream:
         assert stream._active is False
         assert stream._registered_listener is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_filter(self):
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
             event_manager=mock.Mock(), event_type=base_events.Event, timeout=0.001
@@ -285,7 +285,7 @@ class TestEventStream:
 
         assert await stream == [first_pass, second_pass]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_filter_handles_calls_while_active(self):
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
             event_manager=mock.Mock(), event_type=base_events.Event, timeout=0.001
@@ -370,7 +370,7 @@ class TestConsumer:
 
 
 class TestEventManagerBase:
-    @pytest.fixture()
+    @pytest.fixture
     def event_manager(self):
         class EventManagerBaseImpl(event_manager_base.EventManagerBase):
             on_existing_event = None
@@ -477,7 +477,7 @@ class TestEventManagerBase:
 
         assert event_manager._enabled_for_event(shard_events.ShardStateEvent) is False
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_consume_raw_event_when_KeyError(self, event_manager):
         event_manager._enabled_for_event = mock.Mock(return_value=True)
         mock_payload = {"id": "3123123123"}
@@ -497,7 +497,7 @@ class TestEventManagerBase:
         )
         event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):
         event_manager._enabled_for_event = mock.Mock(return_value=True)
         event_manager._handle_dispatch = mock.Mock()
@@ -522,7 +522,7 @@ class TestEventManagerBase:
         )
         event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_consume_raw_event_skips_raw_dispatch_when_not_enabled(self, event_manager):
         event_manager._enabled_for_event = mock.Mock(return_value=False)
         event_manager._handle_dispatch = mock.Mock()
@@ -543,7 +543,7 @@ class TestEventManagerBase:
         event_manager._event_factory.deserialize_shard_payload_event.vassert_not_called()
         event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_handle_dispatch_invokes_callback(self, event_manager):
         event_manager._enabled_for_consumer = mock.Mock(return_value=True)
         consumer = mock.AsyncMock()
@@ -558,7 +558,7 @@ class TestEventManagerBase:
         consumer.callback.assert_awaited_once_with(shard, pl)
         error_handler.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_handle_dispatch_ignores_cancelled_errors(self, event_manager):
         event_manager._enabled_for_consumer = mock.Mock(return_value=True)
         consumer = mock.AsyncMock(side_effect=asyncio.CancelledError)
@@ -572,7 +572,7 @@ class TestEventManagerBase:
 
         error_handler.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_handle_dispatch_handles_exceptions(self, event_manager):
         mock_task = mock.Mock()
         # On Python 3.12+ Asyncio uses this to get the task's context if set to call the
@@ -592,10 +592,15 @@ class TestEventManagerBase:
 
         error_handler.assert_called_once_with(
             event_loop,
-            {"exception": exc, "message": "Exception occurred in raw event dispatch conduit", "task": mock_task},
+            {
+                "exception": exc,
+                "message": "Exception occurred in raw event dispatch conduit",
+                "payload": pl,
+                "task": mock_task,
+            },
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_handle_dispatch_invokes_when_consumer_not_enabled(self, event_manager):
         consumer = mock.Mock(callback=mock.AsyncMock(__name__="ok"), is_enabled=False)
         error_handler = mock.MagicMock()
@@ -611,8 +616,7 @@ class TestEventManagerBase:
 
     def test_subscribe_when_class_call(self, event_manager):
         class Foo:
-            async def __call__(self) -> None:
-                ...
+            async def __call__(self) -> None: ...
 
         foo = Foo()
         event_manager._check_event = mock.Mock()
@@ -622,15 +626,13 @@ class TestEventManagerBase:
         assert event_manager._listeners[member_events.MemberCreateEvent] == [foo]
 
     def test_subscribe_when_callback_is_not_coroutine(self, event_manager):
-        def test():
-            ...
+        def test(): ...
 
         with pytest.raises(TypeError, match=r"Cannot subscribe a non-coroutine function callback"):
             event_manager.subscribe(member_events.MemberCreateEvent, test)
 
     def test_subscribe_when_event_type_not_in_listeners(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._check_event = mock.Mock()
@@ -642,11 +644,9 @@ class TestEventManagerBase:
         event_manager._increment_listener_group_count.assert_called_once_with(member_events.MemberCreateEvent, 1)
 
     def test_subscribe_when_event_type_in_listeners(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
-        async def test2():
-            ...
+        async def test2(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._listeners[member_events.MemberCreateEvent] = [test2]
@@ -673,7 +673,23 @@ class TestEventManagerBase:
         get_intents.assert_called_once_with(member_events.MemberCreateEvent)
         warn.assert_not_called()
 
-    def test__check_intents_when_intents_correct(self, event_manager):
+    def test__check_event_when_generic_event(self, event_manager):
+        T = typing.TypeVar("T")
+
+        class GenericEvent(typing.Generic[T], base_events.Event): ...
+
+        event_manager._intents = intents.Intents.GUILD_MEMBERS
+
+        with mock.patch.object(
+            base_events, "get_required_intents_for", return_value=intents.Intents.GUILD_MEMBERS
+        ) as get_intents:
+            with mock.patch.object(warnings, "warn") as warn:
+                event_manager._check_event(GenericEvent[int], 0)
+
+        get_intents.assert_called_once_with(GenericEvent)
+        warn.assert_not_called()
+
+    def test__check_event_when_intents_correct(self, event_manager):
         event_manager._intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILD_MEMBERS
 
         with mock.patch.object(
@@ -685,7 +701,7 @@ class TestEventManagerBase:
         get_intents.assert_called_once_with(member_events.MemberCreateEvent)
         warn.assert_not_called()
 
-    def test__check_intents_when_intents_incorrect(self, event_manager):
+    def test__check_event_when_intents_incorrect(self, event_manager):
         event_manager._intents = intents.Intents.GUILD_EMOJIS
 
         with mock.patch.object(
@@ -738,8 +754,7 @@ class TestEventManagerBase:
         assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == ["coroutine0"]
 
     def test_unsubscribe_when_event_type_not_in_listeners(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._listeners = {}
@@ -750,11 +765,9 @@ class TestEventManagerBase:
         event_manager._increment_listener_group_count.assert_not_called()
 
     def test_unsubscribe_when_event_type_when_list_not_empty_after_delete(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
-        async def test2():
-            ...
+        async def test2(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._listeners = {
@@ -771,8 +784,7 @@ class TestEventManagerBase:
         event_manager._increment_listener_group_count.assert_not_called()
 
     def test_unsubscribe_when_event_type_when_list_empty_after_delete(self, event_manager):
-        async def test():
-            ...
+        async def test(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
         event_manager._listeners = {member_events.MemberCreateEvent: [test], member_events.MemberDeleteEvent: [test]}
@@ -786,29 +798,25 @@ class TestEventManagerBase:
         with pytest.raises(TypeError):
 
             @event_manager.listen()
-            async def test():
-                ...
+            async def test(): ...
 
     def test_listen_when_more_then_one_param_when_provided_in_typehint(self, event_manager):
         with pytest.raises(TypeError):
 
             @event_manager.listen()
-            async def test(a, b, c):
-                ...
+            async def test(a, b, c): ...
 
     def test_listen_when_more_then_one_param_when_provided_in_decorator(self, event_manager):
         with pytest.raises(TypeError):
 
             @event_manager.listen(object)
-            async def test(a, b, c):
-                ...
+            async def test(a, b, c): ...
 
     def test_listen_when_param_not_provided_in_decorator_nor_typehint(self, event_manager):
         with pytest.raises(TypeError):
 
             @event_manager.listen()
-            async def test(event):
-                ...
+            async def test(event): ...
 
     def test_listen_when_param_provided_in_decorator(self, event_manager):
         stack = contextlib.ExitStack()
@@ -819,8 +827,7 @@ class TestEventManagerBase:
         with stack:
 
             @event_manager.listen(member_events.MemberCreateEvent)
-            async def test(event):
-                ...
+            async def test(event): ...
 
         resolve_signature.assert_not_called()
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
@@ -834,8 +841,7 @@ class TestEventManagerBase:
         with stack:
 
             @event_manager.listen(member_events.MemberCreateEvent, member_events.MemberDeleteEvent)
-            async def test(event):
-                ...
+            async def test(event): ...
 
         assert subscribe.call_count == 2
         resolve_signature.assert_not_called()
@@ -850,8 +856,7 @@ class TestEventManagerBase:
         with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 
             @event_manager.listen()
-            async def test(event: member_events.MemberCreateEvent):
-                ...
+            async def test(event: member_events.MemberCreateEvent): ...
 
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
 
@@ -859,8 +864,7 @@ class TestEventManagerBase:
         with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 
             @event_manager.listen()
-            async def test(event: typing.Union[member_events.MemberCreateEvent, member_events.MemberDeleteEvent]):
-                ...
+            async def test(event: typing.Union[member_events.MemberCreateEvent, member_events.MemberDeleteEvent]): ...
 
         assert subscribe.call_count == 2
         subscribe.assert_has_calls(
@@ -875,8 +879,7 @@ class TestEventManagerBase:
         with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 
             @event_manager.listen()
-            async def test(event: member_events.MemberCreateEvent | member_events.MemberDeleteEvent):
-                ...
+            async def test(event: member_events.MemberCreateEvent | member_events.MemberDeleteEvent): ...
 
         assert subscribe.call_count == 2
         subscribe.assert_has_calls(
@@ -890,5 +893,4 @@ class TestEventManagerBase:
         with pytest.raises(TypeError):
 
             @event_manager.listen()
-            async def test(event: list[member_events.MemberUpdateEvent]):
-                ...
+            async def test(event: list[member_events.MemberUpdateEvent]): ...

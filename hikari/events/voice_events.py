@@ -72,7 +72,7 @@ class VoiceStateUpdateEvent(VoiceEvent):
     old_state: typing.Optional[voices.VoiceState] = attrs.field(repr=True)
     """The old voice state.
 
-    This will be `None` if the voice state missing from the cache.
+    This will be [`None`][] if the voice state missing from the cache.
     """
 
     state: voices.VoiceState = attrs.field(repr=True)
@@ -113,20 +113,21 @@ class VoiceServerUpdateEvent(VoiceEvent):
     raw_endpoint: typing.Optional[str] = attrs.field(repr=True)
     """Raw endpoint URI that Discord sent.
 
-    If this is `None`, it means that the server has been deallocated
+    If this is [`None`][], it means that the server has been deallocated
     and you have to disconnect. You will later receive a new event specifying
     what endpoint to connect to.
 
-    .. warning::
-        This will not contain the scheme to use. Use the `endpoint` property
-        to get a representation that has this prepended.
+    !!! warning
+        This will not contain the scheme to use. Use the
+        [`endpoint`][hikari.events.voice_events.VoiceServerUpdateEvent.endpoint]
+        property to get a representation that has this prepended.
     """
 
     @property
     def endpoint(self) -> typing.Optional[str]:
         """URI for this voice server host, with the correct scheme prepended.
 
-        If this is `None`, it means that the server has been deallocated
+        If this is [`None`][], it means that the server has been deallocated
         and you have to disconnect. You will later receive a new event specifying
         what endpoint to connect to.
         """

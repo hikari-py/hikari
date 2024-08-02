@@ -270,7 +270,7 @@ class AuditLogChangeKey(str, enums.Enum):
     """Role removed from a member."""
 
     COLOUR = COLOR
-    """Alias for `COLOR`."""
+    """Alias for [`hikari.audit_logs.AuditLogChangeKey.COLOR`][]."""
 
 
 @attrs_extensions.with_copy
@@ -398,7 +398,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -424,7 +424,8 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel that the message is in.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][]
+            permission in the channel that the message is in.
         hikari.errors.NotFoundError
             If the message is not found.
         hikari.errors.RateLimitTooLongError
@@ -478,7 +479,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -522,7 +523,7 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -556,7 +557,7 @@ class AuditLogEntry(snowflakes.Unique):
     """The ID of the entity affected by this change, if applicable."""
 
     changes: typing.Sequence[AuditLogChange] = attrs.field(eq=False, hash=False, repr=False)
-    """A sequence of the changes made to `AuditLogEntry.target_id`."""
+    """A sequence of the changes made to [`hikari.audit_logs.AuditLogEntry.target_id`][]."""
 
     user_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the user who made this change."""
@@ -616,12 +617,10 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     """A mapping of the objects of webhooks found in this audit log."""
 
     @typing.overload
-    def __getitem__(self, index: int, /) -> AuditLogEntry:
-        ...
+    def __getitem__(self, index: int, /) -> AuditLogEntry: ...
 
     @typing.overload
-    def __getitem__(self, slice_: slice, /) -> typing.Sequence[AuditLogEntry]:
-        ...
+    def __getitem__(self, slice_: slice, /) -> typing.Sequence[AuditLogEntry]: ...
 
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /

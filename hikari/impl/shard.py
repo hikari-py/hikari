@@ -117,9 +117,9 @@ _RECONNECTABLE_CLOSE_CODES: typing.FrozenSet[errors.ShardCloseCode] = frozenset(
 _CUSTOM_STATUS_NAME = "Custom Status"
 
 
-def _log_filterer(token: str) -> typing.Callable[[str], str]:
-    def filterer(entry: str) -> str:
-        return entry.replace(token, "**REDACTED TOKEN**")
+def _log_filterer(token: bytes) -> typing.Callable[[bytes], bytes]:
+    def filterer(entry: bytes) -> bytes:
+        return entry.replace(token, b"**REDACTED TOKEN**")
 
     return filterer
 
@@ -153,7 +153,7 @@ class _GatewayTransport:
         transport_compression: bool,
         exit_stack: contextlib.AsyncExitStack,
         logger: logging.Logger,
-        log_filterer: typing.Callable[[str], str],
+        log_filterer: typing.Callable[[bytes], bytes],
         dumps: data_binding.JSONEncoder,
         loads: data_binding.JSONDecoder,
     ) -> None:
@@ -203,17 +203,17 @@ class _GatewayTransport:
     async def send_json(self, data: data_binding.JSONObject) -> None:
         pl = self._dumps(data)
         if self._logger.isEnabledFor(ux.TRACE):
-            filtered = self._log_filterer(pl.decode("utf-8"))
+            filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "sending payload with size %s\n    %s", len(pl), filtered)
 
         await self._ws.send_bytes(pl)
 
     def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
-            raise errors.GatewayError("Unexpected message type received TEXT, expected BINARY")
+            raise errors.GatewayTransportError("Unexpected message type received TEXT, expected BINARY")
 
         if message.type == aiohttp.WSMsgType.BINARY:
-            raise errors.GatewayError("Unexpected message type received BINARY, expected TEXT")
+            raise errors.GatewayTransportError("Unexpected message type received BINARY, expected TEXT")
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)
@@ -229,41 +229,43 @@ class _GatewayTransport:
             raise errors.GatewayConnectionError("Socket has closed")
 
         # Assume exception for now.
-        raise errors.GatewayError("Unexpected websocket exception from gateway") from self._ws.exception()
+        reason = f"{message.data!r} [extra={message.extra!r}, type={message.type}]"
+        raise errors.GatewayTransportError(reason) from self._ws.exception()
 
-    async def _receive_and_check_text(self) -> str:
+    async def _receive_and_check_text(self) -> bytes:
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.TEXT:
             assert isinstance(message.data, str)
-            return message.data
+            return message.data.encode()
 
         self._handle_other_message(message)
 
-    async def _receive_and_check_zlib(self) -> str:
+    async def _receive_and_check_zlib(self) -> bytes:
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.BINARY:
             if message.data.endswith(_ZLIB_SUFFIX):
-                return self._zlib.decompress(message.data).decode("utf-8")
+                # Hot and fast path: we already have the full message
+                # in a single frame
+                return self._zlib.decompress(message.data)
 
-            return await self._receive_and_check_complete_zlib_package(message.data)
+            # Cold and slow path: we need to keep receiving frames to complete
+            # the whole message. Only then do we create a buffer
+            buff = bytearray(message.data)
+
+            while not buff.endswith(_ZLIB_SUFFIX):
+                message = await self._ws.receive()
+
+                if message.type == aiohttp.WSMsgType.BINARY:
+                    buff.extend(message.data)
+                    continue
+
+                self._handle_other_message(message)
+
+            return self._zlib.decompress(buff)
 
         self._handle_other_message(message)
-
-    async def _receive_and_check_complete_zlib_package(self, initial_data: bytes, /) -> str:
-        buff = bytearray(initial_data)
-
-        while not buff.endswith(_ZLIB_SUFFIX):
-            message = await self._ws.receive()
-
-            if message.type == aiohttp.WSMsgType.BINARY:
-                buff.extend(message.data)
-                continue
-
-            self._handle_other_message(message)
-
-        return self._zlib.decompress(buff).decode("utf-8")
 
     @classmethod
     async def connect(
@@ -272,7 +274,7 @@ class _GatewayTransport:
         http_settings: config.HTTPSettings,
         logger: logging.Logger,
         proxy_settings: config.ProxySettings,
-        log_filterer: typing.Callable[[str], str],
+        log_filterer: typing.Callable[[bytes], bytes],
         dumps: data_binding.JSONEncoder,
         loads: data_binding.JSONDecoder,
         transport_compression: bool,
@@ -371,7 +373,7 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
 class GatewayShardImpl(shard.GatewayShard):
     """Implementation of a V10 compatible gateway.
 
-    .. note::
+    !!! note
         If all four of `initial_activity`, `initial_idle_since`,
         `initial_is_afk`, and `initial_status` are not defined and left to their
         default values, then the presence will not be _updated_ on startup
@@ -384,51 +386,46 @@ class GatewayShardImpl(shard.GatewayShard):
 
     Parameters
     ----------
-    token : str
+    token
         The bot token to use.
-    url : str
+    url
         The gateway URL to use. This should not contain a query-string or
         fragments.
-    event_manager : hikari.api.event_manager.EventManager
+    event_manager
         The event manager this shard should make calls to.
-    event_factory : hikari.api.event_factory.EventFactory
+    event_factory
         The event factory this shard should use.
-
-    Other Parameters
-    ----------------
-    compression : typing.Optional[str]
+    compression
         Compression format to use for the shard. Only supported values are
-        `"transport_zlib_stream"` or `None` to disable it.
-    dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
-    loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
-    initial_activity : typing.Optional[hikari.presences.Activity]
+        `"transport_zlib_stream"` or [`None`][] to disable it.
+    dumps
+        The JSON encoder this application should use.
+    loads
+        The JSON decoder this application should use.
+    initial_activity
         The initial activity to appear to have for this shard, or
-        `None` if no activity should be set initially. This is the
+        [`None`][] if no activity should be set initially. This is the
         default.
-    initial_idle_since : typing.Optional[datetime.datetime]
-        The datetime to appear to be idle since, or `None` if the
-        shard should not provide this. The default is `None`.
-    initial_is_afk : bool
-        Whether to appear to be AFK or not on login. Defaults to
-        `False`.
-    initial_status : hikari.presences.Status
-        The initial status to set on login for the shard. Defaults to
-        `hikari.presences.Status.ONLINE`.
-    intents : hikari.intents.Intents
+    initial_idle_since
+        The datetime to appear to be idle since, or [`None`][] if the
+        shard should not provide this. The default is [`None`][].
+    initial_is_afk
+        Whether to appear to be AFK or not on login.
+    initial_status
+        The initial status to set on login for the shard.
+    intents
         Collection of intents to use.
-    large_threshold : int
+    large_threshold
         The number of members to have in a guild for it to be considered large.
-    shard_id : int
+    shard_id
         The shard ID.
-    shard_count : int
+    shard_count
         The shard count.
-    http_settings : hikari.impl.config.HTTPSettings
+    http_settings
         The HTTP-related settings to use while negotiating a websocket.
-    proxy_settings : hikari.impl.config.ProxySettings
+    proxy_settings
         The proxy settings to use while negotiating a websocket.
-    data_format : str
+    data_format
         Data format to use for inbound data. Only supported format is `"json"`.
     """
 
@@ -776,7 +773,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 return
 
             elif op == _INVALID_SESSION:
-                can_reconnect = payload[_D]  # We can resume if the payload data is `true`.
+                can_reconnect = payload[_D]  # We can resume if the payload data is [`true`][].
                 if not can_reconnect:
                     self._logger.info("received invalid session, will need to start a new session")
                     self._seq = None
@@ -811,7 +808,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         self._ws = await _GatewayTransport.connect(
             http_settings=self._http_settings,
-            log_filterer=_log_filterer(self._token),
+            log_filterer=_log_filterer(self._token.encode()),
             logger=self._logger,
             proxy_settings=self._proxy_settings,
             transport_compression=self._transport_compression,
@@ -820,16 +817,29 @@ class GatewayShardImpl(shard.GatewayShard):
             url=url,
         )
 
-        # Expect initial HELLO
         hello_payload = await self._ws.receive_json()
-        if hello_payload[_OP] != _HELLO:
+        initial_op = hello_payload[_OP]
+
+        if initial_op == _RECONNECT:
+            # It is possible that we receive RECONNECT as the initial opcode when the node we
+            # are connecting to is being restarted but the load balancer doesn't know it yet
+            self._logger.info(
+                "received %s (RECONNECT) as first opcode. It is likely the node is being restarted, "
+                "backing off and trying again",
+                initial_op,
+            )
+            await self._ws.send_close(code=errors.ShardCloseCode.NORMAL_CLOSURE, message=b"Reconnecting")
+            return ()
+
+        if initial_op != _HELLO:
+            # We expect the first opcode to be HELLO to begin the protocol
             self._logger.debug(
                 "expected %s (HELLO) opcode, received %s which makes no sense, closing with PROTOCOL ERROR",
                 _HELLO,
-                hello_payload[_OP],
+                initial_op,
             )
             await self._ws.send_close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
-            raise errors.GatewayError(f"Expected opcode {_HELLO} (HELLO), but received {hello_payload[_OP]}")
+            raise errors.GatewayError(f"Expected opcode {_HELLO} (HELLO), but received {initial_op}")
 
         # Spawn lifetime tasks
         heartbeat_interval = float(hello_payload[_D]["heartbeat_interval"]) / 1_000.0
@@ -838,9 +848,13 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         poll_events_task = asyncio.create_task(self._poll_events(), name=f"poll events (shard {self._shard_id})")
 
+        # Rate-limits are imposed per websocket connection
+        self._total_rate_limit.close()
+        self._non_priority_rate_limit.close()
+
         # Perform handshake
         if self._seq is None:
-            self._logger.debug("identifying with new session")
+            self._logger.info("identifying with new session")
             await self._send_json(
                 {
                     _OP: _IDENTIFY,
@@ -860,7 +874,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 }
             )
         else:
-            self._logger.debug("resuming session %s", self._session_id)
+            self._logger.info("resuming session %s", self._session_id)
             await self._send_json(
                 {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}}
             )
@@ -905,6 +919,9 @@ class GatewayShardImpl(shard.GatewayShard):
             except errors.GatewayConnectionError as ex:
                 self._logger.warning("failed to communicate with server, reason was: %r. Will retry shortly", ex.reason)
 
+            except errors.GatewayTransportError as ex:
+                self._logger.error("encountered transport error. Will try to reconnect shorty", exc_info=ex)
+
             except errors.GatewayServerClosedConnectionError as ex:
                 if not ex.can_reconnect:
                     self._logger.info(
@@ -924,7 +941,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 backoff.reset()
 
             except errors.GatewayError as ex:
-                self._logger.error("encountered generic gateway error", exc_info=ex)
+                self._logger.error("encountered gateway error", exc_info=ex)
                 raise
 
             except asyncio.CancelledError:

@@ -19,13 +19,31 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Dependency scanning."""
-
+"""Documentation pages generation."""
+from pipelines import config
 from pipelines import nox
 
 
 @nox.session()
-def safety(session: nox.Session) -> None:
-    """Perform dependency scanning."""
-    session.install("-r", "requirements.txt", *nox.dev_requirements("safety"))
-    session.run("safety", "check", "--full-report")
+def mkdocs(session: nox.Session):
+    """Generate docs using mkdocs."""
+    if "--no-refs" in session.posargs:
+        session.env["ENABLE_MKDOCSTRINGS"] = "false"
+
+    session.install("-e", ".", *nox.dev_requirements("mkdocs"))
+
+    session.run("mkdocs", "build", "-d", config.DOCUMENTATION_OUTPUT_PATH)
+
+
+@nox.session()
+def mkdocs_serve(session: nox.Session):
+    """Start an HTTP server that serves the generated docs in real time."""
+    if "--no-refs" in session.posargs:
+        session.env["ENABLE_MKDOCSTRINGS"] = "false"
+
+    session.install("-e", ".", *nox.dev_requirements("mkdocs"))
+
+    if "--no-reload" in session.posargs:
+        session.run("mkdocs", "serve", "--no-livereload")
+    else:
+        session.run("mkdocs", "serve")

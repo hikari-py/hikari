@@ -3,26 +3,12 @@ version: 2
 build:
   os: ubuntu-22.04
   tools:
-    python: "3.9"
-
-sphinx:
-  configuration: docs/conf.py
-  builder: dirhtml
-
-python:
-   install:
-     - requirements: dev-requirements/sphinx.txt
-     - method: pip
-       path: .
-
-search:
-  ignore:
-    # Defaults
-    - search.html
-    - search/index.html
-    - 404.html
-    - 404/index.html
-
-    # Custom
-    - index.html
-    - changelog/index.html
+    # NOTE: This should be kept up to date with ci.yml
+    python: "3.11"
+  commands:
+    - asdf plugin add uv
+    - asdf install uv latest
+    - asdf global uv latest
+    - uv venv
+    - uv pip install -r dev-requirements.txt
+    - .venv/bin/nox -s mkdocs

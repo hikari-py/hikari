@@ -30,7 +30,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestGuildChannelEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         cls = hikari_test_helpers.mock_class_namespace(
             channel_events.GuildChannelEvent,
@@ -59,7 +59,7 @@ class TestGuildChannelEvent:
 
         assert event.get_guild() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild(self, event):
         event.app.rest.fetch_guild = mock.AsyncMock()
         result = await event.fetch_guild()
@@ -78,7 +78,7 @@ class TestGuildChannelEvent:
 
         assert event.get_channel() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_channel(self, event):
         event.app.rest.fetch_channel = mock.AsyncMock(return_value=mock.MagicMock(spec=channels.GuildChannel))
         result = await event.fetch_channel()
@@ -88,7 +88,7 @@ class TestGuildChannelEvent:
 
 
 class TestGuildChannelCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return channel_events.GuildChannelCreateEvent(channel=mock.Mock(), shard=None)
 
@@ -105,7 +105,7 @@ class TestGuildChannelCreateEvent:
 
 
 class TestGuildChannelUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return channel_events.GuildChannelUpdateEvent(channel=mock.Mock(), old_channel=mock.Mock(), shard=None)
 
@@ -126,7 +126,7 @@ class TestGuildChannelUpdateEvent:
 
 
 class TestGuildChannelDeleteEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return channel_events.GuildChannelDeleteEvent(channel=mock.Mock(), shard=None)
 
@@ -143,7 +143,7 @@ class TestGuildChannelDeleteEvent:
 
 
 class TestGuildPinsUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return channel_events.GuildPinsUpdateEvent(
             app=mock.Mock(), shard=None, channel_id=12343, guild_id=None, last_pin_timestamp=None
@@ -159,9 +159,9 @@ class TestGuildPinsUpdateEvent:
         event.app.cache.get_guild_channel.assert_called_once_with(event.channel_id)
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestInviteEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return hikari_test_helpers.mock_class_namespace(
             channel_events.InviteEvent, slots_=False, code=mock.PropertyMock(return_value="Jx4cNGG")
@@ -176,32 +176,32 @@ class TestInviteEvent:
 
 
 class TestInviteCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return channel_events.InviteCreateEvent(shard=None, invite=mock.Mock())
 
     def test_app_property(self, event):
         assert event.app is event.invite.app
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_channel_id_property(self, event):
         event.invite.channel_id = 123
         assert event.channel_id == 123
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_guild_id_property(self, event):
         event.invite.guild_id = 123
         assert event.guild_id == 123
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_code_property(self, event):
         event.invite.code = "Jx4cNGG"
         assert event.code == "Jx4cNGG"
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestWebhookUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return channel_events.WebhookUpdateEvent(app=mock.AsyncMock(), shard=mock.Mock(), channel_id=123, guild_id=456)
 
@@ -217,7 +217,7 @@ class TestWebhookUpdateEvent:
 
 
 class TestGuildThreadEvent:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_channel(self):
         mock_app = mock.AsyncMock()
         mock_app.rest.fetch_channel.return_value = mock.Mock(channels.GuildThreadChannel)
@@ -232,7 +232,7 @@ class TestGuildThreadEvent:
 
 
 class TestGuildThreadAccessEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self) -> channel_events.GuildThreadAccessEvent:
         return channel_events.GuildThreadAccessEvent(shard=mock.Mock(), thread=mock.Mock())
 
@@ -247,7 +247,7 @@ class TestGuildThreadAccessEvent:
 
 
 class TestGuildThreadCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self) -> channel_events.GuildThreadCreateEvent:
         return channel_events.GuildThreadCreateEvent(shard=mock.Mock(), thread=mock.Mock())
 
@@ -262,7 +262,7 @@ class TestGuildThreadCreateEvent:
 
 
 class TestGuildThreadUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self) -> channel_events.GuildThreadUpdateEvent:
         return channel_events.GuildThreadUpdateEvent(shard=mock.Mock(), thread=mock.Mock())
 
