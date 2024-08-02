@@ -338,7 +338,7 @@ class KnownCustomEmoji(CustomEmoji):
     )
     """Client application that models may use for procedures."""
 
-    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=False)
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the guild this emoji belongs to."""
 
     role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
@@ -366,18 +366,3 @@ class KnownCustomEmoji(CustomEmoji):
 
     May be [`False`][] due to a loss of Sever Boosts on the emoji's guild.
     """
-
-
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
-class ApplicationEmoji(CustomEmoji):
-    """Represents an application emoji.
-
-    This is a specialization of [`hikari.emojis.CustomEmoji`][] that is from an application.
-    As a result, it contains a lot more information with it.
-    """
-
-    application_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=False)
-    """The ID of the application this emoji belongs to."""
-
-    user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
-    """The user that created the emoji."""
