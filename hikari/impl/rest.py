@@ -2418,23 +2418,29 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
-    ) -> emojis.CustomEmoji:
+    ) -> emojis.ApplicationEmoji:
         route = routes.GET_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
         response = await self._request(route)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_custom_emoji(response)
+        return self._entity_factory.deserialize_application_emoji(
+            response, application_id=snowflakes.Snowflake(application)
+        )
 
     async def fetch_application_emojis(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
-    ) -> typing.Sequence[emojis.CustomEmoji]:
+    ) -> typing.Sequence[emojis.ApplicationEmoji]:
         route = routes.GET_APPLICATION_EMOJIS.compile(application=application)
         response = await self._request(route)
         assert isinstance(response, list)
-        return [self._entity_factory.deserialize_custom_emoji(emoji_payload) for emoji_payload in response]
+        application_id = snowflakes.Snowflake(application)
+        return [
+            self._entity_factory.deserialize_application_emoji(emoji_payload, application_id=application_id)
+            for emoji_payload in response
+        ]
 
     async def create_application_emoji(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
-    ) -> emojis.CustomEmoji:
+    ) -> emojis.ApplicationEmoji:
         route = routes.POST_APPLICATION_EMOJIS.compile(application=application)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
@@ -2444,21 +2450,25 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_custom_emoji(response)
+        return self._entity_factory.deserialize_application_emoji(
+            response, application_id=snowflakes.Snowflake(application)
+        )
 
     async def edit_application_emoji(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
         name: str,
-    ) -> emojis.CustomEmoji:
+    ) -> emojis.ApplicationEmoji:
         route = routes.PATCH_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_custom_emoji(response)
+        return self._entity_factory.deserialize_application_emoji(
+            response, application_id=snowflakes.Snowflake(application)
+        )
 
     async def delete_application_emoji(
         self,

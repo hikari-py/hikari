@@ -952,6 +952,27 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_application_emoji(
+        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
+    ) -> emoji_models.ApplicationEmoji:
+        """Parse a raw payload from Discord into a application emoji object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+        application_id
+            The ID of the guild this emoji belongs to. This is used to ensure
+            that the guild a known custom emoji belongs to is remembered by
+            allowing for a context based artificial `guild_id` attribute.
+
+        Returns
+        -------
+        hikari.emojis.ApplicationEmoji
+            The deserialized "known custom emoji" object.
+        """
+
+    @abc.abstractmethod
     def deserialize_emoji(
         self, payload: data_binding.JSONObject
     ) -> typing.Union[emoji_models.UnicodeEmoji, emoji_models.CustomEmoji]:

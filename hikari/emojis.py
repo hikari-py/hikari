@@ -366,3 +366,38 @@ class KnownCustomEmoji(CustomEmoji):
 
     May be [`False`][] due to a loss of Sever Boosts on the emoji's guild.
     """
+
+
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+class ApplicationEmoji(CustomEmoji):
+    """Represents an emoji that is known from a guild the bot is in.
+
+    This is a specialization of [`hikari.emojis.CustomEmoji`][] that is from a guild that you
+    _are_ part of. As a result, it contains a lot more information with it.
+    """
+
+    app: traits.RESTAware = attrs.field(
+        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
+    )
+    """Client application that models may use for procedures."""
+
+    application_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the application this emoji belongs to."""
+
+    role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    """The IDs of the roles that are whitelisted to use this emoji.
+
+    If this is empty then any user can use this emoji regardless of their roles.
+    """
+
+    user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
+    """The user that created the emoji."""
+
+    is_colons_required: bool = attrs.field(eq=False, hash=False, repr=False)
+    """Whether this emoji must be wrapped in colons."""
+
+    is_managed: bool = attrs.field(eq=False, hash=False, repr=False)
+    """Whether the emoji is managed by an integration."""
+
+    is_available: bool = attrs.field(eq=False, hash=False, repr=False)
+    """Whether this emoji can currently be used."""

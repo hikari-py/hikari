@@ -1719,6 +1719,28 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_available=payload["available"],
         )
 
+    def deserialize_application_emoji(
+        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
+    ) -> emoji_models.ApplicationEmoji:
+        role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else []
+
+        user: typing.Optional[user_models.User] = None
+        if (raw_user := payload.get("user")) is not None:
+            user = self.deserialize_user(raw_user)
+
+        return emoji_models.ApplicationEmoji(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            is_animated=payload.get("animated", False),
+            application_id=application_id,
+            role_ids=role_ids,
+            user=user,
+            is_colons_required=payload["require_colons"],
+            is_managed=payload["managed"],
+            is_available=payload["available"],
+        )
+
     def deserialize_emoji(
         self, payload: data_binding.JSONObject
     ) -> typing.Union[emoji_models.UnicodeEmoji, emoji_models.CustomEmoji]:
