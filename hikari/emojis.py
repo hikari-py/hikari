@@ -242,8 +242,7 @@ class UnicodeEmoji(str, Emoji):
 class CustomEmoji(snowflakes.Unique, Emoji):
     """Represents a custom emoji.
 
-    This is a custom emoji which could be an application emoji or
-    a normal custom emoji from a guild you might not be part of.
+    This is a custom emoji that is from a guild you might not be part of.
 
     All CustomEmoji objects and their derivatives act as valid
     [`hikari.files.Resource`][] objects. This means you can use them as a
