@@ -1698,7 +1698,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_known_custom_emoji(
-        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> emoji_models.KnownCustomEmoji:
         role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else []
 
@@ -1711,29 +1714,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             is_animated=payload.get("animated", False),
-            guild_id=guild_id,
-            role_ids=role_ids,
-            user=user,
-            is_colons_required=payload["require_colons"],
-            is_managed=payload["managed"],
-            is_available=payload["available"],
-        )
-
-    def deserialize_application_emoji(
-        self, payload: data_binding.JSONObject, *, application_id: snowflakes.Snowflake
-    ) -> emoji_models.ApplicationEmoji:
-        role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else []
-
-        user: typing.Optional[user_models.User] = None
-        if (raw_user := payload.get("user")) is not None:
-            user = self.deserialize_user(raw_user)
-
-        return emoji_models.ApplicationEmoji(
-            app=self._app,
-            id=snowflakes.Snowflake(payload["id"]),
-            name=payload["name"],
-            is_animated=payload.get("animated", False),
-            application_id=application_id,
+            guild_id=guild_id if guild_id is not undefined.UNDEFINED else None,
             role_ids=role_ids,
             user=user,
             is_colons_required=payload["require_colons"],
