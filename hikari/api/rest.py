@@ -3498,7 +3498,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value or
-            if there are no more spaces for the emoji in the application.
+            if there is no more spaces for the emoji in the application.
         hikari.errors.ForbiddenError
             If you are trying to create an emoji for an application
             that is not yours.
@@ -3520,7 +3520,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
         name: str,
     ) -> emojis.ApplicationEmoji:
-        """Edit an emoji in a guild.
+        """Edit an emoji in an application.
 
         Parameters
         ----------
@@ -3562,13 +3562,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
     ) -> None:
-        """Delete an emoji in a guild.
+        """Delete an emoji in an application.
 
         Parameters
         ----------
         application
-            The guild to delete the emoji on. This can be a guild object or the
-            ID of an existing guild.
+            The application to delete the emoji from. This can be a [`hikari.guilds.PartialApplication`][]
+            or the ID of an application.
         emoji
             The emoji to delete. This can be a [`hikari.emojis.CustomEmoji`][]
             or the ID of an existing emoji.

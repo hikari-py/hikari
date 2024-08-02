@@ -370,10 +370,10 @@ class KnownCustomEmoji(CustomEmoji):
 
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class ApplicationEmoji(CustomEmoji):
-    """Represents an emoji that is known from a guild the bot is in.
+    """Represents an application emoji.
 
-    This is a specialization of [`hikari.emojis.CustomEmoji`][] that is from a guild that you
-    _are_ part of. As a result, it contains a lot more information with it.
+    This is a specialization of [`hikari.emojis.CustomEmoji`][] that is from an application.
+    As a result, it contains a lot more information with it.
     """
 
     app: traits.RESTAware = attrs.field(
