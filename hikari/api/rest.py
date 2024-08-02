@@ -3562,7 +3562,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
     ) -> None:
-        """Delete an emoji in an application.
+        """Delete an application emoji.
 
         Parameters
         ----------
