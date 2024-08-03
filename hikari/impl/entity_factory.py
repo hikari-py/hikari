@@ -52,6 +52,7 @@ from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_events_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import stage_instances
 from hikari import stickers as sticker_models
 from hikari import templates as template_models
 from hikari import traits
@@ -1468,6 +1469,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
             is_invitable=metadata["invitable"],
             thread_created_at=thread_created_at,
+        )
+
+    def deserialize_stage_instance(self, payload: data_binding.JSONObject) -> stage_instances.StageInstance:
+        raw_event_id = payload["guild_scheduled_event_id"]
+        guild_scheduled_event_id = snowflakes.Snowflake(raw_event_id) if raw_event_id else None
+
+        return stage_instances.StageInstance(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            topic=payload["topic"],
+            privacy_level=stage_instances.StageInstancePrivacyLevel(payload["privacy_level"]),
+            discoverable_disabled=payload["discoverable_disabled"],
+            scheduled_event_id=guild_scheduled_event_id,
         )
 
     def deserialize_channel(
