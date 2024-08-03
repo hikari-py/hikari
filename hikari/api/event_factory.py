@@ -1429,7 +1429,7 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.voice_events.StageInstanceCreateEvent
+        hikari.events.stage_events.StageInstanceCreateEvent
             The parsed stage instance create event object.
         """
 
@@ -1448,7 +1448,7 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.voice_events.StageInstanceUpdateEvent
+        hikari.events.stage_events.StageInstanceUpdateEvent
             The parsed stage instance update event object.
         """
 
@@ -1467,6 +1467,6 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.voice_events.StageInstanceDeleteEvent
+        hikari.events.stage_events.StageInstanceDeleteEvent
             The parsed stage instance delete event object.
         """

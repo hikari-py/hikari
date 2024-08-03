@@ -8216,7 +8216,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
+        channel
             The guild stage channel to fetch the stage instance from.
 
         Returns
@@ -8260,18 +8260,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
+        channel
             The channel to use for the stage instance creation.
-
-        Other Parameters
-        ----------------
-        topic: str
+        topic
             The topic for the stage instance.
-
-        send_start_notification: hikari.undefined.UndefinedOr[bool]
+        send_start_notification
             Whether to send a notification to *all* server members that the stage instance has started.
-
-        guild_scheduled_event_id: hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.scheduled_events.ScheduledEvent]]
+        scheduled_event_id
             The ID of the scheduled event to associate with the stage instance.
 
 
@@ -8312,12 +8307,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
+        channel
             The channel that the stage instance is associated with.
-
-        Other Parameters
-        ----------------
-        topic: hikari.undefined.UndefinedOr[str]
+        topic
             The topic for the stage instance.
 
         Returns
@@ -8355,7 +8347,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        channel: hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildStageChannel]
+        channel
             The guild stage channel to fetch the stage instance from.
 
         Returns

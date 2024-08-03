@@ -55,23 +55,11 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def stage_instance(self) -> StageInstance:
-        """Stage instance that this event relates to.
-
-        Returns
-        -------
-        hikari.stage_instance.StageInstance
-            The stage instance that this event relates to.
-        """
+        """Stage instance that this event relates to."""
 
     @property
     def stage_instance_id(self) -> snowflakes.Snowflake:
-        """ID of the stage instance that this event relates to.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The ID of the stage instance that this event relates to.
-        """
+        """ID of the stage instance that this event relates to."""
         return self.stage_instance.id
 
 

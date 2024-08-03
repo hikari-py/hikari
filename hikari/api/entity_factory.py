@@ -1984,6 +1984,6 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.channels.StageInstance
+        hikari.stage_intances.StageInstance
             The deserialized stage instance object
         """
