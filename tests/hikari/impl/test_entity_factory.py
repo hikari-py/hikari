@@ -45,6 +45,7 @@ from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_event_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import stage_instances as stage_instance_models
 from hikari import stickers as sticker_models
 from hikari import traits
 from hikari import undefined
@@ -7222,6 +7223,7 @@ class TestEntityFactoryImpl:
             "guild_id": "197038439483310086",
             "channel_id": "733488538393510049",
             "topic": "Testing Testing, 123",
+            "privacy_level": 2,
             "guild_scheduled_event_id": "363820363920323120",
             "discoverable_disabled": False,
         }
@@ -7234,4 +7236,5 @@ class TestEntityFactoryImpl:
         assert stage_instance.channel_id == 733488538393510049
         assert stage_instance.guild_id == 197038439483310086
         assert stage_instance.topic == "Testing Testing, 123"
+        assert stage_instance.privacy_level == stage_instance_models.StageInstancePrivacyLevel.GUILD_ONLY
         assert stage_instance.discoverable_disabled is False

@@ -41,6 +41,7 @@ class TestStageInstance:
             channel_id=snowflakes.Snowflake(6969),
             guild_id=snowflakes.Snowflake(420),
             topic="beanos",
+            privacy_level=stage_instances.StageInstancePrivacyLevel.GUILD_ONLY,
             discoverable_disabled=True,
             scheduled_event_id=snowflakes.Snowflake(1337),
         )
@@ -59,6 +60,9 @@ class TestStageInstance:
 
     def test_topic_property(self, stage_instance):
         assert stage_instance.topic == "beanos"
+
+    def test_privacy_level_property(self, stage_instance):
+        assert stage_instance.privacy_level == stage_instances.StageInstancePrivacyLevel.GUILD_ONLY
 
     def test_discoverable_disabled_property(self, stage_instance):
         assert stage_instance.discoverable_disabled is True

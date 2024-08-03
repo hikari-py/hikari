@@ -47,6 +47,7 @@ from hikari import messages as message_models
 from hikari import permissions
 from hikari import scheduled_events
 from hikari import snowflakes
+from hikari import stage_instances
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -6444,7 +6445,7 @@ class TestRESTClientImplAsync:
         }
         rest_client._request = mock.AsyncMock(return_value=mock_payload)
 
-        result = await rest_client.fetch_stage_instance(channel=123)
+        result = await rest_client.fetch_stage_instance(channel=StubModel(123))
 
         assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
         rest_client._request.assert_called_once_with(expected_route)
@@ -6458,12 +6459,15 @@ class TestRESTClientImplAsync:
             "guild_id": "19703",
             "channel_id": "7334",
             "topic": "ur mom",
+            "privacy_level": 2,
             "guild_scheduled_event_id": "3361203239",
             "discoverable_disabled": False,
         }
         rest_client._request = mock.AsyncMock(return_value=mock_payload)
 
-        result = await rest_client.create_stage_instance(channel=7334, topic="ur mom", scheduled_event_id=3361203239)
+        result = await rest_client.create_stage_instance(
+            channel=StubModel(7334), topic="ur mom", scheduled_event_id=StubModel(3361203239)
+        )
 
         assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
         rest_client._request.assert_called_once_with(expected_route, json=expected_json)
@@ -6471,17 +6475,20 @@ class TestRESTClientImplAsync:
 
     async def test_edit_stage_instance(self, rest_client):
         expected_route = routes.PATCH_STAGE_INSTANCE.compile(channel=7334)
-        expected_json = {"topic": "ur mom"}
+        expected_json = {"topic": "ur mom", "privacy_level": 2}
         mock_payload = {
             "id": "8406",
             "guild_id": "19703",
             "channel_id": "7334",
             "topic": "ur mom",
+            "privacy_level": 2,
             "discoverable_disabled": False,
         }
         rest_client._request = mock.AsyncMock(return_value=mock_payload)
 
-        result = await rest_client.edit_stage_instance(channel=7334, topic="ur mom")
+        result = await rest_client.edit_stage_instance(
+            channel=StubModel(7334), topic="ur mom", privacy_level=stage_instances.StageInstancePrivacyLevel.GUILD_ONLY
+        )
 
         assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
         rest_client._request.assert_called_once_with(expected_route, json=expected_json)
@@ -6489,17 +6496,8 @@ class TestRESTClientImplAsync:
 
     async def test_delete_stage_instance(self, rest_client):
         expected_route = routes.DELETE_STAGE_INSTANCE.compile(channel=7334)
-        mock_payload = {
-            "id": "8406",
-            "guild_id": "19703",
-            "channel_id": "7334",
-            "topic": "ur mom",
-            "discoverable_disabled": False,
-        }
-        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+        rest_client._request = mock.AsyncMock()
 
-        result = await rest_client.delete_stage_instance(channel=7334)
+        await rest_client.delete_stage_instance(channel=StubModel(7334))
 
-        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
         rest_client._request.assert_called_once_with(expected_route)
-        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)

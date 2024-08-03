@@ -8251,6 +8251,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: str,
+        privacy_level: undefined.UndefinedOr[typing.Union[int, stage_instances.StageInstancePrivacyLevel]],
         send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
@@ -8264,6 +8265,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The channel to use for the stage instance creation.
         topic
             The topic for the stage instance.
+        privacy_level
+            The privacy level for the stage instance.
         send_start_notification
             Whether to send a notification to *all* server members that the stage instance has started.
         scheduled_event_id
@@ -8302,6 +8305,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[
+            typing.Union[int, stage_instances.StageInstancePrivacyLevel]
+        ] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         """Edit the stage instance in a guild stage channel.
 
@@ -8311,6 +8317,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The channel that the stage instance is associated with.
         topic
             The topic for the stage instance.
+        privacy_level:
+            The privacy level for the stage instance.
 
         Returns
         -------
@@ -8340,20 +8348,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_stage_instance(
-        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
-    ) -> stage_instances.StageInstance:
+    async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
         """Delete the stage instance.
 
         Parameters
         ----------
         channel
             The guild stage channel to fetch the stage instance from.
-
-        Returns
-        -------
-        hikari.stage_instances.StageInstance
-            The stage instance that was deleted.
 
         Raises
         ------

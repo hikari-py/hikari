@@ -4482,6 +4482,9 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: str,
+        privacy_level: undefined.UndefinedOr[
+            typing.Union[int, stage_instances.StageInstancePrivacyLevel]
+        ] = undefined.UNDEFINED,
         send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
@@ -4491,6 +4494,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("channel_id", channel)
         body.put("topic", topic)
+        body.put("privacy_level", privacy_level)
         body.put("send_start_notification", send_start_notification)
         body.put_snowflake("guild_scheduled_event_id", scheduled_event_id)
 
@@ -4503,19 +4507,19 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[
+            typing.Union[int, stage_instances.StageInstancePrivacyLevel]
+        ] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         route = routes.PATCH_STAGE_INSTANCE.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("topic", topic)
+        body.put("privacy_level", privacy_level)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_stage_instance(response)
 
-    async def delete_stage_instance(
-        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
-    ) -> stage_instances.StageInstance:
+    async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
         route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
-        response = await self._request(route)
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_stage_instance(response)
+        await self._request(route)
