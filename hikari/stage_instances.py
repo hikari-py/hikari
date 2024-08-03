@@ -29,14 +29,10 @@ import typing
 
 import attr
 
-from hikari import channels
 from hikari import scheduled_events
 from hikari import snowflakes
 from hikari import traits
 from hikari.internal import attrs_extensions
-
-if typing.TYPE_CHECKING:
-    from hikari import guilds
 
 
 @attr.define(hash=True, kw_only=True, weakref_slot=False)
@@ -63,8 +59,7 @@ class StageInstance(snowflakes.Unique):
     discoverable_disabled: bool = attr.field(eq=False, hash=False, repr=False)
     """Whether or not stage discovery is disabled."""
 
-    guild_scheduled_event_id: typing.Optional[snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]] = attr.field(
+    scheduled_event_id: typing.Optional[snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]] = attr.field(
         eq=False, hash=False, repr=False
     )
     """The ID of the scheduled event for this stage instance, if it exists."""
-

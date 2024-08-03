@@ -6463,9 +6463,7 @@ class TestRESTClientImplAsync:
         }
         rest_client._request = mock.AsyncMock(return_value=mock_payload)
 
-        result = await rest_client.create_stage_instance(
-            channel=7334, topic="ur mom", guild_scheduled_event_id=3361203239
-        )
+        result = await rest_client.create_stage_instance(channel=7334, topic="ur mom", scheduled_event_id=3361203239)
 
         assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
         rest_client._request.assert_called_once_with(expected_route, json=expected_json)

@@ -4483,7 +4483,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         topic: str,
         send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        guild_scheduled_event_id: undefined.UndefinedOr[
+        scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
         ] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
@@ -4492,7 +4492,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put_snowflake("channel_id", channel)
         body.put("topic", topic)
         body.put("send_start_notification", send_start_notification)
-        body.put_snowflake("guild_scheduled_event_id", guild_scheduled_event_id)
+        body.put_snowflake("guild_scheduled_event_id", scheduled_event_id)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)

@@ -8252,7 +8252,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         topic: str,
         send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        guild_scheduled_event_id: undefined.UndefinedOr[
+        scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
         ] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
@@ -8294,7 +8294,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def edit_stage_instance(

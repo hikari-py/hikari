@@ -1482,7 +1482,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             topic=payload["topic"],
             discoverable_disabled=payload["discoverable_disabled"],
-            guild_scheduled_event_id=guild_scheduled_event_id,
+            scheduled_event_id=guild_scheduled_event_id,
         )
 
     def deserialize_channel(
