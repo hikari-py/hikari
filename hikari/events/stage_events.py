@@ -57,11 +57,6 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
     def stage_instance(self) -> StageInstance:
         """Stage instance that this event relates to."""
 
-    @property
-    def stage_instance_id(self) -> snowflakes.Snowflake:
-        """ID of the stage instance that this event relates to."""
-        return self.stage_instance.id
-
 
 @attrs_extensions.with_copy
 @attr.define(kw_only=True, weakref_slot=False)

@@ -42,6 +42,7 @@ class StageInstancePrivacyLevel(int, enums.Enum):
 
     PUBLIC = 1
     """The Stage instance is visible publicly."""
+
     GUILD_ONLY = 2
     """The Stage instance is visible to only guild members."""
 
