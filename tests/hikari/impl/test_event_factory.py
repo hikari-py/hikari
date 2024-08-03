@@ -1537,7 +1537,6 @@ class TestEventFactoryImpl:
 
         assert event.shard is mock_shard
         assert event.app is event.stage_instance.app
-        assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
         assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
 
     def test_deserialize_stage_instance_update_event(self, event_factory, mock_app, mock_shard):
@@ -1554,7 +1553,6 @@ class TestEventFactoryImpl:
 
         assert event.shard is mock_shard
         assert event.app is event.stage_instance.app
-        assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
         assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
 
     def test_deserialize_stage_instance_delete_event(self, event_factory, mock_app, mock_shard):
@@ -1571,5 +1569,4 @@ class TestEventFactoryImpl:
 
         assert event.shard is mock_shard
         assert event.app is event.stage_instance.app
-        assert event.stage_instance_id == mock_app.entity_factory.deserialize_stage_instance.return_value.id
         assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value

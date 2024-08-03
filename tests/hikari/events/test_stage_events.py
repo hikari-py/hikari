@@ -35,10 +35,6 @@ class TestStageInstanceCreateEvent:
     def test_app_property(self, event):
         assert event.app is event.stage_instance.app
 
-    def test_stage_instance_id_property(self, event):
-        event.stage_instance.id = 1234
-        assert event.stage_instance_id == 1234
-
 
 class TestStageInstanceUpdateEvent:
     @pytest.fixture
@@ -50,10 +46,6 @@ class TestStageInstanceUpdateEvent:
     def test_app_property(self, event):
         assert event.app is event.stage_instance.app
 
-    def test_stage_instance_id_property(self, event):
-        event.stage_instance.id = 1234
-        assert event.stage_instance_id == 1234
-
 
 class TestStageInstanceDeleteEvent:
     @pytest.fixture
@@ -64,7 +56,3 @@ class TestStageInstanceDeleteEvent:
 
     def test_app_property(self, event):
         assert event.app is event.stage_instance.app
-
-    def test_stage_instance_id_property(self, event):
-        event.stage_instance.id = 1234
-        assert event.stage_instance_id == 1234

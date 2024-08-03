@@ -36,7 +36,6 @@ from hikari.internal import attrs_extensions
 from hikari.stage_instances import StageInstance
 
 if typing.TYPE_CHECKING:
-    from hikari import snowflakes
     from hikari import traits
     from hikari.api import shard as gateway_shard
 
