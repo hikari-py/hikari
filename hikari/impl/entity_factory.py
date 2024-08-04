@@ -777,7 +777,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return audit_log_models.ChannelOverwriteEntryInfo(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
-            type=channel_models.PermissionOverwriteType(payload["type"]),
+            type=channel_models.PermissionOverwriteType(int(payload["type"])),
             role_name=payload.get("role_name"),
         )
 
