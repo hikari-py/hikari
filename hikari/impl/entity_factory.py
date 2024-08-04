@@ -485,6 +485,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.PERMISSION_OVERWRITES: self._deserialize_audit_log_overwrites,
+            audit_log_models.AuditLogChangeKey.COMMUNICATION_DISABLED_UNTIL: time.iso8601_datetime_string_to_datetime,
         }
         self._audit_log_event_mapping: typing.Dict[
             typing.Union[int, audit_log_models.AuditLogEventType],
