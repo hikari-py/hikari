@@ -262,6 +262,9 @@ class AuditLogChangeKey(str, enums.Enum):
     GUILD_ID = "guild_id"
     """Guild ID."""
 
+    COMMUNICATION_DISABLED_UNTIL = "communication_disabled_until"
+    """The datetime when a timeout will expire."""
+
     # Who needs consistency?
     ADD_ROLE_TO_MEMBER = "$add"
     """Role added to a member."""
