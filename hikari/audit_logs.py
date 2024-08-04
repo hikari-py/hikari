@@ -364,7 +364,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[channels.PermissionOverwriteType, str] = attrs.field(repr=True)
+    type: channels.PermissionOverwriteType = attrs.field(repr=True)
     """The type of entity this overwrite targets."""
 
     role_name: typing.Optional[str] = attrs.field(repr=True)
