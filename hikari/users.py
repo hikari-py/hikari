@@ -114,10 +114,13 @@ class PremiumType(int, enums.Enum):
     """No premium."""
 
     NITRO_CLASSIC = 1
-    """Premium including basic perks like animated emojis and avatars."""
+    """Legacy premium tier, including basic perks like animated emojis and avatars"""
 
     NITRO = 2
-    """Premium including all perks (e.g. 2 server boosts)."""
+    """Premium tier including *all* available perks (e.g. 2 server boosts)."""
+
+    NITRO_BASIC = 3
+    """Premium tier including basic perks (e.g. animated emojis and avatars"""
 
 
 class PartialUser(snowflakes.Unique, abc.ABC):
