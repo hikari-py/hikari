@@ -1,0 +1,25 @@
+name: Dependency Locks Check
+
+on:
+  pull_request:
+    paths:
+      - dev-requirements/*
+
+jobs:
+  check-locks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.8
+
+      - name: Check dependency locks
+        run: |
+          pip install -r dev-requirements.txt
+
+          nox -s check-dependency-locks

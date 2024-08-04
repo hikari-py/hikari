@@ -1,0 +1,11 @@
+# mock in the stdlib changes between versions of Python, so are not consistent in behaviour like the backport is
+mock==5.1.0
+
+pytest==8.3.2
+pytest-asyncio==0.23.8
+pytest-cov==5.0.0
+pytest-randomly==3.15.0
+
+async-timeout==4.0.3  # Used for timeouts in some test cases.
+
+-r coverage.in  # Consistent coverage version

@@ -1,0 +1,3 @@
+twine==5.1.1
+
+-r build.in
