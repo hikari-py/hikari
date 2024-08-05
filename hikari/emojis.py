@@ -327,10 +327,16 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
 @attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class KnownCustomEmoji(CustomEmoji):
-    """Represents an emoji that is known from a guild the bot is in.
+    """Represents a known emoji.
 
-    This is a specialization of [`hikari.emojis.CustomEmoji`][] that is from a guild that you
-    _are_ part of. As a result, it contains a lot more information with it.
+    The Emoji could be either known because the bot is part of the emoji's guild or
+    because the emoji is an application emoji.
+
+    This is a specialization of [`hikari.emojis.CustomEmoji`][] that is _known_ as mentioned before.
+    As a result, it contains a lot more information with it.
+
+    !!! note
+        If the emoji is an application emoji, the `guild_id` will be [`None`][].
     """
 
     app: traits.RESTAware = attrs.field(
@@ -339,7 +345,11 @@ class KnownCustomEmoji(CustomEmoji):
     """Client application that models may use for procedures."""
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
-    """The ID of the guild this emoji belongs to."""
+    """The ID of the guild this emoji belongs to.
+
+    !!! note
+        This will be [`None`][] if the emoji is an application emoji.
+    """
 
     role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The IDs of the roles that are whitelisted to use this emoji.

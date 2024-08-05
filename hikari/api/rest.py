@@ -3422,7 +3422,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.emojis.ApplicationEmoji
+        hikari.emojis.KnownCustomEmoji
             The requested application emoji.
 
         Raises
@@ -3454,7 +3454,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.emojis.ApplicationEmoji]
+        typing.Sequence[hikari.emojis.KnownCustomEmoji]
             The requested emojis.
 
         Raises
@@ -3491,7 +3491,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.emojis.ApplicationEmoji
+        hikari.emojis.KnownCustomEmoji
             The created emoji.
 
         Raises
@@ -3535,7 +3535,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.emojis.ApplicationEmoji
+        hikari.emojis.KnownCustomEmoji
             The edited emoji.
 
         Raises
