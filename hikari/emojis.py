@@ -342,10 +342,9 @@ class KnownCustomEmoji(CustomEmoji):
     """Client application that models may use for procedures."""
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
-    """The ID of the guild this emoji belongs to.
+    """The ID of the guild this emoji belongs to, if applicable.
 
-    !!! note
-        This will be [`None`][] if the emoji is an application emoji.
+    This will be [`None`][] if the emoji is an application emoji.
     """
 
     role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
