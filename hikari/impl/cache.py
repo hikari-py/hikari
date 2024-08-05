@@ -238,17 +238,18 @@ class CacheImpl(cache.MutableCache):
         emoji_data = self._emoji_entries.pop(emoji_id, None)
         if not emoji_data:
             return None
+        if not emoji_data.guild_id:
+            raise ValueError("Emoji must have a guild ID to be cached.")
 
         if emoji_data.user:
             self._garbage_collect_user(emoji_data.user, decrement=1)
-        if emoji_data.guild_id:
-            guild_record = self._guild_entries.get(emoji_data.guild_id)
-            if guild_record and guild_record.emojis:
-                guild_record.emojis.remove(emoji_id)
+        guild_record = self._guild_entries.get(emoji_data.guild_id)
+        if guild_record and guild_record.emojis:
+            guild_record.emojis.remove(emoji_id)
 
-                if not guild_record.emojis:
-                    guild_record.emojis = None
-                    self._remove_guild_record_if_empty(emoji_data.guild_id, guild_record)
+            if not guild_record.emojis:
+                guild_record.emojis = None
+                self._remove_guild_record_if_empty(emoji_data.guild_id, guild_record)
 
         return self._build_emoji(emoji_data)
 
