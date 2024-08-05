@@ -208,7 +208,7 @@ class TestInitLogging:
         supports_color.assert_not_called()
 
 
-class TestRedBanner:
+class TestReadBanner:
     def test_when_above_3_9(self):
         class MockFile:
             context_entered = 0

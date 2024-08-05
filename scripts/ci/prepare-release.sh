@@ -24,28 +24,33 @@ set -e
 echo "Defined environment variables"
 env | grep -oP "^[^=]+" | sort
 
-if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
-if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
+if [ -z ${IS_PRERELEASE+x} ]; then echo 'IS_PRERELEASE environment variable is missing' && exit 1; fi
+if [ -z "${IS_PRERELEASE}" ]; then echo 'IS_PRERELEASE environment variable is empty' && exit 1; fi
 
 echo "===== INSTALLING DEPENDENCIES ====="
-pip install -r dev-requirements/towncrier.txt -e .
+pip install -r dev-requirements/towncrier.txt
+
+echo "===== GENERATING RELEASE VERSION ====="
+version=$(python scripts/ci/generate_release_version.py "${IS_PRERELEASE}")
 
 echo "===== UPDATING INFORMATION ====="
 echo "-- Checkout branch --"
-git checkout -b "task/prepare-release-${VERSION}"
+git checkout -b "task/prepare-release-${version}"
 
-echo "-- Bumping repository version to ${VERSION} --"
-sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
-sed "/^__docs__.*/, \${s||__docs__: typing.Final[str] = \"https://docs.hikari-py.dev/en/${VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__docs__' not found in about!" && exit 1)
+echo "-- Bumping repository version to ${version} --"
+sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${version}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
+sed "/^__docs__.*/, \${s||__docs__: typing.Final[str] = \"https://docs.hikari-py.dev/en/${version}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__docs__' not found in about!" && exit 1)
 
 echo "-- Running towncrier --"
+# Towncrier requires the package to be installed to get the appropriate release version
+pip install -e .
 towncrier --yes
 
 echo "-- Committing changes --"
-git commit -am "Prepare for release of version ${VERSION}"
+git commit -am "Prepare for release of version ${version}"
 
 if [ "${CI}" ]; then
-    git push origin "task/prepare-release-${VERSION}"
+    git push origin "task/prepare-release-${version}"
 else
-    echo "Changes committed to 'task/prepare-release-${VERSION}'. You can now push the changes and create a pull request"
+    echo "Changes committed to 'task/prepare-release-${version}'. You can now push the changes and create a pull request"
 fi

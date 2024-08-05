@@ -3,9 +3,9 @@ name: Prepare Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'The version to prepare the release for'
-        required: true
+      pre_release:
+        type: boolean
+        description: 'Whether this will be a pre-release version'
 
 jobs:
   prepare-release:
@@ -38,7 +38,7 @@ jobs:
 
       - name: Run prepare script
         env:
-          VERSION: ${{ inputs.version }}
+          IS_PRERELEASE: ${{ inputs.pre_release }}
         run: bash scripts/ci/prepare-release.sh
 
       - name: Create pull request

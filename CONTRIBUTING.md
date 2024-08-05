@@ -17,11 +17,15 @@ This project follows the versioning scheme stated by [PEP 440](https://www.pytho
 The development version number is increased automatically after each release in the `master` branch in the master
 repository.
 
-Please also refer to the [Semantic Versioning specification](https://semver.org/) for more information.
+Please also refer to the [Calendar Versioning specification](https://calver.org/) for more information.
+
+Breaking changes are only allowed in changes to the `minor` releases, unless it is a breaking change
+enforced by an entity out of our control (i.e. Discord), in which case breaking changes can be done in a
+`micro` release, but require it to be done in the least destructive fashion.
 
 # Deprecation process
 
-The removal or renaming of anything facing the public facing API must go through a deprecation process, which should
+The removal or renaming of anything affecting the public facing API must go through a deprecation process, which should
 match that of the versioning scheme. There are utilities under `hikari.internal.deprecation` to aid with it.
 
 # Towncrier

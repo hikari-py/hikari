@@ -393,13 +393,29 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
 _VERSION_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d+)\.(\d+)\.(\d+)(\.[a-z]+)?(\d+)?$", re.I)
 
 
+class _Infinity:
+    def __lt__(self, other: object) -> bool:
+        return False
+
+    def __le__(self, other: object) -> bool:
+        return False
+
+    def __gt__(self, other: object) -> bool:
+        return True
+
+    def __ge__(self, other: object) -> bool:
+        return True
+
+
 # This is a modified version of packaging.version.Version to better suit our needs
 class HikariVersion:
     """Hikari strict version."""
 
-    __slots__: typing.Sequence[str] = ("version", "prerelease", "_cmp")
+    __slots__: typing.Sequence[str] = ("major", "minor", "micro", "prerelease", "_cmp")
 
-    version: typing.Tuple[int, int, int]
+    major: int
+    minor: int
+    micro: int
     prerelease: typing.Optional[typing.Tuple[str, int]]
 
     def __init__(self, vstring: str) -> None:
@@ -407,16 +423,20 @@ class HikariVersion:
         if not match:
             raise ValueError(f"Invalid version: '{vstring}'")
 
-        (major, minor, patch, prerelease, prerelease_num) = match.group(1, 2, 3, 4, 5)
+        matches = match.group(1, 2, 3, 4, 5)
 
-        self.version = (int(major), int(minor), int(patch))
+        self.major = int(matches[0])
+        self.minor = int(matches[1])
+        self.micro = int(matches[2])
+        prerelease = matches[3]
+        prerelease_num = matches[4]
+
         self.prerelease = (prerelease, int(prerelease_num) if prerelease_num else 0) if prerelease else None
 
-        prerelease_num = int(prerelease_num) if prerelease else float("inf")
-        self._cmp = self.version + (prerelease_num,)
+        self._cmp = (self.major, self.minor, self.micro, self.prerelease or _Infinity())
 
     def __str__(self) -> str:
-        vstring = ".".join(map(str, self.version))
+        vstring = f"{self.major}.{self.minor}.{self.micro}"
 
         if self.prerelease:
             vstring += "".join(map(str, self.prerelease))
@@ -453,7 +473,7 @@ class HikariVersion:
 
 async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings) -> None:
     """Perform a check for newer versions of the library, logging any found."""
-    if about.__git_sha1__.casefold() == "head":
+    if about.__git_sha1__.lower() == "head":
         # We are not in a PyPI release, return
         return
 
