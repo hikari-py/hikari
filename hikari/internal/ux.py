@@ -394,6 +394,9 @@ _VERSION_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d+)\.(\d+)\.
 
 
 class _Infinity:
+    def __eq__(self, other: object) -> bool:
+        return type(other) is type(self)
+
     def __lt__(self, other: object) -> bool:
         return False
 
