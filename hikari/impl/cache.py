@@ -285,6 +285,9 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
             return None
 
+        if not emoji.guild_id:
+            return None
+
         user: typing.Optional[cache_utility.RefCell[users.User]] = None
         if emoji.user:
             user = self._set_user(emoji.user)
@@ -294,18 +297,20 @@ class CacheImpl(cache.MutableCache):
         emoji_data = cache_utility.KnownCustomEmojiData.build_from_entity(emoji, user=user)
         self._emoji_entries[emoji.id] = emoji_data
 
-        if emoji.guild_id is not None:
-            guild_record = self._get_or_create_guild_record(emoji.guild_id)
+        guild_record = self._get_or_create_guild_record(emoji.guild_id)
 
-            if guild_record.emojis is None:  # TODO: add test cases when it is not None?
-                guild_record.emojis = collections.SnowflakeSet()
+        if guild_record.emojis is None:  # TODO: add test cases when it is not None?
+            guild_record.emojis = collections.SnowflakeSet()
 
-            guild_record.emojis.add(emoji.id)
+        guild_record.emojis.add(emoji.id)
 
     def update_emoji(
         self, emoji: emojis.KnownCustomEmoji, /
     ) -> typing.Tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
+            return None, None
+
+        if not emoji.guild_id:
             return None, None
 
         cached_emoji = self.get_emoji(emoji.id)
