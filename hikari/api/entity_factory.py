@@ -933,7 +933,10 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_known_custom_emoji(
-        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> emoji_models.KnownCustomEmoji:
         """Parse a raw payload from Discord into a known custom emoji object.
 
@@ -942,9 +945,13 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this emoji belongs to. This is used to ensure
-            that the guild a known custom emoji belongs to is remembered by
-            allowing for a context based artificial `guild_id` attribute.
+            The ID of the guild this emoji belongs to. This is not necessary
+            for application emojis.
+
+            This is used to ensure that the guild a known custom emoji belongs to
+            is remembered by allowing for a context based artificial `guild_id` attribute.
+
+
 
         Returns
         -------

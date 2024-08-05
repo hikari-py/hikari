@@ -1715,7 +1715,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_known_custom_emoji(
-        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> emoji_models.KnownCustomEmoji:
         role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else []
 
@@ -1728,7 +1731,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             is_animated=payload.get("animated", False),
-            guild_id=guild_id,
+            guild_id=guild_id or None,
             role_ids=role_ids,
             user=user,
             is_colons_required=payload["require_colons"],

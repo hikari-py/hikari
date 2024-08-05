@@ -463,6 +463,9 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
         if not user and emoji.user:
             user = RefCell(copy.copy(emoji.user))
 
+        # We ensure that all emojis that will get cached are guild based
+        assert emoji.guild_id is not None
+
         return cls(
             id=emoji.id,
             name=emoji.name,

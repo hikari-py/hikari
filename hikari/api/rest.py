@@ -3404,6 +3404,193 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+    ) -> emojis.KnownCustomEmoji:
+        """Fetch an application emoji.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the emoji from. This can be a [`hikari.guilds.PartialApplication`][]
+            or the ID of an application.
+        emoji
+            The emoji to fetch. This can be a [`hikari.emojis.CustomEmoji`][]
+            or the ID of an existing application emoji.
+
+
+        Returns
+        -------
+        hikari.emojis.KnownCustomEmoji
+            The requested application emoji.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the emoji or the application is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        hikari.errors.ForbiddenError
+            If you are not allowed to access the emoji from this application.
+        """
+
+    @abc.abstractmethod
+    async def fetch_application_emojis(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[emojis.KnownCustomEmoji]:
+        """Fetch the emojis of an application.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the emojis from. This can be a [`hikari.guilds.PartialApplication`][]
+            or the ID of an application.
+
+        Returns
+        -------
+        typing.Sequence[hikari.emojis.KnownCustomEmoji]
+            The requested emojis.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the application is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        hikari.errors.ForbiddenError
+            If you are not allowed to access emojis from this application.
+        """
+
+    @abc.abstractmethod
+    async def create_application_emoji(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
+    ) -> emojis.KnownCustomEmoji:
+        """Create an application emoji.
+
+        Parameters
+        ----------
+        application
+            The application to create the emoji for. This can be an
+            application object or the ID of an existing application.
+        name
+            The name for the emoji.
+        image
+            The 128x128 image for the emoji. Maximum upload size is 256kb.
+            This can be a still or an animated image.
+
+        Returns
+        -------
+        hikari.emojis.KnownCustomEmoji
+            The created emoji.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value or
+            if there is no more spaces for the emoji in the application.
+        hikari.errors.ForbiddenError
+            If you are trying to create an emoji for an application
+            that is not yours.
+        hikari.errors.NotFoundError
+            If the application is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+        name: str,
+    ) -> emojis.KnownCustomEmoji:
+        """Edit an application emoji.
+
+        Parameters
+        ----------
+        application
+            The application to edit the emoji on. This can be a [`hikari.guilds.PartialApplication`][]
+            or the ID of an application.
+        emoji
+            The emoji to edit. This can be a [`hikari.emojis.CustomEmoji`][]
+            or the ID of an existing emoji.
+        name
+            The new name for the emoji.
+
+        Returns
+        -------
+        hikari.emojis.KnownCustomEmoji
+            The edited emoji.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are trying to edit an emoji for an application
+            that is not yours.
+        hikari.errors.NotFoundError
+            If the application or the emoji are not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def delete_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+    ) -> None:
+        """Delete an application emoji.
+
+        Parameters
+        ----------
+        application
+            The application to delete the emoji from. This can be a [`hikari.guilds.PartialApplication`][]
+            or the ID of an application.
+        emoji
+            The emoji to delete. This can be a [`hikari.emojis.CustomEmoji`][]
+            or the ID of an existing emoji.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are trying to edit an emoji for an application
+            that is not yours.
+        hikari.errors.NotFoundError
+            If the application or the emoji are not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers_.StickerPack]:
         """Fetch the available sticker packs.
 

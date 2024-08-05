@@ -2415,6 +2415,60 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
         await self._request(route, reason=reason)
 
+    async def fetch_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+    ) -> emojis.KnownCustomEmoji:
+        route = routes.GET_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_known_custom_emoji(response)
+
+    async def fetch_application_emojis(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[emojis.KnownCustomEmoji]:
+        route = routes.GET_APPLICATION_EMOJIS.compile(application=application)
+        response = await self._request(route)
+        assert isinstance(response, list)
+        return [self._entity_factory.deserialize_known_custom_emoji(emoji_payload) for emoji_payload in response]
+
+    async def create_application_emoji(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
+    ) -> emojis.KnownCustomEmoji:
+        route = routes.POST_APPLICATION_EMOJIS.compile(application=application)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        image_resource = files.ensure_resource(image)
+        async with image_resource.stream(executor=self._executor) as stream:
+            body.put("image", await stream.data_uri())
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_known_custom_emoji(response)
+
+    async def edit_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+        name: str,
+    ) -> emojis.KnownCustomEmoji:
+        route = routes.PATCH_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_known_custom_emoji(response)
+
+    async def delete_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+    ) -> None:
+        route = routes.DELETE_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
+        await self._request(route)
+
     async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers_.StickerPack]:
         route = routes.GET_STICKER_PACKS.compile()
         response = await self._request(route, auth=None)

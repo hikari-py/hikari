@@ -388,6 +388,14 @@ DELETE_GUILD_EMOJI: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/emojis/
 GET_GUILD_EMOJIS: typing.Final[Route] = Route(GET, "/guilds/{guild}/emojis")
 POST_GUILD_EMOJIS: typing.Final[Route] = Route(POST, "/guilds/{guild}/emojis")
 
+GET_APPLICATION_EMOJI: typing.Final[Route] = Route(GET, "/applications/{application}/emojis/{emoji}")
+PATCH_APPLICATION_EMOJI: typing.Final[Route] = Route(PATCH, "/applications/{application}/emojis/{emoji}")
+DELETE_APPLICATION_EMOJI: typing.Final[Route] = Route(DELETE, "/applications/{application}/emojis/{emoji}")
+
+GET_APPLICATION_EMOJIS: typing.Final[Route] = Route(GET, "/applications/{application}/emojis")
+POST_APPLICATION_EMOJIS: typing.Final[Route] = Route(POST, "/applications/{application}/emojis")
+
+
 GET_GUILD_SCHEDULED_EVENT: typing.Final[Route] = Route(GET, "/guilds/{guild}/scheduled-events/{scheduled_event}")
 GET_GUILD_SCHEDULED_EVENTS: typing.Final[Route] = Route(GET, "/guilds/{guild}/scheduled-events")
 GET_GUILD_SCHEDULED_EVENT_USERS: typing.Final[Route] = Route(
