@@ -1714,7 +1714,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             is_animated=payload.get("animated", False),
-            guild_id=guild_id if guild_id is not undefined.UNDEFINED else None,
+            guild_id=guild_id or None,
             role_ids=role_ids,
             user=user,
             is_colons_required=payload["require_colons"],
