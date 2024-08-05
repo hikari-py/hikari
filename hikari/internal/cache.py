@@ -449,7 +449,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     id: snowflakes.Snowflake = attrs.field()
     name: str = attrs.field()
     is_animated: bool = attrs.field()
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    guild_id: snowflakes.Snowflake = attrs.field()
     role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attrs.field()
     user: typing.Optional[RefCell[users_.User]] = attrs.field()
     is_colons_required: bool = attrs.field()
@@ -462,6 +462,9 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     ) -> KnownCustomEmojiData:
         if not user and emoji.user:
             user = RefCell(copy.copy(emoji.user))
+
+        # We ensure that all emojis that will get cached are guild based
+        assert emoji.guild_id is not None
 
         return cls(
             id=emoji.id,

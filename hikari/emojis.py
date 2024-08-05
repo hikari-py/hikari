@@ -334,9 +334,6 @@ class KnownCustomEmoji(CustomEmoji):
 
     This is a specialization of [`hikari.emojis.CustomEmoji`][] that is _known_ as mentioned before.
     As a result, it contains a lot more information with it.
-
-    !!! note
-        If the emoji is an application emoji, the `guild_id` will be [`None`][].
     """
 
     app: traits.RESTAware = attrs.field(

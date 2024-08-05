@@ -238,11 +238,10 @@ class CacheImpl(cache.MutableCache):
         emoji_data = self._emoji_entries.pop(emoji_id, None)
         if not emoji_data:
             return None
-        if not emoji_data.guild_id:
-            raise ValueError("Emoji must have a guild ID to be cached.")
 
         if emoji_data.user:
             self._garbage_collect_user(emoji_data.user, decrement=1)
+
         guild_record = self._guild_entries.get(emoji_data.guild_id)
         if guild_record and guild_record.emojis:
             guild_record.emojis.remove(emoji_id)
@@ -296,7 +295,6 @@ class CacheImpl(cache.MutableCache):
 
         emoji_data = cache_utility.KnownCustomEmojiData.build_from_entity(emoji, user=user)
         self._emoji_entries[emoji.id] = emoji_data
-
         guild_record = self._get_or_create_guild_record(emoji.guild_id)
 
         if guild_record.emojis is None:  # TODO: add test cases when it is not None?
