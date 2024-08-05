@@ -17,7 +17,13 @@ This project follows the versioning scheme stated by [PEP 440](https://www.pytho
 The development version number is increased automatically after each release in the `master` branch in the master
 repository.
 
-Please also refer to the [Semantic Versioning specification](https://semver.org/) for more information.
+Please also refer to the [EffVer Versioning specification](https://jacobtomlinson.dev/effver/) for more information.
+
+More specifically:
+- Major bump: Big changes to the public facing API.
+- Minor bump: New features or changes that require some developer interaction to upgrade to, including 
+  removal/renaming of features.
+- Micro bump: Bug fixes and new features that require no end developer interaction (deprecations can be included here).
 
 # Deprecation process
 
