@@ -1,4 +1,4 @@
-flake8==7.1.0
+flake8==7.1.1
 
 # Plugins
 # Ref: https://github.com/DmytroLitvinov/awesome-flake8-extensions

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -20,25 +19,40 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Events that can be fired by Hikari's gateway implementation."""
 
-from __future__ import annotations
+import mock
+import pytest
 
-from hikari.events.application_events import *
-from hikari.events.base_events import Event
-from hikari.events.base_events import ExceptionEvent
-from hikari.events.channel_events import *
-from hikari.events.guild_events import *
-from hikari.events.interaction_events import *
-from hikari.events.lifetime_events import *
-from hikari.events.member_events import *
-from hikari.events.message_events import *
-from hikari.events.monetization_events import *
-from hikari.events.reaction_events import *
-from hikari.events.role_events import *
-from hikari.events.scheduled_events import *
-from hikari.events.shard_events import *
-from hikari.events.stage_events import *
-from hikari.events.typing_events import *
-from hikari.events.user_events import *
-from hikari.events.voice_events import *
+from hikari import stage_instances
+from hikari.events import stage_events
+
+
+class TestStageInstanceCreateEvent:
+    @pytest.fixture
+    def event(self):
+        return stage_events.StageInstanceCreateEvent(shard=object(), stage_instance=mock.Mock())
+
+    def test_app_property(self, event):
+        assert event.app is event.stage_instance.app
+
+
+class TestStageInstanceUpdateEvent:
+    @pytest.fixture
+    def event(self):
+        return stage_events.StageInstanceUpdateEvent(
+            shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
+        )
+
+    def test_app_property(self, event):
+        assert event.app is event.stage_instance.app
+
+
+class TestStageInstanceDeleteEvent:
+    @pytest.fixture
+    def event(self):
+        return stage_events.StageInstanceDeleteEvent(
+            shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
+        )
+
+    def test_app_property(self, event):
+        assert event.app is event.stage_instance.app

@@ -45,6 +45,7 @@ from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_event_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import stage_instances as stage_instance_models
 from hikari import stickers as sticker_models
 from hikari import traits
 from hikari import undefined
@@ -7210,3 +7211,30 @@ class TestEntityFactoryImpl:
         assert sku.slug == "hashire-sori-yo-kaze-no-you-ni-tsukimihara-wo-padoru-padoru"
         assert sku.flags == (monetization_models.SKUFlags.AVAILABLE | monetization_models.SKUFlags.GUILD_SUBSCRIPTION)
         assert isinstance(sku, monetization_models.SKU)
+
+    #########################
+    # Stage instance models #
+    #########################
+
+    @pytest.fixture
+    def stage_instance_payload(self):
+        return {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 123",
+            "privacy_level": 2,
+            "guild_scheduled_event_id": "363820363920323120",
+            "discoverable_disabled": False,
+        }
+
+    def test_deserialize_stage_instance(self, entity_factory_impl, stage_instance_payload, mock_app):
+        stage_instance = entity_factory_impl.deserialize_stage_instance(stage_instance_payload)
+
+        assert stage_instance.app is mock_app
+        assert stage_instance.id == 840647391636226060
+        assert stage_instance.channel_id == 733488538393510049
+        assert stage_instance.guild_id == 197038439483310086
+        assert stage_instance.topic == "Testing Testing, 123"
+        assert stage_instance.privacy_level == stage_instance_models.StageInstancePrivacyLevel.GUILD_ONLY
+        assert stage_instance.discoverable_disabled is False

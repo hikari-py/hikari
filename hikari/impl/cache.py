@@ -284,6 +284,9 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
             return None
 
+        if not emoji.guild_id:
+            raise ValueError("Cannot cache an emoji without a guild ID.")
+
         user: typing.Optional[cache_utility.RefCell[users.User]] = None
         if emoji.user:
             user = self._set_user(emoji.user)
@@ -304,6 +307,9 @@ class CacheImpl(cache.MutableCache):
     ) -> typing.Tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
             return None, None
+
+        if not emoji.guild_id:
+            raise ValueError("Emoji must have a guild ID to be cached.")
 
         cached_emoji = self.get_emoji(emoji.id)
         self.set_emoji(emoji)

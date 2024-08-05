@@ -51,6 +51,7 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import sessions
     from hikari import snowflakes
+    from hikari import stage_instances
     from hikari import stickers as stickers_
     from hikari import templates
     from hikari import users
@@ -3393,6 +3394,193 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             in the server.
         hikari.errors.NotFoundError
             If the guild or the emoji are not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+    ) -> emojis.KnownCustomEmoji:
+        """Fetch an application emoji.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the emoji from. This can be a [`hikari.guilds.PartialApplication`][]
+            or the ID of an application.
+        emoji
+            The emoji to fetch. This can be a [`hikari.emojis.CustomEmoji`][]
+            or the ID of an existing application emoji.
+
+
+        Returns
+        -------
+        hikari.emojis.KnownCustomEmoji
+            The requested application emoji.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the emoji or the application is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        hikari.errors.ForbiddenError
+            If you are not allowed to access the emoji from this application.
+        """
+
+    @abc.abstractmethod
+    async def fetch_application_emojis(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[emojis.KnownCustomEmoji]:
+        """Fetch the emojis of an application.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the emojis from. This can be a [`hikari.guilds.PartialApplication`][]
+            or the ID of an application.
+
+        Returns
+        -------
+        typing.Sequence[hikari.emojis.KnownCustomEmoji]
+            The requested emojis.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the application is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        hikari.errors.ForbiddenError
+            If you are not allowed to access emojis from this application.
+        """
+
+    @abc.abstractmethod
+    async def create_application_emoji(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
+    ) -> emojis.KnownCustomEmoji:
+        """Create an application emoji.
+
+        Parameters
+        ----------
+        application
+            The application to create the emoji for. This can be an
+            application object or the ID of an existing application.
+        name
+            The name for the emoji.
+        image
+            The 128x128 image for the emoji. Maximum upload size is 256kb.
+            This can be a still or an animated image.
+
+        Returns
+        -------
+        hikari.emojis.KnownCustomEmoji
+            The created emoji.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value or
+            if there is no more spaces for the emoji in the application.
+        hikari.errors.ForbiddenError
+            If you are trying to create an emoji for an application
+            that is not yours.
+        hikari.errors.NotFoundError
+            If the application is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+        name: str,
+    ) -> emojis.KnownCustomEmoji:
+        """Edit an application emoji.
+
+        Parameters
+        ----------
+        application
+            The application to edit the emoji on. This can be a [`hikari.guilds.PartialApplication`][]
+            or the ID of an application.
+        emoji
+            The emoji to edit. This can be a [`hikari.emojis.CustomEmoji`][]
+            or the ID of an existing emoji.
+        name
+            The new name for the emoji.
+
+        Returns
+        -------
+        hikari.emojis.KnownCustomEmoji
+            The edited emoji.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are trying to edit an emoji for an application
+            that is not yours.
+        hikari.errors.NotFoundError
+            If the application or the emoji are not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def delete_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+    ) -> None:
+        """Delete an application emoji.
+
+        Parameters
+        ----------
+        application
+            The application to delete the emoji from. This can be a [`hikari.guilds.PartialApplication`][]
+            or the ID of an application.
+        emoji
+            The emoji to delete. This can be a [`hikari.emojis.CustomEmoji`][]
+            or the ID of an existing emoji.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are trying to edit an emoji for an application
+            that is not yours.
+        hikari.errors.NotFoundError
+            If the application or the emoji are not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -8203,6 +8391,175 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_stage_instance(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
+    ) -> stage_instances.StageInstance:
+        """Fetch the stage instance associated with a guild stage channel.
+
+        Parameters
+        ----------
+        channel
+            The guild stage channel to fetch the stage instance from.
+
+        Returns
+        -------
+        hikari.stage_instances.StageInstance
+            The stage instance associated with the guild stage channel.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the stage instance or channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: str,
+        privacy_level: undefined.UndefinedOr[typing.Union[int, stage_instances.StageInstancePrivacyLevel]],
+        send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        scheduled_event_id: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+        ] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        """Create a stage instance in guild stage channel.
+
+        Parameters
+        ----------
+        channel
+            The channel to use for the stage instance creation.
+        topic
+            The topic for the stage instance.
+        privacy_level
+            The privacy level for the stage instance.
+        send_start_notification
+            Whether to send a notification to *all* server members that the stage instance has started.
+        scheduled_event_id
+            The ID of the scheduled event to associate with the stage instance.
+
+
+        Returns
+        -------
+        hikari.stage_instances.StageInstance
+            The created stage instance.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or response is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[
+            typing.Union[int, stage_instances.StageInstancePrivacyLevel]
+        ] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        """Edit the stage instance in a guild stage channel.
+
+        Parameters
+        ----------
+        channel
+            The channel that the stage instance is associated with.
+        topic
+            The topic for the stage instance.
+        privacy_level:
+            The privacy level for the stage instance.
+
+        Returns
+        -------
+        hikari.stage_instances.StageInstance
+            The edited stage instance.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token
+            or you are not a moderator of the stage instance).
+        hikari.errors.NotFoundError
+            If the interaction or response is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
+        """Delete the stage instance.
+
+        Parameters
+        ----------
+        channel
+            The guild stage channel to fetch the stage instance from.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or response is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.RateLimitedError
+            Usually, Hikari will handle and retry on hitting
+            rate-limits automatically. This includes most bucket-specific
+            rate-limits and global rate-limits. In some rare edge cases,
+            however, Discord implements other undocumented rules for
+            rate-limiting, such as limits per attribute. These cannot be
+            detected or handled normally by Hikari due to their undocumented
+            nature, and will trigger this exception if they occur.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """

@@ -1,7 +1,7 @@
 mkdocs==1.6.0
 
 # Mkdocs Material
-mkdocs-material[imaging]==9.5.30
+mkdocs-material[imaging]==9.5.31
 
 # Docstring parsing for API reference
 mkdocstrings[python]==0.25.2
@@ -15,7 +15,7 @@ mkdocs-literate-nav==0.6.1
 mkdocs-minify-plugin==0.8.0
 
 # Formatting signatures
-black==24.4.2
+black==24.8.0
 
 # Image viewer ext
 # mkdocs-glightbox==0.3.7

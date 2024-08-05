@@ -53,6 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import role_events
     from hikari.events import scheduled_events
     from hikari.events import shard_events
+    from hikari.events import stage_events
     from hikari.events import typing_events
     from hikari.events import user_events
     from hikari.events import voice_events
@@ -1407,4 +1408,65 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.entitlement_events.EntitlementUpdateEvent
             The parsed entitlement update event object.
+        """
+
+    #########################
+    # STAGE INSTANCE EVENTS #
+    #########################
+
+    @abc.abstractmethod
+    def deserialize_stage_instance_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceCreateEvent:
+        """Parse a raw payload from Discord into a stage instance create event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.stage_events.StageInstanceCreateEvent
+            The parsed stage instance create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_stage_instance_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceUpdateEvent:
+        """Parse a raw payload from Discord into a stage instance update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.stage_events.StageInstanceUpdateEvent
+            The parsed stage instance update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_stage_instance_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceDeleteEvent:
+        """Parse a raw payload from Discord into a stage instance delete event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.stage_events.StageInstanceDeleteEvent
+            The parsed stage instance delete event object.
         """

@@ -168,7 +168,7 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(repr=False, hash=False, weakref_slot=False)
+@attrs.define(repr=False, weakref_slot=False)
 class GuildRecord:
     """An object used for storing guild specific cached information in-memory.
 
@@ -317,7 +317,7 @@ class BaseData(abc.ABC, typing.Generic[ValueT]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class InviteData(BaseData[invites.InviteWithMetadata]):
     """A data model for storing invite data in an in-memory cache."""
 
@@ -388,7 +388,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class MemberData(BaseData[guilds.Member]):
     """A data model for storing member data in an in-memory cache."""
 
@@ -442,7 +442,7 @@ class MemberData(BaseData[guilds.Member]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     """A data model for storing known custom emoji data in an in-memory cache."""
 
@@ -462,6 +462,9 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     ) -> KnownCustomEmojiData:
         if not user and emoji.user:
             user = RefCell(copy.copy(emoji.user))
+
+        # We ensure that all emojis that will get cached are guild based
+        assert emoji.guild_id is not None
 
         return cls(
             id=emoji.id,
@@ -492,7 +495,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class GuildStickerData(BaseData[stickers_.GuildSticker]):
     """A data model for storing sticker data in an in-memory cache."""
 
@@ -537,7 +540,7 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class RichActivityData(BaseData[presences.RichActivity]):
     """A data model for storing rich activity data in an in-memory cache."""
 
@@ -620,7 +623,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class MemberPresenceData(BaseData[presences.MemberPresence]):
     """A data model for storing presence data in an in-memory cache."""
 
@@ -654,7 +657,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class MessageInteractionData(BaseData[messages.MessageInteraction]):
     """A model for storing message interaction data."""
 
@@ -694,7 +697,7 @@ def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class MessageData(BaseData[messages.Message]):
     """A model for storing message data in an in-memory cache."""
 
@@ -889,7 +892,7 @@ class MessageData(BaseData[messages.Message]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, hash=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class VoiceStateData(BaseData[voices.VoiceState]):
     """A data model for storing voice state data in an in-memory cache."""
 
@@ -946,7 +949,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(repr=True, hash=False, weakref_slot=True)
+@attrs.define(repr=True, weakref_slot=True)
 class Cell(typing.Generic[ValueT]):
     """Object used to store mutable references to a value in multiple places."""
 
@@ -964,7 +967,7 @@ class Cell(typing.Generic[ValueT]):
 
 
 @attrs_extensions.with_copy
-@attrs.define(repr=False, hash=False, weakref_slot=False)
+@attrs.define(repr=False, weakref_slot=False)
 class RefCell(typing.Generic[ValueT]):
     """Object used to track mutable references to a value in multiple places.
 

@@ -52,6 +52,7 @@ from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_events_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import stage_instances
 from hikari import stickers as sticker_models
 from hikari import templates as template_models
 from hikari import traits
@@ -484,6 +485,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.PERMISSION_OVERWRITES: self._deserialize_audit_log_overwrites,
+            audit_log_models.AuditLogChangeKey.COMMUNICATION_DISABLED_UNTIL: time.iso8601_datetime_string_to_datetime,
         }
         self._audit_log_event_mapping: typing.Dict[
             typing.Union[int, audit_log_models.AuditLogEventType],
@@ -776,7 +778,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return audit_log_models.ChannelOverwriteEntryInfo(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
-            type=channel_models.PermissionOverwriteType(payload["type"]),
+            type=channel_models.PermissionOverwriteType(int(payload["type"])),
             role_name=payload.get("role_name"),
         )
 
@@ -1470,6 +1472,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             thread_created_at=thread_created_at,
         )
 
+    def deserialize_stage_instance(self, payload: data_binding.JSONObject) -> stage_instances.StageInstance:
+        raw_event_id = payload["guild_scheduled_event_id"]
+        guild_scheduled_event_id = snowflakes.Snowflake(raw_event_id) if raw_event_id else None
+
+        return stage_instances.StageInstance(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            topic=payload["topic"],
+            privacy_level=stage_instances.StageInstancePrivacyLevel(payload["privacy_level"]),
+            discoverable_disabled=payload["discoverable_disabled"],
+            scheduled_event_id=guild_scheduled_event_id,
+        )
+
     def deserialize_channel(
         self,
         payload: data_binding.JSONObject,
@@ -1698,7 +1715,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_known_custom_emoji(
-        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> emoji_models.KnownCustomEmoji:
         role_ids = [snowflakes.Snowflake(role_id) for role_id in payload["roles"]] if "roles" in payload else []
 
@@ -1711,7 +1731,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             name=payload["name"],
             is_animated=payload.get("animated", False),
-            guild_id=guild_id,
+            guild_id=guild_id or None,
             role_ids=role_ids,
             user=user,
             is_colons_required=payload["require_colons"],

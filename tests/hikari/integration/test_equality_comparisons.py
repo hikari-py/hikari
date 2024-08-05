@@ -21,34 +21,21 @@
 import datetime
 
 import mock
+import pytest
 
 from hikari import applications
+from hikari import emojis
 from hikari import guilds
 from hikari import snowflakes
 from hikari import users
 
 
-def assert_objects_equal(a, b):
-    assert a == b
-    assert b == a
-    assert not a != b
-    assert not b != a
-    assert hash(a) == hash(b)
-
-
-def assert_objects_not_equal(a, b):
-    assert a != b
-    assert b != a
-    assert not a == b
-    assert not b == a
-
-
-def make_user(user_id, username):
+def make_user(user_id):
     return users.UserImpl(
         app=mock.Mock(),
         id=snowflakes.Snowflake(user_id),
         discriminator="0001",
-        username=username,
+        username="testing",
         global_name=None,
         avatar_hash=None,
         banner_hash=None,
@@ -59,8 +46,8 @@ def make_user(user_id, username):
     )
 
 
-def make_team_member(user_id, username):
-    user = make_user(user_id, username)
+def make_team_member(user_id):
+    user = make_user(user_id)
     return applications.TeamMember(
         membership_state=applications.TeamMembershipState.ACCEPTED,
         permissions="*",
@@ -69,8 +56,8 @@ def make_team_member(user_id, username):
     )
 
 
-def make_guild_member(user_id, username):
-    user = make_user(user_id, username)
+def make_guild_member(user_id):
+    user = make_user(user_id)
     return guilds.Member(
         user=user,
         guild_id=snowflakes.Snowflake(2233),
@@ -86,33 +73,65 @@ def make_guild_member(user_id, username):
     )
 
 
-class TestUsersComparison:
-    def test_user_equal_to_team_member(self):
-        user = make_user(1, "yasuoop")
-        team_member = make_team_member(1, "yasuoop")
-        assert_objects_equal(user, team_member)
+def make_unicode_emoji():
+    return emojis.UnicodeEmoji("\N{OK HAND SIGN}")
 
-    def test_user_not_equal_to_team_member(self):
-        user = make_user(1, "yasuoop")
-        team_member = make_team_member(2, "taricop")
-        assert_objects_not_equal(user, team_member)
 
-    def test_user_equal_to_guild_member(self):
-        user = make_user(1, "yasuoop")
-        guild_member = make_guild_member(1, "yasuoop")
-        assert_objects_equal(user, guild_member)
+def make_custom_emoji(emoji_id):
+    return emojis.CustomEmoji(id=emoji_id, name="testing", is_animated=False)
 
-    def test_user_not_equal_to_guild_member(self):
-        user = make_user(1, "yasuoop")
-        guild_member = make_guild_member(2, "taricop")
-        assert_objects_not_equal(user, guild_member)
 
-    def test_team_member_equal_to_guild_member(self):
-        team_member = make_team_member(1, "yasuoop")
-        guild_member = make_guild_member(1, "yasuoop")
-        assert_objects_equal(team_member, guild_member)
+def make_known_custom_emoji(emoji_id):
+    return emojis.KnownCustomEmoji(
+        app=mock.Mock(),
+        id=emoji_id,
+        name="testing",
+        is_animated=False,
+        guild_id=snowflakes.Snowflake(123),
+        role_ids=[],
+        user=None,
+        is_colons_required=False,
+        is_managed=True,
+        is_available=False,
+    )
 
-    def test_team_member_not_equal_to_guild_member(self):
-        team_member = make_team_member(1, "yasuoop")
-        guild_member = make_guild_member(2, "taricop")
-        assert_objects_not_equal(team_member, guild_member)
+
+@pytest.mark.parametrize(
+    ("a", "b", "eq"),
+    [
+        (make_user(1), make_team_member(1), True),
+        (make_user(1), make_team_member(2), False),
+        (make_user(1), make_guild_member(1), True),
+        (make_user(1), make_guild_member(2), False),
+        (make_team_member(1), make_guild_member(1), True),
+        (make_team_member(1), make_guild_member(2), False),
+        (make_custom_emoji(1), make_known_custom_emoji(1), True),
+        (make_custom_emoji(1), make_known_custom_emoji(2), False),
+        (make_unicode_emoji(), make_custom_emoji(1), False),
+        (make_unicode_emoji(), make_known_custom_emoji(2), False),
+    ],
+    ids=[
+        "User == Team Member",
+        "User != Team Member",
+        "User == Guild Member",
+        "User != Guild Member",
+        "Team Member == Guild Member",
+        "Team Member != Guild Member",
+        "Custom Emoji == Known Custom Emoji",
+        "Custom Emoji != Known Custom Emoji",
+        "Unicode Emoji != Custom Emoji",
+        "Unicode Emoji != Known Custom Emoji",
+    ],
+)
+def test_comparison(a: object, b: object, eq: bool) -> None:
+    if eq:
+        assert a == b
+        assert b == a
+        assert not a != b
+        assert not b != a
+
+    else:
+        assert a != b
+        assert b != a
+        assert not a == b
+        assert not b == a

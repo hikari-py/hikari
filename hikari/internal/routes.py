@@ -50,7 +50,7 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.
 @attrs_extensions.with_copy
-@attrs.define(hash=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
@@ -115,7 +115,7 @@ class CompiledRoute:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, init=False, weakref_slot=False)
+@attrs.define(unsafe_hash=True, init=False, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -194,7 +194,7 @@ def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.Froz
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, weakref_slot=False)
 @typing.final
 class CDNRoute:
     """Route implementation for a CDN resource."""
@@ -340,6 +340,12 @@ POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typi
 POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(POST, "/channels/{channel}/webhooks")
 GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webhooks")
 
+# Stage instances
+POST_STAGE_INSTANCE: typing.Final[Route] = Route(POST, "/stage-instances")
+GET_STAGE_INSTANCE: typing.Final[Route] = Route(GET, "/stage-instances/{channel}")
+PATCH_STAGE_INSTANCE: typing.Final[Route] = Route(PATCH, "/stage-instances/{channel}")
+DELETE_STAGE_INSTANCE: typing.Final[Route] = Route(DELETE, "/stage-instances/{channel}")
+
 # Reactions
 GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
 DELETE_ALL_REACTIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions")
@@ -381,6 +387,14 @@ DELETE_GUILD_EMOJI: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/emojis/
 
 GET_GUILD_EMOJIS: typing.Final[Route] = Route(GET, "/guilds/{guild}/emojis")
 POST_GUILD_EMOJIS: typing.Final[Route] = Route(POST, "/guilds/{guild}/emojis")
+
+GET_APPLICATION_EMOJI: typing.Final[Route] = Route(GET, "/applications/{application}/emojis/{emoji}")
+PATCH_APPLICATION_EMOJI: typing.Final[Route] = Route(PATCH, "/applications/{application}/emojis/{emoji}")
+DELETE_APPLICATION_EMOJI: typing.Final[Route] = Route(DELETE, "/applications/{application}/emojis/{emoji}")
+
+GET_APPLICATION_EMOJIS: typing.Final[Route] = Route(GET, "/applications/{application}/emojis")
+POST_APPLICATION_EMOJIS: typing.Final[Route] = Route(POST, "/applications/{application}/emojis")
+
 
 GET_GUILD_SCHEDULED_EVENT: typing.Final[Route] = Route(GET, "/guilds/{guild}/scheduled-events/{scheduled_event}")
 GET_GUILD_SCHEDULED_EVENTS: typing.Final[Route] = Route(GET, "/guilds/{guild}/scheduled-events")

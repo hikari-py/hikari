@@ -165,7 +165,7 @@ class VideoQualityMode(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ChannelFollow:
     """Relationship between a news channel and a subscriber channel.
 
@@ -326,7 +326,7 @@ class PermissionOverwrite:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialChannel(snowflakes.Unique):
     """Channel representation for cases where further detail is not provided.
 
@@ -825,7 +825,7 @@ class TextableChannel(PartialChannel):
         return await self.app.rest.delete_messages(self.id, messages, *other_messages)
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PrivateChannel(PartialChannel):
     """The base for anything that is a private (non-guild bound) channel."""
 
@@ -838,7 +838,7 @@ class PrivateChannel(PartialChannel):
     """
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class DMChannel(PrivateChannel, TextableChannel):
     """Represents a direct message text channel that is between you and another user."""
 
@@ -854,7 +854,7 @@ class DMChannel(PrivateChannel, TextableChannel):
         return f"{self.__class__.__name__} with: {self.recipient}"
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GroupDMChannel(PrivateChannel):
     """Represents a group direct message channel.
 
@@ -923,7 +923,7 @@ class GroupDMChannel(PrivateChannel):
         )
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildChannel(PartialChannel):
     """The base for anything that is a guild channel."""
 
@@ -1120,7 +1120,7 @@ class GuildChannel(PartialChannel):
         )
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PermissibleGuildChannel(GuildChannel):
     """Base class for all guild channels which have permission overwrites.
 
@@ -1241,7 +1241,7 @@ class TextableGuildChannel(GuildChannel, TextableChannel):
     __slots__: typing.Sequence[str] = ()
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildCategory(PermissibleGuildChannel):
     """Represents a guild category channel.
 
@@ -1256,7 +1256,7 @@ class GuildCategory(PermissibleGuildChannel):
     """
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents a guild text channel."""
 
@@ -1298,7 +1298,7 @@ class GuildTextChannel(PermissibleGuildChannel, TextableGuildChannel):
     """
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents an news channel."""
 
@@ -1328,7 +1328,7 @@ class GuildNewsChannel(PermissibleGuildChannel, TextableGuildChannel):
     """
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents a voice channel."""
 
@@ -1361,7 +1361,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     """
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildStageChannel(PermissibleGuildChannel, TextableGuildChannel):
     """Represents a stage channel."""
 
@@ -1419,7 +1419,7 @@ class ForumLayoutType(int, enums.Enum):
     """Gallery View."""
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ForumTag(snowflakes.Unique):
     """Represents a forum tag."""
 
@@ -1463,7 +1463,7 @@ class ForumTag(snowflakes.Unique):
         return None
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildForumChannel(PermissibleGuildChannel):
     """Represents a guild forum channel."""
 
@@ -1586,7 +1586,7 @@ class ThreadMember:
     """
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildThreadChannel(TextableGuildChannel):
     """Base class for all guild thread channels."""
 
@@ -1683,7 +1683,7 @@ class GuildNewsThread(GuildThreadChannel):
     __slots__: typing.Sequence[str] = ()
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildPublicThread(GuildThreadChannel):
     """Represents a non-news guild channel public thread."""
 
@@ -1703,7 +1703,7 @@ class GuildPublicThread(GuildThreadChannel):
     """
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildPrivateThread(GuildThreadChannel):
     """Represents a guild private thread."""
 

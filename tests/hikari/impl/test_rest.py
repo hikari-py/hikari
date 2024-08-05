@@ -47,6 +47,7 @@ from hikari import messages as message_models
 from hikari import permissions
 from hikari import scheduled_events
 from hikari import snowflakes
+from hikari import stage_instances
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -3869,6 +3870,66 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
 
+    async def test_fetch_application_emoji(self, rest_client):
+        emoji = StubModel(456)
+        expected_route = routes.GET_APPLICATION_EMOJI.compile(emoji=456, application=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+        rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(return_value=emoji)
+
+        assert await rest_client.fetch_application_emoji(StubModel(123), StubModel(456)) is emoji
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_known_custom_emoji.assert_called_once_with({"id": "456"})
+
+    async def test_fetch_application_emojis(self, rest_client):
+        emoji1 = StubModel(456)
+        emoji2 = StubModel(789)
+        expected_route = routes.GET_APPLICATION_EMOJIS.compile(application=123)
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(side_effect=[emoji1, emoji2])
+
+        assert await rest_client.fetch_application_emojis(StubModel(123)) == [emoji1, emoji2]
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_known_custom_emoji.call_count == 2
+        rest_client._entity_factory.deserialize_known_custom_emoji.assert_has_calls(
+            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        )
+
+    async def test_create_application_emoji(self, rest_client, file_resource_patch):
+        emoji = StubModel(234)
+        expected_route = routes.POST_APPLICATION_EMOJIS.compile(application=123)
+        expected_json = {"name": "rooYay", "image": "some data"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "234"})
+        rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(return_value=emoji)
+
+        returned = await rest_client.create_application_emoji(StubModel(123), "rooYay", "rooYay.png")
+        assert returned is emoji
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_known_custom_emoji.assert_called_once_with({"id": "234"})
+
+    async def test_edit_application_emoji(self, rest_client):
+        emoji = StubModel(234)
+        expected_route = routes.PATCH_APPLICATION_EMOJI.compile(application=123, emoji=456)
+        expected_json = {"name": "rooYay2"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "234"})
+        rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(return_value=emoji)
+
+        returned = await rest_client.edit_application_emoji(StubModel(123), StubModel(456), name="rooYay2")
+        assert returned is emoji
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_known_custom_emoji.assert_called_once_with({"id": "234"})
+
+    async def test_delete_application_emoji(self, rest_client):
+        expected_route = routes.DELETE_APPLICATION_EMOJI.compile(application=123, emoji=456)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_application_emoji(StubModel(123), StubModel(456))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_fetch_sticker_packs(self, rest_client):
         pack1 = object()
         pack2 = object()
@@ -6431,3 +6492,72 @@ class TestRESTClientImplAsync:
         await rest_client.delete_scheduled_event(StubModel(54531123), StubModel(123321123321))
 
         rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_stage_instance(self, rest_client):
+        expected_route = routes.GET_STAGE_INSTANCE.compile(channel=123)
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "123",
+            "topic": "ur mom",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_stage_instance(channel=StubModel(123))
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
+
+    async def test_create_stage_instance(self, rest_client):
+        expected_route = routes.POST_STAGE_INSTANCE.compile()
+        expected_json = {"channel_id": "7334", "topic": "ur mom", "guild_scheduled_event_id": "3361203239"}
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "7334",
+            "topic": "ur mom",
+            "privacy_level": 2,
+            "guild_scheduled_event_id": "3361203239",
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.create_stage_instance(
+            channel=StubModel(7334), topic="ur mom", scheduled_event_id=StubModel(3361203239)
+        )
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
+
+    async def test_edit_stage_instance(self, rest_client):
+        expected_route = routes.PATCH_STAGE_INSTANCE.compile(channel=7334)
+        expected_json = {"topic": "ur mom", "privacy_level": 2}
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "7334",
+            "topic": "ur mom",
+            "privacy_level": 2,
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.edit_stage_instance(
+            channel=StubModel(7334), topic="ur mom", privacy_level=stage_instances.StageInstancePrivacyLevel.GUILD_ONLY
+        )
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
+
+    async def test_delete_stage_instance(self, rest_client):
+        expected_route = routes.DELETE_STAGE_INSTANCE.compile(channel=7334)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_stage_instance(channel=StubModel(7334))
+
+        rest_client._request.assert_called_once_with(expected_route)
