@@ -70,6 +70,7 @@ def make_guild_member(user_id):
         is_mute=False,
         is_pending=False,
         raw_communication_disabled_until=None,
+        guild_flags=guilds.GuildMemberFlags.NONE,
     )
 
 
