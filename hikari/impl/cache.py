@@ -241,8 +241,7 @@ class CacheImpl(cache.MutableCache):
 
         if emoji_data.user:
             self._garbage_collect_user(emoji_data.user, decrement=1)
-
-        if emoji_data.guild_id is not None:
+        if emoji_data.guild_id:
             guild_record = self._guild_entries.get(emoji_data.guild_id)
             if guild_record and guild_record.emojis:
                 guild_record.emojis.remove(emoji_id)
@@ -286,7 +285,7 @@ class CacheImpl(cache.MutableCache):
             return None
 
         if not emoji.guild_id:
-            return None
+            raise ValueError("Cannot cache an emoji without a guild ID.")
 
         user: typing.Optional[cache_utility.RefCell[users.User]] = None
         if emoji.user:
@@ -311,7 +310,7 @@ class CacheImpl(cache.MutableCache):
             return None, None
 
         if not emoji.guild_id:
-            return None, None
+            raise ValueError("Emoji must have a guild ID to be cached.")
 
         cached_emoji = self.get_emoji(emoji.id)
         self.set_emoji(emoji)
