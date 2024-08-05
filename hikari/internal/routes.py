@@ -50,7 +50,7 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.
 @attrs_extensions.with_copy
-@attrs.define(hash=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
@@ -115,7 +115,7 @@ class CompiledRoute:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, init=False, weakref_slot=False)
+@attrs.define(unsafe_hash=True, init=False, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -194,7 +194,7 @@ def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.Froz
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, weakref_slot=False)
 @typing.final
 class CDNRoute:
     """Route implementation for a CDN resource."""

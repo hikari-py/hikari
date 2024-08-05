@@ -93,7 +93,7 @@ class ScheduledEventStatus(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ScheduledEvent(snowflakes.Unique):
     """Base class for scheduled events."""
 
@@ -187,7 +187,7 @@ class ScheduledEvent(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ScheduledExternalEvent(ScheduledEvent):
     """A scheduled event that takes place outside of Discord."""
 
@@ -204,7 +204,7 @@ class ScheduledExternalEvent(ScheduledEvent):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ScheduledStageEvent(ScheduledEvent):
     """A scheduled event that takes place in a stage channel."""
 
@@ -213,7 +213,7 @@ class ScheduledStageEvent(ScheduledEvent):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ScheduledVoiceEvent(ScheduledEvent):
     """A scheduled event that takes place in a voice channel."""
 

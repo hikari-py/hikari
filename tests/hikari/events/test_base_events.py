@@ -29,30 +29,30 @@ from hikari.events import base_events
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
-@attrs.define(eq=False, hash=False, init=False, kw_only=True)
+@attrs.define(eq=False, init=False, kw_only=True)
 class DummyGuildEvent(base_events.Event):
     pass
 
 
 @base_events.no_recursive_throw()
 @base_events.requires_intents(intents.Intents.GUILD_PRESENCES)
-@attrs.define(eq=False, hash=False, init=False, kw_only=True)
+@attrs.define(eq=False, init=False, kw_only=True)
 class DummyPresenceEvent(base_events.Event):
     pass
 
 
 @base_events.no_recursive_throw()
-@attrs.define(eq=False, hash=False, init=False, kw_only=True)
+@attrs.define(eq=False, init=False, kw_only=True)
 class ErrorEvent(base_events.Event):
     pass
 
 
-@attrs.define(eq=False, hash=False, init=False, kw_only=True)
+@attrs.define(eq=False, init=False, kw_only=True)
 class DummyGuildDerivedEvent(DummyGuildEvent):
     pass
 
 
-@attrs.define(eq=False, hash=False, init=False, kw_only=True)
+@attrs.define(eq=False, init=False, kw_only=True)
 class DummyPresenceDerivedEvent(DummyPresenceEvent):
     pass
 

@@ -27,7 +27,7 @@ __all__: typing.Sequence[str] = ("StageInstancePrivacyLevel", "StageInstance")
 
 import typing
 
-import attr
+import attrs
 
 from hikari import scheduled_events
 from hikari import snowflakes
@@ -47,34 +47,34 @@ class StageInstancePrivacyLevel(int, enums.Enum):
     """The Stage instance is visible to only guild members."""
 
 
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class StageInstance(snowflakes.Unique):
     """Represents a stage instance."""
 
-    id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the stage instance."""
 
-    app: traits.RESTAware = attr.field(
+    app: traits.RESTAware = attrs.field(
         repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """The client application that models may use for procedures."""
 
-    channel_id: snowflakes.Snowflake = attr.field(hash=True, repr=False)
+    channel_id: snowflakes.Snowflake = attrs.field(hash=True, repr=False)
     """The channel ID of the stage instance."""
 
-    guild_id: snowflakes.Snowflake = attr.field(hash=True, repr=False)
+    guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=False)
     """The guild ID of the stage instance."""
 
-    topic: str = attr.field(eq=False, hash=False, repr=False)
+    topic: str = attrs.field(eq=False, hash=False, repr=False)
     """The topic of the stage instance."""
 
-    privacy_level: StageInstancePrivacyLevel = attr.field(eq=False, hash=False, repr=False)
+    privacy_level: StageInstancePrivacyLevel = attrs.field(eq=False, hash=False, repr=False)
     """The privacy level of the stage instance."""
 
-    discoverable_disabled: bool = attr.field(eq=False, hash=False, repr=False)
+    discoverable_disabled: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether or not stage discovery is disabled."""
 
-    scheduled_event_id: typing.Optional[snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]] = attr.field(
+    scheduled_event_id: typing.Optional[snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]] = attrs.field(
         eq=False, hash=False, repr=False
     )
     """The ID of the scheduled event for this stage instance, if it exists."""

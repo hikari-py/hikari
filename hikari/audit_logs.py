@@ -277,7 +277,7 @@ class AuditLogChangeKey(str, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class AuditLogChange:
     """Represents a change made to an audit log entry's target entity."""
 
@@ -347,7 +347,7 @@ class AuditLogEventType(int, enums.Enum):
     CREATOR_MONETIZATION_TERMS_ACCEPTED = 151
 
 
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class BaseAuditLogEntryInfo(abc.ABC):
     """A base object that all audit log entry info objects will inherit from."""
 
@@ -356,7 +356,7 @@ class BaseAuditLogEntryInfo(abc.ABC):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
     """Represents the extra information for overwrite related audit log entries.
 
@@ -375,7 +375,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MessagePinEntryInfo(BaseAuditLogEntryInfo):
     """The extra information for message pin related audit log entries.
 
@@ -441,7 +441,7 @@ class MessagePinEntryInfo(BaseAuditLogEntryInfo):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
     """Extra information attached to guild prune log entries."""
 
@@ -453,7 +453,7 @@ class MemberPruneEntryInfo(BaseAuditLogEntryInfo):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the message bulk delete audit entry."""
 
@@ -462,7 +462,7 @@ class MessageBulkDeleteEntryInfo(BaseAuditLogEntryInfo):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
     """Extra information attached to the message delete audit entry."""
 
@@ -497,7 +497,7 @@ class MessageDeleteEntryInfo(MessageBulkDeleteEntryInfo):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
     """Extra information for the voice chat member disconnect entry."""
 
@@ -506,7 +506,7 @@ class MemberDisconnectEntryInfo(BaseAuditLogEntryInfo):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
     """Extra information for the voice chat based member move entry."""
 
@@ -541,7 +541,7 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class AuditLogEntry(snowflakes.Unique):
     """Represents an entry in a guild's audit log."""
 
@@ -600,7 +600,7 @@ class AuditLogEntry(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, repr=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class AuditLog(typing.Sequence[AuditLogEntry]):
     """Represents a guilds audit log's page."""
 
