@@ -196,7 +196,7 @@ class MessageActivityType(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Attachment(snowflakes.Unique, files.WebResource):
     """Represents a file attached to a message.
 
@@ -259,7 +259,7 @@ class Attachment(snowflakes.Unique, files.WebResource):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
@@ -277,7 +277,7 @@ class Reaction:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
 
@@ -289,7 +289,7 @@ class MessageActivity:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MessageReference:
     """Represents information about a referenced message.
 
@@ -343,7 +343,7 @@ class MessageReference:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class MessageApplication(guilds.PartialApplication):
     """The representation of an application used in messages."""
 
@@ -387,7 +387,7 @@ class MessageApplication(guilds.PartialApplication):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=True, hash=True, weakref_slot=False)
+@attrs.define(kw_only=True, repr=True, unsafe_hash=True, weakref_slot=False)
 class MessageInteraction:
     """Representation of information provided for a message from an interaction."""
 
@@ -1340,7 +1340,7 @@ class PartialMessage(snowflakes.Unique):
             )
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Message(PartialMessage):
     """Represents a message with all known details."""
 

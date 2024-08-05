@@ -85,7 +85,7 @@ ResolvedOptionData = base_interactions.ResolvedOptionData
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class CommandInteractionOption:
     """Represents the options passed for a command interaction."""
 
@@ -117,7 +117,7 @@ class CommandInteractionOption:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class AutocompleteInteractionOption(CommandInteractionOption):
     """Represents the options passed for a command autocomplete interaction."""
 
@@ -130,7 +130,7 @@ class AutocompleteInteractionOption(CommandInteractionOption):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class BaseCommandInteraction(base_interactions.PartialInteraction):
     """Represents a base command interaction on Discord.
 
@@ -306,7 +306,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class CommandInteraction(
     BaseCommandInteraction,
     base_interactions.MessageResponseMixin[CommandResponseTypesT],
@@ -385,7 +385,7 @@ class CommandInteraction(
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class AutocompleteInteraction(BaseCommandInteraction):
     """Represents an autocomplete interaction on Discord."""
 

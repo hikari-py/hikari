@@ -27,7 +27,7 @@ from __future__ import annotations
 import abc
 import typing
 
-import attr
+import attrs
 
 from hikari import intents
 from hikari.events import base_events
@@ -58,39 +58,39 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
 
 
 @attrs_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceCreateEvent(StageInstanceEvent):
     """Event fired when a stage instance is created."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    stage_instance: StageInstance = attr.field()
+    stage_instance: StageInstance = attrs.field()
     """The stage instance that was created."""
 
 
 @attrs_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceUpdateEvent(StageInstanceEvent):
     """Event fired when a stage instance is updated."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    stage_instance: StageInstance = attr.field()
+    stage_instance: StageInstance = attrs.field()
     """The stage instance that was updated."""
 
 
 @attrs_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILDS)
 class StageInstanceDeleteEvent(StageInstanceEvent):
     """Event fired when a stage instance is deleted."""
 
-    shard: gateway_shard.GatewayShard = attr.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    stage_instance: StageInstance = attr.field()
+    stage_instance: StageInstance = attrs.field()
     """The stage instance that was deleted."""
