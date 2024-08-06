@@ -5,7 +5,7 @@
 <br>
 <a href="https://github.com/hikari-py/hikari/actions"><img height="20" alt="CI status" src="https://github.com/hikari-py/hikari/actions/workflows/ci.yml/badge.svg?branch=master&event=push"></a>
 <a href="https://pypi.org/project/mypy/"><img height="20" alt="Mypy badge" src="https://img.shields.io/badge/mypy-checked-blue"></a>
-<a href="https://pypi.org/project/black"><img height="20" alt="Black badge" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+<a href="https://pypi.org/project/ruff"><img height="20" alt="Ruff badge" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json"></a>
 <a href="https://codeclimate.com/github/hikari-py/hikari/test_coverage"><img height="20" alt="Test coverage" src="https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/test_coverage"></a>
 <br>
 <a href="https://discord.gg/Jx4cNGG"><img height="20" alt="Discord invite" src="https://discord.com/api/guilds/574921006817476608/widget.png"></a>

@@ -22,11 +22,20 @@
 requires = ["wheel", "setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-include = ".*pyi?$"
+target-version = "py38"
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 80
+quote-style = "double"
+line-ending = "lf"
 skip-magic-trailing-comma = true
-target-version = ["py38"]
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+force-single-line = true
 
 [tool.coverage.run]
 relative_files = true

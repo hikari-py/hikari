@@ -20,6 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Code-style jobs."""
+
+from __future__ import annotations
+
 import pathlib
 import shutil
 import subprocess
@@ -34,13 +37,27 @@ GIT = shutil.which("git")
 
 @nox.session()
 def reformat_code(session: nox.Session) -> None:
-    """Remove trailing whitespace in source, run isort, codespell and then run black code formatter."""
-    session.install(*nox.dev_requirements("formatting"))
+    """Remove trailing whitespace in source and then run ruff code formatter."""
+    session.install(*nox.dev_requirements("ruff"))
 
     remove_trailing_whitespaces(session)
 
-    session.run("isort", *config.PYTHON_REFORMATTING_PATHS)
-    session.run("black", *config.PYTHON_REFORMATTING_PATHS)
+    # At the time of writing, sorting imports is not done when running formatting
+    # and needs to be done with ruff check
+    # see: https://docs.astral.sh/ruff/formatter/#sorting-imports
+    session.run("ruff", "format", *config.PYTHON_REFORMATTING_PATHS)
+    session.run("ruff", "check", "--select", "I", "--fix", *config.PYTHON_REFORMATTING_PATHS)
+
+
+@nox.session()
+def check_reformat_code(session: nox.Session) -> None:
+    """TEMPORARY: Check if code is properly formatted."""
+    session.install(*nox.dev_requirements("ruff"))
+
+    # At the time of writing, sorting imports is not done when running formatting
+    # and needs to be done with ruff check
+    session.run("ruff", "format", "--check", *config.PYTHON_REFORMATTING_PATHS)
+    session.run("ruff", "check", "--select", "I", *config.PYTHON_REFORMATTING_PATHS)
 
 
 @nox.session(venv_backend="none")

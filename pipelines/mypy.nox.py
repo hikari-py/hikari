@@ -42,7 +42,7 @@ def mypy(session: nox.Session) -> None:
         "speedup-requirements.txt",
         "-r",
         "server-requirements.txt",
-        *nox.dev_requirements("mypy", "formatting"),
+        *nox.dev_requirements("mypy", "ruff"),
     )
 
     _generate_stubs(session)
@@ -54,7 +54,7 @@ def mypy(session: nox.Session) -> None:
 @nox.session()
 def generate_stubs(session: nox.Session) -> None:
     """Generate the stubs for the package."""
-    session.install(*nox.dev_requirements("mypy", "formatting"))
+    session.install(*nox.dev_requirements("mypy", "ruff"))
     _generate_stubs(session)
 
 
@@ -63,8 +63,11 @@ def _generate_stubs(session: nox.Session) -> None:
 
     stub_paths = [path + "i" for path in STUBGEN_GENERATE]
 
-    session.run("isort", *stub_paths)
-    session.run("black", *stub_paths)
+    # At the time of writing, sorting imports is not done when running formatting
+    # and needs to be done with ruff check
+    # see: https://docs.astral.sh/ruff/formatter/#sorting-imports
+    session.run("ruff", "format", *stub_paths)
+    session.run("ruff", "check", "--select", "I", "--fix", *stub_paths)
 
     for stub_path in stub_paths:
         with open(stub_path, "r") as fp:
