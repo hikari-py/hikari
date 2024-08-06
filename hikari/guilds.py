@@ -1325,7 +1325,7 @@ class OnboardingMode(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class GuildOnboarding:
     """Used to represent guild onboarding settings on Discord."""
 
