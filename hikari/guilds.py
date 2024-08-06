@@ -1325,7 +1325,7 @@ class OnboardingMode(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
 class GuildOnboarding:
     """Used to represent guild onboarding settings on Discord."""
 
@@ -1346,7 +1346,7 @@ class GuildOnboarding:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
 class OnboardingPrompt:
     """Used to represent an onboarding prompt."""
 
@@ -1376,7 +1376,7 @@ class OnboardingPrompt:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
 class OnboardingPromptOption:
     """Used to represent an onboarding prompt option."""
 
