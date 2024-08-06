@@ -778,18 +778,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self, payload: data_binding.JSONArray
     ) -> typing.Mapping[snowflakes.Snowflake, guild_models.OnboardingPromptOption]:
         return {
-            snowflakes.Snowflake(option["id"]): self.deserialize_onboarding_prompt_option(option)
-            for option in payload
+            snowflakes.Snowflake(option["id"]): self.deserialize_onboarding_prompt_option(option) for option in payload
         }
 
     def _deserialize_audit_log_change_prompts(
         self, payload: data_binding.JSONArray
     ) -> typing.Mapping[snowflakes.Snowflake, guild_models.OnboardingPrompt]:
-        return {
-            snowflakes.Snowflake(prompt["id"]): self.deserialize_onboarding_prompt(prompt)
-            for prompt in payload
-        }
-
+        return {snowflakes.Snowflake(prompt["id"]): self.deserialize_onboarding_prompt(prompt) for prompt in payload}
 
     def _deserialize_channel_overwrite_entry_info(
         self, payload: data_binding.JSONObject
