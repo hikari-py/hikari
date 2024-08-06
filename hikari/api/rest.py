@@ -6489,11 +6489,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        default_channels: undefined.UndefinedNoneOr[
+        default_channels: undefined.UndefinedOr[
             typing.Sequence[snowflakes.SnowflakeishOr[channels_.GuildChannel]]
         ] = undefined.UNDEFINED,
         mode: undefined.UndefinedOr[guilds.OnboardingMode] = undefined.UNDEFINED,
-        prompts: undefined.UndefinedNoneOr[typing.Sequence[guilds.OnboardingPrompt]] = undefined.UNDEFINED,
+        prompts: undefined.UndefinedOr[typing.Sequence[guilds.OnboardingPrompt]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.GuildOnboarding:
         """Edit the onboarding of a community guild.
