@@ -257,6 +257,7 @@ def member_payload(user_payload):
         "pending": False,
         "user": user_payload,
         "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
+        "flags": 1,
     }
 
 
@@ -3206,6 +3207,7 @@ class TestEntityFactoryImpl:
         assert member.is_deaf is False
         assert member.is_mute is True
         assert member.is_pending is False
+        assert member.guild_flags == guild_models.GuildMemberFlags(1)
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_when_guild_id_already_in_role_array(
@@ -3225,6 +3227,7 @@ class TestEntityFactoryImpl:
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
         assert member.is_mute is True
+        assert member.guild_flags == guild_models.GuildMemberFlags(1)
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_with_null_fields(self, entity_factory_impl, user_payload):
