@@ -3671,9 +3671,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("enabled", enabled)
         body.put("mode", mode)
 
-        if default_channels is not undefined.UNDEFINED and default_channels is not None:
-            default_channels = [int(snowflakes.Snowflake(channel)) for channel in default_channels]
-            body.put_array("default_channel_ids", default_channels, conversion=str)
+        body.put_snowlake_array("default_channel_ids", default_channels)
 
         if prompts is not None:
             body.put_array("prompts", prompts, conversion=self._entity_factory.serialize_onboarding_prompt)
