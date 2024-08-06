@@ -1852,8 +1852,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> data_binding.JSONObject:
         payload: typing.Dict[str, typing.Any] = {
             "id": option.id,
-            "channel_ids": [str(channel_id) for channel_id in option.channel_ids],
-            "role_ids": [str(role_id) for role_id in option.role_ids],
+            "channel_ids": option.channel_ids,
+            "role_ids": option.role_ids,
             "title": option.title,
         }
 
