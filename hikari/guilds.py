@@ -1332,10 +1332,10 @@ class GuildOnboarding:
     guild_id: snowflakes.Snowflake = attrs.field(repr=True)
     """ID of the guild this onboarding is part of."""
 
-    prompts: typing.List[OnboardingPrompt] = attrs.field(repr=True)
+    prompts: typing.Sequence[OnboardingPrompt] = attrs.field(repr=True)
     """Prompts shown during onboarding and in customize community."""
 
-    default_channel_ids: typing.List[snowflakes.Snowflake] = attrs.field(repr=True)
+    default_channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=True)
     """Channel IDs that members get opted into automatically."""
 
     enabled: bool = attrs.field(repr=True)
