@@ -1329,11 +1329,6 @@ class OnboardingMode(int, enums.Enum):
 class GuildOnboarding:
     """Used to represent guild onboarding settings on Discord."""
 
-    app: traits.RESTAware = attrs.field(
-        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
-    )
-    """Client application that models may use for procedures."""
-
     guild_id: snowflakes.Snowflake = attrs.field(repr=True)
     """ID of the guild this onboarding is part of."""
 
@@ -1348,61 +1343,6 @@ class GuildOnboarding:
 
     mode: OnboardingMode = attrs.field(repr=True)
     """The mode of onboarding."""
-
-    def get_guild(self) -> typing.Optional[Guild]:
-        """Return the guild associated with this member.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.Guild]
-            The linked guild object or [`None`][] if it's not cached.
-        """
-        if not isinstance(self.app, traits.CacheAware):
-            return None
-
-        return self.app.cache.get_guild(self.guild_id)
-
-    def get_default_channels(self) -> typing.Sequence[channels_.GuildChannel]:
-        """Return the cached default channels for this guild.
-
-        This will be empty if the channels are missing from the cache.
-
-        Returns
-        -------
-        typing.Sequence[hikari.channels.GuildChannel]
-            The default channels for this guild.
-        """
-        channels: typing.List[channels_.GuildChannel] = []
-        if not isinstance(self.app, traits.CacheAware):
-            return channels
-
-        for channel_id in self.default_channel_ids:
-            if channel := self.app.cache.get_guild_channel(channel_id):
-                channels.append(channel)
-
-        return channels
-
-    async def fetch_self(self) -> GuildOnboarding:
-        """Fetch an up-to-date view of this guild onboarding from the API.
-
-        Returns
-        -------
-        hikari.guilds.GuildOnboarding
-            An up-to-date view of this guild onboarding.
-
-        Raises
-        ------
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild onboarding is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        return await self.app.rest.fetch_guild_onboarding(self.guild_id)
 
 
 @attrs_extensions.with_copy
@@ -1440,11 +1380,6 @@ class OnboardingPrompt:
 class OnboardingPromptOption:
     """Used to represent an onboarding prompt option."""
 
-    app: traits.RESTAware = attrs.field(
-        repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
-    )
-    """Client application that models may use for procedures."""
-
     id: snowflakes.Snowflake = attrs.field(repr=True)
     """ID of the prompt option."""
 
@@ -1462,47 +1397,6 @@ class OnboardingPromptOption:
 
     description: typing.Optional[str] = attrs.field(repr=True)
     """Description of the option."""
-
-    def get_channels(self) -> typing.Sequence[channels_.GuildChannel]:
-        """Return the cached channels associated with this option.
-
-        This will be empty if the channels are missing from the cache.
-
-        Returns
-        -------
-        typing.Sequence[hikari.channels.GuildChannel]
-            The cached channels associated with this option.
-        """
-        channels: typing.List[channels_.GuildChannel] = []
-        if not isinstance(self.app, traits.CacheAware):
-            return channels
-
-        for channel_id in self.channel_ids:
-            if channel := self.app.cache.get_guild_channel(channel_id):
-                channels.append(channel)
-
-        return channels
-
-    def get_roles(self) -> typing.Sequence[Role]:
-        """Return the roles associated with this option.
-
-        This will be empty if the roles are missing from the cache.
-
-        Returns
-        -------
-        typing.Sequence[hikari.guilds.Role]
-            The roles associated with this option.
-        """
-        roles: typing.List[Role] = []
-
-        if not isinstance(self.app, traits.CacheAware):
-            return roles
-
-        for role_id in self.role_ids:
-            if role := self.app.cache.get_role(role_id):
-                roles.append(role)
-
-        return roles
 
 
 @attrs_extensions.with_copy
