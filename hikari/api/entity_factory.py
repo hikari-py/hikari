@@ -1015,7 +1015,7 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_guild_onboarding(self, payload: data_binding.JSONObject) -> guild_models.GuildOnboarding:
+    def deserialize_onboarding(self, payload: data_binding.JSONObject) -> guild_models.GuildOnboarding:
         """Parse a raw payload from Discord into a guild onboarding object.
 
         Parameters
