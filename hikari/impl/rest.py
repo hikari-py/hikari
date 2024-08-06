@@ -3650,7 +3650,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_GUILD_ONBOARDING.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_guild_onboarding(response)
+        return self._entity_factory.deserialize_onboarding(response)
 
     async def edit_guild_onboarding(
         self,
@@ -3671,14 +3671,12 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("enabled", enabled)
         body.put("mode", mode)
 
-        body.put_snowlake_array("default_channel_ids", default_channels)
-
-        if prompts is not None:
-            body.put_array("prompts", prompts, conversion=self._entity_factory.serialize_onboarding_prompt)
+        body.put_snowflake_array("default_channel_ids", default_channels)
+        body.put_array("prompts", prompts, conversion=self._entity_factory.serialize_onboarding_prompt)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_guild_onboarding(response)
+        return self._entity_factory.deserialize_onboarding(response)
 
     async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
