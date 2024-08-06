@@ -1796,9 +1796,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def deserialize_onboarding_prompt(self, payload: data_binding.JSONObject) -> guild_models.OnboardingPrompt:
-        options: typing.List[guild_models.OnboardingPromptOption] = []
-        for option_payload in payload["options"]:
-            options.append(self.deserialize_onboarding_prompt_option(option_payload))
+        options: typing.List[guild_models.OnboardingPromptOption] = [
+            self.deserialize_onboarding_prompt_option(option_payload) for option_payload in payload["options"]
+        ]
 
         return guild_models.OnboardingPrompt(
             id=snowflakes.Snowflake(payload["id"]),
@@ -1813,13 +1813,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_onboarding_prompt_option(
         self, payload: data_binding.JSONObject
     ) -> guild_models.OnboardingPromptOption:
-        channel_ids: typing.List[snowflakes.Snowflake] = []
-        for raw_channel_id in payload["channel_ids"]:
-            channel_ids.append(snowflakes.Snowflake(raw_channel_id))
+        channel_ids: typing.List[snowflakes.Snowflake] = [
+            snowflakes.Snowflake(raw_channel_id) for raw_channel_id in payload["channel_ids"]
+        ]
 
-        role_ids: typing.List[snowflakes.Snowflake] = []
-        for raw_role_id in payload["role_ids"]:
-            role_ids.append(snowflakes.Snowflake(raw_role_id))
+        role_ids: typing.List[snowflakes.Snowflake] = [
+            snowflakes.Snowflake(raw_role_id) for raw_role_id in payload["role_ids"]
+        ]
 
         description = payload.get("description") or None
 
