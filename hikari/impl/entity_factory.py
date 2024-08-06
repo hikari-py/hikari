@@ -1853,7 +1853,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         self, option: guild_models.OnboardingPromptOption
     ) -> data_binding.JSONObject:
         payload: typing.Dict[str, typing.Any] = {
-            "id": str(option.id),
+            "id": option.id,
             "channel_ids": [str(channel_id) for channel_id in option.channel_ids],
             "role_ids": [str(role_id) for role_id in option.role_ids],
             "title": option.title,
