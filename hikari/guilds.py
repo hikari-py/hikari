@@ -287,7 +287,7 @@ class GuildNSFWLevel(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class GuildWidget:
     """Represents a guild widget."""
 
@@ -339,7 +339,7 @@ class GuildWidget:
 
 
 @attrs_extensions.with_copy
-@attrs.define(eq=False, hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(eq=False, kw_only=True, weakref_slot=False)
 class Member(users.User):
     """Used to represent a guild bound member."""
 
@@ -942,7 +942,7 @@ class Member(users.User):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialRole(snowflakes.Unique):
     """Represents a partial guild bound role object."""
 
@@ -966,7 +966,7 @@ class PartialRole(snowflakes.Unique):
         return self.name
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Role(PartialRole):
     """Represents a guild bound role object."""
 
@@ -1120,7 +1120,7 @@ class IntegrationExpireBehaviour(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class IntegrationAccount:
     """An account that's linked to an integration."""
 
@@ -1136,7 +1136,7 @@ class IntegrationAccount:
 
 # This is here rather than in applications.py to avoid circular imports
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialApplication(snowflakes.Unique):
     """A partial representation of a Discord application."""
 
@@ -1192,7 +1192,7 @@ class PartialApplication(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class IntegrationApplication(PartialApplication):
     """An application that's linked to an integration."""
 
@@ -1201,7 +1201,7 @@ class IntegrationApplication(PartialApplication):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialIntegration(snowflakes.Unique):
     """A partial representation of an integration, found in audit logs."""
 
@@ -1221,7 +1221,7 @@ class PartialIntegration(snowflakes.Unique):
         return self.name
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Integration(PartialIntegration):
     """Represents a guild integration object."""
 
@@ -1278,7 +1278,7 @@ class Integration(PartialIntegration):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, weakref_slot=False)
+@attrs.define(weakref_slot=False)
 class WelcomeChannel:
     """Used to represent channels on guild welcome screens."""
 
@@ -1394,7 +1394,7 @@ class OnboardingPromptOption:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class WelcomeScreen:
     """Used to represent guild welcome screens on Discord."""
 
@@ -1406,7 +1406,7 @@ class WelcomeScreen:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class GuildBan:
     """Used to represent guild bans."""
 
@@ -1418,7 +1418,7 @@ class GuildBan:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialGuild(snowflakes.Unique):
     """Base object for any partial guild objects."""
 
@@ -2513,7 +2513,7 @@ class PartialGuild(snowflakes.Unique):
         return await self.app.rest.fetch_roles(self.id)
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildPreview(PartialGuild):
     """A preview of a guild with the [`hikari.guilds.GuildFeature.DISCOVERABLE`][] feature."""
 
@@ -2609,7 +2609,7 @@ class GuildPreview(PartialGuild):
         )
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Guild(PartialGuild):
     """A representation of a guild on Discord."""
 
@@ -3298,7 +3298,7 @@ class Guild(PartialGuild):
         return updates_channel
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class RESTGuild(Guild):
     """Guild specialization that is sent via the REST API only."""
 
@@ -3337,7 +3337,7 @@ class RESTGuild(Guild):
     """The maximum number of members allowed in this guild."""
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GatewayGuild(Guild):
     """Guild specialization that is sent via the gateway only."""
 

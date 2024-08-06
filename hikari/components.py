@@ -204,7 +204,7 @@ class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
         return len(self.components)
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ButtonComponent(PartialComponent):
     """Represents a button component."""
 
@@ -256,7 +256,7 @@ class SelectMenuOption:
     """Whether this option will be selected by default."""
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class SelectMenuComponent(PartialComponent):
     """Represents a select menu component."""
 

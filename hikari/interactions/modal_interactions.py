@@ -68,7 +68,7 @@ The following types are valid for this:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ModalInteraction(
     base_interactions.MessageResponseMixin[ModalResponseTypesT], base_interactions.PremiumResponseMixin
 ):

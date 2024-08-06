@@ -121,7 +121,7 @@ class EmbedResourceWithProxy(EmbedResource):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class EmbedFooter:
     """Represents an embed footer."""
 
@@ -134,7 +134,7 @@ class EmbedFooter:
     """The URL of the footer icon, or [`None`][] if not present."""
 
 
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class EmbedImage(EmbedResourceWithProxy):
     """Represents an embed image."""
 
@@ -157,7 +157,7 @@ class EmbedImage(EmbedResourceWithProxy):
     """
 
 
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class EmbedVideo(EmbedResourceWithProxy):
     """Represents an embed video.
 
@@ -178,7 +178,7 @@ class EmbedVideo(EmbedResourceWithProxy):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class EmbedProvider:
     """Represents an embed provider.
 
@@ -200,7 +200,7 @@ class EmbedProvider:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class EmbedAuthor:
     """Represents an author of an embed."""
 
@@ -218,7 +218,7 @@ class EmbedAuthor:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class EmbedField:
     """Represents a field in a embed."""
 
