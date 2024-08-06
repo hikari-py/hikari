@@ -8,6 +8,8 @@
 # If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
 """A simple bot with some simple commands."""
 
+from __future__ import annotations
+
 import os
 
 import hikari

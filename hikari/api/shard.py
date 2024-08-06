@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Provides an interface for gateway shard implementations to conform to."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("GatewayDataFormat", "GatewayCompression", "GatewayShard")

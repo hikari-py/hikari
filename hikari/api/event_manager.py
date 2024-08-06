@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Core interface for components that manage events in the library."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("EventManager", "EventStream")
@@ -209,6 +210,7 @@ class EventManager(abc.ABC):
         from hikari.users import User
         from hikari.snowflakes import Snowflake
 
+
         @attrs.define()
         class EveryoneMentionedEvent(Event):
             app: RESTAware = attrs.field()
@@ -230,6 +232,7 @@ class EventManager(abc.ABC):
 
         ```py
         from hikari.events.messages import MessageCreateEvent
+
 
         @bot.listen(MessageCreateEvent)
         async def on_message(event):
@@ -297,8 +300,9 @@ class EventManager(abc.ABC):
         ```py
         from hikari.events.messages import MessageCreateEvent
 
-        async def on_message(event):
-            ...
+
+        async def on_message(event): ...
+
 
         bot.subscribe(MessageCreateEvent, on_message)
         ```
@@ -337,8 +341,9 @@ class EventManager(abc.ABC):
         ```py
         from hikari.events.messages import MessageCreateEvent
 
-        async def on_message(event):
-            ...
+
+        async def on_message(event): ...
+
 
         bot.unsubscribe(MessageCreateEvent, on_message)
         ```
@@ -447,7 +452,9 @@ class EventManager(abc.ABC):
         Examples
         --------
         ```py
-        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+        with bot.stream(events.ReactionAddEvent, timeout=30).filter(
+            ("message_id", message.id)
+        ) as stream:
             async for user_id in stream.map("user_id").limit(50):
                 ...
         ```

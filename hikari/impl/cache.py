@@ -775,7 +775,8 @@ class CacheImpl(cache.MutableCache):
             return cache_utility.EmptyCacheView()
 
         return cache_utility.CacheMappingView(
-            self._guild_channel_entries.freeze(), builder=cache_utility.copy_guild_channel  # type: ignore[type-var]
+            self._guild_channel_entries.freeze(),
+            builder=cache_utility.copy_guild_channel,  # type: ignore[type-var]
         )
 
     def get_guild_channels_view_for_guild(
@@ -804,7 +805,8 @@ class CacheImpl(cache.MutableCache):
 
         cached_channels = dict(sorted(cached_channels.items(), key=sorter))
         return cache_utility.CacheMappingView(
-            cached_channels, builder=cache_utility.copy_guild_channel  # type: ignore[type-var]
+            cached_channels,
+            builder=cache_utility.copy_guild_channel,  # type: ignore[type-var]
         )
 
     def set_guild_channel(self, channel: channels_.PermissibleGuildChannel, /) -> None:

@@ -25,6 +25,7 @@ For consumers of this API, the only class you need to worry about is
 [`hikari.iterators.LazyIterator`][]. Everything else is internal detail only exposed for people who
 wish to extend this API further!
 """
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("LazyIterator", "FlatLazyIterator", "All", "AttrComparator", "BufferedLazyIterator")
@@ -604,9 +605,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             for match in re.findall(r"<@!?(\d+)>", message.content):
                 yield Snowflake(match)
 
+
         mentioned_users = await (
-            channel
-            .history()
+            channel.history()
             .limit(500)
             .map(".content")
             .flat_map(iter_mentioned_users)
@@ -744,8 +745,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     An example would look like the following:
 
     ```py
-    async def some_http_call(i):
-        ...
+    async def some_http_call(i): ...
 
 
     class SomeEndpointLazyIterator(BufferedLazyIterator[SomeObject]):
@@ -753,8 +753,9 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
             super().__init__()
             self._i = 0
 
-
-        def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]:
+        def _next_chunk(
+            self,
+        ) -> typing.Optional[typing.Generator[ValueT, None, None]]:
             raw_items = await some_http_call(self._i)
             self._i += 1
 

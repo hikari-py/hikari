@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Provides the `python -m hikari` and `hikari` commands to the shell."""
+
 from __future__ import annotations
 
 import os

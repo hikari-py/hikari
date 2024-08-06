@@ -22,11 +22,20 @@
 requires = ["wheel", "setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-include = ".*pyi?$"
+target-version = "py38"
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 80
+quote-style = "double"
+line-ending = "lf"
 skip-magic-trailing-comma = true
-target-version = ["py38"]
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+force-single-line = true
 
 [tool.coverage.run]
 relative_files = true
@@ -119,11 +128,6 @@ type = [
 # TODO: Remove this when the next version to 24.7.1 is released
 # see: https://github.com/twisted/towncrier/pull/639
 ignore = [".template.md.jinja"]
-
-[tool.isort]
-profile = "black"
-force_single_line = true
-skip_glob = "**/__init__.pyi"
 
 [tool.mypy]
 # general settings

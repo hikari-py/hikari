@@ -149,6 +149,12 @@ jobs:
         run: |
           nox -s flake8
 
+      # Temporary until we use ruff for linting too
+      - name: Ruff format check
+        if: always()
+        run: |
+          nox -s check-reformat-code
+
       - name: Slotscheck
         if: always()
         run: |

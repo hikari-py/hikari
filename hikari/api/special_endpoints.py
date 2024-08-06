@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Special additional endpoints used by the REST API."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -152,7 +153,9 @@ class GuildBuilder(abc.ABC):
     guild_builder = rest.guild_builder("My Server!")
 
     everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+    admin_role_id = guild_builder.add_role(
+        "Admins", permissions=Permissions.ADMINISTRATOR
+    )
 
     await guild_builder.create()
     ```

@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Application and entities that are used to describe guild scheduled events on Discord."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (

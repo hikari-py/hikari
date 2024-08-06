@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Models and enums related to Discord's interactions system."""
+
 from __future__ import annotations
 
 from hikari.interactions.base_interactions import *

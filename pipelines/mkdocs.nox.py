@@ -20,6 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Documentation pages generation."""
+
+from __future__ import annotations
+
 from pipelines import config
 from pipelines import nox
 

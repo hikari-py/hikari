@@ -21,6 +21,8 @@
 # SOFTWARE.
 """Check for common slotting mistakes."""
 
+from __future__ import annotations
+
 from pipelines import config
 from pipelines import nox
 

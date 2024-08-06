@@ -152,7 +152,6 @@ plugins:
             show_symbol_type_heading: true
             show_symbol_type_toc: true
 #            show_root_toc_entry: false
-            line_length: 80
             find_stubs_package: true
             extensions:
                 - griffe_inherited_docstrings

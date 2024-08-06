@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Standard implementations of a Interaction based REST-only bot."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("RESTBot",)
@@ -211,7 +212,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 "hikari.gateway": {"level": "DEBUG"},
                 "hikari.ratelimits": {"level": "TRACE_HIKARI"},
             },
-        }
+        },
     )
     ```
     """

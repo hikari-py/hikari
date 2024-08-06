@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Events concerning manipulation of members within guilds."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("MemberEvent", "MemberCreateEvent", "MemberUpdateEvent", "MemberDeleteEvent")

@@ -10,6 +10,9 @@
 
 Just visit `http://localhost:6361/ui/` to explore your dashboard!
 """
+
+from __future__ import annotations
+
 import logging
 import os
 

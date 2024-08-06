@@ -71,7 +71,7 @@ class Permissions(enums.Flag):
 
     ```py
     missing_perms = ~my_perms & required_perms
-    if (missing_perms):
+    if missing_perms:
         print(f"I'm missing these permissions: {missing_perms}")
     ```
 

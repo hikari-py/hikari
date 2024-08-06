@@ -7,6 +7,9 @@
 # You should have received a copy of the CC0 Public Domain Dedication along with this software.
 # If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
 """An example OAuth server."""
+
+from __future__ import annotations
+
 import logging
 import os
 

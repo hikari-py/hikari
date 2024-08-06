@@ -20,6 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Pytest integration."""
+
+from __future__ import annotations
+
 import typing
 
 from pipelines import config
