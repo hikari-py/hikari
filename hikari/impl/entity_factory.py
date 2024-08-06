@@ -1821,7 +1821,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         for raw_role_id in payload["role_ids"]:
             role_ids.append(snowflakes.Snowflake(raw_role_id))
 
-        description = payload.get("description", None)
+        description = payload.get("description") or None
 
         emoji: typing.Optional[emoji_models.Emoji] = None
         if raw_emoji := payload.get("emoji"):
