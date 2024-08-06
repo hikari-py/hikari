@@ -6871,6 +6871,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application slash command.
 
@@ -6906,6 +6912,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This can only be applied to non-guild commands.
         nsfw
             Whether this command should be age-restricted.
+        integration_types
+            The integration types for this command.
+        contexts
+            The contexts for this command.
 
         Returns
         -------
@@ -6945,6 +6955,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application context menu command.
 
@@ -6975,6 +6991,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This can only be applied to non-guild commands.
         nsfw
             Whether this command should be age-restricted.
+        integration_types
+            The integration types for this command.
+        contexts
+            The contexts for this command.
 
         Returns
         -------
@@ -7006,6 +7026,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
     ) -> typing.Sequence[commands.PartialCommand]:
         """Set the commands for an application.
+
+        !!! note
+            When creating user commands, make sure to not pass the `guild` argument.
+            There is no feedback from Discord when this happens and commands will not be created properly
 
         !!! warning
             Any existing commands not included in the provided commands array
@@ -7059,6 +7083,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         """Edit a registered application command.
 
@@ -7090,6 +7120,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Whether this command is enabled in DMs with the bot.
 
             This can only be applied to non-guild commands.
+        integration_types
+            The integration types for this command.
+        contexts
+            The contexts for this command.
 
         Returns
         -------

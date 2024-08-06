@@ -22,6 +22,7 @@
 import mock
 import pytest
 
+from hikari import applications
 from hikari import traits
 from hikari import undefined
 from hikari.interactions import base_interactions
@@ -42,6 +43,8 @@ class TestPartialInteraction:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     def test_webhook_id_property(self, mock_partial_interaction):
@@ -58,6 +61,8 @@ class TestMessageResponseMixin:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     @pytest.mark.asyncio
@@ -207,6 +212,8 @@ class TestModalResponseMixin:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     @pytest.mark.asyncio

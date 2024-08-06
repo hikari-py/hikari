@@ -21,6 +21,7 @@
 import mock
 import pytest
 
+from hikari import applications
 from hikari import channels
 from hikari import components
 from hikari import monetization
@@ -76,6 +77,8 @@ class TestModalInteraction:
                     subscription_id=None,
                 )
             ],
+            authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     def test_build_response(self, mock_modal_interaction, mock_app):

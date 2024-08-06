@@ -21,6 +21,7 @@
 import mock
 import pytest
 
+from hikari import applications
 from hikari import channels
 from hikari import monetization
 from hikari import snowflakes
@@ -70,6 +71,8 @@ class TestComponentInteraction:
                     subscription_id=None,
                 )
             ],
+            authorizing_integration_owners={applications.ApplicationIntegrationType.GUILD_INSTALL: 12345},
+            context=applications.ApplicationInstallationContextType.GUILD,
         )
 
     def test_build_response(self, mock_component_interaction, mock_app):
