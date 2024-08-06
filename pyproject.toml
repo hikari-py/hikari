@@ -129,11 +129,6 @@ type = [
 # see: https://github.com/twisted/towncrier/pull/639
 ignore = [".template.md.jinja"]
 
-[tool.isort]
-profile = "black"
-force_single_line = true
-skip_glob = "**/__init__.pyi"
-
 [tool.mypy]
 # general settings
 strict = true

@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Models and enums used for application commands on Discord."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (

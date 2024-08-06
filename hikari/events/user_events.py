@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Events fired when the account user is updated."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("OwnUserUpdateEvent",)

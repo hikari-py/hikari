@@ -20,6 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Wrapper around nox to give default job kwargs."""
+
+from __future__ import annotations
+
 import os as _os
 import typing as _typing
 

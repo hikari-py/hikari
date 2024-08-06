@@ -847,9 +847,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                     new_value = value_converter(new_value) if new_value is not None else None
                     old_value = value_converter(old_value) if old_value is not None else None
 
-                elif not isinstance(
-                    key, audit_log_models.AuditLogChangeKey
-                ):  # pyright: ignore [reportUnnecessaryIsInstance]
+                elif not isinstance(key, audit_log_models.AuditLogChangeKey):  # pyright: ignore [reportUnnecessaryIsInstance]
                     _LOGGER.debug("Unknown audit log change key found %r", key)
 
                 changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))

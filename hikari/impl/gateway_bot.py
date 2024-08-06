@@ -274,7 +274,7 @@ class GatewayBot(traits.GatewayBotAware):
                 "hikari.gateway": {"level": "DEBUG"},
                 "hikari.ratelimits": {"level": "TRACE_HIKARI"},
             },
-        }
+        },
     )
     ```
     """
@@ -508,6 +508,7 @@ class GatewayBot(traits.GatewayBotAware):
         from hikari.users import User
         from hikari.snowflakes import Snowflake
 
+
         @attrs.define()
         class EveryoneMentionedEvent(Event):
             app: RESTAware = attrs.field()
@@ -529,6 +530,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         ```py
         from hikari.events.messages import MessageCreateEvent
+
 
         @bot.listen(MessageCreateEvent)
         async def on_message(event):
@@ -1040,7 +1042,9 @@ class GatewayBot(traits.GatewayBotAware):
         Examples
         --------
         ```py
-        with bot.stream(events.ReactionAddEvent, timeout=30).filter(("message_id", message.id)) as stream:
+        with bot.stream(events.ReactionAddEvent, timeout=30).filter(
+            ("message_id", message.id)
+        ) as stream:
             async for user_id in stream.map("user_id").limit(50):
                 ...
         ```
@@ -1094,8 +1098,9 @@ class GatewayBot(traits.GatewayBotAware):
         ```py
         from hikari.events.messages import MessageCreateEvent
 
-        async def on_message(event):
-            ...
+
+        async def on_message(event): ...
+
 
         bot.subscribe(MessageCreateEvent, on_message)
         ```
@@ -1134,8 +1139,9 @@ class GatewayBot(traits.GatewayBotAware):
         ```py
         from hikari.events.messages import MessageCreateEvent
 
-        async def on_message(event):
-            ...
+
+        async def on_message(event): ...
+
 
         bot.unsubscribe(MessageCreateEvent, on_message)
         ```

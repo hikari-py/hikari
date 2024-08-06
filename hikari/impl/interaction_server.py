@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Standard implementation of a REST based interactions server."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("InteractionServer",)

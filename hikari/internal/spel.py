@@ -50,6 +50,7 @@ Likewise, to check if the input was not a number, you could run
 This expression language is highly experimental and may change without
 prior notice for the time being.
 """
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("AttrGetter",)

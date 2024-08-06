@@ -23,6 +23,7 @@
 
 You should never need to make any of these objects manually.
 """
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -249,7 +250,9 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     guild_builder = rest.guild_builder("My Server!")
 
     everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+    admin_role_id = guild_builder.add_role(
+        "Admins", permissions=Permissions.ADMINISTRATOR
+    )
 
     await guild_builder.create()
     ```
@@ -1460,7 +1463,7 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
 
 
 def _build_emoji(
-    emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED
+    emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
 ) -> tuple[undefined.UndefinedOr[str], undefined.UndefinedOr[str]]:
     """Build an emoji into the format accepted in buttons.
 

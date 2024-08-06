@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Enum of Discord accepted locales."""
+
 from __future__ import annotations
 
 __all__ = ["Locale"]

@@ -1237,7 +1237,9 @@ class PartialMessage(snowflakes.Unique):
 
         # Using a custom emoji's name and ID to remove a specific user's
         # reaction from this reaction.
-        await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
+        await message.remove_reaction(
+            "a:Distraction", 745991233939439616, user=some_user
+        )
 
         # Using a unicode emoji and removing a specific user from this
         # reaction.

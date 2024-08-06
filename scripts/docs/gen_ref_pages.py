@@ -3,6 +3,8 @@
 Based on https://mkdocstrings.github.io/recipes/#generate-pages-on-the-fly
 """
 
+from __future__ import annotations
+
 import pathlib
 
 import mkdocs_gen_files

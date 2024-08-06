@@ -294,10 +294,7 @@ class PermissionOverwrite:
             | Permissions.READ_MESSAGE_HISTORY
             | Permissions.SEND_MESSAGES
         ),
-        deny=(
-            Permissions.MANAGE_MESSAGES
-            | Permissions.SPEAK
-        ),
+        deny=(Permissions.MANAGE_MESSAGES | Permissions.SPEAK),
     )
     ```
     """
@@ -677,10 +674,10 @@ class TextableChannel(PartialChannel):
         block completes.
 
         ```py
-        await channel.trigger_typing()   # type for 10s
+        await channel.trigger_typing()  # type for 10s
 
         async with channel.trigger_typing():
-            await asyncio.sleep(35)            # keep typing until this finishes
+            await asyncio.sleep(35)  # keep typing until this finishes
         ```
 
         !!! note

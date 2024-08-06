@@ -10,7 +10,7 @@ count = true
 # D105: Magic methods not having a docstring.
 # D412: No blank lines allowed between a section header and its content
 # E402: Module level import not at top of file (isn't compatible with our import style).
-# E701, E704: Multiple statements on one line (conflicts with black, but it will be enforced by it anyways).
+# E701, E704: Multiple statements on one line (conflicts with ruff, but it will be enforced by it anyways).
 # T101: TO-DO comment detection (T102 is FIX-ME and T103 is XXX).
 # S101: Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
 # W503: line break before binary operator (too many false positives and doesnt match our style)
@@ -49,7 +49,7 @@ per-file-ignores =
 
 max-complexity = 20
 max-function-length = 130
-# Technically this is 120, but black has a policy of "1 or 2 over is fine if it is tidier", so we have to raise this.
+# Technically this is 120, but ruff has a policy of "1 or 2 over is fine if it is tidier", so we have to raise this.
 max-line-length = 130
 show_source = False
 statistics = False

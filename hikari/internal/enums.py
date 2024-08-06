@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Implementation of parts of Python's [`enum`][] protocol to be more performant."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("deprecated", "Enum", "Flag")

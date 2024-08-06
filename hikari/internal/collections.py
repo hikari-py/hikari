@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Custom data structures used within Hikari's core implementation."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (

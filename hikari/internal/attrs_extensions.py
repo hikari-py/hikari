@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Utility for extending and optimising the usage of [`attr`][] models."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (

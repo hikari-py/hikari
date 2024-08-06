@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Interfaces used to describe voice client implementations."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("VoiceComponent", "VoiceConnection")

@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Models for monetized apps & premium features."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("SKUType", "SKUFlags", "EntitlementType", "EntitlementOwnerType", "SKU", "Entitlement")

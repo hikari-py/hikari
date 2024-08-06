@@ -21,6 +21,8 @@
 # SOFTWARE.
 """Pyright integrations."""
 
+from __future__ import annotations
+
 from pipelines import config
 from pipelines import nox
 

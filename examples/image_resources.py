@@ -12,6 +12,8 @@ This demonstrates how many Hikari objects can act as attachments without any
 special treatment.
 """
 
+from __future__ import annotations
+
 import os
 import re
 
