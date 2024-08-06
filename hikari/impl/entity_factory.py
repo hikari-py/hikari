@@ -1838,7 +1838,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             time.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
         )
 
-        guild_flags = guild_models.GuildMemberFlags(payload.get("flags") or 0)
+        guild_flags = guild_models.GuildMemberFlags(payload.get("flags") or guild_models.GuildMemberFlags.NONE)
 
         communication_disabled_until: typing.Optional[datetime.datetime] = None
         if raw_communication_disabled_until := payload.get("communication_disabled_until"):
@@ -2468,7 +2468,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             disabled_until = None
 
-        guild_flags = guild_models.GuildMemberFlags(payload.get("flags") or 0)
+        guild_flags = guild_models.GuildMemberFlags(payload.get("flags") or guild_models.GuildMemberFlags.NONE)
 
         # TODO: deduplicate member unmarshalling logic
         return base_interactions.InteractionMember(
