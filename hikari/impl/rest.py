@@ -3644,6 +3644,44 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_welcome_screen(response)
 
+    async def fetch_guild_onboarding(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.GuildOnboarding:
+        route = routes.GET_GUILD_ONBOARDING.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_onboarding(response)
+
+    async def edit_guild_onboarding(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        default_channels: undefined.UndefinedNoneOr[
+            typing.Sequence[snowflakes.SnowflakeishOr[channels_.GuildChannel]]
+        ] = undefined.UNDEFINED,
+        mode: undefined.UndefinedOr[guilds.OnboardingMode] = undefined.UNDEFINED,
+        prompts: undefined.UndefinedNoneOr[typing.Sequence[guilds.OnboardingPrompt]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.GuildOnboarding:
+        route = routes.PUT_GUILD_ONBOARDING.compile(guild=guild)
+
+        body = data_binding.JSONObjectBuilder()
+
+        body.put("enabled", enabled)
+        body.put("mode", mode)
+
+        if default_channels is not undefined.UNDEFINED and default_channels is not None:
+            default_channels = [int(snowflakes.Snowflake(channel)) for channel in default_channels]
+            body.put_array("default_channel_ids", default_channels, conversion=str)
+
+        if prompts is not None:
+            body.put_array("prompts", prompts, conversion=self._entity_factory.serialize_onboarding_prompt)
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_onboarding(response)
+
     async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
         response = await self._request(route)
