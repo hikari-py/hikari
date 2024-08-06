@@ -1788,6 +1788,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         mode: guild_models.OnboardingMode = guild_models.OnboardingMode(payload["mode"])
 
         return guild_models.GuildOnboarding(
+            app=self._app,
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             prompts=prompts,
             default_channel_ids=default_channel_ids,
@@ -1828,6 +1829,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             emoji = self.deserialize_emoji(raw_emoji)
 
         return guild_models.OnboardingPromptOption(
+            app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             channel_ids=channel_ids,
             role_ids=role_ids,
