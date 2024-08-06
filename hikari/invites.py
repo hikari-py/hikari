@@ -74,7 +74,7 @@ class InviteCode(abc.ABC):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class VanityURL(InviteCode):
     """A special case invite object, that represents a guild's vanity url."""
 
@@ -90,7 +90,7 @@ class VanityURL(InviteCode):
     """The amount of times this invite has been used."""
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that is attached to invites."""
 
@@ -207,7 +207,7 @@ class InviteGuild(guilds.PartialGuild):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Invite(InviteCode):
     """Represents an invite that's used to add users to a guild or group dm."""
 
@@ -275,7 +275,7 @@ class Invite(InviteCode):
     """
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class InviteWithMetadata(Invite):
     """Extends the base [`hikari.invites.Invite`][] object with metadata.
 
