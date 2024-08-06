@@ -29,7 +29,7 @@ import pytest
 from hikari.internal import reflect
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="This strategy is specific to 3.10 > versions")
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="This strategy is specific to 3.10 < versions")
 class TestResolveSignatureOldStrategy:
     def test_handles_normal_references(self):
         def foo(bar: str, bat: int) -> str: ...
@@ -108,7 +108,7 @@ class TestResolveSignatureOldStrategy:
         assert signature.parameters["bar"].annotation == typing.Optional[typing.Iterator[int]]
 
 
-@pytest.mark.skipif(sys.version_info < (3, 10), reason="This strategy is specific to 3.10 <= versions")
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="This strategy is specific to 3.10 >= versions")
 def test_resolve_signature():
     foo = object()
 

@@ -67,7 +67,17 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
     none_type = type(None)
     for name, param in signature.parameters.items():
         if isinstance(param.annotation, str):
-            param = param.replace(annotation=resolved_typehints[name] if name in resolved_typehints else EMPTY)
+            annotation = resolved_typehints[name] if name in resolved_typehints else EMPTY
+
+            if isinstance(annotation, typing.ForwardRef):
+                # In CPython 3.8, a bug exists where a forward reference could resolve
+                # to another forward reference (i.e. when mixing
+                # "from __future__ import annotations" with a type enclosed in strings already)
+                #
+                # This if check can be removed once 3.8 support is dropped
+                annotation = annotation._evaluate(None, None)
+
+            param = param.replace(annotation=annotation)
         if param.annotation is none_type:
             param = param.replace(annotation=None)
         params.append(param)
