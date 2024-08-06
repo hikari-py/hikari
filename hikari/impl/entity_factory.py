@@ -1865,7 +1865,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if isinstance(option.emoji, emoji_models.UnicodeEmoji):
             payload["emoji_name"] = option.emoji.name
         elif isinstance(option.emoji, emoji_models.CustomEmoji):
-            payload["emoji_id"] = str(option.emoji.id)
+            payload["emoji_id"] = option.emoji.id
             payload["emoji_name"] = option.emoji.name
             payload["emoji_animated"] = option.emoji.is_animated
 
