@@ -1776,7 +1776,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return guild_models.GuildWidget(app=self._app, channel_id=channel_id, is_enabled=payload["enabled"])
 
-    def deserialize_guild_onboarding(self, payload: data_binding.JSONObject) -> guild_models.GuildOnboarding:
+    def deserialize_onboarding(self, payload: data_binding.JSONObject) -> guild_models.GuildOnboarding:
         default_channel_ids: typing.List[snowflakes.Snowflake] = []
         for raw_channel_id in payload["default_channel_ids"]:
             default_channel_ids.append(snowflakes.Snowflake(raw_channel_id))
