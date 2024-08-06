@@ -29,7 +29,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.9
 
       - name: Temporarily disable "include administrators" branch protection
         uses: benjefferies/branch-protection-bot@v1.1.2

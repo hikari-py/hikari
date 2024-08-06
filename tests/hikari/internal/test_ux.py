@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -208,59 +207,50 @@ class TestInitLogging:
         supports_color.assert_not_called()
 
 
-class TestRedBanner:
-    def test_when_above_3_9(self):
-        class MockFile:
-            context_entered = 0
-            context_exited = 0
+def test_read_banner():
+    class MockFile:
+        context_entered = 0
+        context_exited = 0
 
-            def __enter__(self):
-                self.context_entered += 1
-                return self
+        def __enter__(self):
+            self.context_entered += 1
+            return self
 
-            def __exit__(self, exc_type, exc_val, exc_tb):
-                self.context_exited += 1
-                return None
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.context_exited += 1
+            return None
 
-            def read(self):
-                return read
+        def read(self):
+            return read
 
-        class MockTraversable:
-            joint_path = None
-            open_mode = None
-            mock_file = None
-            open_encoding = None
+    class MockTraversable:
+        joint_path = None
+        open_mode = None
+        mock_file = None
+        open_encoding = None
 
-            def joinpath(self, path):
-                self.joint_path = path
-                return self
+        def joinpath(self, path):
+            self.joint_path = path
+            return self
 
-            def open(self, mode, encoding):
-                self.open_mode = mode
-                self.open_encoding = encoding
-                return self.mock_file
+        def open(self, mode, encoding):
+            self.open_mode = mode
+            self.open_encoding = encoding
+            return self.mock_file
 
-        traversable = MockTraversable()
-        traversable.mock_file = MockFile()
-        read = object()
+    traversable = MockTraversable()
+    traversable.mock_file = MockFile()
+    read = object()
 
-        with mock.patch.object(sys, "version_info", new=(3, 9)):
-            with mock.patch.object(importlib.resources, "files", return_value=traversable, create=True) as read_text:
-                assert ux._read_banner("hikaru") is read
+    with mock.patch.object(importlib.resources, "files", return_value=traversable, create=True) as read_text:
+        assert ux._read_banner("hikaru") is read
 
-        read_text.assert_called_once_with("hikaru")
-        assert traversable.joint_path == "banner.txt"
-        assert traversable.open_mode == "r"
-        assert traversable.open_encoding == "utf-8"
-        assert traversable.mock_file.context_entered == 1
-        assert traversable.mock_file.context_exited == 1
-
-    def test_when_below_3_9(self):
-        with mock.patch.object(sys, "version_info", new=(2, 7)):
-            with mock.patch.object(importlib.resources, "read_text") as read_text:
-                assert ux._read_banner("hikaru") is read_text.return_value
-
-        read_text.assert_called_once_with("hikaru", "banner.txt", encoding="utf-8")
+    read_text.assert_called_once_with("hikaru")
+    assert traversable.joint_path == "banner.txt"
+    assert traversable.open_mode == "r"
+    assert traversable.open_encoding == "utf-8"
+    assert traversable.mock_file.context_entered == 1
+    assert traversable.mock_file.context_exited == 1
 
 
 class TestPrintBanner:

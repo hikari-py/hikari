@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -72,14 +71,14 @@ class deprecated:
         self.removal_version = removal_version
 
 
-class _EnumNamespace(typing.Dict[str, typing.Any]):
+class _EnumNamespace(dict[str, typing.Any]):
     __slots__: typing.Sequence[str] = ("base", "names_to_values", "values_to_names")
 
-    def __init__(self, base: typing.Type[typing.Any]) -> None:
+    def __init__(self, base: type[typing.Any]) -> None:
         super().__init__()
         self.base = base
-        self.names_to_values: typing.Dict[str, typing.Any] = {}
-        self.values_to_names: typing.Dict[typing.Any, str] = {}
+        self.names_to_values: dict[str, typing.Any] = {}
+        self.values_to_names: dict[typing.Any, str] = {}
         self["__doc__"] = "An enumeration."
 
     def __getitem__(self, name: str) -> typing.Any:
@@ -164,8 +163,8 @@ class _EnumMeta(type):
     def __new__(
         mcs,
         name: str,
-        bases: typing.Tuple[typing.Type[typing.Any], ...],
-        namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
+        bases: tuple[type[typing.Any], ...],
+        namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
     ) -> Self:
         global _Enum
 
@@ -224,8 +223,8 @@ class _EnumMeta(type):
 
     @classmethod
     def __prepare__(
-        mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()
-    ) -> typing.Union[typing.Dict[str, typing.Any], _EnumNamespace]:
+        mcs, name: str, bases: tuple[type[typing.Any], ...] = ()
+    ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
         if _Enum is NotImplemented:
             if name != "Enum":
                 raise TypeError("First instance of _EnumMeta must be Enum")
@@ -324,8 +323,8 @@ class Enum(metaclass=_EnumMeta):
     _value_to_member_map_: typing.ClassVar[typing.Mapping[int, Enum]]
     _member_names_: typing.ClassVar[typing.Sequence[str]]
     __members__: typing.ClassVar[typing.Mapping[str, Enum]]
-    __objtype__: typing.ClassVar[typing.Type[typing.Any]]
-    __enumtype__: typing.ClassVar[typing.Type[Enum]]
+    __objtype__: typing.ClassVar[type[typing.Any]]
+    __enumtype__: typing.ClassVar[type[Enum]]
     _name_: str
     _value_: typing.Any
 
@@ -350,7 +349,7 @@ class Enum(metaclass=_EnumMeta):
 _Flag = NotImplemented
 
 
-def _name_resolver(members: typing.Dict[int, _Flag], value: int) -> typing.Generator[str, typing.Any, None]:
+def _name_resolver(members: dict[int, _Flag], value: int) -> typing.Generator[str, typing.Any, None]:
     bit = 1
     has_yielded = False
     remaining = value
@@ -415,8 +414,8 @@ class _FlagMeta(type):
 
     @classmethod
     def __prepare__(
-        mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()
-    ) -> typing.Union[typing.Dict[str, typing.Any], _EnumNamespace]:
+        mcs, name: str, bases: tuple[type[typing.Any], ...] = ()
+    ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
         if _Flag is NotImplemented:
             if name != "Flag":
                 raise TypeError("First instance of _FlagMeta must be Flag")
@@ -431,8 +430,8 @@ class _FlagMeta(type):
     def __new__(
         mcs,
         name: str,
-        bases: typing.Tuple[typing.Type[typing.Any], ...],
-        namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
+        bases: tuple[type[typing.Any], ...],
+        namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
     ) -> Self:
         global _Flag
 
@@ -657,8 +656,8 @@ class Flag(metaclass=_FlagMeta):
     _temp_members_: typing.ClassVar[typing.Mapping[int, Flag]]
     _member_names_: typing.ClassVar[typing.Sequence[str]]
     __members__: typing.ClassVar[typing.Mapping[str, Flag]]
-    __objtype__: typing.ClassVar[typing.Type[int]]
-    __enumtype__: typing.ClassVar[typing.Type[Flag]]
+    __objtype__: typing.ClassVar[type[int]]
+    __enumtype__: typing.ClassVar[type[Flag]]
     _name_: typing.Optional[str]
     _value_: int
 

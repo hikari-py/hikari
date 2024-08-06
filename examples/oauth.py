@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Hikari Examples - A collection of examples for Hikari.
 #
 # To the extent possible under law, the author(s) have dedicated all copyright

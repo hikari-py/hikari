@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -406,8 +405,8 @@ class MessageInteraction:
 
 def _map_cache_maybe_discover(
     ids: typing.Iterable[snowflakes.Snowflake], cache_call: typing.Callable[[snowflakes.Snowflake], typing.Optional[_T]]
-) -> typing.Dict[snowflakes.Snowflake, _T]:
-    results: typing.Dict[snowflakes.Snowflake, _T] = {}
+) -> dict[snowflakes.Snowflake, _T]:
+    results: dict[snowflakes.Snowflake, _T] = {}
     for id_ in ids:
         obj = cache_call(id_)
         if obj is not None:

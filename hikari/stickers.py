@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -79,7 +78,7 @@ class StickerFormatType(int, enums.Enum):
     """A GIF sticker."""
 
 
-_STICKER_EXTENSIONS: typing.Dict[typing.Union[StickerFormatType, int], str] = {
+_STICKER_EXTENSIONS: dict[typing.Union[StickerFormatType, int], str] = {
     StickerFormatType.LOTTIE: "json",
     StickerFormatType.GIF: "gif",
 }

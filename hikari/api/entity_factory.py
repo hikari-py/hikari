@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -881,7 +880,7 @@ class EntityFactory(abc.ABC):
     @abc.abstractmethod
     def serialize_embed(
         self, embed: embed_models.Embed
-    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[data_binding.JSONObject, list[files.Resource[files.AsyncReader]]]:
         """Serialize an embed object to a json serializable dict.
 
         Parameters

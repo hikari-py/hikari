@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -114,7 +113,7 @@ _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
 _X_RATELIMIT_SCOPE_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Scope")
-_RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset((500, 502, 503, 504))
+_RETRY_ERROR_CODES: typing.Final[frozenset[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
 
@@ -684,7 +683,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc_val: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -700,7 +699,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         def __exit__(
             self,
-            exc_type: typing.Optional[typing.Type[BaseException]],
+            exc_type: typing.Optional[type[BaseException]],
             exc_val: typing.Optional[BaseException],
             exc_tb: typing.Optional[types.TracebackType],
         ) -> None:
@@ -1385,7 +1384,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
         edit: bool = False,
-    ) -> typing.Tuple[data_binding.JSONObjectBuilder, typing.Optional[data_binding.URLEncodedFormBuilder]]:
+    ) -> tuple[data_binding.JSONObjectBuilder, typing.Optional[data_binding.URLEncodedFormBuilder]]:
         if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
@@ -1414,13 +1413,13 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment = content
             content = undefined.UNDEFINED
 
-        final_attachments: typing.List[typing.Union[files.Resourceish, messages_.Attachment]] = []
+        final_attachments: list[typing.Union[files.Resourceish, messages_.Attachment]] = []
         if attachment:
             final_attachments.append(attachment)
         elif attachments:
             final_attachments.extend(attachments)
 
-        serialized_components: undefined.UndefinedOr[typing.List[data_binding.JSONObject]] = undefined.UNDEFINED
+        serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
             if component is not None:
                 serialized_components = [component.build()]
@@ -1640,7 +1639,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
-        deleted: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
+        deleted: list[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
 
         iterator: iterators.LazyIterator[snowflakes.SnowflakeishOr[messages_.PartialMessage]]
         if isinstance(messages, typing.AsyncIterable):
@@ -2629,7 +2628,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
         stack = contextlib.AsyncExitStack()
-        tasks: typing.List[asyncio.Task[str]] = []
+        tasks: list[asyncio.Task[str]] = []
 
         async with stack:
             if icon is None:
@@ -3765,8 +3764,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def _deserialize_command_list(
         self, command_payloads: data_binding.JSONArray, guild_id: typing.Optional[snowflakes.Snowflake]
-    ) -> typing.List[commands.PartialCommand]:
-        command_objs: typing.List[commands.PartialCommand] = []
+    ) -> list[commands.PartialCommand]:
+        command_objs: list[commands.PartialCommand] = []
         for payload in command_payloads:
             try:
                 command_objs.append(self._entity_factory.deserialize_command(payload, guild_id=guild_id))

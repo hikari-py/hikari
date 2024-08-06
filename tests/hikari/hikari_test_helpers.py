@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -41,7 +40,7 @@ _T = typing.TypeVar("_T")
 
 
 def mock_class_namespace(
-    klass: typing.Type[_T],
+    klass: type[_T],
     /,
     *,
     init_: bool = True,
@@ -49,7 +48,7 @@ def mock_class_namespace(
     implement_abstract_methods_: bool = True,
     rename_impl_: bool = True,
     **namespace: typing.Any,
-) -> typing.Type[_T]:
+) -> type[_T]:
     """Get a version of a class with the provided namespace fields set as class attributes."""
     if slots_ or slots_ is None and hasattr(klass, "__slots__"):
         namespace["__slots__"] = ()

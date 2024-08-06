@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -103,10 +102,7 @@ class TypingIndicator(abc.ABC):
 
     @abc.abstractmethod
     async def __aexit__(
-        self,
-        exception_type: typing.Type[BaseException],
-        exception: BaseException,
-        exception_traceback: types.TracebackType,
+        self, exception_type: type[BaseException], exception: BaseException, exception_traceback: types.TracebackType
     ) -> None: ...
 
 
@@ -512,7 +508,7 @@ class InteractionResponseBuilder(abc.ABC):
     @abc.abstractmethod
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         """Build a JSON object from this builder.
 
         Parameters

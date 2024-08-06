@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -242,7 +241,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
         http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        logs: typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
@@ -262,7 +261,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
         http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        logs: typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
@@ -281,7 +280,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         executor: typing.Optional[concurrent.futures.Executor] = None,
         force_color: bool = False,
         http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        logs: typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
@@ -306,8 +305,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._is_closing = False
-        self._on_shutdown: typing.List[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]] = []
-        self._on_startup: typing.List[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]] = []
+        self._on_shutdown: list[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]] = []
+        self._on_startup: list[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]] = []
         self._proxy_settings = proxy_settings if proxy_settings is not None else config_impl.ProxySettings()
 
         # Entity creation
@@ -375,7 +374,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         banner: typing.Optional[str],
         allow_color: bool,
         force_color: bool,
-        extra_args: typing.Optional[typing.Dict[str, str]] = None,
+        extra_args: typing.Optional[dict[str, str]] = None,
     ) -> None:
         """Print the banner.
 
@@ -685,21 +684,21 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
+        self, interaction_type: type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
     ]: ...
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
+        self, interaction_type: type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
     ]: ...
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[command_interactions.AutocompleteInteraction], /
+        self, interaction_type: type[command_interactions.AutocompleteInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[
             command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
@@ -708,27 +707,27 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
+        self, interaction_type: type[modal_interactions.ModalInteraction], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
     ]: ...
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], /
+        self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[
         interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
     ]: ...
 
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], /
+        self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         return self._server.get_listener(interaction_type)
 
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[command_interactions.CommandInteraction],
+        interaction_type: type[command_interactions.CommandInteraction],
         listener: typing.Optional[
             interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
         ],
@@ -740,7 +739,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[component_interactions.ComponentInteraction],
+        interaction_type: type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
             interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
         ],
@@ -752,7 +751,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[command_interactions.AutocompleteInteraction],
+        interaction_type: type[command_interactions.AutocompleteInteraction],
         listener: typing.Optional[
             interaction_server_.ListenerT[
                 command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
@@ -766,7 +765,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[modal_interactions.ModalInteraction],
+        interaction_type: type[modal_interactions.ModalInteraction],
         listener: typing.Optional[
             interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
         ],
@@ -777,7 +776,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT_co],
+        interaction_type: type[_InteractionT_co],
         listener: typing.Optional[
             interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
         ],

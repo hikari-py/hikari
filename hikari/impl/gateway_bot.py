@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -324,7 +323,7 @@ class GatewayBot(traits.GatewayBotAware):
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         auto_chunk_members: bool = True,
-        logs: typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
@@ -386,7 +385,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         # We populate these on startup instead, as we need to possibly make some
         # HTTP requests to determine what to put in this mapping.
-        self._shards: typing.Dict[int, gateway_shard.GatewayShard] = {}
+        self._shards: dict[int, gateway_shard.GatewayShard] = {}
         self.shards = types.MappingProxyType(self._shards)
 
     @property
@@ -572,7 +571,7 @@ class GatewayBot(traits.GatewayBotAware):
         return self._event_manager.dispatch(event)
 
     def get_listeners(
-        self, event_type: typing.Type[base_events.EventT], /, *, polymorphic: bool = True
+        self, event_type: type[base_events.EventT], /, *, polymorphic: bool = True
     ) -> typing.Collection[event_manager_.CallbackT[base_events.EventT]]:
         """Get the listeners for a given event type, if there are any.
 
@@ -601,7 +600,7 @@ class GatewayBot(traits.GatewayBotAware):
         await aio.first_completed(self._closed_event.wait(), *(s.join() for s in self._shards.values()))
 
     def listen(
-        self, *event_types: typing.Type[base_events.EventT]
+        self, *event_types: type[base_events.EventT]
     ) -> typing.Callable[[event_manager_.CallbackT[base_events.EventT]], event_manager_.CallbackT[base_events.EventT]]:
         """Generate a decorator to subscribe a callback to an event type.
 
@@ -638,7 +637,7 @@ class GatewayBot(traits.GatewayBotAware):
         banner: typing.Optional[str],
         allow_color: bool,
         force_color: bool,
-        extra_args: typing.Optional[typing.Dict[str, str]] = None,
+        extra_args: typing.Optional[dict[str, str]] = None,
     ) -> None:
         """Print the banner.
 
@@ -1005,7 +1004,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     def stream(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
@@ -1073,7 +1072,7 @@ class GatewayBot(traits.GatewayBotAware):
     # using ABCs that are not concrete in generic types passed to functions.
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
-    def subscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
+    def subscribe(self, event_type: type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
         """Subscribe a given callback to a given event type.
 
         Parameters
@@ -1115,7 +1114,7 @@ class GatewayBot(traits.GatewayBotAware):
     # using ABCs that are not concrete in generic types passed to functions.
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
-    def unsubscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
+    def unsubscribe(self, event_type: type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
         """Unsubscribe a given callback from a given event type, if present.
 
         Parameters
@@ -1153,7 +1152,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     async def wait_for(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
         predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,

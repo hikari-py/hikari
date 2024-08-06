@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -553,7 +552,7 @@ class Member(users.User):
         typing.Sequence[hikari.guilds.Role]
             The roles the users has.
         """
-        roles: typing.List[Role] = []
+        roles: list[Role] = []
 
         if not isinstance(self.user.app, traits.CacheAware):
             return roles

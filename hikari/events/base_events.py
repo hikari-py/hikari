@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -60,7 +59,7 @@ class Event(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
-    __dispatches: typing.ClassVar[typing.Tuple[typing.Type[Event], ...]]
+    __dispatches: typing.ClassVar[tuple[type[Event], ...]]
     __bitmask: typing.ClassVar[int]
 
     def __init_subclass__(cls) -> None:
@@ -89,7 +88,7 @@ class Event(abc.ABC):
         """App instance for this application."""
 
     @classmethod
-    def dispatches(cls) -> typing.Sequence[typing.Type[Event]]:
+    def dispatches(cls) -> typing.Sequence[type[Event]]:
         """Sequence of the event classes this event is dispatched as."""
         return cls.__dispatches
 
@@ -99,7 +98,7 @@ class Event(abc.ABC):
         return cls.__bitmask
 
 
-def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
+def get_required_intents_for(event_type: type[Event]) -> typing.Collection[intents.Intents]:
     """Retrieve the intents that are required to listen to an event type.
 
     Parameters
@@ -173,7 +172,7 @@ def no_recursive_throw() -> typing.Callable[[_T], _T]:
     return decorator
 
 
-def is_no_recursive_throw_event(obj: typing.Union[_T, typing.Type[_T]]) -> bool:
+def is_no_recursive_throw_event(obj: typing.Union[_T, type[_T]]) -> bool:
     """Whether the event is marked as `___norecursivethrow___`."""
     result = getattr(obj, NO_RECURSIVE_THROW_attrs, False)
     assert isinstance(result, bool)
@@ -225,7 +224,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
         return None
 
     @property
-    def exc_info(self) -> typing.Tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]]:
+    def exc_info(self) -> tuple[type[Exception], Exception, typing.Optional[types.TracebackType]]:
         """Exception triplet that follows the same format as [`sys.exc_info`][].
 
         The [`sys.exc_info`][] triplet consists of the exception type, the exception

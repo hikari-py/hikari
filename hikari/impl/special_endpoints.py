@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -159,7 +158,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc_val: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -177,7 +176,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
         def __exit__(
             self,
-            exc_type: typing.Optional[typing.Type[Exception]],
+            exc_type: typing.Optional[type[Exception]],
             exc_val: typing.Optional[Exception],
             exc_tb: typing.Optional[types.TracebackType],
         ) -> None:
@@ -781,7 +780,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         before: undefined.UndefinedOr[str],
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
-        action_type: undefined.UndefinedOr[typing.Union["audit_logs.AuditLogEventType", int]],
+        action_type: undefined.UndefinedOr[typing.Union[audit_logs.AuditLogEventType, int]],
     ) -> None:
         self._action_type = action_type
         self._entity_factory = entity_factory
@@ -938,7 +937,7 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         return {"type": self.type, "data": {"choices": [choice.build() for choice in self._choices]}}, ()
 
 
@@ -978,7 +977,7 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
 
     def build(
         self, _: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         if self._flags is not undefined.UNDEFINED:
             return {"type": self._type, "data": {"flags": self._flags}}, ()
 
@@ -1023,13 +1022,13 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]] = (
         attrs.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
     )
-    _attachments: undefined.UndefinedNoneOr[typing.List[files.Resourceish]] = attrs.field(
+    _attachments: undefined.UndefinedNoneOr[list[files.Resourceish]] = attrs.field(
         alias="attachments", default=undefined.UNDEFINED, kw_only=True
     )
-    _components: undefined.UndefinedNoneOr[typing.List[special_endpoints.ComponentBuilder]] = attrs.field(
+    _components: undefined.UndefinedNoneOr[list[special_endpoints.ComponentBuilder]] = attrs.field(
         alias="components", default=undefined.UNDEFINED, kw_only=True
     )
-    _embeds: undefined.UndefinedNoneOr[typing.List[embeds_.Embed]] = attrs.field(
+    _embeds: undefined.UndefinedNoneOr[list[embeds_.Embed]] = attrs.field(
         alias="embeds", default=undefined.UNDEFINED, kw_only=True
     )
 
@@ -1152,7 +1151,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
 
@@ -1174,7 +1173,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
             data.put("attachments", None)
 
         if self._embeds:
-            embeds: typing.List[data_binding.JSONObject] = []
+            embeds: list[data_binding.JSONObject] = []
             for embed, attachments in map(entity_factory.serialize_embed, self._embeds):
                 final_attachments.extend(attachments)
                 embeds.append(embed)
@@ -1208,7 +1207,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
     _title: str = attrs.field(alias="title")
     _custom_id: str = attrs.field(alias="custom_id")
-    _components: typing.List[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
+    _components: list[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
 
     @property
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
@@ -1240,7 +1239,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
         data.put("title", self._title)
         data.put("custom_id", self._custom_id)
@@ -1259,7 +1258,7 @@ class InteractionPremiumRequiredBuilder(special_endpoints.InteractionPremiumRequ
 
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         return {"type": self.type}, ()
 
 
@@ -1359,7 +1358,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     """Builder class for slash commands."""
 
     _description: str = attrs.field(alias="description")
-    _options: typing.List[commands.CommandOption] = attrs.field(alias="options", factory=list, kw_only=True)
+    _options: list[commands.CommandOption] = attrs.field(alias="options", factory=list, kw_only=True)
     _description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
         alias="description_localizations", factory=dict, kw_only=True
     )
@@ -1462,7 +1461,7 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
 
 def _build_emoji(
     emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED
-) -> typing.Tuple[undefined.UndefinedOr[str], undefined.UndefinedOr[str]]:
+) -> tuple[undefined.UndefinedOr[str], undefined.UndefinedOr[str]]:
     """Build an emoji into the format accepted in buttons.
 
     Parameters
@@ -1741,7 +1740,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
 class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuBuilder[_ParentT]):
     """Builder class for text select menus."""
 
-    _options: typing.List[special_endpoints.SelectOptionBuilder] = attrs.field()
+    _options: list[special_endpoints.SelectOptionBuilder] = attrs.field()
     _parent: typing.Optional[_ParentT] = attrs.field()
     _type: typing.Literal[component_models.ComponentType.TEXT_SELECT_MENU] = attrs.field()
 
@@ -1963,7 +1962,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
 class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageActionRowBuilder`][]."""
 
-    _components: typing.List[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
+    _components: list[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
     _stored_type: typing.Optional[int] = attrs.field(default=None, init=False)
 
     @property
@@ -2090,7 +2089,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.ModalActionRowBuilder`][]."""
 
-    _components: typing.List[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
+    _components: list[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
     _stored_type: typing.Optional[int] = attrs.field(init=False, default=None)
 
     @property
