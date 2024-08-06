@@ -1837,17 +1837,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def serialize_onboarding_prompt(self, prompt: guild_models.OnboardingPrompt) -> data_binding.JSONObject:
-        payload: typing.Dict[str, typing.Any] = {
-            "id": str(prompt.id),
-            "type": prompt.type.value,
+        return {
+            "id": prompt.id,
+            "type": prompt.type,
             "title": prompt.title,
             "options": [self.serialize_onboarding_prompt_option(option) for option in prompt.options],
             "single_select": prompt.single_select,
             "required": prompt.required,
             "in_onboarding": prompt.in_onboarding,
         }
-
-        return payload
 
     def serialize_onboarding_prompt_option(
         self, option: guild_models.OnboardingPromptOption
