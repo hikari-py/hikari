@@ -1859,7 +1859,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             "title": option.title,
         }
 
-        if option.description is not None:
+        if option.description:
             payload["description"] = option.description
 
         if isinstance(option.emoji, emoji_models.UnicodeEmoji):
