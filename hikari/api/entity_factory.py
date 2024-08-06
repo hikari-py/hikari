@@ -1015,6 +1015,85 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_onboarding(self, payload: data_binding.JSONObject) -> guild_models.GuildOnboarding:
+        """Parse a raw payload from Discord into a guild onboarding object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.GuildOnboarding
+            The deserialized guild onboarding object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_onboarding_prompt(self, payload: data_binding.JSONObject) -> guild_models.OnboardingPrompt:
+        """Parse a raw payload from Discord into an onboarding prompt object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.OnboardingPrompt
+            The deserialized onboarding prompt object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_onboarding_prompt_option(
+        self, payload: data_binding.JSONObject
+    ) -> guild_models.OnboardingPromptOption:
+        """Parse a raw payload from Discord into an onboarding prompt option object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.OnboardingPromptOption
+            The deserialized onboarding prompt option object.
+        """
+
+    @abc.abstractmethod
+    def serialize_onboarding_prompt_option(
+        self, option: guild_models.OnboardingPromptOption
+    ) -> data_binding.JSONObject:
+        """Serialize an onboarding prompt option object to a json serializable dict.
+
+        Parameters
+        ----------
+        option
+            The onboarding prompt option object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the onboarding prompt option.
+        """
+
+    @abc.abstractmethod
+    def serialize_onboarding_prompt(self, prompt: guild_models.OnboardingPrompt) -> data_binding.JSONObject:
+        """Serialize an onboarding prompt object to a json serializable dict.
+
+        Parameters
+        ----------
+        prompt
+            The onboarding prompt object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the onboarding prompt.
+        """
+
+    @abc.abstractmethod
     def deserialize_welcome_screen(self, payload: data_binding.JSONObject) -> guild_models.WelcomeScreen:
         """Parse a raw payload from Discord into a guild welcome screen object.
 
