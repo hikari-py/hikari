@@ -356,7 +356,7 @@ class GuildMemberFlags(enums.Flag):
     """Member is exempt from guild verification requirements.
 
     !!! note
-        allows a member who does not meet verification requirements to participate in a server.
+        Allows a member who does not meet verification requirements to participate in a server.
     """
 
     STARTED_ONBOARDING = 1 << 3
