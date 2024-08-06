@@ -1332,10 +1332,10 @@ class GuildOnboarding:
     guild_id: snowflakes.Snowflake = attrs.field(repr=True)
     """ID of the guild this onboarding is part of."""
 
-    prompts: typing.Sequence[OnboardingPrompt] = attrs.field(repr=True)
+    prompts: typing.Sequence[OnboardingPrompt] = attrs.field(repr=False)
     """Prompts shown during onboarding and in customize community."""
 
-    default_channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=True)
+    default_channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
     """Channel IDs that members get opted into automatically."""
 
     enabled: bool = attrs.field(repr=True)
@@ -1356,7 +1356,7 @@ class OnboardingPrompt:
     type: OnboardingPromptType = attrs.field(repr=True)
     """The type of the onboarding prompt."""
 
-    options: typing.List[OnboardingPromptOption] = attrs.field(repr=True)
+    options: typing.List[OnboardingPromptOption] = attrs.field(repr=False)
     """Options available within the prompt."""
 
     title: str = attrs.field(repr=True)
@@ -1368,7 +1368,7 @@ class OnboardingPrompt:
     required: bool = attrs.field(repr=True)
     """Indicates whether the prompt is required before a user completes the onboarding flow."""
 
-    in_onboarding: bool = attrs.field(repr=True)
+    in_onboarding: bool = attrs.field(repr=False)
     """Indicates whether the prompt is present in the onboarding flow.
 
     If `[False][]`, the prompt will only appear in the "Channels & Roles" tab.
@@ -1381,16 +1381,22 @@ class OnboardingPromptOption:
     """Used to represent an onboarding prompt option."""
 
     id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the prompt option."""
 
-    channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=True)
+    channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
+    """IDs for channels a member is added to when the option is selected."""
 
-    role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=True)
+    role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
+    """IDs for roles assigned to a member when the option is selected."""
 
     emoji: typing.Optional[emojis_.Emoji] = attrs.field(repr=True)
+    """Emoji of the option."""
 
     title: str = attrs.field(repr=True)
+    """Title of the option."""
 
     description: typing.Optional[str] = attrs.field(repr=True)
+    """Description of the option."""
 
 
 @attrs_extensions.with_copy
