@@ -265,6 +265,27 @@ class AuditLogChangeKey(str, enums.Enum):
     COMMUNICATION_DISABLED_UNTIL = "communication_disabled_until"
     """The datetime when a timeout will expire."""
 
+    ENABLED = "enabled"
+    """Enabled."""
+
+    DEFAULT_CHANNEL_IDS = "default_channel_ids"
+    """Default Channel IDs."""
+
+    MODE = "mode"
+    """Mode."""
+
+    PROMPTS = "prompts"
+    """Prompts."""
+
+    OPTIONS = "options"
+    """Options."""
+
+    SINGLE_SELECT = "single_select"
+    """Single Select."""
+
+    REQUIRED = "required"
+    """Required."""
+
     # Who needs consistency?
     ADD_ROLE_TO_MEMBER = "$add"
     """Role added to a member."""
@@ -345,6 +366,11 @@ class AuditLogEventType(int, enums.Enum):
     THREAD_DELETE = 112
     CREATOR_MONETIZATION_REQUEST_CREATED = 150
     CREATOR_MONETIZATION_TERMS_ACCEPTED = 151
+    ONBOARDING_PROMPT_CREATE = 163
+    ONBOARDING_PROMPT_UPDATE = 164
+    ONBOARDING_PROMPT_DELETE = 165
+    ONBOARDING_CREATE = 166
+    ONBOARDING_UPDATE = 167
 
 
 @attrs.define(kw_only=True, weakref_slot=False)

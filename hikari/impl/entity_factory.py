@@ -486,6 +486,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.PERMISSION_OVERWRITES: self._deserialize_audit_log_overwrites,
             audit_log_models.AuditLogChangeKey.COMMUNICATION_DISABLED_UNTIL: time.iso8601_datetime_string_to_datetime,
+            audit_log_models.AuditLogChangeKey.OPTIONS: self._deserialize_audit_log_change_options,
+            audit_log_models.AuditLogChangeKey.PROMPTS: self._deserialize_audit_log_change_prompts,
         }
         self._audit_log_event_mapping: typing.Dict[
             typing.Union[int, audit_log_models.AuditLogEventType],
@@ -771,6 +773,23 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
             for overwrite in payload
         }
+
+    def _deserialize_audit_log_change_options(
+        self, payload: data_binding.JSONArray
+    ) -> typing.Mapping[snowflakes.Snowflake, guild_models.OnboardingPromptOption]:
+        return {
+            snowflakes.Snowflake(option["id"]): self.deserialize_onboarding_prompt_option(option)
+            for option in payload
+        }
+
+    def _deserialize_audit_log_change_prompts(
+        self, payload: data_binding.JSONArray
+    ) -> typing.Mapping[snowflakes.Snowflake, guild_models.OnboardingPrompt]:
+        return {
+            snowflakes.Snowflake(prompt["id"]): self.deserialize_onboarding_prompt(prompt)
+            for prompt in payload
+        }
+
 
     def _deserialize_channel_overwrite_entry_info(
         self, payload: data_binding.JSONObject
