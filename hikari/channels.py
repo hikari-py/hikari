@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -1547,10 +1546,7 @@ The following types are in this:
 * [`hikari.channels.GuildNewsChannel`][]
 """
 
-WebhookChannelTypes: typing.Tuple[typing.Type[GuildTextChannel], typing.Type[GuildNewsChannel]] = (
-    GuildTextChannel,
-    GuildNewsChannel,
-)
+WebhookChannelTypes: tuple[type[GuildTextChannel], type[GuildNewsChannel]] = (GuildTextChannel, GuildNewsChannel)
 """Tuple of the channel types which are valid for [`hikari.channels.WebhookChannelT`][].
 
 This includes:

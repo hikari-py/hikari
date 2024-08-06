@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -111,7 +110,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     @abc.abstractmethod
     def filter(
         self,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
+        *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
         **attrs: typing.Any,
     ) -> Self:
         """Filter the items by one or more conditions.
@@ -150,7 +149,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     @abc.abstractmethod
     def __exit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -276,7 +275,7 @@ class EventManager(abc.ABC):
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
     @abc.abstractmethod
-    def subscribe(self, event_type: typing.Type[typing.Any], callback: CallbackT[typing.Any]) -> None:
+    def subscribe(self, event_type: type[typing.Any], callback: CallbackT[typing.Any]) -> None:
         """Subscribe a given callback to a given event type.
 
         Parameters
@@ -318,7 +317,7 @@ class EventManager(abc.ABC):
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
     @abc.abstractmethod
-    def unsubscribe(self, event_type: typing.Type[typing.Any], callback: CallbackT[typing.Any]) -> None:
+    def unsubscribe(self, event_type: type[typing.Any], callback: CallbackT[typing.Any]) -> None:
         """Unsubscribe a given callback from a given event type, if present.
 
         Parameters
@@ -355,7 +354,7 @@ class EventManager(abc.ABC):
 
     @abc.abstractmethod
     def get_listeners(
-        self, event_type: typing.Type[base_events.EventT], /, *, polymorphic: bool = True
+        self, event_type: type[base_events.EventT], /, *, polymorphic: bool = True
     ) -> typing.Collection[CallbackT[base_events.EventT]]:
         """Get the listeners for a given event type, if there are any.
 
@@ -379,7 +378,7 @@ class EventManager(abc.ABC):
 
     @abc.abstractmethod
     def listen(
-        self, *event_types: typing.Type[base_events.EventT]
+        self, *event_types: type[base_events.EventT]
     ) -> typing.Callable[[CallbackT[base_events.EventT]], CallbackT[base_events.EventT]]:
         """Generate a decorator to subscribe a callback to an event type.
 
@@ -412,7 +411,7 @@ class EventManager(abc.ABC):
     @abc.abstractmethod
     def stream(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
@@ -477,7 +476,7 @@ class EventManager(abc.ABC):
     @abc.abstractmethod
     async def wait_for(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
         predicate: typing.Optional[PredicateT[base_events.EventT]] = None,

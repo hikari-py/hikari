@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -44,7 +43,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     raw_body = await response.read()
 
     # Little hack to stop mypy from complaining when using `*args`
-    args: typing.List[typing.Any] = [real_url, response.headers, raw_body]
+    args: list[typing.Any] = [real_url, response.headers, raw_body]
     try:
         json_body = data_binding.default_json_loads(await response.read())
         assert isinstance(json_body, dict)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -53,7 +52,7 @@ from hikari.internal import net
 if typing.TYPE_CHECKING:
     from hikari.impl import config
 
-    CmpTuple = typing.Tuple[int, int, int, typing.Union[int, float]]
+    CmpTuple = tuple[int, int, int, typing.Union[int, float]]
 
 # While this is discouraged for most purposes in libraries, this enables us to
 # filter out the vast majority of clutter that most network logger calls
@@ -69,9 +68,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 
 def init_logging(
-    flavor: typing.Union[None, str, int, typing.Dict[str, typing.Any], os.PathLike[str]],
-    allow_color: bool,
-    force_color: bool,
+    flavor: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]], allow_color: bool, force_color: bool
 ) -> None:
     """Initialize logging for the user.
 
@@ -232,23 +229,20 @@ def init_logging(
         raise RuntimeError("A problem occurred while trying to setup default logging configuration") from ex
 
 
-_UNCONDITIONAL_ANSI_FLAGS: typing.Final[typing.FrozenSet[str]] = frozenset(("PYCHARM_HOSTED", "WT_SESSION"))
+_UNCONDITIONAL_ANSI_FLAGS: typing.Final[frozenset[str]] = frozenset(("PYCHARM_HOSTED", "WT_SESSION"))
 """Set of env variables which always indicate that ANSI flags should be included."""
 
 
 def _read_banner(package: str) -> str:
-    if sys.version_info >= (3, 9):
-        with importlib.resources.files(package).joinpath("banner.txt").open("r", encoding="utf-8") as fp:
-            return fp.read()
-    else:
-        return importlib.resources.read_text(package, "banner.txt", encoding="utf-8")
+    with importlib.resources.files(package).joinpath("banner.txt").open("r", encoding="utf-8") as fp:
+        return fp.read()
 
 
 def print_banner(
     package: typing.Optional[str],
     allow_color: bool,
     force_color: bool,
-    extra_args: typing.Optional[typing.Dict[str, str]] = None,
+    extra_args: typing.Optional[dict[str, str]] = None,
 ) -> None:
     """Print a banner of choice to [`sys.stdout`][].
 
@@ -399,8 +393,8 @@ class HikariVersion:
 
     __slots__: typing.Sequence[str] = ("version", "prerelease", "_cmp")
 
-    version: typing.Tuple[int, int, int]
-    prerelease: typing.Optional[typing.Tuple[str, int]]
+    version: tuple[int, int, int]
+    prerelease: typing.Optional[tuple[str, int]]
 
     def __init__(self, vstring: str) -> None:
         match = _VERSION_REGEX.match(vstring)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -136,19 +135,19 @@ class InteractionServer(abc.ABC):
     @typing.overload
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
+        self, interaction_type: type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]]: ...
 
     @typing.overload
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
+        self, interaction_type: type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]]: ...
 
     @typing.overload
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[command_interactions.AutocompleteInteraction], /
+        self, interaction_type: type[command_interactions.AutocompleteInteraction], /
     ) -> typing.Optional[
         ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
     ]: ...
@@ -156,18 +155,18 @@ class InteractionServer(abc.ABC):
     @typing.overload
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
+        self, interaction_type: type[modal_interactions.ModalInteraction], /
     ) -> typing.Optional[ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]: ...
 
     @typing.overload
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], /
+        self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]: ...
 
     @abc.abstractmethod
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], /
+        self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         """Get the listener registered for an interaction.
 
@@ -187,7 +186,7 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def set_listener(
         self,
-        interaction_type: typing.Type[command_interactions.CommandInteraction],
+        interaction_type: type[command_interactions.CommandInteraction],
         listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]],
         /,
         *,
@@ -198,7 +197,7 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def set_listener(
         self,
-        interaction_type: typing.Type[component_interactions.ComponentInteraction],
+        interaction_type: type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
             ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]
         ],
@@ -211,7 +210,7 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def set_listener(
         self,
-        interaction_type: typing.Type[command_interactions.AutocompleteInteraction],
+        interaction_type: type[command_interactions.AutocompleteInteraction],
         listener: typing.Optional[
             ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
         ],
@@ -224,7 +223,7 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def set_listener(
         self,
-        interaction_type: typing.Type[modal_interactions.ModalInteraction],
+        interaction_type: type[modal_interactions.ModalInteraction],
         listener: typing.Optional[ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]],
         /,
         *,
@@ -234,7 +233,7 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT_co],
+        interaction_type: type[_InteractionT_co],
         listener: typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]],
         /,
         *,

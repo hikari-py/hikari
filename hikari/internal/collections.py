@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -106,7 +105,7 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
 
     __slots__: typing.Sequence[str] = ("_data",)
 
-    def __init__(self, source: typing.Optional[typing.Dict[KeyT, ValueT]] = None, /) -> None:
+    def __init__(self, source: typing.Optional[dict[KeyT, ValueT]] = None, /) -> None:
         self._data = source or {}
 
     def clear(self) -> None:
@@ -116,7 +115,7 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
         return FreezableDict(self._data.copy())
 
     # TODO: name this something different if it is not physically frozen.
-    def freeze(self) -> typing.Dict[KeyT, ValueT]:
+    def freeze(self) -> dict[KeyT, ValueT]:
         return self._data.copy()
 
     def __delitem__(self, key: KeyT) -> None:
@@ -160,13 +159,13 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
     def __init__(
         self,
-        source: typing.Optional[typing.Dict[KeyT, ValueT]] = None,
+        source: typing.Optional[dict[KeyT, ValueT]] = None,
         /,
         *,
         limit: int,
         on_expire: typing.Optional[typing.Callable[[ValueT], None]] = None,
     ) -> None:
-        self._data: typing.Dict[KeyT, ValueT] = source or {}
+        self._data: dict[KeyT, ValueT] = source or {}
         self._limit = limit
         self._on_expire = on_expire
         self._garbage_collect()
@@ -177,7 +176,7 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
     def copy(self) -> LimitedCapacityCacheMap[KeyT, ValueT]:
         return LimitedCapacityCacheMap(self._data.copy(), limit=self._limit, on_expire=self._on_expire)
 
-    def freeze(self) -> typing.Dict[KeyT, ValueT]:
+    def freeze(self) -> dict[KeyT, ValueT]:
         return self._data.copy()
 
     def _garbage_collect(self) -> None:

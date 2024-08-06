@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -1004,7 +1003,7 @@ class TestInteractionModalBuilder:
 
 class TestCommandBuilder:
     @pytest.fixture
-    def stub_command(self) -> typing.Type[special_endpoints.CommandBuilder]:
+    def stub_command(self) -> type[special_endpoints.CommandBuilder]:
         return hikari_test_helpers.mock_class_namespace(special_endpoints.CommandBuilder)
 
     def test_name_property(self, stub_command):

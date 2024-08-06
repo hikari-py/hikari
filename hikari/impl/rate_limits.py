@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -72,7 +71,7 @@ class BaseRateLimiter(abc.ABC):
 
     def __exit__(
         self,
-        exc_type: typing.Optional[typing.Type[Exception]],
+        exc_type: typing.Optional[type[Exception]],
         exc_val: typing.Optional[Exception],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -94,7 +93,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
     """The throttling task, or [`None`][] if it is not running."""
 
-    queue: typing.List[asyncio.Future[typing.Any]]
+    queue: list[asyncio.Future[typing.Any]]
     """The queue of any futures under a rate limit."""
 
     def __init__(self, name: str) -> None:

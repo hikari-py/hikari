@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -65,7 +64,7 @@ setuptools.setup(
     maintainer_email=metadata.email,
     license=metadata.license,
     url=metadata.url,
-    python_requires=">=3.8.0,<3.13",
+    python_requires=">=3.9.0,<3.13",
     packages=setuptools.find_namespace_packages(include=["hikari*"]),
     entry_points={"console_scripts": ["hikari = hikari.cli:main"]},
     install_requires=parse_requirements_file("requirements.txt"),
@@ -91,7 +90,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

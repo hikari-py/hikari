@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -154,7 +153,7 @@ class _FilePayload(aiohttp.Payload):
         /,
         *,
         executor: typing.Optional[concurrent.futures.Executor] = None,
-        headers: typing.Optional[typing.Dict[str, str]] = None,
+        headers: typing.Optional[dict[str, str]] = None,
     ) -> None:
         super().__init__(value=value, headers=headers, content_type=content_type)
         self._executor = executor
@@ -244,13 +243,13 @@ class InteractionServer(interaction_server.InteractionServer):
         self._entity_factory = entity_factory
         self._executor = executor
         self._is_closing = False
-        self._listeners: typing.Dict[typing.Type[base_interactions.PartialInteraction], typing.Any] = {}
+        self._listeners: dict[type[base_interactions.PartialInteraction], typing.Any] = {}
         self._loads = loads
         self._nacl = nacl
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
-        self._running_generator_listeners: typing.List[asyncio.Task[None]] = []
+        self._running_generator_listeners: list[asyncio.Task[None]] = []
 
     @property
     def is_alive(self) -> bool:
@@ -547,7 +546,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._server = aiohttp.web_runner.AppRunner(aio_app, access_log=_LOGGER)
         await self._server.setup()
 
-        sites: typing.List[aiohttp.web.BaseSite] = []
+        sites: list[aiohttp.web.BaseSite] = []
 
         if host is not None:
             if isinstance(host, str):
@@ -600,21 +599,21 @@ class InteractionServer(interaction_server.InteractionServer):
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
+        self, interaction_type: type[command_interactions.CommandInteraction], /
     ) -> typing.Optional[
         interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
     ]: ...
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
+        self, interaction_type: type[component_interactions.ComponentInteraction], /
     ) -> typing.Optional[
         interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
     ]: ...
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[command_interactions.AutocompleteInteraction], /
+        self, interaction_type: type[command_interactions.AutocompleteInteraction], /
     ) -> typing.Optional[
         interaction_server.ListenerT[
             command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
@@ -623,27 +622,27 @@ class InteractionServer(interaction_server.InteractionServer):
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
+        self, interaction_type: type[modal_interactions.ModalInteraction], /
     ) -> typing.Optional[
         interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
     ]: ...
 
     @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], /
+        self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[
         interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
     ]: ...
 
     def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], /
+        self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         return self._listeners.get(interaction_type)
 
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[command_interactions.CommandInteraction],
+        interaction_type: type[command_interactions.CommandInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
         ],
@@ -655,7 +654,7 @@ class InteractionServer(interaction_server.InteractionServer):
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[component_interactions.ComponentInteraction],
+        interaction_type: type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
         ],
@@ -667,7 +666,7 @@ class InteractionServer(interaction_server.InteractionServer):
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[command_interactions.AutocompleteInteraction],
+        interaction_type: type[command_interactions.AutocompleteInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[
                 command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
@@ -681,7 +680,7 @@ class InteractionServer(interaction_server.InteractionServer):
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[modal_interactions.ModalInteraction],
+        interaction_type: type[modal_interactions.ModalInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
         ],
@@ -692,7 +691,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT_co],
+        interaction_type: type[_InteractionT_co],
         listener: typing.Optional[
             interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
         ],

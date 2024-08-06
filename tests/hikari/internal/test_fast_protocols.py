@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -78,10 +77,10 @@ class TestFastProtocolChecking:
     def test_new_when_bases_not_fastprotocols(self):
         with pytest.raises(
             TypeError,
-            match=r"FastProtocolChecking can only inherit from other fast checking protocols, got <class 'object'>",
+            match=r"FastProtocolChecking can only inherit from other fast checking protocols, got <class 'str'>",
         ):
 
-            class MyProtocol(object, fast_protocol.FastProtocolChecking, typing.Protocol): ...
+            class MyProtocol(str, fast_protocol.FastProtocolChecking, typing.Protocol): ...
 
     def test_new_when_fastprotocolchecking_in_bases_but_not_protocol(self):
         with pytest.raises(TypeError, match=r"FastProtocolChecking can only be used with protocols"):

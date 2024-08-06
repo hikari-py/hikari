@@ -63,7 +63,7 @@ exclude_lines = [
 [tool.pyright]
 include = ["hikari", "examples"]
 exclude = ["examples/simple_dashboard.py", "**/__init__.py", "hikari/internal/enums.py", "hikari/internal/fast_protocol.py"]
-pythonVersion = "3.8"
+pythonVersion = "3.9"
 typeCheckingMode = "strict"
 
 reportUnnecessaryTypeIgnoreComment = "error"
@@ -133,7 +133,7 @@ incremental = true
 namespace_packages = true
 no_implicit_optional = true
 pretty = true
-python_version = 3.8
+python_version = 3.9
 show_column_numbers = true
 show_error_codes = true
 show_error_context = true

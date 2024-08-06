@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -39,7 +38,7 @@ from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
 PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")
-MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typing.Mapping[str, str]], str]] = {
+MAJOR_PARAM_COMBOS: typing.Mapping[frozenset[str], typing.Callable[[typing.Mapping[str, str]], str]] = {
     frozenset(("channel",)): lambda d: d["channel"],
     frozenset(("guild",)): lambda d: d["guild"],
     frozenset(("webhook", "token")): lambda d: d["webhook"] + ":" + d["token"],
@@ -137,7 +136,7 @@ class Route:
     path_template: str = attrs.field()
     """The template string used for the path."""
 
-    major_params: typing.Optional[typing.FrozenSet[str]] = attrs.field(hash=False, eq=False, repr=False)
+    major_params: typing.Optional[frozenset[str]] = attrs.field(hash=False, eq=False, repr=False)
     """The optional major parameter name combination for this endpoint."""
 
     has_ratelimits: bool = attrs.field(hash=False, eq=False, repr=False)
@@ -189,7 +188,7 @@ class Route:
         return self.method + " " + self.path_template
 
 
-def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.FrozenSet[str]:
+def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> frozenset[str]:
     return frozenset(v.lower() for v in values)
 
 
@@ -578,7 +577,7 @@ GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
 GET_GATEWAY_BOT: typing.Final[Route] = Route(GET, "/gateway/bot")
 
 PNG: typing.Final[str] = "png"
-JPEG_JPG: typing.Final[typing.Tuple[str, str]] = ("jpeg", "jpg")
+JPEG_JPG: typing.Final[tuple[str, str]] = ("jpeg", "jpg")
 WEBP: typing.Final[str] = "webp"
 GIF: typing.Final[str] = "gif"
 LOTTIE: typing.Final[str] = "json"  # https://airbnb.io/lottie/
