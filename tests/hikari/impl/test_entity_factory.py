@@ -3227,7 +3227,7 @@ class TestEntityFactoryImpl:
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
         assert member.is_mute is True
-        assert member.guild_flags == guild_models.GuildMemberFlags(1)
+        assert member.guild_flags == guild_models.GuildMemberFlags.DID_REJOIN
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_with_null_fields(self, entity_factory_impl, user_payload):
