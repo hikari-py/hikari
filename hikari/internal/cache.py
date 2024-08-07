@@ -732,6 +732,7 @@ class MessageData(BaseData[messages.Message]):
     interaction: typing.Optional[MessageInteractionData] = attrs.field()
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     components: tuple[components_.MessageActionRowComponent, ...] = attrs.field()
+    thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field()
 
     @classmethod
     def build_from_entity(
@@ -800,6 +801,7 @@ class MessageData(BaseData[messages.Message]):
             interaction=interaction,
             application_id=message.application_id,
             components=tuple(message.components),
+            thread=message.thread,
         )
 
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
@@ -845,6 +847,7 @@ class MessageData(BaseData[messages.Message]):
             interaction=self.interaction.build_entity(app) if self.interaction else None,
             application_id=self.application_id,
             components=self.components,
+            thread=self.thread,
         )
 
     def update(
