@@ -1,4 +1,4 @@
 aiohttp~=3.10
-attrs~=24.1
+attrs~=24.2
 colorlog~=6.8
 multidict~=6.0
