@@ -6,7 +6,7 @@ repo_url: https://github.com/hikari-py/hikari/
 repo_name: hikari-py/hikari
 edit_uri: blob/master/docs/
 
-watch: [ hikari, README.md, CHANGELOG.md, scripts/docs ]
+watch: [ hikari, README.md, CHANGELOG.md, changes/, scripts/docs ]
 copyright: © 2021-present davfsa
 
 #strict: true
@@ -119,6 +119,8 @@ plugins:
 #      caption_position: bottom
 #      skip_classes:
 #         - no-lightbox
+  - towncrier:
+      hide_if_empty: !ENV [HIDE_EMPTY_TOWNCRIER_DRAFT, true]
   - gen-files:
       scripts:
       - scripts/docs/gen_ref_pages.py
