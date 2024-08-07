@@ -3207,6 +3207,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
+        thread: typing.Optional[channel_models.GuildThreadChannel] = None
+        if thread_payload := payload.get("thread"):
+            thread = self.deserialize_guild_thread(thread_payload)
+
         components: list[component_models.MessageActionRowComponent]
         if component_payloads := payload.get("components"):
             components = self._deserialize_components(component_payloads, self._message_component_type_mapping)
@@ -3249,6 +3253,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_mentions=channel_mentions,
             role_mention_ids=role_mention_ids,
             mentions_everyone=payload.get("mention_everyone", False),
+            thread=thread,
         )
 
     ###################

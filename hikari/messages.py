@@ -1432,3 +1432,9 @@ class Message(PartialMessage):
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""
+
+    thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field(hash=False, eq=False, repr=False)
+    """The thread that was started from this message.
+
+    Will be [`None`] if the message was not used to start a thread.
+    """

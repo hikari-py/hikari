@@ -25,6 +25,7 @@ import datetime
 import mock
 import pytest
 
+from hikari import channels
 from hikari import embeds
 from hikari import emojis
 from hikari import guilds
@@ -2766,6 +2767,7 @@ class TestCacheImpl:
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
         )
         mock_interaction = mock.Mock()
+        mock_thread = mock.MagicMock(channels.GuildThreadChannel)
 
         message_data = cache_utilities.MessageData(
             id=snowflakes.Snowflake(32123123),
@@ -2797,6 +2799,7 @@ class TestCacheImpl:
             interaction=mock_interaction,
             application_id=snowflakes.Snowflake(123123123123),
             components=(mock_component,),
+            thread=mock_thread,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2852,6 +2855,7 @@ class TestCacheImpl:
         assert result.application_id == 123123123123
         assert result.interaction is mock_interaction.build_entity.return_value
         assert result.components == (mock_component,)
+        assert result.thread == mock_thread
 
     def test__build_message_with_null_fields(self, cache_impl):
         message_data = cache_utilities.MessageData(
@@ -2884,6 +2888,7 @@ class TestCacheImpl:
             interaction=None,
             application_id=None,
             components=(),
+            thread=None,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
