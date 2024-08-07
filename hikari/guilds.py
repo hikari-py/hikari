@@ -353,11 +353,7 @@ class GuildMemberFlags(enums.Flag):
     """Member has completed onboarding."""
 
     BYPASSES_VERIFICATION = 1 << 2
-    """Member has been exempt from guild verification requirements.
-
-    !!! note
-        Allows a member who does not meet verification requirements to participate in a server.
-    """
+    """Member is exempt from guild verification requirements."""
 
     STARTED_ONBOARDING = 1 << 3
     """Member has started onboarding."""
