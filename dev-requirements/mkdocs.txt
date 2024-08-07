@@ -14,5 +14,8 @@ mkdocs-literate-nav==0.6.1
 # Minify
 mkdocs-minify-plugin==0.8.0
 
+# Towncrier draft changelogs
+mkdocs-towncrier==0.1.3
+
 # Image viewer ext
 # mkdocs-glightbox==0.3.7

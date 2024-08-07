@@ -23,15 +23,24 @@
 
 from __future__ import annotations
 
+import os
+
 from pipelines import config
 from pipelines import nox
+
+
+def _setup_environ(session: nox.Session) -> None:
+    if "--no-refs" in session.posargs:
+        session.env["ENABLE_MKDOCSTRINGS"] = "false"
+
+    if os.environ.get("READTHEDOCS_VERSION_NAME", "master") == "master":
+        session.env["HIDE_EMPTY_TOWNCRIER_DRAFT"] = "false"
 
 
 @nox.session()
 def mkdocs(session: nox.Session):
     """Generate docs using mkdocs."""
-    if "--no-refs" in session.posargs:
-        session.env["ENABLE_MKDOCSTRINGS"] = "false"
+    _setup_environ(session)
 
     session.install("-e", ".", *nox.dev_requirements("mkdocs"))
 
@@ -41,8 +50,7 @@ def mkdocs(session: nox.Session):
 @nox.session()
 def mkdocs_serve(session: nox.Session):
     """Start an HTTP server that serves the generated docs in real time."""
-    if "--no-refs" in session.posargs:
-        session.env["ENABLE_MKDOCSTRINGS"] = "false"
+    _setup_environ(session)
 
     session.install("-e", ".", *nox.dev_requirements("mkdocs"))
 
