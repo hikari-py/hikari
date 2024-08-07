@@ -25,7 +25,6 @@ import datetime
 import mock
 import pytest
 
-from hikari import channels
 from hikari import embeds
 from hikari import emojis
 from hikari import guilds
@@ -2767,7 +2766,7 @@ class TestCacheImpl:
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
         )
         mock_interaction = mock.Mock()
-        mock_thread = mock.MagicMock(channels.GuildThreadChannel)
+        mock_thread = mock.Mock()
 
         message_data = cache_utilities.MessageData(
             id=snowflakes.Snowflake(32123123),
