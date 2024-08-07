@@ -85,7 +85,7 @@ setuptools.setup(
         "CI": metadata.ci,
     },
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         "Framework :: AsyncIO",
         "Intended Audience :: Developers",
