@@ -1888,7 +1888,7 @@ class TestCacheImpl:
         assert member.raw_communication_disabled_until == datetime.datetime(
             2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
         )
-        assert member.guild_flags == guilds.GuildMemberFlags(1)
+        assert member.guild_flags == guilds.GuildMemberFlags.DID_REJOIN
 
     def test_clear_members(self, cache_impl):
         mock_user_1 = cache_utilities.RefCell(mock.Mock(id=snowflakes.Snowflake(2123123)))
