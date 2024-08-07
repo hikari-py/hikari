@@ -1436,5 +1436,5 @@ class Message(PartialMessage):
     thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field(hash=False, eq=False, repr=False)
     """The thread that was started from this message.
 
-    Will be [`None`] if the message was not used to start a thread.
+    Will be [`None`][] if the message was not used to start a thread.
     """
