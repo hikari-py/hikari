@@ -5653,6 +5653,7 @@ class TestEntityFactoryImpl:
         action_row_payload,
         partial_sticker_payload,
         attachment_payload,
+        guild_public_thread_payload,
     ):
         member_payload = member_payload.copy()
         del member_payload["user"]
@@ -5692,6 +5693,7 @@ class TestEntityFactoryImpl:
             "application_id": "123123123123",
             "interaction": {"id": "123123123", "type": 2, "name": "OKOKOK", "user": user_payload},
             "components": [action_row_payload, {"type": 1000000000}],
+            "thread": guild_public_thread_payload,
         }
 
     def test__deserialize_message_attachment(self, entity_factory_impl, attachment_payload):
@@ -6023,12 +6025,23 @@ class TestEntityFactoryImpl:
             [action_row_payload], entity_factory_impl._message_component_type_mapping
         )
 
+        # Thread
+        assert isinstance(message.thread, channel_models.GuildPublicThread)
+        assert message.thread.id == 947643783913308301
+        assert message.thread.guild_id == 574921006817476608
+        assert message.thread.parent_id == 744183190998089820
+        assert message.thread.owner_id == 115590097100865541
+        assert message.thread.type is channel_models.ChannelType.GUILD_PUBLIC_THREAD
+        assert message.thread.flags == channel_models.ChannelFlag.PINNED
+        assert message.thread.name == "e"
+
     def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
         del message_payload["application"]["cover_image"]
         del message_payload["activity"]["party_id"]
         del message_payload["message_reference"]["message_id"]
         del message_payload["message_reference"]["guild_id"]
         del message_payload["mention_channels"]
+        del message_payload["thread"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
 
@@ -6046,6 +6059,9 @@ class TestEntityFactoryImpl:
         assert message.message_reference.id is None
         assert message.message_reference.guild_id is None
         assert isinstance(message.message_reference, message_models.MessageReference)
+
+        # Thread
+        assert message.thread is None
 
     def test_deserialize_message_with_null_sub_fields(self, entity_factory_impl, message_payload):
         message_payload["application"]["icon"] = None
