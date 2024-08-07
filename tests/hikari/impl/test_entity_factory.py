@@ -3207,7 +3207,7 @@ class TestEntityFactoryImpl:
         assert member.is_deaf is False
         assert member.is_mute is True
         assert member.is_pending is False
-        assert member.guild_flags == guild_models.GuildMemberFlags(1)
+        assert member.guild_flags == guild_models.GuildMemberFlags.DID_REJOIN
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_when_guild_id_already_in_role_array(
