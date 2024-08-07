@@ -2254,7 +2254,7 @@ class TestCacheImpl:
         assert member_entry.object.raw_communication_disabled_until == datetime.datetime(
             2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
         )
-        assert member_entry.object.guild_flags == guilds.GuildMemberFlags(1)
+        assert member_entry.object.guild_flags == guilds.GuildMemberFlags.DID_REJOIN
 
     def test_set_member_doesnt_increment_user_ref_count_for_pre_cached_member(self, cache_impl):
         mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(645234123))
