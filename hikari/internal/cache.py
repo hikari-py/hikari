@@ -403,6 +403,7 @@ class MemberData(BaseData[guilds.Member]):
     is_mute: undefined.UndefinedOr[bool] = attrs.field()
     is_pending: undefined.UndefinedOr[bool] = attrs.field()
     raw_communication_disabled_until: typing.Optional[datetime.datetime] = attrs.field()
+    guild_flags: typing.Union[guilds.GuildMemberFlags, int] = attrs.field()
     # meta-attribute
     has_been_deleted: bool = attrs.field(default=False, init=False)
 
@@ -421,6 +422,7 @@ class MemberData(BaseData[guilds.Member]):
             is_pending=member.is_pending,
             user=user or RefCell(copy.copy(member.user)),
             raw_communication_disabled_until=member.raw_communication_disabled_until,
+            guild_flags=member.guild_flags,
             # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
             role_ids=tuple(member.role_ids),
         )
@@ -438,6 +440,7 @@ class MemberData(BaseData[guilds.Member]):
             is_pending=self.is_pending,
             raw_communication_disabled_until=self.raw_communication_disabled_until,
             user=self.user.copy(),
+            guild_flags=self.guild_flags,
         )
 
 

@@ -230,6 +230,7 @@ class TestMember:
             role_ids=[snowflakes.Snowflake(456), snowflakes.Snowflake(1234)],
             user=mock_user,
             raw_communication_disabled_until=None,
+            guild_flags=guilds.GuildMemberFlags.NONE,
         )
 
     def test_str_operator(self, model, mock_user):
