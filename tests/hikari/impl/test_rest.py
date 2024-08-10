@@ -460,7 +460,6 @@ def file_resource():
     return FileResource
 
 
-@pytest.fixture
 def file_resource_patch(file_resource):
     resource = file_resource("some data")
     with mock.patch.object(files, "ensure_resource", return_value=resource):
@@ -6440,12 +6439,17 @@ class TestRESTClientImplAsync:
         expected_route = routes.GET_POLL_ANSWER.compile(
             channel=StubModel(45874392), message=StubModel(398475938475), answer=StubModel(4)
         )
-        # FIXME: Test that returned values get deserialized correctly
-        rest_client._request = mock.AsyncMock(return_value=[])
 
-        await rest_client.fetch_poll_voters(
-            StubModel(45874392), StubModel(398475938475), StubModel(4), after=StubModel(43587935), limit=6
-        )
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "1234"}])
+
+        with mock.patch.object(
+            rest_client._entity_factory, "deserialize_user", return_value=mock.Mock()
+        ) as patched_deserialize_user:
+            await rest_client.fetch_poll_voters(
+                StubModel(45874392), StubModel(398475938475), StubModel(4), after=StubModel(43587935), limit=6
+            )
+
+            patched_deserialize_user.assert_called_once_with({"id": "1234"})
 
         rest_client._request.assert_awaited_once_with(expected_route, query={"after": "43587935", "limit": "6"})
 
