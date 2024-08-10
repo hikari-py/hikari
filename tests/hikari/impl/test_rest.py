@@ -460,6 +460,7 @@ def file_resource():
     return FileResource
 
 
+@pytest.fixture
 def file_resource_patch(file_resource):
     resource = file_resource("some data")
     with mock.patch.object(files, "ensure_resource", return_value=resource):
