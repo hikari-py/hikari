@@ -3798,7 +3798,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _serialize_poll_media(self, poll_media: poll_models.PollMedia) -> data_binding.JSONObject:
-        # FIXME: Typing is **very** dodgy here. Revise this before shipping.
         serialised_poll_media: typing.MutableMapping[str, typing.Any] = {"text": poll_media.text}
 
         if isinstance(poll_media.emoji, emoji_models.UnicodeEmoji):
