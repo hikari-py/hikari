@@ -1149,6 +1149,24 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
 
+    async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
+        route = routes.GET_MY_GUILD_VOICE_STATE.compile(guild=guild)
+
+        response = await self._request(route)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_voice_state(response)
+
+    async def fetch_voice_state(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> voices.VoiceState:
+        route = routes.GET_GUILD_VOICE_STATE.compile(guild=guild, user=user)
+
+        response = await self._request(route)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_voice_state(response)
+
     async def edit_my_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

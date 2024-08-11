@@ -443,6 +443,9 @@ PATCH_GUILD_ROLES: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/roles")
 
 GET_GUILD_VANITY_URL: typing.Final[Route] = Route(GET, "/guilds/{guild}/vanity-url")
 
+GET_GUILD_VOICE_STATE: typing.Final[Route] = Route(GET, "/guilds/{guild}/voice-states/{user}")
+GET_MY_GUILD_VOICE_STATE: typing.Final[Route] = Route(GET, "/guilds/{guild}/voice-states/@me")
+
 PATCH_GUILD_VOICE_STATE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/voice-states/{user}")
 PATCH_MY_GUILD_VOICE_STATE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/voice-states/@me")
 

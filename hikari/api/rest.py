@@ -407,6 +407,64 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
+        """Fetch the current user's voice state.
+
+        Parameters
+        ----------
+        guild
+            The guild to fetch the state from. This may be the object or the ID.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel, message or voice state is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+
+        Returns
+        -------
+        voices.VoiceState
+            The current user's voice state.
+        """
+
+    @abc.abstractmethod
+    async def fetch_voice_state(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> voices.VoiceState:
+        """Fetch the current user's voice state.
+
+        Parameters
+        ----------
+        guild
+            The guild to fetch the state from. This may be the object or the ID.
+        user
+            The user to fetch the state for. This may be the object or the ID.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel, message or voice state is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+
+        Returns
+        -------
+        voices.VoiceState
+            The user's voice state.
+        """
+
+    @abc.abstractmethod
     async def edit_my_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
