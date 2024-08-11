@@ -2269,6 +2269,86 @@ class TestRESTClientImplAsync:
             expected_route, json={"channel_id": "999", "suppress": True, "request_to_speak_timestamp": None}
         )
 
+    async def test_fetch_my_voice_state(self, rest_client):
+        expected_route = routes.GET_MY_GUILD_VOICE_STATE.compile(guild=5454)
+
+        expected_json = {
+            "guild_id": "5454",
+            "channel_id": "3940568093485",
+            "user_id": "237890809345627",
+            "member": {
+                "nick": "foobarbaz",
+                "roles": ["11111", "22222", "33333", "44444"],
+                "joined_at": "2015-04-26T06:26:56.936000+00:00",
+                "premium_since": "2019-05-17T06:26:56.936000+00:00",
+                "avatar": "estrogen",
+                "deaf": False,
+                "mute": True,
+                "pending": False,
+                "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
+            },
+            "session_id": "39405894b9058guhfguh43t9g",
+            "deaf": False,
+            "mute": True,
+            "self_deaf": False,
+            "self_mute": True,
+            "self_stream": False,
+            "self_video": True,
+            "suppress": False,
+            "request_to_speak_timestamp": "2021-04-17T10:11:19.970105+00:00",
+        }
+
+        rest_client._request = mock.AsyncMock(return_value=expected_json)
+
+        with mock.patch.object(
+            rest_client._entity_factory, "deserialize_voice_state", return_value=mock.Mock()
+        ) as patched_deserialize_voice_state:
+            await rest_client.fetch_my_voice_state(StubModel(5454))
+
+            patched_deserialize_voice_state.assert_called_once_with(expected_json)
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_voice_state(self, rest_client):
+        expected_route = routes.GET_GUILD_VOICE_STATE.compile(guild=5454, user=1234567890)
+
+        expected_json = {
+            "guild_id": "5454",
+            "channel_id": "3940568093485",
+            "user_id": "1234567890",
+            "member": {
+                "nick": "foobarbaz",
+                "roles": ["11111", "22222", "33333", "44444"],
+                "joined_at": "2015-04-26T06:26:56.936000+00:00",
+                "premium_since": "2019-05-17T06:26:56.936000+00:00",
+                "avatar": "estrogen",
+                "deaf": False,
+                "mute": True,
+                "pending": False,
+                "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
+            },
+            "session_id": "39405894b9058guhfguh43t9g",
+            "deaf": False,
+            "mute": True,
+            "self_deaf": False,
+            "self_mute": True,
+            "self_stream": False,
+            "self_video": True,
+            "suppress": False,
+            "request_to_speak_timestamp": "2021-04-17T10:11:19.970105+00:00",
+        }
+
+        rest_client._request = mock.AsyncMock(return_value=expected_json)
+
+        with mock.patch.object(
+            rest_client._entity_factory, "deserialize_voice_state", return_value=mock.Mock()
+        ) as patched_deserialize_voice_state:
+            await rest_client.fetch_voice_state(StubModel(5454), StubModel(1234567890))
+
+            patched_deserialize_voice_state.assert_called_once_with(expected_json)
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_edit_my_voice_state_when_providing_datetime_for_request_to_speak(self, rest_client):
         rest_client._request = mock.AsyncMock()
         expected_route = routes.PATCH_MY_GUILD_VOICE_STATE.compile(guild=5421)
