@@ -413,7 +413,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild
-            Object or Id of the guild to fetch the voice state from.
+            The guild to fetch the state from. This may be the object or the ID.
 
         Raises
         ------
@@ -442,9 +442,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         guild
-            Object or Id of the guild to fetch the voice state from.
+            The guild to fetch the state from. This may be the object or the ID.
         user
-            Object or Id of the user to fetch the voice state for.
+            The user to fetch the state for. This may be the object or the ID.
 
         Raises
         ------
