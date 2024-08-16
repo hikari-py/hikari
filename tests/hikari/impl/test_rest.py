@@ -5130,6 +5130,17 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_member_ban.assert_called_once_with({"id": "789"})
 
+    async def test_fetch_role(self, rest_client):
+        role = StubModel(456)
+        expected_route = routes.GET_GUILD_ROLE.compile(guild=123, role=456)
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+        rest_client._entity_factory.deserialize_role = mock.Mock(return_value=role)
+
+        assert await rest_client.fetch_role(StubModel(123), StubModel(456)) is role
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
+
     async def test_fetch_roles(self, rest_client):
         role1 = StubModel(456)
         role2 = StubModel(789)
