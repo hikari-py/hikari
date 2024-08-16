@@ -5926,7 +5926,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    # write the docstrings for the function below this comment
     @abc.abstractmethod
     async def fetch_role(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
