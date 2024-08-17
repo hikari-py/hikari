@@ -359,7 +359,6 @@ class JSONObjectBuilder(dict[str, JSONish]):
         else:
             self[key] = values
 
-
     def put_snowflake(
         self, key: str, value: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[snowflakes.Unique]], /
     ) -> None:
@@ -385,7 +384,10 @@ class JSONObjectBuilder(dict[str, JSONish]):
             self[key] = value
 
     def put_snowflake_array(
-        self, key: str, values: undefined.UndefinedNoneOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]], /
+        self,
+        key: str,
+        values: undefined.UndefinedNoneOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]],
+        /,
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 
