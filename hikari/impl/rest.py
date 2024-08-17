@@ -3657,11 +3657,11 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        default_channels: undefined.UndefinedOr[
+        default_channels: undefined.UndefinedNoneOr[
             typing.Sequence[snowflakes.SnowflakeishOr[channels_.GuildChannel]]
         ] = undefined.UNDEFINED,
         mode: undefined.UndefinedOr[guilds.OnboardingMode] = undefined.UNDEFINED,
-        prompts: undefined.UndefinedOr[typing.Sequence[guilds.OnboardingPrompt]] = undefined.UNDEFINED,
+        prompts: undefined.UndefinedNoneOr[typing.Sequence[guilds.OnboardingPrompt]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.GuildOnboarding:
         route = routes.PUT_GUILD_ONBOARDING.compile(guild=guild)
