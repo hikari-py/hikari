@@ -5385,6 +5385,71 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
 
+    async def test_fetch_guild_onboarding(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})
+        expected_route = routes.GET_GUILD_ONBOARDING.compile(guild=123)
+
+        result = await rest_client.fetch_guild_onboarding(StubModel(123))
+        assert result is rest_client._entity_factory.deserialize_onboarding.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_onboarding.assert_called_once_with(
+            rest_client._request.return_value
+        )
+
+    async def test_edit_guild_onboarding_with_optional_kwargs(self, rest_client):
+        mock_channel = StubModel(456)
+        mock_prompt = object()
+        rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})
+        expected_route = routes.PUT_GUILD_ONBOARDING.compile(guild=123)
+
+        result = await rest_client.edit_guild_onboarding(
+            StubModel(123),
+            enabled=True,
+            default_channels=[mock_channel],
+            mode=guilds.OnboardingMode.ONBOARDING_DEFAULT,
+            reason="because i can",
+            prompts=[mock_prompt]
+        )
+        assert result is rest_client._entity_factory.deserialize_onboarding.return_value
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "enabled": True,
+                "default_channel_ids": ["456"],
+                "mode": guilds.OnboardingMode.ONBOARDING_DEFAULT,
+                "prompts": [rest_client._entity_factory.serialize_onboarding_prompt.return_value],
+            },
+            reason="because i can",
+        )
+        rest_client._entity_factory.deserialize_onboarding.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._entity_factory.serialize_onboarding_prompt.assert_called_once_with(mock_prompt)
+
+    async def test_edit_guild_onboarding_with_null_kwargs(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})
+        expected_route = routes.PUT_GUILD_ONBOARDING.compile(guild=123)
+
+        result = await rest_client.edit_guild_onboarding(StubModel(123), enabled=None, default_channels=None, mode=None, prompts=None)
+        assert result is rest_client._entity_factory.deserialize_onboarding.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
+        rest_client._entity_factory.deserialize_onboarding.assert_called_once_with(rest_client._request.return_value)
+        rest_client._entity_factory.serialize_onboarding_prompt.assert_not_called()
+
+    async def test_edit_guild_onboarding_without_optional_kwargs(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})
+        expected_route = routes.PUT_GUILD_ONBOARDING.compile(guild=123)
+
+        result = await rest_client.edit_guild_onboarding(StubModel(123))
+        assert result is rest_client._entity_factory.deserialize_onboarding.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
+        rest_client._entity_factory.deserialize_onboarding.assert_called_once_with(rest_client._request.return_value)
+        rest_client._entity_factory.serialize_onboarding_prompt.assert_not_called()
+
     async def test_fetch_vanity_url(self, rest_client):
         vanity_url = StubModel(789)
         expected_route = routes.GET_GUILD_VANITY_URL.compile(guild=123)
