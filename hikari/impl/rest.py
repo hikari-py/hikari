@@ -3433,6 +3433,15 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory, self._request, guild, newest_first, str(start_at)
         )
 
+    async def fetch_role(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+    ) -> guilds.Role:
+        route = routes.GET_GUILD_ROLE.compile(guild=guild, role=role)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        guild_id = snowflakes.Snowflake(guild)
+        return self._entity_factory.deserialize_role(response, guild_id=guild_id)
+
     async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
         response = await self._request(route)

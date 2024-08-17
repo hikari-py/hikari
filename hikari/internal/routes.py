@@ -434,6 +434,7 @@ GET_GUILD_PREVIEW: typing.Final[Route] = Route(GET, "/guilds/{guild}/preview")
 GET_GUILD_PRUNE: typing.Final[Route] = Route(GET, "/guilds/{guild}/prune")
 POST_GUILD_PRUNE: typing.Final[Route] = Route(POST, "/guilds/{guild}/prune")
 
+GET_GUILD_ROLE: typing.Final[Route] = Route(GET, "/guilds/{guild}/roles/{role}")
 PATCH_GUILD_ROLE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/roles/{role}")
 DELETE_GUILD_ROLE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/roles/{role}")
 
