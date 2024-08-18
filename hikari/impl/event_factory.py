@@ -33,6 +33,7 @@ from hikari import applications as application_models
 from hikari import channels as channel_models
 from hikari import colors
 from hikari import emojis as emojis_models
+from hikari import interactions as interaction_models
 from hikari import snowflakes
 from hikari import undefined
 from hikari import users as user_models
@@ -493,9 +494,21 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_interaction_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> interaction_events.InteractionCreateEvent:
-        return interaction_events.InteractionCreateEvent(
-            shard=shard, interaction=self._app.entity_factory.deserialize_interaction(payload)
-        )
+        interaction = self._app.entity_factory.deserialize_interaction(payload)
+        if interaction.type == interaction_models.InteractionType.MESSAGE_COMPONENT:
+            assert isinstance(interaction, interaction_models.ComponentInteraction), "Unexpected interaction type"
+            return interaction_events.ComponentInteractionCreateEvent(shard=shard, interaction=interaction)
+        elif interaction.type == interaction_models.InteractionType.APPLICATION_COMMAND:
+            assert isinstance(interaction, interaction_models.CommandInteraction), "Unexpected interaction type"
+            return interaction_events.CommandInteractionCreateEvent(shard=shard, interaction=interaction)
+        elif interaction.type == interaction_models.InteractionType.AUTOCOMPLETE:
+            assert isinstance(interaction, interaction_models.AutocompleteInteraction), "Unexpected interaction type"
+            return interaction_events.AutocompleteInteractionCreateEvent(shard=shard, interaction=interaction)
+        elif interaction.type == interaction_models.InteractionType.MODAL_SUBMIT:
+            assert isinstance(interaction, interaction_models.ModalInteraction), "Unexpected interaction type"
+            return interaction_events.ModalInteractionCreateEvent(shard=shard, interaction=interaction)
+
+        return interaction_events.InteractionCreateEvent(shard=shard, interaction=interaction)
 
     #################
     # MEMBER EVENTS #
