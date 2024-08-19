@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -24,7 +23,7 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ModalResponseTypesT", "ModalInteraction", "ModalInteraction"]
+__all__: list[str] = ["ModalResponseTypesT", "ModalInteraction", "ModalInteraction"]
 
 import typing
 
@@ -68,7 +67,7 @@ The following types are valid for this:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ModalInteraction(
     base_interactions.MessageResponseMixin[ModalResponseTypesT], base_interactions.PremiumResponseMixin
 ):
@@ -231,10 +230,11 @@ class ModalInteraction(
         Examples
         --------
         ```py
-        async def handle_modal_interaction(interaction: ModalInteraction) -> InteractionMessageBuilder:
+        async def handle_modal_interaction(
+            interaction: ModalInteraction,
+        ) -> InteractionMessageBuilder:
             return (
-                interaction
-                .build_response()
+                interaction.build_response()
                 .add_embed(Embed(description="Hi there"))
                 .set_content("Konnichiwa")
             )

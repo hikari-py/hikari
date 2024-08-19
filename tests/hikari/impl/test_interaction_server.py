@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import re
@@ -848,7 +849,11 @@ class TestInteractionServer:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
             get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-                {"message": "Exception occurred during interaction deserialization", "exception": mock_exception}
+                {
+                    "message": "Exception occurred during interaction deserialization",
+                    "payload": {"type": 2},
+                    "exception": mock_exception,
+                }
             )
 
         assert result.content_type == "text/plain"

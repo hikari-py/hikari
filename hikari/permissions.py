@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -43,7 +42,7 @@ class Permissions(enums.Flag):
     --------
     You can create an enum which combines multiple permissions using the bitwise OR operator (`|`):
 
-     ```py
+    ```py
     my_perms = Permissions.MANAGE_CHANNELS | Permissions.MANAGE_GUILD
 
     required_perms = (
@@ -52,7 +51,7 @@ class Permissions(enums.Flag):
         | Permissions.BAN_MEMBERS
         | Permissions.MANAGE_GUILD
     )
-     ```
+    ```
 
     To find the intersection of two sets of permissions, use the bitwise AND
     operator (`&`) between them. By then applying the `==` operator, you can check if all
@@ -72,7 +71,7 @@ class Permissions(enums.Flag):
 
     ```py
     missing_perms = ~my_perms & required_perms
-    if (missing_perms):
+    if missing_perms:
         print(f"I'm missing these permissions: {missing_perms}")
     ```
 

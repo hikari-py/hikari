@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -114,10 +113,13 @@ class PremiumType(int, enums.Enum):
     """No premium."""
 
     NITRO_CLASSIC = 1
-    """Premium including basic perks like animated emojis and avatars."""
+    """Legacy premium tier, including basic perks like animated emojis and avatars."""
 
     NITRO = 2
-    """Premium including all perks (e.g. 2 server boosts)."""
+    """Premium tier including *all* available perks (e.g. 2 server boosts)."""
+
+    NITRO_BASIC = 3
+    """Premium tier including basic perks (e.g. animated emojis and avatars)."""
 
 
 class PartialUser(snowflakes.Unique, abc.ABC):
@@ -183,6 +185,14 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @abc.abstractmethod
     def global_name(self) -> undefined.UndefinedNoneOr[str]:
         """Global name for the user, if they have one, otherwise [`None`][]."""
+
+    @property
+    def display_name(self) -> undefined.UndefinedNoneOr[str]:
+        """Return the user's display name.
+
+        Either users global name (if set) or its username.
+        """
+        return self.global_name or self.username
 
     @property
     @abc.abstractmethod
@@ -643,7 +653,7 @@ class User(PartialUser, abc.ABC):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialUserImpl(PartialUser):
     """Implementation for partial information about a user.
 
@@ -716,7 +726,7 @@ class PartialUserImpl(PartialUser):
         return f"{self.username}#{self.discriminator}"
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class UserImpl(PartialUserImpl, User):
     """Concrete implementation of user information."""
 
@@ -757,7 +767,7 @@ class UserImpl(PartialUserImpl, User):
     """The public flags for this user."""
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class OwnUser(UserImpl):
     """Represents a user with extended OAuth2 information."""
 

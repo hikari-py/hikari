@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -60,7 +59,6 @@ import urllib.request
 import aiohttp
 import attrs
 
-from hikari.internal import aio
 from hikari.internal import net
 from hikari.internal import time
 
@@ -373,7 +371,7 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
     @abc.abstractmethod
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None: ...
@@ -386,7 +384,7 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
             cls = type(self)
             raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
 
-        def __exit__(self, exc_type: typing.Type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
+        def __exit__(self, exc_type: type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
             return None
 
 
@@ -400,7 +398,7 @@ class _NoOpAsyncReaderContextManagerImpl(AsyncReaderContextManager[ReaderImplT])
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -616,43 +614,48 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
         ctx = client_session.request(method, self._web_resource.url, raise_for_status=False)
 
         try:
+            # Double try is needed to avoid calling __aexit__ if the __aenter__ raised the error
             resp: aiohttp.ClientResponse = await ctx.__aenter__()
 
-            if 200 <= resp.status < 400:
-                mimetype = None
-                filename = self._web_resource.filename
+            try:
+                if 200 <= resp.status < 400:
+                    mimetype = None
+                    filename = self._web_resource.filename
 
-                if resp.content_disposition is not None:
-                    mimetype = resp.content_disposition.type
+                    if resp.content_disposition is not None:
+                        mimetype = resp.content_disposition.type
 
-                if mimetype is None:
-                    mimetype = resp.content_type
+                    if mimetype is None:
+                        mimetype = resp.content_type
 
-                self._client_response_ctx = ctx
-                self._client_session = client_session
+                    self._client_response_ctx = ctx
+                    self._client_session = client_session
 
-                return WebReader(
-                    stream=resp.content,
-                    url=str(resp.real_url),
-                    status=resp.status,
-                    reason=str(resp.reason),
-                    filename=filename,
-                    charset=resp.charset,
-                    mimetype=mimetype,
-                    size=resp.content_length,
-                    head_only=self._head_only,
-                )
-            else:
-                raise await net.generate_error_response(resp)
+                    return WebReader(
+                        stream=resp.content,
+                        url=str(resp.real_url),
+                        status=resp.status,
+                        reason=str(resp.reason),
+                        filename=filename,
+                        charset=resp.charset,
+                        mimetype=mimetype,
+                        size=resp.content_length,
+                        head_only=self._head_only,
+                    )
+                else:
+                    raise await net.generate_error_response(resp)
 
-        except Exception as ex:
-            await ctx.__aexit__(type(ex), ex, ex.__traceback__)
+            except Exception as ex:
+                await ctx.__aexit__(type(ex), ex, ex.__traceback__)
+                raise
+
+        except Exception:
             await client_session.close()
             raise
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -840,7 +843,7 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -986,7 +989,7 @@ class IteratorReader(AsyncReader):
             for i in range(0, len(self.data), _MAGIC):
                 yield self.data[i : i + _MAGIC]  # noqa: E203 - Whitespace before ":"
 
-        elif aio.is_async_iterator(self.data) or inspect.isasyncgen(self.data):
+        elif isinstance(self.data, typing.AsyncIterator) or inspect.isasyncgen(self.data):
             try:
                 while True:
                     yield self._assert_bytes(await self.data.__anext__())
@@ -1007,17 +1010,19 @@ class IteratorReader(AsyncReader):
             except StopIteration:
                 pass
 
-        elif aio.is_async_iterable(self.data):
-            async for chunk in self.data:
-                yield self._assert_bytes(chunk)
-
         elif isinstance(self.data, typing.Iterable):
             for chunk in self.data:
                 yield self._assert_bytes(chunk)
 
+        elif isinstance(self.data, typing.AsyncIterable):
+            async for chunk in self.data:
+                yield self._assert_bytes(chunk)
+
         else:
             # Will always fail.
-            self._assert_bytes(self.data)
+            #
+            # This code, typing wise, is expected to be unreachable
+            self._assert_bytes(self.data)  # type: ignore[unreachable]
 
     @staticmethod
     def _assert_bytes(data: typing.Any) -> bytes:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 
 import mock
@@ -229,6 +230,7 @@ class TestMember:
             role_ids=[snowflakes.Snowflake(456), snowflakes.Snowflake(1234)],
             user=mock_user,
             raw_communication_disabled_until=None,
+            guild_flags=guilds.GuildMemberFlags.NONE,
         )
 
     def test_str_operator(self, model, mock_user):

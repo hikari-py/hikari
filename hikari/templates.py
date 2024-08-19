@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -46,7 +45,7 @@ if typing.TYPE_CHECKING:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class TemplateRole(guilds.PartialRole):
     """The partial role object attached to [`hikari.templates.Template`][]."""
 
@@ -73,7 +72,7 @@ class TemplateRole(guilds.PartialRole):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class TemplateGuild(guilds.PartialGuild):
     """The partial guild object attached to [`hikari.templates.Template`][]."""
 
@@ -145,7 +144,7 @@ class TemplateGuild(guilds.PartialGuild):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Template:
     """Represents a template used for creating guilds."""
 

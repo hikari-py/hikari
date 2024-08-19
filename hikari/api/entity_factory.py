@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Core interface for an object that serializes/deserializes API objects."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("EntityFactory", "GatewayGuildDefinition")
@@ -47,6 +47,7 @@ if typing.TYPE_CHECKING:
     from hikari import scheduled_events as scheduled_events_models
     from hikari import sessions as gateway_models
     from hikari import snowflakes
+    from hikari import stage_instances
     from hikari import stickers as sticker_models
     from hikari import templates as template_models
     from hikari import users as user_models
@@ -881,7 +882,7 @@ class EntityFactory(abc.ABC):
     @abc.abstractmethod
     def serialize_embed(
         self, embed: embed_models.Embed
-    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[data_binding.JSONObject, list[files.Resource[files.AsyncReader]]]:
         """Serialize an embed object to a json serializable dict.
 
         Parameters
@@ -933,7 +934,10 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_known_custom_emoji(
-        self, payload: data_binding.JSONObject, *, guild_id: snowflakes.Snowflake
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> emoji_models.KnownCustomEmoji:
         """Parse a raw payload from Discord into a known custom emoji object.
 
@@ -942,9 +946,13 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this emoji belongs to. This is used to ensure
-            that the guild a known custom emoji belongs to is remembered by
-            allowing for a context based artificial `guild_id` attribute.
+            The ID of the guild this emoji belongs to. This is not necessary
+            for application emojis.
+
+            This is used to ensure that the guild a known custom emoji belongs to
+            is remembered by allowing for a context based artificial `guild_id` attribute.
+
+
 
         Returns
         -------
@@ -1968,6 +1976,29 @@ class EntityFactory(abc.ABC):
         hikari.monetization.SKU
             The deserialized SKU object.
         """
+
+    #########################
+    # STAGE INSTANCE MODELS #
+    #########################
+
+    @abc.abstractmethod
+    def deserialize_stage_instance(self, payload: data_binding.JSONObject) -> stage_instances.StageInstance:
+        """Parse a raw payload from Discord into a guild stage instance object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.stage_intances.StageInstance
+            The deserialized stage instance object
+        """
+
+    ###############
+    # POLL MODELS #
+    ###############
 
     @abc.abstractmethod
     def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:

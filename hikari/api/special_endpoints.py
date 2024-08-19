@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Special additional endpoints used by the REST API."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -103,10 +103,7 @@ class TypingIndicator(abc.ABC):
 
     @abc.abstractmethod
     async def __aexit__(
-        self,
-        exception_type: typing.Type[BaseException],
-        exception: BaseException,
-        exception_traceback: types.TracebackType,
+        self, exception_type: type[BaseException], exception: BaseException, exception_traceback: types.TracebackType
     ) -> None: ...
 
 
@@ -156,7 +153,9 @@ class GuildBuilder(abc.ABC):
     guild_builder = rest.guild_builder("My Server!")
 
     everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role("Admins", permissions=Permissions.ADMINISTRATOR)
+    admin_role_id = guild_builder.add_role(
+        "Admins", permissions=Permissions.ADMINISTRATOR
+    )
 
     await guild_builder.create()
     ```
@@ -512,7 +511,7 @@ class InteractionResponseBuilder(abc.ABC):
     @abc.abstractmethod
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> typing.Tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         """Build a JSON object from this builder.
 
         Parameters

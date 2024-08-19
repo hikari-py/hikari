@@ -22,11 +22,20 @@
 requires = ["wheel", "setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-include = ".*pyi?$"
+target-version = "py39"
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 80
+quote-style = "double"
+line-ending = "lf"
 skip-magic-trailing-comma = true
-target-version = ["py38"]
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+force-single-line = true
 
 [tool.coverage.run]
 relative_files = true
@@ -63,7 +72,7 @@ exclude_lines = [
 [tool.pyright]
 include = ["hikari", "examples"]
 exclude = ["examples/simple_dashboard.py", "**/__init__.py", "hikari/internal/enums.py", "hikari/internal/fast_protocol.py"]
-pythonVersion = "3.8"
+pythonVersion = "3.9"
 typeCheckingMode = "strict"
 
 reportUnnecessaryTypeIgnoreComment = "error"
@@ -104,10 +113,10 @@ required_plugins = ["pytest-asyncio"]
 package = "hikari"
 package_dir = "hikari"
 directory = "changes"
-template = "changes/.template.rst"
+template = "changes/.template.md.jinja"
 filename = "CHANGELOG.md"
 issue_format = "[#{issue}](https://github.com/hikari-py/hikari/issues/{issue})"
-# We use this differently in the template
+# We use these values for headers in the template
 underlines = [2, 3]
 type = [
     { name = "Breaking Changes",            directory = "breaking",      showcontent = true },
@@ -116,11 +125,9 @@ type = [
     { name = "Bugfixes",                    directory = "bugfix",        showcontent = true },
     { name = "Documentation Improvements",  directory = "documentation", showcontent = true },
 ]
-
-[tool.isort]
-profile = "black"
-force_single_line = true
-skip_glob = "**/__init__.pyi"
+# TODO: Remove this when the next version to 24.7.1 is released
+# see: https://github.com/twisted/towncrier/pull/639
+ignore = [".template.md.jinja"]
 
 [tool.mypy]
 # general settings
@@ -130,7 +137,7 @@ incremental = true
 namespace_packages = true
 no_implicit_optional = true
 pretty = true
-python_version = 3.8
+python_version = 3.9
 show_column_numbers = true
 show_error_codes = true
 show_error_context = true

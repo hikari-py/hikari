@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Hikari Examples - A collection of examples for Hikari.
 #
 # To the extent possible under law, the author(s) have dedicated all copyright
@@ -8,6 +7,8 @@
 # You should have received a copy of the CC0 Public Domain Dedication along with this software.
 # If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
 """A simple bot with some simple commands."""
+
+from __future__ import annotations
 
 import os
 

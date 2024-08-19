@@ -171,7 +171,6 @@ class PollBuilder(PartialPoll):
         allow_multiselect: bool,
         layout_type: typing.Union[int, PollLayoutType] = PollLayoutType.DEFAULT,
     ):
-
         super().__init__(question=question, allow_multiselect=allow_multiselect, layout_type=layout_type)
         self._duration = duration
 

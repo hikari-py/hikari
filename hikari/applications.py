@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -256,7 +255,7 @@ class ConnectionVisibility(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class OwnConnection:
     """Represents a user's connection with a third party account.
 
@@ -295,7 +294,7 @@ class OwnConnection:
     """The visibility of the connection."""
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
@@ -315,7 +314,7 @@ class OwnGuild(guilds.PartialGuild):
     """The approximate amount of presences in this guild."""
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class OwnApplicationRoleConnection:
     """Represents an own application role connection."""
 
@@ -351,7 +350,7 @@ class TeamMembershipState(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(eq=False, hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(eq=False, kw_only=True, weakref_slot=False)
 class TeamMember(users.User):
     """Represents a member of a Team."""
 
@@ -443,7 +442,7 @@ class TeamMember(users.User):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Team(snowflakes.Unique):
     """Represents a development team, along with all its members."""
 
@@ -514,7 +513,7 @@ class Team(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class InviteApplication(guilds.PartialApplication):
     """Represents the information of an Invite Application."""
 
@@ -566,7 +565,7 @@ class InviteApplication(guilds.PartialApplication):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ApplicationInstallParameters:
     """Represents the application install parameters."""
 
@@ -578,7 +577,7 @@ class ApplicationInstallParameters:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Application(guilds.PartialApplication):
     """Represents the information of an Oauth2 Application."""
 
@@ -672,7 +671,7 @@ class Application(guilds.PartialApplication):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class AuthorizationApplication(guilds.PartialApplication):
     """The application model found attached to [`hikari.applications.AuthorizationInformation`][]."""
 
@@ -699,7 +698,7 @@ class AuthorizationApplication(guilds.PartialApplication):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class AuthorizationInformation:
     """Model for the data returned by Get Current Authorization Information."""
 
@@ -721,7 +720,7 @@ class AuthorizationInformation:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialOAuth2Token:
     """Model for partial OAuth2 token data returned by the API.
 
@@ -746,7 +745,7 @@ class PartialOAuth2Token:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class OAuth2AuthorizationToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the authorization grant flow."""
 
@@ -769,7 +768,7 @@ class OAuth2AuthorizationToken(PartialOAuth2Token):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class OAuth2ImplicitToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the implicit grant flow."""
 
@@ -820,7 +819,7 @@ class ApplicationRoleConnectionMetadataRecordType(int, enums.Enum):
     """Boolean Not Equal."""
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ApplicationRoleConnectionMetadataRecord:
     """Represents a role connection metadata record."""
 

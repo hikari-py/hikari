@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 
 import mock
@@ -43,6 +44,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
@@ -1518,6 +1520,58 @@ class TestEventFactoryImpl:
         event = event_factory.deserialize_entitlement_delete_event(mock_shard, payload)
 
         assert isinstance(event, monetization_events.EntitlementDeleteEvent)
+
+    #########################
+    # STAGE INSTANCE EVENTS #
+    #########################
+
+    def test_deserialize_stage_instance_create_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 123",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+        event = event_factory.deserialize_stage_instance_create_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceCreateEvent)
+
+        assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
+        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+
+    def test_deserialize_stage_instance_update_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 124",
+            "privacy_level": 2,
+            "discoverable_disabled": True,
+        }
+        event = event_factory.deserialize_stage_instance_update_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceUpdateEvent)
+
+        assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
+        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+
+    def test_deserialize_stage_instance_delete_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 124",
+            "privacy_level": 2,
+            "discoverable_disabled": True,
+        }
+        event = event_factory.deserialize_stage_instance_delete_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceDeleteEvent)
+
+        assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
+        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
 
     ###########
     #  POLLS  #

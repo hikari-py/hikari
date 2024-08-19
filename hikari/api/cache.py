@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Core interface for a cache implementation."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("CacheView", "Cache", "MutableCache")
@@ -908,7 +908,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_emoji(
         self, emoji: emojis.KnownCustomEmoji, /
-    ) -> typing.Tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
+    ) -> tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
         """Update an emoji object in the cache.
 
         Parameters
@@ -1046,7 +1046,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_guild(
         self, guild: guilds.GatewayGuild, /
-    ) -> typing.Tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
+    ) -> tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
         """Update a guild in the cache.
 
         Parameters
@@ -1122,9 +1122,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_guild_channel(
         self, channel: channels.PermissibleGuildChannel, /
-    ) -> typing.Tuple[
-        typing.Optional[channels.PermissibleGuildChannel], typing.Optional[channels.PermissibleGuildChannel]
-    ]:
+    ) -> tuple[typing.Optional[channels.PermissibleGuildChannel], typing.Optional[channels.PermissibleGuildChannel]]:
         """Update a guild channel in the cache.
 
         Parameters
@@ -1223,7 +1221,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_thread(
         self, thread: channels.GuildThreadChannel, /
-    ) -> typing.Tuple[typing.Optional[channels.GuildThreadChannel], typing.Optional[channels.GuildThreadChannel]]:
+    ) -> tuple[typing.Optional[channels.GuildThreadChannel], typing.Optional[channels.GuildThreadChannel]]:
         """Update a thread channel in the cache.
 
         Parameters
@@ -1322,7 +1320,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_invite(
         self, invite: invites.InviteWithMetadata, /
-    ) -> typing.Tuple[typing.Optional[invites.InviteWithMetadata], typing.Optional[invites.InviteWithMetadata]]:
+    ) -> tuple[typing.Optional[invites.InviteWithMetadata], typing.Optional[invites.InviteWithMetadata]]:
         """Update an invite in the cache.
 
         Parameters
@@ -1362,7 +1360,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_me(
         self, user: users.OwnUser, /
-    ) -> typing.Tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
+    ) -> tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
         """Update the own user entry in the cache.
 
         Parameters
@@ -1452,7 +1450,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_member(
         self, member: guilds.Member, /
-    ) -> typing.Tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
+    ) -> tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
         """Update a member in the cache.
 
         Parameters
@@ -1535,7 +1533,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_presence(
         self, presence: presences.MemberPresence, /
-    ) -> typing.Tuple[typing.Optional[presences.MemberPresence], typing.Optional[presences.MemberPresence]]:
+    ) -> tuple[typing.Optional[presences.MemberPresence], typing.Optional[presences.MemberPresence]]:
         """Update a presence object in the cache.
 
         Parameters
@@ -1607,9 +1605,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_role(
-        self, role: guilds.Role, /
-    ) -> typing.Tuple[typing.Optional[guilds.Role], typing.Optional[guilds.Role]]:
+    def update_role(self, role: guilds.Role, /) -> tuple[typing.Optional[guilds.Role], typing.Optional[guilds.Role]]:
         """Update a role in the cache.
 
         Parameters
@@ -1713,7 +1709,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_voice_state(
         self, voice_state: voices.VoiceState, /
-    ) -> typing.Tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
+    ) -> tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
         """Update a voice state object in the cache.
 
         Parameters
@@ -1770,7 +1766,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_message(
         self, message: typing.Union[messages.PartialMessage, messages.Message], /
-    ) -> typing.Tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
+    ) -> tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
         """Update a message in the cache.
 
         Parameters

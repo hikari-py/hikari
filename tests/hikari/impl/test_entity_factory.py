@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 import typing
 
@@ -46,6 +47,7 @@ from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_event_models
 from hikari import sessions as gateway_models
 from hikari import snowflakes
+from hikari import stage_instances as stage_instance_models
 from hikari import stickers as sticker_models
 from hikari import traits
 from hikari import undefined
@@ -122,7 +124,7 @@ def guild_news_channel_payload(permission_overwrite_payload):
 
 
 @pytest.fixture
-def thread_member_payload() -> typing.Dict[str, typing.Any]:
+def thread_member_payload() -> dict[str, typing.Any]:
     return {
         "id": "123321",
         "user_id": "494949494",
@@ -134,7 +136,7 @@ def thread_member_payload() -> typing.Dict[str, typing.Any]:
 
 
 @pytest.fixture
-def guild_news_thread_payload(thread_member_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+def guild_news_thread_payload(thread_member_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
     return {
         "id": "946900871160164393",
         "guild_id": "574921006817476608",
@@ -159,7 +161,7 @@ def guild_news_thread_payload(thread_member_payload: typing.Dict[str, typing.Any
 
 
 @pytest.fixture
-def guild_public_thread_payload(thread_member_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+def guild_public_thread_payload(thread_member_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
     return {
         "id": "947643783913308301",
         "guild_id": "574921006817476608",
@@ -185,7 +187,7 @@ def guild_public_thread_payload(thread_member_payload: typing.Dict[str, typing.A
 
 
 @pytest.fixture
-def guild_private_thread_payload(thread_member_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+def guild_private_thread_payload(thread_member_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
     return {
         "id": "947690637610844210",
         "guild_id": "574921006817476608",
@@ -257,6 +259,7 @@ def member_payload(user_payload):
         "pending": False,
         "user": user_payload,
         "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
+        "flags": 1,
     }
 
 
@@ -733,9 +736,9 @@ class TestGatewayGuildDefinition:
     def test_threads(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        guild_news_thread_payload: dict[str, typing.Any],
+        guild_public_thread_payload: dict[str, typing.Any],
+        guild_private_thread_payload: dict[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {
@@ -2208,7 +2211,7 @@ class TestEntityFactoryImpl:
                 }
 
     def test_deserialize_thread_member(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, thread_member_payload: typing.Dict[str, typing.Any]
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, thread_member_payload: dict[str, typing.Any]
     ):
         thread_member = entity_factory_impl.deserialize_thread_member(thread_member_payload)
 
@@ -2218,7 +2221,7 @@ class TestEntityFactoryImpl:
         assert thread_member.flags == 696969
 
     def test_deserialize_thread_member_with_passed_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, thread_member_payload: typing.Dict[str, typing.Any]
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, thread_member_payload: dict[str, typing.Any]
     ):
         thread_member = entity_factory_impl.deserialize_thread_member(
             {"join_timestamp": "2022-02-28T01:49:03.599821+00:00", "flags": 494949}, thread_id=123321, user_id=65132123
@@ -2230,9 +2233,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_thread_returns_right_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        guild_news_thread_payload: dict[str, typing.Any],
+        guild_public_thread_payload: dict[str, typing.Any],
+        guild_private_thread_payload: dict[str, typing.Any],
     ):
         for payload, expected_type in [
             (guild_news_thread_payload, channel_models.GuildNewsThread),
@@ -2244,9 +2247,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_thread_returns_right_type_with_passed_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        guild_news_thread_payload: dict[str, typing.Any],
+        guild_public_thread_payload: dict[str, typing.Any],
+        guild_private_thread_payload: dict[str, typing.Any],
     ):
         mock_member = mock.Mock()
         for payload in [guild_news_thread_payload, guild_public_thread_payload, guild_private_thread_payload]:
@@ -2262,9 +2265,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_thread_returns_right_type_with_passed_user_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        guild_news_thread_payload: dict[str, typing.Any],
+        guild_public_thread_payload: dict[str, typing.Any],
+        guild_private_thread_payload: dict[str, typing.Any],
     ):
         for payload in [guild_news_thread_payload, guild_public_thread_payload, guild_private_thread_payload]:
             # These may be sharing the same member payload so we need to copy it first
@@ -2295,8 +2298,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
-        thread_member_payload: typing.Dict[str, typing.Any],
+        guild_news_thread_payload: dict[str, typing.Any],
+        thread_member_payload: dict[str, typing.Any],
     ):
         thread = entity_factory_impl.deserialize_guild_news_thread(guild_news_thread_payload)
 
@@ -2326,9 +2329,7 @@ class TestEntityFactoryImpl:
         assert isinstance(thread, channel_models.GuildNewsThread)
 
     def test_deserialize_guild_news_thread_when_null_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_news_thread_payload: dict[str, typing.Any]
     ):
         guild_news_thread_payload["last_message_id"] = None
 
@@ -2337,9 +2338,7 @@ class TestEntityFactoryImpl:
         assert thread.last_message_id is None
 
     def test_deserialize_guild_news_thread_when_unset_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_news_thread_payload: dict[str, typing.Any]
     ):
         del guild_news_thread_payload["last_message_id"]
         del guild_news_thread_payload["guild_id"]
@@ -2356,9 +2355,7 @@ class TestEntityFactoryImpl:
         assert thread.thread_created_at is None
 
     def test_deserialize_guild_news_thread_when_passed_through_member(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_news_thread_payload: dict[str, typing.Any]
     ):
         del guild_news_thread_payload["member"]
         mock_member = mock.Mock()
@@ -2368,9 +2365,7 @@ class TestEntityFactoryImpl:
         assert thread.member is mock_member
 
     def test_deserialize_guild_news_thread_when_passed_through_user_id(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_news_thread_payload: dict[str, typing.Any]
     ):
         del guild_news_thread_payload["member"]["user_id"]
 
@@ -2384,8 +2379,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
-        thread_member_payload: typing.Dict[str, typing.Any],
+        guild_public_thread_payload: dict[str, typing.Any],
+        thread_member_payload: dict[str, typing.Any],
     ):
         thread = entity_factory_impl.deserialize_guild_public_thread(guild_public_thread_payload)
 
@@ -2414,9 +2409,7 @@ class TestEntityFactoryImpl:
         assert thread.applied_tag_ids == [123, 456]
 
     def test_deserialize_guild_public_thread_when_null_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_public_thread_payload: dict[str, typing.Any]
     ):
         guild_public_thread_payload["last_message_id"] = None
 
@@ -2425,9 +2418,7 @@ class TestEntityFactoryImpl:
         assert thread.last_message_id is None
 
     def test_deserialize_guild_public_thread_when_unset_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_public_thread_payload: dict[str, typing.Any]
     ):
         del guild_public_thread_payload["last_message_id"]
         del guild_public_thread_payload["guild_id"]
@@ -2448,9 +2439,7 @@ class TestEntityFactoryImpl:
         assert thread.thread_created_at is None
 
     def test_deserialize_guild_public_thread_when_passed_through_member(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_public_thread_payload: dict[str, typing.Any]
     ):
         del guild_public_thread_payload["member"]
         mock_member = mock.Mock()
@@ -2460,9 +2449,7 @@ class TestEntityFactoryImpl:
         assert thread.member is mock_member
 
     def test_deserialize_guild_public_thread_when_passed_through_user_id(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_public_thread_payload: dict[str, typing.Any]
     ):
         del guild_public_thread_payload["member"]["user_id"]
 
@@ -2476,8 +2463,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
-        thread_member_payload: typing.Dict[str, typing.Any],
+        guild_private_thread_payload: dict[str, typing.Any],
+        thread_member_payload: dict[str, typing.Any],
     ):
         thread = entity_factory_impl.deserialize_guild_private_thread(guild_private_thread_payload)
 
@@ -2507,9 +2494,7 @@ class TestEntityFactoryImpl:
         )
 
     def test_deserialize_guild_private_thread_when_null_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_private_thread_payload: dict[str, typing.Any]
     ):
         guild_private_thread_payload["last_message_id"] = None
 
@@ -2518,9 +2503,7 @@ class TestEntityFactoryImpl:
         assert thread.last_message_id is None
 
     def test_deserialize_guild_private_thread_when_unset_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_private_thread_payload: dict[str, typing.Any]
     ):
         del guild_private_thread_payload["last_message_id"]
         del guild_private_thread_payload["guild_id"]
@@ -2537,9 +2520,7 @@ class TestEntityFactoryImpl:
         assert thread.thread_created_at is None
 
     def test_deserialize_guild_private_thread_when_passed_through_member(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_private_thread_payload: dict[str, typing.Any]
     ):
         del guild_private_thread_payload["member"]
         mock_member = mock.Mock()
@@ -2549,9 +2530,7 @@ class TestEntityFactoryImpl:
         assert thread.member is mock_member
 
     def test_deserialize_guild_private_thread_when_passed_through_user_id(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_private_thread_payload: dict[str, typing.Any]
     ):
         del guild_private_thread_payload["member"]["user_id"]
 
@@ -2564,17 +2543,17 @@ class TestEntityFactoryImpl:
     def test_deserialize_channel_returns_right_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        dm_channel_payload: typing.Dict[str, typing.Any],
-        group_dm_channel_payload: typing.Dict[str, typing.Any],
-        guild_category_payload: typing.Dict[str, typing.Any],
-        guild_text_channel_payload: typing.Dict[str, typing.Any],
-        guild_news_channel_payload: typing.Dict[str, typing.Any],
-        guild_voice_channel_payload: typing.Dict[str, typing.Any],
-        guild_stage_channel_payload: typing.Dict[str, typing.Any],
-        guild_forum_channel_payload: typing.Dict[str, typing.Any],
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        dm_channel_payload: dict[str, typing.Any],
+        group_dm_channel_payload: dict[str, typing.Any],
+        guild_category_payload: dict[str, typing.Any],
+        guild_text_channel_payload: dict[str, typing.Any],
+        guild_news_channel_payload: dict[str, typing.Any],
+        guild_voice_channel_payload: dict[str, typing.Any],
+        guild_stage_channel_payload: dict[str, typing.Any],
+        guild_forum_channel_payload: dict[str, typing.Any],
+        guild_news_thread_payload: dict[str, typing.Any],
+        guild_public_thread_payload: dict[str, typing.Any],
+        guild_private_thread_payload: dict[str, typing.Any],
     ):
         for payload, expected_type in [
             (dm_channel_payload, channel_models.DMChannel),
@@ -2594,14 +2573,14 @@ class TestEntityFactoryImpl:
     def test_deserialize_channel_when_passed_guild_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_category_payload: typing.Dict[str, typing.Any],
-        guild_text_channel_payload: typing.Dict[str, typing.Any],
-        guild_news_channel_payload: typing.Dict[str, typing.Any],
-        guild_voice_channel_payload: typing.Dict[str, typing.Any],
-        guild_stage_channel_payload: typing.Dict[str, typing.Any],
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
+        guild_category_payload: dict[str, typing.Any],
+        guild_text_channel_payload: dict[str, typing.Any],
+        guild_news_channel_payload: dict[str, typing.Any],
+        guild_voice_channel_payload: dict[str, typing.Any],
+        guild_stage_channel_payload: dict[str, typing.Any],
+        guild_news_thread_payload: dict[str, typing.Any],
+        guild_public_thread_payload: dict[str, typing.Any],
+        guild_private_thread_payload: dict[str, typing.Any],
     ):
         for payload in [
             guild_category_payload,
@@ -3206,6 +3185,7 @@ class TestEntityFactoryImpl:
         assert member.is_deaf is False
         assert member.is_mute is True
         assert member.is_pending is False
+        assert member.guild_flags == guild_models.GuildMemberFlags.DID_REJOIN
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_when_guild_id_already_in_role_array(
@@ -3225,6 +3205,7 @@ class TestEntityFactoryImpl:
         assert member.premium_since == datetime.datetime(2019, 5, 17, 6, 26, 56, 936000, tzinfo=datetime.timezone.utc)
         assert member.is_deaf is False
         assert member.is_mute is True
+        assert member.guild_flags == guild_models.GuildMemberFlags.DID_REJOIN
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_with_null_fields(self, entity_factory_impl, user_payload):
@@ -3786,18 +3767,18 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        gateway_guild_payload: typing.Dict[str, typing.Any],
-        guild_text_channel_payload: typing.Dict[str, typing.Any],
-        guild_voice_channel_payload: typing.Dict[str, typing.Any],
-        guild_news_channel_payload: typing.Dict[str, typing.Any],
-        guild_news_thread_payload: typing.Dict[str, typing.Any],
-        guild_public_thread_payload: typing.Dict[str, typing.Any],
-        guild_private_thread_payload: typing.Dict[str, typing.Any],
-        known_custom_emoji_payload: typing.Dict[str, typing.Any],
-        member_payload: typing.Dict[str, typing.Any],
-        member_presence_payload: typing.Dict[str, typing.Any],
-        guild_role_payload: typing.Dict[str, typing.Any],
-        voice_state_payload: typing.Dict[str, typing.Any],
+        gateway_guild_payload: dict[str, typing.Any],
+        guild_text_channel_payload: dict[str, typing.Any],
+        guild_voice_channel_payload: dict[str, typing.Any],
+        guild_news_channel_payload: dict[str, typing.Any],
+        guild_news_thread_payload: dict[str, typing.Any],
+        guild_public_thread_payload: dict[str, typing.Any],
+        guild_private_thread_payload: dict[str, typing.Any],
+        known_custom_emoji_payload: dict[str, typing.Any],
+        member_payload: dict[str, typing.Any],
+        member_presence_payload: dict[str, typing.Any],
+        guild_role_payload: dict[str, typing.Any],
+        voice_state_payload: dict[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             gateway_guild_payload, user_id=snowflakes.Snowflake(43123)
@@ -4389,6 +4370,7 @@ class TestEntityFactoryImpl:
                         ],
                     }
                 ],
+                "guild_id": "12345678",
                 "resolved": interaction_resolved_data_payload,
             },
             "channel_id": "49949494",
@@ -4448,6 +4430,7 @@ class TestEntityFactoryImpl:
         assert interaction.app_permissions == 54123
         assert len(interaction.entitlements) == 1
         assert interaction.entitlements[0].id == 696969696969696
+        assert interaction.registered_guild_id == 12345678
 
         # CommandInteractionOption
         assert len(interaction.options) == 1
@@ -4487,6 +4470,7 @@ class TestEntityFactoryImpl:
                 "type": 2,
                 "target_id": "115590097100865541",
                 "resolved": {"users": {"115590097100865541": user_payload}},
+                "guild_id": 12345678,
             },
             "channel_id": "49949494",
             "member": interaction_member_payload,
@@ -4529,16 +4513,18 @@ class TestEntityFactoryImpl:
         del command_interaction_payload["data"]["options"]
         del command_interaction_payload["guild_locale"]
         del command_interaction_payload["app_permissions"]
+        del command_interaction_payload["data"]["guild_id"]
 
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
 
         assert interaction.guild_id is None
         assert interaction.member is None
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
-        assert interaction.options is None
+        assert interaction.options == []
         assert interaction.resolved is None
         assert interaction.guild_locale is None
         assert interaction.app_permissions is None
+        assert interaction.registered_guild_id is None
 
     @pytest.fixture
     def autocomplete_interaction_payload(self, member_payload, user_payload, interaction_resolved_data_payload):
@@ -4561,6 +4547,7 @@ class TestEntityFactoryImpl:
                         ],
                     }
                 ],
+                "guild_id": 12345678,
             },
             "channel_id": "49949494",
             "user": user_payload,
@@ -4609,6 +4596,7 @@ class TestEntityFactoryImpl:
         entity_factory_impl._deserialize_interaction_member.assert_called_once_with(member_payload, guild_id=43123123)
         assert interaction.locale is locales.Locale.ES_ES
         assert interaction.guild_locale is locales.Locale.EN_US
+        assert interaction.registered_guild_id == 12345678
 
         # AutocompleteInteractionOption
         assert len(interaction.options) == 1
@@ -5644,6 +5632,8 @@ class TestEntityFactoryImpl:
         return {
             "id": "690922406474154014",
             "filename": "IMG.jpg",
+            "title": "IMGA",
+            "description": "description",
             "content_type": "image/png",
             "size": 660521,
             "url": "https://somewhere.com/attachments/123/456/IMG.jpg",
@@ -5668,6 +5658,7 @@ class TestEntityFactoryImpl:
         action_row_payload,
         partial_sticker_payload,
         attachment_payload,
+        guild_public_thread_payload,
     ):
         member_payload = member_payload.copy()
         del member_payload["user"]
@@ -5708,6 +5699,7 @@ class TestEntityFactoryImpl:
             "application_id": "123123123123",
             "interaction": {"id": "123123123", "type": 2, "name": "OKOKOK", "user": user_payload},
             "components": [action_row_payload, {"type": 1000000000}],
+            "thread": guild_public_thread_payload,
         }
 
     def test__deserialize_message_attachment(self, entity_factory_impl, attachment_payload):
@@ -5715,6 +5707,8 @@ class TestEntityFactoryImpl:
 
         assert attachment.id == 690922406474154014
         assert attachment.filename == "IMG.jpg"
+        assert attachment.title == "IMGA"
+        assert attachment.description == "description"
         assert attachment.size == 660521
         assert attachment.media_type == "image/png"
         assert attachment.url == "https://somewhere.com/attachments/123/456/IMG.jpg"
@@ -5737,6 +5731,8 @@ class TestEntityFactoryImpl:
         assert isinstance(attachment, message_models.Attachment)
 
     def test__deserialize_message_attachment_with_unset_fields(self, entity_factory_impl, attachment_payload):
+        del attachment_payload["title"]
+        del attachment_payload["description"]
         del attachment_payload["content_type"]
         del attachment_payload["height"]
         del attachment_payload["width"]
@@ -5746,6 +5742,8 @@ class TestEntityFactoryImpl:
 
         attachment = entity_factory_impl._deserialize_message_attachment(attachment_payload)
 
+        assert attachment.title is None
+        assert attachment.description is None
         assert attachment.media_type is None
         assert attachment.height is None
         assert attachment.width is None
@@ -5963,6 +5961,8 @@ class TestEntityFactoryImpl:
         attachment = message.attachments[0]
         assert attachment.id == 690922406474154014
         assert attachment.filename == "IMG.jpg"
+        assert attachment.title == "IMGA"
+        assert attachment.description == "description"
         assert attachment.size == 660521
         assert attachment.url == "https://somewhere.com/attachments/123/456/IMG.jpg"
         assert attachment.proxy_url == "https://media.somewhere.com/attachments/123/456/IMG.jpg"
@@ -6031,12 +6031,23 @@ class TestEntityFactoryImpl:
             [action_row_payload], entity_factory_impl._message_component_type_mapping
         )
 
+        # Thread
+        assert isinstance(message.thread, channel_models.GuildPublicThread)
+        assert message.thread.id == 947643783913308301
+        assert message.thread.guild_id == 574921006817476608
+        assert message.thread.parent_id == 744183190998089820
+        assert message.thread.owner_id == 115590097100865541
+        assert message.thread.type is channel_models.ChannelType.GUILD_PUBLIC_THREAD
+        assert message.thread.flags == channel_models.ChannelFlag.PINNED
+        assert message.thread.name == "e"
+
     def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
         del message_payload["application"]["cover_image"]
         del message_payload["activity"]["party_id"]
         del message_payload["message_reference"]["message_id"]
         del message_payload["message_reference"]["guild_id"]
         del message_payload["mention_channels"]
+        del message_payload["thread"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
 
@@ -6054,6 +6065,9 @@ class TestEntityFactoryImpl:
         assert message.message_reference.id is None
         assert message.message_reference.guild_id is None
         assert isinstance(message.message_reference, message_models.MessageReference)
+
+        # Thread
+        assert message.thread is None
 
     def test_deserialize_message_with_null_sub_fields(self, entity_factory_impl, message_payload):
         message_payload["application"]["icon"] = None
@@ -6335,9 +6349,7 @@ class TestEntityFactoryImpl:
     ##########################
 
     @pytest.fixture
-    def scheduled_external_event_payload(
-        self, user_payload: typing.Dict[str, typing.Any]
-    ) -> typing.Dict[str, typing.Any]:
+    def scheduled_external_event_payload(self, user_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
         return {
             "id": "9497609168686982223",
             "guild_id": "1525593721265219296",
@@ -6362,8 +6374,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_external_event_payload: typing.Dict[str, typing.Any],
-        user_payload: typing.Dict[str, typing.Any],
+        scheduled_external_event_payload: dict[str, typing.Any],
+        user_payload: dict[str, typing.Any],
     ):
         event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
         assert event.app is mock_app
@@ -6386,7 +6398,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_external_event_payload: typing.Dict[str, typing.Any],
+        scheduled_external_event_payload: dict[str, typing.Any],
     ):
         scheduled_external_event_payload["description"] = None
         scheduled_external_event_payload["image"] = None
@@ -6400,7 +6412,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_external_event_payload: typing.Dict[str, typing.Any],
+        scheduled_external_event_payload: dict[str, typing.Any],
     ):
         del scheduled_external_event_payload["creator"]
         del scheduled_external_event_payload["description"]
@@ -6415,7 +6427,7 @@ class TestEntityFactoryImpl:
         assert event.user_count is None
 
     @pytest.fixture
-    def scheduled_stage_event_payload(self, user_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+    def scheduled_stage_event_payload(self, user_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
         return {
             "id": "9497014470822052443",
             "guild_id": "1525593721265192962",
@@ -6440,8 +6452,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_stage_event_payload: typing.Dict[str, typing.Any],
-        user_payload: typing.Dict[str, typing.Any],
+        scheduled_stage_event_payload: dict[str, typing.Any],
+        user_payload: dict[str, typing.Any],
     ):
         event = entity_factory_impl.deserialize_scheduled_stage_event(scheduled_stage_event_payload)
 
@@ -6465,7 +6477,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_stage_event_payload: typing.Dict[str, typing.Any],
+        scheduled_stage_event_payload: dict[str, typing.Any],
     ):
         scheduled_stage_event_payload["description"] = None
         scheduled_stage_event_payload["image"] = None
@@ -6481,7 +6493,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_stage_event_payload: typing.Dict[str, typing.Any],
+        scheduled_stage_event_payload: dict[str, typing.Any],
     ):
         del scheduled_stage_event_payload["creator"]
         del scheduled_stage_event_payload["description"]
@@ -6496,7 +6508,7 @@ class TestEntityFactoryImpl:
         assert event.user_count is None
 
     @pytest.fixture
-    def scheduled_voice_event_payload(self, user_payload: typing.Dict[str, typing.Any]) -> typing.Dict[str, typing.Any]:
+    def scheduled_voice_event_payload(self, user_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
         return {
             "id": "949760834287063133",
             "guild_id": "152559372126519296",
@@ -6521,8 +6533,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_voice_event_payload: typing.Dict[str, typing.Any],
-        user_payload: typing.Dict[str, typing.Any],
+        scheduled_voice_event_payload: dict[str, typing.Any],
+        user_payload: dict[str, typing.Any],
     ):
         event = entity_factory_impl.deserialize_scheduled_voice_event(scheduled_voice_event_payload)
 
@@ -6546,7 +6558,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_voice_event_payload: typing.Dict[str, typing.Any],
+        scheduled_voice_event_payload: dict[str, typing.Any],
     ):
         scheduled_voice_event_payload["description"] = None
         scheduled_voice_event_payload["image"] = None
@@ -6562,7 +6574,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_voice_event_payload: typing.Dict[str, typing.Any],
+        scheduled_voice_event_payload: dict[str, typing.Any],
     ):
         del scheduled_voice_event_payload["creator"]
         del scheduled_voice_event_payload["description"]
@@ -6579,9 +6591,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_event_returns_right_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        scheduled_external_event_payload: typing.Dict[str, typing.Any],
-        scheduled_stage_event_payload: typing.Dict[str, typing.Any],
-        scheduled_voice_event_payload: typing.Dict[str, typing.Any],
+        scheduled_external_event_payload: dict[str, typing.Any],
+        scheduled_stage_event_payload: dict[str, typing.Any],
+        scheduled_voice_event_payload: dict[str, typing.Any],
     ):
         for cls, payload in [
             (scheduled_event_models.ScheduledExternalEvent, scheduled_external_event_payload),
@@ -6598,8 +6610,8 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def scheduled_event_user_payload(
-        self, user_payload: typing.Dict[str, typing.Any], member_payload: typing.Dict[str, typing.Any]
-    ) -> typing.Dict[str, typing.Any]:
+        self, user_payload: dict[str, typing.Any], member_payload: dict[str, typing.Any]
+    ) -> dict[str, typing.Any]:
         member_payload = member_payload.copy()
         del member_payload["user"]
         return {"guild_scheduled_event_id": "49494949499494", "user": user_payload, "member": member_payload}
@@ -6607,9 +6619,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_event_user(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        scheduled_event_user_payload: typing.Dict[str, typing.Any],
-        user_payload: typing.Dict[str, typing.Any],
-        member_payload: typing.Dict[str, typing.Any],
+        scheduled_event_user_payload: dict[str, typing.Any],
+        user_payload: dict[str, typing.Any],
+        member_payload: dict[str, typing.Any],
     ):
         del member_payload["user"]
         user = entity_factory_impl.deserialize_scheduled_event_user(scheduled_event_user_payload, guild_id=123321)
@@ -6624,8 +6636,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_event_user_when_no_member(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        scheduled_event_user_payload: typing.Dict[str, typing.Any],
-        user_payload: typing.Dict[str, typing.Any],
+        scheduled_event_user_payload: dict[str, typing.Any],
+        user_payload: dict[str, typing.Any],
     ):
         del scheduled_event_user_payload["member"]
 
@@ -7196,6 +7208,33 @@ class TestEntityFactoryImpl:
         assert sku.slug == "hashire-sori-yo-kaze-no-you-ni-tsukimihara-wo-padoru-padoru"
         assert sku.flags == (monetization_models.SKUFlags.AVAILABLE | monetization_models.SKUFlags.GUILD_SUBSCRIPTION)
         assert isinstance(sku, monetization_models.SKU)
+
+    #########################
+    # Stage instance models #
+    #########################
+
+    @pytest.fixture
+    def stage_instance_payload(self):
+        return {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 123",
+            "privacy_level": 2,
+            "guild_scheduled_event_id": "363820363920323120",
+            "discoverable_disabled": False,
+        }
+
+    def test_deserialize_stage_instance(self, entity_factory_impl, stage_instance_payload, mock_app):
+        stage_instance = entity_factory_impl.deserialize_stage_instance(stage_instance_payload)
+
+        assert stage_instance.app is mock_app
+        assert stage_instance.id == 840647391636226060
+        assert stage_instance.channel_id == 733488538393510049
+        assert stage_instance.guild_id == 197038439483310086
+        assert stage_instance.topic == "Testing Testing, 123"
+        assert stage_instance.privacy_level == stage_instance_models.StageInstancePrivacyLevel.GUILD_ONLY
+        assert stage_instance.discoverable_disabled is False
 
     ###########
     #  POLLS  #

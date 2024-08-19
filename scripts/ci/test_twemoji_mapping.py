@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,6 +22,9 @@
 by Discord emojis are actually legitimate URLs, since Discord
 does not map these on a 1-to-1 basis.
 """
+
+from __future__ import annotations
+
 import json
 import pathlib
 import subprocess

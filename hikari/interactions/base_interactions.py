@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Base classes and enums inherited and used throughout the interactions flow."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -197,7 +197,7 @@ The following are valid for this:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     """The base model for all interaction models."""
 
@@ -634,7 +634,7 @@ class ModalResponseMixin(PartialInteraction):
         return self.app.rest.interaction_modal_builder(title=title, custom_id=custom_id)
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class InteractionMember(guilds.Member):
     """Model of the member who triggered an interaction.
 
@@ -647,7 +647,7 @@ class InteractionMember(guilds.Member):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class InteractionChannel(channels.PartialChannel):
     """Represents partial channels returned as resolved entities on interactions."""
 
@@ -656,7 +656,7 @@ class InteractionChannel(channels.PartialChannel):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ResolvedOptionData:
     """Represents the resolved objects of entities referenced in a command's options."""
 

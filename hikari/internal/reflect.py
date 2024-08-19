@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -62,7 +61,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
     signature = inspect.signature(func)
     resolved_typehints = typing.get_type_hints(func)
-    params: typing.List[inspect.Parameter] = []
+    params: list[inspect.Parameter] = []
 
     none_type = type(None)
     for name, param in signature.parameters.items():

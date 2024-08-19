@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -92,7 +91,7 @@ class ActivityType(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ActivityTimestamps:
     """The datetimes for the start and/or end of an activity session."""
 
@@ -104,7 +103,7 @@ class ActivityTimestamps:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ActivityParty:
     """Used to represent activity groups of users."""
 
@@ -122,7 +121,7 @@ _DYNAMIC_URLS = {"mp": urls.MEDIA_PROXY_URL + "/{}"}
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
@@ -245,7 +244,7 @@ class ActivityAssets:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ActivitySecret:
     """The secrets used for interacting with an activity party."""
 
@@ -296,7 +295,7 @@ class ActivityFlag(enums.Flag):
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class Activity:
     """Represents a regular activity that can be associated with a presence."""
 
@@ -323,7 +322,7 @@ class Activity:
         return self.name
 
 
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class RichActivity(Activity):
     """Represents a rich activity that can be associated with a presence."""
 
@@ -379,7 +378,7 @@ class Status(str, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ClientStatus:
     """The client statuses for this member."""
 
@@ -394,7 +393,7 @@ class ClientStatus:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class MemberPresence:
     """Used to represent a guild member's presence."""
 

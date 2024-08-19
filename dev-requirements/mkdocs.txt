@@ -1,11 +1,11 @@
 mkdocs==1.6.0
 
 # Mkdocs Material
-mkdocs-material[imaging]==9.5.23
+mkdocs-material[imaging]==9.5.31
 
 # Docstring parsing for API reference
-mkdocstrings[python]==0.25.1
-griffe-inherited-docstrings==1.0.0
+mkdocstrings[python]==0.25.2
+griffe-inherited-docstrings==1.0.1
 
 # Generate API reference pages dynamically
 mkdocs-gen-files==0.5.0
@@ -14,8 +14,8 @@ mkdocs-literate-nav==0.6.1
 # Minify
 mkdocs-minify-plugin==0.8.0
 
-# Formatting signatures
-black==24.4.2
+# Towncrier draft changelogs
+mkdocs-towncrier==0.1.3
 
 # Image viewer ext
 # mkdocs-glightbox==0.3.7

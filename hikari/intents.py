@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -77,12 +76,12 @@ class Intents(enums.Flag):
     # Several intents together. You may find it useful to format these like
     # so to keep your code readable.
     my_intents = (
-        Intents.GUILDS             |
-        Intents.GUILD_EMOJIS       |
-        Intents.GUILD_INTEGRATIONS |
-        Intents.GUILD_MESSAGES     |
-        Intents.GUILD_MODERATION   |
-        Intents.DM_MESSAGES
+        Intents.GUILDS
+        | Intents.GUILD_EMOJIS
+        | Intents.GUILD_INTEGRATIONS
+        | Intents.GUILD_MESSAGES
+        | Intents.GUILD_MODERATION
+        | Intents.DM_MESSAGES
     )
     ```
 
@@ -98,12 +97,12 @@ class Intents(enums.Flag):
         print("Guild messages are enabled")
 
     # Checking if ALL in a combination are set:
-    expected_intents = (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
+    expected_intents = Intents.GUILD_MESSAGES | Intents.DM_MESSAGES
     if (my_intents & expected_intents) == expected_intents:
         print("Messages are enabled in guilds and private messages.")
 
     # Checking if AT LEAST ONE in a combination is set:
-    expected_intents = (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
+    expected_intents = Intents.GUILD_MESSAGES | Intents.DM_MESSAGES
     if my_intents & expected_intents:
         print("Messages are enabled in guilds or private messages.")
     ```
@@ -120,7 +119,7 @@ class Intents(enums.Flag):
     # Remove all messages events.
     my_intents = my_intents ^ (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
     # or, simplifying
-    my_intents ^= (Intents.GUILD_MESSAGES | Intents.DM_MESSAGES)
+    my_intents ^= Intents.GUILD_MESSAGES | Intents.DM_MESSAGES
     ```
 
     What is and is not covered by intents?

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import mock
 import pytest
 
@@ -58,6 +59,7 @@ class TestCommandInteraction:
             locale="es-ES",
             guild_locale="en-US",
             app_permissions=543123,
+            registered_guild_id=snowflakes.Snowflake(12345678),
             entitlements=[
                 monetization.Entitlement(
                     id=snowflakes.Snowflake(123123),
@@ -135,6 +137,7 @@ class TestAutocompleteInteraction:
             command_name="OKOKOK",
             command_type=1,
             options=[],
+            registered_guild_id=snowflakes.Snowflake(12345678),
             entitlements=[
                 monetization.Entitlement(
                     id=snowflakes.Snowflake(123123),

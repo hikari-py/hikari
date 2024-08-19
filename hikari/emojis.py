@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -238,7 +237,7 @@ class UnicodeEmoji(str, Emoji):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class CustomEmoji(snowflakes.Unique, Emoji):
     """Represents a custom emoji.
 
@@ -274,6 +273,12 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
     def __str__(self) -> str:
         return self.mention
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, CustomEmoji):
+            return self.id == other.id
+
+        return False
 
     @property
     def filename(self) -> str:
@@ -325,12 +330,15 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         raise ValueError("Expected an emoji mention")
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class KnownCustomEmoji(CustomEmoji):
-    """Represents an emoji that is known from a guild the bot is in.
+    """Represents a known emoji.
 
-    This is a specialization of [`hikari.emojis.CustomEmoji`][] that is from a guild that you
-    _are_ part of. As a result, it contains a lot more information with it.
+    The Emoji could be either known because the bot is part of the emoji's guild or
+    because the emoji is an application emoji.
+
+    This is a specialization of [`hikari.emojis.CustomEmoji`][] that is _known_ as mentioned before.
+    As a result, it contains a lot more information with it.
     """
 
     app: traits.RESTAware = attrs.field(
@@ -338,8 +346,11 @@ class KnownCustomEmoji(CustomEmoji):
     )
     """Client application that models may use for procedures."""
 
-    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=False)
-    """The ID of the guild this emoji belongs to."""
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the guild this emoji belongs to, if applicable.
+
+    This will be [`None`][] if the emoji is an application emoji.
+    """
 
     role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The IDs of the roles that are whitelisted to use this emoji.

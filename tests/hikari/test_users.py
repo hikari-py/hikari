@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import mock
 import pytest
 
@@ -343,6 +344,14 @@ class TestPartialUserImpl:
 
     def test_mention_property(self, obj):
         assert obj.mention == "<@123>"
+
+    def test_display_name_property_when_global_name(self, obj):
+        obj.global_name = "Thommo"
+        assert obj.display_name == obj.global_name
+
+    def test_display_name_property_when_no_global_name(self, obj):
+        obj.global_name = None
+        assert obj.display_name == obj.username
 
     @pytest.mark.asyncio
     async def test_fetch_self(self, obj):

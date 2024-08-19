@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -463,7 +462,7 @@ class ExecutableWebhook(abc.ABC):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialWebhook(snowflakes.Unique):
     """Base class for all webhook implementations."""
 
@@ -557,7 +556,7 @@ class PartialWebhook(snowflakes.Unique):
         )
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     """Represents an incoming webhook object on Discord.
 
@@ -771,7 +770,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         return webhook
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ChannelFollowerWebhook(PartialWebhook):
     """Represents a channel follower webhook object on Discord."""
 
@@ -921,7 +920,7 @@ class ChannelFollowerWebhook(PartialWebhook):
         return webhook
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ApplicationWebhook(PartialWebhook):
     """Represents an application webhook object on Discord.
 

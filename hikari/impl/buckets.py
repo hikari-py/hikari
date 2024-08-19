@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -256,7 +255,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -394,8 +393,8 @@ class RESTBucketManager:
     )
 
     def __init__(self, max_rate_limit: float) -> None:
-        self._routes_to_hashes: typing.Dict[routes.Route, str] = {}
-        self._real_hashes_to_buckets: typing.Dict[str, RESTBucket] = {}
+        self._routes_to_hashes: dict[routes.Route, str] = {}
+        self._real_hashes_to_buckets: dict[str, RESTBucket] = {}
         self._gc_task: typing.Optional[asyncio.Task[None]] = None
         self._max_rate_limit = max_rate_limit
         self._global_ratelimit = rate_limits.ManualRateLimiter()
@@ -467,7 +466,7 @@ class RESTBucketManager:
             self._purge_stale_buckets(expire_after)
 
     def _purge_stale_buckets(self, expire_after: float) -> None:
-        buckets_to_purge: typing.List[str] = []
+        buckets_to_purge: list[str] = []
 
         now = time.monotonic()
 
