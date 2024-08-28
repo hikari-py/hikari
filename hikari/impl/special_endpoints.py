@@ -104,8 +104,9 @@ if typing.TYPE_CHECKING:
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
 
-
-    _GuildThreadChannelCovT = typing.TypeVar("_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True)
+    _GuildThreadChannelCovT = typing.TypeVar(
+        "_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True
+    )
 
     class _ThreadDeserializeSig(typing.Protocol[_GuildThreadChannelCovT]):
         def __call__(
