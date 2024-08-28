@@ -133,38 +133,6 @@ class InteractionServer(abc.ABC):
             the interaction request.
         """
 
-    @typing.overload
-    @abc.abstractmethod
-    def get_listener(
-        self, interaction_type: type[command_interactions.CommandInteraction], /
-    ) -> typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]]: ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def get_listener(
-        self, interaction_type: type[component_interactions.ComponentInteraction], /
-    ) -> typing.Optional[ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]]: ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def get_listener(
-        self, interaction_type: type[command_interactions.AutocompleteInteraction], /
-    ) -> typing.Optional[
-        ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
-    ]: ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def get_listener(
-        self, interaction_type: type[modal_interactions.ModalInteraction], /
-    ) -> typing.Optional[ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]: ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def get_listener(
-        self, interaction_type: type[_InteractionT_co], /
-    ) -> typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]: ...
-
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: type[_InteractionT_co], /
