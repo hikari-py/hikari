@@ -410,7 +410,7 @@ class JSONObjectBuilder(dict[str, JSONish]):
         if values is not None:
             self[key] = [str(int(value)) for value in values]
         else:
-            self[key] = values
+            self[key] = None
 
 
 def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterable[T_co], /) -> list[T]:
