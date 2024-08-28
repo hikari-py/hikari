@@ -125,9 +125,6 @@ type = [
     { name = "Bugfixes",                    directory = "bugfix",        showcontent = true },
     { name = "Documentation Improvements",  directory = "documentation", showcontent = true },
 ]
-# TODO: Remove this when the next version to 24.7.1 is released
-# see: https://github.com/twisted/towncrier/pull/639
-ignore = [".template.md.jinja"]
 
 [tool.mypy]
 # general settings
