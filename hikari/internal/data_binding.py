@@ -357,7 +357,7 @@ class JSONObjectBuilder(dict[str, JSONish]):
             else:
                 self[key] = list(values)
         else:
-            self[key] = values
+            self[key] = None
 
     def put_snowflake(
         self, key: str, value: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[snowflakes.Unique]], /
