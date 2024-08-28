@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
 
 import asyncio
 import base64
@@ -1691,4 +1691,73 @@ class TestEventManagerImpl:
         event_factory.deserialize_audit_log_entry_create_event.assert_called_once_with(shard, mock_payload)
         event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_audit_log_entry_create_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_stage_instance_create(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 123",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+
+        await event_manager_impl.on_stage_instance_create(shard, payload)
+
+        event_factory.deserialize_stage_instance_create_event.assert_called_once_with(shard, payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_stage_instance_create_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_stage_instance_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 123",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+
+        await event_manager_impl.on_stage_instance_update(shard, payload)
+
+        event_factory.deserialize_stage_instance_update_event.assert_called_once_with(shard, payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_stage_instance_update_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_stage_instance_delete(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 123",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+
+        await event_manager_impl.on_stage_instance_delete(shard, payload)
+
+        event_factory.deserialize_stage_instance_delete_event.assert_called_once_with(shard, payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_stage_instance_delete_event.return_value
         )

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -79,13 +78,13 @@ class StickerFormatType(int, enums.Enum):
     """A GIF sticker."""
 
 
-_STICKER_EXTENSIONS: typing.Dict[typing.Union[StickerFormatType, int], str] = {
+_STICKER_EXTENSIONS: dict[typing.Union[StickerFormatType, int], str] = {
     StickerFormatType.LOTTIE: "json",
     StickerFormatType.GIF: "gif",
 }
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class StickerPack(snowflakes.Unique):
     """Represents a sticker pack on Discord."""
 
@@ -146,7 +145,7 @@ class StickerPack(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialSticker(snowflakes.Unique):
     """Represents the partial stickers found attached to messages on Discord."""
 
@@ -177,7 +176,7 @@ class PartialSticker(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class StandardSticker(PartialSticker):
     """Represents a standard Discord sticker that belongs to a pack."""
 
@@ -198,7 +197,7 @@ class StandardSticker(PartialSticker):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildSticker(PartialSticker):
     """Represents a Discord sticker that belongs to a guild."""
 

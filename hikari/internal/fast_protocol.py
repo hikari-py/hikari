@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -42,11 +41,9 @@ def _check_if_ignored(name: str) -> bool:
 # This metaclass needs to subclass the same type as [`typing.Protocol`][] to be
 # able to overwrite it
 class _FastProtocolChecking(type(typing.Protocol)):
-    _attributes_: typing.Tuple[str, ...]
+    _attributes_: tuple[str, ...]
 
-    def __new__(
-        cls, cls_name: str, bases: typing.Tuple[typing.Type[typing.Any], ...], namespace: typing.Dict[str, typing.Any]
-    ) -> Self:
+    def __new__(cls, cls_name: str, bases: tuple[type[typing.Any], ...], namespace: dict[str, typing.Any]) -> Self:
         global _Protocol
 
         if _Protocol is NotImplemented:
@@ -109,7 +106,7 @@ class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
 
     __slots__: typing.Sequence[str] = ()
 
-    __subclasshook__: typing.Callable[[typing.Type[typing.Any]], bool]
+    __subclasshook__: typing.Callable[[type[typing.Any]], bool]
 
     def __init_subclass__(cls, *args: typing.Any, **kwargs: typing.Any) -> None:
         # typing sets their own subclasshook if its not there. We want to
@@ -122,7 +119,7 @@ class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
         if not should_overwrite:
             return
 
-        def _subclass_hook(other: typing.Type[typing.Any]) -> bool:
+        def _subclass_hook(other: type[typing.Any]) -> bool:
             for i in cls._attributes_:
                 if i not in other.__dict__:
                     return NotImplemented

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -51,6 +50,7 @@ Likewise, to check if the input was not a number, you could run
 This expression language is highly experimental and may change without
 prior notice for the time being.
 """
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("AttrGetter",)
@@ -81,7 +81,7 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
         elif attr_name.startswith("."):
             attr_name = attr_name[1:]
 
-        self.pipeline: typing.List[typing.Callable[[typing.Any], typing.Any]] = []
+        self.pipeline: list[typing.Callable[[typing.Any], typing.Any]] = []
 
         for operation in attr_name.split("."):
             self.pipeline.append(self._transform(operation))

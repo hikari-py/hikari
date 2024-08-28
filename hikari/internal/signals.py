@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -41,7 +40,7 @@ from hikari.internal import ux
 if typing.TYPE_CHECKING:
     _SignalHandlerT = typing.Callable[[int, typing.Optional[types.FrameType]], None]
 
-_INTERRUPT_SIGNALS: typing.Tuple[str, ...] = ("SIGINT", "SIGTERM")
+_INTERRUPT_SIGNALS: tuple[str, ...] = ("SIGINT", "SIGTERM")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.signals")
 
 
@@ -103,7 +102,7 @@ def handle_interrupts(
         return
 
     interrupt_handler = _interrupt_handler(loop)
-    original_handlers: typing.Dict[int, typing.Union[int, _SignalHandlerT, None]] = {}
+    original_handlers: dict[int, typing.Union[int, _SignalHandlerT, None]] = {}
 
     for sig in _INTERRUPT_SIGNALS:
         try:

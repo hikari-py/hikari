@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Interfaces used to describe voice client implementations."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("VoiceComponent", "VoiceConnection")
@@ -84,7 +84,7 @@ class VoiceComponent(abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.Guild],
         channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel],
-        voice_connection_type: typing.Type[_VoiceConnectionT],
+        voice_connection_type: type[_VoiceConnectionT],
         *,
         deaf: bool = False,
         mute: bool = False,

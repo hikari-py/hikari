@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -50,6 +49,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
@@ -182,9 +182,9 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> channel_events.ThreadMembersUpdateEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
 
-        added_members: typing.Dict[snowflakes.Snowflake, channel_models.ThreadMember] = {}
-        guild_members: typing.Dict[snowflakes.Snowflake, guild_models.Member] = {}
-        guild_presences: typing.Dict[snowflakes.Snowflake, presences_models.MemberPresence] = {}
+        added_members: dict[snowflakes.Snowflake, channel_models.ThreadMember] = {}
+        guild_members: dict[snowflakes.Snowflake, guild_models.Member] = {}
+        guild_presences: dict[snowflakes.Snowflake, presences_models.MemberPresence] = {}
         if raw_added_members := payload.get("added_members"):
             for member_payload in raw_added_members:
                 member = self._app.entity_factory.deserialize_thread_member(member_payload)
@@ -221,12 +221,12 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.ThreadListSyncEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
-        channel_ids: typing.Optional[typing.List[snowflakes.Snowflake]] = None
+        channel_ids: typing.Optional[list[snowflakes.Snowflake]] = None
         if raw_channel_ids := payload.get("channel_ids"):
             channel_ids = [snowflakes.Snowflake(x) for x in raw_channel_ids]
 
         members = {m.thread_id: m for m in map(self._app.entity_factory.deserialize_thread_member, payload["members"])}
-        threads: typing.Dict[snowflakes.Snowflake, channel_models.GuildThreadChannel] = {}
+        threads: dict[snowflakes.Snowflake, channel_models.GuildThreadChannel] = {}
         for thread_payload in payload["threads"]:
             thread_id = snowflakes.Snowflake(thread_payload["id"])
             thread = self._app.entity_factory.deserialize_guild_thread(
@@ -741,7 +741,7 @@ class EventFactoryImpl(event_factory.EventFactory):
 
     def _split_reaction_emoji(
         self, emoji_payload: data_binding.JSONObject, /
-    ) -> typing.Tuple[typing.Optional[snowflakes.Snowflake], typing.Union[str, emojis_models.UnicodeEmoji, None]]:
+    ) -> tuple[typing.Optional[snowflakes.Snowflake], typing.Union[str, emojis_models.UnicodeEmoji, None]]:
         if (emoji_id := emoji_payload.get("id")) is not None:
             return snowflakes.Snowflake(emoji_id), emoji_payload["name"]
 
@@ -953,4 +953,29 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> monetization_events.EntitlementDeleteEvent:
         return monetization_events.EntitlementDeleteEvent(
             app=self._app, shard=shard, entitlement=self._app.entity_factory.deserialize_entitlement(payload)
+        )
+
+    #########################
+    # STAGE INSTANCE EVENTS #
+    #########################
+
+    def deserialize_stage_instance_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceCreateEvent:
+        return stage_events.StageInstanceCreateEvent(
+            shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
+        )
+
+    def deserialize_stage_instance_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceUpdateEvent:
+        return stage_events.StageInstanceUpdateEvent(
+            shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
+        )
+
+    def deserialize_stage_instance_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceDeleteEvent:
+        return stage_events.StageInstanceDeleteEvent(
+            shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
         )

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Models and enums used for application commands on Discord."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -111,7 +111,7 @@ class OptionType(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class CommandChoice:
     """Represents the choices set for an application command's argument."""
 
@@ -128,7 +128,7 @@ class CommandChoice:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class CommandOption:
     """Represents an application command's argument."""
 
@@ -215,7 +215,7 @@ class CommandOption:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialCommand(snowflakes.Unique):
     """Represents any application command on Discord."""
 
@@ -438,7 +438,7 @@ class PartialCommand(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class SlashCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
@@ -461,7 +461,7 @@ class SlashCommand(PartialCommand):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ContextMenuCommand(PartialCommand):
     """Represents a context menu command on Discord."""
 

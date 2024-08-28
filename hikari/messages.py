@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -196,7 +195,7 @@ class MessageActivityType(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Attachment(snowflakes.Unique, files.WebResource):
     """Represents a file attached to a message.
 
@@ -259,7 +258,7 @@ class Attachment(snowflakes.Unique, files.WebResource):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
@@ -277,7 +276,7 @@ class Reaction:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
 
@@ -289,7 +288,7 @@ class MessageActivity:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class MessageReference:
     """Represents information about a referenced message.
 
@@ -343,7 +342,7 @@ class MessageReference:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class MessageApplication(guilds.PartialApplication):
     """The representation of an application used in messages."""
 
@@ -387,7 +386,7 @@ class MessageApplication(guilds.PartialApplication):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=True, hash=True, weakref_slot=False)
+@attrs.define(kw_only=True, repr=True, unsafe_hash=True, weakref_slot=False)
 class MessageInteraction:
     """Representation of information provided for a message from an interaction."""
 
@@ -406,8 +405,8 @@ class MessageInteraction:
 
 def _map_cache_maybe_discover(
     ids: typing.Iterable[snowflakes.Snowflake], cache_call: typing.Callable[[snowflakes.Snowflake], typing.Optional[_T]]
-) -> typing.Dict[snowflakes.Snowflake, _T]:
-    results: typing.Dict[snowflakes.Snowflake, _T] = {}
+) -> dict[snowflakes.Snowflake, _T]:
+    results: dict[snowflakes.Snowflake, _T] = {}
     for id_ in ids:
         obj = cache_call(id_)
         if obj is not None:
@@ -1238,7 +1237,9 @@ class PartialMessage(snowflakes.Unique):
 
         # Using a custom emoji's name and ID to remove a specific user's
         # reaction from this reaction.
-        await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
+        await message.remove_reaction(
+            "a:Distraction", 745991233939439616, user=some_user
+        )
 
         # Using a unicode emoji and removing a specific user from this
         # reaction.
@@ -1340,7 +1341,7 @@ class PartialMessage(snowflakes.Unique):
             )
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Message(PartialMessage):
     """Represents a message with all known details."""
 
@@ -1431,3 +1432,9 @@ class Message(PartialMessage):
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""
+
+    thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field(hash=False, eq=False, repr=False)
+    """The thread that was started from this message.
+
+    Will be [`None`][] if the message was not used to start a thread.
+    """

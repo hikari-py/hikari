@@ -21,6 +21,8 @@
 # SOFTWARE.
 """Dependency scanning."""
 
+from __future__ import annotations
+
 from pipelines import nox
 
 

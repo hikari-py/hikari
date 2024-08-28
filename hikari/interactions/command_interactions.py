@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Models and enums used for Discord's Slash Commands interaction flow."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -85,7 +85,7 @@ ResolvedOptionData = base_interactions.ResolvedOptionData
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class CommandInteractionOption:
     """Represents the options passed for a command interaction."""
 
@@ -117,7 +117,7 @@ class CommandInteractionOption:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class AutocompleteInteractionOption(CommandInteractionOption):
     """Represents the options passed for a command autocomplete interaction."""
 
@@ -130,7 +130,7 @@ class AutocompleteInteractionOption(CommandInteractionOption):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class BaseCommandInteraction(base_interactions.PartialInteraction):
     """Represents a base command interaction on Discord.
 
@@ -306,7 +306,7 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class CommandInteraction(
     BaseCommandInteraction,
     base_interactions.MessageResponseMixin[CommandResponseTypesT],
@@ -338,10 +338,11 @@ class CommandInteraction(
         Examples
         --------
         ```py
-        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+        async def handle_command_interaction(
+            interaction: CommandInteraction,
+        ) -> InteractionMessageBuilder:
             return (
-                interaction
-                .build_response()
+                interaction.build_response()
                 .add_embed(Embed(description="Hi there"))
                 .set_content("Konnichiwa")
             )
@@ -370,7 +371,9 @@ class CommandInteraction(
         Examples
         --------
         ```py
-        async def handle_command_interaction(interaction: CommandInteraction) -> InteractionMessageBuilder:
+        async def handle_command_interaction(
+            interaction: CommandInteraction,
+        ) -> InteractionMessageBuilder:
             yield interaction.build_deferred_response()
 
             await interaction.edit_initial_response("Pong!")
@@ -385,7 +388,7 @@ class CommandInteraction(
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class AutocompleteInteraction(BaseCommandInteraction):
     """Represents an autocomplete interaction on Discord."""
 
@@ -410,16 +413,15 @@ class AutocompleteInteraction(BaseCommandInteraction):
         Examples
         --------
         ```py
-        async def handle_autocomplete_interaction(interaction: AutocompleteInteraction) -> InteractionAutocompleteBuilder:
-            return (
-                interaction
-                .build_response(
-                    [
-                        AutocompleteChoiceBuilder(name="foo", value="a"),
-                        AutocompleteChoiceBuilder(name="bar", value="b"),
-                        AutocompleteChoiceBuilder(name="baz", value="c"),
-                    ]
-                )
+        async def handle_autocomplete_interaction(
+            interaction: AutocompleteInteraction,
+        ) -> InteractionAutocompleteBuilder:
+            return interaction.build_response(
+                [
+                    AutocompleteChoiceBuilder(name="foo", value="a"),
+                    AutocompleteChoiceBuilder(name="bar", value="b"),
+                    AutocompleteChoiceBuilder(name="baz", value="c"),
+                ]
             )
         ```
 

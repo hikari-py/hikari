@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -48,6 +47,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
@@ -888,3 +888,21 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_entitlement_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#entitlement-update for more info."""
         await self.dispatch(self._event_factory.deserialize_entitlement_update_event(shard, payload))
+
+    @event_manager_base.filtered(stage_events.StageInstanceCreateEvent)
+    async def on_stage_instance_create(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        await self.dispatch(self._event_factory.deserialize_stage_instance_create_event(shard, payload))
+
+    @event_manager_base.filtered(stage_events.StageInstanceUpdateEvent)
+    async def on_stage_instance_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        await self.dispatch(self._event_factory.deserialize_stage_instance_update_event(shard, payload))
+
+    @event_manager_base.filtered(stage_events.StageInstanceDeleteEvent)
+    async def on_stage_instance_delete(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        await self.dispatch(self._event_factory.deserialize_stage_instance_delete_event(shard, payload))

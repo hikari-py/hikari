@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Events concerning manipulation of members within guilds."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("MemberEvent", "MemberCreateEvent", "MemberUpdateEvent", "MemberDeleteEvent")

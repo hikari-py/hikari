@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -72,7 +71,7 @@ class Permissions(enums.Flag):
 
     ```py
     missing_perms = ~my_perms & required_perms
-    if (missing_perms):
+    if missing_perms:
         print(f"I'm missing these permissions: {missing_perms}")
     ```
 

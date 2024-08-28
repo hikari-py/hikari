@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -96,15 +95,15 @@ _BACKOFF_CAP: typing.Final[float] = 60.0
 # resume.
 _RESUME_CLOSE_CODE: typing.Final[int] = 3_000
 # Per-shard sending rate-limit
-_TOTAL_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 120)
+_TOTAL_RATELIMIT: typing.Final[tuple[float, int]] = (60.0, 120)
 # Rate-limit for non-priority packages.
 # This is done to always allow for HEARTBEAT packages
 # to get around (leaving 3 slots for it).
-_NON_PRIORITY_RATELIMIT: typing.Final[typing.Tuple[float, int]] = (60.0, 117)
+_NON_PRIORITY_RATELIMIT: typing.Final[tuple[float, int]] = (60.0, 117)
 # Used to identify the end of a ZLIB payload
 _ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
 # Close codes which don't invalidate the current session.
-_RECONNECTABLE_CLOSE_CODES: typing.FrozenSet[errors.ShardCloseCode] = frozenset(
+_RECONNECTABLE_CLOSE_CODES: frozenset[errors.ShardCloseCode] = frozenset(
     (
         errors.ShardCloseCode.UNKNOWN_ERROR,
         errors.ShardCloseCode.DECODE_ERROR,
@@ -787,7 +786,7 @@ class GatewayShardImpl(shard.GatewayShard):
             else:
                 self._logger.log(ux.TRACE, "unknown opcode %s received, it will be ignored...", op)
 
-    async def _connect(self) -> typing.Tuple[asyncio.Task[None], ...]:
+    async def _connect(self) -> tuple[asyncio.Task[None], ...]:
         if self._ws is not None:
             raise errors.ComponentStateConflictError("Attempting to connect an already connected shard")
 
@@ -888,7 +887,7 @@ class GatewayShardImpl(shard.GatewayShard):
     async def _keep_alive(self) -> None:
         assert self._handshake_event is not None
 
-        lifetime_tasks: typing.Tuple[asyncio.Task[None], ...] = ()
+        lifetime_tasks: tuple[asyncio.Task[None], ...] = ()
         last_started_at = -float("inf")
         backoff = rate_limits.ExponentialBackOff(base=_BACKOFF_BASE, maximum=_BACKOFF_CAP)
 

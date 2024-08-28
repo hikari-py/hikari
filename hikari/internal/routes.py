@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -39,7 +38,7 @@ from hikari.internal import data_binding
 
 HASH_SEPARATOR: typing.Final[str] = ";"
 PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")
-MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typing.Mapping[str, str]], str]] = {
+MAJOR_PARAM_COMBOS: typing.Mapping[frozenset[str], typing.Callable[[typing.Mapping[str, str]], str]] = {
     frozenset(("channel",)): lambda d: d["channel"],
     frozenset(("guild",)): lambda d: d["guild"],
     frozenset(("webhook", "token")): lambda d: d["webhook"] + ":" + d["token"],
@@ -50,7 +49,7 @@ MAJOR_PARAM_COMBOS: typing.Mapping[typing.FrozenSet[str], typing.Callable[[typin
 # This could be frozen, except attrs' docs advise against this for performance
 # reasons when using slotted classes.
 @attrs_extensions.with_copy
-@attrs.define(hash=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, weakref_slot=False)
 @typing.final
 class CompiledRoute:
     """A compiled representation of a route to a specific resource.
@@ -115,7 +114,7 @@ class CompiledRoute:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, init=False, weakref_slot=False)
+@attrs.define(unsafe_hash=True, init=False, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -137,7 +136,7 @@ class Route:
     path_template: str = attrs.field()
     """The template string used for the path."""
 
-    major_params: typing.Optional[typing.FrozenSet[str]] = attrs.field(hash=False, eq=False, repr=False)
+    major_params: typing.Optional[frozenset[str]] = attrs.field(hash=False, eq=False, repr=False)
     """The optional major parameter name combination for this endpoint."""
 
     has_ratelimits: bool = attrs.field(hash=False, eq=False, repr=False)
@@ -189,12 +188,12 @@ class Route:
         return self.method + " " + self.path_template
 
 
-def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> typing.FrozenSet[str]:
+def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> frozenset[str]:
     return frozenset(v.lower() for v in values)
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, weakref_slot=False)
 @typing.final
 class CDNRoute:
     """Route implementation for a CDN resource."""
@@ -340,6 +339,12 @@ POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typi
 POST_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(POST, "/channels/{channel}/webhooks")
 GET_CHANNEL_WEBHOOKS: typing.Final[Route] = Route(GET, "/channels/{channel}/webhooks")
 
+# Stage instances
+POST_STAGE_INSTANCE: typing.Final[Route] = Route(POST, "/stage-instances")
+GET_STAGE_INSTANCE: typing.Final[Route] = Route(GET, "/stage-instances/{channel}")
+PATCH_STAGE_INSTANCE: typing.Final[Route] = Route(PATCH, "/stage-instances/{channel}")
+DELETE_STAGE_INSTANCE: typing.Final[Route] = Route(DELETE, "/stage-instances/{channel}")
+
 # Reactions
 GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
 DELETE_ALL_REACTIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions")
@@ -382,6 +387,14 @@ DELETE_GUILD_EMOJI: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/emojis/
 GET_GUILD_EMOJIS: typing.Final[Route] = Route(GET, "/guilds/{guild}/emojis")
 POST_GUILD_EMOJIS: typing.Final[Route] = Route(POST, "/guilds/{guild}/emojis")
 
+GET_APPLICATION_EMOJI: typing.Final[Route] = Route(GET, "/applications/{application}/emojis/{emoji}")
+PATCH_APPLICATION_EMOJI: typing.Final[Route] = Route(PATCH, "/applications/{application}/emojis/{emoji}")
+DELETE_APPLICATION_EMOJI: typing.Final[Route] = Route(DELETE, "/applications/{application}/emojis/{emoji}")
+
+GET_APPLICATION_EMOJIS: typing.Final[Route] = Route(GET, "/applications/{application}/emojis")
+POST_APPLICATION_EMOJIS: typing.Final[Route] = Route(POST, "/applications/{application}/emojis")
+
+
 GET_GUILD_SCHEDULED_EVENT: typing.Final[Route] = Route(GET, "/guilds/{guild}/scheduled-events/{scheduled_event}")
 GET_GUILD_SCHEDULED_EVENTS: typing.Final[Route] = Route(GET, "/guilds/{guild}/scheduled-events")
 GET_GUILD_SCHEDULED_EVENT_USERS: typing.Final[Route] = Route(
@@ -421,6 +434,7 @@ GET_GUILD_PREVIEW: typing.Final[Route] = Route(GET, "/guilds/{guild}/preview")
 GET_GUILD_PRUNE: typing.Final[Route] = Route(GET, "/guilds/{guild}/prune")
 POST_GUILD_PRUNE: typing.Final[Route] = Route(POST, "/guilds/{guild}/prune")
 
+GET_GUILD_ROLE: typing.Final[Route] = Route(GET, "/guilds/{guild}/roles/{role}")
 PATCH_GUILD_ROLE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/roles/{role}")
 DELETE_GUILD_ROLE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/roles/{role}")
 
@@ -429,6 +443,9 @@ POST_GUILD_ROLES: typing.Final[Route] = Route(POST, "/guilds/{guild}/roles")
 PATCH_GUILD_ROLES: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/roles")
 
 GET_GUILD_VANITY_URL: typing.Final[Route] = Route(GET, "/guilds/{guild}/vanity-url")
+
+GET_GUILD_VOICE_STATE: typing.Final[Route] = Route(GET, "/guilds/{guild}/voice-states/{user}")
+GET_MY_GUILD_VOICE_STATE: typing.Final[Route] = Route(GET, "/guilds/{guild}/voice-states/@me")
 
 PATCH_GUILD_VOICE_STATE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/voice-states/{user}")
 PATCH_MY_GUILD_VOICE_STATE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/voice-states/@me")
@@ -564,7 +581,7 @@ GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
 GET_GATEWAY_BOT: typing.Final[Route] = Route(GET, "/gateway/bot")
 
 PNG: typing.Final[str] = "png"
-JPEG_JPG: typing.Final[typing.Tuple[str, str]] = ("jpeg", "jpg")
+JPEG_JPG: typing.Final[tuple[str, str]] = ("jpeg", "jpg")
 WEBP: typing.Final[str] = "webp"
 GIF: typing.Final[str] = "gif"
 LOTTIE: typing.Final[str] = "json"  # https://airbnb.io/lottie/
@@ -604,4 +621,6 @@ CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
     "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
 
-SCHEDULED_EVENT_COVER: typing.Final[CDNRoute] = CDNRoute("/guilds/{scheduled_event_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+SCHEDULED_EVENT_COVER: typing.Final[CDNRoute] = CDNRoute(
+    "/guild-events/{scheduled_event_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
+)

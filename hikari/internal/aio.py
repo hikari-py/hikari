@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -24,27 +23,14 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = (
-    "completed_future",
-    "get_or_make_loop",
-    "is_async_iterator",
-    "is_async_iterable",
-    "first_completed",
-    "all_of",
-    "destroy_loop",
-)
+__all__: typing.Sequence[str] = ("completed_future", "get_or_make_loop", "first_completed", "all_of", "destroy_loop")
 
 import asyncio
-import inspect
-import sys
 import typing
 import warnings
 
 if typing.TYPE_CHECKING:
     import logging
-
-    # Both mypy and pyright vendor typing_extensions.
-    import typing_extensions
 
 T_co = typing.TypeVar("T_co", covariant=True)
 T_inv = typing.TypeVar("T_inv")
@@ -74,34 +60,6 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
     future = asyncio.get_running_loop().create_future()
     future.set_result(result)
     return future
-
-
-# On Python3.8.2, there appears to be a bug with the typing module:
-
-# >>> class Aiterable:
-# ...     async def __aiter__(self):
-# ...         yield ...
-# >>> isinstance(Aiterable(), typing.AsyncIterable)
-# True
-
-# >>> class Aiterator:
-# ...     async def __anext__(self):
-# ...         return ...
-# >>> isinstance(Aiterator(), typing.AsyncIterator)
-# False
-
-# ... so I guess I will have to determine this some other way.
-
-
-def is_async_iterator(obj: typing.Any) -> typing_extensions.TypeGuard[typing.AsyncIterator[object]]:
-    """Determine if the object is an async iterator or not."""
-    return asyncio.iscoroutinefunction(getattr(obj, "__anext__", None))
-
-
-def is_async_iterable(obj: typing.Any) -> typing_extensions.TypeGuard[typing.AsyncIterable[object]]:
-    """Determine if the object is an async iterable or not."""
-    attrs = getattr(obj, "__aiter__", None)
-    return inspect.isfunction(attrs) or inspect.ismethod(attrs)
 
 
 async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: typing.Optional[float] = None) -> None:
@@ -166,7 +124,7 @@ async def all_of(*aws: typing.Awaitable[T_co], timeout: typing.Optional[float] =
     typing.Sequence[T_co]
         The results of each awaitable in the order they were invoked in.
     """
-    fs: typing.Tuple[asyncio.Future[T_co], ...] = tuple(map(asyncio.ensure_future, aws))
+    fs: tuple[asyncio.Future[T_co], ...] = tuple(map(asyncio.ensure_future, aws))
     gatherer = asyncio.gather(*fs)
 
     try:
@@ -260,17 +218,16 @@ def destroy_loop(loop: asyncio.AbstractEventLoop, logger: logging.Logger) -> Non
 
     if remaining_tasks:
         logger.warning("terminating %s remaining tasks forcefully", len(remaining_tasks))
-        loop.run_until_complete(_gather((murder(task) for task in remaining_tasks)))
+        loop.run_until_complete(_gather(murder(task) for task in remaining_tasks))
     else:
         logger.debug("No remaining tasks exist, good job!")
 
-    if sys.version_info >= (3, 9):
-        logger.debug("shutting down default executor")
-        try:
-            # This seems to raise a NotImplementedError when running with uvloop.
-            loop.run_until_complete(loop.shutdown_default_executor())
-        except NotImplementedError:
-            pass
+    logger.debug("shutting down default executor")
+    try:
+        # This seems to raise a NotImplementedError when running with uvloop.
+        loop.run_until_complete(loop.shutdown_default_executor())
+    except NotImplementedError:
+        pass
 
     logger.debug("shutting down asyncgens")
     loop.run_until_complete(loop.shutdown_asyncgens())
