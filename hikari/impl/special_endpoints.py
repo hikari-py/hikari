@@ -104,7 +104,10 @@ if typing.TYPE_CHECKING:
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
 
-    class _ThreadDeserializeSig(typing.Protocol["_GuildThreadChannelCovT"]):
+
+    _GuildThreadChannelCovT = typing.TypeVar("_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True)
+
+    class _ThreadDeserializeSig(typing.Protocol[_GuildThreadChannelCovT]):
         def __call__(
             self,
             payload: data_binding.JSONObject,
@@ -118,7 +121,6 @@ if typing.TYPE_CHECKING:
 
 _ParentT = typing.TypeVar("_ParentT")
 _GuildThreadChannelT = typing.TypeVar("_GuildThreadChannelT", bound=channels.GuildThreadChannel)
-_GuildThreadChannelCovT = typing.TypeVar("_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True)
 
 
 @typing.final
@@ -830,7 +832,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
 
     def __init__(
         self,
-        deserialize: _ThreadDeserializeSig[_GuildThreadChannelCovT],
+        deserialize: _ThreadDeserializeSig[_GuildThreadChannelT],
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
         route: routes.CompiledRoute,
@@ -846,7 +848,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
         self._request_call = request_call
         self._route = route
 
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelCovT, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelT, typing.Any, None]]:
         if not self._has_more:
             return None
 
