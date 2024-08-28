@@ -381,7 +381,7 @@ class JSONObjectBuilder(dict[str, JSONish]):
         if value is not None:
             self[key] = str(int(value))
         else:
-            self[key] = value
+            self[key] = None
 
     def put_snowflake_array(
         self,
