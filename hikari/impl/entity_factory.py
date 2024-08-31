@@ -3634,8 +3634,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_channel_id := payload["channel_id"]) is not None:
             channel_id = snowflakes.Snowflake(raw_channel_id)
 
+        member_obj: typing.Optional[guild_models.Member] = None
         if member is undefined.UNDEFINED:
-            member = self.deserialize_member(payload["member"], guild_id=guild_id)
+            # It is insanely rare for this to happen, but we can receive voice states
+            # with no member object attached to them unfortunately.
+            member_obj = self.deserialize_member(payload["member"], guild_id=guild_id) if "member" in payload else None
+        else:
+            member_obj = member
 
         requested_to_speak_at: typing.Optional[datetime.datetime] = None
         if raw_requested_to_speak_at := payload.get("request_to_speak_timestamp"):
@@ -3646,7 +3651,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             channel_id=channel_id,
             user_id=snowflakes.Snowflake(payload["user_id"]),
-            member=member,
+            member=member_obj,
             session_id=payload["session_id"],
             is_guild_deafened=payload["deaf"],
             is_guild_muted=payload["mute"],
