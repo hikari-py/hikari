@@ -2456,6 +2456,7 @@ class TestCacheImpl:
         voice_state_data = cache_utilities.VoiceStateData(
             channel_id=snowflakes.Snowflake(4651234123),
             guild_id=snowflakes.Snowflake(54123123),
+            user_id=snowflakes.Snowflake(7512312),
             is_guild_deafened=True,
             is_guild_muted=False,
             is_self_deafened=True,
