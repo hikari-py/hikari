@@ -86,7 +86,7 @@ curl \
             "color": 6697881,
             "description": "'"Install it now by executing: \`\`\`pip install hikari==${VERSION}\`\`\`\\nDocumentation can be found at https://docs.hikari-py.dev/en/${VERSION}"'",
             "footer": {
-              "text": "'"SHA: ${REF}"'"
+              "text": "'"SHA: ${ref}"'"
             }
           }
         ]
