@@ -55,6 +55,7 @@ jobs:
           path: .coverage
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-coverage:
     needs: [test]
