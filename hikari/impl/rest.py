@@ -2447,8 +2447,10 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Sequence[emojis.KnownCustomEmoji]:
         route = routes.GET_APPLICATION_EMOJIS.compile(application=application)
         response = await self._request(route)
-        assert isinstance(response, list)
-        return [self._entity_factory.deserialize_known_custom_emoji(emoji_payload) for emoji_payload in response]
+        assert isinstance(response, dict)
+        return [
+            self._entity_factory.deserialize_known_custom_emoji(emoji_payload) for emoji_payload in response["items"]
+        ]
 
     async def create_application_emoji(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish

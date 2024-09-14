@@ -3966,7 +3966,7 @@ class TestRESTClientImplAsync:
         emoji1 = StubModel(456)
         emoji2 = StubModel(789)
         expected_route = routes.GET_APPLICATION_EMOJIS.compile(application=123)
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._request = mock.AsyncMock(return_value={"items": [{"id": "456"}, {"id": "789"}]})
         rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(side_effect=[emoji1, emoji2])
 
         assert await rest_client.fetch_application_emojis(StubModel(123)) == [emoji1, emoji2]
