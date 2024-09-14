@@ -904,6 +904,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
 
     channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
+    user_id: snowflakes.Snowflake = attrs.field()
     is_guild_deafened: bool = attrs.field()
     is_guild_muted: bool = attrs.field()
     is_self_deafened: bool = attrs.field()
@@ -911,13 +912,14 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     is_streaming: bool = attrs.field()
     is_suppressed: bool = attrs.field()
     is_video_enabled: bool = attrs.field()
-    member: RefCell[MemberData] = attrs.field()
+    member: typing.Optional[RefCell[MemberData]] = attrs.field()
     session_id: str = attrs.field()
     requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field()
 
     def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
-        member = self.member.object.build_entity(app)
+        member = self.member.object.build_entity(app) if self.member else None
         return voices.VoiceState(
+            app=app,
             channel_id=self.channel_id,
             guild_id=self.guild_id,
             is_guild_deafened=self.is_guild_deafened,
@@ -927,9 +929,8 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_streaming=self.is_streaming,
             is_suppressed=self.is_suppressed,
             is_video_enabled=self.is_video_enabled,
-            user_id=member.user.id,
+            user_id=self.user_id,
             session_id=self.session_id,
-            app=app,
             member=member,
             requested_to_speak_at=self.requested_to_speak_at,
         )
@@ -941,6 +942,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
         return cls(
             channel_id=voice_state.channel_id,
             guild_id=voice_state.guild_id,
+            user_id=voice_state.user_id,
             is_self_deafened=voice_state.is_self_deafened,
             is_self_muted=voice_state.is_self_muted,
             is_guild_deafened=voice_state.is_guild_deafened,
@@ -948,7 +950,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_streaming=voice_state.is_streaming,
             is_suppressed=voice_state.is_suppressed,
             is_video_enabled=voice_state.is_video_enabled,
-            member=member or RefCell(MemberData.build_from_entity(voice_state.member)),
+            member=member,
             session_id=voice_state.session_id,
             requested_to_speak_at=voice_state.requested_to_speak_at,
         )

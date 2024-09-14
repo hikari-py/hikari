@@ -108,6 +108,7 @@ filterwarnings = [
     "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
 ]
 required_plugins = ["pytest-asyncio"]
+asyncio_default_fixture_loop_scope = "func"
 
 [tool.towncrier]
 package = "hikari"
