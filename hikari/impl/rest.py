@@ -1142,10 +1142,12 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_channel_follow(response)
 
     async def delete_channel(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         route = routes.DELETE_CHANNEL.compile(channel=channel)
-        response = await self._request(route)
+        response = await self._request(route, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
 
