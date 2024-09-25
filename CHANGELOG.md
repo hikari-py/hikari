@@ -1,3 +1,22 @@
+## 2.1.0 (2024-09-25)
+
+### Breaking Changes
+
+- `VoiceState.member` can now be `None` in cases where Discord doesn't send the relevant information ([#2038](https://github.com/hikari-py/hikari/issues/2038))
+
+### Features
+
+- Add the optional audit log `reason` argument to `hikari.api.rest.RESTClient.delete_channel` and
+  `hikari.impl.rest.RESTClientImpl.delete_channel`, the same way it already exists for e.g.
+  `edit_channel` ([#2058](https://github.com/hikari-py/hikari/issues/2058))
+
+### Bugfixes
+
+- Fix issue when deserializing voice states with missing member data ([#2038](https://github.com/hikari-py/hikari/issues/2038))
+- Fix `fetch_application_emojis` endpoint deserialization ([#2050](https://github.com/hikari-py/hikari/issues/2050))
+- Fix uploading files when using aiohttp 3.10.6 and onwards ([#2059](https://github.com/hikari-py/hikari/issues/2059))
+
+---
 ## 2.0.0 (2024-08-28)
 
 ### Breaking Changes
