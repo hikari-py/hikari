@@ -372,7 +372,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_channel(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         """Delete a channel in a guild, or close a DM.
 
@@ -385,6 +387,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel
             The channel to delete. This may be the object or the ID of an
             existing channel.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
