@@ -57,6 +57,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels as channels_
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
+    from hikari import polls as polls_
     from hikari import stickers as stickers_
     from hikari import users as users_
     from hikari.api import special_endpoints
@@ -538,6 +539,9 @@ class PartialMessage(snowflakes.Unique):
     embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
 
+    poll: undefined.UndefinedOr[polls_.Poll] = attrs.field(hash=False, eq=False, repr=False)
+    """The message poll."""
+
     reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attrs.field(hash=False, eq=False, repr=False)
     """The message reactions."""
 
@@ -764,6 +768,7 @@ class PartialMessage(snowflakes.Unique):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[polls_.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -936,6 +941,7 @@ class PartialMessage(snowflakes.Unique):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[polls_.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -1103,6 +1109,7 @@ class PartialMessage(snowflakes.Unique):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             sticker=sticker,
             stickers=stickers,
             tts=tts,
