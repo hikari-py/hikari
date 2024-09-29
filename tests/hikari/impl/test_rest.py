@@ -2782,8 +2782,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=123, message=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_message(StubModel(123), StubModel(456))
-        rest_client._request.assert_awaited_once_with(expected_route)
+        await rest_client.delete_message(StubModel(123), StubModel(456), reason="broke laws")
+        rest_client._request.assert_awaited_once_with(expected_route, reason="broke laws")
 
     async def test_delete_messages(self, rest_client):
         messages = [StubModel(i) for i in range(200)]
@@ -2793,10 +2793,13 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(StubModel(123), *messages)
+        await rest_client.delete_messages(StubModel(123), *messages, reason="broke laws")
 
         rest_client._request.assert_has_awaits(
-            [mock.call(expected_route, json=expected_json1), mock.call(expected_route, json=expected_json2)]
+            [
+                mock.call(expected_route, json=expected_json1, reason="broke laws"),
+                mock.call(expected_route, json=expected_json2, reason="broke laws"),
+            ]
         )
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_message_not_found(
@@ -2812,12 +2815,12 @@ class TestRESTClientImplAsync:
             side_effect=errors.NotFoundError(url="", headers={}, raw_body="", code=10008)
         )
 
-        await rest_client.delete_messages(channel, *messages)
+        await rest_client.delete_messages(channel, *messages, reason="broke laws")
 
         rest_client._request.assert_awaited_once_with(
-            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message)
+        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_channel_not_found(
         self, rest_client
@@ -2832,14 +2835,14 @@ class TestRESTClientImplAsync:
         rest_client.delete_message = mock.AsyncMock(side_effect=mock_not_found)
 
         with pytest.raises(errors.BulkDeleteError) as exc_info:
-            await rest_client.delete_messages(channel, *messages)
+            await rest_client.delete_messages(channel, *messages, reason="broke laws")
 
         assert exc_info.value.__cause__ is mock_not_found
 
         rest_client._request.assert_awaited_once_with(
-            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message)
+        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
 
     async def test_delete_messages_when_one_message_left_in_chunk(self, rest_client):
         channel = StubModel(123)
@@ -2849,12 +2852,16 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(channel, *messages)
+        await rest_client.delete_messages(channel, *messages, reason="broke laws")
 
         rest_client._request.assert_has_awaits(
             [
-                mock.call(routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json),
-                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
+                mock.call(
+                    routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
+                    json=expected_json,
+                    reason="broke laws",
+                ),
+                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message), reason="broke laws"),
             ]
         )
 
@@ -2873,17 +2880,19 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(channel, messages, StubModel(444), StubModel(6523))
+        await rest_client.delete_messages(channel, messages, StubModel(444), StubModel(6523), reason="broke laws")
 
         rest_client._request.assert_has_awaits(
             [
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": [str(i) for i in range(100)]},
+                    reason="broke laws",
                 ),
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": ["100", "444", "6523"]},
+                    reason="broke laws",
                 ),
             ]
         )
@@ -2894,17 +2903,19 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(channel, iterator)
+        await rest_client.delete_messages(channel, iterator, reason="broke laws")
 
         rest_client._request.assert_has_awaits(
             [
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": [str(i) for i in range(100)]},
+                    reason="broke laws",
                 ),
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": ["100", "101", "102"]},
+                    reason="broke laws",
                 ),
             ]
         )

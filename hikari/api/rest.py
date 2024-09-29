@@ -1433,6 +1433,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a given message in a given channel.
 
@@ -1444,6 +1446,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message
             The message to delete. This may be the object or the ID of
             an existing message.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -1472,6 +1477,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Bulk-delete messages from the channel.
 
@@ -1506,6 +1512,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             (sync or async) of the objects and/or IDs of existing messages to delete.
         *other_messages
             The objects and/or IDs of other existing messages to delete.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
