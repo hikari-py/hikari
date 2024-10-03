@@ -1642,9 +1642,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     async def delete_messages(
         self,
@@ -1656,6 +1658,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
@@ -1690,7 +1693,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 if len(chunk) == 1:
                     message = chunk[0]
                     try:
-                        await self.delete_message(channel, message)
+                        await self.delete_message(channel, message, reason=reason)
                     except errors.NotFoundError as ex:
                         # If the message is not found then this error should be suppressed
                         # to keep consistency with how the bulk delete endpoint functions.
@@ -1702,7 +1705,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 else:
                     body = data_binding.JSONObjectBuilder()
                     body.put_snowflake_array("messages", chunk)
-                    await self._request(route, json=body)
+                    await self._request(route, json=body, reason=reason)
                     deleted += chunk
 
             except Exception as ex:
