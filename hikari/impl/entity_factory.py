@@ -485,6 +485,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.PERMISSION_OVERWRITES: self._deserialize_audit_log_overwrites,
             audit_log_models.AuditLogChangeKey.COMMUNICATION_DISABLED_UNTIL: time.iso8601_datetime_string_to_datetime,
+            audit_log_models.AuditLogChangeKey.OPTIONS: self._deserialize_audit_log_change_options,
+            audit_log_models.AuditLogChangeKey.PROMPTS: self._deserialize_audit_log_change_prompts,
         }
         self._audit_log_event_mapping: dict[
             typing.Union[int, audit_log_models.AuditLogEventType],
@@ -770,6 +772,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
             for overwrite in payload
         }
+
+    def _deserialize_audit_log_change_options(
+        self, payload: data_binding.JSONArray
+    ) -> typing.Mapping[snowflakes.Snowflake, guild_models.OnboardingPromptOption]:
+        return {
+            snowflakes.Snowflake(option["id"]): self.deserialize_onboarding_prompt_option(option) for option in payload
+        }
+
+    def _deserialize_audit_log_change_prompts(
+        self, payload: data_binding.JSONArray
+    ) -> typing.Mapping[snowflakes.Snowflake, guild_models.OnboardingPrompt]:
+        return {snowflakes.Snowflake(prompt["id"]): self.deserialize_onboarding_prompt(prompt) for prompt in payload}
 
     def _deserialize_channel_overwrite_entry_info(
         self, payload: data_binding.JSONObject
@@ -1772,6 +1786,99 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_id = snowflakes.Snowflake(raw_channel_id)
 
         return guild_models.GuildWidget(app=self._app, channel_id=channel_id, is_enabled=payload["enabled"])
+
+    def deserialize_onboarding(self, payload: data_binding.JSONObject) -> guild_models.GuildOnboarding:
+        default_channel_ids: typing.List[snowflakes.Snowflake] = []
+        for raw_channel_id in payload["default_channel_ids"]:
+            default_channel_ids.append(snowflakes.Snowflake(raw_channel_id))
+
+        prompts: typing.List[guild_models.OnboardingPrompt] = []
+        for prompt_payload in payload["prompts"]:
+            prompts.append(self.deserialize_onboarding_prompt(prompt_payload))
+
+        mode: guild_models.OnboardingMode = guild_models.OnboardingMode(payload["mode"])
+
+        return guild_models.GuildOnboarding(
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            prompts=prompts,
+            default_channel_ids=default_channel_ids,
+            mode=mode,
+            enabled=bool(payload.get("enabled")),
+        )
+
+    def deserialize_onboarding_prompt(self, payload: data_binding.JSONObject) -> guild_models.OnboardingPrompt:
+        options: typing.List[guild_models.OnboardingPromptOption] = [
+            self.deserialize_onboarding_prompt_option(option_payload) for option_payload in payload["options"]
+        ]
+
+        return guild_models.OnboardingPrompt(
+            id=snowflakes.Snowflake(payload["id"]),
+            type=guild_models.OnboardingPromptType(payload["type"]),
+            options=options,
+            title=payload["title"],
+            single_select=bool(payload.get("single_select")),
+            required=bool(payload.get("required")),
+            in_onboarding=bool(payload.get("in_onboarding")),
+        )
+
+    def deserialize_onboarding_prompt_option(
+        self, payload: data_binding.JSONObject
+    ) -> guild_models.OnboardingPromptOption:
+        channel_ids: typing.List[snowflakes.Snowflake] = [
+            snowflakes.Snowflake(raw_channel_id) for raw_channel_id in payload["channel_ids"]
+        ]
+
+        role_ids: typing.List[snowflakes.Snowflake] = [
+            snowflakes.Snowflake(raw_role_id) for raw_role_id in payload["role_ids"]
+        ]
+
+        description = payload.get("description") or None
+
+        emoji: typing.Optional[emoji_models.Emoji] = None
+        if raw_emoji := payload.get("emoji"):
+            emoji = self.deserialize_emoji(raw_emoji)
+
+        return guild_models.OnboardingPromptOption(
+            id=snowflakes.Snowflake(payload["id"]),
+            channel_ids=channel_ids,
+            role_ids=role_ids,
+            emoji=emoji,
+            title=payload["title"],
+            description=description,
+        )
+
+    def serialize_onboarding_prompt(self, prompt: guild_models.OnboardingPrompt) -> data_binding.JSONObject:
+        return {
+            "id": prompt.id,
+            "type": prompt.type,
+            "title": prompt.title,
+            "options": [self.serialize_onboarding_prompt_option(option) for option in prompt.options],
+            "single_select": prompt.single_select,
+            "required": prompt.required,
+            "in_onboarding": prompt.in_onboarding,
+        }
+
+    def serialize_onboarding_prompt_option(
+        self, option: guild_models.OnboardingPromptOption
+    ) -> data_binding.JSONObject:
+        payload: typing.Dict[str, typing.Any] = {
+            "id": option.id,
+            "channel_ids": option.channel_ids,
+            "role_ids": option.role_ids,
+            "title": option.title,
+        }
+
+        if option.description:
+            payload["description"] = option.description
+
+        if isinstance(option.emoji, emoji_models.UnicodeEmoji):
+            payload["emoji_name"] = option.emoji.name
+        elif isinstance(option.emoji, emoji_models.CustomEmoji):
+            payload["emoji_id"] = option.emoji.id
+            payload["emoji_name"] = option.emoji.name
+            payload["emoji_animated"] = option.emoji.is_animated
+
+        return payload
 
     def deserialize_welcome_screen(self, payload: data_binding.JSONObject) -> guild_models.WelcomeScreen:
         channels: list[guild_models.WelcomeChannel] = []
