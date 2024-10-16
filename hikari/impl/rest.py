@@ -2745,7 +2745,6 @@ class RESTClientImpl(rest_api.RESTClient):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -2760,7 +2759,6 @@ class RESTClientImpl(rest_api.RESTClient):
             position=position,
             topic=topic,
             nsfw=nsfw,
-            rate_limit_per_user=rate_limit_per_user,
             permission_overwrites=permission_overwrites,
             category=category,
             default_auto_archive_duration=default_auto_archive_duration,
