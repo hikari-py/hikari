@@ -530,6 +530,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
             channel_models.ChannelType.GUILD_FORUM: self.deserialize_guild_forum_channel,
+            channel_models.ChannelType.GUILD_MEDIA: self.deserialize_guild_media_channel
         }
         self._thread_channel_type_mapping = {
             channel_models.ChannelType.GUILD_NEWS_THREAD: self.deserialize_guild_news_thread,
@@ -1313,7 +1314,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if deserialize := self._thread_channel_type_mapping.get(channel_type):
             return deserialize(payload, guild_id=guild_id, member=member, user_id=user_id)
 
-        _LOGGER.debug(f"Unrecognised thread channel type {channel_type}")
+        _LOGGER.debug("Unrecognised thread channel type %s", channel_type)
         raise errors.UnrecognisedEntityError(f"Unrecognised thread channel type {channel_type}")
 
     def deserialize_guild_news_thread(
@@ -1468,6 +1469,79 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_invitable=metadata["invitable"],
             thread_created_at=thread_created_at,
         )
+    
+    def deserialize_guild_media_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildMediaChannel:
+        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+
+        # Discord's docs are just wrong about this always being included.
+        default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
+        default_thread_rate_limit_per_user = datetime.timedelta(
+            seconds=payload.get("default_thread_rate_limit_per_user", 0)
+        )
+
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
+
+        last_thread_id: typing.Optional[snowflakes.Snowflake] = None
+        if raw_last_thread_id := payload.get("last_message_id"):
+            last_thread_id = snowflakes.Snowflake(raw_last_thread_id)
+
+        available_tags: typing.List[channel_models.ForumTag] = []
+        for tag_payload in payload.get("available_tags", ()):
+            tag_emoji: typing.Union[emoji_models.UnicodeEmoji, snowflakes.Snowflake, None]
+            if tag_emoji := tag_payload["emoji_id"]:
+                tag_emoji = snowflakes.Snowflake(tag_emoji)
+
+            elif tag_emoji := tag_payload["emoji_name"]:
+                tag_emoji = emoji_models.UnicodeEmoji(tag_emoji)
+
+            available_tags.append(
+                channel_models.ForumTag(
+                    id=snowflakes.Snowflake(tag_payload["id"]),
+                    name=tag_payload["name"],
+                    moderated=tag_payload["moderated"],
+                    emoji=tag_emoji,
+                )
+            )
+
+        reaction_emoji_id: typing.Optional[snowflakes.Snowflake] = None
+        reaction_emoji_name: typing.Union[None, emoji_models.UnicodeEmoji, str] = None
+        if reaction_emoji_payload := payload.get("default_reaction_emoji"):
+            if reaction_emoji_id := reaction_emoji_payload["emoji_id"]:
+                reaction_emoji_id = snowflakes.Snowflake(reaction_emoji_id)
+
+            if reaction_emoji_name := reaction_emoji_payload["emoji_name"]:
+                reaction_emoji_name = emoji_models.UnicodeEmoji(reaction_emoji_name)
+
+        return channel_models.GuildMediaChannel(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            permission_overwrites=permission_overwrites,
+            is_nsfw=payload.get("nsfw", False),
+            parent_id=channel_fields.parent_id,
+            topic=payload["topic"],
+            last_thread_id=last_thread_id,
+            rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
+            default_thread_rate_limit_per_user=default_thread_rate_limit_per_user,
+            default_auto_archive_duration=default_auto_archive_duration,
+            position=int(payload["position"]),
+            available_tags=available_tags,
+            flags=channel_models.ChannelFlag(payload["flags"]),
+            # Discord's docs are just wrong about this never being null.
+            default_sort_order=channel_models.ForumSortOrderType(payload.get("default_sort_order") or 0),
+            default_reaction_emoji_id=reaction_emoji_id,
+            default_reaction_emoji_name=reaction_emoji_name,
+        )
 
     def deserialize_stage_instance(self, payload: data_binding.JSONObject) -> stage_instances.StageInstance:
         raw_event_id = payload["guild_scheduled_event_id"]
@@ -1500,7 +1574,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if dm_channel_model := self._dm_channel_type_mapping.get(channel_type):
             return dm_channel_model(payload)
 
-        _LOGGER.debug(f"Unrecognised channel type {channel_type}")
+        _LOGGER.debug("Unrecognised channel type %s", channel_type)
         raise errors.UnrecognisedEntityError(f"Unrecognised channel type {channel_type}")
 
     ################
@@ -3468,7 +3542,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if converter := self._scheduled_event_type_mapping.get(event_type):
             return converter(payload)
 
-        _LOGGER.debug(f"Unrecognised scheduled event type {event_type}")
+        _LOGGER.debug("Unrecognised scheduled event type %s", event_type)
         raise errors.UnrecognisedEntityError(f"Unrecognised scheduled event type {event_type}")
 
     def deserialize_scheduled_event_user(
@@ -3747,7 +3821,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if converter := self._webhook_type_mapping.get(webhook_type):
             return converter(payload)
 
-        _LOGGER.debug(f"Unrecognised webhook type {webhook_type}")
+        _LOGGER.debug("Unrecognised webhook type %s", webhook_type)
         raise errors.UnrecognisedEntityError(f"Unrecognised webhook type {webhook_type}")
 
     ##################
