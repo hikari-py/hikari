@@ -2045,10 +2045,6 @@ class PartialGuild(snowflakes.Unique):
             If provided, the channels topic. Maximum 1024 characters.
         nsfw
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user
-            If provided, the amount of seconds a user has to wait
-            before being able to send another message in the channel.
-            Maximum 21600 seconds.
         permission_overwrites
             If provided, the permission overwrites for the channel.
         category
