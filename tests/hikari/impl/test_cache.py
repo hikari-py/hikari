@@ -30,6 +30,7 @@ from hikari import emojis
 from hikari import guilds
 from hikari import invites
 from hikari import messages
+from hikari import polls
 from hikari import snowflakes
 from hikari import stickers
 from hikari import undefined
@@ -2760,6 +2761,7 @@ class TestCacheImpl:
         mock_attachment = mock.MagicMock(messages.Attachment)
         mock_embed_field = mock.MagicMock(embeds.EmbedField)
         mock_embed = mock.MagicMock(embeds.Embed, fields=(mock_embed_field,))
+        mock_poll = mock.MagicMock(polls.Poll)
         mock_sticker = mock.MagicMock(stickers.PartialSticker)
         mock_reaction = mock.MagicMock(messages.Reaction)
         mock_activity = mock.MagicMock(messages.MessageActivity)
@@ -2789,6 +2791,7 @@ class TestCacheImpl:
             mentions_everyone=False,
             attachments=(mock_attachment,),
             embeds=(mock_embed,),
+            poll=mock_poll,
             reactions=(mock_reaction,),
             is_pinned=False,
             webhook_id=snowflakes.Snowflake(3123123),
@@ -2878,6 +2881,7 @@ class TestCacheImpl:
             mentions_everyone=undefined.UNDEFINED,
             attachments=(),
             embeds=(),
+            poll=None,
             reactions=(),
             is_pinned=False,
             webhook_id=None,

@@ -47,6 +47,7 @@ from hikari import locales
 from hikari import messages as message_models
 from hikari import monetization as monetization_models
 from hikari import permissions as permission_models
+from hikari import polls as poll_models
 from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_events_models
 from hikari import sessions as gateway_models
@@ -3031,7 +3032,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=self.deserialize_user(payload["user"]),
         )
 
-    def deserialize_partial_message(  # noqa: C901 - Too complex
+    def deserialize_partial_message(  # noqa: C901, CFQ001 - Too complex, Exceeds allowed length
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
         author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
@@ -3068,6 +3069,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         embeds: undefined.UndefinedOr[list[embed_models.Embed]] = undefined.UNDEFINED
         if "embeds" in payload:
             embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
+
+        poll: undefined.UndefinedOr[poll_models.Poll] = undefined.UNDEFINED
+        if "poll" in payload:
+            poll = self.deserialize_poll(payload["poll"])
 
         reactions: undefined.UndefinedOr[list[message_models.Reaction]] = undefined.UNDEFINED
         if "reactions" in payload:
@@ -3142,6 +3147,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_tts=payload.get("tts", undefined.UNDEFINED),
             attachments=attachments,
             embeds=embeds,
+            poll=poll,
             reactions=reactions,
             is_pinned=payload.get("pinned", undefined.UNDEFINED),
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else undefined.UNDEFINED,
@@ -3180,6 +3186,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         attachments = [self._deserialize_message_attachment(attachment) for attachment in payload["attachments"]]
 
         embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
+
+        poll: undefined.UndefinedOr[poll_models.Poll] = undefined.UNDEFINED
+        if "polls" in payload:
+            poll = self.deserialize_poll(payload["poll"])
 
         if "reactions" in payload:
             reactions = [self._deserialize_message_reaction(reaction) for reaction in payload["reactions"]]
@@ -3241,6 +3251,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_tts=payload["tts"],
             attachments=attachments,
             embeds=embeds,
+            poll=poll,
             reactions=reactions,
             is_pinned=payload["pinned"],
             webhook_id=snowflakes.Snowflake(payload["webhook_id"]) if "webhook_id" in payload else None,
@@ -3779,3 +3790,67 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             slug=payload["slug"],
             flags=monetization_models.SKUFlags(payload["flags"]),
         )
+
+    ###############
+    # POLL MODELS #
+    ###############
+    def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
+        question = payload["question"]["text"]
+        expiry = time.iso8601_datetime_string_to_datetime(payload["expiry"])
+        allow_multiselect = payload["allow_multiselect"]
+        layout_type = poll_models.PollLayoutType(payload["layout_type"])
+
+        answers: typing.MutableSequence[poll_models.PollAnswer] = []
+        for answer_payload in payload["answers"]:
+            answer_id = answer_payload["answer_id"]
+
+            emoji = answer_payload["poll_media"]["emoji"]
+            poll_media = poll_models.PollMedia(
+                text=answer_payload["poll_media"]["text"], emoji=self.deserialize_emoji(emoji) if emoji else None
+            )
+
+            answers.append(poll_models.PollAnswer(answer_id=answer_id, poll_media=poll_media))
+
+        results = None
+        if (result_payload := payload.get("result")) is not None:
+            is_finalized = result_payload["is_finalized"]
+
+            answer_counts = tuple(
+                poll_models.PollAnswerCount(
+                    answer_id=payload["answer_id"], count=payload["count"], me_voted=payload["me_voted"]
+                )
+                for payload in result_payload["answer_counts"]
+            )
+            results = poll_models.PollResult(is_finalized=is_finalized, answer_counts=answer_counts)
+
+        return poll_models.Poll(
+            question=question,
+            answers=answers,
+            expiry=expiry,
+            allow_multiselect=allow_multiselect,
+            layout_type=layout_type,
+            results=results,
+        )
+
+    def _serialize_poll_media(self, poll_media: poll_models.PollMedia) -> data_binding.JSONObject:
+        serialised_poll_media: typing.MutableMapping[str, typing.Any] = {"text": poll_media.text}
+
+        if isinstance(poll_media.emoji, emoji_models.UnicodeEmoji):
+            serialised_poll_media["emoji"] = {"name": poll_media.emoji.name}
+        elif isinstance(poll_media.emoji, emoji_models.CustomEmoji):
+            serialised_poll_media["emoji"] = {"name": poll_media.emoji.name, "id": poll_media.emoji.id}
+
+        return serialised_poll_media
+
+    def serialize_poll(self, poll: poll_models.PollBuilder) -> data_binding.JSONObject:
+        answers: typing.MutableSequence[typing.Any] = []
+        for answer in poll.answers:
+            answers.append({"poll_media": self._serialize_poll_media(answer.poll_media)})
+
+        return {
+            "question": self._serialize_poll_media(poll.question),
+            "answers": answers,
+            "duration": poll.duration,
+            "allow_multiselect": poll.allow_multiselect,
+            "layout_type": poll.layout_type.value,
+        }
