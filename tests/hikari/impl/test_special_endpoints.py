@@ -25,6 +25,7 @@ import typing
 import mock
 import pytest
 
+from hikari import applications
 from hikari import channels
 from hikari import commands
 from hikari import components
@@ -1037,6 +1038,18 @@ class TestCommandBuilder:
 
         assert builder.name_localizations == {"aaa": "bbb", "ccc": "DDd"}
 
+    def test_set_integration_types(self, stub_command):
+        builder = stub_command("oksksksk").set_integration_types(
+            [applications.ApplicationIntegrationType.GUILD_INSTALL]
+        )
+
+        assert builder.integration_types == [applications.ApplicationIntegrationType.GUILD_INSTALL]
+
+    def test_set_contexts(self, stub_command):
+        builder = stub_command("oksksksk").set_contexts([applications.ApplicationInstallationContextType.BOT_DM])
+
+        assert builder.contexts == [applications.ApplicationInstallationContextType.BOT_DM]
+
 
 class TestSlashCommandBuilder:
     def test_description_property(self):
@@ -1112,6 +1125,13 @@ class TestSlashCommandBuilder:
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types(
+                [
+                    applications.ApplicationIntegrationType.GUILD_INSTALL,
+                    applications.ApplicationIntegrationType.USER_INSTALL,
+                ]
+            )
+            .set_contexts([applications.ApplicationInstallationContextType.GUILD])
         )
         mock_rest = mock.AsyncMock()
 
@@ -1129,6 +1149,11 @@ class TestSlashCommandBuilder:
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             dm_enabled=True,
             nsfw=True,
+            integration_types=[
+                applications.ApplicationIntegrationType.GUILD_INSTALL,
+                applications.ApplicationIntegrationType.USER_INSTALL,
+            ],
+            contexts=[applications.ApplicationInstallationContextType.GUILD],
         )
 
     @pytest.mark.asyncio
@@ -1138,6 +1163,13 @@ class TestSlashCommandBuilder:
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types(
+                [
+                    applications.ApplicationIntegrationType.GUILD_INSTALL,
+                    applications.ApplicationIntegrationType.USER_INSTALL,
+                ]
+            )
+            .set_contexts([applications.ApplicationInstallationContextType.GUILD])
         )
         mock_rest = mock.AsyncMock()
 
@@ -1158,6 +1190,11 @@ class TestSlashCommandBuilder:
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             dm_enabled=True,
             nsfw=True,
+            integration_types=[
+                applications.ApplicationIntegrationType.GUILD_INSTALL,
+                applications.ApplicationIntegrationType.USER_INSTALL,
+            ],
+            contexts=[applications.ApplicationInstallationContextType.GUILD],
         )
 
 
@@ -1199,6 +1236,13 @@ class TestContextMenuBuilder:
             .set_name_localizations({"meow": "nyan"})
             .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types(
+                [
+                    applications.ApplicationIntegrationType.GUILD_INSTALL,
+                    applications.ApplicationIntegrationType.USER_INSTALL,
+                ]
+            )
+            .set_contexts([applications.ApplicationInstallationContextType.GUILD])
         )
         mock_rest = mock.AsyncMock()
 
@@ -1214,6 +1258,8 @@ class TestContextMenuBuilder:
             name_localizations={"meow": "nyan"},
             dm_enabled=True,
             nsfw=True,
+            integration_types=[0, 1],
+            contexts=[0],
         )
 
     @pytest.mark.asyncio
@@ -1224,6 +1270,13 @@ class TestContextMenuBuilder:
             .set_name_localizations({"en-ghibli": "meow"})
             .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types(
+                [
+                    applications.ApplicationIntegrationType.GUILD_INSTALL,
+                    applications.ApplicationIntegrationType.USER_INSTALL,
+                ]
+            )
+            .set_contexts([applications.ApplicationInstallationContextType.GUILD])
         )
         mock_rest = mock.AsyncMock()
 
@@ -1239,6 +1292,11 @@ class TestContextMenuBuilder:
             name_localizations={"en-ghibli": "meow"},
             dm_enabled=True,
             nsfw=True,
+            integration_types=[
+                applications.ApplicationIntegrationType.GUILD_INSTALL,
+                applications.ApplicationIntegrationType.USER_INSTALL,
+            ],
+            contexts=[applications.ApplicationInstallationContextType.GUILD],
         )
 
 
