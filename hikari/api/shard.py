@@ -158,6 +158,11 @@ class GatewayShard(abc.ABC):
             changed.
         status
             The web status to show. If undefined, this will not be changed.
+
+        Raises
+        ------
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
 
     @abc.abstractmethod
@@ -185,6 +190,11 @@ class GatewayShard(abc.ABC):
         self_deaf
             If specified and [`True`][], the bot will deafen itself in that
             voice channel. If [`False`][], then it will undeafen itself.
+
+        Raises
+        ------
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
 
     @abc.abstractmethod
@@ -227,4 +237,6 @@ class GatewayShard(abc.ABC):
         hikari.errors.MissingIntentError
             When trying to request presences without the [`hikari.intents.Intents.GUILD_MEMBERS`][] or when trying to
             request the full list of members without [`hikari.intents.Intents.GUILD_PRESENCES`][].
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
