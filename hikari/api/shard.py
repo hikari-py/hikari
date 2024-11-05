@@ -112,6 +112,11 @@ class GatewayShard(abc.ABC):
         -------
         hikari.snowflakes.Snowflake
             The user ID for the application user.
+
+        Raises
+        ------
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
 
     @abc.abstractmethod
