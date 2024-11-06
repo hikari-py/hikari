@@ -5,7 +5,7 @@ mkdocs-material[imaging]==9.5.43
 
 # Docstring parsing for API reference
 mkdocstrings[python]==0.26.2
-griffe-inherited-docstrings==1.1.0
+griffe-inherited-docstrings==1.1.1
 
 # Generate API reference pages dynamically
 mkdocs-gen-files==0.5.0
