@@ -6,6 +6,6 @@ pytest-asyncio==0.24.0
 pytest-cov==6.0.0
 pytest-randomly==3.16.0
 
-async-timeout==4.0.3  # Used for timeouts in some test cases.
+async-timeout==5.0.1  # Used for timeouts in some test cases.
 
 -r coverage.txt  # Consistent coverage version
