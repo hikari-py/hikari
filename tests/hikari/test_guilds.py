@@ -771,9 +771,7 @@ class TestPartialGuild:
     async def test_create_news_channel(self, model):
         model.app.rest.create_guild_news_channel = mock.AsyncMock()
 
-        news_channel = await model.create_news_channel(
-            "cool news channel", position=1, nsfw=False, rate_limit_per_user=420
-        )
+        news_channel = await model.create_news_channel("cool news channel", position=1, nsfw=False)
 
         model.app.rest.create_guild_news_channel.assert_awaited_once_with(
             90210,
@@ -781,7 +779,6 @@ class TestPartialGuild:
             position=1,
             topic=undefined.UNDEFINED,
             nsfw=False,
-            rate_limit_per_user=420,
             permission_overwrites=undefined.UNDEFINED,
             category=undefined.UNDEFINED,
             reason=undefined.UNDEFINED,

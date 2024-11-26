@@ -4286,7 +4286,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -4310,10 +4309,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the channels topic. Maximum 1024 characters.
         nsfw
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user
-            If provided, the amount of seconds a user has to wait
-            before being able to send another message in the channel.
-            Maximum 21600 seconds.
         permission_overwrites
             If provided, the permission overwrites for the channel.
         category
