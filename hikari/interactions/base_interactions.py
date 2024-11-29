@@ -51,6 +51,7 @@ from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    from hikari import applications
     from hikari import embeds as embeds_
     from hikari import files
     from hikari import messages
@@ -58,7 +59,6 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users
     from hikari.api import special_endpoints
-
 
 _CommandResponseTypesT = typing.TypeVar("_CommandResponseTypesT", bound=int)
 
@@ -218,6 +218,14 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
 
     version: int = attrs.field(eq=False, repr=True)
     """Version of the interaction system this interaction is under."""
+
+    authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (
+        attrs.field(eq=False, repr=False)
+    )
+    """Mapping installation contexts authorized for interaction to related user or guild IDs."""
+
+    context: typing.Optional[applications.ApplicationInstallationContextType] = attrs.field(eq=False, repr=False)
+    """A context on where interaction was triggered."""
 
     @property
     def webhook_id(self) -> snowflakes.Snowflake:
