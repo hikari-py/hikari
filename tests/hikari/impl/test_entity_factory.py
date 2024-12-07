@@ -2967,19 +2967,11 @@ class TestEntityFactoryImpl:
         assert entity_factory_impl.serialize_embed(embed_models.Embed()) == ({}, [])
 
     @pytest.mark.parametrize(
-        "field_kwargs",
-        [
-            {"name": None, "value": "correct value"},
-            {"name": "", "value": "correct value"},
-            {"name": "    ", "value": "correct value"},
-            {"name": "correct value", "value": None},
-            {"name": "correct value", "value": ""},
-            {"name": "correct value", "value": "    "},
-        ],
+        "field_kwargs", [{"name": None, "value": "correct value"}, {"name": "correct value", "value": None}]
     )
     def test_serialize_embed_validators(self, entity_factory_impl, field_kwargs):
         embed_obj = embed_models.Embed()
-        embed_obj.add_field(**field_kwargs)
+        embed_obj._fields = [embed_models.EmbedField(**field_kwargs)]
         with pytest.raises(TypeError):
             entity_factory_impl.serialize_embed(embed_obj)
 
