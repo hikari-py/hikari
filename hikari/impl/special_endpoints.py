@@ -68,6 +68,7 @@ from hikari.api import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
@@ -1289,6 +1290,14 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         alias="name_localizations", factory=dict, kw_only=True
     )
 
+    _integration_types: typing.Sequence[applications.ApplicationIntegrationType] = attrs.field(
+        alias="integration_types", default=undefined.UNDEFINED, kw_only=True
+    )
+
+    _contexts: typing.Sequence[applications.ApplicationInstallationContextType] = attrs.field(
+        alias="contexts", default=undefined.UNDEFINED, kw_only=True
+    )
+
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
@@ -1299,6 +1308,9 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @property
     def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
+        deprecation.warn_deprecated(
+            "is_dm_enabled", additional_info="use contexts instead", removal_version="2.0.0.dev129"
+        )
         return self._is_dm_enabled
 
     @property
@@ -1308,6 +1320,14 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def integration_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]:
+        return self._integration_types
+
+    @property
+    def contexts(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationInstallationContextType]]:
+        return self._contexts
 
     def set_name(self, name: str, /) -> Self:
         self._name = name
@@ -1341,6 +1361,16 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._name_localizations = name_localizations
         return self
 
+    def set_integration_types(
+        self, integration_types: typing.Sequence[applications.ApplicationIntegrationType], /
+    ) -> Self:
+        self._integration_types = integration_types
+        return self
+
+    def set_contexts(self, contexts: typing.Sequence[applications.ApplicationInstallationContextType], /) -> Self:
+        self._contexts = contexts
+        return self
+
     def build(self, _: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
@@ -1349,6 +1379,8 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data.put("name_localizations", self._name_localizations)
         data.put("dm_permission", self._is_dm_enabled)
         data.put("nsfw", self._is_nsfw)
+        data.put_array("integration_types", self._integration_types)
+        data.put_array("contexts", self._contexts)
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by using it correctly.
@@ -1429,6 +1461,8 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             default_member_permissions=self._default_member_permissions,
             dm_enabled=self._is_dm_enabled,
             nsfw=self._is_nsfw,
+            integration_types=self._integration_types,
+            contexts=self._contexts,
         )
 
 
@@ -1462,6 +1496,8 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
             default_member_permissions=self._default_member_permissions,
             dm_enabled=self._is_dm_enabled,
             nsfw=self.is_nsfw,
+            integration_types=self._integration_types,
+            contexts=self._contexts,
         )
 
 
