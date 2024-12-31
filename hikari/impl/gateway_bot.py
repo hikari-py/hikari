@@ -823,7 +823,9 @@ class GatewayBot(traits.GatewayBotAware):
                     )
                 )
 
-                loop.run_until_complete(self.join())
+                if self._closed_event is not None:
+                    # The user might have closed the bot during startup, respect it
+                    loop.run_until_complete(self.join())
 
             finally:
                 try:
@@ -929,6 +931,10 @@ class GatewayBot(traits.GatewayBotAware):
         self._voice.start()
 
         await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
+        if self._closed_event is None:
+            # If the user requested to close the bot before startup, respect it
+            return
+
         requirements = await self._rest.fetch_gateway_bot_info()
 
         if shard_count is None:
