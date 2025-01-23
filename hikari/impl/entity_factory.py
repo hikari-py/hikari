@@ -3755,7 +3755,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def deserialize_entitlement(self, payload: data_binding.JSONObject) -> monetization_models.Entitlement:
-        starts_at = time.iso8601_datetime_string_to_datetime(payload["starts_at"]) if "starts_at" in payload else None
+        starts_at = time.iso8601_datetime_string_to_datetime(payload["starts_at"]) if payload.get("starts_at") else None
 
         return monetization_models.Entitlement(
             id=snowflakes.Snowflake(payload["id"]),
@@ -3766,7 +3766,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user_id=snowflakes.Snowflake(payload["user_id"]) if "user_id" in payload else None,
             is_deleted=payload["deleted"],
             starts_at=starts_at,
-            ends_at=time.iso8601_datetime_string_to_datetime(payload["ends_at"]) if "ends_at" in payload else None,
+            ends_at=time.iso8601_datetime_string_to_datetime(payload["ends_at"]) if payload.get("ends_at") else None,
             subscription_id=snowflakes.Snowflake(payload["subscription_id"]) if "subscription_id" in payload else None,
         )
 
