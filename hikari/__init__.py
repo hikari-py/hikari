@@ -56,6 +56,8 @@ from hikari.applications import ApplicationRoleConnectionMetadataRecord
 from hikari.applications import ApplicationRoleConnectionMetadataRecordType
 from hikari.applications import AuthorizationApplication
 from hikari.applications import AuthorizationInformation
+from hikari.applications import ApplicationInstallationContextType
+from hikari.applications import ApplicationIntegrationType
 from hikari.applications import ConnectionVisibility
 from hikari.applications import OAuth2AuthorizationToken
 from hikari.applications import OAuth2ImplicitToken

@@ -642,12 +642,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_models.ApplicationIntegrationType, application_models.ApplicationInstallParameters
         ] = {}
         if (integration_types_config_payload := payload.get("integration_types_config")) is not None:
-            integration_types_config = {
-                application_models.ApplicationIntegrationType(k): self._deserialize_install_parameters(
-                    v["oauth2_install_params"]
+            # If user installs set with default options discord returns {"0": {}}
+            for key, value in integration_types_config_payload.items():
+                if not value:
+                    continue
+
+                integration_types_config[application_models.ApplicationIntegrationType(key)] = self._deserialize_install_parameters(
+                    value["oauth2_install_params"]
                 )
-                for k, v in integration_types_config_payload.items()
-            }
 
         return application_models.Application(
             app=self._app,

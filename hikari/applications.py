@@ -30,6 +30,10 @@ __all__: typing.Sequence[str] = (
     "ApplicationFlags",
     "AuthorizationApplication",
     "AuthorizationInformation",
+    "ApplicationIntegrationType",
+    "ApplicationInstallationContextType",
+    "ApplicationRoleConnectionMetadataRecordType",
+    "ApplicationRoleConnectionMetadataRecord",
     "ConnectionVisibility",
     "OAuth2AuthorizationToken",
     "OAuth2ImplicitToken",
@@ -42,11 +46,7 @@ __all__: typing.Sequence[str] = (
     "TeamMember",
     "TeamMembershipState",
     "TokenType",
-    "ApplicationRoleConnectionMetadataRecordType",
-    "ApplicationRoleConnectionMetadataRecord",
-    "get_token_id",
-    "ApplicationIntegrationType",
-    "ApplicationInstallationContextType",
+    "get_token_id"
 )
 
 import base64
