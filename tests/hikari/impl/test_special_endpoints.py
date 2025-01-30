@@ -1206,7 +1206,7 @@ class TestContextMenuBuilder:
             "name_localizations": {},
             "contexts": [],
             "integration_types": [],
-            }
+        }
 
     @pytest.mark.asyncio
     async def test_create(self):

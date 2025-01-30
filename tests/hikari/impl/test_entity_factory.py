@@ -982,6 +982,10 @@ class TestEntityFactoryImpl:
             "tags": ["i", "like", "hikari"],
             "install_params": {"scopes": ["bot", "applications.commands"], "permissions": 8},
             "approximate_guild_count": 10000,
+            "integration_types_config": {
+                "0": {"oauth2_install_params": {"scopes": ["applications.commands", "bot"], "permissions": "0"}},
+                "1": {},
+            },
         }
 
     def test_deserialize_application(
@@ -1030,6 +1034,20 @@ class TestEntityFactoryImpl:
         assert member.team_id == 209333111222
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert isinstance(member, application_models.TeamMember)
+
+        # IntegrationTypesConfig
+        guild_integration_types = application.integration_types_config.get(
+            application_models.ApplicationIntegrationType.GUILD_INSTALL
+        )
+        assert guild_integration_types is not None
+        assert guild_integration_types.scopes == [
+            application_models.OAuth2Scope.APPLICATIONS_COMMANDS,
+            application_models.OAuth2Scope.BOT,
+        ]
+        assert guild_integration_types.permissions == permission_models.Permissions.NONE
+        assert isinstance(guild_integration_types, application_models.OAuth2InstallParameters)
+
+        assert application.integration_types_config[application_models.ApplicationIntegrationType.USER_INSTALL] is None
 
         assert application.cover_image_hash == "hashmebaby"
         assert isinstance(application, application_models.Application)
@@ -4019,6 +4037,8 @@ class TestEntityFactoryImpl:
                 }
             ],
             "version": "123321123",
+            "integration_types": ["0"],
+            "contexts": ["0"],
         }
 
     def test_deserialize_slash_command(self, entity_factory_impl, mock_app, slash_command_payload):
@@ -4034,6 +4054,8 @@ class TestEntityFactoryImpl:
         assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
+        assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
+        assert command.context_types == [application_models.ApplicationContextType.GUILD]
 
         # CommandOption
         assert len(command.options) == 1
@@ -4110,6 +4132,8 @@ class TestEntityFactoryImpl:
         assert command.options is None
         assert command.is_dm_enabled is True
         assert command.is_nsfw is False
+        assert command.integration_types == []
+        assert command.context_types == []
         assert isinstance(command, commands.SlashCommand)
 
     def test_deserialize_slash_command_standardizes_default_member_permissions(
@@ -4746,6 +4770,8 @@ class TestEntityFactoryImpl:
             "dm_permission": False,
             "nsfw": True,
             "version": "123321123",
+            "integration_types": ["0"],
+            "contexts": ["0"],
         }
 
     def test_deserialize_context_menu_command(self, entity_factory_impl, context_menu_command_payload):
@@ -4761,6 +4787,8 @@ class TestEntityFactoryImpl:
         assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
+        assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
+        assert command.context_types == [application_models.ApplicationContextType.GUILD]
 
     def test_deserialize_context_menu_command_with_guild_id(self, entity_factory_impl, context_menu_command_payload):
         command = entity_factory_impl.deserialize_command(context_menu_command_payload, guild_id=123)
@@ -4775,18 +4803,24 @@ class TestEntityFactoryImpl:
         assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
+        assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
+        assert command.context_types == [application_models.ApplicationContextType.GUILD]
 
     def test_deserialize_context_menu_command_with_with_null_and_unset_values(
         self, entity_factory_impl, context_menu_command_payload
     ):
         del context_menu_command_payload["dm_permission"]
         del context_menu_command_payload["nsfw"]
+        del context_menu_command_payload["integration_types"]
+        del context_menu_command_payload["contexts"]
 
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
         assert command.is_dm_enabled is True
         assert command.is_nsfw is False
+        assert command.integration_types == []
+        assert command.context_types == []
 
     def test_deserialize_context_menu_command_default_member_permissions(
         self, entity_factory_impl, context_menu_command_payload
