@@ -25,6 +25,7 @@ import typing
 import mock
 import pytest
 
+from hikari import applications
 from hikari import channels
 from hikari import commands
 from hikari import components
@@ -1069,6 +1070,8 @@ class TestSlashCommandBuilder:
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
             .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types([applications.ApplicationIntegrationType.GUILD_INSTALL])
+            .set_context_types([applications.ApplicationContextType.GUILD])
         )
 
         result = builder.build(mock_entity_factory)
@@ -1085,6 +1088,8 @@ class TestSlashCommandBuilder:
             "id": "3412312",
             "name_localizations": {locales.Locale.TR: "merhaba"},
             "description_localizations": {locales.Locale.TR: "bir"},
+            "contexts": [applications.ApplicationIntegrationType.GUILD_INSTALL.value],
+            "integration_types": [applications.ApplicationContextType.GUILD.value],
         }
 
     def test_build_without_optional_data(self):
@@ -1099,6 +1104,8 @@ class TestSlashCommandBuilder:
             "options": [],
             "name_localizations": {},
             "description_localizations": {},
+            "contexts": [],
+            "integration_types": [],
         }
 
     @pytest.mark.asyncio
@@ -1170,6 +1177,8 @@ class TestContextMenuBuilder:
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
             .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types([applications.ApplicationIntegrationType.GUILD_INSTALL])
+            .set_context_types([applications.ApplicationContextType.GUILD])
         )
 
         result = builder.build(mock.Mock())
@@ -1182,6 +1191,8 @@ class TestContextMenuBuilder:
             "default_member_permissions": 8,
             "id": "3412312",
             "name_localizations": {locales.Locale.TR: "merhaba"},
+            "contexts": [applications.ApplicationIntegrationType.GUILD_INSTALL.value],
+            "integration_types": [applications.ApplicationContextType.GUILD.value],
         }
 
     def test_build_without_optional_data(self):
@@ -1189,7 +1200,13 @@ class TestContextMenuBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {"type": 3, "name": "nameeeee", "name_localizations": {}}
+        assert result == {
+            "type": 3,
+            "name": "nameeeee",
+            "name_localizations": {},
+            "contexts": [],
+            "integration_types": [],
+            }
 
     @pytest.mark.asyncio
     async def test_create(self):

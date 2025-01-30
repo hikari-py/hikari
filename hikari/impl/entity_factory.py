@@ -633,6 +633,67 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 permissions=permission_models.Permissions(install_payload["permissions"]),
             )
 
+        integration_types_config: typing.MutableMapping[
+            application_models.ApplicationIntegrationType, typing.Optional[application_models.OAuth2InstallParameters]
+        ] = {}
+        if (integration_types_config_payload := payload.get("integration_types_config")) is not None:
+            # FIXME: I am not sure if this is how this should be handled. Maybe it should be a loop for all the types?
+            if (
+                integration_scope_guild_install_payload := integration_types_config_payload.get(
+                    str(application_models.ApplicationIntegrationType.GUILD_INSTALL.value)
+                )
+            ) is not None:
+                if (
+                    oauth2_install_guild_params_payload := integration_scope_guild_install_payload.get(
+                        "oauth2_install_params"
+                    )
+                ) is not None:
+                    integration_types_config.update(
+                        {
+                            application_models.ApplicationIntegrationType.GUILD_INSTALL: application_models.OAuth2InstallParameters(
+                                scopes=(
+                                    [
+                                        application_models.OAuth2Scope(scope)
+                                        for scope in oauth2_install_guild_params_payload["scopes"]
+                                    ]
+                                ),
+                                permissions=permission_models.Permissions(
+                                    int(oauth2_install_guild_params_payload["permissions"])
+                                ),
+                            )
+                        }
+                    )
+                else:
+                    integration_types_config.update({application_models.ApplicationIntegrationType.GUILD_INSTALL: None})
+
+            if (
+                integration_scope_user_install_payload := integration_types_config_payload.get(
+                    str(application_models.ApplicationIntegrationType.USER_INSTALL.value)
+                )
+            ) is not None:
+                if (
+                    oauth2_install_user_params_payload := integration_scope_user_install_payload.get(
+                        "oauth2_install_params"
+                    )
+                ) is not None:
+                    integration_types_config.update(
+                        {
+                            application_models.ApplicationIntegrationType.USER_INSTALL: application_models.OAuth2InstallParameters(
+                                scopes=(
+                                    [
+                                        application_models.OAuth2Scope(scope)
+                                        for scope in oauth2_install_user_params_payload["scopes"]
+                                    ]
+                                ),
+                                permissions=permission_models.Permissions(
+                                    int(oauth2_install_user_params_payload["permissions"])
+                                ),
+                            )
+                        }
+                    )
+                else:
+                    integration_types_config.update({application_models.ApplicationIntegrationType.USER_INSTALL: None})
+
         return application_models.Application(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -654,6 +715,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             tags=payload.get("tags") or [],
             install_parameters=install_parameters,
             approximate_guild_count=payload["approximate_guild_count"],
+            integration_types_config=integration_types_config,
         )
 
     def deserialize_authorization_information(
@@ -2296,6 +2358,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
+        integration_types: typing.MutableSequence[application_models.ApplicationIntegrationType] = []
+        if (integration_types_payload := payload.get("integration_types")) is not None:
+            for integration_type_payload in integration_types_payload:
+                integration_types.append(application_models.ApplicationIntegrationType(int(integration_type_payload)))
+
+        context_types: typing.MutableSequence[application_models.ApplicationContextType] = []
+        if (context_types_payload := payload.get("contexts")) is not None:
+            for context_type_payload in context_types_payload:
+                context_types.append(application_models.ApplicationContextType(int(context_type_payload)))
+
         return commands.SlashCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2311,6 +2383,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=snowflakes.Snowflake(payload["version"]),
             name_localizations=name_localizations,
             description_localizations=description_localizations,
+            integration_types=integration_types,
+            context_types=context_types,
         )
 
     def deserialize_context_menu_command(
@@ -2337,6 +2411,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
+        integration_types: typing.MutableSequence[application_models.ApplicationIntegrationType] = []
+        if (integration_types_payload := payload.get("integration_types")) is not None:
+            for integration_type_payload in integration_types_payload:
+                integration_types.append(application_models.ApplicationIntegrationType(int(integration_type_payload)))
+
+        context_types: typing.MutableSequence[application_models.ApplicationContextType] = []
+        if (context_types_payload := payload.get("contexts")) is not None:
+            for context_type_payload in context_types_payload:
+                context_types.append(application_models.ApplicationContextType(int(context_type_payload)))
+
         return commands.ContextMenuCommand(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2349,6 +2433,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
             name_localizations=name_localizations,
+            integration_types=integration_types,
+            context_types=context_types,
         )
 
     def deserialize_command(
