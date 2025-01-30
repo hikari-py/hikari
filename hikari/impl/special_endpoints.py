@@ -1316,8 +1316,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @property
     def integration_types(self) -> typing.Sequence[applications.ApplicationIntegrationType]:
-        # FIXME: I am also not sure if this should be done, but basically, discord can return nothing, or a list of ApplicationIntegrationType
-        # And it seems that this should just show a list of options to the user, and not a null value, as its not useful for the user.
         if self._integration_types:
             return self._integration_types
 
@@ -1325,8 +1323,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @property
     def context_types(self) -> typing.Sequence[applications.ApplicationContextType]:
-        # FIXME: I am also not sure if this should be done, but basically, discord can return nothing, or a list of ApplicationIntegrationType
-        # And it seems that this should just show a list of options to the user, and not a null value, as its not useful for the user.
         if self._context_types:
             return self._context_types
 
