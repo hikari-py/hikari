@@ -1,7 +1,7 @@
 mkdocs==1.6.1
 
 # Mkdocs Material
-mkdocs-material[imaging]==9.5.49
+mkdocs-material[imaging]==9.6.2
 
 # Docstring parsing for API reference
 mkdocstrings[python]==0.27.0
