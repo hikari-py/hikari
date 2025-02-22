@@ -3848,6 +3848,12 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
             route = routes.POST_APPLICATION_COMMAND.compile(application=application)
@@ -3868,8 +3874,11 @@ class RESTClientImpl(rest_api.RESTClient):
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
         body.put("dm_permission", dm_enabled)
+        body.put("integration_types", integration_types)
+        body.put("contexts", contexts)
 
         response = await self._request(route, json=body)
+
         assert isinstance(response, dict)
         return response
 
@@ -3892,6 +3901,12 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
             application=application,
@@ -3905,6 +3920,8 @@ class RESTClientImpl(rest_api.RESTClient):
             default_member_permissions=default_member_permissions,
             dm_enabled=dm_enabled,
             nsfw=nsfw,
+            integration_types=integration_types,
+            contexts=contexts,
         )
         return self._entity_factory.deserialize_slash_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3925,6 +3942,12 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
             application=application,
@@ -3935,6 +3958,8 @@ class RESTClientImpl(rest_api.RESTClient):
             default_member_permissions=default_member_permissions,
             dm_enabled=dm_enabled,
             nsfw=nsfw,
+            integration_types=integration_types,
+            contexts=contexts,
         )
         return self._entity_factory.deserialize_context_menu_command(
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
@@ -3971,6 +3996,12 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        integration_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationIntegrationType]
+        ] = undefined.UNDEFINED,
+        contexts: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationInstallationContextType]
+        ] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
             route = routes.PATCH_APPLICATION_COMMAND.compile(application=application, command=command)
@@ -3989,6 +4020,8 @@ class RESTClientImpl(rest_api.RESTClient):
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
         body.put("dm_permission", dm_enabled)
+        body.put("integration_types", integration_types)
+        body.put("contexts", contexts)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
