@@ -7170,6 +7170,21 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
+    def entitlement_payload_starts_ends_null(self):
+        return {
+            "id": "696969696969696",
+            "sku_id": "420420420420420",
+            "application_id": "123123123123123",
+            "type": 8,
+            "deleted": False,
+            "starts_at": None,
+            "ends_at": None,
+            "guild_id": "1015034326372454400",
+            "user_id": "115590097100865541",
+            "subscription_id": "1019653835926409216",
+        }
+
+    @pytest.fixture
     def sku_payload(self):
         return {
             "id": "420420420420420",
@@ -7190,6 +7205,21 @@ class TestEntityFactoryImpl:
         assert entitlement.is_deleted is False
         assert entitlement.starts_at == datetime.datetime(2022, 9, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
         assert entitlement.ends_at == datetime.datetime(2022, 10, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
+        assert entitlement.guild_id == 1015034326372454400
+        assert entitlement.user_id == 115590097100865541
+        assert entitlement.subscription_id == 1019653835926409216
+        assert isinstance(entitlement, monetization_models.Entitlement)
+
+    def test_deserialize_entitlement_starts_ends_null(self, entity_factory_impl, entitlement_payload_starts_ends_null):
+        entitlement = entity_factory_impl.deserialize_entitlement(entitlement_payload_starts_ends_null)
+
+        assert entitlement.id == 696969696969696
+        assert entitlement.sku_id == 420420420420420
+        assert entitlement.application_id == 123123123123123
+        assert entitlement.type is monetization_models.EntitlementType.APPLICATION_SUBSCRIPTION
+        assert entitlement.is_deleted is False
+        assert entitlement.starts_at is None
+        assert entitlement.ends_at is None
         assert entitlement.guild_id == 1015034326372454400
         assert entitlement.user_id == 115590097100865541
         assert entitlement.subscription_id == 1019653835926409216
