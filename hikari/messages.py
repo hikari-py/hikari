@@ -173,6 +173,9 @@ class MessageFlag(enums.Flag):
     IS_VOICE_MESSAGE = 1 << 13
     """This message is a voice message."""
 
+    IS_COMPONENTS_V2 = 1 << 15
+    """This message uses the new components system."""
+
 
 @typing.final
 class MessageActivityType(int, enums.Enum):
