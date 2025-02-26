@@ -136,6 +136,8 @@ class MessageType(int, enums.Enum):
     ROLE_SUBSCRIPTION_PURCHASE = 25
     """A message sent to indicate a role subscription has been purchased."""
 
+    POLL_RESULT = 46
+    """A message sent to indicate a poll has finished."""
 
 @typing.final
 class MessageFlag(enums.Flag):
