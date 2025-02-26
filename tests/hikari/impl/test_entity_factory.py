@@ -1037,18 +1037,24 @@ class TestEntityFactoryImpl:
         assert isinstance(member, application_models.TeamMember)
 
         # IntegrationTypesConfig
-        guild_integration_types = application.integration_types_config.get(
+        guild_integration_config = application.integration_types_config[
             application_models.ApplicationIntegrationType.GUILD_INSTALL
-        )
-        assert guild_integration_types is not None
-        assert guild_integration_types.scopes == [
+        ]
+        assert isinstance(guild_integration_config, application_models.ApplicationIntegrationConfiguration)
+        assert guild_integration_config.oauth2_install_parameters
+
+        assert guild_integration_config.oauth2_install_parameters.scopes == [
             application_models.OAuth2Scope.APPLICATIONS_COMMANDS,
             application_models.OAuth2Scope.BOT,
         ]
-        assert guild_integration_types.permissions == permission_models.Permissions.NONE
-        assert isinstance(guild_integration_types, application_models.OAuth2InstallParameters)
+        assert guild_integration_config.oauth2_install_parameters.permissions == permission_models.Permissions.NONE
 
-        assert application.integration_types_config[application_models.ApplicationIntegrationType.USER_INSTALL] is None
+        user_integration_config = application.integration_types_config[
+            application_models.ApplicationIntegrationType.USER_INSTALL
+        ]
+        assert isinstance(user_integration_config, application_models.ApplicationIntegrationConfiguration)
+
+        assert user_integration_config.oauth2_install_parameters is None
 
         assert application.cover_image_hash == "hashmebaby"
         assert isinstance(application, application_models.Application)

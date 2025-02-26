@@ -46,6 +46,7 @@ __all__: typing.Sequence[str] = (
     "OAuth2InstallParameters",
     "ApplicationContextType",
     "ApplicationIntegrationType",
+    "ApplicationIntegrationConfiguration",
     "get_token_id",
 )
 
@@ -637,7 +638,7 @@ class Application(guilds.PartialApplication):
     approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of guilds this application is part of."""
 
-    integration_types_config: typing.Mapping[ApplicationIntegrationType, typing.Optional[OAuth2InstallParameters]] = (
+    integration_types_config: typing.Mapping[ApplicationIntegrationType, ApplicationIntegrationConfiguration] = (
         attrs.field(eq=False, hash=False, repr=False)
     )
 
@@ -851,6 +852,12 @@ class ApplicationRoleConnectionMetadataRecord:
         eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of description localizations for this metadata field."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ApplicationIntegrationConfiguration:
+    oauth2_install_parameters: OAuth2InstallParameters | None
 
 
 @attrs_extensions.with_copy
