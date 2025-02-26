@@ -40,8 +40,7 @@
 
 - Fix incorrect cleanup when failing to create request with a web reader ([#1946](https://github.com/hikari-py/hikari/issues/1946))
 - Fix serializing JSON dicts with enum values as keys.
-
-  See https://github.com/hikari-py/hikari/issues/1955 ([#1957](https://github.com/hikari-py/hikari/issues/1957))
+  See [#1955](https://github.com/hikari-py/hikari/issues/1955) ([#1957](https://github.com/hikari-py/hikari/issues/1957))
 - Use Discord Media Proxy instead of CDN for animated stickers urls ([#1982](https://github.com/hikari-py/hikari/issues/1982))
 - Use correct URL route for scheduled event covers. ([#1983](https://github.com/hikari-py/hikari/issues/1983))
 - Perform proper comparison when checking `CustomEmoji` against `KnownCustomEmoji`. ([#1986](https://github.com/hikari-py/hikari/issues/1986))
