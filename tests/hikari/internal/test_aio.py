@@ -302,6 +302,9 @@ def test_get_or_make_loop():
 
     assert aio.get_or_make_loop() is mock_loop
 
+    # Make sure to cleanup event loop or pytest_asyncio will error
+    asyncio.set_event_loop(None)
+
 
 def test_get_or_make_loop_handles_runtime_error():
     asyncio.set_event_loop(None)
