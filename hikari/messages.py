@@ -139,6 +139,7 @@ class MessageType(int, enums.Enum):
     POLL_RESULT = 46
     """A message sent to indicate a poll has finished."""
 
+
 @typing.final
 class MessageFlag(enums.Flag):
     """Additional flags for message options."""
