@@ -434,6 +434,7 @@ GET_GUILD_PREVIEW: typing.Final[Route] = Route(GET, "/guilds/{guild}/preview")
 GET_GUILD_PRUNE: typing.Final[Route] = Route(GET, "/guilds/{guild}/prune")
 POST_GUILD_PRUNE: typing.Final[Route] = Route(POST, "/guilds/{guild}/prune")
 
+GET_GUILD_ROLE: typing.Final[Route] = Route(GET, "/guilds/{guild}/roles/{role}")
 PATCH_GUILD_ROLE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/roles/{role}")
 DELETE_GUILD_ROLE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/roles/{role}")
 
@@ -442,6 +443,9 @@ POST_GUILD_ROLES: typing.Final[Route] = Route(POST, "/guilds/{guild}/roles")
 PATCH_GUILD_ROLES: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/roles")
 
 GET_GUILD_VANITY_URL: typing.Final[Route] = Route(GET, "/guilds/{guild}/vanity-url")
+
+GET_GUILD_VOICE_STATE: typing.Final[Route] = Route(GET, "/guilds/{guild}/voice-states/{user}")
+GET_MY_GUILD_VOICE_STATE: typing.Final[Route] = Route(GET, "/guilds/{guild}/voice-states/@me")
 
 PATCH_GUILD_VOICE_STATE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/voice-states/{user}")
 PATCH_MY_GUILD_VOICE_STATE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/voice-states/@me")

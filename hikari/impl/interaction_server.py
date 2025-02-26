@@ -159,6 +159,9 @@ class _FilePayload(aiohttp.Payload):
         super().__init__(value=value, headers=headers, content_type=content_type)
         self._executor = executor
 
+    def decode(self, encoding: str = "utf-8", errors: str = "strict") -> str:
+        raise RuntimeError("Impossible to decode a _FilePayload. If you see this, please file a bug report with hikari")
+
     async def write(self, writer: aiohttp.abc.AbstractStreamWriter) -> None:
         async with self._value.stream(executor=self._executor) as data:
             async for chunk in data:
@@ -597,43 +600,6 @@ class InteractionServer(interaction_server.InteractionServer):
         for site in sites:
             _LOGGER.info("Starting site on %s", site.name)
             await site.start()
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: type[command_interactions.CommandInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
-    ]: ...
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: type[component_interactions.ComponentInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
-    ]: ...
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: type[command_interactions.AutocompleteInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[
-            command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
-        ]
-    ]: ...
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: type[modal_interactions.ModalInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
-    ]: ...
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: type[_InteractionT_co], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
-    ]: ...
 
     def get_listener(
         self, interaction_type: type[_InteractionT_co], /

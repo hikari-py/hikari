@@ -1142,12 +1142,32 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_channel_follow(response)
 
     async def delete_channel(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         route = routes.DELETE_CHANNEL.compile(channel=channel)
-        response = await self._request(route)
+        response = await self._request(route, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
+
+    async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
+        route = routes.GET_MY_GUILD_VOICE_STATE.compile(guild=guild)
+
+        response = await self._request(route)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_voice_state(response)
+
+    async def fetch_voice_state(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> voices.VoiceState:
+        route = routes.GET_GUILD_VOICE_STATE.compile(guild=guild, user=user)
+
+        response = await self._request(route)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_voice_state(response)
 
     async def edit_my_voice_state(
         self,
@@ -1622,9 +1642,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     async def delete_messages(
         self,
@@ -1636,6 +1658,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
@@ -1670,7 +1693,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 if len(chunk) == 1:
                     message = chunk[0]
                     try:
-                        await self.delete_message(channel, message)
+                        await self.delete_message(channel, message, reason=reason)
                     except errors.NotFoundError as ex:
                         # If the message is not found then this error should be suppressed
                         # to keep consistency with how the bulk delete endpoint functions.
@@ -1682,7 +1705,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 else:
                     body = data_binding.JSONObjectBuilder()
                     body.put_snowflake_array("messages", chunk)
-                    await self._request(route, json=body)
+                    await self._request(route, json=body, reason=reason)
                     deleted += chunk
 
             except Exception as ex:
@@ -2429,8 +2452,10 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Sequence[emojis.KnownCustomEmoji]:
         route = routes.GET_APPLICATION_EMOJIS.compile(application=application)
         response = await self._request(route)
-        assert isinstance(response, list)
-        return [self._entity_factory.deserialize_known_custom_emoji(emoji_payload) for emoji_payload in response]
+        assert isinstance(response, dict)
+        return [
+            self._entity_factory.deserialize_known_custom_emoji(emoji_payload) for emoji_payload in response["items"]
+        ]
 
     async def create_application_emoji(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
@@ -3414,6 +3439,15 @@ class RESTClientImpl(rest_api.RESTClient):
         return special_endpoints_impl.GuildBanIterator(
             self._entity_factory, self._request, guild, newest_first, str(start_at)
         )
+
+    async def fetch_role(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+    ) -> guilds.Role:
+        route = routes.GET_GUILD_ROLE.compile(guild=guild, role=role)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        guild_id = snowflakes.Snowflake(guild)
+        return self._entity_factory.deserialize_role(response, guild_id=guild_id)
 
     async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)

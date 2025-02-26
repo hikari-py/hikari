@@ -1897,6 +1897,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             time.iso8601_datetime_string_to_datetime(raw_premium_since) if raw_premium_since is not None else None
         )
 
+        guild_flags = guild_models.GuildMemberFlags(payload.get("flags") or guild_models.GuildMemberFlags.NONE)
+
         communication_disabled_until: typing.Optional[datetime.datetime] = None
         if raw_communication_disabled_until := payload.get("communication_disabled_until"):
             communication_disabled_until = time.iso8601_datetime_string_to_datetime(raw_communication_disabled_until)
@@ -1913,6 +1915,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_mute=payload.get("mute", undefined.UNDEFINED),
             is_pending=payload.get("pending", undefined.UNDEFINED),
             raw_communication_disabled_until=communication_disabled_until,
+            guild_flags=guild_flags,
         )
 
     def deserialize_role(
@@ -2548,6 +2551,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             disabled_until = None
 
+        guild_flags = guild_models.GuildMemberFlags(payload.get("flags") or guild_models.GuildMemberFlags.NONE)
+
         # TODO: deduplicate member unmarshalling logic
         return base_interactions.InteractionMember(
             user=user,
@@ -2562,6 +2567,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_pending=payload.get("pending", undefined.UNDEFINED),
             permissions=permission_models.Permissions(int(payload["permissions"])),
             raw_communication_disabled_until=disabled_until,
+            guild_flags=guild_flags,
         )
 
     def _deserialize_resolved_option_data(
@@ -3714,8 +3720,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_channel_id := payload["channel_id"]) is not None:
             channel_id = snowflakes.Snowflake(raw_channel_id)
 
+        member_obj: typing.Optional[guild_models.Member] = None
         if member is undefined.UNDEFINED:
-            member = self.deserialize_member(payload["member"], guild_id=guild_id)
+            # It is insanely rare for this to happen, but we can receive voice states
+            # with no member object attached to them unfortunately.
+            member_obj = self.deserialize_member(payload["member"], guild_id=guild_id) if "member" in payload else None
+        else:
+            member_obj = member
 
         requested_to_speak_at: typing.Optional[datetime.datetime] = None
         if raw_requested_to_speak_at := payload.get("request_to_speak_timestamp"):
@@ -3726,7 +3737,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             channel_id=channel_id,
             user_id=snowflakes.Snowflake(payload["user_id"]),
-            member=member,
+            member=member_obj,
             session_id=payload["session_id"],
             is_guild_deafened=payload["deaf"],
             is_guild_muted=payload["mute"],
