@@ -988,6 +988,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = self._loads(await response.read())
         assert isinstance(body, dict)
+        if "retry_after" not in body:
+            # This is most probably a Cloudflare ban, so just output the entire
+            # body to the console and abort the request.
+            raise errors.HTTPResponseError(
+                str(response.real_url), http.HTTPStatus.TOO_MANY_REQUESTS, response.headers, str(body), str(body)
+            )
+
         body_retry_after = float(body["retry_after"])
 
         if body.get("global", False) is True:
