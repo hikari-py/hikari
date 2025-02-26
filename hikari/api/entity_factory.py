@@ -42,6 +42,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites as invite_models
     from hikari import messages as message_models
     from hikari import monetization as entitlement_models
+    from hikari import polls as poll_models
     from hikari import presences as presence_models
     from hikari import scheduled_events as scheduled_events_models
     from hikari import sessions as gateway_models
@@ -1993,4 +1994,38 @@ class EntityFactory(abc.ABC):
         -------
         hikari.stage_intances.StageInstance
             The deserialized stage instance object
+        """
+
+    ###############
+    # POLL MODELS #
+    ###############
+
+    @abc.abstractmethod
+    def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
+        """Parse a raw payload from Discord into a poll object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.polls.Poll
+            The deserialized poll object.
+        """
+
+    @abc.abstractmethod
+    def serialize_poll(self, poll: poll_models.PollBuilder) -> data_binding.JSONObject:
+        """Serialize a poll object to a json serializable dict.
+
+        Parameters
+        ----------
+        poll
+            The poll object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the poll.
         """
