@@ -44,7 +44,8 @@ from typing_extensions import Self as __Self
 
 Enum = __enum.Enum
 
-class Flag(__enum.IntFlag):
+# MyPy started complaining of Flags with no additional flags, so just ignore it here
+class Flag(__enum.IntFlag):  # type: ignore[misc]
     def all(self, *flags: __Self) -> bool: ...
     def any(self, *flags: __Self) -> bool: ...
     def difference(self, other: __Union[int, __Self]) -> __Self: ...
