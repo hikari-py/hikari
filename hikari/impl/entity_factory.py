@@ -1680,17 +1680,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
                 if name is None:
                     raise TypeError(f"in embed.fields[{i}].name - cannot have `None`")
-                if not name:
-                    raise TypeError(f"in embed.fields[{i}].name - cannot have empty string")
-                if not name.strip():
-                    raise TypeError(f"in embed.fields[{i}].name - cannot have only whitespace")
 
                 if value is None:
                     raise TypeError(f"in embed.fields[{i}].value - cannot have `None`")
-                if not value:
-                    raise TypeError(f"in embed.fields[{i}].value - cannot have empty string")
-                if not value.strip():
-                    raise TypeError(f"in embed.fields[{i}].value - cannot have only whitespace")
 
                 # Name and value always have to be specified; we can always
                 # send a default `inline` value also just to keep this simpler.
