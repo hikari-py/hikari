@@ -870,6 +870,10 @@ class ApplicationIntegrationType(int, enums.Enum):
     USER_INSTALL = 1
     """Application is installable to all users."""
 
+    @classmethod
+    def all(cls) -> typing.Sequence[ApplicationIntegrationType]:
+        return (ApplicationIntegrationType.GUILD_INSTALL, ApplicationIntegrationType.USER_INSTALL)
+
 
 @typing.final
 class ApplicationContextType(int, enums.Enum):

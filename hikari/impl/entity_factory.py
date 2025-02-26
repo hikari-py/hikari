@@ -636,63 +636,34 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         integration_types_config: typing.MutableMapping[
             application_models.ApplicationIntegrationType, typing.Optional[application_models.OAuth2InstallParameters]
         ] = {}
-        if (integration_types_config_payload := payload.get("integration_types_config")) is not None:
-            # FIXME: I am not sure if this is how this should be handled. Maybe it should be a loop for all the types?
-            if (
-                integration_scope_guild_install_payload := integration_types_config_payload.get(
-                    str(application_models.ApplicationIntegrationType.GUILD_INSTALL.value)
-                )
-            ) is not None:
-                if (
-                    oauth2_install_guild_params_payload := integration_scope_guild_install_payload.get(
-                        "oauth2_install_params"
-                    )
-                ) is not None:
-                    integration_types_config.update(
-                        {
-                            application_models.ApplicationIntegrationType.GUILD_INSTALL: application_models.OAuth2InstallParameters(
-                                scopes=(
-                                    [
-                                        application_models.OAuth2Scope(scope)
-                                        for scope in oauth2_install_guild_params_payload["scopes"]
-                                    ]
-                                ),
-                                permissions=permission_models.Permissions(
-                                    int(oauth2_install_guild_params_payload["permissions"])
-                                ),
-                            )
-                        }
-                    )
-                else:
-                    integration_types_config.update({application_models.ApplicationIntegrationType.GUILD_INSTALL: None})
 
-            if (
-                integration_scope_user_install_payload := integration_types_config_payload.get(
-                    str(application_models.ApplicationIntegrationType.USER_INSTALL.value)
-                )
-            ) is not None:
+        if (integration_types_config_payload := payload.get("integration_types_config")) is not None:
+            for integration_type in (
+                application_models.ApplicationIntegrationType.all()  # FIXME: I have no idea if this method should exist, or if there is an alternative option for it.
+            ):
                 if (
-                    oauth2_install_user_params_payload := integration_scope_user_install_payload.get(
-                        "oauth2_install_params"
-                    )
+                    integration_type_payload := integration_types_config_payload.get(str(integration_type.value))
                 ) is not None:
-                    integration_types_config.update(
-                        {
-                            application_models.ApplicationIntegrationType.USER_INSTALL: application_models.OAuth2InstallParameters(
-                                scopes=(
-                                    [
-                                        application_models.OAuth2Scope(scope)
-                                        for scope in oauth2_install_user_params_payload["scopes"]
-                                    ]
-                                ),
-                                permissions=permission_models.Permissions(
-                                    int(oauth2_install_user_params_payload["permissions"])
-                                ),
-                            )
-                        }
-                    )
-                else:
-                    integration_types_config.update({application_models.ApplicationIntegrationType.USER_INSTALL: None})
+                    if (
+                        oauth2_install_params_payload := integration_type_payload.get("oauth2_install_params")
+                    ) is not None:
+                        integration_types_config.update(
+                            {
+                                integration_type: application_models.OAuth2InstallParameters(
+                                    scopes=(
+                                        [
+                                            application_models.OAuth2Scope(scope)
+                                            for scope in oauth2_install_params_payload["scopes"]
+                                        ]
+                                    ),
+                                    permissions=permission_models.Permissions(
+                                        int(oauth2_install_params_payload["permissions"])
+                                    ),
+                                )
+                            }
+                        )
+                    else:
+                        integration_types_config.update({integration_type: None})
 
         return application_models.Application(
             app=self._app,
