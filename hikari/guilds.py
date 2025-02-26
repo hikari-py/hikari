@@ -1325,6 +1325,103 @@ class WelcomeChannel:
     """ID of the emoji shown in the welcome screen channel if it's set to a custom emoji."""
 
 
+@typing.final
+class OnboardingPromptType(int, enums.Enum):
+    """The type of onboarding prompt."""
+
+    MULTIPLE_CHOICE = 0
+    """A multiple choice prompt."""
+
+    DROPDOWN = 1
+    """A dropdown prompt."""
+
+
+@typing.final
+class OnboardingMode(int, enums.Enum):
+    """The mode of onboarding."""
+
+    ONBOARDING_DEFAULT = 0
+    """Counts only Default Channels towards constraints."""
+
+    ONBOARDING_ADVANCED = 1
+    """Counts Default Channels and Questions towards constraints."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildOnboarding:
+    """Used to represent guild onboarding settings on Discord."""
+
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the guild this onboarding is part of."""
+
+    prompts: typing.Sequence[OnboardingPrompt] = attrs.field(repr=False)
+    """Prompts shown during onboarding and in customize community."""
+
+    default_channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
+    """Channel IDs that members get opted into automatically."""
+
+    enabled: bool = attrs.field(repr=True)
+    """Whether the guild onboarding is enabled."""
+
+    mode: OnboardingMode = attrs.field(repr=True)
+    """The mode of onboarding."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class OnboardingPrompt:
+    """Used to represent an onboarding prompt."""
+
+    id: snowflakes.Snowflake = attrs.field(repr=True)
+    """The ID of the onboarding prompt."""
+
+    type: OnboardingPromptType = attrs.field(repr=True)
+    """The type of the onboarding prompt."""
+
+    options: typing.List[OnboardingPromptOption] = attrs.field(repr=False)
+    """Options available within the prompt."""
+
+    title: str = attrs.field(repr=True)
+    """The title of the onboarding prompt."""
+
+    single_select: bool = attrs.field(repr=True)
+    """Indicates whether users are limited to selecting one option for the prompt."""
+
+    required: bool = attrs.field(repr=True)
+    """Indicates whether the prompt is required before a user completes the onboarding flow."""
+
+    in_onboarding: bool = attrs.field(repr=False)
+    """Indicates whether the prompt is present in the onboarding flow.
+
+    If `[False][]`, the prompt will only appear in the "Channels & Roles" tab.
+    """
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
+class OnboardingPromptOption:
+    """Used to represent an onboarding prompt option."""
+
+    id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the prompt option."""
+
+    channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
+    """IDs for channels a member is added to when the option is selected."""
+
+    role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
+    """IDs for roles assigned to a member when the option is selected."""
+
+    emoji: typing.Optional[emojis_.Emoji] = attrs.field(repr=True)
+    """Emoji of the option."""
+
+    title: str = attrs.field(repr=True)
+    """Title of the option."""
+
+    description: typing.Optional[str] = attrs.field(repr=True)
+    """Description of the option."""
+
+
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class WelcomeScreen:
