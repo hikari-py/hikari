@@ -126,6 +126,27 @@ class ComponentType(int, enums.Enum):
         as [`hikari.components.ComponentType.ACTION_ROW`][].
     """
 
+    SECTION = 9
+    """FIXME: Document me."""
+    
+    TEXT_DISPLAY = 10
+    """FIXME: Document me."""
+    
+    MEDIA_GALLERY = 11
+    """FIXME: Document me."""
+    
+    THUMBNAIL = 12
+    """FIXME: Document me."""
+    
+    FILE = 13
+    """FIXME: Document me."""
+    
+    SEPARATOR = 14
+    """FIXME: Document me."""
+    
+    CONTAINER = 16
+    """FIXME: Document me."""
+
 
 @typing.final
 class ButtonStyle(int, enums.Enum):
@@ -308,6 +329,67 @@ class TextInputComponent(PartialComponent):
 
     value: str = attrs.field(repr=True)
     """Value provided for this text input."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class Section:
+    """FIXME: Document me."""
+
+    components: typing.Sequence[TextDisplay]
+    """FIXME: Document me."""
+    accessory: typing.Union[ButtonComponent, Thumbnail]
+    """FIXME: Document me."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class Thumbnail:
+    """FIXME: Document me."""
+    has_spoiler: bool
+    """FIXME: Document me."""
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class TextDisplay:
+    """FIXME: Document me."""
+    content: str
+    """FIXME: Document me."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MediaGallery:
+    """FIXME: Document me."""
+    items: typing.Sequence[MediaGalleryItem]
+    """FIXME: Document me."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MediaGalleryItem:
+    """FIXME: Document me."""
+    pass
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class Separator:
+    """FIXME: Document me."""
+    spacing: SpacingType
+    """FIXME: Document me."""
+    has_divider: bool
+    """FIXME: Document me."""
+
+
+@typing.final
+class SpacingType(int, enums.Enum):
+    """FIXME: Document me."""
+    SMALL = 1
+    """FIXME: Document me."""
+    LARGE = 2
+    """FIXME: Document me."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class FileComponent:
+    """FIXME: Document me."""
+    has_spoiler: bool
+    """FIXME: Document me."""
 
 
 SelectMenuTypesT = typing.Union[
