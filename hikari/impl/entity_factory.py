@@ -638,8 +638,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ] = {}
 
         if (integration_types_config_payload := payload.get("integration_types_config")) is not None:
-            for key, integration_payload in integration_types_config_payload.items():
-                integration_type = application_models.ApplicationIntegrationType(int(key))
+            for raw_type, integration_payload in integration_types_config_payload.items():
+                integration_type = application_models.ApplicationIntegrationType(int(raw_type))
 
                 oauth2_install_parameters = None
                 if oauth2_install_params_payload := integration_payload.get("oauth2_install_params"):
