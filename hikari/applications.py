@@ -641,6 +641,7 @@ class Application(guilds.PartialApplication):
     integration_types_config: typing.Mapping[ApplicationIntegrationType, ApplicationIntegrationConfiguration] = (
         attrs.field(eq=False, hash=False, repr=False)
     )
+    """The default scopes and permissions for each integration type."""
 
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
@@ -857,14 +858,21 @@ class ApplicationRoleConnectionMetadataRecord:
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class ApplicationIntegrationConfiguration:
-    oauth2_install_parameters: OAuth2InstallParameters | None
+    """The Application Integration Configuration for the related [ApplicationIntegrationType][]."""
+
+    oauth2_install_parameters: typing.Optional[OAuth2InstallParameters]
+    """The OAuth2 Install parameters for the Application Integration."""
 
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class OAuth2InstallParameters:
+    """OAuth2 Install Parameters."""
+
     scopes: typing.Sequence[OAuth2Scope]
+    """The scopes the application will be added to the server with."""
     permissions: permissions_.Permissions
+    """The permissions that will be requested for the bot role."""
 
 
 @typing.final
