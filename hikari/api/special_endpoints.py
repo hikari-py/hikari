@@ -1031,15 +1031,11 @@ class CommandBuilder(abc.ABC):
     @abc.abstractmethod
     def integration_types(self) -> typing.Sequence[applications.ApplicationIntegrationType]:
         """The integration types allowed for this command."""
-        # FIXME: I am also not sure if this should be done, but basically, discord can return nothing, or a list of ApplicationIntegrationType
-        # And it seems that this should just show a list of options to the user, and not a null value, as its not useful for the user.
 
     @property
     @abc.abstractmethod
     def context_types(self) -> typing.Sequence[applications.ApplicationContextType]:
         """The context types allowed for this command."""
-        # FIXME: I am also not sure if this should be done, but basically, discord can return nothing, or a list of ApplicationIntegrationType
-        # And it seems that this should just show a list of options to the user, and not a null value, as its not useful for the user.
 
     @abc.abstractmethod
     def set_name(self, name: str, /) -> Self:
