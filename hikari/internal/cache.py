@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Various utilities that may be used in a cache-impl."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -396,13 +396,14 @@ class MemberData(BaseData[guilds.Member]):
     guild_id: snowflakes.Snowflake = attrs.field()
     nickname: typing.Optional[str] = attrs.field()
     guild_avatar_hash: typing.Optional[str] = attrs.field()
-    role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attrs.field()
+    role_ids: tuple[snowflakes.Snowflake, ...] = attrs.field()
     joined_at: typing.Optional[datetime.datetime] = attrs.field()
     premium_since: typing.Optional[datetime.datetime] = attrs.field()
     is_deaf: undefined.UndefinedOr[bool] = attrs.field()
     is_mute: undefined.UndefinedOr[bool] = attrs.field()
     is_pending: undefined.UndefinedOr[bool] = attrs.field()
     raw_communication_disabled_until: typing.Optional[datetime.datetime] = attrs.field()
+    guild_flags: typing.Union[guilds.GuildMemberFlags, int] = attrs.field()
     # meta-attribute
     has_been_deleted: bool = attrs.field(default=False, init=False)
 
@@ -421,6 +422,7 @@ class MemberData(BaseData[guilds.Member]):
             is_pending=member.is_pending,
             user=user or RefCell(copy.copy(member.user)),
             raw_communication_disabled_until=member.raw_communication_disabled_until,
+            guild_flags=member.guild_flags,
             # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
             role_ids=tuple(member.role_ids),
         )
@@ -438,6 +440,7 @@ class MemberData(BaseData[guilds.Member]):
             is_pending=self.is_pending,
             raw_communication_disabled_until=self.raw_communication_disabled_until,
             user=self.user.copy(),
+            guild_flags=self.guild_flags,
         )
 
 
@@ -450,7 +453,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     name: str = attrs.field()
     is_animated: bool = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
-    role_ids: typing.Tuple[snowflakes.Snowflake, ...] = attrs.field()
+    role_ids: tuple[snowflakes.Snowflake, ...] = attrs.field()
     user: typing.Optional[RefCell[users_.User]] = attrs.field()
     is_colons_required: bool = attrs.field()
     is_managed: bool = attrs.field()
@@ -558,7 +561,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
     secrets: typing.Optional[presences.ActivitySecret] = attrs.field()
     is_instance: typing.Optional[bool] = attrs.field()
     flags: typing.Optional[presences.ActivityFlag] = attrs.field()
-    buttons: typing.Tuple[str, ...] = attrs.field()
+    buttons: tuple[str, ...] = attrs.field()
 
     @classmethod
     def build_from_entity(
@@ -630,7 +633,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
     user_id: snowflakes.Snowflake = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
     visible_status: typing.Union[presences.Status, str] = attrs.field()
-    activities: typing.Tuple[RichActivityData, ...] = attrs.field()
+    activities: tuple[RichActivityData, ...] = attrs.field()
     client_status: presences.ClientStatus = attrs.field()
 
     @classmethod
@@ -711,14 +714,14 @@ class MessageData(BaseData[messages.Message]):
     edited_timestamp: typing.Optional[datetime.datetime] = attrs.field()
     is_tts: bool = attrs.field()
     user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = attrs.field()
-    role_mention_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = attrs.field()
+    role_mention_ids: undefined.UndefinedOr[tuple[snowflakes.Snowflake, ...]] = attrs.field()
     channel_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = (
         attrs.field()
     )
     mentions_everyone: undefined.UndefinedOr[bool] = attrs.field()
-    attachments: typing.Tuple[messages.Attachment, ...] = attrs.field()
-    embeds: typing.Tuple[embeds_.Embed, ...] = attrs.field()
-    reactions: typing.Tuple[messages.Reaction, ...] = attrs.field()
+    attachments: tuple[messages.Attachment, ...] = attrs.field()
+    embeds: tuple[embeds_.Embed, ...] = attrs.field()
+    reactions: tuple[messages.Reaction, ...] = attrs.field()
     is_pinned: bool = attrs.field()
     webhook_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     type: typing.Union[messages.MessageType, int] = attrs.field()
@@ -726,12 +729,13 @@ class MessageData(BaseData[messages.Message]):
     application: typing.Optional[messages.MessageApplication] = attrs.field()
     message_reference: typing.Optional[messages.MessageReference] = attrs.field()
     flags: messages.MessageFlag = attrs.field()
-    stickers: typing.Tuple[stickers_.PartialSticker, ...] = attrs.field()
+    stickers: tuple[stickers_.PartialSticker, ...] = attrs.field()
     nonce: typing.Optional[str] = attrs.field()
     referenced_message: typing.Optional[RefCell[MessageData]] = attrs.field()
     interaction: typing.Optional[MessageInteractionData] = attrs.field()
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
-    components: typing.Tuple[components_.MessageActionRowComponent, ...] = attrs.field()
+    components: tuple[components_.MessageActionRowComponent, ...] = attrs.field()
+    thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field()
 
     @classmethod
     def build_from_entity(
@@ -764,7 +768,7 @@ class MessageData(BaseData[messages.Message]):
             if message.channel_mentions is not undefined.UNDEFINED
             else undefined.UNDEFINED
         )
-        role_mention_ids: undefined.UndefinedOr[typing.Tuple[snowflakes.Snowflake, ...]] = (
+        role_mention_ids: undefined.UndefinedOr[tuple[snowflakes.Snowflake, ...]] = (
             tuple(message.role_mention_ids)
             if message.role_mention_ids is not undefined.UNDEFINED
             else undefined.UNDEFINED
@@ -800,6 +804,7 @@ class MessageData(BaseData[messages.Message]):
             interaction=interaction,
             application_id=message.application_id,
             components=tuple(message.components),
+            thread=message.thread,
         )
 
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
@@ -845,6 +850,7 @@ class MessageData(BaseData[messages.Message]):
             interaction=self.interaction.build_entity(app) if self.interaction else None,
             application_id=self.application_id,
             components=self.components,
+            thread=self.thread,
         )
 
     def update(
@@ -898,6 +904,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
 
     channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
+    user_id: snowflakes.Snowflake = attrs.field()
     is_guild_deafened: bool = attrs.field()
     is_guild_muted: bool = attrs.field()
     is_self_deafened: bool = attrs.field()
@@ -905,13 +912,14 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     is_streaming: bool = attrs.field()
     is_suppressed: bool = attrs.field()
     is_video_enabled: bool = attrs.field()
-    member: RefCell[MemberData] = attrs.field()
+    member: typing.Optional[RefCell[MemberData]] = attrs.field()
     session_id: str = attrs.field()
     requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field()
 
     def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
-        member = self.member.object.build_entity(app)
+        member = self.member.object.build_entity(app) if self.member else None
         return voices.VoiceState(
+            app=app,
             channel_id=self.channel_id,
             guild_id=self.guild_id,
             is_guild_deafened=self.is_guild_deafened,
@@ -921,9 +929,8 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_streaming=self.is_streaming,
             is_suppressed=self.is_suppressed,
             is_video_enabled=self.is_video_enabled,
-            user_id=member.user.id,
+            user_id=self.user_id,
             session_id=self.session_id,
-            app=app,
             member=member,
             requested_to_speak_at=self.requested_to_speak_at,
         )
@@ -935,6 +942,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
         return cls(
             channel_id=voice_state.channel_id,
             guild_id=voice_state.guild_id,
+            user_id=voice_state.user_id,
             is_self_deafened=voice_state.is_self_deafened,
             is_self_muted=voice_state.is_self_muted,
             is_guild_deafened=voice_state.is_guild_deafened,
@@ -942,7 +950,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_streaming=voice_state.is_streaming,
             is_suppressed=voice_state.is_suppressed,
             is_video_enabled=voice_state.is_video_enabled,
-            member=member or RefCell(MemberData.build_from_entity(voice_state.member)),
+            member=member,
             session_id=voice_state.session_id,
             requested_to_speak_at=voice_state.requested_to_speak_at,
         )

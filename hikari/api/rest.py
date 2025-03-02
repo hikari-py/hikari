@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Provides an interface for REST API implementations to follow."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("RESTClient", "TokenStrategy")
@@ -372,7 +372,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_channel(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         """Delete a channel in a guild, or close a DM.
 
@@ -385,6 +387,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel
             The channel to delete. This may be the object or the ID of an
             existing channel.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -404,6 +409,64 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
+        """Fetch the current user's voice state.
+
+        Parameters
+        ----------
+        guild
+            The guild to fetch the state from. This may be the object or the ID.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel, message or voice state is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+
+        Returns
+        -------
+        voices.VoiceState
+            The current user's voice state.
+        """
+
+    @abc.abstractmethod
+    async def fetch_voice_state(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> voices.VoiceState:
+        """Fetch the current user's voice state.
+
+        Parameters
+        ----------
+        guild
+            The guild to fetch the state from. This may be the object or the ID.
+        user
+            The user to fetch the state for. This may be the object or the ID.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the channel, message or voice state is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+
+        Returns
+        -------
+        voices.VoiceState
+            The user's voice state.
         """
 
     @abc.abstractmethod
@@ -1370,6 +1433,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a given message in a given channel.
 
@@ -1381,6 +1446,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message
             The message to delete. This may be the object or the ID of
             an existing message.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -1409,6 +1477,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Bulk-delete messages from the channel.
 
@@ -1443,6 +1512,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             (sync or async) of the objects and/or IDs of existing messages to delete.
         *other_messages
             The objects and/or IDs of other existing messages to delete.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -5861,6 +5933,39 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_role(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+    ) -> guilds.Role:
+        """Fetch a single role of a guild.
+
+        Parameters
+        ----------
+        guild
+            The guild to fetch the role from. This may be the
+            object or the ID of an existing guild.
+        role
+            The role to fetch. This may be the object or the
+            ID of an existing role.
+
+        Returns
+        -------
+        hikari.guilds.Role
+            The requested role.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or the role is not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.

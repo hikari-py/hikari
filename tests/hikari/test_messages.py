@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 
 import mock
@@ -120,6 +121,7 @@ def message():
         interaction=None,
         application_id=123123,
         components=[],
+        thread=None,
     )
 
 

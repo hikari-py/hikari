@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import os
 import re
 import types
@@ -65,7 +66,7 @@ setuptools.setup(
     maintainer_email=metadata.email,
     license=metadata.license,
     url=metadata.url,
-    python_requires=">=3.8.0,<3.13",
+    python_requires=">=3.9.0,<3.14",
     packages=setuptools.find_namespace_packages(include=["hikari*"]),
     entry_points={"console_scripts": ["hikari = hikari.cli:main"]},
     install_requires=parse_requirements_file("requirements.txt"),
@@ -84,18 +85,18 @@ setuptools.setup(
         "CI": metadata.ci,
     },
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         "Framework :: AsyncIO",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Communications :: Chat",
         "Topic :: Internet :: WWW/HTTP",

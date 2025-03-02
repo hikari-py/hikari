@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import datetime
@@ -2231,11 +2232,21 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_CHANNEL.compile(channel=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "NNNNN"})
 
+        result = await rest_client.delete_channel(StubModel(123), reason="some reason :)")
+
+        assert result is rest_client._entity_factory.deserialize_channel.return_value
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(expected_route, reason="some reason :)")
+
+    async def test_delete_channel_without_optionals(self, rest_client):
+        expected_route = routes.DELETE_CHANNEL.compile(channel=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "NNNNN"})
+
         result = await rest_client.delete_channel(StubModel(123))
 
         assert result is rest_client._entity_factory.deserialize_channel.return_value
         rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, reason=undefined.UNDEFINED)
 
     async def test_edit_my_voice_state_when_requesting_to_speak(self, rest_client):
         rest_client._request = mock.AsyncMock()
@@ -2267,6 +2278,86 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route, json={"channel_id": "999", "suppress": True, "request_to_speak_timestamp": None}
         )
+
+    async def test_fetch_my_voice_state(self, rest_client):
+        expected_route = routes.GET_MY_GUILD_VOICE_STATE.compile(guild=5454)
+
+        expected_json = {
+            "guild_id": "5454",
+            "channel_id": "3940568093485",
+            "user_id": "237890809345627",
+            "member": {
+                "nick": "foobarbaz",
+                "roles": ["11111", "22222", "33333", "44444"],
+                "joined_at": "2015-04-26T06:26:56.936000+00:00",
+                "premium_since": "2019-05-17T06:26:56.936000+00:00",
+                "avatar": "estrogen",
+                "deaf": False,
+                "mute": True,
+                "pending": False,
+                "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
+            },
+            "session_id": "39405894b9058guhfguh43t9g",
+            "deaf": False,
+            "mute": True,
+            "self_deaf": False,
+            "self_mute": True,
+            "self_stream": False,
+            "self_video": True,
+            "suppress": False,
+            "request_to_speak_timestamp": "2021-04-17T10:11:19.970105+00:00",
+        }
+
+        rest_client._request = mock.AsyncMock(return_value=expected_json)
+
+        with mock.patch.object(
+            rest_client._entity_factory, "deserialize_voice_state", return_value=mock.Mock()
+        ) as patched_deserialize_voice_state:
+            await rest_client.fetch_my_voice_state(StubModel(5454))
+
+            patched_deserialize_voice_state.assert_called_once_with(expected_json)
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_voice_state(self, rest_client):
+        expected_route = routes.GET_GUILD_VOICE_STATE.compile(guild=5454, user=1234567890)
+
+        expected_json = {
+            "guild_id": "5454",
+            "channel_id": "3940568093485",
+            "user_id": "1234567890",
+            "member": {
+                "nick": "foobarbaz",
+                "roles": ["11111", "22222", "33333", "44444"],
+                "joined_at": "2015-04-26T06:26:56.936000+00:00",
+                "premium_since": "2019-05-17T06:26:56.936000+00:00",
+                "avatar": "estrogen",
+                "deaf": False,
+                "mute": True,
+                "pending": False,
+                "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
+            },
+            "session_id": "39405894b9058guhfguh43t9g",
+            "deaf": False,
+            "mute": True,
+            "self_deaf": False,
+            "self_mute": True,
+            "self_stream": False,
+            "self_video": True,
+            "suppress": False,
+            "request_to_speak_timestamp": "2021-04-17T10:11:19.970105+00:00",
+        }
+
+        rest_client._request = mock.AsyncMock(return_value=expected_json)
+
+        with mock.patch.object(
+            rest_client._entity_factory, "deserialize_voice_state", return_value=mock.Mock()
+        ) as patched_deserialize_voice_state:
+            await rest_client.fetch_voice_state(StubModel(5454), StubModel(1234567890))
+
+            patched_deserialize_voice_state.assert_called_once_with(expected_json)
+
+        rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_edit_my_voice_state_when_providing_datetime_for_request_to_speak(self, rest_client):
         rest_client._request = mock.AsyncMock()
@@ -2691,8 +2782,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=123, message=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_message(StubModel(123), StubModel(456))
-        rest_client._request.assert_awaited_once_with(expected_route)
+        await rest_client.delete_message(StubModel(123), StubModel(456), reason="broke laws")
+        rest_client._request.assert_awaited_once_with(expected_route, reason="broke laws")
 
     async def test_delete_messages(self, rest_client):
         messages = [StubModel(i) for i in range(200)]
@@ -2702,10 +2793,13 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(StubModel(123), *messages)
+        await rest_client.delete_messages(StubModel(123), *messages, reason="broke laws")
 
         rest_client._request.assert_has_awaits(
-            [mock.call(expected_route, json=expected_json1), mock.call(expected_route, json=expected_json2)]
+            [
+                mock.call(expected_route, json=expected_json1, reason="broke laws"),
+                mock.call(expected_route, json=expected_json2, reason="broke laws"),
+            ]
         )
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_message_not_found(
@@ -2721,12 +2815,12 @@ class TestRESTClientImplAsync:
             side_effect=errors.NotFoundError(url="", headers={}, raw_body="", code=10008)
         )
 
-        await rest_client.delete_messages(channel, *messages)
+        await rest_client.delete_messages(channel, *messages, reason="broke laws")
 
         rest_client._request.assert_awaited_once_with(
-            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message)
+        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_channel_not_found(
         self, rest_client
@@ -2741,14 +2835,14 @@ class TestRESTClientImplAsync:
         rest_client.delete_message = mock.AsyncMock(side_effect=mock_not_found)
 
         with pytest.raises(errors.BulkDeleteError) as exc_info:
-            await rest_client.delete_messages(channel, *messages)
+            await rest_client.delete_messages(channel, *messages, reason="broke laws")
 
         assert exc_info.value.__cause__ is mock_not_found
 
         rest_client._request.assert_awaited_once_with(
-            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message)
+        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
 
     async def test_delete_messages_when_one_message_left_in_chunk(self, rest_client):
         channel = StubModel(123)
@@ -2758,12 +2852,16 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(channel, *messages)
+        await rest_client.delete_messages(channel, *messages, reason="broke laws")
 
         rest_client._request.assert_has_awaits(
             [
-                mock.call(routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json),
-                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
+                mock.call(
+                    routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
+                    json=expected_json,
+                    reason="broke laws",
+                ),
+                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message), reason="broke laws"),
             ]
         )
 
@@ -2782,17 +2880,19 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(channel, messages, StubModel(444), StubModel(6523))
+        await rest_client.delete_messages(channel, messages, StubModel(444), StubModel(6523), reason="broke laws")
 
         rest_client._request.assert_has_awaits(
             [
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": [str(i) for i in range(100)]},
+                    reason="broke laws",
                 ),
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": ["100", "444", "6523"]},
+                    reason="broke laws",
                 ),
             ]
         )
@@ -2803,17 +2903,19 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(channel, iterator)
+        await rest_client.delete_messages(channel, iterator, reason="broke laws")
 
         rest_client._request.assert_has_awaits(
             [
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": [str(i) for i in range(100)]},
+                    reason="broke laws",
                 ),
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": ["100", "101", "102"]},
+                    reason="broke laws",
                 ),
             ]
         )
@@ -3885,7 +3987,7 @@ class TestRESTClientImplAsync:
         emoji1 = StubModel(456)
         emoji2 = StubModel(789)
         expected_route = routes.GET_APPLICATION_EMOJIS.compile(application=123)
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._request = mock.AsyncMock(return_value={"items": [{"id": "456"}, {"id": "789"}]})
         rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(side_effect=[emoji1, emoji2])
 
         assert await rest_client.fetch_application_emojis(StubModel(123)) == [emoji1, emoji2]
@@ -5048,6 +5150,17 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_member_ban.assert_called_once_with({"id": "789"})
+
+    async def test_fetch_role(self, rest_client):
+        role = StubModel(456)
+        expected_route = routes.GET_GUILD_ROLE.compile(guild=123, role=456)
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+        rest_client._entity_factory.deserialize_role = mock.Mock(return_value=role)
+
+        assert await rest_client.fetch_role(StubModel(123), StubModel(456)) is role
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
 
     async def test_fetch_roles(self, rest_client):
         role1 = StubModel(456)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -789,17 +788,15 @@ class Embed:
 
         return self
 
-    def add_field(self, name: str, value: str, *, inline: bool = False) -> Embed:
+    def add_field(self, name: str | None = None, value: str | None = None, *, inline: bool = False) -> Embed:
         """Add a new field to this embed.
 
         Parameters
         ----------
         name
-            The mandatory non-empty field name. This must contain at least one
-            non-whitespace character to be valid.
+            The field name.
         value
-            The mandatory non-empty field value. This must contain at least one
-            non-whitespace character to be valid.
+            The field value.
         inline
             If [`True`][], the embed field may be shown "inline" on some
             Discord clients with other fields. If [`False`][], it is always placed
@@ -812,6 +809,10 @@ class Embed:
         """
         if self._fields is None:
             self._fields = []
+        if name is None:
+            name = ""
+        if value is None:
+            value = ""
         self._fields.append(EmbedField(name=name, value=value, inline=inline))
         return self
 

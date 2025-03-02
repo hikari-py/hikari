@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -175,7 +174,7 @@ class Color(int):
         return self.hex_code
 
     @property
-    def rgb(self) -> typing.Tuple[int, int, int]:
+    def rgb(self) -> tuple[int, int, int]:
         """The RGB representation of this Color.
 
         Represented as a tuple of R, G, B. Each value is
@@ -188,7 +187,7 @@ class Color(int):
         return (self >> 16) & 0xFF, (self >> 8) & 0xFF, self & 0xFF
 
     @property
-    def rgb_float(self) -> typing.Tuple[float, float, float]:
+    def rgb_float(self) -> tuple[float, float, float]:
         """Return the floating-point RGB representation of this Color.
 
         Represented as a tuple of R, G, B. Each value is in the range [0, 1].
@@ -533,8 +532,8 @@ class Color(int):
 Colorish = typing.Union[
     Color,
     typing.SupportsInt,
-    typing.Tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt],
-    typing.Tuple[typing.SupportsFloat, typing.SupportsFloat, typing.SupportsFloat],
+    tuple[typing.SupportsInt, typing.SupportsInt, typing.SupportsInt],
+    tuple[typing.SupportsFloat, typing.SupportsFloat, typing.SupportsFloat],
     typing.Sequence[typing.SupportsInt],
     typing.Sequence[typing.SupportsFloat],
     str,

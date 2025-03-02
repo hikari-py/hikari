@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -87,8 +86,13 @@ class VoiceState:
     user_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the user this voice state is for."""
 
-    member: guilds.Member = attrs.field(eq=False, hash=False, repr=False)
-    """The guild member this voice state is for."""
+    member: typing.Optional[guilds.Member] = attrs.field(eq=False, hash=False, repr=False)
+    """The guild member this voice state is for.
+
+    This can be [`None`][] in cases where the Discord backend fails to
+    resolve the member object from the user ID. This can sometimes happen
+    when a user is kicked from the server.
+    """
 
     session_id: str = attrs.field(hash=True, repr=True)
     """The string ID of this voice state's session."""

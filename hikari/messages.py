@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -406,8 +405,8 @@ class MessageInteraction:
 
 def _map_cache_maybe_discover(
     ids: typing.Iterable[snowflakes.Snowflake], cache_call: typing.Callable[[snowflakes.Snowflake], typing.Optional[_T]]
-) -> typing.Dict[snowflakes.Snowflake, _T]:
-    results: typing.Dict[snowflakes.Snowflake, _T] = {}
+) -> dict[snowflakes.Snowflake, _T]:
+    results: dict[snowflakes.Snowflake, _T] = {}
     for id_ in ids:
         obj = cache_call(id_)
         if obj is not None:
@@ -1238,7 +1237,9 @@ class PartialMessage(snowflakes.Unique):
 
         # Using a custom emoji's name and ID to remove a specific user's
         # reaction from this reaction.
-        await message.remove_reaction("a:Distraction", 745991233939439616, user=some_user)
+        await message.remove_reaction(
+            "a:Distraction", 745991233939439616, user=some_user
+        )
 
         # Using a unicode emoji and removing a specific user from this
         # reaction.
@@ -1431,3 +1432,9 @@ class Message(PartialMessage):
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""
+
+    thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field(hash=False, eq=False, repr=False)
+    """The thread that was started from this message.
+
+    Will be [`None`][] if the message was not used to start a thread.
+    """

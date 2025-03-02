@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import asyncio
 
 import mock.mock
@@ -81,119 +82,6 @@ class TestCompletedFuture:
     @pytest.mark.asyncio
     async def test_non_default_result(self):
         assert aio.completed_future(...).result() is ...
-
-
-class TestIsAsyncIterator:
-    def test_on_inst(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return None
-
-        assert aio.is_async_iterator(AsyncIterator())
-
-    def test_on_class(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return ...
-
-        assert aio.is_async_iterator(AsyncIterator)
-
-    @pytest.mark.asyncio
-    async def test_on_genexp(self):
-        async def genexp():
-            yield ...
-            yield ...
-
-        exp = genexp()
-        try:
-            assert not aio.is_async_iterator(exp)
-        finally:
-            await exp.aclose()
-
-    def test_on_iterator(self):
-        class Iter:
-            def __next__(self):
-                return ...
-
-        assert not aio.is_async_iterator(Iter())
-
-    def test_on_iterator_class(self):
-        class Iter:
-            def __next__(self):
-                return ...
-
-        assert not aio.is_async_iterator(Iter)
-
-    def test_on_async_iterable(self):
-        class AsyncIter:
-            def __aiter__(self):
-                yield ...
-
-        assert not aio.is_async_iterator(AsyncIter())
-
-    def test_on_async_iterable_class(self):
-        class AsyncIter:
-            def __aiter__(self):
-                yield ...
-
-        assert not aio.is_async_iterator(AsyncIter)
-
-
-class TestIsAsyncIterable:
-    def test_on_instance(self):
-        class AsyncIter:
-            async def __aiter__(self):
-                yield ...
-
-        assert aio.is_async_iterable(AsyncIter())
-
-    def test_on_class(self):
-        class AsyncIter:
-            async def __aiter__(self):
-                yield ...
-
-        assert aio.is_async_iterable(AsyncIter)
-
-    def test_on_delegate(self):
-        class AsyncIterator:
-            async def __anext__(self): ...
-
-        class AsyncIterable:
-            def __aiter__(self):
-                return AsyncIterator()
-
-        assert aio.is_async_iterable(AsyncIterable())
-
-    def test_on_delegate_class(self):
-        class AsyncIterator:
-            async def __anext__(self): ...
-
-        class AsyncIterable:
-            def __aiter__(self):
-                return AsyncIterator()
-
-        assert aio.is_async_iterable(AsyncIterable)
-
-    def test_on_inst(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return None
-
-        assert aio.is_async_iterator(AsyncIterator())
-
-    def test_on_AsyncIterator(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return ...
-
-        assert not aio.is_async_iterable(AsyncIterator())
-
-    def test_on_AsyncIterator_class(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return ...
-
-        assert not aio.is_async_iterable(AsyncIterator)
 
 
 @pytest.mark.asyncio
@@ -413,6 +301,9 @@ def test_get_or_make_loop():
     asyncio.set_event_loop(mock_loop)
 
     assert aio.get_or_make_loop() is mock_loop
+
+    # Make sure to "cleanup" event loop or pytest_asyncio will error
+    mock_loop.is_closed = mock.Mock(return_value=True)
 
 
 def test_get_or_make_loop_handles_runtime_error():

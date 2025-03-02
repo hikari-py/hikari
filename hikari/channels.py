@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -295,10 +294,7 @@ class PermissionOverwrite:
             | Permissions.READ_MESSAGE_HISTORY
             | Permissions.SEND_MESSAGES
         ),
-        deny=(
-            Permissions.MANAGE_MESSAGES
-            | Permissions.SPEAK
-        ),
+        deny=(Permissions.MANAGE_MESSAGES | Permissions.SPEAK),
     )
     ```
     """
@@ -678,10 +674,10 @@ class TextableChannel(PartialChannel):
         block completes.
 
         ```py
-        await channel.trigger_typing()   # type for 10s
+        await channel.trigger_typing()  # type for 10s
 
         async with channel.trigger_typing():
-            await asyncio.sleep(35)            # keep typing until this finishes
+            await asyncio.sleep(35)  # keep typing until this finishes
         ```
 
         !!! note
@@ -1197,9 +1193,9 @@ class PermissibleGuildChannel(GuildChannel):
             If an internal error occurs on Discord while handling the request.
         """
         if target_type is undefined.UNDEFINED:
-            assert not isinstance(
-                target, int
-            ), "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
+            assert not isinstance(target, int), (
+                "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
+            )
             return await self.app.rest.edit_permission_overwrite(self.id, target, allow=allow, deny=deny, reason=reason)
 
         return await self.app.rest.edit_permission_overwrite(
@@ -1547,10 +1543,7 @@ The following types are in this:
 * [`hikari.channels.GuildNewsChannel`][]
 """
 
-WebhookChannelTypes: typing.Tuple[typing.Type[GuildTextChannel], typing.Type[GuildNewsChannel]] = (
-    GuildTextChannel,
-    GuildNewsChannel,
-)
+WebhookChannelTypes: tuple[type[GuildTextChannel], type[GuildNewsChannel]] = (GuildTextChannel, GuildNewsChannel)
 """Tuple of the channel types which are valid for [`hikari.channels.WebhookChannelT`][].
 
 This includes:

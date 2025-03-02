@@ -1,3 +1,71 @@
+## 2.1.1 (2025-02-26)
+
+### Features
+
+- Allow specifying a reason for message deletions ([#2066](https://github.com/hikari-py/hikari/issues/2066))
+- Allow setting `name` and `value` of an `EmbedField` to an empty string. ([#2105](https://github.com/hikari-py/hikari/issues/2105))
+
+### Bugfixes
+
+- Fixed Entitlement `starts_at` and `ends_at` erroring when set to `None`. ([#2149](https://github.com/hikari-py/hikari/issues/2149))
+- Properly handle and error on Cloudflare bans ([#2168](https://github.com/hikari-py/hikari/issues/2168))
+
+### Documentation Improvements
+
+- Added missing documentation for `GatewayShard` and for trait `ShardAware`, adding missing errors which can be thrown. ([#2100](https://github.com/hikari-py/hikari/issues/2100))
+
+---
+## 2.1.0 (2024-09-25)
+
+### Breaking Changes
+
+- `VoiceState.member` can now be `None` in cases where Discord doesn't send the relevant information ([#2038](https://github.com/hikari-py/hikari/issues/2038))
+
+### Features
+
+- Add the optional audit log `reason` argument to `hikari.api.rest.RESTClient.delete_channel` and
+  `hikari.impl.rest.RESTClientImpl.delete_channel`, the same way it already exists for e.g.
+  `edit_channel` ([#2058](https://github.com/hikari-py/hikari/issues/2058))
+
+### Bugfixes
+
+- Fix issue when deserializing voice states with missing member data ([#2038](https://github.com/hikari-py/hikari/issues/2038))
+- Fix `fetch_application_emojis` endpoint deserialization ([#2050](https://github.com/hikari-py/hikari/issues/2050))
+- Fix uploading files when using aiohttp 3.10.6 and onwards ([#2059](https://github.com/hikari-py/hikari/issues/2059))
+
+---
+## 2.0.0 (2024-08-28)
+
+### Breaking Changes
+
+- Drop Python 3.8 support. ([#2008](https://github.com/hikari-py/hikari/issues/2008))
+
+### Features
+
+- Implement stage instances ([#1725](https://github.com/hikari-py/hikari/issues/1725))
+- Add Python 3.13 support ([#1793](https://github.com/hikari-py/hikari/issues/1793))
+- Add `title` and `description` fields to `Attachment`. ([#1945](https://github.com/hikari-py/hikari/issues/1945))
+- Add `display_name` to `PartialUser` ([#1951](https://github.com/hikari-py/hikari/issues/1951))
+- Remove `Optional` type hint from `CommandInteraction.options` - it will now always be an empty sequence when not provided. ([#1965](https://github.com/hikari-py/hikari/issues/1965))
+- Application-bound emojis API support. ([#1990](https://github.com/hikari-py/hikari/issues/1990))
+- Add `Member.guild_flag` and matching `GuildMemberFlags` enum. ([#2004](https://github.com/hikari-py/hikari/issues/2004))
+- Add `Message.thread` field. ([#2012](https://github.com/hikari-py/hikari/issues/2012))
+- Add new voice endpoints (`fetch_my_voice_state` and `fetch_voice_state`) ([#2016](https://github.com/hikari-py/hikari/issues/2016))
+- Add `fetch_role` method to `RESTClient` ([#2020](https://github.com/hikari-py/hikari/issues/2020))
+
+### Bugfixes
+
+- Fix incorrect cleanup when failing to create request with a web reader ([#1946](https://github.com/hikari-py/hikari/issues/1946))
+- Fix serializing JSON dicts with enum values as keys.
+  See [#1955](https://github.com/hikari-py/hikari/issues/1955) ([#1957](https://github.com/hikari-py/hikari/issues/1957))
+- Use Discord Media Proxy instead of CDN for animated stickers urls ([#1982](https://github.com/hikari-py/hikari/issues/1982))
+- Use correct URL route for scheduled event covers. ([#1983](https://github.com/hikari-py/hikari/issues/1983))
+- Perform proper comparison when checking `CustomEmoji` against `KnownCustomEmoji`. ([#1986](https://github.com/hikari-py/hikari/issues/1986))
+- Add `NITRO_BASIC` attribute to `PremiumType` ([#1988](https://github.com/hikari-py/hikari/issues/1988))
+- Fix incorrectly deserialized field `type` in `ChannelOverwriteEntryInfo` ([#1993](https://github.com/hikari-py/hikari/issues/1993))
+- Add missing `AuditLogChangeKey.COMMUNICATION_DISABLED_UNTIL` and matching key deserialization ([#1996](https://github.com/hikari-py/hikari/issues/1996))
+
+---
 ## 2.0.0.dev126 (2024-06-20)
 
 ### Features

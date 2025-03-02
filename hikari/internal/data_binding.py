@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Data binding utilities."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -58,7 +58,7 @@ if typing.TYPE_CHECKING:
 Headers = typing.Mapping[str, str]
 """Type hint for HTTP headers."""
 
-Query = typing.Union[typing.Dict[str, str], multidict.MultiDict[str]]
+Query = typing.Union[dict[str, str], multidict.MultiDict[str]]
 """Type hint for HTTP query string."""
 
 # MyPy does not support recursive types yet. This has been ongoing for a long time, unfortunately.
@@ -91,7 +91,7 @@ the JSON-ish object, as well as raises a [`ValueError`][] on an incorrect JSON p
 """
 
 _StringMapBuilderArg = typing.Union[
-    typing.Mapping[str, str], multidict.MultiMapping[str], typing.Iterable[typing.Tuple[str, str]]
+    typing.Mapping[str, str], multidict.MultiMapping[str], typing.Iterable[tuple[str, str]]
 ]
 
 _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
@@ -99,15 +99,18 @@ _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
 _UTF_8: typing.Final[str] = "utf-8"
 
 default_json_dumps: JSONEncoder
-"""Default json encoder to use."""
+"""Default JSON encoder to use."""
 
 default_json_loads: JSONDecoder
-"""Default json decoder to use."""
+"""Default JSON decoder to use."""
 
 try:
     import orjson
 
-    default_json_dumps = orjson.dumps
+    def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
+        """Encode a JSON object to [`bytes`][]."""
+        return orjson.dumps(obj, option=orjson.OPT_NON_STR_KEYS)
+
     default_json_loads = orjson.loads
 except ModuleNotFoundError:
     import json
@@ -115,7 +118,7 @@ except ModuleNotFoundError:
     _json_separators = (",", ":")
 
     def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
-        """Encode a JSON object to a [`str`][]."""
+        """Encode a JSON object to [`bytes`][]."""
         return json.dumps(obj, separators=_json_separators).encode(_UTF_8)
 
     default_json_loads = json.loads
@@ -136,8 +139,8 @@ class URLEncodedFormBuilder:
     __slots__: typing.Sequence[str] = ("_fields", "_resources")
 
     def __init__(self) -> None:
-        self._fields: typing.List[typing.Tuple[str, typing.Union[str, aiohttp.BytesPayload], typing.Optional[str]]] = []
-        self._resources: typing.List[typing.Tuple[str, files.Resource[files.AsyncReader]]] = []
+        self._fields: list[tuple[str, typing.Union[str, aiohttp.BytesPayload], typing.Optional[str]]] = []
+        self._resources: list[tuple[str, files.Resource[files.AsyncReader]]] = []
 
     def add_field(
         self, name: str, data: typing.Union[str, bytes], *, content_type: typing.Optional[str] = None
@@ -245,7 +248,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
 
 
 @typing.final
-class JSONObjectBuilder(typing.Dict[str, JSONish]):
+class JSONObjectBuilder(dict[str, JSONish]):
     """Helper class used to quickly build JSON objects from various values.
 
     If provided with any values that are [`hikari.undefined.UNDEFINED`][],
@@ -391,7 +394,7 @@ class JSONObjectBuilder(typing.Dict[str, JSONish]):
             self[key] = [str(int(value)) for value in values]
 
 
-def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterable[T_co], /) -> typing.List[T]:
+def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterable[T_co], /) -> list[T]:
     """Cast an array of enum variants while ignoring unrecognised variant types.
 
     Parameters
@@ -409,7 +412,7 @@ def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Ite
     typing.List[T]
         A list of the casted variants (with any unrecognised types ignored).
     """
-    results: typing.List[T] = []
+    results: list[T] = []
 
     for value in raw_values:
         try:

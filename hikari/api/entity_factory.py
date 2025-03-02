@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Core interface for an object that serializes/deserializes API objects."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("EntityFactory", "GatewayGuildDefinition")
@@ -881,7 +881,7 @@ class EntityFactory(abc.ABC):
     @abc.abstractmethod
     def serialize_embed(
         self, embed: embed_models.Embed
-    ) -> typing.Tuple[data_binding.JSONObject, typing.List[files.Resource[files.AsyncReader]]]:
+    ) -> tuple[data_binding.JSONObject, list[files.Resource[files.AsyncReader]]]:
         """Serialize an embed object to a json serializable dict.
 
         Parameters

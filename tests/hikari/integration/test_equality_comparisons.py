@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Tomxey
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,6 +17,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 
 import mock
@@ -70,6 +71,7 @@ def make_guild_member(user_id):
         is_mute=False,
         is_pending=False,
         raw_communication_disabled_until=None,
+        guild_flags=guilds.GuildMemberFlags.NONE,
     )
 
 

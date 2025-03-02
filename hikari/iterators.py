@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -26,6 +25,7 @@ For consumers of this API, the only class you need to worry about is
 [`hikari.iterators.LazyIterator`][]. Everything else is internal detail only exposed for people who
 wish to extend this API further!
 """
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("LazyIterator", "FlatLazyIterator", "All", "AttrComparator", "BufferedLazyIterator")
@@ -259,9 +259,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
                 consumer(item)
 
     def filter(
-        self,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[ValueT], bool]],
-        **attrs: typing.Any,
+        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
     ) -> LazyIterator[ValueT]:
         """Filter the items by one or more conditions.
 
@@ -296,9 +294,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _FilteredLazyIterator(self, conditions)
 
     def take_while(
-        self,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[ValueT], bool]],
-        **attrs: typing.Any,
+        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
     ) -> LazyIterator[ValueT]:
         """Return each item until any conditions fail or the end is reached.
 
@@ -326,9 +322,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _TakeWhileLazyIterator(self, conditions)
 
     def take_until(
-        self,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[ValueT], bool]],
-        **attrs: typing.Any,
+        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
     ) -> LazyIterator[ValueT]:
         """Return each item until any conditions pass or the end is reached.
 
@@ -356,9 +350,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _TakeWhileLazyIterator(self, ~conditions)
 
     def skip_while(
-        self,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[ValueT], bool]],
-        **attrs: typing.Any,
+        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
     ) -> LazyIterator[ValueT]:
         """Discard items while all conditions are True.
 
@@ -388,9 +380,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _DropWhileLazyIterator(self, conditions)
 
     def skip_until(
-        self,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[ValueT], bool]],
-        **attrs: typing.Any,
+        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
     ) -> LazyIterator[ValueT]:
         """Discard items while all conditions are False.
 
@@ -419,7 +409,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         conditions = self._map_predicates_and_attr_getters("skip_until", *predicates, **attrs)
         return _DropWhileLazyIterator(self, ~conditions)
 
-    def enumerate(self, *, start: int = 0) -> LazyIterator[typing.Tuple[int, ValueT]]:
+    def enumerate(self, *, start: int = 0) -> LazyIterator[tuple[int, ValueT]]:
         """Enumerate the paginated results lazily.
 
         This behaves as an asyncio-friendly version of [`enumerate`][]
@@ -615,9 +605,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             for match in re.findall(r"<@!?(\d+)>", message.content):
                 yield Snowflake(match)
 
+
         mentioned_users = await (
-            channel
-            .history()
+            channel.history()
             .limit(500)
             .map(".content")
             .flat_map(iter_mentioned_users)
@@ -672,13 +662,13 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     @staticmethod
     def _map_predicates_and_attr_getters(
         alg_name: str,
-        *predicates: typing.Union[str, typing.Tuple[str, typing.Any], typing.Callable[[ValueT], bool]],
+        *predicates: typing.Union[str, tuple[str, typing.Any], typing.Callable[[ValueT], bool]],
         **attrs: typing.Any,
     ) -> All[ValueT]:
         if not predicates and not attrs:
             raise TypeError(f"You should provide at least one predicate to {alg_name}()")
 
-        conditions: typing.List[typing.Callable[[ValueT], bool]] = []
+        conditions: list[typing.Callable[[ValueT], bool]] = []
 
         for p in predicates:
             if isinstance(p, tuple):
@@ -755,8 +745,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     An example would look like the following:
 
     ```py
-    async def some_http_call(i):
-        ...
+    async def some_http_call(i): ...
 
 
     class SomeEndpointLazyIterator(BufferedLazyIterator[SomeObject]):
@@ -764,8 +753,9 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
             super().__init__()
             self._i = 0
 
-
-        def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]:
+        def _next_chunk(
+            self,
+        ) -> typing.Optional[typing.Generator[ValueT, None, None]]:
             raw_items = await some_http_call(self._i)
             self._i += 1
 
@@ -837,14 +827,14 @@ class NOOPLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         return await self._iterator.__anext__()
 
 
-class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Tuple[int, ValueT]]):
+class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[tuple[int, ValueT]]):
     __slots__: typing.Sequence[str] = ("_i", "_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], *, start: int) -> None:
         self._i = start
         self._iterator = iterator
 
-    async def __anext__(self) -> typing.Tuple[int, ValueT]:
+    async def __anext__(self) -> tuple[int, ValueT]:
         pair = self._i, await self._iterator.__anext__()
         self._i += 1
         return pair
@@ -911,7 +901,7 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         self._chunk_size = chunk_size
 
     async def __anext__(self) -> typing.Sequence[ValueT]:
-        chunk: typing.List[ValueT] = []
+        chunk: list[ValueT] = []
 
         async for item in self._iterator:
             chunk.append(item)
@@ -1032,11 +1022,11 @@ class _AwaitingLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
     def __init__(self, iterator: LazyIterator[typing.Awaitable[ValueT]], window_size: int) -> None:
         self._iterator = iterator
         self._window_size = float("inf") if window_size <= 0 else window_size
-        self._buffer: typing.List[ValueT] = []
+        self._buffer: list[ValueT] = []
 
     async def __anext__(self) -> ValueT:
         if not self._buffer:
-            coroutines: typing.List[typing.Awaitable[ValueT]] = []
+            coroutines: list[typing.Awaitable[ValueT]] = []
 
             while len(coroutines) < self._window_size:
                 try:

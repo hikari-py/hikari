@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Core app interface for application implementations."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -315,6 +315,11 @@ class ShardAware(
             changed.
         status
             The web status to show. If undefined, this will not be changed.
+
+        Raises
+        ------
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
         raise NotImplementedError
 
@@ -349,6 +354,8 @@ class ShardAware(
         RuntimeError
             If the guild passed isn't covered by any of the shards in this sharded
             client.
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
 
     @abc.abstractmethod
@@ -394,6 +401,8 @@ class ShardAware(
         RuntimeError
             If the guild passed isn't covered by any of the shards in this sharded
             client.
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
 
 

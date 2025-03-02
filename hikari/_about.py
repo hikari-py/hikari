@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Package metadata."""
+
 from __future__ import annotations
 
 import typing
@@ -39,5 +39,5 @@ __email__: typing.Final[str] = "davfsa@gmail.com"
 __issue_tracker__: typing.Final[str] = "https://github.com/hikari-py/hikari/issues"
 __license__: typing.Final[str] = "MIT"
 __url__: typing.Final[str] = "https://github.com/hikari-py/hikari"
-__version__: typing.Final[str] = "2.0.0.dev127"
+__version__: typing.Final[str] = "2.1.2.dev0"
 __git_sha1__: typing.Final[str] = "HEAD"

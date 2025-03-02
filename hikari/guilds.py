@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -40,6 +39,7 @@ __all__: typing.Sequence[str] = (
     "GuildPreview",
     "GuildBan",
     "GuildNSFWLevel",
+    "GuildMemberFlags",
     "Member",
     "Integration",
     "IntegrationAccount",
@@ -338,6 +338,26 @@ class GuildWidget:
         return widget_channel
 
 
+@typing.final
+class GuildMemberFlags(enums.Flag):
+    """Represents the flags that a member can have."""
+
+    NONE = 0
+    """No flags."""
+
+    DID_REJOIN = 1 << 0
+    """Member has left and rejoined the guild."""
+
+    COMPLETED_ONBOARDING = 1 << 1
+    """Member has completed onboarding."""
+
+    BYPASSES_VERIFICATION = 1 << 2
+    """Member is exempt from guild verification requirements."""
+
+    STARTED_ONBOARDING = 1 << 3
+    """Member has started onboarding."""
+
+
 @attrs_extensions.with_copy
 @attrs.define(eq=False, kw_only=True, weakref_slot=False)
 class Member(users.User):
@@ -413,6 +433,9 @@ class Member(users.User):
     !!! note
         This takes precedence over [`hikari.guilds.Member.avatar_hash`][].
     """
+
+    guild_flags: typing.Union[GuildMemberFlags, int] = attrs.field(eq=False, hash=False, repr=False)
+    """The flags this member has in the guild."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -553,7 +576,7 @@ class Member(users.User):
         typing.Sequence[hikari.guilds.Role]
             The roles the users has.
         """
-        roles: typing.List[Role] = []
+        roles: list[Role] = []
 
         if not isinstance(self.user.app, traits.CacheAware):
             return roles

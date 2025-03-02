@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -20,6 +19,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Normalize coverage collected across runners."""
+
+from __future__ import annotations
+
 import sqlite3
 
 connection = sqlite3.connect(".coverage")

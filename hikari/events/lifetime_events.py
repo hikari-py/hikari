@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -57,7 +56,7 @@ class StartingEvent(base_events.Event):
         to try to access a database that has not yet connected fully).
 
     If you want to do something _after_ the application has initialized, you
-    should consider using [`hikari.events.lifetime_events.StartingEvent`][] instead.
+    should consider using [`hikari.events.lifetime_events.StartedEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -99,7 +98,7 @@ class StoppingEvent(base_events.Event):
         on a connection still being available to complete.
 
     If you want to do something _after_ the disconnection has occurred, you
-    should consider using [`hikari.events.lifetime_events.StoppingEvent`][] instead.
+    should consider using [`hikari.events.lifetime_events.StoppedEvent`][] instead.
     """
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
