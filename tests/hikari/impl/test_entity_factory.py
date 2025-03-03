@@ -4561,7 +4561,6 @@ class TestEntityFactoryImpl:
         del command_interaction_payload["data"]["resolved"]
         del command_interaction_payload["data"]["options"]
         del command_interaction_payload["guild_locale"]
-        del command_interaction_payload["app_permissions"]
         del command_interaction_payload["data"]["guild_id"]
 
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
@@ -4572,7 +4571,6 @@ class TestEntityFactoryImpl:
         assert interaction.options == []
         assert interaction.resolved is None
         assert interaction.guild_locale is None
-        assert interaction.app_permissions is None
         assert interaction.registered_guild_id is None
 
     @pytest.fixture
@@ -4973,6 +4971,7 @@ class TestEntityFactoryImpl:
                 "channel_id": "345626669114982999",
                 "application_id": "290926444748734465",
                 "locale": "es-ES",
+                "app_permissions": "5431234",
                 "entitlements": [
                     {
                         "id": "696969696969696",
@@ -4997,7 +4996,6 @@ class TestEntityFactoryImpl:
         assert interaction.user == entity_factory_impl.deserialize_user(user_payload)
         assert interaction.values == ()
         assert interaction.guild_locale is None
-        assert interaction.app_permissions is None
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     @pytest.fixture
@@ -5021,6 +5019,7 @@ class TestEntityFactoryImpl:
             "application_id": "290926444748734465",
             "locale": "en-US",
             "guild_locale": "es-ES",
+            "app_permissions": "5431234",
             "entitlements": [
                 {
                     "id": "696969696969696",

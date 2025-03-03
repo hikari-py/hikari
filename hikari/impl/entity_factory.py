@@ -637,22 +637,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_models.ApplicationIntegrationType, application_models.ApplicationIntegrationConfiguration
         ] = {}
 
-        if (integration_types_config_payload := payload.get("integration_types_config")) is not None:
-            for raw_type, integration_payload in integration_types_config_payload.items():
-                integration_type = application_models.ApplicationIntegrationType(int(raw_type))
+        for raw_type, integration_payload in payload.get("integration_types_config", {}).items():
+            integration_type = application_models.ApplicationIntegrationType(int(raw_type))
 
-                oauth2_install_parameters = None
-                if oauth2_install_params_payload := integration_payload.get("oauth2_install_params"):
-                    oauth2_install_parameters = application_models.OAuth2InstallParameters(
-                        scopes=[
-                            application_models.OAuth2Scope(scope) for scope in oauth2_install_params_payload["scopes"]
-                        ],
-                        permissions=permission_models.Permissions(int(oauth2_install_params_payload["permissions"])),
-                    )
-
-                integration_types_config[integration_type] = application_models.ApplicationIntegrationConfiguration(
-                    oauth2_install_parameters=oauth2_install_parameters
+            oauth2_install_parameters = None
+            if (oauth2_install_params_payload := integration_payload.get("oauth2_install_params")) is not None:
+                oauth2_install_parameters = application_models.OAuth2InstallParameters(
+                    scopes=[
+                        application_models.OAuth2Scope(scope) for scope in oauth2_install_params_payload["scopes"]
+                    ],
+                    permissions=permission_models.Permissions(int(oauth2_install_params_payload["permissions"])),
                 )
+
+            integration_types_config[integration_type] = application_models.ApplicationIntegrationConfiguration(
+                oauth2_install_parameters=oauth2_install_parameters
+            )
 
         return application_models.Application(
             app=self._app,
@@ -2313,15 +2312,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
-        integration_types: typing.MutableSequence[application_models.ApplicationIntegrationType] = []
-        if (integration_types_payload := payload.get("integration_types")) is not None:
-            for integration_type_payload in integration_types_payload:
-                integration_types.append(application_models.ApplicationIntegrationType(int(integration_type_payload)))
+        integration_types = [
+            application_models.ApplicationIntegrationType(int(integration_type))
+            for integration_type in payload.get("integration_types", ())
+        ]
 
-        context_types: typing.MutableSequence[application_models.ApplicationContextType] = []
-        if (context_types_payload := payload.get("contexts")) is not None:
-            for context_type_payload in context_types_payload:
-                context_types.append(application_models.ApplicationContextType(int(context_type_payload)))
+        context_types = [
+            application_models.ApplicationContextType(int(context)) for context in payload.get("contexts", ())
+        ]
 
         return commands.SlashCommand(
             app=self._app,
@@ -2366,15 +2364,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             default_member_permissions = permission_models.Permissions(default_member_permissions or 0)
 
-        integration_types: typing.MutableSequence[application_models.ApplicationIntegrationType] = []
-        if (integration_types_payload := payload.get("integration_types")) is not None:
-            for integration_type_payload in integration_types_payload:
-                integration_types.append(application_models.ApplicationIntegrationType(int(integration_type_payload)))
+        integration_types = [
+            application_models.ApplicationIntegrationType(int(integration_type))
+            for integration_type in payload.get("integration_types", ())
+        ]
 
-        context_types: typing.MutableSequence[application_models.ApplicationContextType] = []
-        if (context_types_payload := payload.get("contexts")) is not None:
-            for context_type_payload in context_types_payload:
-                context_types.append(application_models.ApplicationContextType(int(context_type_payload)))
+        context_types = [
+            application_models.ApplicationContextType(int(context)) for context in payload.get("contexts", ())
+        ]
 
         return commands.ContextMenuCommand(
             app=self._app,
@@ -2431,7 +2428,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_partial_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
         authorizing_integration_owners = {
             application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
-                int(integration_owner_id)
+                integration_owner_id
             )
             for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
         }
@@ -2623,13 +2620,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_target_id := data_payload.get("target_id"):
             target_id = snowflakes.Snowflake(raw_target_id)
 
-        app_perms = payload.get("app_permissions")
-
         entitlements = [self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())]
 
         authorizing_integration_owners = {
             application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
-                int(integration_owner_id)
+                integration_owner_id
             )
             for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
         }
@@ -2653,7 +2648,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             options=options,
             resolved=resolved,
             target_id=target_id,
-            app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
+            app_permissions=permission_models.Permissions(payload["app_permissions"]),
             registered_guild_id=snowflakes.Snowflake(data_payload["guild_id"]) if "guild_id" in data_payload else None,
             entitlements=entitlements,
             authorizing_integration_owners=authorizing_integration_owners,
@@ -2684,7 +2679,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         authorizing_integration_owners = {
             application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
-                int(integration_owner_id)
+                integration_owner_id
             )
             for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
         }
@@ -2736,19 +2731,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         authorizing_integration_owners = {
             application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
-                int(integration_owner_id)
+                integration_owner_id
             )
             for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
         }
 
-        app_perms = payload.get("app_permissions")
         return modal_interactions.ModalInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
             id=snowflakes.Snowflake(payload["id"]),
             type=base_interactions.InteractionType(payload["type"]),
             guild_id=guild_id,
-            app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
+            app_permissions=permission_models.Permissions(payload["app_permissions"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             locale=locales.Locale(payload["locale"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
@@ -2836,12 +2830,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         authorizing_integration_owners = {
             application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
-                int(integration_owner_id)
+                integration_owner_id
             )
             for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
         }
 
-        app_perms = payload.get("app_permissions")
         return component_interactions.ComponentInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2860,7 +2853,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             message=self.deserialize_message(payload["message"]),
             locale=locales.Locale(payload["locale"]),
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
-            app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
+            app_permissions=permission_models.Permissions(payload["app_permissions"]),
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),

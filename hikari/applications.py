@@ -869,9 +869,10 @@ class ApplicationIntegrationConfiguration:
 class OAuth2InstallParameters:
     """OAuth2 Install Parameters."""
 
-    scopes: typing.Sequence[OAuth2Scope]
+    scopes: typing.Sequence[OAuth2Scope] = attrs.field(eq=False, hash=False, repr=True)
     """The scopes the application will be added to the server with."""
-    permissions: permissions_.Permissions
+
+    permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=True)
     """The permissions that will be requested for the bot role."""
 
 
@@ -884,10 +885,6 @@ class ApplicationIntegrationType(int, enums.Enum):
 
     USER_INSTALL = 1
     """Application is installable to all users."""
-
-    @classmethod
-    def all(cls) -> typing.Sequence[ApplicationIntegrationType]:
-        return (ApplicationIntegrationType.GUILD_INSTALL, ApplicationIntegrationType.USER_INSTALL)
 
 
 @typing.final
