@@ -4219,6 +4219,8 @@ class TestEntityFactoryImpl:
             "type": 1,
             "version": 1,
             "application_id": "1",
+            "authorizing_integration_owners": {"0": "123", "1": "456"},
+            "context": 2,
         }
 
     def test_deserialize_partial_interaction(self, mock_app, entity_factory_impl, partial_interaction_payload):
@@ -4230,6 +4232,13 @@ class TestEntityFactoryImpl:
         assert interaction.type == 1
         assert interaction.version == 1
         assert interaction.application_id == 1
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.GUILD_INSTALL
+        ] == snowflakes.Snowflake(123)
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.USER_INSTALL
+        ] == snowflakes.Snowflake(456)
+        assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
         assert type(interaction) is base_interactions.PartialInteraction
 
     @pytest.fixture
@@ -4424,6 +4433,8 @@ class TestEntityFactoryImpl:
                     "subscription_id": "1019653835926409216",
                 }
             ],
+            "authorizing_integration_owners": {"0": "123", "1": "456"},
+            "context": 2,
         }
 
     def test_deserialize_command_interaction(
@@ -4460,6 +4471,13 @@ class TestEntityFactoryImpl:
         assert len(interaction.entitlements) == 1
         assert interaction.entitlements[0].id == 696969696969696
         assert interaction.registered_guild_id == 12345678
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.GUILD_INSTALL
+        ] == snowflakes.Snowflake(123)
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.USER_INSTALL
+        ] == snowflakes.Snowflake(456)
+        assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
 
         # CommandInteractionOption
         assert len(interaction.options) == 1
@@ -4523,6 +4541,8 @@ class TestEntityFactoryImpl:
                     "subscription_id": "1019653835926409216",
                 }
             ],
+            "authorizing_integration_owners": {"0": "123", "1": "456"},
+            "context": 2,
         }
 
     def test_deserialize_command_interaction_with_context_menu_field(
@@ -4531,6 +4551,14 @@ class TestEntityFactoryImpl:
         interaction = entity_factory_impl.deserialize_command_interaction(context_menu_command_interaction_payload)
         assert interaction.target_id == 115590097100865541
         assert isinstance(interaction, command_interactions.CommandInteraction)
+
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.GUILD_INSTALL
+        ] == snowflakes.Snowflake(123)
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.USER_INSTALL
+        ] == snowflakes.Snowflake(456)
+        assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
 
     def test_deserialize_command_interaction_with_null_attributes(
         self, entity_factory_impl, command_interaction_payload, user_payload
@@ -4599,6 +4627,8 @@ class TestEntityFactoryImpl:
                     "subscription_id": "1019653835926409216",
                 }
             ],
+            "authorizing_integration_owners": {"0": "123", "1": "456"},
+            "context": 2,
         }
 
     def test_deserialize_autocomplete_interaction(
@@ -4626,6 +4656,13 @@ class TestEntityFactoryImpl:
         assert interaction.locale is locales.Locale.ES_ES
         assert interaction.guild_locale is locales.Locale.EN_US
         assert interaction.registered_guild_id == 12345678
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.GUILD_INSTALL
+        ] == snowflakes.Snowflake(123)
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.USER_INSTALL
+        ] == snowflakes.Snowflake(456)
+        assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
 
         # AutocompleteInteractionOption
         assert len(interaction.options) == 1
@@ -4877,6 +4914,8 @@ class TestEntityFactoryImpl:
                     "subscription_id": "1019653835926409216",
                 }
             ],
+            "authorizing_integration_owners": {"0": "123", "1": "456"},
+            "context": 2,
         }
 
     def test_deserialize_component_interaction(
@@ -4911,6 +4950,13 @@ class TestEntityFactoryImpl:
         assert interaction.guild_locale == "en-US"
         assert interaction.guild_locale is locales.Locale.EN_US
         assert interaction.app_permissions == 5431234
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.GUILD_INSTALL
+        ] == snowflakes.Snowflake(123)
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.USER_INSTALL
+        ] == snowflakes.Snowflake(456)
+        assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
         # ResolvedData
         assert interaction.resolved == entity_factory_impl._deserialize_resolved_option_data(
             interaction_resolved_data_payload, guild_id=290926798626357999
@@ -4949,6 +4995,8 @@ class TestEntityFactoryImpl:
                         "subscription_id": "1019653835926409216",
                     }
                 ],
+                "authorizing_integration_owners": {"0": "123", "1": "456"},
+                "context": 0,
             }
         )
 
@@ -4995,6 +5043,8 @@ class TestEntityFactoryImpl:
                     "subscription_id": "1019653835926409216",
                 }
             ],
+            "authorizing_integration_owners": {"0": "123", "1": "456"},
+            "context": 2,
         }
 
     def test_deserialize_modal_interaction(
@@ -5035,6 +5085,13 @@ class TestEntityFactoryImpl:
 
         interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
         assert interaction.user.id == 115590097100865541
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.GUILD_INSTALL
+        ] == snowflakes.Snowflake(123)
+        assert interaction.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.USER_INSTALL
+        ] == snowflakes.Snowflake(456)
+        assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
 
     def test_deserialize_modal_interaction_with_unrecognized_component(
         self, entity_factory_impl, modal_interaction_payload
