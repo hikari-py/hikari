@@ -2437,6 +2437,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return {"id": str(permission.id), "type": permission.type, "permission": permission.has_access}
 
     def deserialize_partial_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
+        authorizing_integration_owners = {
+            application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
+                int(integration_owner_id)
+            )
+            for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
+        }
+
         return base_interactions.PartialInteraction(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -2444,6 +2451,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             token=payload["token"],
             version=payload["version"],
             application_id=snowflakes.Snowflake(payload["application_id"]),
+            authorizing_integration_owners=authorizing_integration_owners,
+            context=application_models.ApplicationContextType(payload["context"]),
         )
 
     def _deserialize_interaction_command_option(
@@ -2626,6 +2635,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         entitlements = [self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())]
 
+        authorizing_integration_owners = {
+            application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
+                int(integration_owner_id)
+            )
+            for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
+        }
+
         return command_interactions.CommandInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2648,6 +2664,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
             registered_guild_id=snowflakes.Snowflake(data_payload["guild_id"]) if "guild_id" in data_payload else None,
             entitlements=entitlements,
+            authorizing_integration_owners=authorizing_integration_owners,
+            context=application_models.ApplicationContextType(payload["context"]),
         )
 
     def deserialize_autocomplete_interaction(
@@ -2672,6 +2690,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member = None
             user = self.deserialize_user(payload["user"])
 
+        authorizing_integration_owners = {
+            application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
+                int(integration_owner_id)
+            )
+            for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
+        }
+
         return command_interactions.AutocompleteInteraction(
             app=self._app,
             application_id=snowflakes.Snowflake(payload["application_id"]),
@@ -2691,6 +2716,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             registered_guild_id=snowflakes.Snowflake(data_payload["guild_id"]) if "guild_id" in data_payload else None,
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
+            authorizing_integration_owners=authorizing_integration_owners,
+            context=application_models.ApplicationContextType(payload["context"]),
         )
 
     def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
@@ -2715,6 +2742,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if message_payload := payload.get("message"):
             message = self.deserialize_message(message_payload)
 
+        authorizing_integration_owners = {
+            application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
+                int(integration_owner_id)
+            )
+            for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
+        }
+
         app_perms = payload.get("app_permissions")
         return modal_interactions.ModalInteraction(
             app=self._app,
@@ -2734,6 +2768,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             components=self._deserialize_components(data_payload["components"], self._modal_component_type_mapping),
             message=message,
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
+            authorizing_integration_owners=authorizing_integration_owners,
+            context=application_models.ApplicationContextType(payload["context"]),
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
@@ -2806,6 +2842,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if resolved_payload := data_payload.get("resolved"):
             resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
 
+        authorizing_integration_owners = {
+            application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
+                int(integration_owner_id)
+            )
+            for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
+        }
+
         app_perms = payload.get("app_permissions")
         return component_interactions.ComponentInteraction(
             app=self._app,
@@ -2827,6 +2870,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_locale=locales.Locale(payload["guild_locale"]) if "guild_locale" in payload else None,
             app_permissions=permission_models.Permissions(app_perms) if app_perms else None,
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
+            authorizing_integration_owners=authorizing_integration_owners,
+            context=application_models.ApplicationContextType(payload["context"]),
         )
 
     ##################

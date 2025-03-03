@@ -23,6 +23,8 @@ from __future__ import annotations
 import mock
 import pytest
 
+from hikari import applications
+from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari.interactions import base_interactions
@@ -43,6 +45,10 @@ class TestPartialInteraction:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            authorizing_integration_owners={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
+            },
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
     def test_webhook_id_property(self, mock_partial_interaction):
@@ -59,6 +65,10 @@ class TestMessageResponseMixin:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            authorizing_integration_owners={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
+            },
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
     @pytest.mark.asyncio
@@ -208,6 +218,10 @@ class TestModalResponseMixin:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            authorizing_integration_owners={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
+            },
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
     @pytest.mark.asyncio
