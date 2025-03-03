@@ -191,9 +191,9 @@ class GuildMessageCreateEvent(MessageCreateEvent):
             return None
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"Cached channel ID is not a TextableGuildChannel, but a {type(channel).__name__}!"
+        assert channel is None or isinstance(channel, channels.TextableGuildChannel), (
+            f"Cached channel ID is not a TextableGuildChannel, but a {type(channel).__name__}!"
+        )
         return channel
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
@@ -429,9 +429,9 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
             return None
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"Cached channel ID is not a TextableGuildChannel, but a {type(channel).__name__}!"
+        assert channel is None or isinstance(channel, channels.TextableGuildChannel), (
+            f"Cached channel ID is not a TextableGuildChannel, but a {type(channel).__name__}!"
+        )
         return channel
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
@@ -544,9 +544,9 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
             return None
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"Cached channel ID is not a TextableGuildChannel, but a {type(channel).__name__}!"
+        assert channel is None or isinstance(channel, channels.TextableGuildChannel), (
+            f"Cached channel ID is not a TextableGuildChannel, but a {type(channel).__name__}!"
+        )
         return channel
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
@@ -640,9 +640,9 @@ class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
             return None
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"Cached channel ID is not a TextableGuildChannel, but a {type(channel).__name__}!"
+        assert channel is None or isinstance(channel, channels.TextableGuildChannel), (
+            f"Cached channel ID is not a TextableGuildChannel, but a {type(channel).__name__}!"
+        )
         return channel
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
