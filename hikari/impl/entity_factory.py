@@ -643,9 +643,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             oauth2_install_parameters = None
             if (oauth2_install_params_payload := integration_payload.get("oauth2_install_params")) is not None:
                 oauth2_install_parameters = application_models.OAuth2InstallParameters(
-                    scopes=[
-                        application_models.OAuth2Scope(scope) for scope in oauth2_install_params_payload["scopes"]
-                    ],
+                    scopes=[application_models.OAuth2Scope(scope) for scope in oauth2_install_params_payload["scopes"]],
                     permissions=permission_models.Permissions(int(oauth2_install_params_payload["permissions"])),
                 )
 
@@ -2590,6 +2588,30 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             attachments=attachments, channels=channels, members=members, messages=messages, roles=roles, users=users
         )
 
+    def _deserialize_command_message_interaction_metadata(
+        self, payload: data_binding.JSONObject
+    ) -> command_interactions.CommandMessageInteractionMetadata:
+        authorizing_integration_owners = {
+            application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
+                integration_owner_id
+            )
+            for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
+        }
+
+        return command_interactions.CommandMessageInteractionMetadata(
+            interaction_id=payload["id"],
+            type=base_interactions.InteractionType(payload["type"]),
+            user=self.deserialize_user(payload["user"]),
+            authorizing_integration_owners=authorizing_integration_owners,
+            original_response_message_id=snowflakes.Snowflake(payload["original_response_message_id"])
+            if "original_response_message_id" in payload
+            else None,
+            target_user=self.deserialize_user(payload["target_user"]) if "target_user" in payload else None,
+            target_message_id=snowflakes.Snowflake(payload["target_message_id"])
+            if "target_message_id" in payload
+            else None,
+        )
+
     def deserialize_command_interaction(
         self, payload: data_binding.JSONObject
     ) -> command_interactions.CommandInteraction:
@@ -2653,6 +2675,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entitlements=entitlements,
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
+            interaction_metadata=self._deserialize_command_message_interaction_metadata(payload["interaction_metadata"])
+            if "interaction_metadata" in payload
+            else None,
         )
 
     def deserialize_autocomplete_interaction(
@@ -2707,6 +2732,27 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             context=application_models.ApplicationContextType(payload["context"]),
         )
 
+    def _deserialize_modal_message_interaction_metadata(
+        self, payload: data_binding.JSONObject
+    ) -> modal_interactions.ModalMessageInteractionMetadata:
+        authorizing_integration_owners = {
+            application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
+                integration_owner_id
+            )
+            for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
+        }
+
+        return modal_interactions.ModalMessageInteractionMetadata(
+            interaction_id=payload["id"],
+            type=base_interactions.InteractionType(payload["type"]),
+            user=self.deserialize_user(payload["user"]),
+            authorizing_integration_owners=authorizing_integration_owners,
+            original_response_message_id=snowflakes.Snowflake(payload["original_response_message_id"])
+            if "original_response_message_id" in payload
+            else None,
+            triggering_interaction_metadata=NotImplemented,  # FIXME: Unsure how to handle this.
+        )
+
     def deserialize_modal_interaction(self, payload: data_binding.JSONObject) -> modal_interactions.ModalInteraction:
         data_payload = payload["data"]
 
@@ -2756,6 +2802,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
+            interaction_metadata=self._deserialize_modal_message_interaction_metadata(payload["interaction_metadata"])
+            if "interaction_metadata" in payload
+            else None,
         )
 
     def deserialize_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
@@ -2803,6 +2852,27 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload["max_length"] = option.max_length
 
         return payload
+
+    def _deserialize_component_message_interaction_metadata(
+        self, payload: data_binding.JSONObject
+    ) -> component_interactions.ComponentMessageInteractionMetadata:
+        authorizing_integration_owners = {
+            application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
+                integration_owner_id
+            )
+            for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
+        }
+
+        return component_interactions.ComponentMessageInteractionMetadata(
+            interaction_id=payload["id"],
+            type=base_interactions.InteractionType(payload["type"]),
+            user=self.deserialize_user(payload["user"]),
+            authorizing_integration_owners=authorizing_integration_owners,
+            original_response_message_id=snowflakes.Snowflake(payload["original_response_message_id"])
+            if "original_response_message_id" in payload
+            else None,
+            interacted_message_id=snowflakes.Snowflake(payload["interacted_message_id"]),
+        )
 
     def deserialize_component_interaction(
         self, payload: data_binding.JSONObject
@@ -2857,6 +2927,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
+            interaction_metadata=self._deserialize_component_message_interaction_metadata(
+                payload["interaction_metadata"]
+            )
+            if "interaction_metadata" in payload
+            else None,
         )
 
     ##################

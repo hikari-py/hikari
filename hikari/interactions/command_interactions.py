@@ -327,6 +327,9 @@ class CommandInteraction(
     target_id: typing.Optional[snowflakes.Snowflake] = attrs.field(default=None, eq=False, hash=False, repr=True)
     """The target of the command. Only available if the command is a context menu command."""
 
+    interaction_metadata: typing.Optional[CommandMessageInteractionMetadata] = attrs.field(eq=False, repr=True)
+    """Sent if the message is sent as a result of an interaction."""
+
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
@@ -441,3 +444,15 @@ class AutocompleteInteraction(BaseCommandInteraction):
             The choices for the autocomplete.
         """
         await self.app.rest.create_autocomplete_response(self.id, self.token, choices)
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class CommandMessageInteractionMetadata(base_interactions.PartialMessageInteractionMetadata):
+    """FIXME: Do docs."""
+
+    target_user: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
+    """The user the command was run on, present only on user command interactions."""
+
+    target_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the message the command was run on, present only on message command interactions."""
