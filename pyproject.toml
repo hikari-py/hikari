@@ -19,15 +19,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 [build-system]
-requires = ["wheel", "setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.14"]
+build-backend = "hatchling.build"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["hikari*"]
-
-[tool.setuptools.dynamic]
-version = { attr = "hikari._about.__version__" }
+[tool.hatch.version]
+path = "hikari/_about.py"
+pattern = '__version__: typing\.Final\[str\] = \"(?P<version>[^\"]+)\"'
 
 [project]
 dynamic = ["version"]
@@ -119,7 +116,7 @@ mkdocs = [
     # Minify
     "mkdocs-minify-plugin==0.8.0",
     # Towncrier draft changelogs
-    "mkdocs-towncrier==0.1.3",
+    "mkdocs-towncrier==0.1.4",
     # Image viewer ext
     # "mkdocs-glightbox==0.3.7",
 ]
@@ -138,6 +135,9 @@ release = ["twine==6.1.0"]
 ruff = ["ruff==0.9.9"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
+
+[tool.uv]
+required-version = "~=0.5"
 
 [tool.ruff]
 line-length = 120

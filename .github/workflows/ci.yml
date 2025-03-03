@@ -27,26 +27,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Test Installation
         shell: bash
         run: |
-          pip install -r dev-requirements/build.txt
+          uv pip install .
+          uv pip uninstall -y hikari
 
-          pip install .
-          pip uninstall -y hikari
-
-          pip install .[speedups]
-          pip uninstall -y hikari
+          uv pip install .[speedups]
+          uv pip uninstall -y hikari
 
       - name: Run tests
         shell: bash
         run: |
-          pip install -r dev-requirements.txt
+          uv pip install nox
 
           nox -s pytest
           nox -s pytest-all-features -- --cov-append
@@ -118,15 +116,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: 3.9
+
+      - name: Install nox
+        run: |
+          uv pip install nox
 
       - name: Check stubs
         if: always()
         run: |
-          pip install -r dev-requirements.txt
           nox -s generate-stubs
           if [ "$(git status --short)" ]; then
             echo "Stubs were not updated accordingly to the changes. Please run 'nox -s generate-stubs' and commit the changes to fix this."

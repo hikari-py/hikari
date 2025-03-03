@@ -23,14 +23,11 @@
 
 from __future__ import annotations
 
-import os as _os
 import typing as _typing
 
 from nox import options as _options
 from nox import session as _session
 from nox.sessions import Session
-
-from pipelines import config as _pipelines_config
 
 # Default sessions should be defined here
 _options.sessions = ["reformat-code", "codespell", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
@@ -48,10 +45,10 @@ def session(**kwargs: _typing.Any) -> _typing.Callable[[_NoxCallbackSig], _NoxCa
     return decorator
 
 
-def dev_requirements(*dependencies: str) -> _typing.Sequence[str]:
+def dev_groups(*groups: str) -> _typing.Sequence[str]:
     args = []
 
-    for dep in dependencies:
-        args.extend(("-r", _os.path.join(_pipelines_config.DEV_REQUIREMENTS_DIRECTORY, f"{dep}.txt")))
+    for group in groups:
+        args.extend(("--group", group))
 
     return args

@@ -19,14 +19,15 @@ jobs:
           # needs a non-shallow clone.
           fetch-depth: 0
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: 3.9
 
       - name: Check if changelog fragment was added
         run: |
-          pip install -r dev-requirements/towncrier.txt
+          # FIXME: Temporary - https://github.com/astral-sh/uv/issues/8590
+          uv export --only-group=towncrier | uv pip install --requirements=-
 
           if ! towncrier check --compare-with origin/${{ github.base_ref }}; then
             exit 1
