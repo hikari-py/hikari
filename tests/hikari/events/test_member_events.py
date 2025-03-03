@@ -31,7 +31,7 @@ from tests.hikari import hikari_test_helpers
 
 class TestMemberEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> member_events.MemberEvent:
         cls = hikari_test_helpers.mock_class_namespace(
             member_events.MemberEvent,
             slots_=False,
@@ -40,10 +40,10 @@ class TestMemberEvent:
         )
         return cls()
 
-    def test_app_property(self, event):
+    def test_app_property(self, event: member_events.MemberEvent):
         assert event.app is event.user.app
 
-    def test_user_id_property(self, event):
+    def test_user_id_property(self, event: member_events.MemberEvent):
         event.user_id == 456
 
     def test_guild_when_no_cache_trait(self):
@@ -51,14 +51,14 @@ class TestMemberEvent:
 
         assert event.get_guild() is None
 
-    def test_get_guild_when_available(self, event):
+    def test_get_guild_when_available(self, event: member_events.MemberEvent):
         result = event.get_guild()
 
         assert result is event.app.cache.get_available_guild.return_value
         event.app.cache.get_available_guild.assert_called_once_with(123)
         event.app.cache.get_unavailable_guild.assert_not_called()
 
-    def test_guild_when_unavailable(self, event):
+    def test_guild_when_unavailable(self, event: member_events.MemberEvent):
         event.app.cache.get_available_guild.return_value = None
         result = event.get_guild()
 
@@ -69,14 +69,14 @@ class TestMemberEvent:
 
 class TestMemberCreateEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> member_events.MemberCreateEvent:
         return member_events.MemberCreateEvent(shard=None, member=mock.Mock())
 
-    def test_guild_property(self, event):
+    def test_guild_property(self, event: member_events.MemberCreateEvent):
         event.member.guild_id = 123
         event.guild_id == 123
 
-    def test_user_property(self, event):
+    def test_user_property(self, event: member_events.MemberCreateEvent):
         user = object()
         event.member.user = user
         event.user == user
@@ -84,19 +84,19 @@ class TestMemberCreateEvent:
 
 class TestMemberUpdateEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> member_events.MemberUpdateEvent:
         return member_events.MemberUpdateEvent(shard=None, member=mock.Mock(), old_member=mock.Mock(guilds.Member))
 
-    def test_guild_property(self, event):
+    def test_guild_property(self, event: member_events.MemberUpdateEvent):
         event.member.guild_id = 123
         event.guild_id == 123
 
-    def test_user_property(self, event):
+    def test_user_property(self, event: member_events.MemberUpdateEvent):
         user = object()
         event.member.user = user
         event.user == user
 
-    def test_old_user_property(self, event):
+    def test_old_user_property(self, event: member_events.MemberUpdateEvent):
         event.member.guild_id = 123
         event.member.id = 456
 

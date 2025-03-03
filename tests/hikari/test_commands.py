@@ -31,13 +31,13 @@ from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture
-def mock_app():
+def mock_app() -> traits.RESTAware:
     return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
 
 
 class TestPartialCommand:
     @pytest.fixture
-    def mock_command(self, mock_app):
+    def mock_command(self, mock_app: traits.RESTAware) -> commands.PartialCommand:
         return hikari_test_helpers.mock_class_namespace(commands.PartialCommand)(
             app=mock_app,
             id=snowflakes.Snowflake(34123123),
@@ -53,14 +53,16 @@ class TestPartialCommand:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_self(self, mock_command, mock_app):
+    async def test_fetch_self(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         result = await mock_command.fetch_self()
 
         assert result is mock_app.rest.fetch_application_command.return_value
         mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
     @pytest.mark.asyncio
-    async def test_fetch_self_when_guild_id_is_none(self, mock_command, mock_app):
+    async def test_fetch_self_when_guild_id_is_none(
+        self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware
+    ):
         mock_command.guild_id = None
 
         result = await mock_command.fetch_self()
@@ -69,7 +71,7 @@ class TestPartialCommand:
         mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
     @pytest.mark.asyncio
-    async def test_edit_without_optional_args(self, mock_command, mock_app):
+    async def test_edit_without_optional_args(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         result = await mock_command.edit()
 
         assert result is mock_app.rest.edit_application_command.return_value
@@ -83,7 +85,7 @@ class TestPartialCommand:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_with_optional_args(self, mock_command, mock_app):
+    async def test_edit_with_optional_args(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         mock_option = object()
         result = await mock_command.edit(name="new name", description="very descrypt", options=[mock_option])
 
@@ -93,7 +95,7 @@ class TestPartialCommand:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_when_guild_id_is_none(self, mock_command, mock_app):
+    async def test_edit_when_guild_id_is_none(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         mock_command.guild_id = None
 
         result = await mock_command.edit()
@@ -109,13 +111,15 @@ class TestPartialCommand:
         )
 
     @pytest.mark.asyncio
-    async def test_delete(self, mock_command, mock_app):
+    async def test_delete(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         await mock_command.delete()
 
         mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
     @pytest.mark.asyncio
-    async def test_delete_when_guild_id_is_none(self, mock_command, mock_app):
+    async def test_delete_when_guild_id_is_none(
+        self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware
+    ):
         mock_command.guild_id = None
 
         await mock_command.delete()
@@ -123,7 +127,7 @@ class TestPartialCommand:
         mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
     @pytest.mark.asyncio
-    async def test_fetch_guild_permissions(self, mock_command, mock_app):
+    async def test_fetch_guild_permissions(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         result = await mock_command.fetch_guild_permissions(123321)
 
         assert result is mock_app.rest.fetch_application_command_permissions.return_value
@@ -132,7 +136,7 @@ class TestPartialCommand:
         )
 
     @pytest.mark.asyncio
-    async def test_set_guild_permissions(self, mock_command, mock_app):
+    async def test_set_guild_permissions(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         mock_permissions = object()
 
         result = await mock_command.set_guild_permissions(312123, mock_permissions)

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import contextlib
 import copy as stdlib_copy
+import typing
 
 import attrs
 import mock
@@ -381,7 +382,7 @@ class TestCopyDecorator:
 
     def test___deep__copy(self):
         class CopyingMock(mock.Mock):
-            def __call__(self, /, *args, **kwargs):
+            def __call__(self, /, *args: typing.Any, **kwargs: typing.Any):
                 args = list(args)
                 args[1] = dict(args[1])
                 return super().__call__(*args, **kwargs)

@@ -28,16 +28,16 @@ from hikari import embeds
 
 class TestEmbedResource:
     @pytest.fixture
-    def resource(self):
+    def resource(self) -> embeds.EmbedResource:
         return embeds.EmbedResource(resource=mock.Mock())
 
-    def test_url(self, resource):
+    def test_url(self, resource: embeds.EmbedResource):
         assert resource.url is resource.resource.url
 
-    def test_filename(self, resource):
+    def test_filename(self, resource: embeds.EmbedResource):
         assert resource.filename is resource.resource.filename
 
-    def test_stream(self, resource):
+    def test_stream(self, resource: embeds.EmbedResource):
         mock_executor = object()
 
         assert resource.stream(executor=mock_executor, head_only=True) is resource.resource.stream.return_value
@@ -47,20 +47,20 @@ class TestEmbedResource:
 
 class TestEmbedResourceWithProxy:
     @pytest.fixture
-    def resource_with_proxy(self):
+    def resource_with_proxy(self) -> embeds.EmbedResourceWithProxy:
         return embeds.EmbedResourceWithProxy(resource=mock.Mock(), proxy_resource=mock.Mock())
 
-    def test_proxy_url(self, resource_with_proxy):
+    def test_proxy_url(self, resource_with_proxy: embeds.EmbedResourceWithProxy):
         assert resource_with_proxy.proxy_url is resource_with_proxy.proxy_resource.url
 
-    def test_proxy_url_when_resource_is_none(self, resource_with_proxy):
+    def test_proxy_url_when_resource_is_none(self, resource_with_proxy: embeds.EmbedResourceWithProxy):
         resource_with_proxy.proxy_resource = None
         assert resource_with_proxy.proxy_url is None
 
-    def test_proxy_filename(self, resource_with_proxy):
+    def test_proxy_filename(self, resource_with_proxy: embeds.EmbedResourceWithProxy):
         assert resource_with_proxy.proxy_filename is resource_with_proxy.proxy_resource.filename
 
-    def test_proxy_filename_when_resource_is_none(self, resource_with_proxy):
+    def test_proxy_filename_when_resource_is_none(self, resource_with_proxy: embeds.EmbedResourceWithProxy):
         resource_with_proxy.proxy_resource = None
         assert resource_with_proxy.proxy_filename is None
 

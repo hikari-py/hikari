@@ -20,6 +20,8 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
@@ -33,13 +35,13 @@ from hikari.interactions import command_interactions
 
 
 @pytest.fixture
-def mock_app():
+def mock_app() -> traits.RESTAware:
     return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
 
 
 class TestCommandInteraction:
     @pytest.fixture
-    def mock_command_interaction(self, mock_app):
+    def mock_command_interaction(self, mock_app: traits.RESTAware) -> command_interactions.CommandInteraction:
         return command_interactions.CommandInteraction(
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
@@ -76,14 +78,18 @@ class TestCommandInteraction:
             ],
         )
 
-    def test_build_response(self, mock_command_interaction, mock_app):
+    def test_build_response(
+        self, mock_command_interaction: command_interactions.CommandInteraction, mock_app: mock.Mock
+    ):
         mock_app.rest.interaction_message_builder = mock.Mock()
         builder = mock_command_interaction.build_response()
 
         assert builder is mock_app.rest.interaction_message_builder.return_value
         mock_app.rest.interaction_message_builder.assert_called_once_with(base_interactions.ResponseType.MESSAGE_CREATE)
 
-    def test_build_deferred_response(self, mock_command_interaction, mock_app):
+    def test_build_deferred_response(
+        self, mock_command_interaction: command_interactions.CommandInteraction, mock_app: traits.RESTAware
+    ):
         mock_app.rest.interaction_deferred_builder = mock.Mock()
         builder = mock_command_interaction.build_deferred_response()
 
@@ -93,25 +99,31 @@ class TestCommandInteraction:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_channel(self, mock_command_interaction, mock_app):
+    async def test_fetch_channel(
+        self, mock_command_interaction: command_interactions.CommandInteraction, mock_app: traits.RESTAware
+    ):
         mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableGuildChannel)
         assert await mock_command_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
 
         mock_app.rest.fetch_channel.assert_awaited_once_with(3123123)
 
-    def test_get_channel(self, mock_command_interaction, mock_app):
+    def test_get_channel(
+        self, mock_command_interaction: command_interactions.CommandInteraction, mock_app: traits.RESTAware
+    ):
         mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.TextableGuildChannel)
 
         assert mock_command_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
         mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
 
-    def test_get_channel_when_not_cached(self, mock_command_interaction, mock_app):
+    def test_get_channel_when_not_cached(
+        self, mock_command_interaction: command_interactions.CommandInteraction, mock_app: traits.RESTAware
+    ):
         mock_app.cache.get_guild_channel.return_value = None
 
         assert mock_command_interaction.get_channel() is None
         mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
 
-    def test_get_channel_without_cache(self, mock_command_interaction):
+    def test_get_channel_without_cache(self, mock_command_interaction: command_interactions.CommandInteraction):
         mock_command_interaction.app = mock.Mock(traits.RESTAware)
 
         assert mock_command_interaction.get_channel() is None
@@ -119,7 +131,7 @@ class TestCommandInteraction:
 
 class TestAutocompleteInteraction:
     @pytest.fixture
-    def mock_autocomplete_interaction(self, mock_app):
+    def mock_autocomplete_interaction(self, mock_app: traits.RESTAware) -> command_interactions.AutocompleteInteraction:
         return command_interactions.AutocompleteInteraction(
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
@@ -155,13 +167,18 @@ class TestAutocompleteInteraction:
         )
 
     @pytest.fixture
-    def mock_command_choices(self):
+    def mock_command_choices(self) -> typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]:
         return [
             special_endpoints.AutocompleteChoiceBuilder(name="a", value="b"),
             special_endpoints.AutocompleteChoiceBuilder(name="foo", value="bar"),
         ]
 
-    def test_build_response(self, mock_autocomplete_interaction, mock_app, mock_command_choices):
+    def test_build_response(
+        self,
+        mock_autocomplete_interaction: command_interactions.AutocompleteInteraction,
+        mock_app: traits.RESTAware,
+        mock_command_choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
+    ):
         mock_app.rest.interaction_autocomplete_builder = mock.Mock()
         builder = mock_autocomplete_interaction.build_response(mock_command_choices)
 
@@ -172,8 +189,8 @@ class TestAutocompleteInteraction:
     async def test_create_response(
         self,
         mock_autocomplete_interaction: command_interactions.AutocompleteInteraction,
-        mock_app,
-        mock_command_choices,
+        mock_app: traits.RESTAware,
+        mock_command_choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
     ):
         await mock_autocomplete_interaction.create_response(mock_command_choices)
 

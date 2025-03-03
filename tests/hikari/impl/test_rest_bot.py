@@ -42,38 +42,38 @@ from tests.hikari import hikari_test_helpers
 
 class TestRESTBot:
     @pytest.fixture
-    def mock_interaction_server(self):
+    def mock_interaction_server(self) -> interaction_server_impl.InteractionServer:
         return mock.Mock(interaction_server_impl.InteractionServer)
 
     @pytest.fixture
-    def mock_rest_client(self):
+    def mock_rest_client(self) -> rest_impl.RESTClientImpl:
         return mock.Mock(rest_impl.RESTClientImpl)
 
     @pytest.fixture
-    def mock_entity_factory(self):
+    def mock_entity_factory(self) -> entity_factory_impl.EntityFactoryImpl:
         return mock.Mock(entity_factory_impl.EntityFactoryImpl)
 
     @pytest.fixture
-    def mock_http_settings(self):
+    def mock_http_settings(self) -> config.HTTPSettings:
         return mock.Mock(config.HTTPSettings)
 
     @pytest.fixture
-    def mock_proxy_settings(self):
+    def mock_proxy_settings(self) -> config.ProxySettings:
         return mock.Mock(config.ProxySettings)
 
     @pytest.fixture
-    def mock_executor(self):
+    def mock_executor(self) -> concurrent.futures.Executor:
         return mock.Mock(concurrent.futures.Executor)
 
     @pytest.fixture
     def mock_rest_bot(
         self,
-        mock_interaction_server,
-        mock_rest_client,
-        mock_entity_factory,
-        mock_http_settings,
-        mock_proxy_settings,
-        mock_executor,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
+        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        mock_http_settings: config.HTTPSettings,
+        mock_proxy_settings: config.ProxySettings,
+        mock_executor: concurrent.futures.Executor,
     ):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
@@ -97,7 +97,12 @@ class TestRESTBot:
             )
 
     def test___init__(
-        self, mock_http_settings, mock_proxy_settings, mock_entity_factory, mock_rest_client, mock_interaction_server
+        self,
+        mock_http_settings: config.HTTPSettings,
+        mock_proxy_settings: config.ProxySettings,
+        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        mock_rest_client: rest_impl.RESTClientImpl,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
     ):
         cls = hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, print_banner=mock.Mock())
         mock_executor = object()
@@ -235,11 +240,11 @@ class TestRESTBot:
             assert result.proxy_settings is config.ProxySettings.return_value
 
     @pytest.mark.parametrize(("close_event", "expected"), [(object(), True), (None, False)])
-    def test_is_alive_property(self, mock_rest_bot, close_event, expected):
+    def test_is_alive_property(self, mock_rest_bot: rest_bot_impl.RESTBot, close_event: object | None, expected: bool):
         mock_rest_bot._close_event = close_event
         assert mock_rest_bot.is_alive is expected
 
-    def test_print_banner(self, mock_rest_bot):
+    def test_print_banner(self, mock_rest_bot: rest_bot_impl.RESTBot):
         with mock.patch.object(ux, "print_banner") as print_banner:
             mock_rest_bot.print_banner("okokok", True, False, {"test_key": "test_value"})
 
@@ -287,7 +292,10 @@ class TestRESTBot:
 
     @pytest.mark.asyncio
     async def test_close(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
         mock_shutdown_1 = mock.AsyncMock()
         mock_shutdown_2 = mock.AsyncMock()
@@ -308,7 +316,10 @@ class TestRESTBot:
 
     @pytest.mark.asyncio
     async def test_close_when_shutdown_callback_raises(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
         mock_error = KeyError("Too many catgirls")
         mock_shutdown_1 = mock.AsyncMock(side_effect=mock_error)
@@ -332,7 +343,10 @@ class TestRESTBot:
 
     @pytest.mark.asyncio
     async def test_close_when_is_closing(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
         mock_shutdown_1 = mock.AsyncMock()
         mock_shutdown_2 = mock.AsyncMock()
@@ -354,12 +368,12 @@ class TestRESTBot:
         mock_shutdown_2.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_close_when_inactive(self, mock_rest_bot):
+    async def test_close_when_inactive(self, mock_rest_bot: rest_bot_impl.RESTBot):
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_rest_bot.close()
 
     @pytest.mark.asyncio
-    async def test_join(self, mock_rest_bot):
+    async def test_join(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot._close_event = mock.AsyncMock()
 
         await mock_rest_bot.join()
@@ -367,12 +381,14 @@ class TestRESTBot:
         mock_rest_bot._close_event.wait.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_join_when_not_alive(self, mock_rest_bot):
+    async def test_join_when_not_alive(self, mock_rest_bot: rest_bot_impl.RESTBot):
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_rest_bot.join()
 
     @pytest.mark.asyncio
-    async def test_on_interaction(self, mock_rest_bot, mock_interaction_server):
+    async def test_on_interaction(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: interaction_server_impl.InteractionServer
+    ):
         mock_interaction_server.on_interaction = mock.AsyncMock()
 
         result = await mock_rest_bot.on_interaction(b"1", b"2", b"3")
@@ -380,7 +396,7 @@ class TestRESTBot:
         assert result is mock_interaction_server.on_interaction.return_value
         mock_interaction_server.on_interaction.assert_awaited_once_with(b"1", b"2", b"3")
 
-    def test_run(self, mock_rest_bot):
+    def test_run(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_socket = object()
         mock_context = object()
         mock_rest_bot._executor = None
@@ -440,7 +456,7 @@ class TestRESTBot:
         )
         get_or_make_loop.return_value.close.assert_not_called()
 
-    def test_run_when_close_loop(self, mock_rest_bot):
+    def test_run_when_close_loop(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
@@ -450,7 +466,7 @@ class TestRESTBot:
 
         destroy_loop.assert_called_once_with(get_or_make_loop.return_value, rest_bot_impl._LOGGER)
 
-    def test_run_when_asyncio_debug(self, mock_rest_bot):
+    def test_run_when_asyncio_debug(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
@@ -459,7 +475,7 @@ class TestRESTBot:
 
         get_or_make_loop.return_value.set_debug.assert_called_once_with(True)
 
-    def test_run_with_coroutine_tracking_depth(self, mock_rest_bot):
+    def test_run_with_coroutine_tracking_depth(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
@@ -471,13 +487,15 @@ class TestRESTBot:
 
         set_tracking_depth.assert_called_once_with(42)
 
-    def test_run_when_already_running(self, mock_rest_bot):
+    def test_run_when_already_running(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot._close_event = object()
 
         with pytest.raises(errors.ComponentStateConflictError):
             mock_rest_bot.run()
 
-    def test_run_closes_executor_when_present(self, mock_rest_bot, mock_executor):
+    def test_run_closes_executor_when_present(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_executor: concurrent.futures.Executor
+    ):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
@@ -503,7 +521,7 @@ class TestRESTBot:
         mock_executor.shutdown.assert_called_once_with(wait=True)
         assert mock_rest_bot.executor is None
 
-    def test_run_ignores_close_executor_when_not_present(self, mock_rest_bot):
+    def test_run_ignores_close_executor_when_not_present(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
         mock_rest_bot._executor = None
@@ -531,7 +549,10 @@ class TestRESTBot:
 
     @pytest.mark.asyncio
     async def test_start(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
         mock_socket = object()
         mock_ssl_context = object()
@@ -576,7 +597,10 @@ class TestRESTBot:
 
     @pytest.mark.asyncio
     async def test_start_when_startup_callback_raises(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
         mock_socket = object()
         mock_ssl_context = object()
@@ -613,7 +637,12 @@ class TestRESTBot:
         mock_callback_2.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_start_checks_for_update(self, mock_rest_bot, mock_http_settings, mock_proxy_settings):
+    async def test_start_checks_for_update(
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_http_settings: config.HTTPSettings,
+        mock_proxy_settings: config.ProxySettings,
+    ):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(asyncio, "create_task"))
         stack.enter_context(mock.patch.object(ux, "check_for_updates", new=mock.Mock()))
@@ -638,7 +667,7 @@ class TestRESTBot:
             ux.check_for_updates.assert_called_once_with(mock_http_settings, mock_proxy_settings)
 
     @pytest.mark.asyncio
-    async def test_start_when_is_alive(self, mock_rest_bot):
+    async def test_start_when_is_alive(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot._close_event = object()
 
         with mock.patch.object(ux, "check_for_updates", new=mock.Mock()) as check_for_updates:
@@ -647,7 +676,9 @@ class TestRESTBot:
 
             check_for_updates.assert_not_called()
 
-    def test_get_listener(self, mock_rest_bot, mock_interaction_server):
+    def test_get_listener(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: interaction_server_impl.InteractionServer
+    ):
         mock_type = object()
 
         result = mock_rest_bot.get_listener(mock_type)
@@ -655,7 +686,9 @@ class TestRESTBot:
         assert result is mock_interaction_server.get_listener.return_value
         mock_interaction_server.get_listener.assert_called_once_with(mock_type)
 
-    def test_set_listener(self, mock_rest_bot, mock_interaction_server):
+    def test_set_listener(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: interaction_server_impl.InteractionServer
+    ):
         mock_type = object()
         mock_listener = object()
 

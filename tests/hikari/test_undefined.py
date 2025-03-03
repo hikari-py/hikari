@@ -77,7 +77,7 @@ class TestUndefined:
         ((undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, 34123), False),
     ],
 )
-def test_all_undefined(values, result):
+def test_all_undefined(values: tuple[str | undefined.UndefinedType | int, ...], result: bool):
     assert undefined.all_undefined(*values) is result
 
 
@@ -92,7 +92,7 @@ def test_all_undefined(values, result):
         ((undefined.UNDEFINED, 34123, 5432123, "312", False), True),
     ],
 )
-def test_any_undefined(values, result):
+def test_any_undefined(values: tuple[str | undefined.UndefinedType | int, ...], result: bool):
     assert undefined.any_undefined(*values) is result
 
 
@@ -107,5 +107,5 @@ def test_any_undefined(values, result):
         ((undefined.UNDEFINED, "32123123", undefined.UNDEFINED, 34123123, undefined.UNDEFINED), 3),
     ],
 )
-def test_count(values, result):
+def test_count(values: tuple[str | undefined.UndefinedType | int, ...], result: bool):
     assert undefined.count(*values) == result

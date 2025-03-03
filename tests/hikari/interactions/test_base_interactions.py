@@ -20,6 +20,8 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
@@ -29,13 +31,13 @@ from hikari.interactions import base_interactions
 
 
 @pytest.fixture
-def mock_app():
+def mock_app() -> traits.RESTAware:
     return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
 
 
 class TestPartialInteraction:
     @pytest.fixture
-    def mock_partial_interaction(self, mock_app):
+    def mock_partial_interaction(self, mock_app: traits.RESTAware) -> base_interactions.PartialInteraction:
         return base_interactions.PartialInteraction(
             app=mock_app,
             id=34123,
@@ -45,13 +47,15 @@ class TestPartialInteraction:
             version=3122312,
         )
 
-    def test_webhook_id_property(self, mock_partial_interaction):
+    def test_webhook_id_property(self, mock_partial_interaction: base_interactions.PartialInteraction):
         assert mock_partial_interaction.webhook_id is mock_partial_interaction.application_id
 
 
 class TestMessageResponseMixin:
     @pytest.fixture
-    def mock_message_response_mixin(self, mock_app):
+    def mock_message_response_mixin(
+        self, mock_app: traits.RESTAware
+    ) -> base_interactions.MessageResponseMixin[typing.Any]:
         return base_interactions.MessageResponseMixin(
             app=mock_app,
             id=34123,
@@ -62,14 +66,22 @@ class TestMessageResponseMixin:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_initial_response(self, mock_message_response_mixin, mock_app):
+    async def test_fetch_initial_response(
+        self,
+        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
+        mock_app: traits.RESTAware,
+    ):
         result = await mock_message_response_mixin.fetch_initial_response()
 
         assert result is mock_app.rest.fetch_interaction_response.return_value
         mock_app.rest.fetch_interaction_response.assert_awaited_once_with(651231, "399393939doodsodso")
 
     @pytest.mark.asyncio
-    async def test_create_initial_response_with_optional_args(self, mock_message_response_mixin, mock_app):
+    async def test_create_initial_response_with_optional_args(
+        self,
+        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
+        mock_app: traits.RESTAware,
+    ):
         mock_embed_1 = object()
         mock_embed_2 = object()
         mock_component = object()
@@ -111,7 +123,11 @@ class TestMessageResponseMixin:
         )
 
     @pytest.mark.asyncio
-    async def test_create_initial_response_without_optional_args(self, mock_message_response_mixin, mock_app):
+    async def test_create_initial_response_without_optional_args(
+        self,
+        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
+        mock_app: traits.RESTAware,
+    ):
         await mock_message_response_mixin.create_initial_response(
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         )
@@ -135,7 +151,11 @@ class TestMessageResponseMixin:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_initial_response_with_optional_args(self, mock_message_response_mixin, mock_app):
+    async def test_edit_initial_response_with_optional_args(
+        self,
+        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
+        mock_app: traits.RESTAware,
+    ):
         mock_embed_1 = object()
         mock_embed_2 = object()
         mock_attachment_1 = object()
@@ -172,7 +192,11 @@ class TestMessageResponseMixin:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_initial_response_without_optional_args(self, mock_message_response_mixin, mock_app):
+    async def test_edit_initial_response_without_optional_args(
+        self,
+        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
+        mock_app: traits.RESTAware,
+    ):
         result = await mock_message_response_mixin.edit_initial_response()
 
         assert result is mock_app.rest.edit_interaction_response.return_value
@@ -192,7 +216,11 @@ class TestMessageResponseMixin:
         )
 
     @pytest.mark.asyncio
-    async def test_delete_initial_response(self, mock_message_response_mixin, mock_app):
+    async def test_delete_initial_response(
+        self,
+        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
+        mock_app: traits.RESTAware,
+    ):
         await mock_message_response_mixin.delete_initial_response()
 
         mock_app.rest.delete_interaction_response.assert_awaited_once_with(651231, "399393939doodsodso")
@@ -200,7 +228,7 @@ class TestMessageResponseMixin:
 
 class TestModalResponseMixin:
     @pytest.fixture
-    def mock_modal_response_mixin(self, mock_app):
+    def mock_modal_response_mixin(self, mock_app: traits.RESTAware) -> base_interactions.ModalResponseMixin:
         return base_interactions.ModalResponseMixin(
             app=mock_app,
             id=34123,
@@ -211,14 +239,18 @@ class TestModalResponseMixin:
         )
 
     @pytest.mark.asyncio
-    async def test_create_modal_response(self, mock_modal_response_mixin, mock_app):
+    async def test_create_modal_response(
+        self, mock_modal_response_mixin: base_interactions.ModalResponseMixin, mock_app: traits.RESTAware
+    ):
         await mock_modal_response_mixin.create_modal_response("title", "custom_id", None, [])
 
         mock_app.rest.create_modal_response.assert_awaited_once_with(
             34123, "399393939doodsodso", title="title", custom_id="custom_id", component=None, components=[]
         )
 
-    def test_build_response(self, mock_modal_response_mixin, mock_app):
+    def test_build_response(
+        self, mock_modal_response_mixin: base_interactions.ModalResponseMixin, mock_app: traits.RESTAware
+    ):
         mock_app.rest.interaction_modal_builder = mock.Mock()
         builder = mock_modal_response_mixin.build_modal_response("title", "custom_id")
 

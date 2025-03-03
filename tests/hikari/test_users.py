@@ -34,17 +34,17 @@ from tests.hikari import hikari_test_helpers
 
 class TestPartialUser:
     @pytest.fixture
-    def obj(self):
+    def obj(self) -> users.PartialUser:
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.PartialUser, slots_=False)()
 
-    def test_accent_colour_alias_property(self, obj):
+    def test_accent_colour_alias_property(self, obj: users.PartialUser):
         obj.accent_color = object()
 
         assert obj.accent_colour is obj.accent_color
 
     @pytest.mark.asyncio
-    async def test_fetch_self(self, obj):
+    async def test_fetch_self(self, obj: users.PartialUser):
         obj.id = 123
         obj.app = mock.AsyncMock()
 
@@ -52,7 +52,7 @@ class TestPartialUser:
         obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
 
     @pytest.mark.asyncio
-    async def test_send_uses_cached_id(self, obj):
+    async def test_send_uses_cached_id(self, obj: users.PartialUser):
         obj.id = 4123123
         embed = object()
         embeds = [object()]
@@ -110,7 +110,7 @@ class TestPartialUser:
         )
 
     @pytest.mark.asyncio
-    async def test_send_when_not_cached(self, obj):
+    async def test_send_when_not_cached(self, obj: users.PartialUser):
         obj.id = 522234
         obj.app = mock.Mock(spec=traits.CacheAware, rest=mock.AsyncMock())
         obj.app.cache.get_dm_channel_id = mock.Mock(return_value=None)
@@ -142,7 +142,7 @@ class TestPartialUser:
         )
 
     @pytest.mark.asyncio
-    async def test_send_when_not_cache_aware(self, obj):
+    async def test_send_when_not_cache_aware(self, obj: users.PartialUser):
         obj.id = 522234
         obj.app = mock.Mock(spec=traits.RESTAware, rest=mock.AsyncMock())
         obj.fetch_dm_channel = mock.AsyncMock()
@@ -172,7 +172,7 @@ class TestPartialUser:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_dm_channel(self, obj):
+    async def test_fetch_dm_channel(self, obj: users.PartialUser):
         obj.id = 123
         obj.app = mock.Mock()
         obj.app.rest.create_dm_channel = mock.AsyncMock()
@@ -188,20 +188,20 @@ class TestUser:
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.User, slots_=False)()
 
-    def test_accent_colour_alias_property(self, obj):
+    def test_accent_colour_alias_property(self, obj: users.User):
         obj.accent_color = object()
 
         assert obj.accent_colour is obj.accent_color
 
-    def test_avatar_url_property(self, obj):
+    def test_avatar_url_property(self, obj: users.User):
         with mock.patch.object(users.User, "make_avatar_url") as make_avatar_url:
             assert obj.avatar_url is make_avatar_url.return_value
 
-    def test_make_avatar_url_when_no_hash(self, obj):
+    def test_make_avatar_url_when_no_hash(self, obj: users.User):
         obj.avatar_hash = None
         assert obj.make_avatar_url(ext="png", size=1024) is None
 
-    def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_for_gif(self, obj):
+    def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_for_gif(self, obj: users.User):
         obj.avatar_hash = "a_18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -213,7 +213,7 @@ class TestUser:
             urls.CDN_URL, user_id=obj.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
-    def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, obj):
+    def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, obj: users.User):
         obj.avatar_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -225,7 +225,7 @@ class TestUser:
             urls.CDN_URL, user_id=obj.id, hash=obj.avatar_hash, size=4096, file_format="png"
         )
 
-    def test_make_avatar_url_with_all_args(self, obj):
+    def test_make_avatar_url_with_all_args(self, obj: users.User):
         obj.avatar_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -237,16 +237,16 @@ class TestUser:
             urls.CDN_URL, user_id=obj.id, hash=obj.avatar_hash, size=4096, file_format="url"
         )
 
-    def test_display_avatar_url_when_avatar_url(self, obj):
+    def test_display_avatar_url_when_avatar_url(self, obj: users.User):
         with mock.patch.object(users.User, "make_avatar_url") as mock_make_avatar_url:
             assert obj.display_avatar_url is mock_make_avatar_url.return_value
 
-    def test_display_avatar_url_when_no_avatar_url(self, obj):
+    def test_display_avatar_url_when_no_avatar_url(self, obj: users.User):
         with mock.patch.object(users.User, "make_avatar_url", return_value=None):
             with mock.patch.object(users.User, "default_avatar_url") as mock_default_avatar_url:
                 assert obj.display_avatar_url is mock_default_avatar_url
 
-    def test_default_avatar(self, obj):
+    def test_default_avatar(self, obj: users.User):
         obj.avatar_hash = "18dnf8dfbakfdh"
         obj.discriminator = "1234"
 
@@ -257,7 +257,7 @@ class TestUser:
 
         route.compile_to_file.assert_called_once_with(urls.CDN_URL, style=4, file_format="png")
 
-    def test_default_avatar_for_migrated_users(self, obj):
+    def test_default_avatar_for_migrated_users(self, obj: users.User):
         obj.id = 377812572784820226
         obj.avatar_hash = "18dnf8dfbakfdh"
         obj.discriminator = "0"
@@ -269,11 +269,11 @@ class TestUser:
 
         route.compile_to_file.assert_called_once_with(urls.CDN_URL, style=0, file_format="png")
 
-    def test_banner_url_property(self, obj):
+    def test_banner_url_property(self, obj: users.User):
         with mock.patch.object(users.User, "make_banner_url") as make_banner_url:
             assert obj.banner_url is make_banner_url.return_value
 
-    def test_make_banner_url_when_no_hash(self, obj):
+    def test_make_banner_url_when_no_hash(self, obj: users.User):
         obj.banner_hash = None
 
         with mock.patch.object(routes, "CDN_USER_BANNER") as route:
@@ -281,7 +281,7 @@ class TestUser:
 
         route.compile_to_file.assert_not_called()
 
-    def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, obj):
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, obj: users.User):
         obj.banner_hash = "a_18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -293,7 +293,7 @@ class TestUser:
             urls.CDN_URL, user_id=obj.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
-    def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, obj):
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, obj: users.User):
         obj.banner_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -305,7 +305,7 @@ class TestUser:
             urls.CDN_URL, user_id=obj.id, hash=obj.banner_hash, size=4096, file_format="png"
         )
 
-    def test_make_banner_url_with_all_args(self, obj):
+    def test_make_banner_url_with_all_args(self, obj: users.User):
         obj.banner_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -320,7 +320,7 @@ class TestUser:
 
 class TestPartialUserImpl:
     @pytest.fixture
-    def obj(self):
+    def obj(self) -> users.PartialUserImpl:
         return users.PartialUserImpl(
             id=snowflakes.Snowflake(123),
             app=mock.Mock(),
@@ -335,26 +335,26 @@ class TestPartialUserImpl:
             flags=users.UserFlag.DISCORD_EMPLOYEE,
         )
 
-    def test_str_operator(self, obj):
+    def test_str_operator(self, obj: users.PartialUserImpl):
         assert str(obj) == "thomm.o#8637"
 
-    def test_str_operator_when_partial(self, obj):
+    def test_str_operator_when_partial(self, obj: users.PartialUserImpl):
         obj.username = undefined.UNDEFINED
         assert str(obj) == "Partial user ID 123"
 
-    def test_mention_property(self, obj):
+    def test_mention_property(self, obj: users.PartialUserImpl):
         assert obj.mention == "<@123>"
 
-    def test_display_name_property_when_global_name(self, obj):
+    def test_display_name_property_when_global_name(self, obj: users.PartialUserImpl):
         obj.global_name = "Thommo"
         assert obj.display_name == obj.global_name
 
-    def test_display_name_property_when_no_global_name(self, obj):
+    def test_display_name_property_when_no_global_name(self, obj: users.PartialUserImpl):
         obj.global_name = None
         assert obj.display_name == obj.username
 
     @pytest.mark.asyncio
-    async def test_fetch_self(self, obj):
+    async def test_fetch_self(self, obj: users.PartialUserImpl):
         user = object()
         obj.app.rest.fetch_user = mock.AsyncMock(return_value=user)
         assert await obj.fetch_self() is user
@@ -364,7 +364,7 @@ class TestPartialUserImpl:
 @pytest.mark.asyncio
 class TestOwnUser:
     @pytest.fixture
-    def obj(self):
+    def obj(self) -> users.OwnUser:
         return users.OwnUser(
             id=snowflakes.Snowflake(12345),
             app=mock.Mock(),
@@ -384,16 +384,16 @@ class TestOwnUser:
             premium_type=None,
         )
 
-    async def test_fetch_self(self, obj):
+    async def test_fetch_self(self, obj: users.OwnUser):
         user = object()
         obj.app.rest.fetch_my_user = mock.AsyncMock(return_value=user)
         assert await obj.fetch_self() is user
         obj.app.rest.fetch_my_user.assert_awaited_once_with()
 
-    async def test_fetch_dm_channel(self, obj):
+    async def test_fetch_dm_channel(self, obj: users.OwnUser):
         with pytest.raises(TypeError, match=r"Unable to fetch your own DM channel"):
             await obj.fetch_dm_channel()
 
-    async def test_send(self, obj):
+    async def test_send(self, obj: users.OwnUser):
         with pytest.raises(TypeError, match=r"Unable to send a DM to yourself"):
             await obj.send()

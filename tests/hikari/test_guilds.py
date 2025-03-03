@@ -30,6 +30,7 @@ from hikari import colors
 from hikari import guilds
 from hikari import permissions
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -40,19 +41,19 @@ from tests.hikari import hikari_test_helpers
 
 
 @pytest.fixture
-def mock_app():
+def mock_app() -> traits.RESTAware:
     return mock.Mock(spec_set=gateway_bot.GatewayBot)
 
 
 class TestPartialRole:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> guilds.PartialRole:
         return guilds.PartialRole(app=mock_app, id=snowflakes.Snowflake(1106913972), name="The Big Cool")
 
-    def test_str_operator(self, model):
+    def test_str_operator(self, model: guilds.PartialRole):
         assert str(model) == "The Big Cool"
 
-    def test_mention_property(self, model):
+    def test_mention_property(self, model: guilds.PartialRole):
         assert model.mention == "<@&1106913972>"
 
 
@@ -64,19 +65,19 @@ def test_PartialApplication_str_operator():
 
 class TestPartialApplication:
     @pytest.fixture
-    def model(self):
+    def model(self) -> guilds.PartialApplication:
         return hikari_test_helpers.mock_class_namespace(
             guilds.PartialApplication, init_=False, slots_=False, id=123, icon_hash="ahashicon"
         )()
 
-    def test_icon_url_property(self, model):
+    def test_icon_url_property(self, model: guilds.PartialApplication):
         model.make_icon_url = mock.Mock(return_value="url")
 
         assert model.icon_url == "url"
 
         model.make_icon_url.assert_called_once_with()
 
-    def test_make_icon_url_when_hash_is_None(self, model):
+    def test_make_icon_url_when_hash_is_None(self, model: guilds.PartialApplication):
         model.icon_hash = None
 
         with mock.patch.object(
@@ -86,7 +87,7 @@ class TestPartialApplication:
 
         route.compile_to_file.assert_not_called()
 
-    def test_make_icon_url_when_hash_is_not_None(self, model):
+    def test_make_icon_url_when_hash_is_not_None(self, model: guilds.PartialApplication):
         with mock.patch.object(
             routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -99,16 +100,16 @@ class TestPartialApplication:
 
 class TestIntegrationAccount:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> guilds.IntegrationAccount:
         return guilds.IntegrationAccount(id="foo", name="bar")
 
-    def test_str_operator(self, model):
+    def test_str_operator(self, model: guilds.IntegrationAccount):
         assert str(model) == "bar"
 
 
 class TestPartialIntegration:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> guilds.PartialIntegration:
         return guilds.PartialIntegration(
             account=mock.Mock(return_value=guilds.IntegrationAccount),
             id=snowflakes.Snowflake(69420),
@@ -116,13 +117,13 @@ class TestPartialIntegration:
             type="illegal",
         )
 
-    def test_str_operator(self, model):
+    def test_str_operator(self, model: guilds.PartialIntegration):
         assert str(model) == "nice"
 
 
 class TestRole:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> guilds.Role:
         return guilds.Role(
             app=mock_app,
             id=snowflakes.Snowflake(979899100),
@@ -144,23 +145,23 @@ class TestRole:
             is_available_for_purchase=True,
         )
 
-    def test_colour_property(self, model):
+    def test_colour_property(self, model: guilds.Role):
         assert model.colour == colors.Color(0x1A2B3C)
 
-    def test_icon_url_property(self, model):
+    def test_icon_url_property(self, model: guilds.Role):
         with mock.patch.object(guilds.Role, "make_icon_url") as make_icon_url:
             assert model.icon_url == make_icon_url.return_value
 
             model.make_icon_url.assert_called_once_with()
 
-    def test_mention_property(self, model):
+    def test_mention_property(self, model: guilds.Role):
         assert model.mention == "<@&979899100>"
 
-    def test_mention_property_when_is_everyone_role(self, model):
+    def test_mention_property_when_is_everyone_role(self, model: guilds.Role):
         model.id = model.guild_id
         assert model.mention == "@everyone"
 
-    def test_make_icon_url_when_hash_is_None(self, model):
+    def test_make_icon_url_when_hash_is_None(self, model: guilds.Role):
         model.icon_hash = None
 
         with mock.patch.object(
@@ -170,7 +171,7 @@ class TestRole:
 
         route.compile_to_file.assert_not_called()
 
-    def test_make_icon_url_when_hash_is_not_None(self, model):
+    def test_make_icon_url_when_hash_is_not_None(self, model: guilds.Role):
         with mock.patch.object(
             routes, "CDN_ROLE_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -183,20 +184,20 @@ class TestRole:
 
 class TestGuildWidget:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> guilds.GuildWidget:
         return guilds.GuildWidget(app=mock_app, channel_id=snowflakes.Snowflake(420), is_enabled=True)
 
-    def test_app_property(self, model, mock_app):
+    def test_app_property(self, model: guilds.GuildWidget, mock_app: traits.RESTAware):
         assert model.app is mock_app
 
-    def test_channel_property(self, model):
+    def test_channel_property(self, model: guilds.GuildWidget):
         assert model.channel_id == snowflakes.Snowflake(420)
 
-    def test_is_enabled_property(self, model):
+    def test_is_enabled_property(self, model: guilds.GuildWidget):
         assert model.is_enabled is True
 
     @pytest.mark.asyncio
-    async def test_fetch_channel(self, model):
+    async def test_fetch_channel(self, model: guilds.GuildWidget):
         mock_channel = mock.Mock(channels_.GuildChannel)
         model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
@@ -204,7 +205,7 @@ class TestGuildWidget:
         model.app.rest.fetch_channel.assert_awaited_once_with(420)
 
     @pytest.mark.asyncio
-    async def test_fetch_channel_when_None(self, model):
+    async def test_fetch_channel_when_None(self, model: guilds.GuildWidget):
         model.app.rest.fetch_channel = mock.AsyncMock()
         model.channel_id = None
 
@@ -213,11 +214,11 @@ class TestGuildWidget:
 
 class TestMember:
     @pytest.fixture
-    def mock_user(self):
+    def mock_user(self) -> users.User:
         return mock.Mock(id=snowflakes.Snowflake(123))
 
     @pytest.fixture
-    def model(self, mock_user):
+    def model(self, mock_user: users.User) -> guilds.Member:
         return guilds.Member(
             guild_id=snowflakes.Snowflake(456),
             is_deaf=True,
@@ -232,86 +233,88 @@ class TestMember:
             raw_communication_disabled_until=None,
         )
 
-    def test_str_operator(self, model, mock_user):
+    def test_str_operator(self, model: guilds.Member, mock_user: users.User):
         assert str(model) == str(mock_user)
 
-    def test_app_property(self, model, mock_user):
+    def test_app_property(self, model: guilds.Member, mock_user: users.User):
         assert model.app is mock_user.app
 
-    def test_id_property(self, model, mock_user):
+    def test_id_property(self, model: guilds.Member, mock_user: users.User):
         assert model.id is mock_user.id
 
-    def test_username_property(self, model, mock_user):
+    def test_username_property(self, model: guilds.Member, mock_user: users.User):
         assert model.username is mock_user.username
 
-    def test_discriminator_property(self, model, mock_user):
+    def test_discriminator_property(self, model: guilds.Member, mock_user: users.User):
         assert model.discriminator is mock_user.discriminator
 
-    def test_avatar_hash_property(self, model, mock_user):
+    def test_avatar_hash_property(self, model: guilds.Member, mock_user: users.User):
         assert model.avatar_hash is mock_user.avatar_hash
 
-    def test_is_bot_property(self, model, mock_user):
+    def test_is_bot_property(self, model: guilds.Member, mock_user: users.User):
         assert model.is_bot is mock_user.is_bot
 
-    def test_is_system_property(self, model, mock_user):
+    def test_is_system_property(self, model: guilds.Member, mock_user: users.User):
         assert model.is_system is mock_user.is_system
 
-    def test_flags_property(self, model, mock_user):
+    def test_flags_property(self, model: guilds.Member, mock_user: users.User):
         assert model.flags is mock_user.flags
 
-    def test_avatar_url_property(self, model, mock_user):
+    def test_avatar_url_property(self, model: guilds.Member, mock_user: users.User):
         assert model.avatar_url is mock_user.avatar_url
 
-    def test_display_avatar_url_when_guild_hash_is_None(self, model, mock_user):
+    def test_display_avatar_url_when_guild_hash_is_None(self, model: guilds.Member, mock_user: users.User):
         with mock.patch.object(guilds.Member, "make_guild_avatar_url") as mock_make_guild_avatar_url:
             assert model.display_avatar_url is mock_make_guild_avatar_url.return_value
 
-    def test_display_guild_avatar_url_when_guild_hash_is_not_None(self, model, mock_user):
+    def test_display_guild_avatar_url_when_guild_hash_is_not_None(self, model: guilds.Member, mock_user: users.User):
         with mock.patch.object(guilds.Member, "make_guild_avatar_url", return_value=None):
             with mock.patch.object(users.User, "display_avatar_url") as mock_display_avatar_url:
                 assert model.display_avatar_url is mock_display_avatar_url
 
-    def test_banner_hash_property(self, model, mock_user):
+    def test_banner_hash_property(self, model: guilds.Member, mock_user: users.User):
         assert model.banner_hash is mock_user.banner_hash
 
-    def test_banner_url_property(self, model, mock_user):
+    def test_banner_url_property(self, model: guilds.Member, mock_user: users.User):
         assert model.banner_url is mock_user.banner_url
 
-    def test_accent_color_property(self, model, mock_user):
+    def test_accent_color_property(self, model: guilds.Member, mock_user: users.User):
         assert model.accent_color is mock_user.accent_color
 
-    def test_guild_avatar_url_property(self, model):
+    def test_guild_avatar_url_property(self, model: guilds.Member):
         with mock.patch.object(guilds.Member, "make_guild_avatar_url") as make_guild_avatar_url:
             assert model.guild_avatar_url is make_guild_avatar_url.return_value
 
-    def test_communication_disabled_until(self, model):
+    def test_communication_disabled_until(self, model: guilds.Member):
         model.raw_communication_disabled_until = datetime.datetime(2021, 11, 22)
 
         with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
             assert model.communication_disabled_until() == datetime.datetime(2021, 11, 22)
 
-    def test_communication_disabled_until_when_raw_communication_disabled_until_is_None(self, model):
+    def test_communication_disabled_until_when_raw_communication_disabled_until_is_None(self, model: guilds.Member):
         model.raw_communication_disabled_until = None
 
         with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
             assert model.communication_disabled_until() is None
 
-    def test_communication_disabled_until_when_raw_communication_disabled_until_is_in_the_past(self, model):
+    def test_communication_disabled_until_when_raw_communication_disabled_until_is_in_the_past(
+        self, model: guilds.Member
+    ):
         model.raw_communication_disabled_until = datetime.datetime(2021, 10, 18)
 
         with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 11, 22)):
             assert model.communication_disabled_until() is None
 
-    def test_make_avatar_url(self, model, mock_user):
+    def test_make_avatar_url(self, model: guilds.Member, mock_user: users.User):
         result = model.make_avatar_url(ext="png", size=4096)
         mock_user.make_avatar_url.assert_called_once_with(ext="png", size=4096)
         assert result is mock_user.make_avatar_url.return_value
 
-    def test_make_guild_avatar_url_when_no_hash(self, model):
+    def test_make_guild_avatar_url_when_no_hash(self, model: guilds.Member):
         model.guild_avatar_hash = None
         assert model.make_guild_avatar_url(ext="png", size=1024) is None
 
-    def test_make_guild_avatar_url_when_format_is_None_and_avatar_hash_is_for_gif(self, model):
+    def test_make_guild_avatar_url_when_format_is_None_and_avatar_hash_is_for_gif(self, model: guilds.Member):
         model.guild_avatar_hash = "a_18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -328,7 +331,7 @@ class TestMember:
             file_format="gif",
         )
 
-    def test_make_guild_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model):
+    def test_make_guild_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model: guilds.Member):
         model.guild_avatar_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -345,7 +348,7 @@ class TestMember:
             file_format="png",
         )
 
-    def test_make_guild_avatar_url_with_all_args(self, model):
+    def test_make_guild_avatar_url_with_all_args(self, model: guilds.Member):
         model.guild_avatar_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -363,7 +366,7 @@ class TestMember:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_dm_channel(self, model):
+    async def test_fetch_dm_channel(self, model: guilds.Member):
         model.user.fetch_dm_channel = mock.AsyncMock()
 
         assert await model.fetch_dm_channel() is model.user.fetch_dm_channel.return_value
@@ -371,7 +374,7 @@ class TestMember:
         model.user.fetch_dm_channel.assert_awaited_once_with()
 
     @pytest.mark.asyncio
-    async def test_fetch_self(self, model):
+    async def test_fetch_self(self, model: guilds.Member):
         model.user.app.rest.fetch_member = mock.AsyncMock()
 
         assert await model.fetch_self() is model.user.app.rest.fetch_member.return_value
@@ -379,13 +382,13 @@ class TestMember:
         model.user.app.rest.fetch_member.assert_awaited_once_with(456, 123)
 
     @pytest.mark.asyncio
-    async def test_fetch_roles(self, model):
+    async def test_fetch_roles(self, model: guilds.Member):
         model.user.app.rest.fetch_roles = mock.AsyncMock()
         await model.fetch_roles()
         model.user.app.rest.fetch_roles.assert_awaited_once_with(456)
 
     @pytest.mark.asyncio
-    async def test_ban(self, model):
+    async def test_ban(self, model: guilds.Member):
         model.app.rest.ban_user = mock.AsyncMock()
 
         await model.ban(delete_message_seconds=600, reason="bored")
@@ -393,7 +396,7 @@ class TestMember:
         model.app.rest.ban_user.assert_awaited_once_with(456, 123, delete_message_seconds=600, reason="bored")
 
     @pytest.mark.asyncio
-    async def test_unban(self, model):
+    async def test_unban(self, model: guilds.Member):
         model.app.rest.unban_user = mock.AsyncMock()
 
         await model.unban(reason="Unbored")
@@ -401,7 +404,7 @@ class TestMember:
         model.app.rest.unban_user.assert_awaited_once_with(456, 123, reason="Unbored")
 
     @pytest.mark.asyncio
-    async def test_kick(self, model):
+    async def test_kick(self, model: guilds.Member):
         model.app.rest.kick_user = mock.AsyncMock()
 
         await model.kick(reason="bored")
@@ -409,7 +412,7 @@ class TestMember:
         model.app.rest.kick_user.assert_awaited_once_with(456, 123, reason="bored")
 
     @pytest.mark.asyncio
-    async def test_add_role(self, model):
+    async def test_add_role(self, model: guilds.Member):
         model.app.rest.add_role_to_member = mock.AsyncMock()
 
         await model.add_role(563412, reason="Promoted")
@@ -417,7 +420,7 @@ class TestMember:
         model.app.rest.add_role_to_member.assert_awaited_once_with(456, 123, 563412, reason="Promoted")
 
     @pytest.mark.asyncio
-    async def test_remove_role(self, model):
+    async def test_remove_role(self, model: guilds.Member):
         model.app.rest.remove_role_from_member = mock.AsyncMock()
 
         await model.remove_role(563412, reason="Demoted")
@@ -425,7 +428,7 @@ class TestMember:
         model.app.rest.remove_role_from_member.assert_awaited_once_with(456, 123, 563412, reason="Demoted")
 
     @pytest.mark.asyncio
-    async def test_edit(self, model):
+    async def test_edit(self, model: guilds.Member):
         model.app.rest.edit_member = mock.AsyncMock()
         disabled_until = datetime.datetime(2021, 11, 17)
         edit = await model.edit(
@@ -452,20 +455,20 @@ class TestMember:
 
         assert edit == model.app.rest.edit_member.return_value
 
-    def test_default_avatar_url_property(self, model, mock_user):
+    def test_default_avatar_url_property(self, model: guilds.Member, mock_user: users.User):
         assert model.default_avatar_url is mock_user.default_avatar_url
 
-    def test_display_name_property_when_nickname(self, model):
+    def test_display_name_property_when_nickname(self, model: guilds.Member):
         assert model.display_name == "davb"
 
-    def test_display_name_property_when_no_nickname(self, model, mock_user):
+    def test_display_name_property_when_no_nickname(self, model: guilds.Member, mock_user: users.User):
         model.nickname = None
         assert model.display_name is mock_user.global_name
 
-    def test_mention_property(self, model, mock_user):
+    def test_mention_property(self, model: guilds.Member, mock_user: users.User):
         assert model.mention == mock_user.mention
 
-    def test_get_guild(self, model):
+    def test_get_guild(self, model: guilds.Member):
         guild = mock.Mock(id=456)
         model.user.app.cache.get_guild.side_effect = [guild]
 
@@ -473,19 +476,19 @@ class TestMember:
 
         model.user.app.cache.get_guild.assert_has_calls([mock.call(456)])
 
-    def test_get_guild_when_guild_not_in_cache(self, model):
+    def test_get_guild_when_guild_not_in_cache(self, model: guilds.Member):
         model.user.app.cache.get_guild.side_effect = [None]
 
         assert model.get_guild() is None
 
         model.user.app.cache.get_guild.assert_has_calls([mock.call(456)])
 
-    def test_get_guild_when_no_cache_trait(self, model):
+    def test_get_guild_when_no_cache_trait(self, model: guilds.Member):
         model.user.app = object()
 
         assert model.get_guild() is None
 
-    def test_get_roles(self, model):
+    def test_get_roles(self, model: guilds.Member):
         role1 = mock.Mock(id=321, position=2)
         role2 = mock.Mock(id=654, position=1)
         model.user.app.cache.get_role.side_effect = [role1, role2]
@@ -495,7 +498,7 @@ class TestMember:
 
         model.user.app.cache.get_role.assert_has_calls([mock.call(321), mock.call(654)])
 
-    def test_get_roles_when_role_ids_not_in_cache(self, model):
+    def test_get_roles_when_role_ids_not_in_cache(self, model: guilds.Member):
         role = mock.Mock(id=456, position=1)
         model.user.app.cache.get_role.side_effect = [None, role]
         model.role_ids = [321, 456]
@@ -504,7 +507,7 @@ class TestMember:
 
         model.user.app.cache.get_role.assert_has_calls([mock.call(321), mock.call(456)])
 
-    def test_get_roles_when_empty_cache(self, model):
+    def test_get_roles_when_empty_cache(self, model: guilds.Member):
         model.role_ids = [132, 432]
         model.user.app.cache.get_role.side_effect = [None, None]
 
@@ -512,60 +515,60 @@ class TestMember:
 
         model.user.app.cache.get_role.assert_has_calls([mock.call(132), mock.call(432)])
 
-    def test_get_roles_when_no_cache_trait(self, model):
+    def test_get_roles_when_no_cache_trait(self, model: guilds.Member):
         model.user.app = object()
 
         assert model.get_roles() == []
 
-    def test_get_top_role(self, model):
+    def test_get_top_role(self, model: guilds.Member):
         role1 = mock.Mock(id=321, position=2)
         role2 = mock.Mock(id=654, position=1)
 
         with mock.patch.object(guilds.Member, "get_roles", return_value=[role1, role2]):
             assert model.get_top_role() is role1
 
-    def test_get_top_role_when_roles_is_empty(self, model):
+    def test_get_top_role_when_roles_is_empty(self, model: guilds.Member):
         with mock.patch.object(guilds.Member, "get_roles", return_value=[]):
             assert model.get_top_role() is None
 
-    def test_get_presence(self, model):
+    def test_get_presence(self, model: guilds.Member):
         assert model.get_presence() is model.user.app.cache.get_presence.return_value
         model.user.app.cache.get_presence.assert_called_once_with(456, 123)
 
-    def test_get_presence_when_no_cache_trait(self, model):
+    def test_get_presence_when_no_cache_trait(self, model: guilds.Member):
         model.user.app = object()
         assert model.get_presence() is None
 
 
 class TestPartialGuild:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> guilds.PartialGuild:
         return guilds.PartialGuild(app=mock_app, id=snowflakes.Snowflake(90210), icon_hash="yeet", name="hikari")
 
-    def test_str_operator(self, model):
+    def test_str_operator(self, model: guilds.PartialGuild):
         assert str(model) == "hikari"
 
-    def test_shard_id_property(self, model):
+    def test_shard_id_property(self, model: guilds.PartialGuild):
         model.app.shard_count = 4
         assert model.shard_id == 0
 
-    def test_shard_id_when_not_shard_aware(self, model):
+    def test_shard_id_when_not_shard_aware(self, model: guilds.PartialGuild):
         model.app = object()
 
         assert model.shard_id is None
 
-    def test_icon_url(self, model):
+    def test_icon_url(self, model: guilds.PartialGuild):
         icon = object()
 
         with mock.patch.object(guilds.PartialGuild, "make_icon_url", return_value=icon):
             assert model.icon_url is icon
 
-    def test_make_icon_url_when_no_hash(self, model):
+    def test_make_icon_url_when_no_hash(self, model: guilds.PartialGuild):
         model.icon_hash = None
 
         assert model.make_icon_url(ext="png", size=2048) is None
 
-    def test_make_icon_url_when_format_is_None_and_avatar_hash_is_for_gif(self, model):
+    def test_make_icon_url_when_format_is_None_and_avatar_hash_is_for_gif(self, model: guilds.PartialGuild):
         model.icon_hash = "a_yeet"
 
         with mock.patch.object(
@@ -577,7 +580,7 @@ class TestPartialGuild:
             urls.CDN_URL, guild_id=90210, hash="a_yeet", size=1024, file_format="gif"
         )
 
-    def test_make_icon_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model):
+    def test_make_icon_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, model: guilds.PartialGuild):
         with mock.patch.object(
             routes, "CDN_GUILD_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -587,7 +590,7 @@ class TestPartialGuild:
             urls.CDN_URL, guild_id=90210, hash="yeet", size=4096, file_format="png"
         )
 
-    def test_make_icon_url_with_all_args(self, model):
+    def test_make_icon_url_with_all_args(self, model: guilds.PartialGuild):
         with mock.patch.object(
             routes, "CDN_GUILD_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -598,14 +601,14 @@ class TestPartialGuild:
         )
 
     @pytest.mark.asyncio
-    async def test_kick(self, model):
+    async def test_kick(self, model: guilds.PartialGuild):
         model.app.rest.kick_user = mock.AsyncMock()
         await model.kick(4321, reason="Go away!")
 
         model.app.rest.kick_user.assert_awaited_once_with(90210, 4321, reason="Go away!")
 
     @pytest.mark.asyncio
-    async def test_ban(self, model):
+    async def test_ban(self, model: guilds.PartialGuild):
         model.app.rest.ban_user = mock.AsyncMock()
 
         await model.ban(4321, delete_message_seconds=864000, reason="Go away!")
@@ -613,14 +616,14 @@ class TestPartialGuild:
         model.app.rest.ban_user.assert_awaited_once_with(90210, 4321, delete_message_seconds=864000, reason="Go away!")
 
     @pytest.mark.asyncio
-    async def test_unban(self, model):
+    async def test_unban(self, model: guilds.PartialGuild):
         model.app.rest.unban_user = mock.AsyncMock()
         await model.unban(4321, reason="Comeback!!")
 
         model.app.rest.unban_user.assert_awaited_once_with(90210, 4321, reason="Comeback!!")
 
     @pytest.mark.asyncio
-    async def test_edit(self, model):
+    async def test_edit(self, model: guilds.PartialGuild):
         model.app.rest.edit_guild = mock.AsyncMock()
         edited_guild = await model.edit(
             name="chad server",
@@ -657,7 +660,7 @@ class TestPartialGuild:
         assert edited_guild is model.app.rest.edit_guild.return_value
 
     @pytest.mark.asyncio
-    async def test_fetch_emojis(self, model):
+    async def test_fetch_emojis(self, model: guilds.PartialGuild):
         model.app.rest.fetch_guild_emojis = mock.AsyncMock()
 
         emojis = await model.fetch_emojis()
@@ -666,7 +669,7 @@ class TestPartialGuild:
         assert emojis is model.app.rest.fetch_guild_emojis.return_value
 
     @pytest.mark.asyncio
-    async def test_fetch_emoji(self, model):
+    async def test_fetch_emoji(self, model: guilds.PartialGuild):
         model.app.rest.fetch_emoji = mock.AsyncMock()
 
         emoji = await model.fetch_emoji(349)
@@ -675,7 +678,7 @@ class TestPartialGuild:
         assert emoji is model.app.rest.fetch_emoji.return_value
 
     @pytest.mark.asyncio
-    async def test_fetch_stickers(self, model):
+    async def test_fetch_stickers(self, model: guilds.PartialGuild):
         model.app.rest.fetch_guild_stickers = mock.AsyncMock()
 
         stickers = await model.fetch_stickers()
@@ -684,7 +687,7 @@ class TestPartialGuild:
         assert stickers is model.app.rest.fetch_guild_stickers.return_value
 
     @pytest.mark.asyncio
-    async def test_fetch_sticker(self, model):
+    async def test_fetch_sticker(self, model: guilds.PartialGuild):
         model.app.rest.fetch_guild_sticker = mock.AsyncMock()
 
         sticker = await model.fetch_sticker(6969)
@@ -693,7 +696,7 @@ class TestPartialGuild:
         assert sticker is model.app.rest.fetch_guild_sticker.return_value
 
     @pytest.mark.asyncio
-    async def test_create_sticker(self, model):
+    async def test_create_sticker(self, model: guilds.PartialGuild):
         model.app.rest.create_sticker = mock.AsyncMock()
         file = object()
 
@@ -707,7 +710,7 @@ class TestPartialGuild:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_sticker(self, model):
+    async def test_edit_sticker(self, model: guilds.PartialGuild):
         model.app.rest.edit_sticker = mock.AsyncMock()
 
         sticker = await model.edit_sticker(4567, name="Brilliant", tag="parmesan", description="amazing")
@@ -719,7 +722,7 @@ class TestPartialGuild:
         assert sticker is model.app.rest.edit_sticker.return_value
 
     @pytest.mark.asyncio
-    async def test_delete_sticker(self, model):
+    async def test_delete_sticker(self, model: guilds.PartialGuild):
         model.app.rest.delete_sticker = mock.AsyncMock()
 
         sticker = await model.delete_sticker(951)
@@ -729,7 +732,7 @@ class TestPartialGuild:
         assert sticker is model.app.rest.delete_sticker.return_value
 
     @pytest.mark.asyncio
-    async def test_create_category(self, model):
+    async def test_create_category(self, model: guilds.PartialGuild):
         model.app.rest.create_guild_category = mock.AsyncMock()
 
         category = await model.create_category("very cool category", position=2)
@@ -745,7 +748,7 @@ class TestPartialGuild:
         assert category is model.app.rest.create_guild_category.return_value
 
     @pytest.mark.asyncio
-    async def test_create_text_channel(self, model):
+    async def test_create_text_channel(self, model: guilds.PartialGuild):
         model.app.rest.create_guild_text_channel = mock.AsyncMock()
 
         text_channel = await model.create_text_channel(
@@ -767,7 +770,7 @@ class TestPartialGuild:
         assert text_channel is model.app.rest.create_guild_text_channel.return_value
 
     @pytest.mark.asyncio
-    async def test_create_news_channel(self, model):
+    async def test_create_news_channel(self, model: guilds.PartialGuild):
         model.app.rest.create_guild_news_channel = mock.AsyncMock()
 
         news_channel = await model.create_news_channel(
@@ -789,7 +792,7 @@ class TestPartialGuild:
         assert news_channel is model.app.rest.create_guild_news_channel.return_value
 
     @pytest.mark.asyncio
-    async def test_create_forum_channel(self, model):
+    async def test_create_forum_channel(self, model: guilds.PartialGuild):
         model.app.rest.create_guild_forum_channel = mock.AsyncMock()
 
         forum_channel = await model.create_forum_channel(
@@ -817,7 +820,7 @@ class TestPartialGuild:
         assert forum_channel is model.app.rest.create_guild_forum_channel.return_value
 
     @pytest.mark.asyncio
-    async def test_create_voice_channel(self, model):
+    async def test_create_voice_channel(self, model: guilds.PartialGuild):
         model.app.rest.create_guild_voice_channel = mock.AsyncMock()
 
         voice_channel = await model.create_voice_channel(
@@ -840,7 +843,7 @@ class TestPartialGuild:
         assert voice_channel is model.app.rest.create_guild_voice_channel.return_value
 
     @pytest.mark.asyncio
-    async def test_create_stage_channel(self, model):
+    async def test_create_stage_channel(self, model: guilds.PartialGuild):
         model.app.rest.create_guild_stage_channel = mock.AsyncMock()
 
         stage_channel = await model.create_stage_channel("cool stage channel", position=1, bitrate=3200, user_limit=100)
@@ -860,7 +863,7 @@ class TestPartialGuild:
         assert stage_channel is model.app.rest.create_guild_stage_channel.return_value
 
     @pytest.mark.asyncio
-    async def test_delete_channel(self, model):
+    async def test_delete_channel(self, model: guilds.PartialGuild):
         mock_channel = mock.Mock(channels_.GuildChannel)
         model.app.rest.delete_channel = mock.AsyncMock(return_value=mock_channel)
 
@@ -870,14 +873,14 @@ class TestPartialGuild:
         assert deleted_channel is model.app.rest.delete_channel.return_value
 
     @pytest.mark.asyncio
-    async def test_fetch_guild(self, model):
+    async def test_fetch_guild(self, model: guilds.PartialGuild):
         model.app.rest.fetch_guild = mock.AsyncMock(return_value=model)
 
         assert await model.fetch_self() is model.app.rest.fetch_guild.return_value
         model.app.rest.fetch_guild.assert_awaited_once_with(model.id)
 
     @pytest.mark.asyncio
-    async def test_fetch_roles(self, model):
+    async def test_fetch_roles(self, model: guilds.PartialGuild):
         model.app.rest.fetch_roles = mock.AsyncMock()
 
         roles = await model.fetch_roles()
@@ -888,7 +891,7 @@ class TestPartialGuild:
 
 class TestGuildPreview:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> guilds.GuildPreview:
         return guilds.GuildPreview(
             app=mock_app,
             features=["huge super secret nsfw channel"],
@@ -903,13 +906,13 @@ class TestGuildPreview:
             description="the place for quality shitposting!",
         )
 
-    def test_splash_url(self, model):
+    def test_splash_url(self, model: guilds.GuildPreview):
         splash = object()
 
         with mock.patch.object(guilds.GuildPreview, "make_splash_url", return_value=splash):
             assert model.splash_url is splash
 
-    def test_make_splash_url_when_hash(self, model):
+    def test_make_splash_url_when_hash(self, model: guilds.GuildPreview):
         model.splash_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -921,17 +924,17 @@ class TestGuildPreview:
             urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=1024, file_format="url"
         )
 
-    def test_make_splash_url_when_no_hash(self, model):
+    def test_make_splash_url_when_no_hash(self, model: guilds.GuildPreview):
         model.splash_hash = None
         assert model.make_splash_url(ext="png", size=512) is None
 
-    def test_discovery_splash_url(self, model):
+    def test_discovery_splash_url(self, model: guilds.GuildPreview):
         discovery_splash = object()
 
         with mock.patch.object(guilds.GuildPreview, "make_discovery_splash_url", return_value=discovery_splash):
             assert model.discovery_splash_url is discovery_splash
 
-    def test_make_discovery_splash_url_when_hash(self, model):
+    def test_make_discovery_splash_url_when_hash(self, model: guilds.GuildPreview):
         model.discovery_splash_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -943,14 +946,14 @@ class TestGuildPreview:
             urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2048, file_format="url"
         )
 
-    def test_make_discovery_splash_url_when_no_hash(self, model):
+    def test_make_discovery_splash_url_when_no_hash(self, model: guilds.GuildPreview):
         model.discovery_splash_hash = None
         assert model.make_discovery_splash_url(ext="png", size=4096) is None
 
 
 class TestGuild:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> guilds.Guild:
         return hikari_test_helpers.mock_class_namespace(guilds.Guild)(
             app=mock_app,
             id=snowflakes.Snowflake(123),
@@ -983,117 +986,117 @@ class TestGuild:
             system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_PREMIUM_SUBSCRIPTION,
         )
 
-    def test_get_channels(self, model):
+    def test_get_channels(self, model: guilds.Guild):
         assert model.get_channels() is model.app.cache.get_guild_channels_view_for_guild.return_value
         model.app.cache.get_guild_channels_view_for_guild.assert_called_once_with(123)
 
-    def test_get_channels_when_no_cache_trait(self, model):
+    def test_get_channels_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_channels() == {}
 
-    def test_get_members(self, model):
+    def test_get_members(self, model: guilds.Guild):
         assert model.get_members() is model.app.cache.get_members_view_for_guild.return_value
         model.app.cache.get_members_view_for_guild.assert_called_once_with(123)
 
-    def test_get_members_when_no_cache_trait(self, model):
+    def test_get_members_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_members() == {}
 
-    def test_get_presences(self, model):
+    def test_get_presences(self, model: guilds.Guild):
         assert model.get_presences() is model.app.cache.get_presences_view_for_guild.return_value
         model.app.cache.get_presences_view_for_guild.assert_called_once_with(123)
 
-    def test_get_presences_when_no_cache_trait(self, model):
+    def test_get_presences_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_presences() == {}
 
-    def test_get_voice_states(self, model):
+    def test_get_voice_states(self, model: guilds.Guild):
         assert model.get_voice_states() is model.app.cache.get_voice_states_view_for_guild.return_value
         model.app.cache.get_voice_states_view_for_guild.assert_called_once_with(123)
 
-    def test_get_voice_states_when_no_cache_trait(self, model):
+    def test_get_voice_states_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_voice_states() == {}
 
-    def test_get_emojis(self, model):
+    def test_get_emojis(self, model: guilds.Guild):
         assert model.get_emojis() is model.app.cache.get_emojis_view_for_guild.return_value
         model.app.cache.get_emojis_view_for_guild.assert_called_once_with(123)
 
-    def test_emojis_when_no_cache_trait(self, model):
+    def test_emojis_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_emojis() == {}
 
-    def test_get_sticker(self, model):
+    def test_get_sticker(self, model: guilds.Guild):
         model.app.cache.get_sticker.return_value.guild_id = model.id
         assert model.get_sticker(456) is model.app.cache.get_sticker.return_value
         model.app.cache.get_sticker.assert_called_once_with(456)
 
-    def test_get_sticker_when_not_from_guild(self, model):
+    def test_get_sticker_when_not_from_guild(self, model: guilds.Guild):
         model.app.cache.get_sticker.return_value.guild_id = 546123123433
 
         assert model.get_sticker(456) is None
 
         model.app.cache.get_sticker.assert_called_once_with(456)
 
-    def test_get_sticker_when_no_cache_trait(self, model):
+    def test_get_sticker_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_sticker(1234) is None
 
-    def test_get_stickers(self, model):
+    def test_get_stickers(self, model: guilds.Guild):
         assert model.get_stickers() is model.app.cache.get_stickers_view_for_guild.return_value
         model.app.cache.get_stickers_view_for_guild.assert_called_once_with(123)
 
-    def test_get_stickers_when_no_cache_trait(self, model):
+    def test_get_stickers_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_stickers() == {}
 
-    def test_roles(self, model):
+    def test_roles(self, model: guilds.Guild):
         assert model.get_roles() is model.app.cache.get_roles_view_for_guild.return_value
         model.app.cache.get_roles_view_for_guild.assert_called_once_with(123)
 
-    def test_get_roles_when_no_cache_trait(self, model):
+    def test_get_roles_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_roles() == {}
 
-    def test_get_emoji(self, model):
+    def test_get_emoji(self, model: guilds.Guild):
         model.app.cache.get_emoji.return_value.guild_id = model.id
         assert model.get_emoji(456) is model.app.cache.get_emoji.return_value
         model.app.cache.get_emoji.assert_called_once_with(456)
 
-    def test_get_emoji_when_not_from_guild(self, model):
+    def test_get_emoji_when_not_from_guild(self, model: guilds.Guild):
         model.app.cache.get_emoji.return_value.guild_id = 1233212
 
         assert model.get_emoji(456) is None
 
         model.app.cache.get_emoji.assert_called_once_with(456)
 
-    def test_get_emoji_when_no_cache_trait(self, model):
+    def test_get_emoji_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_emoji(456) is None
 
-    def test_get_role(self, model):
+    def test_get_role(self, model: guilds.Guild):
         model.app.cache.get_role.return_value.guild_id = model.id
         assert model.get_role(456) is model.app.cache.get_role.return_value
         model.app.cache.get_role.assert_called_once_with(456)
 
-    def test_get_role_when_not_from_guild(self, model):
+    def test_get_role_when_not_from_guild(self, model: guilds.Guild):
         model.app.cache.get_role.return_value.guild_id = 7623123321123
 
         assert model.get_role(456) is None
 
         model.app.cache.get_role.assert_called_once_with(456)
 
-    def test_get_role_when_no_cache_trait(self, model):
+    def test_get_role_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_role(456) is None
 
-    def test_splash_url(self, model):
+    def test_splash_url(self, model: guilds.Guild):
         splash = object()
 
         with mock.patch.object(guilds.Guild, "make_splash_url", return_value=splash):
             assert model.splash_url is splash
 
-    def test_make_splash_url_when_hash(self, model):
+    def test_make_splash_url_when_hash(self, model: guilds.Guild):
         model.splash_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -1105,17 +1108,17 @@ class TestGuild:
             urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=2, file_format="url"
         )
 
-    def test_make_splash_url_when_no_hash(self, model):
+    def test_make_splash_url_when_no_hash(self, model: guilds.Guild):
         model.splash_hash = None
         assert model.make_splash_url(ext="png", size=1024) is None
 
-    def test_discovery_splash_url(self, model):
+    def test_discovery_splash_url(self, model: guilds.Guild):
         discovery_splash = object()
 
         with mock.patch.object(guilds.Guild, "make_discovery_splash_url", return_value=discovery_splash):
             assert model.discovery_splash_url is discovery_splash
 
-    def test_make_discovery_splash_url_when_hash(self, model):
+    def test_make_discovery_splash_url_when_hash(self, model: guilds.Guild):
         model.discovery_splash_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -1127,17 +1130,17 @@ class TestGuild:
             urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=1024, file_format="url"
         )
 
-    def test_make_discovery_splash_url_when_no_hash(self, model):
+    def test_make_discovery_splash_url_when_no_hash(self, model: guilds.Guild):
         model.discovery_splash_hash = None
         assert model.make_discovery_splash_url(ext="png", size=2048) is None
 
-    def test_banner_url(self, model):
+    def test_banner_url(self, model: guilds.Guild):
         banner = object()
 
         with mock.patch.object(guilds.Guild, "make_banner_url", return_value=banner):
             assert model.banner_url is banner
 
-    def test_make_banner_url_when_hash(self, model):
+    def test_make_banner_url_when_hash(self, model: guilds.Guild):
         with mock.patch.object(
             routes, "CDN_GUILD_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -1147,7 +1150,7 @@ class TestGuild:
             urls.CDN_URL, guild_id=123, hash="banner_hash", size=512, file_format="url"
         )
 
-    def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model):
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model: guilds.Guild):
         model.banner_hash = "a_18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -1159,7 +1162,7 @@ class TestGuild:
             urls.CDN_URL, guild_id=model.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
         )
 
-    def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model):
+    def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model: guilds.Guild):
         model.banner_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
@@ -1171,19 +1174,19 @@ class TestGuild:
             urls.CDN_URL, guild_id=model.id, hash=model.banner_hash, size=4096, file_format="png"
         )
 
-    def test_make_banner_url_when_no_hash(self, model):
+    def test_make_banner_url_when_no_hash(self, model: guilds.Guild):
         model.banner_hash = None
         assert model.make_banner_url(ext="png", size=2048) is None
 
     @pytest.mark.asyncio
-    async def test_fetch_owner(self, model):
+    async def test_fetch_owner(self, model: guilds.Guild):
         model.app.rest.fetch_member = mock.AsyncMock()
 
         assert await model.fetch_owner() is model.app.rest.fetch_member.return_value
         model.app.rest.fetch_member.assert_awaited_once_with(123, 1111)
 
     @pytest.mark.asyncio
-    async def test_fetch_widget_channel(self, model):
+    async def test_fetch_widget_channel(self, model: guilds.Guild):
         mock_channel = mock.Mock(channels_.GuildChannel)
         model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
@@ -1191,13 +1194,13 @@ class TestGuild:
         model.app.rest.fetch_channel.assert_awaited_once_with(192729)
 
     @pytest.mark.asyncio
-    async def test_fetch_widget_channel_when_None(self, model):
+    async def test_fetch_widget_channel_when_None(self, model: guilds.Guild):
         model.widget_channel_id = None
 
         assert await model.fetch_widget_channel() is None
 
     @pytest.mark.asyncio
-    async def test_fetch_rules_channel(self, model):
+    async def test_fetch_rules_channel(self, model: guilds.Guild):
         mock_channel = mock.Mock(channels_.GuildTextChannel)
         model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
@@ -1205,13 +1208,13 @@ class TestGuild:
         model.app.rest.fetch_channel.assert_awaited_once_with(123445)
 
     @pytest.mark.asyncio
-    async def test_fetch_rules_channel_when_None(self, model):
+    async def test_fetch_rules_channel_when_None(self, model: guilds.Guild):
         model.rules_channel_id = None
 
         assert await model.fetch_rules_channel() is None
 
     @pytest.mark.asyncio
-    async def test_fetch_system_channel(self, model):
+    async def test_fetch_system_channel(self, model: guilds.Guild):
         mock_channel = mock.Mock(channels_.GuildTextChannel)
         model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
@@ -1219,13 +1222,13 @@ class TestGuild:
         model.app.rest.fetch_channel.assert_awaited_once_with(123888)
 
     @pytest.mark.asyncio
-    async def test_fetch_system_channel_when_None(self, model):
+    async def test_fetch_system_channel_when_None(self, model: guilds.Guild):
         model.system_channel_id = None
 
         assert await model.fetch_system_channel() is None
 
     @pytest.mark.asyncio
-    async def test_fetch_public_updates_channel(self, model):
+    async def test_fetch_public_updates_channel(self, model: guilds.Guild):
         mock_channel = mock.Mock(channels_.GuildTextChannel)
         model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
@@ -1233,13 +1236,13 @@ class TestGuild:
         model.app.rest.fetch_channel.assert_awaited_once_with(99699)
 
     @pytest.mark.asyncio
-    async def test_fetch_public_updates_channel_when_None(self, model):
+    async def test_fetch_public_updates_channel_when_None(self, model: guilds.Guild):
         model.public_updates_channel_id = None
 
         assert await model.fetch_public_updates_channel() is None
 
     @pytest.mark.asyncio
-    async def test_fetch_afk_channel(self, model):
+    async def test_fetch_afk_channel(self, model: guilds.Guild):
         mock_channel = mock.Mock(channels_.GuildVoiceChannel)
         model.app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
 
@@ -1247,63 +1250,63 @@ class TestGuild:
         model.app.rest.fetch_channel.assert_awaited_once_with(1234)
 
     @pytest.mark.asyncio
-    async def test_fetch_afk_channel_when_None(self, model):
+    async def test_fetch_afk_channel_when_None(self, model: guilds.Guild):
         model.afk_channel_id = None
 
         assert await model.fetch_afk_channel() is None
 
-    def test_get_channel(self, model):
+    def test_get_channel(self, model: guilds.Guild):
         model.app.cache.get_guild_channel.return_value.guild_id = model.id
         assert model.get_channel(456) is model.app.cache.get_guild_channel.return_value
         model.app.cache.get_guild_channel.assert_called_once_with(456)
 
-    def test_get_channel_when_not_from_guild(self, model):
+    def test_get_channel_when_not_from_guild(self, model: guilds.Guild):
         model.app.cache.get_guild_channel.return_value.guild_id = 654523123
 
         assert model.get_channel(456) is None
 
         model.app.cache.get_guild_channel.assert_called_once_with(456)
 
-    def test_get_channel_when_no_cache_trait(self, model):
+    def test_get_channel_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_channel(456) is None
 
-    def test_get_member(self, model):
+    def test_get_member(self, model: guilds.Guild):
         assert model.get_member(456) is model.app.cache.get_member.return_value
         model.app.cache.get_member.assert_called_once_with(123, 456)
 
-    def test_get_member_when_no_cache_trait(self, model):
+    def test_get_member_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_member(456) is None
 
-    def test_get_presence(self, model):
+    def test_get_presence(self, model: guilds.Guild):
         assert model.get_presence(456) is model.app.cache.get_presence.return_value
         model.app.cache.get_presence.assert_called_once_with(123, 456)
 
-    def test_get_presence_when_no_cache_trait(self, model):
+    def test_get_presence_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_presence(456) is None
 
-    def test_get_voice_state(self, model):
+    def test_get_voice_state(self, model: guilds.Guild):
         assert model.get_voice_state(456) is model.app.cache.get_voice_state.return_value
         model.app.cache.get_voice_state.assert_called_once_with(123, 456)
 
-    def test_get_voice_state_when_no_cache_trait(self, model):
+    def test_get_voice_state_when_no_cache_trait(self, model: guilds.Guild):
         model.app = object()
         assert model.get_voice_state(456) is None
 
-    def test_get_my_member_when_not_shardaware(self, model):
+    def test_get_my_member_when_not_shardaware(self, model: guilds.Guild):
         model.app = object()
         assert model.get_my_member() is None
 
-    def test_get_my_member_when_no_me(self, model):
+    def test_get_my_member_when_no_me(self, model: guilds.Guild):
         model.app.get_me = mock.Mock(return_value=None)
 
         assert model.get_my_member() is None
 
         model.app.get_me.assert_called_once_with()
 
-    def test_get_my_member(self, model):
+    def test_get_my_member(self, model: guilds.Guild):
         model.app.get_me = mock.Mock()
         model.app.get_me.return_value.id = 123
 
@@ -1316,7 +1319,7 @@ class TestGuild:
 
 class TestRestGuild:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> guilds.RESTGuild:
         return guilds.RESTGuild(
             app=mock_app,
             id=snowflakes.Snowflake(123),

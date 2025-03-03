@@ -29,33 +29,33 @@ from hikari.events import voice_events
 
 class TestVoiceStateUpdateEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> voice_events.VoiceStateUpdateEvent:
         return voice_events.VoiceStateUpdateEvent(
             shard=object(), state=mock.Mock(voices.VoiceState), old_state=mock.Mock(voices.VoiceState)
         )
 
-    def test_app_property(self, event):
+    def test_app_property(self, event: voice_events.VoiceStateUpdateEvent):
         assert event.app is event.state.app
 
-    def test_guild_id_property(self, event):
+    def test_guild_id_property(self, event: voice_events.VoiceStateUpdateEvent):
         event.state.guild_id = 123
         assert event.guild_id == 123
 
-    def test_old_voice_state(self, event):
+    def test_old_voice_state(self, event: voice_events.VoiceStateUpdateEvent):
         event.old_state.guild_id = 123
         assert event.old_state.guild_id == 123
 
 
 class TestVoiceServerUpdateEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> voice_events.VoiceServerUpdateEvent:
         return voice_events.VoiceServerUpdateEvent(
             app=None, shard=object(), guild_id=123, token="token", raw_endpoint="voice.discord.com:123"
         )
 
-    def test_endpoint_property(self, event):
+    def test_endpoint_property(self, event: voice_events.VoiceServerUpdateEvent):
         assert event.endpoint == "wss://voice.discord.com:123"
 
-    def test_endpoint_property_when_raw_endpoint_is_None(self, event):
+    def test_endpoint_property_when_raw_endpoint_is_None(self, event: voice_events.VoiceServerUpdateEvent):
         event.raw_endpoint = None
         assert event.endpoint is None

@@ -23,6 +23,7 @@ from __future__ import annotations
 import asyncio
 import pathlib
 import shutil
+import typing
 
 import mock
 import pytest
@@ -45,15 +46,15 @@ class TestURL:
 
 class TestAsyncReaderContextManager:
     @pytest.fixture
-    def reader(self):
+    def reader(self) -> typing.Type[files.AsyncReaderContextManager[files.AsyncReader]]:
         return hikari_test_helpers.mock_class_namespace(files.AsyncReaderContextManager)
 
-    def test___enter__(self, reader):
+    def test___enter__(self, reader: files.AsyncReaderContextManager[files.AsyncReader]):
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             reader().__enter__()
 
-    def test___exit__(self, reader):
+    def test___exit__(self, reader: files.AsyncReaderContextManager[files.AsyncReader]):
         try:
             reader().__exit__(None, None, None)
         except AttributeError as exc:
@@ -149,14 +150,14 @@ def test_open_write_path():
 
 class TestResource:
     @pytest.fixture
-    def resource(self):
+    def resource(self) -> files.Resource[files.AsyncReader]:
         class MockReader:
             data = iter(("never", "gonna", "give", "you", "up"))
 
             async def __aenter__(self):
                 return self
 
-            async def __aexit__(self, *args, **kwargs):
+            async def __aexit__(self, *args: typing.Any, **kwargs: typing.Any):
                 return
 
             def __aiter__(self):
@@ -176,7 +177,7 @@ class TestResource:
         return ResourceImpl()
 
     @pytest.mark.asyncio
-    async def test_save(self, resource):
+    async def test_save(self, resource: files.Resource[files.AsyncReader]):
         executor = object()
         file_open = mock.Mock()
         file_open.write = mock.Mock()
@@ -214,7 +215,7 @@ class TestFile:
         return files.File("one/path/something.txt")
 
     @pytest.mark.asyncio
-    async def test_save(self, file_obj):
+    async def test_save(self, file_obj: files.File):
         mock_executor = object()
         loop = mock.Mock(run_in_executor=mock.AsyncMock())
 
@@ -243,12 +244,14 @@ def test_write_bytes():
 
 class TestBytes:
     @pytest.fixture
-    def bytes_obj(self):
+    def bytes_obj(self) -> files.Bytes:
         return files.Bytes(b"some data", "something.txt")
 
     @pytest.mark.parametrize("data_type", [bytes, bytearray, memoryview])
     @pytest.mark.asyncio
-    async def test_save(self, bytes_obj, data_type):
+    async def test_save(
+        self, bytes_obj: files.Bytes, data_type: type[bytes] | type[bytearray] | type[memoryview[typing.Any]]
+    ):
         bytes_obj.data = mock.Mock(data_type)
         mock_executor = object()
         loop = mock.Mock(run_in_executor=mock.AsyncMock())
@@ -263,7 +266,7 @@ class TestBytes:
         )
 
     @pytest.mark.asyncio
-    async def test_save_when_data_is_not_bytes(self, bytes_obj):
+    async def test_save_when_data_is_not_bytes(self, bytes_obj: files.Bytes):
         bytes_obj.data = object()
         mock_executor = object()
 

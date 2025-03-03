@@ -24,6 +24,7 @@ import asyncio
 import contextlib
 import re
 import threading
+import typing
 
 import aiohttp
 import aiohttp.abc
@@ -166,7 +167,7 @@ def valid_edd25519():
 
 
 @pytest.fixture
-def valid_payload():
+def valid_payload() -> typing.Mapping[str, typing.Any]:
     return {
         "application_id": "658822586720976907",
         "channel_id": "938391701561679903",
@@ -206,7 +207,7 @@ def valid_payload():
 
 
 @pytest.fixture
-def invalid_ed25519():
+def invalid_ed25519() -> tuple[bytes, bytes, bytes]:
     body = (
         b'{"application_id":"658822586720976907","id":"838085779104202754","token":"aW50ZXJhY3Rpb246ODM4MDg1Nzc5MTA0MjA'
         b"yNzU0OmNhSk9QUU4wa1BKV21nTjFvSGhIbUp0QnQ1NjNGZFRtMlJVRlNjR0ttaDhtUGJrWUNvcmxYZnd2NTRLeUQ2c0hGS1YzTU03dFJ0V0s5"
@@ -223,7 +224,7 @@ def invalid_ed25519():
 
 
 @pytest.fixture
-def public_key():
+def public_key() -> bytes:
     return b"\x12-\xdfX\xa8\x95\xd7\xe1\xb7o\xf5\xd0q\xb0\xaa\xc9\xb7v^*\xb5\x15\xe1\x1b\x7f\xca\xf9d\xdbT\x90\xc6"
 
 
@@ -639,7 +640,7 @@ class TestInteractionServer:
             await mock_interaction_server.close()
 
     @pytest.mark.asyncio
-    async def test_join(self, mock_interaction_server):
+    async def test_join(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_event = mock.AsyncMock()
         mock_interaction_server._server = object()
         mock_interaction_server._close_event = mock_event

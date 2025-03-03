@@ -31,20 +31,20 @@ from tests.hikari import hikari_test_helpers
 
 class TestExecutableWebhook:
     @pytest.fixture
-    def executable_webhook(self):
+    def executable_webhook(self) -> webhooks.ExecutableWebhook:
         return hikari_test_helpers.mock_class_namespace(
             webhooks.ExecutableWebhook, slots_=False, app=mock.AsyncMock()
         )()
 
     @pytest.mark.asyncio
-    async def test_execute_when_no_token(self, executable_webhook):
+    async def test_execute_when_no_token(self, executable_webhook: webhooks.ExecutableWebhook):
         executable_webhook.token = None
 
         with pytest.raises(ValueError, match=r"Cannot send a message using a webhook where we don't know the token"):
             await executable_webhook.execute()
 
     @pytest.mark.asyncio
-    async def test_execute_with_optionals(self, executable_webhook):
+    async def test_execute_with_optionals(self, executable_webhook: webhooks.ExecutableWebhook):
         mock_attachment_1 = object()
         mock_attachment_2 = object()
         mock_component = object()
@@ -90,7 +90,7 @@ class TestExecutableWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_execute_without_optionals(self, executable_webhook):
+    async def test_execute_without_optionals(self, executable_webhook: webhooks.ExecutableWebhook):
         result = await executable_webhook.execute()
 
         assert result is executable_webhook.app.rest.execute_webhook.return_value
@@ -114,7 +114,7 @@ class TestExecutableWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_message(self, executable_webhook):
+    async def test_fetch_message(self, executable_webhook: webhooks.ExecutableWebhook):
         message = object()
         returned_message = object()
         executable_webhook.app.rest.fetch_webhook_message = mock.AsyncMock(return_value=returned_message)
@@ -128,13 +128,13 @@ class TestExecutableWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_message_when_no_token(self, executable_webhook):
+    async def test_fetch_message_when_no_token(self, executable_webhook: webhooks.ExecutableWebhook):
         executable_webhook.token = None
         with pytest.raises(ValueError, match=r"Cannot fetch a message using a webhook where we don't know the token"):
             await executable_webhook.fetch_message(987)
 
     @pytest.mark.asyncio
-    async def test_edit_message(self, executable_webhook):
+    async def test_edit_message(self, executable_webhook: webhooks.ExecutableWebhook):
         message = object()
         embed = object()
         attachment = object()
@@ -174,13 +174,13 @@ class TestExecutableWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_message_when_no_token(self, executable_webhook):
+    async def test_edit_message_when_no_token(self, executable_webhook: webhooks.ExecutableWebhook):
         executable_webhook.token = None
         with pytest.raises(ValueError, match=r"Cannot edit a message using a webhook where we don't know the token"):
             await executable_webhook.edit_message(987)
 
     @pytest.mark.asyncio
-    async def test_delete_message(self, executable_webhook):
+    async def test_delete_message(self, executable_webhook: webhooks.ExecutableWebhook):
         message = object()
 
         await executable_webhook.delete_message(message)
@@ -190,7 +190,7 @@ class TestExecutableWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_delete_message_when_no_token(self, executable_webhook):
+    async def test_delete_message_when_no_token(self, executable_webhook: webhooks.ExecutableWebhook):
         executable_webhook.token = None
         with pytest.raises(ValueError, match=r"Cannot delete a message using a webhook where we don't know the token"):
             assert await executable_webhook.delete_message(987)
@@ -198,7 +198,7 @@ class TestExecutableWebhook:
 
 class TestPartialWebhook:
     @pytest.fixture
-    def webhook(self):
+    def webhook(self) -> webhooks.PartialWebhook:
         return webhooks.PartialWebhook(
             app=mock.Mock(rest=mock.AsyncMock()),
             id=987654321,
@@ -208,28 +208,28 @@ class TestPartialWebhook:
             application_id=None,
         )
 
-    def test_str(self, webhook):
+    def test_str(self, webhook: webhooks.PartialWebhook):
         assert str(webhook) == "not a webhook"
 
-    def test_str_when_name_is_None(self, webhook):
+    def test_str_when_name_is_None(self, webhook: webhooks.PartialWebhook):
         webhook.name = None
         assert str(webhook) == "Unnamed webhook ID 987654321"
 
-    def test_mention_property(self, webhook):
+    def test_mention_property(self, webhook: webhooks.PartialWebhook):
         assert webhook.mention == "<@987654321>"
 
-    def test_avatar_url_property(self, webhook):
+    def test_avatar_url_property(self, webhook: webhooks.PartialWebhook):
         assert webhook.avatar_url == webhook.make_avatar_url()
 
-    def test_default_avatar_url(self, webhook):
+    def test_default_avatar_url(self, webhook: webhooks.PartialWebhook):
         assert webhook.default_avatar_url.url == "https://cdn.discordapp.com/embed/avatars/0.png"
 
-    def test_make_avatar_url(self, webhook):
+    def test_make_avatar_url(self, webhook: webhooks.PartialWebhook):
         result = webhook.make_avatar_url(ext="jpeg", size=2048)
 
         assert result.url == "https://cdn.discordapp.com/avatars/987654321/hook.jpeg?size=2048"
 
-    def test_make_avatar_url_when_no_avatar(self, webhook):
+    def test_make_avatar_url_when_no_avatar(self, webhook: webhooks.PartialWebhook):
         webhook.avatar_hash = None
 
         assert webhook.make_avatar_url() is None
@@ -237,7 +237,7 @@ class TestPartialWebhook:
 
 class TestIncomingWebhook:
     @pytest.fixture
-    def webhook(self):
+    def webhook(self) -> webhooks.IncomingWebhook:
         return webhooks.IncomingWebhook(
             app=mock.Mock(rest=mock.AsyncMock()),
             id=987654321,
@@ -251,11 +251,11 @@ class TestIncomingWebhook:
             application_id=None,
         )
 
-    def test_webhook_id_property(self, webhook):
+    def test_webhook_id_property(self, webhook: webhooks.IncomingWebhook):
         assert webhook.webhook_id is webhook.id
 
     @pytest.mark.asyncio
-    async def test_delete(self, webhook):
+    async def test_delete(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
 
         await webhook.delete()
@@ -263,7 +263,7 @@ class TestIncomingWebhook:
         webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
 
     @pytest.mark.asyncio
-    async def test_delete_uses_token_property(self, webhook):
+    async def test_delete_uses_token_property(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "123321"
 
         await webhook.delete()
@@ -271,7 +271,7 @@ class TestIncomingWebhook:
         webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321, token="123321")
 
     @pytest.mark.asyncio
-    async def test_delete_use_token_is_true(self, webhook):
+    async def test_delete_use_token_is_true(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "322312"
 
         await webhook.delete(use_token=True)
@@ -279,7 +279,7 @@ class TestIncomingWebhook:
         webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321, token="322312")
 
     @pytest.mark.asyncio
-    async def test_delete_use_token_is_true_without_token(self, webhook):
+    async def test_delete_use_token_is_true_without_token(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
 
         with pytest.raises(ValueError, match="This webhook's token is unknown, so cannot be used"):
@@ -288,7 +288,7 @@ class TestIncomingWebhook:
         webhook.app.rest.delete_webhook.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_delete_use_token_is_false(self, webhook):
+    async def test_delete_use_token_is_false(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "322312"
 
         await webhook.delete(use_token=False)
@@ -296,7 +296,7 @@ class TestIncomingWebhook:
         webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
 
     @pytest.mark.asyncio
-    async def test_edit(self, webhook):
+    async def test_edit(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
         mock_avatar = object()
@@ -309,7 +309,7 @@ class TestIncomingWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_uses_token_property(self, webhook):
+    async def test_edit_uses_token_property(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "aye"
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
         mock_avatar = object()
@@ -322,7 +322,7 @@ class TestIncomingWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_when_use_token_is_true(self, webhook):
+    async def test_edit_when_use_token_is_true(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "owoowow"
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
         mock_avatar = object()
@@ -335,7 +335,7 @@ class TestIncomingWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_when_use_token_is_true_and_no_token(self, webhook):
+    async def test_edit_when_use_token_is_true_and_no_token(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
 
         with pytest.raises(ValueError, match="This webhook's token is unknown, so cannot be used"):
@@ -344,7 +344,7 @@ class TestIncomingWebhook:
         webhook.app.rest.edit_webhook.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_edit_when_use_token_is_false(self, webhook):
+    async def test_edit_when_use_token_is_false(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "owoowow"
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
         mock_avatar = object()
@@ -357,7 +357,7 @@ class TestIncomingWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_channel(self, webhook):
+    async def test_fetch_channel(self, webhook: webhooks.IncomingWebhook):
         webhook.app.rest.fetch_channel.return_value = mock.Mock(channels.GuildTextChannel)
 
         assert await webhook.fetch_channel() is webhook.app.rest.fetch_channel.return_value
@@ -365,7 +365,7 @@ class TestIncomingWebhook:
         webhook.app.rest.fetch_channel.assert_awaited_once_with(webhook.channel_id)
 
     @pytest.mark.asyncio
-    async def test_fetch_self(self, webhook):
+    async def test_fetch_self(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
         webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
 
@@ -375,7 +375,7 @@ class TestIncomingWebhook:
         webhook.app.rest.fetch_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
 
     @pytest.mark.asyncio
-    async def test_fetch_self_uses_token_property(self, webhook):
+    async def test_fetch_self_uses_token_property(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "no gnomo"
         webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
 
@@ -385,7 +385,7 @@ class TestIncomingWebhook:
         webhook.app.rest.fetch_webhook.assert_awaited_once_with(987654321, token="no gnomo")
 
     @pytest.mark.asyncio
-    async def test_fetch_self_when_use_token_is_true(self, webhook):
+    async def test_fetch_self_when_use_token_is_true(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "no momo"
         webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
 
@@ -395,7 +395,7 @@ class TestIncomingWebhook:
         webhook.app.rest.fetch_webhook.assert_awaited_once_with(987654321, token="no momo")
 
     @pytest.mark.asyncio
-    async def test_fetch_self_when_use_token_is_true_without_token_property(self, webhook):
+    async def test_fetch_self_when_use_token_is_true_without_token_property(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
 
         with pytest.raises(ValueError, match="This webhook's token is unknown, so cannot be used"):
@@ -404,7 +404,7 @@ class TestIncomingWebhook:
         webhook.app.rest.fetch_webhook.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_fetch_self_when_use_token_is_false(self, webhook):
+    async def test_fetch_self_when_use_token_is_false(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "no momo"
         webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
 
@@ -416,7 +416,7 @@ class TestIncomingWebhook:
 
 class TestChannelFollowerWebhook:
     @pytest.fixture
-    def webhook(self):
+    def webhook(self) -> webhooks.ChannelFollowerWebhook:
         return webhooks.ChannelFollowerWebhook(
             app=mock.Mock(rest=mock.AsyncMock()),
             id=987654321,
@@ -432,13 +432,13 @@ class TestChannelFollowerWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_delete(self, webhook):
+    async def test_delete(self, webhook: webhooks.ChannelFollowerWebhook):
         await webhook.delete()
 
         webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321)
 
     @pytest.mark.asyncio
-    async def test_edit(self, webhook):
+    async def test_edit(self, webhook: webhooks.ChannelFollowerWebhook):
         mock_avatar = object()
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.ChannelFollowerWebhook)
 
@@ -450,7 +450,7 @@ class TestChannelFollowerWebhook:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_channel(self, webhook):
+    async def test_fetch_channel(self, webhook: webhooks.ChannelFollowerWebhook):
         webhook.app.rest.fetch_channel.return_value = mock.Mock(channels.GuildTextChannel)
 
         assert await webhook.fetch_channel() is webhook.app.rest.fetch_channel.return_value
@@ -458,7 +458,7 @@ class TestChannelFollowerWebhook:
         webhook.app.rest.fetch_channel.assert_awaited_once_with(webhook.channel_id)
 
     @pytest.mark.asyncio
-    async def test_fetch_self(self, webhook):
+    async def test_fetch_self(self, webhook: webhooks.ChannelFollowerWebhook):
         webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.ChannelFollowerWebhook)
 
         result = await webhook.fetch_self()

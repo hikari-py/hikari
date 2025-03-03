@@ -36,49 +36,49 @@ from tests.hikari import hikari_test_helpers
 
 class TestTeamMember:
     @pytest.fixture
-    def model(self):
+    def model(self) -> applications.TeamMember:
         return applications.TeamMember(membership_state=4, permissions=["*"], team_id=34123, user=mock.Mock(users.User))
 
-    def test_app_property(self, model):
+    def test_app_property(self, model: applications.TeamMember):
         assert model.app is model.user.app
 
-    def test_avatar_hash_property(self, model):
+    def test_avatar_hash_property(self, model: applications.TeamMember):
         assert model.avatar_hash is model.user.avatar_hash
 
-    def test_avatar_url_property(self, model):
+    def test_avatar_url_property(self, model: applications.TeamMember):
         assert model.avatar_url is model.user.avatar_url
 
-    def test_banner_hash_property(self, model):
+    def test_banner_hash_property(self, model: applications.TeamMember):
         assert model.banner_hash is model.user.banner_hash
 
-    def test_banner_url_propert(self, model):
+    def test_banner_url_propert(self, model: applications.TeamMember):
         assert model.banner_url is model.user.banner_url
 
-    def test_accent_color_propert(self, model):
+    def test_accent_color_propert(self, model: applications.TeamMember):
         assert model.accent_color is model.user.accent_color
 
-    def test_default_avatar_url_property(self, model):
+    def test_default_avatar_url_property(self, model: applications.TeamMember):
         assert model.default_avatar_url is model.user.default_avatar_url
 
-    def test_discriminator_property(self, model):
+    def test_discriminator_property(self, model: applications.TeamMember):
         assert model.discriminator is model.user.discriminator
 
-    def test_flags_property(self, model):
+    def test_flags_property(self, model: applications.TeamMember):
         assert model.flags is model.user.flags
 
-    def test_id_property(self, model):
+    def test_id_property(self, model: applications.TeamMember):
         assert model.id is model.user.id
 
-    def test_is_bot_property(self, model):
+    def test_is_bot_property(self, model: applications.TeamMember):
         assert model.is_bot is model.user.is_bot
 
-    def test_is_system_property(self, model):
+    def test_is_system_property(self, model: applications.TeamMember):
         assert model.is_system is model.user.is_system
 
-    def test_mention_property(self, model):
+    def test_mention_property(self, model: applications.TeamMember):
         assert model.mention is model.user.mention
 
-    def test_username_property(self, model):
+    def test_username_property(self, model: applications.TeamMember):
         assert model.username is model.user.username
 
     def test_str_operator(self):
@@ -90,7 +90,7 @@ class TestTeamMember:
 
 class TestTeam:
     @pytest.fixture
-    def model(self):
+    def model(self) -> applications.Team:
         return hikari_test_helpers.mock_class_namespace(
             applications.Team, slots_=False, init_=False, id=123, icon_hash="ahashicon"
         )()
@@ -99,14 +99,14 @@ class TestTeam:
         team = applications.Team(id=696969, app=object(), name="test", icon_hash="", members=[], owner_id=0)
         assert str(team) == "Team test (696969)"
 
-    def test_icon_url_property(self, model):
+    def test_icon_url_property(self, model: applications.Team):
         model.make_icon_url = mock.Mock(return_value="url")
 
         assert model.icon_url == "url"
 
         model.make_icon_url.assert_called_once_with()
 
-    def test_make_icon_url_when_hash_is_None(self, model):
+    def test_make_icon_url_when_hash_is_None(self, model: applications.Team):
         model.icon_hash = None
 
         with mock.patch.object(
@@ -116,7 +116,7 @@ class TestTeam:
 
         route.compile_to_file.assert_not_called()
 
-    def test_make_icon_url_when_hash_is_not_None(self, model):
+    def test_make_icon_url_when_hash_is_not_None(self, model: applications.Team):
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -129,7 +129,7 @@ class TestTeam:
 
 class TestApplication:
     @pytest.fixture
-    def model(self):
+    def model(self) -> applications.Application:
         return hikari_test_helpers.mock_class_namespace(
             applications.Application,
             init_=False,
@@ -139,14 +139,14 @@ class TestApplication:
             cover_image_hash="ahashcover",
         )()
 
-    def test_cover_image_url_property(self, model):
+    def test_cover_image_url_property(self, model: applications.Application):
         model.make_cover_image_url = mock.Mock(return_value="url")
 
         assert model.cover_image_url == "url"
 
         model.make_cover_image_url.assert_called_once_with()
 
-    def test_make_cover_image_url_when_hash_is_None(self, model):
+    def test_make_cover_image_url_when_hash_is_None(self, model: applications.Application):
         model.cover_image_hash = None
 
         with mock.patch.object(
@@ -156,7 +156,7 @@ class TestApplication:
 
         route.compile_to_file.assert_not_called()
 
-    def test_make_cover_image_url_when_hash_is_not_None(self, model):
+    def test_make_cover_image_url_when_hash_is_not_None(self, model: applications.Application):
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -167,7 +167,7 @@ class TestApplication:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_guild(self, model):
+    async def test_fetch_guild(self, model: applications.Application):
         model.guild_id = 1234
         model.fetch_guild = mock.AsyncMock()
 
@@ -181,7 +181,7 @@ class TestApplication:
             await model.fetch_guild()
 
     @pytest.mark.asyncio
-    async def test_fetch_guild_preview(self, model):
+    async def test_fetch_guild_preview(self, model: applications.Application):
         model.fetch_guild_preview = mock.AsyncMock()
 
         model.fetch_guild_preview.return_value.description = "poggers"
@@ -215,6 +215,6 @@ def test_get_token_id_adds_padding():
 
 
 @pytest.mark.parametrize("token", ["______.222222.dessddssd", "", "b2tva29r.b2tva29r.b2tva29r"])
-def test_get_token_id_handles_invalid_token(token):
+def test_get_token_id_handles_invalid_token(token: str):
     with pytest.raises(ValueError, match="Unexpected token format"):
         applications.get_token_id(token)

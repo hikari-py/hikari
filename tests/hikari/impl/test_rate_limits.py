@@ -25,6 +25,7 @@ import contextlib
 import math
 import sys
 import time
+import typing
 
 import mock
 import pytest
@@ -52,22 +53,23 @@ class TestBaseRateLimiter:
         m.close.assert_called_once()
 
 
+class MockBurstLimiterImpl(rate_limits.BurstRateLimiter):
+    async def acquire(self, *args: typing.Any, **kwargs: typing.Any) -> None:
+        raise NotImplementedError
+
+
 class TestBurstRateLimiter:
     @pytest.fixture
-    def mock_burst_limiter(self):
-        class Impl(rate_limits.BurstRateLimiter):
-            async def acquire(self, *args, **kwargs) -> None:
-                raise NotImplementedError
-
-        return Impl(__name__)
+    def mock_burst_limiter(self) -> MockBurstLimiterImpl:
+        return MockBurstLimiterImpl(__name__)
 
     @pytest.mark.parametrize(("queue", "is_empty"), [(["foo", "bar", "baz"], False), ([], True)])
-    def test_is_empty(self, queue, is_empty, mock_burst_limiter):
+    def test_is_empty(self, queue: typing.Sequence[str], is_empty: bool, mock_burst_limiter: MockBurstLimiterImpl):
         mock_burst_limiter.queue = queue
         assert mock_burst_limiter.is_empty is is_empty
 
     @pytest.mark.asyncio
-    async def test_close_removes_all_futures_from_queue(self, mock_burst_limiter):
+    async def test_close_removes_all_futures_from_queue(self, mock_burst_limiter: MockBurstLimiterImpl):
         event_loop = asyncio.get_running_loop()
         mock_burst_limiter.throttle_task = None
         futures = [event_loop.create_future() for _ in range(10)]
@@ -76,7 +78,9 @@ class TestBurstRateLimiter:
         assert len(mock_burst_limiter.queue) == 0
 
     @pytest.mark.asyncio
-    async def test_close_cancels_all_futures_pending_when_futures_pending(self, mock_burst_limiter):
+    async def test_close_cancels_all_futures_pending_when_futures_pending(
+        self, mock_burst_limiter: MockBurstLimiterImpl
+    ):
         event_loop = asyncio.get_running_loop()
         mock_burst_limiter.throttle_task = None
         futures = [event_loop.create_future() for _ in range(10)]
@@ -86,14 +90,14 @@ class TestBurstRateLimiter:
             assert future.cancelled(), f"future {i} was not cancelled"
 
     @pytest.mark.asyncio
-    async def test_close_is_silent_when_no_futures_pending(self, mock_burst_limiter):
+    async def test_close_is_silent_when_no_futures_pending(self, mock_burst_limiter: MockBurstLimiterImpl):
         mock_burst_limiter.throttle_task = None
         mock_burst_limiter.queue = []
         mock_burst_limiter.close()
         assert True, "passed successfully"
 
     @pytest.mark.asyncio
-    async def test_close_cancels_throttle_task_if_running(self, mock_burst_limiter):
+    async def test_close_cancels_throttle_task_if_running(self, mock_burst_limiter: MockBurstLimiterImpl):
         event_loop = asyncio.get_running_loop()
         task = event_loop.create_future()
         mock_burst_limiter.throttle_task = task
@@ -102,7 +106,7 @@ class TestBurstRateLimiter:
         assert task.cancelled(), "throttle_task is not cancelled"
 
     @pytest.mark.asyncio
-    async def test_close_when_closed(self, mock_burst_limiter):
+    async def test_close_when_closed(self, mock_burst_limiter: MockBurstLimiterImpl):
         # Double-running shouldn't do anything adverse.
         mock_burst_limiter.close()
         mock_burst_limiter.close()
@@ -217,7 +221,7 @@ class TestManualRateLimiter:
 
 class TestWindowedBurstRateLimiter:
     @pytest.fixture
-    def ratelimiter(self):
+    def ratelimiter(self) -> typing.Generator[rate_limits.WindowedBurstRateLimiter, typing.Any, None]:
         inst = hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
             __name__, 3, 3
         )
@@ -226,7 +230,7 @@ class TestWindowedBurstRateLimiter:
             inst.close()
 
     @pytest.mark.asyncio
-    async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter):
+    async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter: rate_limits.WindowedBurstRateLimiter):
         event_loop = asyncio.get_running_loop()
 
         ratelimiter.drip = mock.Mock()
@@ -240,7 +244,7 @@ class TestWindowedBurstRateLimiter:
         event_loop.create_future.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter):
+    async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter: rate_limits.WindowedBurstRateLimiter):
         event_loop = asyncio.get_running_loop()
 
         ratelimiter.drip = mock.Mock()
@@ -254,7 +258,7 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.drip.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_no_drip_if_rate_limited(self, ratelimiter):
+    async def test_no_drip_if_rate_limited(self, ratelimiter: rate_limits.WindowedBurstRateLimiter):
         event_loop = asyncio.get_running_loop()
 
         ratelimiter.drip = mock.Mock()
@@ -268,7 +272,9 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.drip.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_task_scheduled_if_rate_limited_and_throttle_task_is_None(self, ratelimiter):
+    async def test_task_scheduled_if_rate_limited_and_throttle_task_is_None(
+        self, ratelimiter: rate_limits.WindowedBurstRateLimiter
+    ):
         event_loop = asyncio.get_running_loop()
 
         ratelimiter.drip = mock.Mock()
@@ -284,7 +290,9 @@ class TestWindowedBurstRateLimiter:
         ratelimiter.throttle.assert_called()
 
     @pytest.mark.asyncio
-    async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(self, ratelimiter):
+    async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(
+        self, ratelimiter: rate_limits.WindowedBurstRateLimiter
+    ):
         event_loop = asyncio.get_running_loop()
 
         ratelimiter.drip = mock.Mock()
@@ -298,7 +306,9 @@ class TestWindowedBurstRateLimiter:
         assert old_task is ratelimiter.throttle_task, "task was rescheduled, that shouldn't happen :("
 
     @pytest.mark.asyncio
-    async def test_future_is_added_to_queue_if_throttle_task_is_not_None(self, ratelimiter):
+    async def test_future_is_added_to_queue_if_throttle_task_is_not_None(
+        self, ratelimiter: rate_limits.WindowedBurstRateLimiter
+    ):
         event_loop = asyncio.get_running_loop()
 
         ratelimiter.drip = mock.Mock()
@@ -313,7 +323,7 @@ class TestWindowedBurstRateLimiter:
         assert ratelimiter.queue[-1:] == [future]
 
     @pytest.mark.asyncio
-    async def test_future_is_added_to_queue_if_rate_limited(self, ratelimiter):
+    async def test_future_is_added_to_queue_if_rate_limited(self, ratelimiter: rate_limits.WindowedBurstRateLimiter):
         event_loop = asyncio.get_running_loop()
 
         ratelimiter.drip = mock.Mock()
@@ -425,7 +435,7 @@ class TestWindowedBurstRateLimiter:
             assert rl.remaining == 27
 
     @pytest.mark.parametrize("remaining", [-1, 0, 1])
-    def test_is_rate_limited_when_rate_limit_not_expired_only_returns_False(self, remaining):
+    def test_is_rate_limited_when_rate_limit_not_expired_only_returns_False(self, remaining: int):
         with rate_limits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
             now = 420
             rl.reset_at = now + 69
@@ -468,7 +478,7 @@ class TestExponentialBackOff:
         assert eb.increment == 0
 
     @pytest.mark.parametrize(("iteration", "backoff"), enumerate((1, 2, 4, 8, 16, 32)))
-    def test_increment_linear(self, iteration, backoff):
+    def test_increment_linear(self, iteration: int, backoff: int):
         eb = rate_limits.ExponentialBackOff(2, 64, 0)
 
         for _ in range(iteration):
@@ -503,7 +513,7 @@ class TestExponentialBackOff:
         assert eb.increment == 5
 
     @pytest.mark.parametrize(("iteration", "backoff"), enumerate((1, 2, 4, 8, 16, 32)))
-    def test_increment_jitter(self, iteration, backoff):
+    def test_increment_jitter(self, iteration: int, backoff: int):
         abs_tol = 1
         eb = rate_limits.ExponentialBackOff(2, 64, abs_tol)
 

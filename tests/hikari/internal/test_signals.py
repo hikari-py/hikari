@@ -37,7 +37,7 @@ def test__raise_interrupt():
 
 
 @pytest.mark.parametrize("trace", [True, False])
-def test__interrupt_handler(trace):
+def test__interrupt_handler(trace: bool):
     loop = mock.Mock()
 
     with mock.patch.object(signals, "_LOGGER", new=mock.Mock(isEnabledFor=mock.Mock(return_value=trace))):

@@ -21,8 +21,10 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import contextlib
 import sys
+import typing
 import warnings
 
 import mock
@@ -30,6 +32,7 @@ import pytest
 
 from hikari import applications
 from hikari import errors
+from hikari import intents as intents_
 from hikari import presences
 from hikari import snowflakes
 from hikari import undefined
@@ -49,7 +52,7 @@ from tests.hikari import hikari_test_helpers
 
 
 @pytest.mark.parametrize("activity", [undefined.UNDEFINED, None])
-def test_validate_activity_when_no_activity(activity):
+def test_validate_activity_when_no_activity(activity: undefined.UndefinedType | None):
     with mock.patch.object(warnings, "warn") as warn:
         bot_impl._validate_activity(activity)
 
@@ -81,58 +84,58 @@ def test_validate_activity_when_no_warning():
 
 class TestGatewayBot:
     @pytest.fixture
-    def cache(self):
+    def cache(self) -> cache_impl.CacheImpl:
         return mock.Mock()
 
     @pytest.fixture
-    def entity_factory(self):
+    def entity_factory(self) -> entity_factory_impl.EntityFactoryImpl:
         return mock.Mock()
 
     @pytest.fixture
-    def event_factory(self):
+    def event_factory(self) -> event_factory_impl.EventFactoryImpl:
         return mock.Mock()
 
     @pytest.fixture
-    def event_manager(self):
+    def event_manager(self) -> event_manager_impl.EventManagerImpl:
         return mock.Mock()
 
     @pytest.fixture
-    def rest(self):
+    def rest(self) -> rest_impl.RESTClientImpl:
         return mock.Mock()
 
     @pytest.fixture
-    def voice(self):
+    def voice(self) -> voice_impl.VoiceComponentImpl:
         return mock.Mock()
 
     @pytest.fixture
-    def executor(self):
+    def executor(self) -> concurrent.futures.Executor:
         return mock.Mock()
 
     @pytest.fixture
-    def intents(self):
+    def intents(self) -> intents_.Intents:
         return mock.Mock()
 
     @pytest.fixture
-    def proxy_settings(self):
+    def proxy_settings(self) -> config.ProxySettings:
         return mock.Mock()
 
     @pytest.fixture
-    def http_settings(self):
+    def http_settings(self) -> config.HTTPSettings:
         return mock.Mock()
 
     @pytest.fixture
     def bot(
         self,
-        cache,
-        entity_factory,
-        event_factory,
-        event_manager,
-        rest,
-        voice,
-        executor,
-        intents,
-        proxy_settings,
-        http_settings,
+        cache: cache_impl.CacheImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        event_manager: event_manager_impl.EventManagerImpl,
+        rest: rest_impl.RESTClientImpl,
+        voice: voice_impl.VoiceComponentImpl,
+        executor: concurrent.futures.Executor,
+        intents: intents_.Intents,
+        proxy_settings: config.ProxySettings,
+        http_settings: config.HTTPSettings,
     ):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(cache_impl, "CacheImpl", return_value=cache))
@@ -267,22 +270,22 @@ class TestGatewayBot:
 
         assert bot._token == "token yeet"
 
-    def test_cache(self, bot, cache):
+    def test_cache(self, bot: bot_impl.GatewayBot, cache: cache_impl.CacheImpl):
         assert bot.cache is cache
 
-    def test_event_manager(self, bot, event_manager):
+    def test_event_manager(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
         assert bot.event_manager is event_manager
 
-    def test_entity_factory(self, bot, entity_factory):
+    def test_entity_factory(self, bot: bot_impl.GatewayBot, entity_factory: entity_factory_impl.EntityFactoryImpl):
         assert bot.entity_factory is entity_factory
 
-    def test_event_factory(self, bot, event_factory):
+    def test_event_factory(self, bot: bot_impl.GatewayBot, event_factory: event_factory_impl.EventFactoryImpl):
         assert bot.event_factory is event_factory
 
-    def test_executor(self, bot, executor):
+    def test_executor(self, bot: bot_impl.GatewayBot, executor: concurrent.futures.Executor):
         assert bot.executor is executor
 
-    def test_heartbeat_latencies(self, bot):
+    def test_heartbeat_latencies(self, bot: bot_impl.GatewayBot):
         bot._shards = {
             0: mock.Mock(id=0, heartbeat_latency=96),
             1: mock.Mock(id=1, heartbeat_latency=123),
@@ -291,7 +294,7 @@ class TestGatewayBot:
 
         assert bot.heartbeat_latencies == {0: 96, 1: 123, 2: 456}
 
-    def test_heartbeat_latency(self, bot):
+    def test_heartbeat_latency(self, bot: bot_impl.GatewayBot):
         bot._shards = {
             0: mock.Mock(heartbeat_latency=96),
             1: mock.Mock(heartbeat_latency=123),
@@ -300,60 +303,60 @@ class TestGatewayBot:
 
         assert bot.heartbeat_latency == 109.5
 
-    def test_http_settings(self, bot, http_settings):
+    def test_http_settings(self, bot: bot_impl.GatewayBot, http_settings: config.HTTPSettings):
         assert bot.http_settings is http_settings
 
-    def test_intents(self, bot, intents):
+    def test_intents(self, bot: bot_impl.GatewayBot, intents: intents_.Intents):
         assert bot.intents is intents
 
-    def test_get_me(self, bot, cache):
+    def test_get_me(self, bot: bot_impl.GatewayBot, cache: cache_impl.CacheImpl):
         assert bot.get_me() is cache.get_me.return_value
 
-    def test_proxy_settings(self, bot, proxy_settings):
+    def test_proxy_settings(self, bot: bot_impl.GatewayBot, proxy_settings: config.ProxySettings):
         assert bot.proxy_settings is proxy_settings
 
-    def test_shard_count_when_no_shards(self, bot):
+    def test_shard_count_when_no_shards(self, bot: bot_impl.GatewayBot):
         bot._shards = {}
 
         assert bot.shard_count == 0
 
-    def test_shard_count(self, bot):
+    def test_shard_count(self, bot: bot_impl.GatewayBot):
         bot._shards = {0: mock.Mock(shard_count=96), 1: mock.Mock(shard_count=123)}
 
         assert bot.shard_count == 96
 
-    def test_voice(self, bot, voice):
+    def test_voice(self, bot: bot_impl.GatewayBot, voice: voice_impl.VoiceComponentImpl):
         assert bot.voice is voice
 
-    def test_rest(self, bot, rest):
+    def test_rest(self, bot: bot_impl.GatewayBot, rest: rest_impl.RESTClientImpl):
         assert bot.rest is rest
 
     @pytest.mark.parametrize(("closed_event", "expected"), [("something", True), (None, False)])
-    def test_is_alive(self, bot, closed_event, expected):
+    def test_is_alive(self, bot: bot_impl.GatewayBot, closed_event: str | None, expected: bool):
         bot._closed_event = closed_event
 
         assert bot.is_alive is expected
 
-    def test_check_if_alive(self, bot):
+    def test_check_if_alive(self, bot: bot_impl.GatewayBot):
         bot._closed_event = object()
 
         bot._check_if_alive()
 
-    def test_check_if_alive_when_False(self, bot):
+    def test_check_if_alive_when_False(self, bot: bot_impl.GatewayBot):
         bot._closed_event = None
 
         with pytest.raises(errors.ComponentStateConflictError):
             bot._check_if_alive()
 
     @pytest.mark.asyncio
-    async def test_close_when_already_closed(self, bot):
+    async def test_close_when_already_closed(self, bot: bot_impl.GatewayBot):
         bot._closed_event = mock.Mock()
 
         with pytest.raises(errors.ComponentStateConflictError):
             await bot.close()
 
     @pytest.mark.asyncio
-    async def test_close_when_already_closing(self, bot):
+    async def test_close_when_already_closing(self, bot: bot_impl.GatewayBot):
         bot._closed_event = mock.Mock()
         bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
 
@@ -364,7 +367,15 @@ class TestGatewayBot:
         bot._closed_event.set.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_close(self, bot, event_manager, event_factory, rest, voice, cache):
+    async def test_close(
+        self,
+        bot: bot_impl.GatewayBot,
+        event_manager: event_manager_impl.EventManagerImpl,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        rest: rest_impl.RESTClientImpl,
+        voice: voice_impl.VoiceComponentImpl,
+        cache: cache_impl.CacheImpl,
+    ):
         def null_call(arg):
             return arg
 
@@ -450,14 +461,14 @@ class TestGatewayBot:
             ]
         )
 
-    def test_dispatch(self, bot, event_manager):
+    def test_dispatch(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
         event = object()
 
         assert bot.dispatch(event) is event_manager.dispatch.return_value
 
         event_manager.dispatch.assert_called_once_with(event)
 
-    def test_get_listeners(self, bot, event_manager):
+    def test_get_listeners(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
         event = object()
 
         assert bot.get_listeners(event, polymorphic=False) is event_manager.get_listeners.return_value
@@ -465,7 +476,7 @@ class TestGatewayBot:
         event_manager.get_listeners.assert_called_once_with(event, polymorphic=False)
 
     @pytest.mark.asyncio
-    async def test_join(self, bot, event_manager):
+    async def test_join(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
         bot._closed_event = mock.AsyncMock()
 
         await bot.join()
@@ -473,36 +484,38 @@ class TestGatewayBot:
         bot._closed_event.wait.assert_awaited_once_with()
 
     @pytest.mark.asyncio
-    async def test_join_when_not_running(self, bot, event_manager):
+    async def test_join_when_not_running(
+        self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl
+    ):
         bot._closed_event = None
 
         with pytest.raises(errors.ComponentStateConflictError):
             await bot.join()
 
-    def test_listen(self, bot, event_manager):
+    def test_listen(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
         event = object()
 
         assert bot.listen(event) is event_manager.listen.return_value
 
         event_manager.listen.assert_called_once_with(event)
 
-    def test_print_banner(self, bot):
+    def test_print_banner(self, bot: bot_impl.GatewayBot):
         with mock.patch.object(ux, "print_banner") as print_banner:
             bot.print_banner("testing", False, True, extra_args={"test_key": "test_value"})
 
         print_banner.assert_called_once_with("testing", False, True, extra_args={"test_key": "test_value"})
 
-    def test_run_when_already_running(self, bot):
+    def test_run_when_already_running(self, bot: bot_impl.GatewayBot):
         bot._closed_event = object()
 
         with pytest.raises(errors.ComponentStateConflictError):
             bot.run()
 
-    def test_run_when_shard_ids_specified_without_shard_count(self, bot):
+    def test_run_when_shard_ids_specified_without_shard_count(self, bot: bot_impl.GatewayBot):
         with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
             bot.run(shard_ids={1})
 
-    def test_run_with_asyncio_debug(self, bot):
+    def test_run_with_asyncio_debug(self, bot: bot_impl.GatewayBot):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
@@ -516,7 +529,7 @@ class TestGatewayBot:
 
         loop.set_debug.assert_called_once_with(True)
 
-    def test_run_with_coroutine_tracking_depth(self, bot):
+    def test_run_with_coroutine_tracking_depth(self, bot: bot_impl.GatewayBot):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
@@ -533,7 +546,7 @@ class TestGatewayBot:
 
         coroutine_tracking_depth.assert_called_once_with(100)
 
-    def test_run_with_close_passed_executor(self, bot):
+    def test_run_with_close_passed_executor(self, bot: bot_impl.GatewayBot):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
@@ -550,7 +563,7 @@ class TestGatewayBot:
         executor.shutdown.assert_called_once_with(wait=True)
         assert bot._executor is None
 
-    def test_run_when_close_loop(self, bot):
+    def test_run_when_close_loop(self, bot: bot_impl.GatewayBot):
         stack = contextlib.ExitStack()
         logger = stack.enter_context(mock.patch.object(bot_impl, "_LOGGER"))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
@@ -566,7 +579,7 @@ class TestGatewayBot:
 
         destroy_loop.assert_called_once_with(loop, logger)
 
-    def test_run(self, bot):
+    def test_run(self, bot: bot_impl.GatewayBot):
         activity = object()
         afk = object()
         check_for_updates = object()
@@ -622,19 +635,28 @@ class TestGatewayBot:
         handle_interrupts.return_value.assert_used_once()
 
     @pytest.mark.asyncio
-    async def test_start_when_shard_ids_specified_without_shard_count(self, bot):
+    async def test_start_when_shard_ids_specified_without_shard_count(self, bot: bot_impl.GatewayBot):
         with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
             await bot.start(shard_ids=(1,))
 
     @pytest.mark.asyncio
-    async def test_start_when_already_running(self, bot):
+    async def test_start_when_already_running(self, bot: bot_impl.GatewayBot):
         bot._closed_event = object()
 
         with pytest.raises(errors.ComponentStateConflictError):
             await bot.start()
 
     @pytest.mark.asyncio
-    async def test_start(self, bot, rest, voice, event_manager, event_factory, http_settings, proxy_settings):
+    async def test_start(
+        self,
+        bot: bot_impl.GatewayBot,
+        rest: rest_impl.RESTClientImpl,
+        voice: voice_impl.VoiceComponentImpl,
+        event_manager: event_manager_impl.EventManagerImpl,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        http_settings: config.HTTPSettings,
+        proxy_settings: config.ProxySettings,
+    ):
         class MockSessionStartLimit:
             remaining = 10
             reset_at = "now"
@@ -651,7 +673,7 @@ class TestGatewayBot:
 
         mock_start_one_shard = mock.Mock()
 
-        def _mock_start_one_shard(*args, **kwargs):
+        def _mock_start_one_shard(*args: typing.Any, **kwargs: typing.Any):
             bot._shards[kwargs["shard_id"]] = next(shards_iter)
             return mock_start_one_shard(*args, **kwargs)
 
@@ -731,7 +753,14 @@ class TestGatewayBot:
         )
 
     @pytest.mark.asyncio
-    async def test_start_when_request_close_mid_startup(self, bot, rest, voice, event_manager, event_factory):
+    async def test_start_when_request_close_mid_startup(
+        self,
+        bot: bot_impl.GatewayBot,
+        rest: rest_impl.RESTClientImpl,
+        voice: voice_impl.VoiceComponentImpl,
+        event_manager: event_manager_impl.EventManagerImpl,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         class MockSessionStartLimit:
             remaining = 10
             reset_at = "now"
@@ -766,7 +795,14 @@ class TestGatewayBot:
         )
 
     @pytest.mark.asyncio
-    async def test_start_when_shard_closed_mid_startup(self, bot, rest, voice, event_manager, event_factory):
+    async def test_start_when_shard_closed_mid_startup(
+        self,
+        bot: bot_impl.GatewayBot,
+        rest: rest_impl.RESTClientImpl,
+        voice: voice_impl.VoiceComponentImpl,
+        event_manager: event_manager_impl.EventManagerImpl,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         class MockSessionStartLimit:
             remaining = 10
             reset_at = "now"
@@ -801,7 +837,7 @@ class TestGatewayBot:
             event.return_value.wait.return_value, shard1.join.return_value, timeout=5
         )
 
-    def test_stream(self, bot):
+    def test_stream(self, bot: bot_impl.GatewayBot):
         event_type = object()
 
         with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
@@ -810,7 +846,7 @@ class TestGatewayBot:
         check_if_alive.assert_called_once_with()
         bot._event_manager.stream.assert_called_once_with(event_type, timeout=100, limit=400)
 
-    def test_subscribe(self, bot):
+    def test_subscribe(self, bot: bot_impl.GatewayBot):
         event_type = object()
         callback = object()
 
@@ -818,7 +854,7 @@ class TestGatewayBot:
 
         bot._event_manager.subscribe.assert_called_once_with(event_type, callback)
 
-    def test_unsubscribe(self, bot):
+    def test_unsubscribe(self, bot: bot_impl.GatewayBot):
         event_type = object()
         callback = object()
 
@@ -827,7 +863,7 @@ class TestGatewayBot:
         bot._event_manager.unsubscribe.assert_called_once_with(event_type, callback)
 
     @pytest.mark.asyncio
-    async def test_wait_for(self, bot):
+    async def test_wait_for(self, bot: bot_impl.GatewayBot):
         event_type = object()
         predicate = object()
         bot._event_manager.wait_for = mock.AsyncMock()
@@ -838,7 +874,7 @@ class TestGatewayBot:
         check_if_alive.assert_called_once_with()
         bot._event_manager.wait_for.assert_awaited_once_with(event_type, timeout=100, predicate=predicate)
 
-    def test_get_shard_when_not_present(self, bot):
+    def test_get_shard_when_not_present(self, bot: bot_impl.GatewayBot):
         shard = mock.Mock(shard_count=96)
         bot._shards = {96: shard}
 
@@ -850,7 +886,7 @@ class TestGatewayBot:
 
         calculate_shard_id.assert_called_once_with(96, 702763150025556029)
 
-    def test_get_shard(self, bot):
+    def test_get_shard(self, bot: bot_impl.GatewayBot):
         shard = mock.Mock(shard_count=96)
         bot._shards = {96: shard}
 
@@ -860,7 +896,7 @@ class TestGatewayBot:
         calculate_shard_id.assert_called_once_with(96, 702763150025556029)
 
     @pytest.mark.asyncio
-    async def test_update_presence(self, bot):
+    async def test_update_presence(self, bot: bot_impl.GatewayBot):
         status = object()
         activity = object()
         idle_since = object()
@@ -888,7 +924,7 @@ class TestGatewayBot:
         shard2.update_presence.assert_called_once_with(status=status, activity=activity, idle_since=idle_since, afk=afk)
 
     @pytest.mark.asyncio
-    async def test_update_voice_state(self, bot):
+    async def test_update_voice_state(self, bot: bot_impl.GatewayBot):
         shard = mock.Mock()
         shard.update_voice_state = mock.AsyncMock()
 
@@ -903,7 +939,7 @@ class TestGatewayBot:
         )
 
     @pytest.mark.asyncio
-    async def test_request_guild_members(self, bot):
+    async def test_request_guild_members(self, bot: bot_impl.GatewayBot):
         shard = mock.Mock(shard_count=3)
         shard.request_guild_members = mock.AsyncMock()
 
@@ -920,7 +956,7 @@ class TestGatewayBot:
         )
 
     @pytest.mark.asyncio
-    async def test_start_one_shard(self, bot):
+    async def test_start_one_shard(self, bot: bot_impl.GatewayBot):
         activity = object()
         status = object()
         bot._shards = {}
@@ -960,7 +996,7 @@ class TestGatewayBot:
         assert bot._shards == {1: shard_obj}
 
     @pytest.mark.asyncio
-    async def test_start_one_shard_when_not_alive(self, bot):
+    async def test_start_one_shard_when_not_alive(self, bot: bot_impl.GatewayBot):
         activity = object()
         status = object()
         bot._shards = {}
@@ -984,7 +1020,7 @@ class TestGatewayBot:
 
     @pytest.mark.parametrize("is_alive", [True, False])
     @pytest.mark.asyncio
-    async def test_start_one_shard_when_exception(self, bot, is_alive):
+    async def test_start_one_shard_when_exception(self, bot: bot_impl.GatewayBot, is_alive: bool):
         activity = object()
         status = object()
         bot._shards = {}

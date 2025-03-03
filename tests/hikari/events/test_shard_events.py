@@ -29,7 +29,7 @@ from hikari.events import shard_events
 
 class TestShardReadyEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> shard_events.ShardReadyEvent:
         return shard_events.ShardReadyEvent(
             my_user=mock.Mock(),
             resume_gateway_url="testing",
@@ -41,13 +41,13 @@ class TestShardReadyEvent:
             unavailable_guilds=[],
         )
 
-    def test_app_property(self, event):
+    def test_app_property(self, event: shard_events.ShardReadyEvent):
         assert event.app is event.my_user.app
 
 
 class TestMemberChunkEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> shard_events.MemberChunkEvent:
         return shard_events.MemberChunkEvent(
             app=mock.Mock(),
             shard=mock.Mock(),
@@ -65,14 +65,14 @@ class TestMemberChunkEvent:
             nonce="blah",
         )
 
-    def test___getitem___with_slice(self, event):
+    def test___getitem___with_slice(self, event: shard_events.MemberChunkEvent):
         mock_member_0 = object()
         mock_member_1 = object()
         event.members = {1: object(), 55: object(), 99: mock_member_0, 455: object(), 5444: mock_member_1}
 
         assert event[2:5:2] == (mock_member_0, mock_member_1)
 
-    def test___getitem___with_valid_index(self, event):
+    def test___getitem___with_valid_index(self, event: shard_events.MemberChunkEvent):
         mock_member = object()
         event.members[snowflakes.Snowflake(99)] = mock_member
         assert event[2] is mock_member
@@ -80,11 +80,11 @@ class TestMemberChunkEvent:
         with pytest.raises(IndexError):
             assert event[55]
 
-    def test___getitem___with_invalid_index(self, event):
+    def test___getitem___with_invalid_index(self, event: shard_events.MemberChunkEvent):
         with pytest.raises(IndexError):
             assert event[123]
 
-    def test___iter___(self, event):
+    def test___iter___(self, event: shard_events.MemberChunkEvent):
         member_0 = mock.Mock()
         member_1 = mock.Mock()
         member_2 = mock.Mock()
@@ -97,5 +97,5 @@ class TestMemberChunkEvent:
 
         assert list(event) == [member_0, member_1, member_2]
 
-    def test___len___(self, event):
+    def test___len___(self, event: shard_events.MemberChunkEvent):
         assert len(event) == 4

@@ -32,76 +32,76 @@ from hikari import intents
 
 class TestShardCloseCode:
     @pytest.mark.parametrize(("code", "expected"), [(1000, True), (1001, True), (4000, False), (4014, False)])
-    def test_is_standard_property(self, code, expected):
+    def test_is_standard_property(self, code: int, expected: bool):
         assert errors.ShardCloseCode(code).is_standard is expected
 
 
 class TestComponentStateConflictError:
     @pytest.fixture
-    def error(self):
+    def error(self) -> errors.ComponentStateConflictError:
         return errors.ComponentStateConflictError("some reason")
 
-    def test_str(self, error):
+    def test_str(self, error: errors.ComponentStateConflictError):
         assert str(error) == "some reason"
 
 
 class TestUnrecognisedEntityError:
     @pytest.fixture
-    def error(self):
+    def error(self) -> errors.UnrecognisedEntityError:
         return errors.UnrecognisedEntityError("some reason")
 
-    def test_str(self, error):
+    def test_str(self, error: errors.UnrecognisedEntityError):
         assert str(error) == "some reason"
 
 
 class TestGatewayError:
     @pytest.fixture
-    def error(self):
+    def error(self) -> errors.GatewayError:
         return errors.GatewayError("some reason")
 
-    def test_str(self, error):
+    def test_str(self, error: errors.GatewayError):
         assert str(error) == "some reason"
 
 
 class TestGatewayServerClosedConnectionError:
     @pytest.fixture
-    def error(self):
+    def error(self) -> errors.GatewayServerClosedConnectionError:
         return errors.GatewayServerClosedConnectionError("some reason", 123)
 
-    def test_str(self, error):
+    def test_str(self, error: errors.GatewayServerClosedConnectionError):
         assert str(error) == "Server closed connection with code 123 (some reason)"
 
 
 class TestHTTPResponseError:
     @pytest.fixture
-    def error(self):
+    def error(self) -> errors.HTTPResponseError:
         return errors.HTTPResponseError(
             "https://some.url", http.HTTPStatus.BAD_REQUEST, {}, "raw body", "message", 12345
         )
 
-    def test_str(self, error):
+    def test_str(self, error: errors.HTTPResponseError):
         assert str(error) == "Bad Request 400: (12345) 'message' for https://some.url"
 
-    def test_str_when_int_status_code(self, error):
+    def test_str_when_int_status_code(self, error: errors.HTTPResponseError):
         error.status = 699
         assert str(error) == "Unknown Status 699: (12345) 'message' for https://some.url"
 
-    def test_str_when_message_is_None(self, error):
+    def test_str_when_message_is_None(self, error: errors.HTTPResponseError):
         error.message = None
         assert str(error) == "Bad Request 400: (12345) 'raw body' for https://some.url"
 
-    def test_str_when_code_is_zero(self, error):
+    def test_str_when_code_is_zero(self, error: errors.HTTPResponseError):
         error.code = 0
         assert str(error) == "Bad Request 400: 'message' for https://some.url"
 
-    def test_str_when_code_is_not_zero(self, error):
+    def test_str_when_code_is_not_zero(self, error: errors.HTTPResponseError):
         error.code = 100
         assert str(error) == "Bad Request 400: (100) 'message' for https://some.url"
 
 
 class TestBadRequestError:
     @pytest.fixture
-    def error(self):
+    def error(self) -> errors.BadRequestError:
         return errors.BadRequestError(
             "https://some.url",
             http.HTTPStatus.BAD_REQUEST,
@@ -121,7 +121,7 @@ class TestBadRequestError:
             },
         )
 
-    def test_str(self, error):
+    def test_str(self, error: errors.BadRequestError):
         assert str(error) == inspect.cleandoc(
             """
             Bad Request 400: 'raw body' for https://some.url
@@ -138,7 +138,7 @@ class TestBadRequestError:
             """
         )
 
-    def test_str_when_dump_error_errors(self, error):
+    def test_str_when_dump_error_errors(self, error: errors.BadRequestError):
         with mock.patch.object(errors, "_dump_errors", side_effect=KeyError):
             string = str(error)
 
@@ -181,7 +181,7 @@ class TestBadRequestError:
             """
         )
 
-    def test_str_when_cached(self, error):
+    def test_str_when_cached(self, error: errors.BadRequestError):
         error._cached_str = "ok"
 
         with mock.patch.object(errors, "_dump_errors") as dump_errors:
@@ -189,7 +189,7 @@ class TestBadRequestError:
 
         dump_errors.assert_not_called()
 
-    def test_str_when_no_errors(self, error):
+    def test_str_when_no_errors(self, error: errors.BadRequestError):
         error.errors = None
 
         with mock.patch.object(errors, "_dump_errors") as dump_errors:
@@ -200,15 +200,15 @@ class TestBadRequestError:
 
 class TestRateLimitTooLongError:
     @pytest.fixture
-    def error(self):
+    def error(self) -> errors.RateLimitTooLongError:
         return errors.RateLimitTooLongError(
             route="some route", is_global=False, retry_after=0, max_retry_after=60, reset_at=0, limit=0, period=0
         )
 
-    def test_remaining(self, error):
+    def test_remaining(self, error: errors.RateLimitTooLongError):
         assert error.remaining == 0
 
-    def test_str(self, error):
+    def test_str(self, error: errors.RateLimitTooLongError):
         assert str(error) == (
             "The request has been rejected, as you would be waiting for more than "
             "the max retry-after (60) on route 'some route' [is_global=False]"
@@ -217,17 +217,17 @@ class TestRateLimitTooLongError:
 
 class TestBulkDeleteError:
     @pytest.fixture
-    def error(self):
+    def error(self) -> errors.BulkDeleteError:
         return errors.BulkDeleteError(range(10))
 
-    def test_str(self, error):
+    def test_str(self, error: errors.BulkDeleteError):
         assert str(error) == "Error encountered when bulk deleting messages (10 messages deleted)"
 
 
 class TestMissingIntentError:
     @pytest.fixture
-    def error(self):
+    def error(self) -> errors.MissingIntentError:
         return errors.MissingIntentError(intents.Intents.GUILD_MEMBERS | intents.Intents.GUILD_EMOJIS)
 
-    def test_str(self, error):
+    def test_str(self, error: errors.MissingIntentError):
         assert str(error) == "You are missing the following intent(s): GUILD_EMOJIS, GUILD_MEMBERS"

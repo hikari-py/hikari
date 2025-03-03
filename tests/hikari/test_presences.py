@@ -26,6 +26,7 @@ import pytest
 from hikari import files
 from hikari import presences
 from hikari import snowflakes
+from hikari import traits
 from hikari import urls
 from hikari.impl import gateway_bot
 from hikari.internal import routes
@@ -166,7 +167,7 @@ class TestActivity:
 
 class TestMemberPresence:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> presences.MemberPresence:
         return presences.MemberPresence(
             app=mock_app,
             user_id=snowflakes.Snowflake(432),
@@ -177,14 +178,14 @@ class TestMemberPresence:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_user(self, model):
+    async def test_fetch_user(self, model: presences.MemberPresence):
         model.app.rest.fetch_user = mock.AsyncMock()
 
         assert await model.fetch_user() is model.app.rest.fetch_user.return_value
         model.app.rest.fetch_user.assert_awaited_once_with(432)
 
     @pytest.mark.asyncio
-    async def test_fetch_member(self, model):
+    async def test_fetch_member(self, model: presences.MemberPresence):
         model.app.rest.fetch_member = mock.AsyncMock()
 
         assert await model.fetch_member() is model.app.rest.fetch_member.return_value

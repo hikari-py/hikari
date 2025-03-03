@@ -40,10 +40,10 @@ class MyUnique(snowflakes.Unique):
 
 class TestURLEncodedFormBuilder:
     @pytest.fixture
-    def form_builder(self):
+    def form_builder(self) -> data_binding.URLEncodedFormBuilder:
         return data_binding.URLEncodedFormBuilder()
 
-    def test_add_field(self, form_builder):
+    def test_add_field(self, form_builder: data_binding.URLEncodedFormBuilder):
         class TestBytesPayload:
             def __init__(self, value: bytes) -> None:
                 self.inner = value
@@ -67,7 +67,7 @@ class TestURLEncodedFormBuilder:
             ("test_name2", TestBytesPayload(b"test_data2"), "mimetype2"),
         ]
 
-    def test_add_resource(self, form_builder):
+    def test_add_resource(self, form_builder: data_binding.URLEncodedFormBuilder):
         mock_resource = object()
 
         form_builder.add_resource("lick", mock_resource)
@@ -75,7 +75,7 @@ class TestURLEncodedFormBuilder:
         assert form_builder._resources == [("lick", mock_resource)]
 
     @pytest.mark.asyncio
-    async def test_build(self, form_builder):
+    async def test_build(self, form_builder: data_binding.URLEncodedFormBuilder):
         resource1 = mock.Mock()
         resource2 = mock.Mock()
         stream1 = mock.Mock(filename="testing1", mimetype="text")
@@ -150,7 +150,7 @@ class TestStringMapBuilder:
     @pytest.mark.parametrize(
         ("name", "input_val", "expect"), [("a", True, "true"), ("b", False, "false"), ("c", None, "null")]
     )
-    def test_put_py_singleton(self, name, input_val, expect):
+    def test_put_py_singleton(self, name: str, input_val: typing.Optional[typing.Union[str, bool]], expect: str):
         mapping = data_binding.StringMapBuilder()
         mapping.put(name, input_val)
         assert dict(mapping) == {name: expect}
@@ -277,7 +277,9 @@ class TestJSONObjectBuilder:
             (snowflakes.Snowflake("100126"), "100126"),
         ],
     )
-    def test_put_snowflake(self, input_value, expected_str):
+    def test_put_snowflake(
+        self, input_value: typing.Union[int, str, MyUnique, snowflakes.Snowflake], expected_str: str
+    ):
         builder = data_binding.JSONObjectBuilder()
         builder.put_snowflake("WAWAWA!", input_value)
         assert builder == {"WAWAWA!": expected_str}
@@ -298,7 +300,9 @@ class TestJSONObjectBuilder:
             (snowflakes.Snowflake("100126"), "100126"),
         ],
     )
-    def test_put_snowflake_array_conversions(self, input_value, expected_str):
+    def test_put_snowflake_array_conversions(
+        self, input_value: typing.Union[int, str, MyUnique, snowflakes.Snowflake], expected_str: str
+    ):
         builder = data_binding.JSONObjectBuilder()
         builder.put_snowflake_array("WAWAWAH!", [input_value] * 5)
         assert builder == {"WAWAWAH!": [expected_str] * 5}

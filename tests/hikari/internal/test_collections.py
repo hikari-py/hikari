@@ -23,6 +23,7 @@ from __future__ import annotations
 import array as array_
 import operator
 import sys
+import typing
 
 import mock
 import pytest
@@ -192,7 +193,9 @@ class TestSnowflakeSet:
             ([0, 122], [123, 121, 999991, 121, 121, 124, 120], [0, 120, 121, 122, 123, 124, 999991]),
         ],
     )
-    def test_add_inserts_items(self, start_with, add_items, expect):
+    def test_add_inserts_items(
+        self, start_with: typing.Sequence[int], add_items: typing.Sequence[int], expect: typing.Sequence[int]
+    ):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(start_with)
@@ -216,7 +219,9 @@ class TestSnowflakeSet:
             ([0, 122], [123, 121, 999991, 121, 121, 124, 120], [0, 120, 121, 122, 123, 124, 999991]),
         ],
     )
-    def test_add_all_inserts_items(self, start_with, add_items, expect):
+    def test_add_all_inserts_items(
+        self, start_with: typing.Sequence[int], add_items: typing.Sequence[int], expect: typing.Sequence[int]
+    ):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(start_with)
@@ -264,7 +269,9 @@ class TestSnowflakeSet:
             ([9, 18, 27, 36, 45, 54, 63], [18, 27, 18, 18, 36, 64, 63], [9, 45, 54]),
         ],
     )
-    def test_discard(self, start_with, discard, expect):
+    def test_discard(
+        self, start_with: typing.Sequence[int], discard: typing.Sequence[int], expect: typing.Sequence[int]
+    ):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(start_with)
@@ -292,7 +299,7 @@ class TestSnowflakeSet:
             ([12], "12", False),
         ],
     )
-    def test_contains(self, start_with, look_for, expect):
+    def test_contains(self, start_with: typing.Sequence[int], look_for: int, expect: bool):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(start_with)
@@ -308,7 +315,7 @@ class TestSnowflakeSet:
         assert list(sfs) == [9, 18, 27, 36, 45, 54, 63]
 
     @pytest.mark.parametrize("items", [*range(0, 10)])
-    def test_len(self, items):
+    def test_len(self, items: int):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(i for i in range(items))
@@ -316,7 +323,7 @@ class TestSnowflakeSet:
         assert len(sfs) == items
 
     @pytest.mark.parametrize("items", [*range(0, 10)])
-    def test_length_hint(self, items):
+    def test_length_hint(self, items: int):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(i for i in range(items))

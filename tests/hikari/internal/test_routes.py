@@ -20,6 +20,8 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
@@ -35,16 +37,16 @@ class TestCompiledRoute:
             major_param_hash="abc123", route=mock.Mock(method="GET"), compiled_path="/some/endpoint"
         )
 
-    def test_method(self, compiled_route):
+    def test_method(self, compiled_route: routes.CompiledRoute):
         assert compiled_route.method == "GET"
 
-    def test_create_url(self, compiled_route):
+    def test_create_url(self, compiled_route: routes.CompiledRoute):
         assert compiled_route.create_url("https://some.url/api") == "https://some.url/api/some/endpoint"
 
-    def test_create_real_bucket_hash(self, compiled_route):
+    def test_create_real_bucket_hash(self, compiled_route: routes.CompiledRoute):
         assert compiled_route.create_real_bucket_hash("UNKNOWN", "AUTH_HASH") == "UNKNOWN;AUTH_HASH;abc123"
 
-    def test__str__(self, compiled_route):
+    def test__str__(self, compiled_route: routes.CompiledRoute):
         assert str(compiled_route) == "GET /some/endpoint"
 
 
@@ -59,7 +61,7 @@ class TestRoute:
             (routes.GET_INVITE, None),
         ],
     )
-    def test_major_params(self, route, params):
+    def test_major_params(self, route: routes.Route, params: typing.Optional[frozenset[tuple[str, ...]]]):
         assert route.major_params == params
 
     def test_compile_with_no_major_params(self):
@@ -138,7 +140,7 @@ class TestCDNRoute:
     @pytest.mark.parametrize(
         ("input_file_format", "expected_file_format"), [("jpg", "jpg"), ("JPG", "jpg"), ("png", "png"), ("PNG", "png")]
     )
-    def test_compile_uses_lowercase_file_format_always(self, input_file_format, expected_file_format):
+    def test_compile_uses_lowercase_file_format_always(self, input_file_format: str, expected_file_format: str):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg"}, is_sizable=False)
         compiled_url = route.compile("http://example.com", file_format=input_file_format)
         assert compiled_url.endswith(f".{expected_file_format}"), f"compiled_url={compiled_url}"
@@ -158,12 +160,12 @@ class TestCDNRoute:
             route.compile("http://example.com", file_format="gif", hash="boooob")
 
     @pytest.mark.parametrize("format", ["png", "jpg", "webp"])
-    def test_requesting_non_gif_on_non_animated_hash_does_not_raise_TypeError(self, format):
+    def test_requesting_non_gif_on_non_animated_hash_does_not_raise_TypeError(self, format: str):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "webp", "gif"}, is_sizable=False)
         route.compile("http://example.com", file_format=format, hash="boooob")
 
     @pytest.mark.parametrize("format", ["png", "jpg", "webp"])
-    def test_requesting_non_gif_on_animated_hash_does_not_raise_TypeError(self, format):
+    def test_requesting_non_gif_on_animated_hash_does_not_raise_TypeError(self, format: str):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "webp", "gif"}, is_sizable=False)
         route.compile("http://example.com", file_format=format, hash="a_boooob")
 
@@ -193,25 +195,25 @@ class TestCDNRoute:
         route.compile("http://example.com", file_format="png", hash="boooob")
 
     @pytest.mark.parametrize("size", [*range(17, 32)])
-    def test_passing_non_power_of_2_sizes_to_sizable_raises_ValueError(self, size):
+    def test_passing_non_power_of_2_sizes_to_sizable_raises_ValueError(self, size: int):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=True)
         with pytest.raises(ValueError, match="size must be an integer power of 2 between 16 and 4096 inclusive"):
             route.compile("http://example.com", file_format="png", hash="boooob", size=size)
 
     @pytest.mark.parametrize("size", [int(2**size) for size in [1, *range(17, 25)]])
-    def test_passing_invalid_magnitude_sizes_to_sizable_raises_ValueError(self, size):
+    def test_passing_invalid_magnitude_sizes_to_sizable_raises_ValueError(self, size: int):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "png"}, is_sizable=True)
         with pytest.raises(ValueError, match="size must be an integer power of 2 between 16 and 4096 inclusive"):
             route.compile("http://example.com", file_format="png", hash="boooob", size=size)
 
     @pytest.mark.parametrize("size", [*range(-10, 0)])
-    def test_passing_negative_sizes_to_sizable_raises_ValueError(self, size):
+    def test_passing_negative_sizes_to_sizable_raises_ValueError(self, size: int):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "png"}, is_sizable=True)
         with pytest.raises(ValueError, match="size must be positive"):
             route.compile("http://example.com", file_format="png", hash="boooob", size=size)
 
     @pytest.mark.parametrize("size", [int(2**size) for size in range(4, 13)])
-    def test_passing_valid_sizes_to_sizable_does_not_raise_ValueError(self, size):
+    def test_passing_valid_sizes_to_sizable_does_not_raise_ValueError(self, size: int):
         route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=True)
         route.compile("http://example.com", file_format="png", hash="boooob", size=size)
 
@@ -281,14 +283,23 @@ class TestCDNRoute:
             ("http://example.com", "/{foo}/bar", "GIF", {}, "baz", "bork qux", "http://example.com/baz/bar.gif"),
         ],
     )
-    def test_compile_generates_expected_url(self, base_url, template, format, size_kwds, foo, bar, expected_url):
+    def test_compile_generates_expected_url(
+        self,
+        base_url: str,
+        template: str,
+        format: str,
+        size_kwds: typing.Mapping[str, typing.Any],
+        foo: str,
+        bar: str,
+        expected_url: str,
+    ):
         route = routes.CDNRoute(template, {"png", "gif", "jpg", "webp"}, is_sizable=True)
         actual_url = route.compile(base_url=base_url, file_format=format, foo=foo, bar=bar, **size_kwds)
         assert actual_url == expected_url
 
     @pytest.mark.parametrize("format", ["png", "jpg"])
     @pytest.mark.parametrize("size", [64, 256, 2048])
-    def test_compile_to_file_calls_compile(self, format, size):
+    def test_compile_to_file_calls_compile(self, format: str, size: int):
         with mock.patch.object(files, "URL", autospec=files.URL):
             route = hikari_test_helpers.mock_class_namespace(routes.CDNRoute, slots_=False)(
                 "/hello/world", {"png", "jpg"}, is_sizable=True

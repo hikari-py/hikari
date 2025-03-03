@@ -20,6 +20,8 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import pytest
 
 from hikari import emojis
@@ -40,25 +42,25 @@ class TestEmoji:
             ),
         ],
     )
-    def test_parse(self, input, output):
+    def test_parse(self, input: str, output: emojis.Emoji):
         assert emojis.Emoji.parse(input) == output
 
 
 class TestUnicodeEmoji:
     @pytest.fixture
-    def emoji(self):
+    def emoji(self) -> emojis.UnicodeEmoji:
         return emojis.UnicodeEmoji("\N{OK HAND SIGN}")
 
-    def test_name_property(self, emoji):
+    def test_name_property(self, emoji: emojis.UnicodeEmoji):
         assert emoji.name == emoji
 
-    def test_url_name_property(self, emoji):
+    def test_url_name_property(self, emoji: emojis.UnicodeEmoji):
         assert emoji.url_name == emoji
 
-    def test_mention_property(self, emoji):
+    def test_mention_property(self, emoji: emojis.UnicodeEmoji):
         assert emoji.mention == emoji
 
-    def test_codepoints_property(self, emoji):
+    def test_codepoints_property(self, emoji: emojis.UnicodeEmoji):
         assert emoji.codepoints == [128076]
 
     @pytest.mark.parametrize(
@@ -78,23 +80,23 @@ class TestUnicodeEmoji:
             ([0x200D, 0xFE0F, 0x1F44C, 0x1F44C], "200d-1f44c-1f44c"),
         ],
     )
-    def test_filename_property(self, codepoints, expected_filename):
+    def test_filename_property(self, codepoints: typing.Sequence[int], expected_filename: str):
         emoji = emojis.UnicodeEmoji.parse_codepoints(*codepoints)
         assert emoji.filename == f"{expected_filename}.png"
 
-    def test_url_property(self, emoji):
+    def test_url_property(self, emoji: emojis.UnicodeEmoji):
         assert emoji.url == "https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png"
 
-    def test_unicode_escape_property(self, emoji):
+    def test_unicode_escape_property(self, emoji: emojis.UnicodeEmoji):
         assert emoji.unicode_escape == "\\U0001f44c"
 
-    def test_parse_codepoints(self, emoji):
+    def test_parse_codepoints(self, emoji: emojis.UnicodeEmoji):
         assert emojis.UnicodeEmoji.parse_codepoints(128076) == emoji
 
-    def test_parse_unicode_escape(self, emoji):
+    def test_parse_unicode_escape(self, emoji: emojis.UnicodeEmoji):
         assert emojis.UnicodeEmoji.parse_unicode_escape("\\U0001f44c") == emoji
 
-    def test_str_operator(self, emoji):
+    def test_str_operator(self, emoji: emojis.UnicodeEmoji):
         assert str(emoji) == emoji
 
     @pytest.mark.parametrize(
@@ -107,34 +109,34 @@ class TestUnicodeEmoji:
             ),
         ],
     )
-    def test_parse(self, input, output):
+    def test_parse(self, input: str, output: emojis.UnicodeEmoji):
         assert emojis.UnicodeEmoji.parse(input) == output
 
 
 class TestCustomEmoji:
     @pytest.fixture
-    def emoji(self):
+    def emoji(self) -> emojis.CustomEmoji:
         return emojis.CustomEmoji(id=3213452, name="ok", is_animated=False)
 
-    def test_filename_property(self, emoji):
+    def test_filename_property(self, emoji: emojis.CustomEmoji):
         assert emoji.filename == "3213452.png"
 
-    def test_filename_property_when_animated(self, emoji):
+    def test_filename_property_when_animated(self, emoji: emojis.CustomEmoji):
         emoji.is_animated = True
         assert emoji.filename == "3213452.gif"
 
-    def test_url_name_property(self, emoji):
+    def test_url_name_property(self, emoji: emojis.CustomEmoji):
         assert emoji.url_name == "ok:3213452"
 
-    def test_mention_property(self, emoji):
+    def test_mention_property(self, emoji: emojis.CustomEmoji):
         assert emoji.mention == "<:ok:3213452>"
 
-    def test_mention_property_when_animated(self, emoji):
+    def test_mention_property_when_animated(self, emoji: emojis.CustomEmoji):
         emoji.is_animated = True
 
         assert emoji.mention == "<a:ok:3213452>"
 
-    def test_url_property(self, emoji):
+    def test_url_property(self, emoji: emojis.CustomEmoji):
         assert emoji.url == "https://cdn.discordapp.com/emojis/3213452.png"
 
     def test_str_operator_when_populated_name(self):
@@ -149,7 +151,7 @@ class TestCustomEmoji:
             ("<a:foo:12345>", emojis.CustomEmoji(id=snowflakes.Snowflake(12345), name="foo", is_animated=True)),
         ],
     )
-    def test_parse(self, input, output):
+    def test_parse(self, input: str, output: emojis.CustomEmoji):
         assert emojis.CustomEmoji.parse(input) == output
 
     def test_parse_unhappy_path(self):

@@ -20,6 +20,8 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
@@ -47,7 +49,9 @@ class TestReactionAddEvent:
             (123321, None, emojis.UnicodeEmoji("no u")),
         ],
     )
-    def test_is_for_emoji_when_wrong_emoji_type(self, emoji_id, emoji_name, emoji):
+    def test_is_for_emoji_when_wrong_emoji_type(
+        self, emoji_id: typing.Optional[int], emoji_name: typing.Optional[str], emoji: emojis.Emoji
+    ):
         event = hikari_test_helpers.mock_class_namespace(
             reaction_events.ReactionAddEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
@@ -61,7 +65,9 @@ class TestReactionAddEvent:
             (123321, None, emojis.CustomEmoji(id=123312123, name=None, is_animated=False)),
         ],
     )
-    def test_is_for_emoji_when_emoji_miss_match(self, emoji_id, emoji_name, emoji):
+    def test_is_for_emoji_when_emoji_miss_match(
+        self, emoji_id: typing.Optional[int], emoji_name: typing.Optional[str], emoji: emojis.Emoji
+    ):
         event = hikari_test_helpers.mock_class_namespace(
             reaction_events.ReactionAddEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
@@ -87,7 +93,9 @@ class TestReactionDeleteEvent:
             (534123, None, emojis.UnicodeEmoji("nodfgdu")),
         ],
     )
-    def test_is_for_emoji_when_wrong_emoji_type(self, emoji_id, emoji_name, emoji):
+    def test_is_for_emoji_when_wrong_emoji_type(
+        self, emoji_id: typing.Optional[int], emoji_name: typing.Optional[str], emoji: emojis.Emoji
+    ):
         event = hikari_test_helpers.mock_class_namespace(
             reaction_events.ReactionDeleteEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
@@ -101,7 +109,9 @@ class TestReactionDeleteEvent:
             (54123, None, emojis.CustomEmoji(id=34123, name=None, is_animated=False)),
         ],
     )
-    def test_is_for_emoji_when_emoji_miss_match(self, emoji_id, emoji_name, emoji):
+    def test_is_for_emoji_when_emoji_miss_match(
+        self, emoji_id: typing.Optional[int], emoji_name: typing.Optional[str], emoji: emojis.Emoji
+    ):
         event = hikari_test_helpers.mock_class_namespace(
             reaction_events.ReactionDeleteEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
@@ -127,7 +137,9 @@ class TestReactionDeleteEmojiEvent:
             (1233211, None, emojis.UnicodeEmoji("no eeeu")),
         ],
     )
-    def test_is_for_emoji_when_wrong_emoji_type(self, emoji_id, emoji_name, emoji):
+    def test_is_for_emoji_when_wrong_emoji_type(
+        self, emoji_id: typing.Optional[int], emoji_name: typing.Optional[str], emoji: emojis.Emoji
+    ):
         event = hikari_test_helpers.mock_class_namespace(
             reaction_events.ReactionDeleteEmojiEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
@@ -141,7 +153,9 @@ class TestReactionDeleteEmojiEvent:
             (12331231, None, emojis.CustomEmoji(id=121233312123, name=None, is_animated=False)),
         ],
     )
-    def test_is_for_emoji_when_emoji_miss_match(self, emoji_id, emoji_name, emoji):
+    def test_is_for_emoji_when_emoji_miss_match(
+        self, emoji_id: typing.Optional[int], emoji_name: typing.Optional[str], emoji: emojis.Emoji
+    ):
         event = hikari_test_helpers.mock_class_namespace(
             reaction_events.ReactionDeleteEmojiEvent, emoji_id=emoji_id, emoji_name=emoji_name
         )()
@@ -151,7 +165,7 @@ class TestReactionDeleteEmojiEvent:
 
 class TestGuildReactionAddEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> reaction_events.GuildReactionAddEvent:
         return reaction_events.GuildReactionAddEvent(
             shard=object(),
             member=mock.MagicMock(guilds.Member),
@@ -162,13 +176,13 @@ class TestGuildReactionAddEvent:
             is_animated=False,
         )
 
-    def test_app_property(self, event):
+    def test_app_property(self, event: reaction_events.GuildReactionAddEvent):
         assert event.app is event.member.app
 
-    def test_guild_id_property(self, event):
+    def test_guild_id_property(self, event: reaction_events.GuildReactionAddEvent):
         event.member.guild_id = 123
         assert event.guild_id == 123
 
-    def test_user_id_property(self, event):
+    def test_user_id_property(self, event: reaction_events.GuildReactionAddEvent):
         event.member.user.id = 123
         assert event.user_id == 123
