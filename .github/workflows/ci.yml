@@ -36,10 +36,10 @@ jobs:
         shell: bash
         run: |
           uv pip install .
-          uv pip uninstall -y hikari
+          uv pip uninstall hikari
 
           uv pip install .[speedups]
-          uv pip uninstall -y hikari
+          uv pip uninstall hikari
 
       - name: Run tests
         shell: bash
