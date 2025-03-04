@@ -64,7 +64,7 @@ class TestActivityAssets:
 
     def test_make_large_image_url(self):
         asset = presences.ActivityAssets(
-            application_id=45123123, large_image="541sdfasdasd", large_text=None, small_image=None, small_text=None
+            application_id=snowflakes.Snowflake(45123123), large_image="541sdfasdasd", large_text=None, small_image=None, small_text=None
         )
 
         with mock.patch.object(routes, "CDN_APPLICATION_ASSET") as route:
@@ -125,7 +125,7 @@ class TestActivityAssets:
 
     def test_make_small_image_url(self):
         asset = presences.ActivityAssets(
-            application_id=123321, large_image=None, large_text=None, small_image="aseqwsdas", small_text=None
+            application_id=snowflakes.Snowflake(123321), large_image=None, large_text=None, small_image="aseqwsdas", small_text=None
         )
 
         with mock.patch.object(routes, "CDN_APPLICATION_ASSET") as route:

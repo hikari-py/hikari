@@ -33,12 +33,12 @@ class TestStickerPack:
     @pytest.fixture
     def model(self) -> stickers.StickerPack:
         return stickers.StickerPack(
-            id=123,
+            id=snowflakes.Snowflake(123),
             name="testing",
             description="testing description",
             cover_sticker_id=snowflakes.Snowflake(6541234),
             stickers=[],
-            sku_id=123,
+            sku_id=snowflakes.Snowflake(123),
             banner_asset_id=snowflakes.Snowflake(541231),
         )
 
@@ -65,7 +65,7 @@ class TestStickerPack:
 class TestPartialSticker:
     @pytest.fixture
     def model(self) -> stickers.PartialSticker:
-        return stickers.PartialSticker(id=123, name="testing", format_type="some")
+        return stickers.PartialSticker(id=snowflakes.Snowflake(123), name="testing", format_type="some")
 
     def test_image_url(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.PNG

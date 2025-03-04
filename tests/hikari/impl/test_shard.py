@@ -31,7 +31,7 @@ import aiohttp
 import mock
 import pytest
 
-from hikari import _about
+from hikari import _about, snowflakes
 from hikari import errors
 from hikari import intents
 from hikari import presences
@@ -669,7 +669,7 @@ class TestGatewayShardImpl:
         assert client._status == status
 
     def test_get_user_id(self, client: shard.GatewayShardImpl):
-        client._user_id = 123
+        client._user_id = snowflakes.Snowflake(123)
 
         with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
             assert client.get_user_id() == 123

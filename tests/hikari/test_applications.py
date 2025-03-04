@@ -25,7 +25,7 @@ import datetime
 import mock
 import pytest
 
-from hikari import applications
+from hikari import applications, snowflakes
 from hikari import urls
 from hikari import users
 from hikari.errors import ForbiddenError
@@ -37,7 +37,7 @@ from tests.hikari import hikari_test_helpers
 class TestTeamMember:
     @pytest.fixture
     def model(self) -> applications.TeamMember:
-        return applications.TeamMember(membership_state=4, permissions=["*"], team_id=34123, user=mock.Mock(users.User))
+        return applications.TeamMember(membership_state=4, permissions=["*"], team_id=snowflakes.Snowflake(34123), user=mock.Mock(users.User))
 
     def test_app_property(self, model: applications.TeamMember):
         assert model.app is model.user.app
@@ -96,7 +96,7 @@ class TestTeam:
         )()
 
     def test_str_operator(self):
-        team = applications.Team(id=696969, app=mock.Mock(), name="test", icon_hash="", members=[], owner_id=0)
+        team = applications.Team(id=snowflakes.Snowflake(696969), app=mock.Mock(), name="test", icon_hash="", members=[], owner_id=snowflakes.Snowflake(0))
         assert str(team) == "Team test (696969)"
 
     def test_icon_url_property(self, model: applications.Team):

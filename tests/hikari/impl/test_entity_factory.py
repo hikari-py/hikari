@@ -828,7 +828,7 @@ class TestGatewayGuildDefinition:
         threads = [{"id": str(id_), "type": type_} for id_, type_ in zip(iter(range(len(thread_types))), thread_types)]
         assert threads
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
-            {"id": "4212312", "threads": threads}, user_id=123321
+            {"id": "4212312", "threads": threads}, user_id=snowflakes.Snowflake(123321)
         )
 
         assert guild_definition.threads() == {}
@@ -1086,7 +1086,7 @@ class TestEntityFactoryImpl:
         assert isinstance(application.team, application_models.Team)
         # TeamMember
         assert len(application.team.members) == 1
-        member = application.team.members[115590097100865541]
+        member = application.team.members[snowflakes.Snowflake(115590097100865541)]
         assert member.membership_state == application_models.TeamMembershipState.INVITED
         assert member.permissions == ["*"]
         assert member.team_id == 209333111222
@@ -1428,7 +1428,7 @@ class TestEntityFactoryImpl:
         test_role_payloads = [{"id": "24", "name": "roleA"}]
         roles = entity_factory_impl._deserialize_audit_log_change_roles(test_role_payloads)
         assert len(roles) == 1
-        role = roles[24]
+        role = roles[snowflakes.Snowflake(24)]
         assert role.id == 24
         assert role.name == "roleA"
         assert isinstance(role, guild_models.PartialRole)
@@ -2484,7 +2484,7 @@ class TestEntityFactoryImpl:
         thread_member_payload: typing.Mapping[str, typing.Any],
     ):
         thread_member = entity_factory_impl.deserialize_thread_member(
-            {"join_timestamp": "2022-02-28T01:49:03.599821+00:00", "flags": 494949}, thread_id=123321, user_id=65132123
+            {"join_timestamp": "2022-02-28T01:49:03.599821+00:00", "flags": 494949}, thread_id=snowflakes.Snowflake(123321), user_id=snowflakes.Snowflake(65132123)
         )
 
         assert thread_member.thread_id == 123321
@@ -2584,7 +2584,7 @@ class TestEntityFactoryImpl:
         assert thread.approximate_member_count == 3
         assert thread.rate_limit_per_user == datetime.timedelta(seconds=53)
         assert thread.member == entity_factory_impl.deserialize_thread_member(
-            thread_member_payload, thread_id=946900871160164393
+            thread_member_payload, thread_id=snowflakes.Snowflake(946900871160164393)
         )
         assert isinstance(thread, channel_models.GuildNewsThread)
 
@@ -2672,7 +2672,7 @@ class TestEntityFactoryImpl:
         assert thread.approximate_member_count == 3
         assert thread.rate_limit_per_user == datetime.timedelta(seconds=23)
         assert thread.member == entity_factory_impl.deserialize_thread_member(
-            thread_member_payload, thread_id=947643783913308301
+            thread_member_payload, thread_id=snowflakes.Snowflake(947643783913308301)
         )
         assert thread.applied_tag_ids == [123, 456]
 
@@ -2766,7 +2766,7 @@ class TestEntityFactoryImpl:
         assert thread.approximate_member_count == 3
         assert thread.rate_limit_per_user == datetime.timedelta(seconds=0)
         assert thread.member == entity_factory_impl.deserialize_thread_member(
-            thread_member_payload, thread_id=947690637610844210
+            thread_member_payload, thread_id=snowflakes.Snowflake(947690637610844210)
         )
 
     def test_deserialize_guild_private_thread_when_null_fields(
@@ -2905,7 +2905,7 @@ class TestEntityFactoryImpl:
             # are the ones we mock
             entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
 
-            assert entity_factory_impl.deserialize_channel(payload, guild_id=123) is expected_fn.return_value
+            assert entity_factory_impl.deserialize_channel(payload, guild_id=snowflakes.Snowflake(123)) is expected_fn.return_value
 
         expected_fn.assert_called_once_with(payload, guild_id=123)
 
@@ -2918,7 +2918,7 @@ class TestEntityFactoryImpl:
             # are the ones we mock
             entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
 
-            assert entity_factory_impl.deserialize_channel(payload, guild_id=123123123) is expected_fn.return_value
+            assert entity_factory_impl.deserialize_channel(payload, guild_id=snowflakes.Snowflake(123123123)) is expected_fn.return_value
 
         expected_fn.assert_called_once_with(payload)
 
@@ -4294,7 +4294,7 @@ class TestEntityFactoryImpl:
                 "verification_level": 4,
                 "nsfw_level": 0,
             },
-            user_id=65123,
+            user_id=snowflakes.Snowflake(65123),
         )
         guild = guild_definition.guild()
         assert guild.joined_at is None
@@ -4361,7 +4361,7 @@ class TestEntityFactoryImpl:
                 "widget_enabled": True,
                 "nsfw_level": 0,
             },
-            user_id=1343123,
+            user_id=snowflakes.Snowflake(1343123),
         )
         guild = guild_definition.guild()
         assert guild.icon_hash is None
@@ -4499,7 +4499,7 @@ class TestEntityFactoryImpl:
             "version": "123312",
         }
 
-        command = entity_factory_impl.deserialize_slash_command(payload, guild_id=123123)
+        command = entity_factory_impl.deserialize_slash_command(payload, guild_id=snowflakes.Snowflake(123123))
 
         assert command.guild_id == 123123
 
@@ -4552,7 +4552,7 @@ class TestEntityFactoryImpl:
             # are the ones we mock
             entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
 
-            assert entity_factory_impl.deserialize_command(payload, guild_id=123) is expected_fn.return_value
+            assert entity_factory_impl.deserialize_command(payload, guild_id=snowflakes.Snowflake(123)) is expected_fn.return_value
 
         expected_fn.assert_called_once_with(payload, guild_id=123)
 
@@ -4646,7 +4646,7 @@ class TestEntityFactoryImpl:
         interaction_member_payload: typing.Mapping[str, typing.Any],
         user_payload: typing.Mapping[str, typing.Any],
     ):
-        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
+        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=snowflakes.Snowflake(43123123))
         assert member.id == 115590097100865541
         assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.timezone.utc)
         assert member.nickname == "Snab"
@@ -4683,7 +4683,7 @@ class TestEntityFactoryImpl:
             43123123,
         ]
 
-        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
+        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=snowflakes.Snowflake(43123123))
         assert member.role_ids == [
             582345963851743243,
             582689893965365248,
@@ -4701,7 +4701,7 @@ class TestEntityFactoryImpl:
         del interaction_member_payload["avatar"]
         del interaction_member_payload["communication_disabled_until"]
 
-        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=43123123)
+        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=snowflakes.Snowflake(43123123))
 
         assert member.guild_avatar_hash is None
         assert member.premium_since is None
@@ -4714,7 +4714,7 @@ class TestEntityFactoryImpl:
     ):
         mock_user = mock.Mock()
         member = entity_factory_impl._deserialize_interaction_member(
-            interaction_member_payload, guild_id=43123123, user=mock_user
+            interaction_member_payload, guild_id=snowflakes.Snowflake(43123123), user=mock_user
         )
 
         assert member.user is mock_user
@@ -4730,27 +4730,27 @@ class TestEntityFactoryImpl:
         message_payload: typing.Mapping[str, typing.Any],
     ):
         resolved = entity_factory_impl._deserialize_resolved_option_data(
-            interaction_resolved_data_payload, guild_id=123321
+            interaction_resolved_data_payload, guild_id=snowflakes.Snowflake(123321)
         )
 
         assert len(resolved.channels) == 1
-        channel = resolved.channels[695382395666300958]
+        channel = resolved.channels[snowflakes.Snowflake(695382395666300958)]
         assert channel.type is channel_models.ChannelType.GUILD_TEXT
         assert channel.id == 695382395666300958
         assert channel.name == "discord-announcements"
         assert channel.permissions == permission_models.Permissions(17179869183)
         assert isinstance(channel, base_interactions.InteractionChannel)
         assert len(resolved.members) == 1
-        member = resolved.members[115590097100865541]
+        member = resolved.members[snowflakes.Snowflake(115590097100865541)]
         assert member == entity_factory_impl._deserialize_interaction_member(
-            interaction_member_payload, guild_id=123321, user=entity_factory_impl.deserialize_user(user_payload)
+            interaction_member_payload, guild_id=snowflakes.Snowflake(123321), user=entity_factory_impl.deserialize_user(user_payload)
         )
 
         assert resolved.attachments == {
             690922406474154014: entity_factory_impl._deserialize_message_attachment(attachment_payload)
         }
         assert resolved.roles == {
-            41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=123321)
+            41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(123321))
         }
         assert resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
         assert resolved.messages == {123: entity_factory_impl.deserialize_message(message_payload)}
@@ -4867,13 +4867,13 @@ class TestEntityFactoryImpl:
         assert interaction.guild_locale == "en-US"
         assert interaction.guild_locale is locales.Locale.EN_US
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
-            interaction_member_payload, guild_id=43123123
+            interaction_member_payload, guild_id=snowflakes.Snowflake(43123123)
         )
         assert interaction.user is interaction.member.user
         assert interaction.command_id == 43123123
         assert interaction.command_name == "okokokok"
         assert interaction.resolved == entity_factory_impl._deserialize_resolved_option_data(
-            interaction_resolved_data_payload, guild_id=43123123
+            interaction_resolved_data_payload, guild_id=snowflakes.Snowflake(43123123)
         )
         assert interaction.app_permissions == 54123
         assert len(interaction.entitlements) == 1
@@ -5238,7 +5238,7 @@ class TestEntityFactoryImpl:
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         context_menu_command_payload: typing.Mapping[str, typing.Any],
     ):
-        command = entity_factory_impl.deserialize_command(context_menu_command_payload, guild_id=123)
+        command = entity_factory_impl.deserialize_command(context_menu_command_payload, guild_id=snowflakes.Snowflake(123))
         assert isinstance(command, commands.ContextMenuCommand)
 
         assert command.id == 1231231231
@@ -5341,7 +5341,7 @@ class TestEntityFactoryImpl:
         assert interaction.guild_id == 290926798626357999
         assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
-            interaction_member_payload, guild_id=290926798626357999
+            interaction_member_payload, guild_id=snowflakes.Snowflake(290926798626357999)
         )
         assert interaction.user is interaction.member.user
         assert interaction.values == ["1", "2", "67"]
@@ -5352,7 +5352,7 @@ class TestEntityFactoryImpl:
         assert interaction.app_permissions == 5431234
         # ResolvedData
         assert interaction.resolved == entity_factory_impl._deserialize_resolved_option_data(
-            interaction_resolved_data_payload, guild_id=290926798626357999
+            interaction_resolved_data_payload, guild_id=snowflakes.Snowflake(290926798626357999)
         )
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
@@ -5462,7 +5462,7 @@ class TestEntityFactoryImpl:
         assert interaction.guild_id == 290926798626357999
         assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
-            interaction_member_payload, guild_id=290926798626357999
+            interaction_member_payload, guild_id=snowflakes.Snowflake(290926798626357999)
         )
         assert interaction.user is interaction.member.user
         assert isinstance(interaction, modal_interactions.ModalInteraction)
@@ -5644,7 +5644,7 @@ class TestEntityFactoryImpl:
         guild_sticker_payload: typing.Mapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
-            {"id": "265828729970753537", "stickers": [guild_sticker_payload]}, user_id=123321
+            {"id": "265828729970753537", "stickers": [guild_sticker_payload]}, user_id=snowflakes.Snowflake(123321)
         )
 
         assert guild_definition.stickers() == {
@@ -5656,7 +5656,7 @@ class TestEntityFactoryImpl:
             entity_factory.EntityFactoryImpl, "deserialize_guild_sticker"
         ) as mock_deserialize_guild_sticker:
             guild_definition = entity_factory_impl.deserialize_gateway_guild(
-                {"id": "265828729970753537"}, user_id=123321
+                {"id": "265828729970753537"}, user_id=snowflakes.Snowflake(123321)
             )
 
             mock_sticker = mock.Mock()
@@ -7236,12 +7236,12 @@ class TestEntityFactoryImpl:
         member_payload: typing.Mapping[str, typing.Any],
     ):
         del member_payload["user"]
-        user = entity_factory_impl.deserialize_scheduled_event_user(scheduled_event_user_payload, guild_id=123321)
+        user = entity_factory_impl.deserialize_scheduled_event_user(scheduled_event_user_payload, guild_id=snowflakes.Snowflake(123321))
 
         assert user.event_id == 49494949499494
         assert user.user == entity_factory_impl.deserialize_user(user_payload)
         assert user.member == entity_factory_impl.deserialize_member(
-            member_payload, user=entity_factory_impl.deserialize_user(user_payload), guild_id=123321
+            member_payload, user=entity_factory_impl.deserialize_user(user_payload), guild_id=snowflakes.Snowflake(123321)
         )
         assert isinstance(user, scheduled_event_models.ScheduledEventUser)
 
@@ -7253,7 +7253,7 @@ class TestEntityFactoryImpl:
     ):
         del scheduled_event_user_payload["member"]
 
-        event = entity_factory_impl.deserialize_scheduled_event_user(scheduled_event_user_payload, guild_id=123321)
+        event = entity_factory_impl.deserialize_scheduled_event_user(scheduled_event_user_payload, guild_id=snowflakes.Snowflake(123321))
 
         assert event.member is None
         assert event.user == entity_factory_impl.deserialize_user(user_payload)
@@ -7339,7 +7339,7 @@ class TestEntityFactoryImpl:
 
         # TemplateRole
         assert len(template.source_guild.roles) == 1
-        role = template.source_guild.roles[33]
+        role = template.source_guild.roles[snowflakes.Snowflake(33)]
         assert role.app is mock_app
         assert role.id == 33
         assert role.name == "@everyone"

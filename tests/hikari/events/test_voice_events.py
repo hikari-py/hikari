@@ -23,7 +23,7 @@ from __future__ import annotations
 import mock
 import pytest
 
-from hikari import voices
+from hikari import snowflakes, voices
 from hikari.events import voice_events
 
 
@@ -38,11 +38,11 @@ class TestVoiceStateUpdateEvent:
         assert event.app is event.state.app
 
     def test_guild_id_property(self, event: voice_events.VoiceStateUpdateEvent):
-        event.state.guild_id = 123
+        event.state.guild_id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
     def test_old_voice_state(self, event: voice_events.VoiceStateUpdateEvent):
-        event.old_state.guild_id = 123
+        event.old_state.guild_id = snowflakes.Snowflake(123)
         assert event.old_state.guild_id == 123
 
 
@@ -50,7 +50,7 @@ class TestVoiceServerUpdateEvent:
     @pytest.fixture
     def event(self) -> voice_events.VoiceServerUpdateEvent:
         return voice_events.VoiceServerUpdateEvent(
-            app=None, shard=mock.Mock(), guild_id=123, token="token", raw_endpoint="voice.discord.com:123"
+            app=None, shard=mock.Mock(), guild_id=snowflakes.Snowflake(123), token="token", raw_endpoint="voice.discord.com:123"
         )
 
     def test_endpoint_property(self, event: voice_events.VoiceServerUpdateEvent):

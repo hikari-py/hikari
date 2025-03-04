@@ -23,7 +23,7 @@ from __future__ import annotations
 import mock
 import pytest
 
-from hikari import guilds
+from hikari import guilds, snowflakes
 from hikari.events import role_events
 
 
@@ -36,11 +36,11 @@ class TestRoleCreateEvent:
         assert event.app is event.role.app
 
     def test_guild_id_property(self, event: role_events.RoleCreateEvent):
-        event.role.guild_id = 123
+        event.role.guild_id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
     def test_role_id_property(self, event: role_events.RoleCreateEvent):
-        event.role.id = 123
+        event.role.id = snowflakes.Snowflake(123)
         assert event.role_id == 123
 
 
@@ -55,16 +55,16 @@ class TestRoleUpdateEvent:
         assert event.app is event.role.app
 
     def test_guild_id_property(self, event: role_events.RoleUpdateEvent):
-        event.role.guild_id = 123
+        event.role.guild_id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
     def test_role_id_property(self, event: role_events.RoleUpdateEvent):
-        event.role.id = 123
+        event.role.id = snowflakes.Snowflake(123)
         assert event.role_id == 123
 
     def test_old_role(self, event: role_events.RoleUpdateEvent):
-        event.old_role.guild_id = 123
-        event.old_role.id = 456
+        event.old_role.guild_id = snowflakes.Snowflake(123)
+        event.old_role.id = snowflakes.Snowflake(456)
 
         assert event.old_role.guild_id == 123
         assert event.old_role.id == 456

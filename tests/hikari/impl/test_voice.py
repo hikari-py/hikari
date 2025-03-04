@@ -84,7 +84,7 @@ class TestVoiceComponentImpl:
     async def test_disconnect_when_guild_id_not_in_connections(self, voice_client: voice.VoiceComponentImpl):
         mock_connection = mock.AsyncMock()
         mock_connection_2 = mock.AsyncMock()
-        voice_client._connections = {123: mock_connection, 5324: mock_connection_2}
+        voice_client._connections = {snowflakes.Snowflake(123): mock_connection, snowflakes.Snowflake(5324): mock_connection_2}
 
         with pytest.raises(errors.VoiceError):
             await voice_client.disconnect(1234567890)
@@ -96,7 +96,7 @@ class TestVoiceComponentImpl:
     async def test__disconnect_all(self, voice_client: voice.VoiceComponentImpl):
         mock_connection = mock.AsyncMock()
         mock_connection_2 = mock.AsyncMock()
-        voice_client._connections = {123: mock_connection, 5324: mock_connection_2}
+        voice_client._connections = {snowflakes.Snowflake(123): mock_connection, snowflakes.Snowflake(5324): mock_connection_2}
 
         await voice_client._disconnect_all()
 
@@ -119,7 +119,7 @@ class TestVoiceComponentImpl:
         self, voice_client: voice.VoiceComponentImpl, mock_app: traits.RESTAware, voice_listener: bool
     ):
         voice_client._disconnect_all = mock.AsyncMock()
-        voice_client._connections = {123: None}
+        voice_client._connections = {snowflakes.Snowflake(123): None}
         voice_client._check_if_alive = mock.Mock()
         voice_client._voice_listener = voice_listener
 
@@ -183,7 +183,7 @@ class TestVoiceComponentImpl:
         voice_client._init_state_update_predicate = mock.Mock()
         voice_client._init_server_update_predicate = mock.Mock()
         mock_other_connection = mock.Mock()
-        voice_client._connections = {555: mock_other_connection}
+        voice_client._connections = {snowflakes.Snowflake(555): mock_other_connection}
         mock_shard = mock.AsyncMock(is_alive=True)
         mock_app.event_manager.wait_for = mock.AsyncMock()
         mock_app.shard_count = 42
@@ -360,11 +360,11 @@ class TestVoiceComponentImpl:
     ):
         mock_shard = mock.AsyncMock()
         mock_app.shards = {69: mock_shard}
-        voice_client._connections = {65234123: mock.Mock()}
+        voice_client._connections = {snowflakes.Snowflake(65234123): mock.Mock()}
         expected_connections = {}
         if more_connections:
             mock_connection = mock.Mock()
-            voice_client._connections[123] = mock_connection
+            voice_client._connections[snowflakes.Snowflake(123)] = mock_connection
             expected_connections[123] = mock_connection
 
         await voice_client._on_connection_close(mock.Mock(guild_id=65234123, shard_id=69))
@@ -380,25 +380,25 @@ class TestVoiceComponentImpl:
         assert voice_client._connections == expected_connections
 
     def test__init_state_update_predicate_matches(self, voice_client: voice.VoiceComponentImpl):
-        predicate = voice_client._init_state_update_predicate(42069, 696969)
+        predicate = voice_client._init_state_update_predicate(snowflakes.Snowflake(42069), snowflakes.Snowflake(696969))
         mock_voice_state = mock.Mock(state=mock.Mock(guild_id=42069, user_id=696969))
 
         assert predicate(mock_voice_state) is True
 
     def test__init_state_update_predicate_ignores(self, voice_client: voice.VoiceComponentImpl):
-        predicate = voice_client._init_state_update_predicate(999, 420)
+        predicate = voice_client._init_state_update_predicate(snowflakes.Snowflake(999), snowflakes.Snowflake(420))
         mock_voice_state = mock.Mock(state=mock.Mock(guild_id=6969, user_id=3333))
 
         assert predicate(mock_voice_state) is False
 
     def test__init_server_update_predicate_matches(self, voice_client: voice.VoiceComponentImpl):
-        predicate = voice_client._init_server_update_predicate(696969)
+        predicate = voice_client._init_server_update_predicate(snowflakes.Snowflake(696969))
         mock_voice_state = mock.Mock(guild_id=696969)
 
         assert predicate(mock_voice_state) is True
 
     def test__init_server_update_predicate_ignores(self, voice_client: voice.VoiceComponentImpl):
-        predicate = voice_client._init_server_update_predicate(321231)
+        predicate = voice_client._init_server_update_predicate(snowflakes.Snowflake(321231))
         mock_voice_state = mock.Mock(guild_id=123123123)
 
         assert predicate(mock_voice_state) is False
@@ -415,7 +415,7 @@ class TestVoiceComponentImpl:
     @pytest.mark.asyncio
     async def test__on_voice_event(self, voice_client: voice.VoiceComponentImpl):
         mock_connection = mock.AsyncMock()
-        voice_client._connections = {6633: mock_connection}
+        voice_client._connections = {snowflakes.Snowflake(6633): mock_connection}
         mock_event = mock.Mock(guild_id=6633)
 
         await voice_client._on_voice_event(mock_event)

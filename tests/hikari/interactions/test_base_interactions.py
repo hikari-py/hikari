@@ -25,7 +25,7 @@ import typing
 import mock
 import pytest
 
-from hikari import traits
+from hikari import snowflakes, traits
 from hikari import undefined
 from hikari.interactions import base_interactions
 
@@ -40,8 +40,8 @@ class TestPartialInteraction:
     def mock_partial_interaction(self, mock_app: traits.RESTAware) -> base_interactions.PartialInteraction:
         return base_interactions.PartialInteraction(
             app=mock_app,
-            id=34123,
-            application_id=651231,
+            id=snowflakes.Snowflake(34123),
+            application_id=snowflakes.Snowflake(651231),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
@@ -58,8 +58,8 @@ class TestMessageResponseMixin:
     ) -> base_interactions.MessageResponseMixin[typing.Any]:
         return base_interactions.MessageResponseMixin(
             app=mock_app,
-            id=34123,
-            application_id=651231,
+            id=snowflakes.Snowflake(34123),
+            application_id=snowflakes.Snowflake(651231),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
@@ -231,8 +231,8 @@ class TestModalResponseMixin:
     def mock_modal_response_mixin(self, mock_app: traits.RESTAware) -> base_interactions.ModalResponseMixin:
         return base_interactions.ModalResponseMixin(
             app=mock_app,
-            id=34123,
-            application_id=651231,
+            id=snowflakes.Snowflake(34123),
+            application_id=snowflakes.Snowflake(651231),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,

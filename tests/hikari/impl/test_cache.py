@@ -2713,7 +2713,7 @@ class TestCacheImpl:
 
         cache_impl._increment_ref_count.assert_called_with(mock_reffed_member)
         cache_impl._set_member.assert_called_once_with(mock_member)
-        voice_state_data = cache_impl._guild_entries[43123123].voice_states[4531231]
+        voice_state_data = cache_impl._guild_entries[snowflakes.Snowflake(43123123)].voice_states[snowflakes.Snowflake(4531231)]
         assert voice_state_data.channel_id == 239211023123
         assert voice_state_data.guild_id == 43123123
         assert voice_state_data.is_guild_muted is True

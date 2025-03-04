@@ -116,7 +116,7 @@ class TestUnicodeEmoji:
 class TestCustomEmoji:
     @pytest.fixture
     def emoji(self) -> emojis.CustomEmoji:
-        return emojis.CustomEmoji(id=3213452, name="ok", is_animated=False)
+        return emojis.CustomEmoji(id=snowflakes.Snowflake(3213452), name="ok", is_animated=False)
 
     def test_filename_property(self, emoji: emojis.CustomEmoji):
         assert emoji.filename == "3213452.png"

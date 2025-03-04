@@ -23,7 +23,7 @@ from __future__ import annotations
 import mock
 import pytest
 
-from hikari import invites
+from hikari import invites, snowflakes
 from hikari import urls
 from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
@@ -42,7 +42,7 @@ class TestInviteGuild:
     def model(self) -> invites.InviteGuild:
         return invites.InviteGuild(
             app=mock.Mock(),
-            id=123321,
+            id=snowflakes.Snowflake(123321),
             icon_hash="hi",
             name="bye",
             features=[],

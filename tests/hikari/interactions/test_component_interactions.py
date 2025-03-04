@@ -141,7 +141,7 @@ class TestComponentInteraction:
     async def test_fetch_guild(
         self, mock_component_interaction: component_interactions.ComponentInteraction, mock_app: traits.RESTAware
     ):
-        mock_component_interaction.guild_id = 43123123
+        mock_component_interaction.guild_id = snowflakes.Snowflake(43123123)
 
         assert await mock_component_interaction.fetch_guild() is mock_app.rest.fetch_guild.return_value
 
@@ -160,7 +160,7 @@ class TestComponentInteraction:
     def test_get_guild(
         self, mock_component_interaction: component_interactions.ComponentInteraction, mock_app: traits.RESTAware
     ):
-        mock_component_interaction.guild_id = 874356
+        mock_component_interaction.guild_id = snowflakes.Snowflake(874356)
 
         assert mock_component_interaction.get_guild() is mock_app.cache.get_guild.return_value
 
@@ -178,7 +178,7 @@ class TestComponentInteraction:
     def test_get_guild_when_cacheless(
         self, mock_component_interaction: component_interactions.ComponentInteraction, mock_app: traits.RESTAware
     ):
-        mock_component_interaction.guild_id = 321123
+        mock_component_interaction.guild_id = snowflakes.Snowflake(321123)
         mock_component_interaction.app = mock.Mock(traits.RESTAware)
 
         assert mock_component_interaction.get_guild() is None

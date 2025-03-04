@@ -494,7 +494,7 @@ class TestMember:
         role1 = mock.Mock(id=321, position=2)
         role2 = mock.Mock(id=654, position=1)
         model.user.app.cache.get_role.side_effect = [role1, role2]
-        model.role_ids = [321, 654]
+        model.role_ids = [snowflakes.Snowflake(321), snowflakes.Snowflake(654)]
 
         assert model.get_roles() == [role1, role2]
 
@@ -503,14 +503,14 @@ class TestMember:
     def test_get_roles_when_role_ids_not_in_cache(self, model: guilds.Member):
         role = mock.Mock(id=456, position=1)
         model.user.app.cache.get_role.side_effect = [None, role]
-        model.role_ids = [321, 456]
+        model.role_ids = [snowflakes.Snowflake(321), snowflakes.Snowflake(456)]
 
         assert model.get_roles() == [role]
 
         model.user.app.cache.get_role.assert_has_calls([mock.call(321), mock.call(456)])
 
     def test_get_roles_when_empty_cache(self, model: guilds.Member):
-        model.role_ids = [132, 432]
+        model.role_ids = [snowflakes.Snowflake(132), snowflakes.Snowflake(432)]
         model.user.app.cache.get_role.side_effect = [None, None]
 
         assert model.get_roles() == []

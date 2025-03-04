@@ -98,7 +98,7 @@ class TestGuildAvailableEvent:
         assert event.app is event.guild.app
 
     def test_guild_id_property(self, event: guild_events.GuildAvailableEvent):
-        event.guild.id = 123
+        event.guild.id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
 
@@ -118,11 +118,11 @@ class TestGuildUpdateEvent:
         assert event.app is event.guild.app
 
     def test_guild_id_property(self, event: guild_events.GuildUpdateEvent):
-        event.guild.id = 123
+        event.guild.id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
     def test_old_guild_id_property(self, event: guild_events.GuildUpdateEvent):
-        event.old_guild.id = 123
+        event.old_guild.id = snowflakes.Snowflake(123)
         assert event.old_guild.id == 123
 
 
@@ -149,16 +149,16 @@ class TestPresenceUpdateEvent:
         assert event.app is event.presence.app
 
     def test_user_id_property(self, event: guild_events.PresenceUpdateEvent):
-        event.presence.user_id = 123
+        event.presence.user_id = snowflakes.Snowflake(123)
         assert event.user_id == 123
 
     def test_guild_id_property(self, event: guild_events.PresenceUpdateEvent):
-        event.presence.guild_id = 123
+        event.presence.guild_id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
     def test_old_presence(self, event: guild_events.PresenceUpdateEvent):
         event.old_presence.id = 123
-        event.old_presence.guild_id = 456
+        event.old_presence.guild_id = snowflakes.Snowflake(456)
 
         assert event.old_presence.id == 123
         assert event.old_presence.guild_id == 456

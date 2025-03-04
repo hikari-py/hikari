@@ -508,7 +508,7 @@ class TestTransformEmojiToUrlFormat:
     @pytest.mark.parametrize(
         ("emoji", "expected_return"),
         [
-            (emojis.CustomEmoji(id=123, name="rooYay", is_animated=False), "rooYay:123"),
+            (emojis.CustomEmoji(id=snowflakes.Snowflake(123), name="rooYay", is_animated=False), "rooYay:123"),
             ("\N{OK HAND SIGN}", "\N{OK HAND SIGN}"),
             (emojis.UnicodeEmoji("\N{OK HAND SIGN}"), "\N{OK HAND SIGN}"),
         ],
@@ -520,7 +520,7 @@ class TestTransformEmojiToUrlFormat:
         assert rest._transform_emoji_to_url_format("rooYay", 123) == "rooYay:123"
 
     @pytest.mark.parametrize(
-        "emoji", [emojis.CustomEmoji(id=123, name="rooYay", is_animated=False), emojis.UnicodeEmoji("\N{OK HAND SIGN}")]
+        "emoji", [emojis.CustomEmoji(id=snowflakes.Snowflake(123), name="rooYay", is_animated=False), emojis.UnicodeEmoji("\N{OK HAND SIGN}")]
     )
     def test_when_id_passed_with_emoji_object(self, rest_client: rest_api.RESTClient, emoji: emojis.Emoji):
         with pytest.raises(ValueError, match="emoji_id shouldn't be passed when an Emoji object is passed for emoji"):
@@ -4763,7 +4763,7 @@ class TestRESTClientImplAsync:
             flags=54123,
             auto_archive_duration=auto_archive_duration,
             rate_limit_per_user=rate_limit_per_user,
-            tags=[12220, 12201],
+            tags=[snowflakes.Snowflake(12220), snowflakes.Snowflake(12201)],
             reason="Secrets!!",
         )
 
@@ -4833,7 +4833,7 @@ class TestRESTClientImplAsync:
             flags=54123,
             auto_archive_duration=auto_archive_duration,
             rate_limit_per_user=rate_limit_per_user,
-            tags=[12220, 12201],
+            tags=[snowflakes.Snowflake(12220), snowflakes.Snowflake(12201)],
             reason="Secrets!!",
         )
 

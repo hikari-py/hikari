@@ -25,7 +25,7 @@ import typing
 import mock
 import pytest
 
-from hikari import emojis
+from hikari import emojis, snowflakes
 from hikari import guilds
 from hikari.events import reaction_events
 from tests.hikari import hikari_test_helpers
@@ -33,9 +33,9 @@ from tests.hikari import hikari_test_helpers
 
 class TestReactionAddEvent:
     def test_is_for_emoji_when_custom_emoji_matches(self):
-        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionAddEvent, emoji_id=333333)()
+        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionAddEvent, emoji_id=snowflakes.Snowflake(333333))()
 
-        assert event.is_for_emoji(emojis.CustomEmoji(id=333333, name=None, is_animated=True))
+        assert event.is_for_emoji(emojis.CustomEmoji(id=snowflakes.Snowflake(333333), name=None, is_animated=True))
 
     def test_is_for_emoji_when_unicode_emoji_matches(self):
         event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionAddEvent, emoji_name="🌲")()
@@ -45,7 +45,7 @@ class TestReactionAddEvent:
     @pytest.mark.parametrize(
         ("emoji_id", "emoji_name", "emoji"),
         [
-            (None, "hi", emojis.CustomEmoji(name=None, id=54123, is_animated=False)),
+            (None, "hi", emojis.CustomEmoji(name=None, id=snowflakes.Snowflake(54123), is_animated=False)),
             (123321, None, emojis.UnicodeEmoji("no u")),
         ],
     )
@@ -62,7 +62,7 @@ class TestReactionAddEvent:
         ("emoji_id", "emoji_name", "emoji"),
         [
             (None, "hi", emojis.UnicodeEmoji("bye")),
-            (123321, None, emojis.CustomEmoji(id=123312123, name=None, is_animated=False)),
+            (123321, None, emojis.CustomEmoji(id=snowflakes.Snowflake(123312123), name=None, is_animated=False)),
         ],
     )
     def test_is_for_emoji_when_emoji_miss_match(
@@ -79,7 +79,7 @@ class TestReactionDeleteEvent:
     def test_is_for_emoji_when_custom_emoji_matches(self):
         event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionDeleteEvent, emoji_id=333)()
 
-        assert event.is_for_emoji(emojis.CustomEmoji(id=333, name=None, is_animated=True))
+        assert event.is_for_emoji(emojis.CustomEmoji(id=snowflakes.Snowflake(333), name=None, is_animated=True))
 
     def test_is_for_emoji_when_unicode_emoji_matches(self):
         event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionDeleteEvent, emoji_name="e")()
@@ -89,7 +89,7 @@ class TestReactionDeleteEvent:
     @pytest.mark.parametrize(
         ("emoji_id", "emoji_name", "emoji"),
         [
-            (None, "hasdi", emojis.CustomEmoji(name=None, id=3123, is_animated=False)),
+            (None, "hasdi", emojis.CustomEmoji(name=None, id=snowflakes.Snowflake(3123), is_animated=False)),
             (534123, None, emojis.UnicodeEmoji("nodfgdu")),
         ],
     )
@@ -106,7 +106,7 @@ class TestReactionDeleteEvent:
         ("emoji_id", "emoji_name", "emoji"),
         [
             (None, "hfdasi", emojis.UnicodeEmoji("bgye")),
-            (54123, None, emojis.CustomEmoji(id=34123, name=None, is_animated=False)),
+            (54123, None, emojis.CustomEmoji(id=snowflakes.Snowflake(34123), name=None, is_animated=False)),
         ],
     )
     def test_is_for_emoji_when_emoji_miss_match(
@@ -123,7 +123,7 @@ class TestReactionDeleteEmojiEvent:
     def test_is_for_emoji_when_custom_emoji_matches(self):
         event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionDeleteEmojiEvent, emoji_id=332223333)()
 
-        assert event.is_for_emoji(emojis.CustomEmoji(id=332223333, name=None, is_animated=True))
+        assert event.is_for_emoji(emojis.CustomEmoji(id=snowflakes.Snowflake(332223333), name=None, is_animated=True))
 
     def test_is_for_emoji_when_unicode_emoji_matches(self):
         event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionDeleteEmojiEvent, emoji_name="🌲e")()
@@ -133,7 +133,7 @@ class TestReactionDeleteEmojiEvent:
     @pytest.mark.parametrize(
         ("emoji_id", "emoji_name", "emoji"),
         [
-            (None, "heeei", emojis.CustomEmoji(name=None, id=541123, is_animated=False)),
+            (None, "heeei", emojis.CustomEmoji(name=None, id=snowflakes.Snowflake(541123), is_animated=False)),
             (1233211, None, emojis.UnicodeEmoji("no eeeu")),
         ],
     )
@@ -150,7 +150,7 @@ class TestReactionDeleteEmojiEvent:
         ("emoji_id", "emoji_name", "emoji"),
         [
             (None, "dsahi", emojis.UnicodeEmoji("bye321")),
-            (12331231, None, emojis.CustomEmoji(id=121233312123, name=None, is_animated=False)),
+            (12331231, None, emojis.CustomEmoji(id=snowflakes.Snowflake(121233312123), name=None, is_animated=False)),
         ],
     )
     def test_is_for_emoji_when_emoji_miss_match(
@@ -169,8 +169,8 @@ class TestGuildReactionAddEvent:
         return reaction_events.GuildReactionAddEvent(
             shard=mock.Mock(),
             member=mock.MagicMock(guilds.Member),
-            channel_id=123,
-            message_id=456,
+            channel_id=snowflakes.Snowflake(123),
+            message_id=snowflakes.Snowflake(456),
             emoji_name="👌",
             emoji_id=None,
             is_animated=False,
@@ -180,7 +180,7 @@ class TestGuildReactionAddEvent:
         assert event.app is event.member.app
 
     def test_guild_id_property(self, event: reaction_events.GuildReactionAddEvent):
-        event.member.guild_id = 123
+        event.member.guild_id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
     def test_user_id_property(self, event: reaction_events.GuildReactionAddEvent):

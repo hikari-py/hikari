@@ -33,14 +33,14 @@ class TestMessagePinEntryInfo:
     async def test_fetch_channel(self):
         app = mock.AsyncMock()
         app.rest.fetch_channel.return_value = mock.Mock(spec_set=channels.GuildTextChannel)
-        model = audit_logs.MessagePinEntryInfo(app=app, channel_id=123, message_id=456)
+        model = audit_logs.MessagePinEntryInfo(app=app, channel_id=snowflakes.Snowflake(123), message_id=snowflakes.Snowflake(456))
 
         assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
 
         model.app.rest.fetch_channel.assert_awaited_once_with(123)
 
     async def test_fetch_message(self):
-        model = audit_logs.MessagePinEntryInfo(app=mock.AsyncMock(), channel_id=123, message_id=456)
+        model = audit_logs.MessagePinEntryInfo(app=mock.AsyncMock(), channel_id=snowflakes.Snowflake(123), message_id=snowflakes.Snowflake(456))
 
         assert await model.fetch_message() is model.app.rest.fetch_message.return_value
 
@@ -52,7 +52,7 @@ class TestMessageDeleteEntryInfo:
     async def test_fetch_channel(self):
         app = mock.AsyncMock()
         app.rest.fetch_channel.return_value = mock.Mock(spec_set=channels.GuildTextChannel)
-        model = audit_logs.MessageDeleteEntryInfo(app=app, count=1, channel_id=123)
+        model = audit_logs.MessageDeleteEntryInfo(app=app, count=1, channel_id=snowflakes.Snowflake(123))
 
         assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
 
@@ -64,7 +64,7 @@ class TestMemberMoveEntryInfo:
     async def test_fetch_channel(self):
         app = mock.AsyncMock()
         app.rest.fetch_channel.return_value = mock.Mock(spec_set=channels.GuildVoiceChannel)
-        model = audit_logs.MemberMoveEntryInfo(app=app, count=1, channel_id=123)
+        model = audit_logs.MemberMoveEntryInfo(app=app, count=1, channel_id=snowflakes.Snowflake(123))
 
         assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
 
@@ -76,7 +76,7 @@ class TestAuditLogEntry:
     async def test_fetch_user_when_no_user(self):
         model = audit_logs.AuditLogEntry(
             app=mock.AsyncMock(),
-            id=123,
+            id=snowflakes.Snowflake(123),
             target_id=None,
             changes=[],
             user_id=None,
@@ -94,10 +94,10 @@ class TestAuditLogEntry:
     async def test_fetch_user_when_user(self):
         model = audit_logs.AuditLogEntry(
             app=mock.AsyncMock(),
-            id=123,
+            id=snowflakes.Snowflake(123),
             target_id=None,
             changes=[],
-            user_id=456,
+            user_id=snowflakes.Snowflake(456),
             action_type=0,
             options=None,
             reason=None,

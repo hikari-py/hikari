@@ -124,7 +124,7 @@ class TestModalInteraction:
     async def test_fetch_guild(
         self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware
     ):
-        mock_modal_interaction.guild_id = 43123123
+        mock_modal_interaction.guild_id = snowflakes.Snowflake(43123123)
 
         assert await mock_modal_interaction.fetch_guild() is mock_app.rest.fetch_guild.return_value
 
@@ -141,7 +141,7 @@ class TestModalInteraction:
         mock_app.rest.fetch_guild.assert_not_called()
 
     def test_get_guild(self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware):
-        mock_modal_interaction.guild_id = 874356
+        mock_modal_interaction.guild_id = snowflakes.Snowflake(874356)
 
         assert mock_modal_interaction.get_guild() is mock_app.cache.get_guild.return_value
 
@@ -159,7 +159,7 @@ class TestModalInteraction:
     def test_get_guild_when_cacheless(
         self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware
     ):
-        mock_modal_interaction.guild_id = 321123
+        mock_modal_interaction.guild_id = snowflakes.Snowflake(321123)
         mock_modal_interaction.app = mock.Mock(traits.RESTAware)
 
         assert mock_modal_interaction.get_guild() is None

@@ -36,7 +36,7 @@ class TestShardReadyEvent:
             shard=None,
             actual_gateway_version=1,
             session_id="ok",
-            application_id=1,
+            application_id=snowflakes.Snowflake(1),
             application_flags=1,
             unavailable_guilds=[],
         )
@@ -68,7 +68,7 @@ class TestMemberChunkEvent:
     def test___getitem___with_slice(self, event: shard_events.MemberChunkEvent):
         mock_member_0 = mock.Mock()
         mock_member_1 = mock.Mock()
-        event.members = {1: mock.Mock(), 55: mock.Mock(), 99: mock_member_0, 455: mock.Mock(), 5444: mock_member_1}
+        event.members = {snowflakes.Snowflake(1): mock.Mock(), snowflakes.Snowflake(55): mock.Mock(), snowflakes.Snowflake(99): mock_member_0, snowflakes.Snowflake(455): mock.Mock(), snowflakes.Snowflake(5444): mock_member_1}
 
         assert event[2:5:2] == (mock_member_0, mock_member_1)
 

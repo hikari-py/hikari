@@ -23,7 +23,7 @@ from __future__ import annotations
 import mock
 import pytest
 
-from hikari import channels
+from hikari import channels, snowflakes
 from hikari import undefined
 from hikari import webhooks
 from tests.hikari import hikari_test_helpers
@@ -201,7 +201,7 @@ class TestPartialWebhook:
     def webhook(self) -> webhooks.PartialWebhook:
         return webhooks.PartialWebhook(
             app=mock.Mock(rest=mock.AsyncMock()),
-            id=987654321,
+            id=snowflakes.Snowflake(987654321),
             type=webhooks.WebhookType.CHANNEL_FOLLOWER,
             name="not a webhook",
             avatar_hash="hook",
@@ -240,10 +240,10 @@ class TestIncomingWebhook:
     def webhook(self) -> webhooks.IncomingWebhook:
         return webhooks.IncomingWebhook(
             app=mock.Mock(rest=mock.AsyncMock()),
-            id=987654321,
+            id=snowflakes.Snowflake(987654321),
             type=webhooks.WebhookType.CHANNEL_FOLLOWER,
-            guild_id=123,
-            channel_id=456,
+            guild_id=snowflakes.Snowflake(123),
+            channel_id=snowflakes.Snowflake(456),
             author=None,
             name="not a webhook",
             avatar_hash=None,
@@ -419,10 +419,10 @@ class TestChannelFollowerWebhook:
     def webhook(self) -> webhooks.ChannelFollowerWebhook:
         return webhooks.ChannelFollowerWebhook(
             app=mock.Mock(rest=mock.AsyncMock()),
-            id=987654321,
+            id=snowflakes.Snowflake(987654321),
             type=webhooks.WebhookType.CHANNEL_FOLLOWER,
-            guild_id=123,
-            channel_id=456,
+            guild_id=snowflakes.Snowflake(123),
+            channel_id=snowflakes.Snowflake(456),
             author=None,
             name="not a webhook",
             avatar_hash=None,

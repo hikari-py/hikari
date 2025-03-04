@@ -1250,7 +1250,7 @@ def test__build_emoji_with_unicode_emoji(emoji: str | emojis.UnicodeEmoji):
 
 
 @pytest.mark.parametrize(
-    "emoji", [snowflakes.Snowflake(54123123), 54123123, emojis.CustomEmoji(id=54123123, name=None, is_animated=None)]
+    "emoji", [snowflakes.Snowflake(54123123), 54123123, emojis.CustomEmoji(id=snowflakes.Snowflake(54123123), name=None, is_animated=None)]
 )
 def test__build_emoji_with_custom_emoji(emoji: int | snowflakes.Snowflake | emojis.CustomEmoji):
     result = special_endpoints._build_emoji(emoji)
@@ -1294,7 +1294,7 @@ class Test_ButtonBuilder:
         assert button._emoji_id is undefined.UNDEFINED
         assert button._emoji_name == "unicode"
 
-    @pytest.mark.parametrize("emoji", [emojis.CustomEmoji(name="ok", id=34123123, is_animated=False), 34123123])
+    @pytest.mark.parametrize("emoji", [emojis.CustomEmoji(name="ok", id=snowflakes.Snowflake(34123123), is_animated=False), 34123123])
     def test_set_emoji_with_custom_emoji(
         self, button: special_endpoints._ButtonBuilder, emoji: int | emojis.CustomEmoji
     ):
@@ -1341,7 +1341,7 @@ class Test_ButtonBuilder:
             "disabled": True,
         }
 
-    @pytest.mark.parametrize("emoji", [123321, emojis.CustomEmoji(id=123321, name="", is_animated=True)])
+    @pytest.mark.parametrize("emoji", [123321, emojis.CustomEmoji(id=snowflakes.Snowflake(123321), name="", is_animated=True)])
     def test_build_with_custom_emoji(self, emoji: typing.Union[int, emojis.Emoji]):
         button = special_endpoints._ButtonBuilder(
             style=components.ButtonStyle.DANGER, emoji=emoji, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
@@ -1416,7 +1416,7 @@ class TestSelectOptionBuilder:
         assert option._emoji_id is undefined.UNDEFINED
         assert option._emoji_name == "unicode"
 
-    @pytest.mark.parametrize("emoji", [emojis.CustomEmoji(name="ok", id=34123123, is_animated=False), 34123123])
+    @pytest.mark.parametrize("emoji", [emojis.CustomEmoji(name="ok", id=snowflakes.Snowflake(34123123), is_animated=False), 34123123])
     def test_set_emoji_with_custom_emoji(
         self, option: special_endpoints.SelectOptionBuilder, emoji: int | emojis.CustomEmoji
     ):

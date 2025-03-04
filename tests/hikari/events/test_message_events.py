@@ -344,7 +344,7 @@ class TestGuildMessageDeleteEvent:
             channel_id=snowflakes.Snowflake(54213123123),
             app=mock.Mock(),
             shard=mock.Mock(),
-            message_id=9,
+            message_id=snowflakes.Snowflake(9),
             old_message=mock.Mock(),
         )
 

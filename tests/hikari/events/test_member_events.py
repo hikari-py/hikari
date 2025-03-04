@@ -73,7 +73,7 @@ class TestMemberCreateEvent:
         return member_events.MemberCreateEvent(shard=None, member=mock.Mock())
 
     def test_guild_property(self, event: member_events.MemberCreateEvent):
-        event.member.guild_id = 123
+        event.member.guild_id = snowflakes.Snowflake(123)
         event.guild_id == 123
 
     def test_user_property(self, event: member_events.MemberCreateEvent):
@@ -88,7 +88,7 @@ class TestMemberUpdateEvent:
         return member_events.MemberUpdateEvent(shard=None, member=mock.Mock(), old_member=mock.Mock(guilds.Member))
 
     def test_guild_property(self, event: member_events.MemberUpdateEvent):
-        event.member.guild_id = 123
+        event.member.guild_id = snowflakes.Snowflake(123)
         event.guild_id == 123
 
     def test_user_property(self, event: member_events.MemberUpdateEvent):
@@ -97,7 +97,7 @@ class TestMemberUpdateEvent:
         event.user == user
 
     def test_old_user_property(self, event: member_events.MemberUpdateEvent):
-        event.member.guild_id = 123
+        event.member.guild_id = snowflakes.Snowflake(123)
         event.member.id = 456
 
         assert event.member.guild_id == 123

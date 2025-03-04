@@ -98,11 +98,11 @@ class TestGuildChannelCreateEvent:
         assert event.app is event.channel.app
 
     def test_channel_id_property(self, event: channel_events.GuildChannelCreateEvent):
-        event.channel.id = 123
+        event.channel.id = snowflakes.Snowflake(123)
         assert event.channel_id == 123
 
     def test_guild_id_property(self, event: channel_events.GuildChannelCreateEvent):
-        event.channel.guild_id = 123
+        event.channel.guild_id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
 
@@ -115,15 +115,15 @@ class TestGuildChannelUpdateEvent:
         assert event.app is event.channel.app
 
     def test_channel_id_property(self, event: channel_events.GuildChannelUpdateEvent):
-        event.channel.id = 123
+        event.channel.id = snowflakes.Snowflake(123)
         assert event.channel_id == 123
 
     def test_guild_id_property(self, event: channel_events.GuildChannelUpdateEvent):
-        event.channel.guild_id = 123
+        event.channel.guild_id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
     def test_old_channel_id_property(self, event: channel_events.GuildChannelUpdateEvent):
-        event.old_channel.id = 123
+        event.old_channel.id = snowflakes.Snowflake(123)
         assert event.old_channel.id == 123
 
 
@@ -136,11 +136,11 @@ class TestGuildChannelDeleteEvent:
         assert event.app is event.channel.app
 
     def test_channel_id_property(self, event: channel_events.GuildChannelDeleteEvent):
-        event.channel.id = 123
+        event.channel.id = snowflakes.Snowflake(123)
         assert event.channel_id == 123
 
     def test_guild_id_property(self, event: channel_events.GuildChannelDeleteEvent):
-        event.channel.guild_id = 123
+        event.channel.guild_id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
 
@@ -148,7 +148,7 @@ class TestGuildPinsUpdateEvent:
     @pytest.fixture
     def event(self) -> channel_events.GuildPinsUpdateEvent:
         return channel_events.GuildPinsUpdateEvent(
-            app=mock.Mock(), shard=None, channel_id=12343, guild_id=None, last_pin_timestamp=None
+            app=mock.Mock(), shard=None, channel_id=snowflakes.Snowflake(12343), guild_id=None, last_pin_timestamp=None
         )
 
     @pytest.mark.parametrize("result", [mock.Mock(spec=channels.GuildTextChannel), None])
@@ -189,12 +189,12 @@ class TestInviteCreateEvent:
 
     @pytest.mark.asyncio
     async def test_channel_id_property(self, event: channel_events.InviteCreateEvent):
-        event.invite.channel_id = 123
+        event.invite.channel_id = snowflakes.Snowflake(123)
         assert event.channel_id == 123
 
     @pytest.mark.asyncio
     async def test_guild_id_property(self, event: channel_events.InviteCreateEvent):
-        event.invite.guild_id = 123
+        event.invite.guild_id = snowflakes.Snowflake(123)
         assert event.guild_id == 123
 
     @pytest.mark.asyncio
@@ -207,7 +207,7 @@ class TestInviteCreateEvent:
 class TestWebhookUpdateEvent:
     @pytest.fixture
     def event(self) -> channel_events.WebhookUpdateEvent:
-        return channel_events.WebhookUpdateEvent(app=mock.AsyncMock(), shard=mock.Mock(), channel_id=123, guild_id=456)
+        return channel_events.WebhookUpdateEvent(app=mock.AsyncMock(), shard=mock.Mock(), channel_id=snowflakes.Snowflake(123), guild_id=snowflakes.Snowflake(456))
 
     async def test_fetch_channel_webhooks(self, event: channel_events.WebhookUpdateEvent):
         await event.fetch_channel_webhooks()
@@ -226,7 +226,7 @@ class TestGuildThreadEvent:
         mock_app = mock.AsyncMock()
         mock_app.rest.fetch_channel.return_value = mock.Mock(channels.GuildThreadChannel)
         event = hikari_test_helpers.mock_class_namespace(
-            channel_events.GuildThreadEvent, app=mock_app, thread_id=123321
+            channel_events.GuildThreadEvent, app=mock_app, thread_id=snowflakes.Snowflake(123321)
         )()
 
         result = await event.fetch_channel()
