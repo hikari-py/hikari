@@ -5731,7 +5731,7 @@ class TestEntityFactoryImpl:
             "duration_secs": 1000.123,
             "waveform": "some encoded string",
         }
-    
+
     @pytest.fixture
     def partial_interaction_metadata_payload(self, user_payload):
         return {
@@ -5800,7 +5800,7 @@ class TestEntityFactoryImpl:
             "interaction": {"id": "123123123", "type": 2, "name": "OKOKOK", "user": user_payload},
             "components": [action_row_payload, {"type": 1000000000}],
             "thread": guild_public_thread_payload,
-            "interaction_metadata": partial_interaction_metadata_payload
+            "interaction_metadata": partial_interaction_metadata_payload,
         }
 
     def test__deserialize_message_attachment(self, entity_factory_impl, attachment_payload):
@@ -5853,12 +5853,11 @@ class TestEntityFactoryImpl:
         assert attachment.waveform is None
 
     def test__deserialize_partial_message_interaction_metadata(
-        self,
-        entity_factory_impl,
-        partial_interaction_metadata_payload,
-        user_payload
+        self, entity_factory_impl, partial_interaction_metadata_payload, user_payload
     ):
-        partial_message_interaction_metadata = entity_factory_impl._deserialize_command_message_interaction_metadata(partial_interaction_metadata_payload)
+        partial_message_interaction_metadata = entity_factory_impl._deserialize_command_message_interaction_metadata(
+            partial_interaction_metadata_payload
+        )
 
         assert partial_message_interaction_metadata.interaction_id == snowflakes.Snowflake(123456)
         assert partial_message_interaction_metadata.type == base_interactions.InteractionType.APPLICATION_COMMAND
@@ -5873,36 +5872,84 @@ class TestEntityFactoryImpl:
         assert isinstance(partial_message_interaction_metadata, base_interactions.PartialMessageInteractionMetadata)
 
     def test__deserialize_command_message_interaction_metadata(
-        self,
-        entity_factory_impl,
-        partial_interaction_metadata_payload,
-        user_payload,
+        self, entity_factory_impl, partial_interaction_metadata_payload, user_payload
     ):
         partial_interaction_metadata_payload["target_user"] = user_payload
         partial_interaction_metadata_payload["target_message_id"] = "59332"
-        
-        command_message_interaction_metadata = entity_factory_impl._deserialize_command_message_interaction_metadata(partial_interaction_metadata_payload)
+
+        command_message_interaction_metadata = entity_factory_impl._deserialize_command_message_interaction_metadata(
+            partial_interaction_metadata_payload
+        )
 
         assert command_message_interaction_metadata.target_user == entity_factory_impl.deserialize_user(user_payload)
         assert command_message_interaction_metadata.target_message_id == snowflakes.Snowflake(59332)
         assert isinstance(command_message_interaction_metadata, command_interactions.CommandMessageInteractionMetadata)
 
     def test__deserialize_component_message_interaction_metadata(
-        self,
-        entity_factory_impl,
-        partial_interaction_metadata_payload
+        self, entity_factory_impl, partial_interaction_metadata_payload
     ):
         partial_interaction_metadata_payload["interacted_message_id"] = "684831"
-        
-        component_message_interaction_metadata = entity_factory_impl._deserialize_component_message_interaction_metadata(partial_interaction_metadata_payload)
+
+        component_message_interaction_metadata = (
+            entity_factory_impl._deserialize_component_message_interaction_metadata(
+                partial_interaction_metadata_payload
+            )
+        )
 
         assert component_message_interaction_metadata.interacted_message_id == snowflakes.Snowflake(684831)
-        assert isinstance(component_message_interaction_metadata, component_interactions.ComponentMessageInteractionMetadata)
+        assert isinstance(
+            component_message_interaction_metadata, component_interactions.ComponentMessageInteractionMetadata
+        )
 
-    def test__deserialize_modal_message_interaction_metadata(
-        self,
+    def test__deserialize_modal_message_interaction_metadata_with_commmand_interaction(
+        self, entity_factory_impl, partial_interaction_metadata_payload, user_payload
     ):
-        raise NotImplementedError("Implement me!")
+        component_interaction_metadata_payload = dict(partial_interaction_metadata_payload)
+        component_interaction_metadata_payload["target_user"] = user_payload
+        component_interaction_metadata_payload["target_message_id"] = "59332"
+
+        partial_interaction_metadata_payload["triggering_interaction_metadata"] = component_interaction_metadata_payload
+
+        modal_message_interaction_metadata = entity_factory_impl._deserialize_modal_message_interaction_metadata(
+            partial_interaction_metadata_payload
+        )
+
+        assert (
+            modal_message_interaction_metadata.triggering_interaction_metadata.target_user
+            == entity_factory_impl.deserialize_user(user_payload)
+        )
+        assert (
+            modal_message_interaction_metadata.triggering_interaction_metadata.target_message_id
+            == snowflakes.Snowflake(59332)
+        )
+        assert isinstance(
+            modal_message_interaction_metadata.triggering_interaction_metadata,
+            command_interactions.CommandMessageInteractionMetadata,
+        )
+        assert isinstance(modal_message_interaction_metadata, modal_interactions.ModalMessageInteractionMetadata)
+
+    def test__deserialize_modal_message_interaction_metadata_with_component_interaction(
+        self, entity_factory_impl, partial_interaction_metadata_payload
+    ):
+        command_interaction_metadata_payload = dict(partial_interaction_metadata_payload)
+        command_interaction_metadata_payload["type"] = "3"
+        command_interaction_metadata_payload["interacted_message_id"] = "684831"
+
+        partial_interaction_metadata_payload["triggering_interaction_metadata"] = command_interaction_metadata_payload
+
+        modal_message_interaction_metadata = entity_factory_impl._deserialize_modal_message_interaction_metadata(
+            partial_interaction_metadata_payload
+        )
+
+        assert (
+            modal_message_interaction_metadata.triggering_interaction_metadata.interacted_message_id
+            == snowflakes.Snowflake(684831)
+        )
+        assert isinstance(
+            modal_message_interaction_metadata.triggering_interaction_metadata,
+            component_interactions.ComponentMessageInteractionMetadata,
+        )
+        assert isinstance(modal_message_interaction_metadata, modal_interactions.ModalMessageInteractionMetadata)
 
     def test_deserialize_partial_message(
         self,

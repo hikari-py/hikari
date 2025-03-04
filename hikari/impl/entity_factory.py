@@ -442,6 +442,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_message_interaction_metadata_mapping",
         "_scheduled_event_type_mapping",
         "_webhook_type_mapping",
+        "_modal_message_interaction_triggering_metadata",
     )
 
     def __init__(self, app: traits.RESTAware) -> None:
@@ -559,6 +560,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             base_interactions.InteractionType.APPLICATION_COMMAND: self._deserialize_command_message_interaction_metadata,
             base_interactions.InteractionType.MESSAGE_COMPONENT: self._deserialize_component_message_interaction_metadata,
             base_interactions.InteractionType.MODAL_SUBMIT: self._deserialize_modal_message_interaction_metadata,
+        }
+        self._modal_message_interaction_triggering_metadata: dict[
+            int,
+            typing.Callable[
+                [data_binding.JSONObject],
+                typing.Union[
+                    command_interactions.CommandMessageInteractionMetadata,
+                    component_interactions.ComponentMessageInteractionMetadata,
+                ],
+            ],
+        ] = {
+            base_interactions.InteractionType.APPLICATION_COMMAND: self._deserialize_command_message_interaction_metadata,
+            base_interactions.InteractionType.MESSAGE_COMPONENT: self._deserialize_component_message_interaction_metadata,
         }
         self._scheduled_event_type_mapping = {
             scheduled_events_models.ScheduledEventType.STAGE_INSTANCE: self.deserialize_scheduled_stage_event,
@@ -3168,13 +3182,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> modal_interactions.ModalMessageInteractionMetadata:
         partial_message_interaction_metadata = self._deserialize_partial_message_interaction_metadata(payload)
 
+        triggering_interaction_metadata_payload = payload["triggering_interaction_metadata"]
+        triggering_interaction_metadata_type = base_interactions.InteractionType(
+            int(triggering_interaction_metadata_payload["type"])
+        )
+        triggering_interaction_metadata = self._modal_message_interaction_triggering_metadata[
+            triggering_interaction_metadata_type
+        ](triggering_interaction_metadata_payload)
+
         return modal_interactions.ModalMessageInteractionMetadata(
             interaction_id=partial_message_interaction_metadata.interaction_id,
             type=partial_message_interaction_metadata.type,
             user=partial_message_interaction_metadata.user,
             authorizing_integration_owners=partial_message_interaction_metadata.authorizing_integration_owners,
             original_response_message_id=partial_message_interaction_metadata.original_response_message_id,
-            triggering_interaction_metadata=NotImplemented,  # FIXME: Unsure how to handle this.
+            triggering_interaction_metadata=triggering_interaction_metadata,
         )
 
     def _deserialize_message_interaction(self, payload: data_binding.JSONObject) -> message_models.MessageInteraction:
@@ -3399,7 +3421,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             ):
                 interaction_metadata = interaction_metadata_deserializer(interaction_metadata_payload)
 
-
         return message_models.Message(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
@@ -3432,7 +3453,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             role_mention_ids=role_mention_ids,
             mentions_everyone=payload.get("mention_everyone", False),
             thread=thread,
-            interaction_metadata=interaction_metadata
+            interaction_metadata=interaction_metadata,
         )
 
     ###################

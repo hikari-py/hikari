@@ -2772,7 +2772,7 @@ class TestCacheImpl:
         )
         mock_interaction = mock.Mock()
         mock_thread = mock.Mock()
-        mock_interaction_metadata= mock.Mock()
+        mock_interaction_metadata = mock.Mock()
 
         message_data = cache_utilities.MessageData(
             id=snowflakes.Snowflake(32123123),
@@ -2805,7 +2805,7 @@ class TestCacheImpl:
             application_id=snowflakes.Snowflake(123123123123),
             components=(mock_component,),
             thread=mock_thread,
-            interaction_metadata=mock_interaction_metadata
+            interaction_metadata=mock_interaction_metadata,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2896,7 +2896,7 @@ class TestCacheImpl:
             application_id=None,
             components=(),
             thread=None,
-            interaction_metadata=None
+            interaction_metadata=None,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
