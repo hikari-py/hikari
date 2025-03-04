@@ -36,8 +36,7 @@ To aid with the generation of `CHANGELOG.md` as well as the releases changelog w
 
 You will need to install `towncrier` and `hikari` from source before making changelog additions.
 ```bash
-pip install -r dev-requirements/towncrier.txt 
-pip install -e .
+pip install --group towncrier -e .
 ```
 
 For every pull request made to this project, there should be a short explanation of the change under `changes/`
@@ -79,7 +78,7 @@ We have nox to help out with running pipelines locally and provides some helpful
 
 You will need to install `nox` locally before running any pipelines.
 ```bash
-pip install -r dev-requirements.txt
+pip install --group nox
 ```
 
 Nox is similar to tox, but uses a pure Python configuration instead of an INI based configuration. Nox and tox are

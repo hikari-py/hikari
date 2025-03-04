@@ -27,7 +27,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install the latest version of uv
+      - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -44,7 +44,7 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          uv pip install nox
+          uv pip install --group nox
 
           nox -s pytest
           nox -s pytest-all-features -- --cov-append
@@ -68,8 +68,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.10"
 
@@ -97,7 +97,8 @@ jobs:
 
       - name: Combine coverage
         run: |
-          pip install -r dev-requirements/coverage.txt
+          uv pip install --group coverage
+
           coverage combine
           coverage xml
           coverage report
@@ -123,7 +124,7 @@ jobs:
 
       - name: Install nox
         run: |
-          uv pip install nox
+          uv pip install --group nox
 
       - name: Check stubs
         if: always()
@@ -182,14 +183,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: 3.9
 
       - name: Test twemoji mapping
         run: |
-          pip install -r dev-requirements.txt
+          uv pip install --group nox
+
           nox -s twemoji-test
 
   docs:
@@ -199,15 +201,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           # NOTE: This should be kept up to date with .readthedocs.yaml
           python-version: 3.11
 
       - name: Build documentation
         run: |
-          pip install -r dev-requirements.txt
+          uv pip install --group nox
           nox -s mkdocs
 
       - name: Upload artifacts
