@@ -769,7 +769,7 @@ class TestInteractionDeferredBuilder:
     def test_build(self):
         builder = special_endpoints.InteractionDeferredBuilder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
-        result, attachments = builder.build(object())
+        result, attachments = builder.build(mock.Mock())
 
         assert result == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE}
         assert attachments == ()
@@ -779,7 +779,7 @@ class TestInteractionDeferredBuilder:
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         ).set_flags(64)
 
-        result, attachments = builder.build(object())
+        result, attachments = builder.build(mock.Mock())
 
         assert result == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, "data": {"flags": 64}}
         assert attachments == ()
@@ -814,7 +814,7 @@ class TestInteractionMessageBuilder:
         assert builder.attachments is undefined.UNDEFINED
 
     def test_components_property(self):
-        mock_component = object()
+        mock_component = mock.Mock()
         builder = special_endpoints.InteractionMessageBuilder(4).add_component(mock_component)
 
         assert builder.components == [mock_component]
@@ -825,7 +825,7 @@ class TestInteractionMessageBuilder:
         assert builder.components is undefined.UNDEFINED
 
     def test_embeds_property(self):
-        mock_embed = object()
+        mock_embed = mock.Mock()
         builder = special_endpoints.InteractionMessageBuilder(4).add_embed(mock_embed)
 
         assert builder.embeds == [mock_embed]
@@ -863,8 +863,8 @@ class TestInteractionMessageBuilder:
     def test_build(self):
         mock_entity_factory = mock.Mock()
         mock_component = mock.Mock()
-        mock_embed = object()
-        mock_serialized_embed = object()
+        mock_embed = mock.Mock()
+        mock_serialized_embed = mock.Mock()
         mock_entity_factory.serialize_embed.return_value = (mock_serialized_embed, [])
         builder = (
             special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
@@ -933,15 +933,15 @@ class TestInteractionMessageBuilder:
     def test_build_handles_attachments(self):
         mock_entity_factory = mock.Mock()
         mock_message_attachment = mock.Mock(messages.Attachment, id=123, filename="testing")
-        mock_file_attachment = object()
-        mock_embed = object()
-        mock_embed_attachment = object()
+        mock_file_attachment = mock.Mock()
+        mock_embed = mock.Mock()
+        mock_embed_attachment = mock.Mock()
         mock_entity_factory.serialize_embed.return_value = (mock_embed, [mock_embed_attachment])
         builder = (
             special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
             .add_attachment(mock_file_attachment)
             .add_attachment(mock_message_attachment)
-            .add_embed(object())
+            .add_embed(mock.Mock())
         )
 
         with mock.patch.object(files, "ensure_resource") as ensure_resource:
@@ -1046,7 +1046,7 @@ class TestSlashCommandBuilder:
 
     def test_options_property(self):
         builder = special_endpoints.SlashCommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa")
-        mock_option = object()
+        mock_option = mock.Mock()
 
         assert builder.options == []
 
@@ -1056,7 +1056,7 @@ class TestSlashCommandBuilder:
 
     def test_build_with_optional_data(self):
         mock_entity_factory = mock.Mock()
-        mock_option = object()
+        mock_option = mock.Mock()
         builder = (
             special_endpoints.SlashCommandBuilder(
                 "we are number",
@@ -1539,7 +1539,7 @@ class TestTextSelectMenuBuilder:
         return special_endpoints.TextSelectMenuBuilder(custom_id="o2o2o2")
 
     def test_parent_property(self):
-        mock_parent = object()
+        mock_parent = mock.Mock()
         menu = special_endpoints.TextSelectMenuBuilder(custom_id="o2o2o2", parent=mock_parent)
 
         assert menu.parent is mock_parent
@@ -1565,7 +1565,7 @@ class TestTextSelectMenuBuilder:
         assert option.is_default is True
 
     def test_add_raw_option(self, menu: special_endpoints.TextSelectMenuBuilder[typing.NoReturn]):
-        mock_option = object()
+        mock_option = mock.Mock()
 
         menu.add_raw_option(mock_option)
 

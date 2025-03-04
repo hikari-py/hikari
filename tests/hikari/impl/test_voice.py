@@ -182,7 +182,7 @@ class TestVoiceComponentImpl:
     ):
         voice_client._init_state_update_predicate = mock.Mock()
         voice_client._init_server_update_predicate = mock.Mock()
-        mock_other_connection = object()
+        mock_other_connection = mock.Mock()
         voice_client._connections = {555: mock_other_connection}
         mock_shard = mock.AsyncMock(is_alive=True)
         mock_app.event_manager.wait_for = mock.AsyncMock()
@@ -283,13 +283,13 @@ class TestVoiceComponentImpl:
     async def test_connect_to_when_connection_already_present(
         self, voice_client: voice.VoiceComponentImpl, mock_app: traits.RESTAware
     ):
-        voice_client._connections = {snowflakes.Snowflake(123): object()}
+        voice_client._connections = {snowflakes.Snowflake(123): mock.Mock()}
 
         with pytest.raises(
             errors.VoiceError,
             match="Already in a voice channel for that guild. Disconnect before attempting to connect again",
         ):
-            await voice_client.connect_to(123, 4532, object())
+            await voice_client.connect_to(123, 4532, mock.Mock())
 
     @pytest.mark.asyncio
     async def test_connect_to_for_unknown_shard(
@@ -301,7 +301,7 @@ class TestVoiceComponentImpl:
         with pytest.raises(
             errors.VoiceError, match="Cannot connect to shard 0 as it is not present in this application"
         ):
-            await voice_client.connect_to(123, 4532, object())
+            await voice_client.connect_to(123, 4532, mock.Mock())
 
     @pytest.mark.asyncio
     async def test_connect_to_handles_failed_connection_initialise(
@@ -360,10 +360,10 @@ class TestVoiceComponentImpl:
     ):
         mock_shard = mock.AsyncMock()
         mock_app.shards = {69: mock_shard}
-        voice_client._connections = {65234123: object()}
+        voice_client._connections = {65234123: mock.Mock()}
         expected_connections = {}
         if more_connections:
-            mock_connection = object()
+            mock_connection = mock.Mock()
             voice_client._connections[123] = mock_connection
             expected_connections[123] = mock_connection
 
@@ -405,7 +405,7 @@ class TestVoiceComponentImpl:
 
     @pytest.mark.asyncio
     async def test__on_connection_close_ignores_unknown_voice_state(self, voice_client: voice.VoiceComponentImpl):
-        connections = {123132: object(), 65234234: object()}
+        connections = {123132: mock.Mock(), 65234234: mock.Mock()}
         voice_client._connections = connections.copy()
 
         await voice_client._on_connection_close(mock.Mock(guild_id=-1))

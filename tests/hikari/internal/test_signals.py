@@ -50,7 +50,7 @@ def test__interrupt_handler(trace: bool):
 
 class TestHandleInterrupt:
     def test_behaviour(self):
-        loop = object()
+        loop = mock.Mock()
 
         stack = contextlib.ExitStack()
         register_signal_handler = stack.enter_context(mock.patch.object(signal, "signal"))
@@ -77,7 +77,7 @@ class TestHandleInterrupt:
 
     def test_when_disabled(self):
         with mock.patch.object(signal, "signal") as register_signal_handler:
-            with signals.handle_interrupts(False, object(), True):
+            with signals.handle_interrupts(False, mock.Mock(), True):
                 register_signal_handler.assert_not_called()
 
         register_signal_handler.assert_not_called()
@@ -85,10 +85,10 @@ class TestHandleInterrupt:
     def test_when_propagate_interrupt(self):
         with mock.patch.object(signal, "signal"):
             with pytest.raises(errors.HikariInterrupt):  # noqa: PT012 - raises block should contain a single statement
-                with signals.handle_interrupts(True, object(), True):
+                with signals.handle_interrupts(True, mock.Mock(), True):
                     raise errors.HikariInterrupt(1, "t")
 
     def test_when_not_propagate_interrupt(self):
         with mock.patch.object(signal, "signal"):
-            with signals.handle_interrupts(True, object(), False):
+            with signals.handle_interrupts(True, mock.Mock(), False):
                 raise errors.HikariInterrupt(1, "t")

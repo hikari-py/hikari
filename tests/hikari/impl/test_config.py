@@ -23,6 +23,7 @@ from __future__ import annotations
 import ssl
 import typing
 
+import mock
 import pytest
 
 from hikari.impl import config as config_
@@ -42,7 +43,7 @@ class TestSSLFactory:
         assert returned.verify_mode is ssl.CERT_NONE
 
     def test_when_value_is_non_bool(self):
-        value = object()
+        value = mock.Mock()
         assert config_._ssl_factory(value) is value
 
 
@@ -62,7 +63,7 @@ class TestHTTPTimeoutSettings:
     @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
     def test_max_redirects_validator_when_not_None_nor_int_nor_float(self, arg: str):
         with pytest.raises(ValueError, match=rf"HTTPTimeoutSettings.{arg} must be None, or a POSITIVE float/int"):
-            config_.HTTPTimeoutSettings(**{arg: object()})
+            config_.HTTPTimeoutSettings(**{arg: mock.Mock()})
 
     @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
     def test_max_redirects_validator_when_negative_int(self, arg: str):
@@ -83,7 +84,7 @@ class TestHTTPTimeoutSettings:
 class TestHTTPSettings:
     def test_max_redirects_validator_when_not_None_nor_int(self):
         with pytest.raises(ValueError, match=r"http_settings.max_redirects must be None or a POSITIVE integer"):
-            config_.HTTPSettings(max_redirects=object())
+            config_.HTTPSettings(max_redirects=mock.Mock())
 
     def test_max_redirects_validator_when_negative(self):
         with pytest.raises(ValueError, match=r"http_settings.max_redirects must be None or a POSITIVE integer"):

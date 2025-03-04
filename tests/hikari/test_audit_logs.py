@@ -111,9 +111,9 @@ class TestAuditLogEntry:
 
 class TestAuditLog:
     def test_iter(self):
-        entry_1 = object()
-        entry_2 = object()
-        entry_3 = object()
+        entry_1 = mock.Mock()
+        entry_2 = mock.Mock()
+        entry_3 = mock.Mock()
         audit_log = audit_logs.AuditLog(
             entries={
                 snowflakes.Snowflake(432123): entry_1,
@@ -128,14 +128,14 @@ class TestAuditLog:
         assert list(audit_log) == [entry_1, entry_2, entry_3]
 
     def test_get_item_with_index(self):
-        entry = object()
-        entry_2 = object()
+        entry = mock.Mock()
+        entry_2 = mock.Mock()
         audit_log = audit_logs.AuditLog(
             entries={
-                snowflakes.Snowflake(432123): object(),
+                snowflakes.Snowflake(432123): mock.Mock(),
                 snowflakes.Snowflake(432654): entry,
-                snowflakes.Snowflake(432888): object(),
-                snowflakes.Snowflake(677777): object(),
+                snowflakes.Snowflake(432888): mock.Mock(),
+                snowflakes.Snowflake(677777): mock.Mock(),
                 snowflakes.Snowflake(999999): entry_2,
             },
             integrations={},
@@ -147,15 +147,15 @@ class TestAuditLog:
         assert audit_log[4] is entry_2
 
     def test_get_item_with_slice(self):
-        entry_1 = object()
-        entry_2 = object()
+        entry_1 = mock.Mock()
+        entry_2 = mock.Mock()
         audit_log = audit_logs.AuditLog(
             entries={
-                snowflakes.Snowflake(432123): object(),
+                snowflakes.Snowflake(432123): mock.Mock(),
                 snowflakes.Snowflake(432654): entry_1,
-                snowflakes.Snowflake(432888): object(),
+                snowflakes.Snowflake(432888): mock.Mock(),
                 snowflakes.Snowflake(666666): entry_2,
-                snowflakes.Snowflake(783452): object(),
+                snowflakes.Snowflake(783452): mock.Mock(),
             },
             integrations={},
             threads={},
@@ -167,10 +167,10 @@ class TestAuditLog:
     def test_len(self):
         audit_log = audit_logs.AuditLog(
             entries={
-                snowflakes.Snowflake(432123): object(),
-                snowflakes.Snowflake(432654): object(),
-                snowflakes.Snowflake(432888): object(),
-                snowflakes.Snowflake(783452): object(),
+                snowflakes.Snowflake(432123): mock.Mock(),
+                snowflakes.Snowflake(432654): mock.Mock(),
+                snowflakes.Snowflake(432888): mock.Mock(),
+                snowflakes.Snowflake(783452): mock.Mock(),
             },
             integrations={},
             threads={},

@@ -105,7 +105,7 @@ class TestRESTBot:
         mock_interaction_server: interaction_server_impl.InteractionServer,
     ):
         cls = hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, print_banner=mock.Mock())
-        mock_executor = object()
+        mock_executor = mock.Mock()
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
@@ -174,7 +174,7 @@ class TestRESTBot:
         stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
 
         with stack:
-            result = cls(object(), "token_type", "6f66646f646f646f6f")
+            result = cls(mock.Mock(), "token_type", "6f66646f646f646f6f")
 
             interaction_server_impl.InteractionServer.assert_called_once_with(
                 entity_factory=result.entity_factory, public_key=b"ofdododoo", rest_client=result.rest
@@ -239,7 +239,7 @@ class TestRESTBot:
             assert result.http_settings is config.HTTPSettings.return_value
             assert result.proxy_settings is config.ProxySettings.return_value
 
-    @pytest.mark.parametrize(("close_event", "expected"), [(object(), True), (None, False)])
+    @pytest.mark.parametrize(("close_event", "expected"), [(mock.Mock(), True), (None, False)])
     def test_is_alive_property(self, mock_rest_bot: rest_bot_impl.RESTBot, close_event: object | None, expected: bool):
         mock_rest_bot._close_event = close_event
         assert mock_rest_bot.is_alive is expected
@@ -397,8 +397,8 @@ class TestRESTBot:
         mock_interaction_server.on_interaction.assert_awaited_once_with(b"1", b"2", b"3")
 
     def test_run(self, mock_rest_bot: rest_bot_impl.RESTBot):
-        mock_socket = object()
-        mock_context = object()
+        mock_socket = mock.Mock()
+        mock_context = mock.Mock()
         mock_rest_bot._executor = None
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
@@ -488,7 +488,7 @@ class TestRESTBot:
         set_tracking_depth.assert_called_once_with(42)
 
     def test_run_when_already_running(self, mock_rest_bot: rest_bot_impl.RESTBot):
-        mock_rest_bot._close_event = object()
+        mock_rest_bot._close_event = mock.Mock()
 
         with pytest.raises(errors.ComponentStateConflictError):
             mock_rest_bot.run()
@@ -514,8 +514,8 @@ class TestRESTBot:
                 reuse_address=True,
                 reuse_port=False,
                 shutdown_timeout=534.534,
-                socket=object(),
-                ssl_context=object(),
+                socket=mock.Mock(),
+                ssl_context=mock.Mock(),
             )
 
         mock_executor.shutdown.assert_called_once_with(wait=True)
@@ -541,8 +541,8 @@ class TestRESTBot:
                 reuse_address=True,
                 reuse_port=False,
                 shutdown_timeout=534.534,
-                socket=object(),
-                ssl_context=object(),
+                socket=mock.Mock(),
+                ssl_context=mock.Mock(),
             )
 
         assert mock_rest_bot.executor is None
@@ -554,8 +554,8 @@ class TestRESTBot:
         mock_interaction_server: interaction_server_impl.InteractionServer,
         mock_rest_client: rest_impl.RESTClientImpl,
     ):
-        mock_socket = object()
-        mock_ssl_context = object()
+        mock_socket = mock.Mock()
+        mock_ssl_context = mock.Mock()
         mock_callback_1 = mock.AsyncMock()
         mock_callback_2 = mock.AsyncMock()
         mock_rest_bot.add_startup_callback(mock_callback_1)
@@ -602,8 +602,8 @@ class TestRESTBot:
         mock_interaction_server: interaction_server_impl.InteractionServer,
         mock_rest_client: rest_impl.RESTClientImpl,
     ):
-        mock_socket = object()
-        mock_ssl_context = object()
+        mock_socket = mock.Mock()
+        mock_ssl_context = mock.Mock()
         mock_rest_bot._is_closing = True
         mock_error = TypeError("Not a real catgirl")
         mock_callback_1 = mock.AsyncMock(side_effect=mock_error)
@@ -656,9 +656,9 @@ class TestRESTBot:
                 path="patpatpapt",
                 reuse_address=True,
                 reuse_port=False,
-                socket=object(),
+                socket=mock.Mock(),
                 shutdown_timeout=4312312.3132132,
-                ssl_context=object(),
+                ssl_context=mock.Mock(),
             )
 
             asyncio.create_task.assert_called_once_with(
@@ -668,7 +668,7 @@ class TestRESTBot:
 
     @pytest.mark.asyncio
     async def test_start_when_is_alive(self, mock_rest_bot: rest_bot_impl.RESTBot):
-        mock_rest_bot._close_event = object()
+        mock_rest_bot._close_event = mock.Mock()
 
         with mock.patch.object(ux, "check_for_updates", new=mock.Mock()) as check_for_updates:
             with pytest.raises(errors.ComponentStateConflictError):
@@ -679,7 +679,7 @@ class TestRESTBot:
     def test_get_listener(
         self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
-        mock_type = object()
+        mock_type = mock.Mock()
 
         result = mock_rest_bot.get_listener(mock_type)
 
@@ -689,8 +689,8 @@ class TestRESTBot:
     def test_set_listener(
         self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
-        mock_type = object()
-        mock_listener = object()
+        mock_type = mock.Mock()
+        mock_listener = mock.Mock()
 
         mock_rest_bot.set_listener(mock_type, mock_listener, replace=True)
 

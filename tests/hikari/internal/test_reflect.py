@@ -111,7 +111,7 @@ class TestResolveSignatureOldStrategy:
 
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="This strategy is specific to 3.10 >= versions")
 def test_resolve_signature():
-    foo = object()
+    foo = mock.Mock()
 
     with mock.patch.object(inspect, "signature") as signature:
         sig = reflect.resolve_signature(foo)

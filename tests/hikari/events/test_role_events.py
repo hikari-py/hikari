@@ -30,7 +30,7 @@ from hikari.events import role_events
 class TestRoleCreateEvent:
     @pytest.fixture
     def event(self) -> role_events.RoleCreateEvent:
-        return role_events.RoleCreateEvent(shard=object(), role=mock.Mock(guilds.Role))
+        return role_events.RoleCreateEvent(shard=mock.Mock(), role=mock.Mock(guilds.Role))
 
     def test_app_property(self, event: role_events.RoleCreateEvent):
         assert event.app is event.role.app
@@ -47,7 +47,9 @@ class TestRoleCreateEvent:
 class TestRoleUpdateEvent:
     @pytest.fixture
     def event(self) -> role_events.RoleUpdateEvent:
-        return role_events.RoleUpdateEvent(shard=object(), role=mock.Mock(guilds.Role), old_role=mock.Mock(guilds.Role))
+        return role_events.RoleUpdateEvent(
+            shard=mock.Mock(), role=mock.Mock(guilds.Role), old_role=mock.Mock(guilds.Role)
+        )
 
     def test_app_property(self, event: role_events.RoleUpdateEvent):
         assert event.app is event.role.app

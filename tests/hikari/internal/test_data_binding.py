@@ -68,7 +68,7 @@ class TestURLEncodedFormBuilder:
         ]
 
     def test_add_resource(self, form_builder: data_binding.URLEncodedFormBuilder):
-        mock_resource = object()
+        mock_resource = mock.Mock()
 
         form_builder.add_resource("lick", mock_resource)
 
@@ -83,7 +83,7 @@ class TestURLEncodedFormBuilder:
         data1 = aiohttp.BytesPayload(b"data1")
         data2 = aiohttp.BytesPayload(b"data2")
         mock_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[stream1, stream2]))
-        executor = object()
+        executor = mock.Mock()
         form_builder._fields = [("test_name", data1, "mimetype"), ("test_name2", data2, "mimetype2")]
         form_builder._resources = [("aye", resource1), ("lmao", resource2)]
 
@@ -167,7 +167,7 @@ class TestStringMapBuilder:
         mapping = data_binding.StringMapBuilder()
         convert = mock.Mock()
 
-        expect = object()
+        expect = mock.Mock()
         mapping.put("yaskjgakljglak", expect, conversion=convert)
         convert.assert_called_once_with(expect)
 
@@ -246,7 +246,7 @@ class TestJSONObjectBuilder:
 
         convert = mock.Mock(side_effect=[r1, r2, r3])
         builder = data_binding.JSONObjectBuilder()
-        builder.put_array("www", [object(), object(), object()], conversion=convert)
+        builder.put_array("www", [mock.Mock(), mock.Mock(), mock.Mock()], conversion=convert)
         assert builder == {"www": [r1, r2, r3]}
 
     def test_put_array_with_conversion_passes_raw_input_to_converter(self):

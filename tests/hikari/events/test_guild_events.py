@@ -25,6 +25,7 @@ import pytest
 
 from hikari import guilds
 from hikari import presences
+from hikari import traits
 from hikari import snowflakes
 from hikari.events import guild_events
 from tests.hikari import hikari_test_helpers
@@ -54,7 +55,7 @@ class TestGuildEvent:
         event.app.cache.get_available_guild.assert_called_once_with(534123123)
 
     def test_get_guild_cacheless(self, event: guild_events.GuildEvent):
-        event = hikari_test_helpers.mock_class_namespace(guild_events.GuildEvent, app=object())()
+        event = hikari_test_helpers.mock_class_namespace(guild_events.GuildEvent, app=mock.Mock(spec=traits.RESTAware))()
 
         assert event.get_guild() is None
 
@@ -79,7 +80,7 @@ class TestGuildAvailableEvent:
     @pytest.fixture
     def event(self) -> guild_events.GuildAvailableEvent:
         return guild_events.GuildAvailableEvent(
-            shard=object(),
+            shard=mock.Mock(),
             guild=mock.Mock(guilds.Guild),
             emojis={},
             stickers={},
@@ -103,7 +104,7 @@ class TestGuildUpdateEvent:
     @pytest.fixture
     def event(self) -> guild_events.GuildUpdateEvent:
         return guild_events.GuildUpdateEvent(
-            shard=object(),
+            shard=mock.Mock(),
             guild=mock.Mock(guilds.Guild),
             old_guild=mock.Mock(guilds.Guild),
             emojis={},
@@ -136,7 +137,7 @@ class TestPresenceUpdateEvent:
     @pytest.fixture
     def event(self) -> guild_events.PresenceUpdateEvent:
         return guild_events.PresenceUpdateEvent(
-            shard=object(),
+            shard=mock.Mock(),
             presence=mock.Mock(presences.MemberPresence),
             old_presence=mock.Mock(presences.MemberPresence),
             user=mock.Mock(),

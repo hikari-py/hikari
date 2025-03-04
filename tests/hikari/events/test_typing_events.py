@@ -34,7 +34,7 @@ class TestTypingEvent:
     @pytest.fixture
     def event(self) -> typing_events.TypingEvent:
         cls = hikari_test_helpers.mock_class_namespace(
-            typing_events.TypingEvent, channel_id=123, user_id=456, timestamp=object(), shard=object()
+            typing_events.TypingEvent, channel_id=123, user_id=456, timestamp=mock.Mock(), shard=mock.Mock()
         )
 
         return cls()
@@ -61,8 +61,8 @@ class TestGuildTypingEvent:
 
         return cls(
             channel_id=123,
-            timestamp=object(),
-            shard=object(),
+            timestamp=mock.Mock(),
+            shard=mock.Mock(),
             guild_id=789,
             member=mock.Mock(id=456, app=mock.Mock(rest=mock.AsyncMock())),
         )
@@ -150,7 +150,7 @@ class TestDMTypingEvent:
         cls = hikari_test_helpers.mock_class_namespace(typing_events.DMTypingEvent)
 
         return cls(
-            channel_id=123, timestamp=object(), shard=object(), app=mock.Mock(rest=mock.AsyncMock()), user_id=456
+            channel_id=123, timestamp=mock.Mock(), shard=mock.Mock(), app=mock.Mock(rest=mock.AsyncMock()), user_id=456
         )
 
     async def test_fetch_channel(self, event: typing_events.DMTypingEvent):

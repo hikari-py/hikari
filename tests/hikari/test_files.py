@@ -88,7 +88,7 @@ class TestThreadedFileReaderContextManagerImpl:
     @pytest.mark.asyncio
     async def test_context_manager(self):
         mock_file = mock.Mock()
-        executor = object()
+        executor = mock.Mock()
         path = pathlib.Path("test/path/")
 
         loop = mock.Mock(run_in_executor=mock.AsyncMock(side_effect=[mock_file, None]))
@@ -178,7 +178,7 @@ class TestResource:
 
     @pytest.mark.asyncio
     async def test_save(self, resource: files.Resource[files.AsyncReader]):
-        executor = object()
+        executor = mock.Mock()
         file_open = mock.Mock()
         file_open.write = mock.Mock()
         loop = mock.Mock(run_in_executor=mock.AsyncMock(side_effect=[file_open, None, None, None, None, None, None]))
@@ -216,7 +216,7 @@ class TestFile:
 
     @pytest.mark.asyncio
     async def test_save(self, file_obj: files.File):
-        mock_executor = object()
+        mock_executor = mock.Mock()
         loop = mock.Mock(run_in_executor=mock.AsyncMock())
 
         with mock.patch.object(asyncio, "get_running_loop", return_value=loop):
@@ -253,7 +253,7 @@ class TestBytes:
         self, bytes_obj: files.Bytes, data_type: type[bytes] | type[bytearray] | type[memoryview[typing.Any]]
     ):
         bytes_obj.data = mock.Mock(data_type)
-        mock_executor = object()
+        mock_executor = mock.Mock()
         loop = mock.Mock(run_in_executor=mock.AsyncMock())
 
         with mock.patch.object(asyncio, "get_running_loop", return_value=loop):
@@ -267,8 +267,8 @@ class TestBytes:
 
     @pytest.mark.asyncio
     async def test_save_when_data_is_not_bytes(self, bytes_obj: files.Bytes):
-        bytes_obj.data = object()
-        mock_executor = object()
+        bytes_obj.data = mock.Mock()
+        mock_executor = mock.Mock()
 
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
             with mock.patch.object(files.Resource, "save") as super_save:

@@ -243,7 +243,7 @@ def test_read_banner():
 
     traversable = MockTraversable()
     traversable.mock_file = MockFile()
-    read = object()
+    read = mock.Mock()
 
     with mock.patch.object(importlib.resources, "files", return_value=traversable, create=True) as read_text:
         assert ux._read_banner("hikaru") is read

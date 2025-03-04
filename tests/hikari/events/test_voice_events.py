@@ -31,7 +31,7 @@ class TestVoiceStateUpdateEvent:
     @pytest.fixture
     def event(self) -> voice_events.VoiceStateUpdateEvent:
         return voice_events.VoiceStateUpdateEvent(
-            shard=object(), state=mock.Mock(voices.VoiceState), old_state=mock.Mock(voices.VoiceState)
+            shard=mock.Mock(), state=mock.Mock(voices.VoiceState), old_state=mock.Mock(voices.VoiceState)
         )
 
     def test_app_property(self, event: voice_events.VoiceStateUpdateEvent):
@@ -50,7 +50,7 @@ class TestVoiceServerUpdateEvent:
     @pytest.fixture
     def event(self) -> voice_events.VoiceServerUpdateEvent:
         return voice_events.VoiceServerUpdateEvent(
-            app=None, shard=object(), guild_id=123, token="token", raw_endpoint="voice.discord.com:123"
+            app=None, shard=mock.Mock(), guild_id=123, token="token", raw_endpoint="voice.discord.com:123"
         )
 
     def test_endpoint_property(self, event: voice_events.VoiceServerUpdateEvent):

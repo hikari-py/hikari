@@ -38,7 +38,7 @@ class TestEmbedResource:
         assert resource.filename is resource.resource.filename
 
     def test_stream(self, resource: embeds.EmbedResource):
-        mock_executor = object()
+        mock_executor = mock.Mock()
 
         assert resource.stream(executor=mock_executor, head_only=True) is resource.resource.stream.return_value
 

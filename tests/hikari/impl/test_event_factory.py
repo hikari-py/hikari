@@ -70,7 +70,7 @@ class TestEventFactoryImpl:
     def test_deserialize_application_command_permission_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_payload = object()
+        mock_payload = mock.Mock()
 
         event = event_factory.deserialize_application_command_permission_update_event(mock_shard, mock_payload)
 
@@ -105,8 +105,8 @@ class TestEventFactoryImpl:
         mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(
             spec=channel_models.PermissibleGuildChannel
         )
-        mock_old_channel = object()
-        mock_payload = object()
+        mock_old_channel = mock.Mock()
+        mock_payload = mock.Mock()
 
         event = event_factory.deserialize_guild_channel_update_event(
             mock_shard, mock_payload, old_channel=mock_old_channel
@@ -406,7 +406,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"guild_id": "1231234", "channel_id": "123123", "code": "no u"}
-        mock_old_invite = object()
+        mock_old_invite = mock.Mock()
 
         event = event_factory.deserialize_invite_delete_event(mock_shard, mock_payload, old_invite=mock_old_invite)
 
@@ -425,7 +425,7 @@ class TestEventFactoryImpl:
     def test_deserialize_typing_start_event_for_guild(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_member_payload = object()
+        mock_member_payload = mock.Mock()
         mock_payload = {
             "guild_id": "123321",
             "channel_id": "48585858",
@@ -519,7 +519,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
-        mock_old_guild = object()
+        mock_old_guild = mock.Mock()
 
         event = event_factory.deserialize_guild_update_event(mock_shard, mock_payload, old_guild=mock_old_guild)
 
@@ -542,7 +542,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"id": "43123123"}
-        mock_old_guild = object()
+        mock_old_guild = mock.Mock()
 
         event = event_factory.deserialize_guild_leave_event(mock_shard, mock_payload, old_guild=mock_old_guild)
 
@@ -595,8 +595,8 @@ class TestEventFactoryImpl:
     def test_deserialize_guild_emojis_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_emoji_payload = object()
-        mock_old_emojis = object()
+        mock_emoji_payload = mock.Mock()
+        mock_old_emojis = mock.Mock()
         mock_payload = {"guild_id": "123431", "emojis": [mock_emoji_payload]}
 
         event = event_factory.deserialize_guild_emojis_update_event(
@@ -616,8 +616,8 @@ class TestEventFactoryImpl:
     def test_deserialize_guild_stickers_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_sticker_payload = object()
-        mock_old_stickers = object()
+        mock_sticker_payload = mock.Mock()
+        mock_old_stickers = mock.Mock()
         mock_payload = {"guild_id": "472", "stickers": [mock_sticker_payload]}
 
         event = event_factory.deserialize_guild_stickers_update_event(
@@ -635,7 +635,7 @@ class TestEventFactoryImpl:
     def test_deserialize_integration_create_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_payload = object()
+        mock_payload = mock.Mock()
 
         event = event_factory.deserialize_integration_create_event(mock_shard, mock_payload)
 
@@ -671,7 +671,7 @@ class TestEventFactoryImpl:
     def test_deserialize_integration_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_payload = object()
+        mock_payload = mock.Mock()
 
         event = event_factory.deserialize_integration_update_event(mock_shard, mock_payload)
 
@@ -685,7 +685,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"user": {"id": "1231312"}}
-        mock_old_presence = object()
+        mock_old_presence = mock.Mock()
         mock_app.entity_factory.deserialize_member_presence.return_value = mock.Mock(app=mock_app)
 
         event = event_factory.deserialize_presence_update_event(
@@ -745,7 +745,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"user": {"id": "1231312", "e": "OK"}}
-        mock_old_presence = object()
+        mock_old_presence = mock.Mock()
         mock_app.entity_factory.deserialize_member_presence.return_value = mock.Mock(app=mock_app)
 
         event = event_factory.deserialize_presence_update_event(
@@ -819,7 +819,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
-        mock_old_member = object()
+        mock_old_member = mock.Mock()
 
         event = event_factory.deserialize_guild_member_update_event(
             mock_shard, mock_payload, old_member=mock_old_member
@@ -835,7 +835,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_user_payload = mock.Mock(app=mock_app)
-        mock_old_member = object()
+        mock_old_member = mock.Mock()
         mock_payload = {"guild_id": "43123", "user": mock_user_payload}
 
         event = event_factory.deserialize_guild_member_remove_event(
@@ -870,7 +870,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_role_payload = mock.Mock(app=mock_app)
-        mock_old_role = object()
+        mock_old_role = mock.Mock()
         mock_payload = {"role": mock_role_payload, "guild_id": "45123"}
 
         event = event_factory.deserialize_guild_role_update_event(mock_shard, mock_payload, old_role=mock_old_role)
@@ -885,7 +885,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"guild_id": "432123", "role_id": "848484"}
-        mock_old_role = object()
+        mock_old_role = mock.Mock()
 
         event = event_factory.deserialize_guild_role_delete_event(mock_shard, mock_payload, old_role=mock_old_role)
 
@@ -1030,7 +1030,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
-        mock_old_message = object()
+        mock_old_message = mock.Mock()
         mock_app.entity_factory.deserialize_partial_message.return_value = mock.Mock(guild_id=123321, app=mock_app)
 
         event = event_factory.deserialize_message_update_event(mock_shard, mock_payload, old_message=mock_old_message)
@@ -1044,7 +1044,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
-        mock_old_message = object()
+        mock_old_message = mock.Mock()
         mock_app.entity_factory.deserialize_partial_message.return_value = mock.Mock(guild_id=None)
 
         event = event_factory.deserialize_message_update_event(mock_shard, mock_payload, old_message=mock_old_message)
@@ -1058,7 +1058,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"id": "5412", "channel_id": "541123", "guild_id": "9494949"}
-        old_message = object()
+        old_message = mock.Mock()
 
         event = event_factory.deserialize_message_delete_event(mock_shard, mock_payload, old_message=old_message)
 
@@ -1074,7 +1074,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"id": "5412", "channel_id": "541123"}
-        old_message = object()
+        old_message = mock.Mock()
 
         event = event_factory.deserialize_message_delete_event(mock_shard, mock_payload, old_message=old_message)
 
@@ -1089,7 +1089,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"ids": ["6523423", "345123"], "channel_id": "564123", "guild_id": "4394949"}
-        old_messages = object()
+        old_messages = mock.Mock()
 
         event = event_factory.deserialize_guild_message_delete_bulk_event(
             mock_shard, mock_payload, old_messages=old_messages
@@ -1145,7 +1145,7 @@ class TestEventFactoryImpl:
     def test_deserialize_message_reaction_add_event_in_guild_when_partial_custom(
         self, event_factory: event_factory_.EventFactoryImpl, mock_shard: shard.GatewayShard, mock_app: traits.RESTAware
     ):
-        mock_member_payload = object()
+        mock_member_payload = mock.Mock()
         mock_payload = {
             "member": mock_member_payload,
             "channel_id": "34123",
@@ -1163,7 +1163,7 @@ class TestEventFactoryImpl:
     def test_deserialize_message_reaction_add_event_in_guild_when_unicode(
         self, event_factory: event_factory_.EventFactoryImpl, mock_shard: shard.GatewayShard, mock_app: traits.RESTAware
     ):
-        mock_member_payload = object()
+        mock_member_payload = mock.Mock()
         mock_payload = {
             "member": mock_member_payload,
             "channel_id": "34123",
@@ -1443,7 +1443,7 @@ class TestEventFactoryImpl:
     def test_deserialize_ready_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_user_payload = object()
+        mock_user_payload = mock.Mock()
         mock_payload = {
             "v": "69",
             "resume_gateway_url": "testing.com",
@@ -1546,7 +1546,7 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
-        mock_old_user = object()
+        mock_old_user = mock.Mock()
         mock_app.entity_factory.deserialize_my_user.return_value = mock.Mock(app=mock_app)
 
         event = event_factory.deserialize_own_user_update_event(mock_shard, mock_payload, old_user=mock_old_user)
@@ -1564,8 +1564,8 @@ class TestEventFactoryImpl:
     def test_deserialize_voice_state_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_payload = object()
-        mock_old_voice_state = object()
+        mock_payload = mock.Mock()
+        mock_old_voice_state = mock.Mock()
         mock_app.entity_factory.deserialize_voice_state.return_value = mock.Mock(app=mock_app)
 
         event = event_factory.deserialize_voice_state_update_event(

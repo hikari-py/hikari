@@ -80,7 +80,7 @@ class TestChannelFollow:
 
     def test_get_channel_when_no_cache_trait(self):
         follow = channels.ChannelFollow(
-            webhook_id=snowflakes.Snowflake(993883), app=object(), channel_id=snowflakes.Snowflake(696969)
+            webhook_id=snowflakes.Snowflake(993883), app=mock.Mock(traits.RESTAware), channel_id=snowflakes.Snowflake(696969)
         )
 
         assert follow.get_channel() is None
@@ -257,13 +257,13 @@ class TestTextChannel:
     @pytest.mark.asyncio
     async def test_send(self, model: channels.TextableChannel):
         model.app.rest.create_message = mock.AsyncMock()
-        mock_attachment = object()
-        mock_component = object()
-        mock_components = [object(), object()]
-        mock_embed = object()
-        mock_embeds = object()
-        mock_attachments = [object(), object(), object()]
-        mock_reply = object()
+        mock_attachment = mock.Mock()
+        mock_component = mock.Mock()
+        mock_components = [mock.Mock(), mock.Mock()]
+        mock_embed = mock.Mock()
+        mock_embeds = mock.Mock()
+        mock_attachments = [mock.Mock(), mock.Mock(), mock.Mock()]
+        mock_reply = mock.Mock()
 
         await model.send(
             content="test content",
@@ -470,7 +470,7 @@ class TestPermissibleGuildChannel:
         model.app.cache.get_guild.assert_called_once_with(123456789)
 
     def test_get_guild_when_no_cache_trait(self, model: channels.PermissibleGuildChannel):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
 
         assert model.get_guild() is None
 

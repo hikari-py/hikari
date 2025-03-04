@@ -25,7 +25,7 @@ import typing
 import mock
 import pytest
 
-from hikari import channels
+from hikari import channels, traits
 from hikari import messages
 from hikari import snowflakes
 from hikari import undefined
@@ -187,7 +187,7 @@ class TestGuildMessageCreateEvent:
     def event(self):
         return message_events.GuildMessageCreateEvent(
             message=mock.Mock(
-                spec_set=messages.Message,
+                spec=messages.Message,
                 guild_id=snowflakes.Snowflake(342123123),
                 channel_id=snowflakes.Snowflake(9121234),
             ),
@@ -342,13 +342,13 @@ class TestGuildMessageDeleteEvent:
             guild_id=snowflakes.Snowflake(542342354564),
             channel_id=snowflakes.Snowflake(54213123123),
             app=mock.Mock(),
-            shard=object(),
+            shard=mock.Mock(),
             message_id=9,
-            old_message=object(),
+            old_message=mock.Mock(),
         )
 
     def test_get_channel_when_no_cache_trait(self, event: message_events.GuildMessageDeleteEvent):
-        event.app = object()
+        event.app = mock.Mock(traits.RESTAware)
 
         assert event.get_channel() is None
 
@@ -365,7 +365,7 @@ class TestGuildMessageDeleteEvent:
         event.app.cache.get_guild_channel.assert_called_once_with(54213123123)
 
     def test_get_guild_when_no_cache_trait(self, event: message_events.GuildMessageDeleteEvent):
-        event.app = object()
+        event.app = mock.Mock(traits.RESTAware)
 
         assert event.get_guild() is None
 

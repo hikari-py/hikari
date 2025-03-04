@@ -82,12 +82,12 @@ class TestMessageResponseMixin:
         mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
         mock_app: traits.RESTAware,
     ):
-        mock_embed_1 = object()
-        mock_embed_2 = object()
-        mock_component = object()
-        mock_components = object(), object()
-        mock_attachment = object()
-        mock_attachments = object(), object()
+        mock_embed_1 = mock.Mock()
+        mock_embed_2 = mock.Mock()
+        mock_component = mock.Mock()
+        mock_components = mock.Mock(), mock.Mock()
+        mock_attachment = mock.Mock()
+        mock_attachments = mock.Mock(), mock.Mock()
         await mock_message_response_mixin.create_initial_response(
             base_interactions.ResponseType.MESSAGE_CREATE,
             "content",
@@ -156,12 +156,12 @@ class TestMessageResponseMixin:
         mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
         mock_app: traits.RESTAware,
     ):
-        mock_embed_1 = object()
-        mock_embed_2 = object()
-        mock_attachment_1 = object()
-        mock_attachment_2 = object()
-        mock_component = object()
-        mock_components = object(), object()
+        mock_embed_1 = mock.Mock()
+        mock_embed_2 = mock.Mock()
+        mock_attachment_1 = mock.Mock()
+        mock_attachment_2 = mock.Mock()
+        mock_component = mock.Mock()
+        mock_components = mock.Mock(), mock.Mock()
         result = await mock_message_response_mixin.edit_initial_response(
             "new content",
             embed=mock_embed_1,

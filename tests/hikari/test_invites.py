@@ -56,7 +56,7 @@ class TestInviteGuild:
         )
 
     def test_splash_url(self, model: invites.InviteGuild):
-        splash = object()
+        splash = mock.Mock()
 
         with mock.patch.object(invites.InviteGuild, "make_splash_url", return_value=splash):
             assert model.splash_url is splash
@@ -78,7 +78,7 @@ class TestInviteGuild:
         assert model.make_splash_url(ext="png", size=1024) is None
 
     def test_banner_url(self, model: invites.InviteGuild):
-        banner = object()
+        banner = mock.Mock()
 
         with mock.patch.object(invites.InviteGuild, "make_banner_url", return_value=banner):
             assert model.banner_url is banner

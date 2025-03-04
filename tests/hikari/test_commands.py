@@ -86,7 +86,7 @@ class TestPartialCommand:
 
     @pytest.mark.asyncio
     async def test_edit_with_optional_args(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
-        mock_option = object()
+        mock_option = mock.Mock()
         result = await mock_command.edit(name="new name", description="very descrypt", options=[mock_option])
 
         assert result is mock_app.rest.edit_application_command.return_value
@@ -137,7 +137,7 @@ class TestPartialCommand:
 
     @pytest.mark.asyncio
     async def test_set_guild_permissions(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
-        mock_permissions = object()
+        mock_permissions = mock.Mock()
 
         result = await mock_command.set_guild_permissions(312123, mock_permissions)
 

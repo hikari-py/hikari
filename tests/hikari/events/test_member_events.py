@@ -77,7 +77,7 @@ class TestMemberCreateEvent:
         event.guild_id == 123
 
     def test_user_property(self, event: member_events.MemberCreateEvent):
-        user = object()
+        user = mock.Mock()
         event.member.user = user
         event.user == user
 
@@ -92,7 +92,7 @@ class TestMemberUpdateEvent:
         event.guild_id == 123
 
     def test_user_property(self, event: member_events.MemberUpdateEvent):
-        user = object()
+        user = mock.Mock()
         event.member.user = user
         event.user == user
 

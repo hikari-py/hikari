@@ -61,7 +61,7 @@ class TestGenerateWeakListener:
     @pytest.mark.asyncio
     async def test__generate_weak_listener(self):
         mock_listener = mock.AsyncMock()
-        mock_event = object()
+        mock_event = mock.Mock()
 
         def test():
             return mock_listener
@@ -95,7 +95,7 @@ class TestEventStream:
     async def test__listener_when_filter_returns_false(self, mock_app: traits.RESTAware):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None)
         stream.filter(lambda _: False)
-        mock_event = object()
+        mock_event = mock.Mock()
 
         assert await stream._listener(mock_event) is None
         assert not stream._queue
@@ -104,10 +104,10 @@ class TestEventStream:
     @pytest.mark.asyncio
     async def test__listener_when_filter_passes_and_queue_full(self, mock_app: traits.RESTAware):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=2)
-        stream._queue.append(object())
-        stream._queue.append(object())
+        stream._queue.append(mock.Mock())
+        stream._queue.append(mock.Mock())
         stream.filter(lambda _: True)
-        mock_event = object()
+        mock_event = mock.Mock()
 
         with stream:
             assert await stream._listener(mock_event) is None
@@ -119,10 +119,10 @@ class TestEventStream:
     @pytest.mark.asyncio
     async def test__listener_when_filter_passes_and_queue_not_full(self, mock_app: traits.RESTAware):
         stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=None)
-        stream._queue.append(object())
-        stream._queue.append(object())
+        stream._queue.append(mock.Mock())
+        stream._queue.append(mock.Mock())
         stream.filter(lambda _: True)
-        mock_event = object()
+        mock_event = mock.Mock()
 
         with stream:
             assert await stream._listener(mock_event) is None
@@ -151,7 +151,7 @@ class TestEventStream:
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext___waits_for_next_event(self):
-        mock_event = object()
+        mock_event = mock.Mock()
         streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=None)
 
         async def quickly_run_task(task):
@@ -172,7 +172,7 @@ class TestEventStream:
     @pytest.mark.asyncio
     @hikari_test_helpers.timeout()
     async def test___anext__(self):
-        mock_event = object()
+        mock_event = mock.Mock()
         streamer = event_manager_base.EventStream(
             event_manager=mock.Mock(),
             event_type=base_events.Event,
@@ -185,9 +185,9 @@ class TestEventStream:
 
     @pytest.mark.asyncio
     async def test___await__(self):
-        mock_event_0 = object()
-        mock_event_1 = object()
-        mock_event_2 = object()
+        mock_event_0 = mock.Mock()
+        mock_event_1 = mock.Mock()
+        mock_event_2 = mock.Mock()
         streamer = hikari_test_helpers.mock_class_namespace(
             event_manager_base.EventStream,
             close=mock.Mock(),
@@ -202,7 +202,7 @@ class TestEventStream:
         streamer.close.assert_called_once_with()
 
     def test___del___for_active_stream(self):
-        mock_coroutine = object()
+        mock_coroutine = mock.Mock()
         close_method = mock.Mock(return_value=mock_coroutine)
         streamer = hikari_test_helpers.mock_class_namespace(
             event_manager_base.EventStream, close=close_method, init_=False
@@ -234,7 +234,7 @@ class TestEventStream:
         mock_app.event_manager.unsubscribe.assert_not_called()
 
     def test_close_for_active_stream(self):
-        mock_registered_listener = object()
+        mock_registered_listener = mock.Mock()
         mock_manager = mock.Mock()
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
             event_manager=mock_manager, event_type=base_events.Event, timeout=float("inf")
@@ -248,7 +248,7 @@ class TestEventStream:
         assert stream._registered_listener is None
 
     def test_close_for_active_stream_handles_value_error(self):
-        mock_registered_listener = object()
+        mock_registered_listener = mock.Mock()
         mock_manager = mock.Mock()
         mock_manager.unsubscribe.side_effect = ValueError
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
@@ -309,7 +309,7 @@ class TestEventStream:
             assert await stream == [first_pass, second_pass]
 
     def test_open_for_inactive_stream(self):
-        mock_listener = object()
+        mock_listener = mock.Mock()
         mock_manager = mock.Mock()
         stream = hikari_test_helpers.mock_class_namespace(event_manager_base.EventStream)(
             event_manager=mock_manager, event_type=base_events.Event, timeout=float("inf")
@@ -338,8 +338,8 @@ class TestEventStream:
             event_manager=mock_manager, event_type=base_events.Event, timeout=float("inf")
         )
         stream._active = False
-        mock_listener = object()
-        mock_listener_ref = object()
+        mock_listener = mock.Mock()
+        mock_listener_ref = mock.Mock()
 
         with mock.patch.object(event_manager_base, "_generate_weak_listener", return_value=mock_listener):
             with mock.patch.object(weakref, "WeakMethod", return_value=mock_listener_ref):
@@ -364,7 +364,7 @@ class TestConsumer:
     def test_is_enabled(
         self, is_caching: bool, listener_group_count: int, waiter_group_count: int, expected_result: bool
     ):
-        consumer = event_manager_base._Consumer(object(), 123, is_caching)
+        consumer = event_manager_base._Consumer(mock.Mock(), 123, is_caching)
         consumer.listener_group_count = listener_group_count
         consumer.waiter_group_count = waiter_group_count
 
@@ -505,9 +505,9 @@ class TestEventManagerBase:
         event_manager._enabled_for_event = mock.Mock(return_value=True)
         event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
-        on_existing_event = object()
+        on_existing_event = mock.Mock()
         event_manager._consumers = {"existing_event": on_existing_event}
-        shard = object()
+        shard = mock.Mock()
         payload = {"berp": "baz"}
 
         with mock.patch("asyncio.create_task") as create_task:
@@ -530,9 +530,9 @@ class TestEventManagerBase:
         event_manager._enabled_for_event = mock.Mock(return_value=False)
         event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
-        on_existing_event = object()
+        on_existing_event = mock.Mock()
         event_manager._consumers = {"existing_event": on_existing_event}
-        shard = object()
+        shard = mock.Mock()
         payload = {"berp": "baz"}
 
         with mock.patch("asyncio.create_task") as create_task:
@@ -553,7 +553,7 @@ class TestEventManagerBase:
         error_handler = mock.MagicMock()
         event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
-        shard = object()
+        shard = mock.Mock()
         pl = {"foo": "bar"}
 
         await event_manager._handle_dispatch(consumer, shard, pl)
@@ -568,7 +568,7 @@ class TestEventManagerBase:
         error_handler = mock.MagicMock()
         event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
-        shard = object()
+        shard = mock.Mock()
         pl = {"lorem": "ipsum"}
 
         await event_manager._handle_dispatch(consumer, shard, pl)
@@ -587,7 +587,7 @@ class TestEventManagerBase:
         error_handler = mock.MagicMock()
         event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
-        shard = object()
+        shard = mock.Mock()
         pl = {"i like": "cats"}
 
         with mock.patch.object(asyncio, "current_task", return_value=mock_task):
@@ -609,7 +609,7 @@ class TestEventManagerBase:
         error_handler = mock.MagicMock()
         event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
-        shard = object()
+        shard = mock.Mock()
         pl = {"foo": "bar"}
 
         await event_manager._handle_dispatch(consumer, shard, pl)

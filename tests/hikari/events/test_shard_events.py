@@ -66,14 +66,14 @@ class TestMemberChunkEvent:
         )
 
     def test___getitem___with_slice(self, event: shard_events.MemberChunkEvent):
-        mock_member_0 = object()
-        mock_member_1 = object()
-        event.members = {1: object(), 55: object(), 99: mock_member_0, 455: object(), 5444: mock_member_1}
+        mock_member_0 = mock.Mock()
+        mock_member_1 = mock.Mock()
+        event.members = {1: mock.Mock(), 55: mock.Mock(), 99: mock_member_0, 455: mock.Mock(), 5444: mock_member_1}
 
         assert event[2:5:2] == (mock_member_0, mock_member_1)
 
     def test___getitem___with_valid_index(self, event: shard_events.MemberChunkEvent):
-        mock_member = object()
+        mock_member = mock.Mock()
         event.members[snowflakes.Snowflake(99)] = mock_member
         assert event[2] is mock_member
 

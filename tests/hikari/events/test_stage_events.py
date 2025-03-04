@@ -30,7 +30,7 @@ from hikari.events import stage_events
 class TestStageInstanceCreateEvent:
     @pytest.fixture
     def event(self) -> stage_events.StageInstanceCreateEvent:
-        return stage_events.StageInstanceCreateEvent(shard=object(), stage_instance=mock.Mock())
+        return stage_events.StageInstanceCreateEvent(shard=mock.Mock(), stage_instance=mock.Mock())
 
     def test_app_property(self, event: stage_events.StageInstanceCreateEvent):
         assert event.app is event.stage_instance.app
@@ -40,7 +40,7 @@ class TestStageInstanceUpdateEvent:
     @pytest.fixture
     def event(self) -> stage_events.StageInstanceUpdateEvent:
         return stage_events.StageInstanceUpdateEvent(
-            shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
+            shard=mock.Mock(), stage_instance=mock.Mock(stage_instances.StageInstance)
         )
 
     def test_app_property(self, event: stage_events.StageInstanceUpdateEvent):
@@ -51,7 +51,7 @@ class TestStageInstanceDeleteEvent:
     @pytest.fixture
     def event(self) -> stage_events.StageInstanceDeleteEvent:
         return stage_events.StageInstanceDeleteEvent(
-            shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
+            shard=mock.Mock(), stage_instance=mock.Mock(stage_instances.StageInstance)
         )
 
     def test_app_property(self, event: stage_events.StageInstanceDeleteEvent):

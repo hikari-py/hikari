@@ -48,7 +48,7 @@ class TestRESTBucket:
     async def test_async_context_manager(self, compiled_route: routes.CompiledRoute):
         with mock.patch.object(buckets.RESTBucket, "acquire", new=mock.AsyncMock()) as acquire:
             with mock.patch.object(buckets.RESTBucket, "release") as release:
-                async with buckets.RESTBucket("spaghetti", compiled_route, object(), float("inf")):
+                async with buckets.RESTBucket("spaghetti", compiled_route, mock.Mock(), float("inf")):
                     acquire.assert_awaited_once_with()
                     release.assert_not_called()
 
@@ -56,11 +56,11 @@ class TestRESTBucket:
 
     @pytest.mark.parametrize("name", ["spaghetti", buckets.UNKNOWN_HASH])
     def test_is_unknown(self, name: str, compiled_route: routes.CompiledRoute):
-        with buckets.RESTBucket(name, compiled_route, object(), float("inf")) as rl:
+        with buckets.RESTBucket(name, compiled_route, mock.Mock(), float("inf")) as rl:
             assert rl.is_unknown is (name == buckets.UNKNOWN_HASH)
 
     def test_release(self, compiled_route: routes.CompiledRoute):
-        with buckets.RESTBucket(__name__, compiled_route, object(), float("inf")) as rl:
+        with buckets.RESTBucket(__name__, compiled_route, mock.Mock(), float("inf")) as rl:
             rl._lock = mock.Mock()
 
             rl.release()
@@ -68,7 +68,7 @@ class TestRESTBucket:
             rl._lock.release.assert_called_once_with()
 
     def test_update_rate_limit(self, compiled_route: routes.CompiledRoute):
-        with buckets.RESTBucket(__name__, compiled_route, object(), float("inf")) as rl:
+        with buckets.RESTBucket(__name__, compiled_route, mock.Mock(), float("inf")) as rl:
             rl.remaining = 1
             rl.limit = 2
             rl.reset_at = 3
@@ -84,7 +84,7 @@ class TestRESTBucket:
 
     @pytest.mark.asyncio
     async def test_acquire_when_unknown_bucket(self, compiled_route: routes.CompiledRoute):
-        with buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, object(), float("inf")) as rl:
+        with buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, mock.Mock(), float("inf")) as rl:
             rl._lock = mock.AsyncMock()
             with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
                 assert await rl.acquire() is None
@@ -95,7 +95,7 @@ class TestRESTBucket:
     @pytest.mark.asyncio
     async def test_acquire_when_too_long_ratelimit(self, compiled_route: routes.CompiledRoute):
         stack = contextlib.ExitStack()
-        rl = stack.enter_context(buckets.RESTBucket("spaghetti", compiled_route, object(), 60))
+        rl = stack.enter_context(buckets.RESTBucket("spaghetti", compiled_route, mock.Mock(), 60))
         rl._lock = mock.Mock(acquire=mock.AsyncMock())
         rl.reset_at = time.perf_counter() + 999999999999999999999999999
         stack.enter_context(mock.patch.object(buckets.RESTBucket, "is_rate_limited", return_value=True))
@@ -136,14 +136,14 @@ class TestRESTBucket:
             global_ratelimit.acquire.assert_awaited_once_with()
 
     def test_resolve_when_not_unknown(self, compiled_route: routes.CompiledRoute):
-        with buckets.RESTBucket("spaghetti", compiled_route, object(), float("inf")) as rl:
+        with buckets.RESTBucket("spaghetti", compiled_route, mock.Mock(), float("inf")) as rl:
             with pytest.raises(RuntimeError, match=r"Cannot resolve known bucket"):
                 rl.resolve("test")
 
             assert rl.name == "spaghetti"
 
     def test_resolve(self, compiled_route: routes.CompiledRoute):
-        with buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, object(), float("inf")) as rl:
+        with buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, mock.Mock(), float("inf")) as rl:
             rl.resolve("test")
 
             assert rl.name == "test"
@@ -153,12 +153,12 @@ class TestRESTBucketManager:
     @pytest.fixture
     def bucket_manager(self):
         manager = buckets.RESTBucketManager(max_rate_limit=float("inf"))
-        manager._gc_task = object()
+        manager._gc_task = mock.Mock()
 
         return manager
 
     def test_max_rate_limit_property(self, bucket_manager: buckets.RESTBucketManager):
-        bucket_manager._max_rate_limit = object()
+        bucket_manager._max_rate_limit = mock.Mock()
 
         assert bucket_manager.max_rate_limit is bucket_manager._max_rate_limit
 
@@ -212,7 +212,7 @@ class TestRESTBucketManager:
 
     @pytest.mark.asyncio
     async def test_start_when_already_started(self, bucket_manager: buckets.RESTBucketManager):
-        bucket_manager._gc_task = object()
+        bucket_manager._gc_task = mock.Mock()
 
         with pytest.raises(errors.ComponentStateConflictError):
             bucket_manager.start()

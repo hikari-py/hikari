@@ -35,9 +35,9 @@ class TestTemplate:
             name="Test Template",
             description="Template used for testing",
             usage_count=101,
-            creator=object(),
-            created_at=object(),
-            updated_at=object(),
+            creator=mock.Mock(),
+            created_at=mock.Mock(),
+            updated_at=mock.Mock(),
             source_guild=mock.Mock(id=123),
             is_unsynced=True,
         )

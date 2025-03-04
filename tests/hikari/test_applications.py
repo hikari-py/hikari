@@ -96,7 +96,7 @@ class TestTeam:
         )()
 
     def test_str_operator(self):
-        team = applications.Team(id=696969, app=object(), name="test", icon_hash="", members=[], owner_id=0)
+        team = applications.Team(id=696969, app=mock.Mock(), name="test", icon_hash="", members=[], owner_id=0)
         assert str(team) == "Team test (696969)"
 
     def test_icon_url_property(self, model: applications.Team):

@@ -439,7 +439,7 @@ class TestGatewayGuildDefinition:
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537"}, user_id=snowflakes.Snowflake(43123)
         )
-        mock_channel = object()
+        mock_channel = mock.Mock()
         guild_definition._channels = {"123321": mock_channel}
         entity_factory_impl.deserialize_guild_text_channel = mock.Mock()
         entity_factory_impl.deserialize_guild_voice_channel = mock.Mock()
@@ -474,7 +474,7 @@ class TestGatewayGuildDefinition:
         }
 
     def test_emojis_returns_cached_values(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
-        mock_emoji = object()
+        mock_emoji = mock.Mock()
         entity_factory_impl.deserialize_known_custom_emoji = mock.Mock()
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537"}, user_id=snowflakes.Snowflake(43123)
@@ -673,7 +673,7 @@ class TestGatewayGuildDefinition:
         assert guild.public_updates_channel_id is None
 
     def test_guild_returns_cached_values(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
-        mock_guild = object()
+        mock_guild = mock.Mock()
         entity_factory_impl.set_guild_attributes = mock.Mock()
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "9393939"}, user_id=snowflakes.Snowflake(43123)
@@ -698,7 +698,7 @@ class TestGatewayGuildDefinition:
         }
 
     def test_members_returns_cached_values(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
-        mock_member = object()
+        mock_member = mock.Mock()
         entity_factory_impl.deserialize_member = mock.Mock()
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "92929292"}, user_id=snowflakes.Snowflake(43123)
@@ -725,7 +725,7 @@ class TestGatewayGuildDefinition:
         }
 
     def test_presences_returns_cached_values(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
-        mock_presence = object()
+        mock_presence = mock.Mock()
         entity_factory_impl.deserialize_member_presence = mock.Mock()
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "29292992"}, user_id=snowflakes.Snowflake(43123)
@@ -750,7 +750,7 @@ class TestGatewayGuildDefinition:
         }
 
     def test_roles_returns_cached_values(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
-        mock_role = object()
+        mock_role = mock.Mock()
         entity_factory_impl.deserialize_role = mock.Mock()
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "9292929"}, user_id=snowflakes.Snowflake(43123)
@@ -795,7 +795,7 @@ class TestGatewayGuildDefinition:
         }
 
     def test_threads_returns_cached_values(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
-        mock_thread = object()
+        mock_thread = mock.Mock()
         entity_factory_impl.deserialize_guild_thread = mock.Mock()
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "92929292"}, user_id=snowflakes.Snowflake(43123)
@@ -854,7 +854,7 @@ class TestGatewayGuildDefinition:
         }
 
     def test_voice_states_returns_cached_values(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
-        mock_voice_state = object()
+        mock_voice_state = mock.Mock()
         entity_factory_impl.deserialize_voice_state = mock.Mock()
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "292929"}, user_id=snowflakes.Snowflake(43123)
@@ -2453,8 +2453,8 @@ class TestEntityFactoryImpl:
 
     def test_serialize_forum_tag(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
         tag = channel_models.ForumTag(id=snowflakes.Snowflake(123), name="test", moderated=True, emoji=None)
-        unicode_emoji = object()
-        emoji_id = object()
+        unicode_emoji = mock.Mock()
+        emoji_id = mock.Mock()
 
         with mock.patch.object(channel_models.ForumTag, "unicode_emoji", new=unicode_emoji):
             with mock.patch.object(channel_models.ForumTag, "emoji_id", new=emoji_id):
@@ -4712,7 +4712,7 @@ class TestEntityFactoryImpl:
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         interaction_member_payload: typing.Mapping[str, typing.Any],
     ):
-        mock_user = object()
+        mock_user = mock.Mock()
         member = entity_factory_impl._deserialize_interaction_member(
             interaction_member_payload, guild_id=43123123, user=mock_user
         )
@@ -5659,7 +5659,7 @@ class TestEntityFactoryImpl:
                 {"id": "265828729970753537"}, user_id=123321
             )
 
-            mock_sticker = object()
+            mock_sticker = mock.Mock()
             guild_definition._stickers = {"54545454": mock_sticker}
 
             assert guild_definition.stickers() == {"54545454": mock_sticker}

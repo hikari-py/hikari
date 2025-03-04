@@ -227,7 +227,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {"id": 123}
-        old_channel = object()
+        old_channel = mock.Mock()
         event = mock.Mock(channel=mock.Mock(channels.GuildChannel))
 
         event_factory.deserialize_guild_channel_update_event.return_value = event
@@ -911,10 +911,10 @@ class TestEventManagerImpl:
         entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
         payload = {"id": 123}
-        old_guild = object()
-        mock_role = object()
-        mock_emoji = object()
-        mock_sticker = object()
+        old_guild = mock.Mock()
+        mock_role = mock.Mock()
+        mock_emoji = mock.Mock()
+        mock_sticker = mock.Mock()
         event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
         event = mock.Mock(
             roles={555: mock_role}, emojis={333: mock_emoji}, guild=mock.Mock(id=123), stickers={444: mock_sticker}
@@ -948,9 +948,9 @@ class TestEventManagerImpl:
         entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
         payload = {"id": 123}
-        mock_role = object()
-        mock_emoji = object()
-        mock_sticker = object()
+        mock_role = mock.Mock()
+        mock_emoji = mock.Mock()
+        mock_sticker = mock.Mock()
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
         guild_definition = entity_factory.deserialize_gateway_guild.return_value
         guild_definition.id = 123
@@ -1154,7 +1154,7 @@ class TestEventManagerImpl:
     ):
         payload = {"guild_id": 123}
         old_emojis = {"Test": 123}
-        mock_emoji = object()
+        mock_emoji = mock.Mock()
         event = mock.Mock(emojis=[mock_emoji], guild_id=123)
 
         event_factory.deserialize_guild_emojis_update_event.return_value = event
@@ -1192,7 +1192,7 @@ class TestEventManagerImpl:
     ):
         payload = {"guild_id": 720}
         old_stickers = {700: 123}
-        mock_sticker = object()
+        mock_sticker = mock.Mock()
         event = mock.Mock(stickers=[mock_sticker], guild_id=123)
 
         event_factory.deserialize_guild_stickers_update_event.return_value = event
@@ -1291,7 +1291,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {}
-        event = mock.Mock(user=object(), member=object())
+        event = mock.Mock(user=mock.Mock(), member=mock.Mock())
 
         event_factory.deserialize_guild_member_add_event.return_value = event
 
@@ -1360,7 +1360,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {"user": {"id": 123}, "guild_id": 456}
-        old_member = object()
+        old_member = mock.Mock()
         event = mock.Mock(member=mock.Mock())
 
         event_factory.deserialize_guild_member_update_event.return_value = event
@@ -1433,7 +1433,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {}
-        event = mock.Mock(role=object())
+        event = mock.Mock(role=mock.Mock())
 
         event_factory.deserialize_guild_role_create_event.return_value = event
 
@@ -1467,7 +1467,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {"role": {"id": 123}}
-        old_role = object()
+        old_role = mock.Mock()
         event = mock.Mock(role=mock.Mock())
 
         event_factory.deserialize_guild_role_update_event.return_value = event
@@ -1606,7 +1606,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {}
-        event = mock.Mock(message=object())
+        event = mock.Mock(message=mock.Mock())
 
         event_factory.deserialize_message_create_event.return_value = event
 
@@ -1640,7 +1640,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {"id": 123}
-        old_message = object()
+        old_message = mock.Mock()
         event = mock.Mock(message=mock.Mock())
 
         event_factory.deserialize_message_update_event.return_value = event
@@ -1712,9 +1712,9 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {"ids": [123, 456, 789, 987]}
-        message1 = object()
-        message2 = object()
-        message3 = object()
+        message1 = mock.Mock()
+        message2 = mock.Mock()
+        message3 = mock.Mock()
         event_manager_impl._cache.delete_message.side_effect = [message1, message2, message3, None]
 
         await event_manager_impl.on_message_delete_bulk(shard, payload)
@@ -1823,7 +1823,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {"user": {"id": 123}, "guild_id": 456}
-        old_presence = object()
+        old_presence = mock.Mock()
         event = mock.Mock(presence=mock.Mock(visible_status=presences.Status.ONLINE))
 
         event_factory.deserialize_presence_update_event.return_value = event
@@ -1846,7 +1846,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {"user": {"id": 123}, "guild_id": 456}
-        old_presence = object()
+        old_presence = mock.Mock()
         event = mock.Mock(presence=mock.Mock(visible_status=presences.Status.OFFLINE))
 
         event_factory.deserialize_presence_update_event.return_value = event
@@ -1904,7 +1904,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {}
-        old_user = object()
+        old_user = mock.Mock()
         event = mock.Mock(user=mock.Mock())
 
         event_factory.deserialize_own_user_update_event.return_value = event
@@ -1940,7 +1940,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {"user_id": 123, "guild_id": 456}
-        old_state = object()
+        old_state = mock.Mock()
         event = mock.Mock(state=mock.Mock(channel_id=123))
 
         event_factory.deserialize_voice_state_update_event.return_value = event
@@ -1961,7 +1961,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
         payload = {"user_id": 123, "guild_id": 456}
-        old_state = object()
+        old_state = mock.Mock()
         event = mock.Mock(state=mock.Mock(channel_id=None))
 
         event_factory.deserialize_voice_state_update_event.return_value = event

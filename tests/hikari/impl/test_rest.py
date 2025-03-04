@@ -74,8 +74,8 @@ from tests.hikari import hikari_test_helpers
 
 
 class StubRestClient:
-    http_settings = object()
-    proxy_settings = object()
+    http_settings = mock.Mock()
+    proxy_settings = mock.Mock()
 
 
 class TestRestProvider:
@@ -319,23 +319,23 @@ class TestRESTApp:
         )
 
     def test_executor_property(self, rest_app: rest.RESTApp):
-        mock_executor = object()
+        mock_executor = mock.Mock()
         rest_app._executor = mock_executor
         assert rest_app.executor is mock_executor
 
     def test_http_settings_property(self, rest_app: rest.RESTApp):
-        mock_http_settings = object()
+        mock_http_settings = mock.Mock()
         rest_app._http_settings = mock_http_settings
         assert rest_app.http_settings is mock_http_settings
 
     def test_proxy_settings(self, rest_app: rest.RESTApp):
-        mock_proxy_settings = object()
+        mock_proxy_settings = mock.Mock()
         rest_app._proxy_settings = mock_proxy_settings
         assert rest_app.proxy_settings is mock_proxy_settings
 
     def test_acquire(self, rest_app: rest.RESTApp):
-        rest_app._client_session = object()
-        rest_app._bucket_manager = object()
+        rest_app._client_session = mock.Mock()
+        rest_app._bucket_manager = mock.Mock()
         stack = contextlib.ExitStack()
         mock_entity_factory = stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl"))
         mock_client = stack.enter_context(mock.patch.object(rest, "RESTClientImpl"))
@@ -367,8 +367,8 @@ class TestRESTApp:
         assert rest_provider.executor is rest_app._executor
 
     def test_acquire_defaults_to_bearer_for_a_string_token(self, rest_app: rest.RESTApp):
-        rest_app._client_session = object()
-        rest_app._bucket_manager = object()
+        rest_app._client_session = mock.Mock()
+        rest_app._bucket_manager = mock.Mock()
         stack = contextlib.ExitStack()
         mock_entity_factory = stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl"))
         mock_client = stack.enter_context(mock.patch.object(rest, "RESTClientImpl"))
@@ -428,7 +428,7 @@ def rest_client(
         token_type="tYpe",
         max_retries=0,
         rest_url="https://some.where/api/v3",
-        executor=object(),
+        executor=mock.Mock(),
         entity_factory=mock.Mock(),
         bucket_manager=mock.Mock(
             acquire_bucket=mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock()),
@@ -436,7 +436,7 @@ def rest_client(
         ),
         client_session=mock.Mock(request=mock.AsyncMock()),
     )
-    obj._close_event = object()
+    obj._close_event = mock.Mock()
     return obj
 
 
@@ -657,7 +657,7 @@ class TestRESTClientImpl:
         except AttributeError as exc:
             pytest.fail(exc)
 
-    @pytest.mark.parametrize(("attributes", "expected_result"), [(None, False), (object(), True)])
+    @pytest.mark.parametrize(("attributes", "expected_result"), [(None, False), (mock.Mock(), True)])
     def test_is_alive_property(
         self, rest_client: rest_api.RESTClient, attributes: object | None, expected_result: bool
     ):
@@ -669,17 +669,17 @@ class TestRESTClientImpl:
         assert rest_client.entity_factory is rest_client._entity_factory
 
     def test_http_settings_property(self, rest_client: rest_api.RESTClient):
-        mock_http_settings = object()
+        mock_http_settings = mock.Mock()
         rest_client._http_settings = mock_http_settings
         assert rest_client.http_settings is mock_http_settings
 
     def test_proxy_settings_property(self, rest_client: rest_api.RESTClient):
-        mock_proxy_settings = object()
+        mock_proxy_settings = mock.Mock()
         rest_client._proxy_settings = mock_proxy_settings
         assert rest_client.proxy_settings is mock_proxy_settings
 
     def test_token_type_property(self, rest_client: rest_api.RESTClient):
-        mock_type = object()
+        mock_type = mock.Mock()
         rest_client._token_type = mock_type
         assert rest_client.token_type is mock_type
 
@@ -750,7 +750,7 @@ class TestRESTClientImpl:
             rest_client._bucket_manager.start.assert_not_called()
 
     def test_start_when_active(self, rest_client):
-        rest_client._close_event = object()
+        rest_client._close_event = mock.Mock()
 
         with pytest.raises(errors.ComponentStateConflictError):
             rest_client.start()
@@ -1276,16 +1276,16 @@ class TestRESTClientImpl:
         url_encoded_form.return_value.add_resource.assert_called_once_with("files[0]", resource_attachment)
 
     def test__build_message_payload_with_singular_args(self, rest_client: rest_api.RESTClient):
-        attachment = object()
+        attachment = mock.Mock()
         resource_attachment1 = mock.Mock(filename="attachment.png")
         resource_attachment2 = mock.Mock(filename="attachment2.png")
         component = mock.Mock(build=mock.Mock(return_value={"component": 1}))
-        embed = object()
-        embed_attachment = object()
-        mentions_everyone = object()
-        mentions_reply = object()
-        user_mentions = object()
-        role_mentions = object()
+        embed = mock.Mock()
+        embed_attachment = mock.Mock()
+        mentions_everyone = mock.Mock()
+        mentions_reply = mock.Mock()
+        user_mentions = mock.Mock()
+        role_mentions = mock.Mock()
 
         stack = contextlib.ExitStack()
         ensure_resource = stack.enter_context(
@@ -1348,7 +1348,7 @@ class TestRESTClientImpl:
         )
 
     def test__build_message_payload_with_plural_args(self, rest_client: rest_api.RESTClient):
-        attachment1 = object()
+        attachment1 = mock.Mock()
         attachment2 = mock.Mock(message_models.Attachment, id=123, filename="attachment123.png")
         resource_attachment1 = mock.Mock(filename="attachment.png")
         resource_attachment2 = mock.Mock(filename="attachment2.png")
@@ -1358,16 +1358,16 @@ class TestRESTClientImpl:
         resource_attachment6 = mock.Mock(filename="attachment6.png")
         component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
         component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
-        embed1 = object()
-        embed2 = object()
-        embed_attachment1 = object()
-        embed_attachment2 = object()
-        embed_attachment3 = object()
-        embed_attachment4 = object()
-        mentions_everyone = object()
-        mentions_reply = object()
-        user_mentions = object()
-        role_mentions = object()
+        embed1 = mock.Mock()
+        embed2 = mock.Mock()
+        embed_attachment1 = mock.Mock()
+        embed_attachment2 = mock.Mock()
+        embed_attachment3 = mock.Mock()
+        embed_attachment4 = mock.Mock()
+        mentions_everyone = mock.Mock()
+        mentions_reply = mock.Mock()
+        user_mentions = mock.Mock()
+        role_mentions = mock.Mock()
 
         stack = contextlib.ExitStack()
         ensure_resource = stack.enter_context(
@@ -1469,7 +1469,7 @@ class TestRESTClientImpl:
         )
 
     def test__build_message_payload_with_edit_and_attachment_object_passed(self, rest_client: rest_api.RESTClient):
-        attachment1 = object()
+        attachment1 = mock.Mock()
         attachment2 = mock.Mock(message_models.Attachment, id=123, filename="attachment123.png")
         resource_attachment1 = mock.Mock(filename="attachment.png")
         resource_attachment2 = mock.Mock(filename="attachment2.png")
@@ -1478,12 +1478,12 @@ class TestRESTClientImpl:
         resource_attachment5 = mock.Mock(filename="attachment5.png")
         component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
         component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
-        embed1 = object()
-        embed2 = object()
-        embed_attachment1 = object()
-        embed_attachment2 = object()
-        embed_attachment3 = object()
-        embed_attachment4 = object()
+        embed1 = mock.Mock()
+        embed2 = mock.Mock()
+        embed_attachment1 = mock.Mock()
+        embed_attachment2 = mock.Mock()
+        embed_attachment3 = mock.Mock()
+        embed_attachment4 = mock.Mock()
 
         stack = contextlib.ExitStack()
         ensure_resource = stack.enter_context(
@@ -1574,7 +1574,7 @@ class TestRESTClientImpl:
         with pytest.raises(
             ValueError, match=rf"You may only specify one of '{singular_arg}' or '{plural_arg}', not both"
         ):
-            rest_client._build_message_payload(**{singular_arg: object(), plural_arg: object()})
+            rest_client._build_message_payload(**{singular_arg: mock.Mock(), plural_arg: mock.Mock()})
 
     def test_interaction_deferred_builder(self, rest_client: rest_api.RESTClient):
         result = rest_client.interaction_deferred_builder(5)
@@ -1674,7 +1674,7 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
 
         with pytest.raises(ValueError, match="Can only provide one of 'json' or 'form_builder', not both"):
-            await rest_client._perform_request(route, json=object(), form_builder=object())
+            await rest_client._perform_request(route, json=mock.Mock(), form_builder=mock.Mock())
 
     @hikari_test_helpers.timeout()
     async def test_perform_request_builds_json_when_passed(
@@ -2497,12 +2497,12 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"id": "456"})
 
     async def test_create_message_when_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -2557,12 +2557,12 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_create_message_when_no_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=123456789)
@@ -2618,7 +2618,7 @@ class TestRESTClientImplAsync:
 
     async def test_crosspost_message(self, rest_client: rest_api.RESTClient):
         expected_route = routes.POST_CHANNEL_CROSSPOST.compile(channel=444432, message=12353234)
-        mock_message = object()
+        mock_message = mock.Mock()
         rest_client._entity_factory.deserialize_message = mock.Mock(return_value=mock_message)
         rest_client._request = mock.AsyncMock(return_value={"id": "93939383883", "content": "foobar"})
 
@@ -2631,12 +2631,12 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_edit_message_when_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -2683,12 +2683,12 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_edit_message_when_no_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=123456789, message=987654321)
@@ -3103,12 +3103,12 @@ class TestRESTClientImplAsync:
     async def test_execute_webhook_when_form(
         self, rest_client: rest_api.RESTClient, webhook: webhooks.ExecutableWebhook, avatar_url: files.URL
     ):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -3230,12 +3230,12 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_execute_webhook_when_thread_and_no_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=432, token="hi, im a token")
@@ -3288,7 +3288,7 @@ class TestRESTClientImplAsync:
     async def test_fetch_webhook_message(
         self, rest_client: rest_api.RESTClient, webhook: webhooks.ExecutableWebhook | int
     ):
-        message_obj = object()
+        message_obj = mock.Mock()
         expected_route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=432, token="hi, im a token", message=456)
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         rest_client._entity_factory.deserialize_message = mock.Mock(return_value=message_obj)
@@ -3299,7 +3299,7 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"id": "456"})
 
     async def test_fetch_webhook_message_when_thread(self, rest_client: rest_api.RESTClient):
-        message_obj = object()
+        message_obj = mock.Mock()
         expected_route = routes.GET_WEBHOOK_MESSAGE.compile(webhook=43234312, token="hi, im a token", message=456)
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
         rest_client._entity_factory.deserialize_message = mock.Mock(return_value=message_obj)
@@ -3316,12 +3316,12 @@ class TestRESTClientImplAsync:
     async def test_edit_webhook_message_when_form(
         self, rest_client: rest_api.RESTClient, webhook: webhooks.ExecutableWebhook | int
     ):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -3400,12 +3400,12 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_edit_webhook_message_when_no_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=432, token="hi, im a token", message=456)
@@ -4010,9 +4010,9 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_fetch_sticker_packs(self, rest_client: rest_api.RESTClient):
-        pack1 = object()
-        pack2 = object()
-        pack3 = object()
+        pack1 = mock.Mock()
+        pack2 = mock.Mock()
+        pack3 = mock.Mock()
         expected_route = routes.GET_STICKER_PACKS.compile()
         rest_client._request = mock.AsyncMock(
             return_value={"sticker_packs": [{"id": "123"}, {"id": "456"}, {"id": "789"}]}
@@ -4049,9 +4049,9 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_standard_sticker.assert_called_once_with({"id": "123"})
 
     async def test_fetch_guild_stickers(self, rest_client: rest_api.RESTClient):
-        sticker1 = object()
-        sticker2 = object()
-        sticker3 = object()
+        sticker1 = mock.Mock()
+        sticker2 = mock.Mock()
+        sticker3 = mock.Mock()
         expected_route = routes.GET_GUILD_STICKERS.compile(guild=987)
         rest_client._request = mock.AsyncMock(return_value=[{"id": "123"}, {"id": "456"}, {"id": "789"}])
         rest_client._entity_factory.deserialize_guild_sticker = mock.Mock(side_effect=[sticker1, sticker2, sticker3])
@@ -4076,7 +4076,7 @@ class TestRESTClientImplAsync:
 
     async def test_create_sticker(self, rest_client: rest_api.RESTClient):
         rest_client.create_sticker = mock.AsyncMock()
-        file = object()
+        file = mock.Mock()
 
         sticker = await rest_client.create_sticker(
             90210, "NewSticker", "funny", file, description="A sticker", reason="blah blah blah"
@@ -4725,12 +4725,12 @@ class TestRESTClientImplAsync:
         auto_archive_duration: typing.Union[int, datetime.datetime, float],
         rate_limit_per_user: typing.Union[int, datetime.datetime, float],
     ):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
 
         expected_route = routes.POST_CHANNEL_THREADS.compile(channel=321123)
@@ -4801,12 +4801,12 @@ class TestRESTClientImplAsync:
         auto_archive_duration: typing.Union[int, datetime.datetime, float],
         rate_limit_per_user: typing.Union[int, datetime.datetime, float],
     ):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_body = {"mock": "message body"}
         mock_form = mock.Mock()
 
@@ -5420,7 +5420,7 @@ class TestRESTClientImplAsync:
         )
 
     async def test_edit_welcome_screen_with_optional_kwargs(self, rest_client: rest_api.RESTClient):
-        mock_channel = object()
+        mock_channel = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"go": "home", "you're": "drunk"})
         expected_route = routes.PATCH_GUILD_WELCOME_SCREEN.compile(guild=54123564)
 
@@ -5652,7 +5652,7 @@ class TestRESTClientImplAsync:
     async def test__create_application_command_with_optionals(self, rest_client: rest_api.RESTClient):
         expected_route = routes.POST_APPLICATION_GUILD_COMMAND.compile(application=4332123, guild=653452134)
         rest_client._request = mock.AsyncMock(return_value={"id": "29393939"})
-        mock_option = object()
+        mock_option = mock.Mock()
 
         result = await rest_client._create_application_command(
             application=StubModel(4332123),
@@ -5716,7 +5716,7 @@ class TestRESTClientImplAsync:
 
     async def test_create_slash_command(self, rest_client: rest_api.RESTClient):
         rest_client._create_application_command = mock.AsyncMock()
-        mock_options = object()
+        mock_options = mock.Mock()
         mock_application = StubModel(4332123)
         mock_guild = StubModel(123123123)
 
@@ -5834,7 +5834,7 @@ class TestRESTClientImplAsync:
             application=1235432, guild=54123, command=3451231
         )
         rest_client._request = mock.AsyncMock(return_value={"id": "94594994"})
-        mock_option = object()
+        mock_option = mock.Mock()
 
         result = await rest_client.edit_application_command(
             StubModel(1235432),
@@ -5911,7 +5911,7 @@ class TestRESTClientImplAsync:
 
     async def test_fetch_application_guild_commands_permissions(self, rest_client: rest_api.RESTClient):
         expected_route = routes.GET_APPLICATION_GUILD_COMMANDS_PERMISSIONS.compile(application=321431, guild=54123)
-        mock_command_payload = object()
+        mock_command_payload = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value=[mock_command_payload])
 
         result = await rest_client.fetch_application_guild_commands_permissions(321431, 54123)
@@ -5935,7 +5935,7 @@ class TestRESTClientImplAsync:
 
     async def test_set_application_command_permissions(self, rest_client: rest_api.RESTClient):
         route = routes.PUT_APPLICATION_COMMAND_PERMISSIONS.compile(application=2321, guild=431, command=666666)
-        mock_permission = object()
+        mock_permission = mock.Mock()
         mock_command_payload = {"id": "29292929"}
         rest_client._request = mock.AsyncMock(return_value=mock_command_payload)
 
@@ -5958,12 +5958,12 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, auth=None)
 
     async def test_create_interaction_response_when_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -6009,12 +6009,12 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
 
     async def test_create_interaction_response_when_no_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=432, token="some token")
@@ -6058,12 +6058,12 @@ class TestRESTClientImplAsync:
         )
 
     async def test_edit_interaction_response_when_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -6107,12 +6107,12 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_edit_interaction_response_when_no_form(self, rest_client: rest_api.RESTClient):
-        attachment_obj = object()
-        attachment_obj2 = object()
-        component_obj = object()
-        component_obj2 = object()
-        embed_obj = object()
-        embed_obj2 = object()
+        attachment_obj = mock.Mock()
+        attachment_obj2 = mock.Mock()
+        component_obj = mock.Mock()
+        component_obj2 = mock.Mock()
+        embed_obj = mock.Mock()
+        embed_obj2 = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=432, token="some token")

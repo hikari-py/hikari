@@ -39,7 +39,7 @@ class TestPartialUser:
         return hikari_test_helpers.mock_class_namespace(users.PartialUser, slots_=False)()
 
     def test_accent_colour_alias_property(self, obj: users.PartialUser):
-        obj.accent_color = object()
+        obj.accent_color = mock.Mock()
 
         assert obj.accent_colour is obj.accent_color
 
@@ -54,16 +54,16 @@ class TestPartialUser:
     @pytest.mark.asyncio
     async def test_send_uses_cached_id(self, obj: users.PartialUser):
         obj.id = 4123123
-        embed = object()
-        embeds = [object()]
-        attachment = object()
-        attachments = [object(), object()]
-        component = object()
-        components = [object(), object()]
-        user_mentions = [object(), object()]
-        role_mentions = [object(), object()]
-        reply = object()
-        mentions_reply = object()
+        embed = mock.Mock()
+        embeds = [mock.Mock()]
+        attachment = mock.Mock()
+        attachments = [mock.Mock(), mock.Mock()]
+        component = mock.Mock()
+        components = [mock.Mock(), mock.Mock()]
+        user_mentions = [mock.Mock(), mock.Mock()]
+        role_mentions = [mock.Mock(), mock.Mock()]
+        reply = mock.Mock()
+        mentions_reply = mock.Mock()
 
         obj.app = mock.Mock(spec=traits.CacheAware, rest=mock.AsyncMock())
         obj.fetch_dm_channel = mock.AsyncMock()
@@ -189,7 +189,7 @@ class TestUser:
         return hikari_test_helpers.mock_class_namespace(users.User, slots_=False)()
 
     def test_accent_colour_alias_property(self, obj: users.User):
-        obj.accent_color = object()
+        obj.accent_color = mock.Mock()
 
         assert obj.accent_colour is obj.accent_color
 
@@ -355,7 +355,7 @@ class TestPartialUserImpl:
 
     @pytest.mark.asyncio
     async def test_fetch_self(self, obj: users.PartialUserImpl):
-        user = object()
+        user = mock.Mock()
         obj.app.rest.fetch_user = mock.AsyncMock(return_value=user)
         assert await obj.fetch_self() is user
         obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
@@ -385,7 +385,7 @@ class TestOwnUser:
         )
 
     async def test_fetch_self(self, obj: users.OwnUser):
-        user = object()
+        user = mock.Mock()
         obj.app.rest.fetch_my_user = mock.AsyncMock(return_value=user)
         assert await obj.fetch_self() is user
         obj.app.rest.fetch_my_user.assert_awaited_once_with()

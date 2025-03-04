@@ -263,8 +263,8 @@ class TestInteractionServer:
     def test___init__(
         self, mock_rest_client: rest_impl.RESTClientImpl, mock_entity_factory: entity_factory_impl.EntityFactoryImpl
     ):
-        mock_dumps = object()
-        mock_loads = object()
+        mock_dumps = mock.Mock()
+        mock_loads = mock.Mock()
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
@@ -287,8 +287,8 @@ class TestInteractionServer:
     def test___init___with_public_key(
         self, mock_rest_client: rest_impl.RESTClientImpl, mock_entity_factory: entity_factory_impl.EntityFactoryImpl
     ):
-        mock_dumps = object()
-        mock_loads = object()
+        mock_dumps = mock.Mock()
+        mock_loads = mock.Mock()
 
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
@@ -308,7 +308,7 @@ class TestInteractionServer:
         assert mock_interaction_server.is_alive is False
 
     def test_is_alive_property_when_active(self, mock_interaction_server: interaction_server_impl.InteractionServer):
-        mock_interaction_server._server = object()
+        mock_interaction_server._server = mock.Mock()
 
         assert mock_interaction_server.is_alive is True
 
@@ -384,7 +384,7 @@ class TestInteractionServer:
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
         mock_lock = mock.AsyncMock()
-        mock_public_key = object()
+        mock_public_key = mock.Mock()
         mock_interaction_server._application_fetch_lock = mock_lock
         mock_interaction_server._public_key = mock_public_key
 
@@ -623,7 +623,7 @@ class TestInteractionServer:
         mock_interaction_server._close_event = mock_event
         mock_interaction_server._is_closing = True
         mock_interaction_server.join = mock.AsyncMock()
-        mock_listener = object()
+        mock_listener = mock.Mock()
         mock_interaction_server._running_generator_listeners = [mock_listener]
 
         await mock_interaction_server.close()
@@ -642,7 +642,7 @@ class TestInteractionServer:
     @pytest.mark.asyncio
     async def test_join(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_event = mock.AsyncMock()
-        mock_interaction_server._server = object()
+        mock_interaction_server._server = mock.Mock()
         mock_interaction_server._close_event = mock_event
 
         await mock_interaction_server.join()
@@ -973,8 +973,8 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio
     async def test_start(self, mock_interaction_server: interaction_server_impl.InteractionServer):
-        mock_context = object()
-        mock_socket = object()
+        mock_context = mock.Mock()
+        mock_socket = mock.Mock()
         mock_interaction_server._is_closing = True
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
@@ -1042,7 +1042,7 @@ class TestInteractionServer:
     async def test_start_with_default_behaviour(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
-        mock_context = object()
+        mock_context = mock.Mock()
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
@@ -1077,7 +1077,7 @@ class TestInteractionServer:
     async def test_start_with_default_behaviour_and_not_main_thread(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
-        mock_context = object()
+        mock_context = mock.Mock()
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
@@ -1111,7 +1111,7 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio
     async def test_start_with_multiple_hosts(self, mock_interaction_server: interaction_server_impl.InteractionServer):
-        mock_context = object()
+        mock_context = mock.Mock()
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
@@ -1159,8 +1159,8 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio
     async def test_start_when_no_tcp_sites(self, mock_interaction_server: interaction_server_impl.InteractionServer):
-        mock_socket = object()
-        mock_context = object()
+        mock_socket = mock.Mock()
+        mock_context = mock.Mock()
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
@@ -1195,7 +1195,7 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio
     async def test_start_when_already_running(self, mock_interaction_server: interaction_server_impl.InteractionServer):
-        mock_interaction_server._server = object()
+        mock_interaction_server._server = mock.Mock()
 
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_interaction_server.start()
@@ -1204,13 +1204,13 @@ class TestInteractionServer:
         assert mock_interaction_server.get_listener(base_interactions.PartialInteraction) is None
 
     def test_get_listener_when_registered(self, mock_interaction_server: interaction_server_impl.InteractionServer):
-        mock_listener = object()
+        mock_listener = mock.Mock()
         mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock_listener)
 
         assert mock_interaction_server.get_listener(base_interactions.PartialInteraction) is mock_listener
 
     def test_set_listener(self, mock_interaction_server: interaction_server_impl.InteractionServer):
-        mock_listener = object()
+        mock_listener = mock.Mock()
 
         mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock_listener)
 
@@ -1219,16 +1219,16 @@ class TestInteractionServer:
     def test_set_listener_when_already_registered_without_replace(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
-        mock_interaction_server.set_listener(base_interactions.PartialInteraction, object())
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock.Mock())
 
         with pytest.raises(TypeError):
-            mock_interaction_server.set_listener(base_interactions.PartialInteraction, object())
+            mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock.Mock())
 
     def test_set_listener_when_already_registered_with_replace(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
-        mock_listener = object()
-        mock_interaction_server.set_listener(base_interactions.PartialInteraction, object())
+        mock_listener = mock.Mock()
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock.Mock())
 
         mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock_listener, replace=True)
 
@@ -1237,7 +1237,7 @@ class TestInteractionServer:
     def test_set_listener_when_removing_listener(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
-        mock_interaction_server.set_listener(base_interactions.PartialInteraction, object())
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock.Mock())
         mock_interaction_server.set_listener(base_interactions.PartialInteraction, None)
 
         assert mock_interaction_server.get_listener(base_interactions.PartialInteraction) is None

@@ -127,7 +127,7 @@ class TestCacheImpl:
         assert cache_impl.get_dm_channel_ids_view() == {222: 333, 643: 213, 54234: 1231321}
 
     def test_set_dm_channel_id(self, cache_impl: cache_impl_.CacheImpl):
-        cache_impl._user_entries = collections.FreezableDict({43123123: object()})
+        cache_impl._user_entries = collections.FreezableDict({43123123: mock.Mock()})
 
         cache_impl.set_dm_channel_id(StubModel(43123123), StubModel(12222))
 
@@ -301,7 +301,7 @@ class TestCacheImpl:
         cache_impl._build_emoji.assert_not_called()
 
     def test_delete_emoji(self, cache_impl: cache_impl_.CacheImpl):
-        mock_user = object()
+        mock_user = mock.Mock()
         mock_emoji_data = mock.Mock(
             cache_utilities.KnownCustomEmojiData, user=mock_user, guild_id=snowflakes.Snowflake(123333)
         )
@@ -697,7 +697,7 @@ class TestCacheImpl:
         cache_impl._build_sticker.assert_not_called()
 
     def test_delete_sticker(self, cache_impl: cache_impl_.CacheImpl):
-        mock_user = object()
+        mock_user = mock.Mock()
         mock_sticker_data = mock.Mock(
             cache_utilities.GuildStickerData, user=mock_user, guild_id=snowflakes.Snowflake(123333)
         )
@@ -1171,7 +1171,7 @@ class TestCacheImpl:
                 snowflakes.Snowflake(4312312): cache_utilities.GuildRecord(guild=mock_guild_1, is_available=True),
                 snowflakes.Snowflake(34123): cache_utilities.GuildRecord(),
                 snowflakes.Snowflake(73453): cache_utilities.GuildRecord(guild=mock_guild_2, is_available=True),
-                snowflakes.Snowflake(6554234): cache_utilities.GuildRecord(guild=object(), is_available=False),
+                snowflakes.Snowflake(6554234): cache_utilities.GuildRecord(guild=mock.Mock(), is_available=False),
             }
         )
 
@@ -1200,7 +1200,7 @@ class TestCacheImpl:
                 snowflakes.Snowflake(4312312): cache_utilities.GuildRecord(guild=mock_guild_1, is_available=False),
                 snowflakes.Snowflake(34123): cache_utilities.GuildRecord(),
                 snowflakes.Snowflake(73453): cache_utilities.GuildRecord(guild=mock_guild_2, is_available=False),
-                snowflakes.Snowflake(6554234): cache_utilities.GuildRecord(guild=object(), is_available=True),
+                snowflakes.Snowflake(6554234): cache_utilities.GuildRecord(guild=mock.Mock(), is_available=True),
             }
         )
 
@@ -1232,7 +1232,7 @@ class TestCacheImpl:
         assert cache_impl._guild_entries[snowflakes.Snowflake(5123123)].is_available is True
 
     def test_set_guild_availability_for_cached_guild(self, cache_impl: cache_impl_.CacheImpl):
-        cache_impl._guild_entries = {snowflakes.Snowflake(43123): cache_utilities.GuildRecord(guild=object())}
+        cache_impl._guild_entries = {snowflakes.Snowflake(43123): cache_utilities.GuildRecord(guild=mock.Mock())}
 
         cache_impl.set_guild_availability(StubModel(43123), True)
 
@@ -1273,7 +1273,7 @@ class TestCacheImpl:
     def test__build_invite(self, cache_impl: cache_impl_.CacheImpl):
         mock_inviter = mock.MagicMock(users.User)
         mock_target_user = mock.MagicMock(users.User)
-        mock_application = object()
+        mock_application = mock.Mock()
         invite_data = cache_utilities.InviteData(
             code="okokok",
             guild_id=snowflakes.Snowflake(965234),
@@ -1513,7 +1513,7 @@ class TestCacheImpl:
             target_user=mock_target_user,
         )
         mock_other_invite_data = mock.Mock(cache_utilities.InviteData)
-        mock_invite = object()
+        mock_invite = mock.Mock()
         cache_impl._invite_entries = collections.FreezableDict(
             {"blamSpat": mock_other_invite_data, "oooooooooooooo": mock_invite_data}
         )
@@ -1577,7 +1577,7 @@ class TestCacheImpl:
             cache_utilities.InviteData, inviter=None, target_user=None, guild_id=snowflakes.Snowflake(999999999)
         )
         mock_other_invite_data = mock.Mock(cache_utilities.InviteData)
-        mock_invite = object()
+        mock_invite = mock.Mock()
         cache_impl._invite_entries = collections.FreezableDict(
             {"blamSpat": mock_other_invite_data, "oooooooooooooo": mock_invite_data}
         )
@@ -1822,7 +1822,7 @@ class TestCacheImpl:
     def test_set_me_when_not_enabled(self, cache_impl: cache_impl_.CacheImpl):
         cache_impl._settings.components = 0
 
-        cache_impl.set_me(object())
+        cache_impl.set_me(mock.Mock())
 
         assert cache_impl._me is None
 
@@ -1849,7 +1849,7 @@ class TestCacheImpl:
         cache_impl.get_me = mock.Mock()
         cache_impl.set_me = mock.Mock()
 
-        result = cache_impl.update_me(object())
+        result = cache_impl.update_me(mock.Mock())
 
         assert result == (None, None)
         cache_impl.get_me.assert_not_called()
@@ -1936,11 +1936,11 @@ class TestCacheImpl:
                 has_been_deleted=False,
             )
         )
-        mock_member_1 = object()
-        mock_member_2 = object()
-        mock_member_3 = object()
-        mock_member_4 = object()
-        mock_member_5 = object()
+        mock_member_1 = mock.Mock()
+        mock_member_2 = mock.Mock()
+        mock_member_3 = mock.Mock()
+        mock_member_4 = mock.Mock()
+        mock_member_5 = mock.Mock()
         guild_record_1 = cache_utilities.GuildRecord(
             members=collections.FreezableDict(
                 {snowflakes.Snowflake(2123123): mock_data_member_1, snowflakes.Snowflake(212314423): mock_data_member_2}
@@ -2109,16 +2109,16 @@ class TestCacheImpl:
         cache_impl._build_member.assert_called_once_with(mock_member_data)
 
     def test_get_members_view(self, cache_impl: cache_impl_.CacheImpl):
-        mock_member_data_1 = cache_utilities.RefCell(object())
-        mock_member_data_2 = cache_utilities.RefCell(object())
-        mock_member_data_3 = cache_utilities.RefCell(object())
-        mock_member_data_4 = cache_utilities.RefCell(object())
-        mock_member_data_5 = cache_utilities.RefCell(object())
-        mock_member_1 = object()
-        mock_member_2 = object()
-        mock_member_3 = object()
-        mock_member_4 = object()
-        mock_member_5 = object()
+        mock_member_data_1 = cache_utilities.RefCell(mock.Mock())
+        mock_member_data_2 = cache_utilities.RefCell(mock.Mock())
+        mock_member_data_3 = cache_utilities.RefCell(mock.Mock())
+        mock_member_data_4 = cache_utilities.RefCell(mock.Mock())
+        mock_member_data_5 = cache_utilities.RefCell(mock.Mock())
+        mock_member_1 = mock.Mock()
+        mock_member_2 = mock.Mock()
+        mock_member_3 = mock.Mock()
+        mock_member_4 = mock.Mock()
+        mock_member_5 = mock.Mock()
         cache_impl._build_member = mock.Mock(
             side_effect=[mock_member_1, mock_member_2, mock_member_3, mock_member_4, mock_member_5]
         )
@@ -2493,8 +2493,8 @@ class TestCacheImpl:
     def test_clear_voice_states_for_channel(self, cache_impl: cache_impl_.CacheImpl): ...
 
     def test_clear_voice_states_for_guild(self, cache_impl: cache_impl_.CacheImpl):
-        mock_member_data_1 = object()
-        mock_member_data_2 = object()
+        mock_member_data_1 = mock.Mock()
+        mock_member_data_2 = mock.Mock()
         mock_voice_state_data_1 = mock.Mock(cache_utilities.VoiceStateData, member=mock_member_data_1)
         mock_voice_state_data_2 = mock.Mock(cache_utilities.VoiceStateData, member=mock_member_data_2)
         mock_voice_state_1 = mock.Mock(voices.VoiceState)
@@ -2539,7 +2539,7 @@ class TestCacheImpl:
         assert result == {}
 
     def test_delete_voice_state(self, cache_impl: cache_impl_.CacheImpl):
-        mock_member_data = object()
+        mock_member_data = mock.Mock()
         mock_voice_state_data = mock.Mock(cache_utilities.VoiceStateData, member=mock_member_data)
         mock_other_voice_state_data = mock.Mock(cache_utilities.VoiceStateData)
         mock_voice_state = mock.Mock(voices.VoiceState)
@@ -2552,11 +2552,11 @@ class TestCacheImpl:
                 }
             ),
             members=collections.FreezableDict(
-                {snowflakes.Snowflake(12354345): mock_member_data, snowflakes.Snowflake(9955959): object()}
+                {snowflakes.Snowflake(12354345): mock_member_data, snowflakes.Snowflake(9955959): mock.Mock()}
             ),
         )
         cache_impl._user_entries = collections.FreezableDict(
-            {snowflakes.Snowflake(12354345): object(), snowflakes.Snowflake(9393): object()}
+            {snowflakes.Snowflake(12354345): mock.Mock(), snowflakes.Snowflake(9393): mock.Mock()}
         )
         cache_impl._guild_entries = collections.FreezableDict(
             {
@@ -2688,8 +2688,8 @@ class TestCacheImpl:
     def test_get_voice_states_view_for_guild(self, cache_impl: cache_impl_.CacheImpl): ...
 
     def test_set_voice_state(self, cache_impl: cache_impl_.CacheImpl):
-        mock_member = object()
-        mock_reffed_member = cache_utilities.RefCell(object())
+        mock_member = mock.Mock()
+        mock_reffed_member = cache_utilities.RefCell(mock.Mock())
         voice_state = voices.VoiceState(
             app=None,
             channel_id=snowflakes.Snowflake(239211023123),
@@ -2748,7 +2748,7 @@ class TestCacheImpl:
 
     def test__build_message(self, cache_impl: cache_impl_.CacheImpl):
         mock_author = mock.MagicMock(users.User)
-        mock_member = object()
+        mock_member = mock.Mock()
         member_data = mock.Mock(build_entity=mock.Mock(return_value=mock_member))
         mock_channel = mock.MagicMock()
         mock_mention_user = mock.MagicMock()
@@ -2763,8 +2763,8 @@ class TestCacheImpl:
         mock_activity = mock.MagicMock(messages.MessageActivity)
         mock_application = mock.MagicMock(messages.MessageApplication)
         mock_reference = mock.MagicMock(messages.MessageReference)
-        mock_referenced_message = object()
-        mock_component = object()
+        mock_referenced_message = mock.Mock()
+        mock_component = mock.Mock()
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
         )
@@ -2864,7 +2864,7 @@ class TestCacheImpl:
             id=snowflakes.Snowflake(32123123),
             channel_id=snowflakes.Snowflake(3123123123),
             guild_id=snowflakes.Snowflake(5555555),
-            author=cache_utilities.RefCell(object()),
+            author=cache_utilities.RefCell(mock.Mock()),
             member=None,
             content=None,
             timestamp=datetime.datetime(2020, 7, 30, 7, 10, 9, 550233, tzinfo=datetime.timezone.utc),
@@ -2925,8 +2925,8 @@ class TestCacheImpl:
         raise NotImplementedError
 
     def test_get_message(self, cache_impl: cache_impl_.CacheImpl):
-        mock_message_data = object()
-        mock_message = object()
+        mock_message_data = mock.Mock()
+        mock_message = mock.Mock()
         cache_impl._build_message = mock.Mock(return_value=mock_message)
         cache_impl._message_entries[snowflakes.Snowflake(32332123)] = mock_message_data
 
@@ -2936,8 +2936,8 @@ class TestCacheImpl:
         cache_impl._build_message.assert_called_once_with(mock_message_data)
 
     def test_get_message_reference_only(self, cache_impl: cache_impl_.CacheImpl):
-        mock_message_data = object()
-        mock_message = object()
+        mock_message_data = mock.Mock()
+        mock_message = mock.Mock()
         cache_impl._build_message = mock.Mock(return_value=mock_message)
         cache_impl._referenced_messages[snowflakes.Snowflake(32332123)] = mock_message_data
 
@@ -2955,12 +2955,12 @@ class TestCacheImpl:
         cache_impl._build_message.assert_not_called()
 
     def test_get_messages_view(self, cache_impl: cache_impl_.CacheImpl):
-        mock_message_data_1 = object()
-        mock_message_data_2 = object()
-        mock_message_data_3 = object()
-        mock_message_1 = object()
-        mock_message_2 = object()
-        mock_message_3 = object()
+        mock_message_data_1 = mock.Mock()
+        mock_message_data_2 = mock.Mock()
+        mock_message_data_3 = mock.Mock()
+        mock_message_1 = mock.Mock()
+        mock_message_2 = mock.Mock()
+        mock_message_3 = mock.Mock()
         cache_impl._build_message = mock.Mock(side_effect=[mock_message_1, mock_message_2, mock_message_3])
         cache_impl._message_entries = collections.FreezableDict(
             {snowflakes.Snowflake(32123): mock_message_data_1, snowflakes.Snowflake(451231): mock_message_data_2}
@@ -2980,7 +2980,7 @@ class TestCacheImpl:
 
     def test_update_message_for_full_message(self, cache_impl: cache_impl_.CacheImpl):
         message = mock.Mock(messages.Message, id=snowflakes.Snowflake(45312312))
-        cached_message = object()
+        cached_message = mock.Mock()
         cache_impl.get_message = mock.Mock(side_effect=(None, cached_message))
         cache_impl.set_message = mock.Mock()
 

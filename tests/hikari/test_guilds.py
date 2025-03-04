@@ -484,9 +484,11 @@ class TestMember:
         model.user.app.cache.get_guild.assert_has_calls([mock.call(456)])
 
     def test_get_guild_when_no_cache_trait(self, model: guilds.Member):
-        model.user.app = object()
-
-        assert model.get_guild() is None
+        with (
+            mock.patch.object(model.user.app, "cache", mock.Mock()) as mocked_cache,
+            mock.patch.object(mocked_cache, "get_guild", mock.Mock(return_value=None))
+        ):
+            assert model.get_guild() is None
 
     def test_get_roles(self, model: guilds.Member):
         role1 = mock.Mock(id=321, position=2)

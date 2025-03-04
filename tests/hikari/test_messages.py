@@ -173,12 +173,12 @@ class TestAsyncMessage:
         message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
-        embed = object()
-        embeds = [object(), object()]
-        component = object()
-        components = object(), object()
-        attachment = object()
-        roles = [object()]
+        embed = mock.Mock()
+        embeds = [mock.Mock(), mock.Mock()]
+        component = mock.Mock()
+        components = mock.Mock(), mock.Mock()
+        attachment = mock.Mock()
+        roles = [mock.Mock()]
         await message.edit(
             content="test content",
             embed=embed,
@@ -214,14 +214,14 @@ class TestAsyncMessage:
         message.app = mock.AsyncMock()
         message.id = 123
         message.channel_id = 456
-        embed = object()
-        embeds = [object(), object()]
-        roles = [object()]
-        attachment = object()
-        attachments = [object()]
-        component = object()
-        components = object(), object()
-        reference_messsage = object()
+        embed = mock.Mock()
+        embeds = [mock.Mock(), mock.Mock()]
+        roles = [mock.Mock()]
+        attachment = mock.Mock()
+        attachments = [mock.Mock()]
+        component = mock.Mock()
+        components = mock.Mock(), mock.Mock()
+        reference_messsage = mock.Mock()
         await message.respond(
             content="test content",
             embed=embed,
@@ -339,7 +339,7 @@ class TestAsyncMessage:
 
     async def test_remove_reaction_with_user(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        user = object()
+        user = mock.Mock()
         message.id = 123
         message.channel_id = 456
         await message.remove_reaction("👌", 31231, user=user)

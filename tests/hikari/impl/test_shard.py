@@ -447,8 +447,8 @@ class TestGatewayTransport:
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
-                loads=object(),
-                dumps=object(),
+                loads=mock.Mock(),
+                dumps=mock.Mock(),
                 transport_compression=True,
             )
 
@@ -497,8 +497,8 @@ class TestGatewayTransport:
                 url="https://some.url",
                 log_filterer=log_filterer,
                 transport_compression=True,
-                loads=object(),
-                dumps=object(),
+                loads=mock.Mock(),
+                dumps=mock.Mock(),
             )
 
         exit_stack.aclose.assert_awaited_once_with()
@@ -556,7 +556,7 @@ class TestGatewayShardImpl:
         assert client.id == 101
 
     def test_intents_property(self, client: shard.GatewayShardImpl):
-        mock_intents = object()
+        mock_intents = mock.Mock()
         client._intents = mock_intents
         assert client.intents is mock_intents
 
@@ -737,7 +737,7 @@ class TestGatewayShardImplAsync:
             await client.join()
 
     async def test_join(self, client: shard.GatewayShardImpl):
-        client._keep_alive_task = object()
+        client._keep_alive_task = mock.Mock()
 
         with mock.patch.object(asyncio, "wait_for") as wait_for:
             with mock.patch.object(asyncio, "shield", new=mock.Mock()) as shield:
@@ -750,7 +750,7 @@ class TestGatewayShardImplAsync:
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
-        data = object()
+        data = mock.Mock()
 
         await client._send_json(data)
 
@@ -762,7 +762,7 @@ class TestGatewayShardImplAsync:
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
-        data = object()
+        data = mock.Mock()
 
         await client._send_json(data, priority=True)
 
@@ -864,7 +864,7 @@ class TestGatewayShardImplAsync:
 
     @pytest.mark.parametrize("attr", ["_keep_alive_task", "_handshake_event"])
     async def test_start_when_already_running(self, client: shard.GatewayShardImpl, attr: str):
-        setattr(client, attr, object())
+        setattr(client, attr, mock.Mock())
 
         with pytest.raises(errors.ComponentStateConflictError):
             await client.start()
@@ -971,7 +971,7 @@ class TestGatewayShardImplAsync:
         sleep.assert_not_called()
 
     async def test__connect_when_ws(self, client: shard.GatewayShardImpl):
-        client._ws = object()
+        client._ws = mock.Mock()
 
         with pytest.raises(errors.ComponentStateConflictError):
             await client._connect()
@@ -993,10 +993,10 @@ class TestGatewayShardImplAsync:
         client._large_threshold = "your mom"
         client._intents = 9
 
-        heartbeat_task = object()
-        poll_events_task = object()
-        shielded_heartbeat_task = object()
-        shielded_poll_events_task = object()
+        heartbeat_task = mock.Mock()
+        poll_events_task = mock.Mock()
+        shielded_heartbeat_task = mock.Mock()
+        shielded_poll_events_task = mock.Mock()
 
         stack = contextlib.ExitStack()
         create_task = stack.enter_context(
@@ -1087,10 +1087,10 @@ class TestGatewayShardImplAsync:
         client._seq = 1234
         client._session_id = "some session id"
 
-        heartbeat_task = object()
-        poll_events_task = object()
-        shielded_heartbeat_task = object()
-        shielded_poll_events_task = object()
+        heartbeat_task = mock.Mock()
+        poll_events_task = mock.Mock()
+        shielded_heartbeat_task = mock.Mock()
+        shielded_poll_events_task = mock.Mock()
 
         stack = contextlib.ExitStack()
         create_task = stack.enter_context(
@@ -1149,7 +1149,7 @@ class TestGatewayShardImplAsync:
         ws.receive_json.return_value = {"op": 0, "d": {"not": "hello"}}
         client._gateway_url = "somewhere.com"
         client._logger = mock.Mock()
-        client._handshake_event = object()
+        client._handshake_event = mock.Mock()
 
         stack = contextlib.ExitStack()
         stack.enter_context(pytest.raises(errors.GatewayError))

@@ -45,12 +45,12 @@ class TestExecutableWebhook:
 
     @pytest.mark.asyncio
     async def test_execute_with_optionals(self, executable_webhook: webhooks.ExecutableWebhook):
-        mock_attachment_1 = object()
-        mock_attachment_2 = object()
-        mock_component = object()
-        mock_components = object(), object()
-        mock_embed = object()
-        mock_embeds = object(), object()
+        mock_attachment_1 = mock.Mock()
+        mock_attachment_2 = mock.Mock()
+        mock_component = mock.Mock()
+        mock_components = mock.Mock(), mock.Mock()
+        mock_embed = mock.Mock()
+        mock_embeds = mock.Mock(), mock.Mock()
 
         result = await executable_webhook.execute(
             content="coooo",
@@ -115,8 +115,8 @@ class TestExecutableWebhook:
 
     @pytest.mark.asyncio
     async def test_fetch_message(self, executable_webhook: webhooks.ExecutableWebhook):
-        message = object()
-        returned_message = object()
+        message = mock.Mock()
+        returned_message = mock.Mock()
         executable_webhook.app.rest.fetch_webhook_message = mock.AsyncMock(return_value=returned_message)
 
         returned = await executable_webhook.fetch_message(message)
@@ -135,11 +135,11 @@ class TestExecutableWebhook:
 
     @pytest.mark.asyncio
     async def test_edit_message(self, executable_webhook: webhooks.ExecutableWebhook):
-        message = object()
-        embed = object()
-        attachment = object()
-        component = object()
-        components = object()
+        message = mock.Mock()
+        embed = mock.Mock()
+        attachment = mock.Mock()
+        component = mock.Mock()
+        components = mock.Mock()
 
         returned = await executable_webhook.edit_message(
             message,
@@ -181,7 +181,7 @@ class TestExecutableWebhook:
 
     @pytest.mark.asyncio
     async def test_delete_message(self, executable_webhook: webhooks.ExecutableWebhook):
-        message = object()
+        message = mock.Mock()
 
         await executable_webhook.delete_message(message)
 
@@ -299,7 +299,7 @@ class TestIncomingWebhook:
     async def test_edit(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
-        mock_avatar = object()
+        mock_avatar = mock.Mock()
 
         result = await webhook.edit(name="OK", avatar=mock_avatar, channel=33333, reason="byebye")
 
@@ -312,7 +312,7 @@ class TestIncomingWebhook:
     async def test_edit_uses_token_property(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "aye"
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
-        mock_avatar = object()
+        mock_avatar = mock.Mock()
 
         result = await webhook.edit(name="bye", avatar=mock_avatar, channel=33333, reason="byebye")
 
@@ -325,7 +325,7 @@ class TestIncomingWebhook:
     async def test_edit_when_use_token_is_true(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "owoowow"
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
-        mock_avatar = object()
+        mock_avatar = mock.Mock()
 
         result = await webhook.edit(use_token=True, name="hiu", avatar=mock_avatar, channel=231, reason="sus")
 
@@ -347,7 +347,7 @@ class TestIncomingWebhook:
     async def test_edit_when_use_token_is_false(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "owoowow"
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
-        mock_avatar = object()
+        mock_avatar = mock.Mock()
 
         result = await webhook.edit(use_token=False, name="eee", avatar=mock_avatar, channel=231, reason="rrr")
 
@@ -427,8 +427,8 @@ class TestChannelFollowerWebhook:
             name="not a webhook",
             avatar_hash=None,
             application_id=None,
-            source_channel=object(),
-            source_guild=object(),
+            source_channel=mock.Mock(),
+            source_guild=mock.Mock(),
         )
 
     @pytest.mark.asyncio
@@ -439,7 +439,7 @@ class TestChannelFollowerWebhook:
 
     @pytest.mark.asyncio
     async def test_edit(self, webhook: webhooks.ChannelFollowerWebhook):
-        mock_avatar = object()
+        mock_avatar = mock.Mock()
         webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.ChannelFollowerWebhook)
 
         result = await webhook.edit(name="hi", avatar=mock_avatar, channel=43123, reason="ok")

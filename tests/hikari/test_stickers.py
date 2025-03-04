@@ -43,7 +43,7 @@ class TestStickerPack:
         )
 
     def test_banner_url(self, model: stickers.StickerPack):
-        banner = object()
+        banner = mock.Mock()
 
         with mock.patch.object(stickers.StickerPack, "make_banner_url", return_value=banner):
             assert model.banner_url is banner
