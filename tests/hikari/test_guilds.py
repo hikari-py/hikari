@@ -486,7 +486,7 @@ class TestMember:
     def test_get_guild_when_no_cache_trait(self, model: guilds.Member):
         with (
             mock.patch.object(model.user.app, "cache", mock.Mock()) as mocked_cache,
-            mock.patch.object(mocked_cache, "get_guild", mock.Mock(return_value=None))
+            mock.patch.object(mocked_cache, "get_guild", mock.Mock(return_value=None)),
         ):
             assert model.get_guild() is None
 
@@ -518,7 +518,7 @@ class TestMember:
         model.user.app.cache.get_role.assert_has_calls([mock.call(132), mock.call(432)])
 
     def test_get_roles_when_no_cache_trait(self, model: guilds.Member):
-        model.user.app = object()
+        model.user.app = mock.Mock(traits.RESTAware)
 
         assert model.get_roles() == []
 
@@ -538,7 +538,7 @@ class TestMember:
         model.user.app.cache.get_presence.assert_called_once_with(456, 123)
 
     def test_get_presence_when_no_cache_trait(self, model: guilds.Member):
-        model.user.app = object()
+        model.user.app = mock.Mock(traits.RESTAware)
         assert model.get_presence() is None
 
 
@@ -555,12 +555,12 @@ class TestPartialGuild:
         assert model.shard_id == 0
 
     def test_shard_id_when_not_shard_aware(self, model: guilds.PartialGuild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
 
         assert model.shard_id is None
 
     def test_icon_url(self, model: guilds.PartialGuild):
-        icon = object()
+        icon = mock.Mock()
 
         with mock.patch.object(guilds.PartialGuild, "make_icon_url", return_value=icon):
             assert model.icon_url is icon
@@ -700,7 +700,7 @@ class TestPartialGuild:
     @pytest.mark.asyncio
     async def test_create_sticker(self, model: guilds.PartialGuild):
         model.app.rest.create_sticker = mock.AsyncMock()
-        file = object()
+        file = mock.Mock()
 
         sticker = await model.create_sticker(
             "NewSticker", "funny", file, description="A sticker", reason="blah blah blah"
@@ -909,7 +909,7 @@ class TestGuildPreview:
         )
 
     def test_splash_url(self, model: guilds.GuildPreview):
-        splash = object()
+        splash = mock.Mock()
 
         with mock.patch.object(guilds.GuildPreview, "make_splash_url", return_value=splash):
             assert model.splash_url is splash
@@ -931,7 +931,7 @@ class TestGuildPreview:
         assert model.make_splash_url(ext="png", size=512) is None
 
     def test_discovery_splash_url(self, model: guilds.GuildPreview):
-        discovery_splash = object()
+        discovery_splash = mock.Mock()
 
         with mock.patch.object(guilds.GuildPreview, "make_discovery_splash_url", return_value=discovery_splash):
             assert model.discovery_splash_url is discovery_splash
@@ -993,7 +993,7 @@ class TestGuild:
         model.app.cache.get_guild_channels_view_for_guild.assert_called_once_with(123)
 
     def test_get_channels_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_channels() == {}
 
     def test_get_members(self, model: guilds.Guild):
@@ -1001,7 +1001,7 @@ class TestGuild:
         model.app.cache.get_members_view_for_guild.assert_called_once_with(123)
 
     def test_get_members_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_members() == {}
 
     def test_get_presences(self, model: guilds.Guild):
@@ -1009,7 +1009,7 @@ class TestGuild:
         model.app.cache.get_presences_view_for_guild.assert_called_once_with(123)
 
     def test_get_presences_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_presences() == {}
 
     def test_get_voice_states(self, model: guilds.Guild):
@@ -1017,7 +1017,7 @@ class TestGuild:
         model.app.cache.get_voice_states_view_for_guild.assert_called_once_with(123)
 
     def test_get_voice_states_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_voice_states() == {}
 
     def test_get_emojis(self, model: guilds.Guild):
@@ -1025,7 +1025,7 @@ class TestGuild:
         model.app.cache.get_emojis_view_for_guild.assert_called_once_with(123)
 
     def test_emojis_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_emojis() == {}
 
     def test_get_sticker(self, model: guilds.Guild):
@@ -1041,7 +1041,7 @@ class TestGuild:
         model.app.cache.get_sticker.assert_called_once_with(456)
 
     def test_get_sticker_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock()
         assert model.get_sticker(1234) is None
 
     def test_get_stickers(self, model: guilds.Guild):
@@ -1049,7 +1049,7 @@ class TestGuild:
         model.app.cache.get_stickers_view_for_guild.assert_called_once_with(123)
 
     def test_get_stickers_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_stickers() == {}
 
     def test_roles(self, model: guilds.Guild):
@@ -1057,7 +1057,7 @@ class TestGuild:
         model.app.cache.get_roles_view_for_guild.assert_called_once_with(123)
 
     def test_get_roles_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_roles() == {}
 
     def test_get_emoji(self, model: guilds.Guild):
@@ -1073,7 +1073,7 @@ class TestGuild:
         model.app.cache.get_emoji.assert_called_once_with(456)
 
     def test_get_emoji_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock()
         assert model.get_emoji(456) is None
 
     def test_get_role(self, model: guilds.Guild):
@@ -1089,11 +1089,11 @@ class TestGuild:
         model.app.cache.get_role.assert_called_once_with(456)
 
     def test_get_role_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock()
         assert model.get_role(456) is None
 
     def test_splash_url(self, model: guilds.Guild):
-        splash = object()
+        splash = mock.Mock()
 
         with mock.patch.object(guilds.Guild, "make_splash_url", return_value=splash):
             assert model.splash_url is splash
@@ -1115,7 +1115,7 @@ class TestGuild:
         assert model.make_splash_url(ext="png", size=1024) is None
 
     def test_discovery_splash_url(self, model: guilds.Guild):
-        discovery_splash = object()
+        discovery_splash = mock.Mock()
 
         with mock.patch.object(guilds.Guild, "make_discovery_splash_url", return_value=discovery_splash):
             assert model.discovery_splash_url is discovery_splash
@@ -1137,7 +1137,7 @@ class TestGuild:
         assert model.make_discovery_splash_url(ext="png", size=2048) is None
 
     def test_banner_url(self, model: guilds.Guild):
-        banner = object()
+        banner = mock.Mock()
 
         with mock.patch.object(guilds.Guild, "make_banner_url", return_value=banner):
             assert model.banner_url is banner
@@ -1270,7 +1270,7 @@ class TestGuild:
         model.app.cache.get_guild_channel.assert_called_once_with(456)
 
     def test_get_channel_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock()
         assert model.get_channel(456) is None
 
     def test_get_member(self, model: guilds.Guild):
@@ -1278,7 +1278,7 @@ class TestGuild:
         model.app.cache.get_member.assert_called_once_with(123, 456)
 
     def test_get_member_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_member(456) is None
 
     def test_get_presence(self, model: guilds.Guild):
@@ -1286,7 +1286,7 @@ class TestGuild:
         model.app.cache.get_presence.assert_called_once_with(123, 456)
 
     def test_get_presence_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_presence(456) is None
 
     def test_get_voice_state(self, model: guilds.Guild):
@@ -1294,11 +1294,11 @@ class TestGuild:
         model.app.cache.get_voice_state.assert_called_once_with(123, 456)
 
     def test_get_voice_state_when_no_cache_trait(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_voice_state(456) is None
 
     def test_get_my_member_when_not_shardaware(self, model: guilds.Guild):
-        model.app = object()
+        model.app = mock.Mock(traits.RESTAware)
         assert model.get_my_member() is None
 
     def test_get_my_member_when_no_me(self, model: guilds.Guild):

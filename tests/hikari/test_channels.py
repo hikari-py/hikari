@@ -80,7 +80,9 @@ class TestChannelFollow:
 
     def test_get_channel_when_no_cache_trait(self):
         follow = channels.ChannelFollow(
-            webhook_id=snowflakes.Snowflake(993883), app=mock.Mock(traits.RESTAware), channel_id=snowflakes.Snowflake(696969)
+            webhook_id=snowflakes.Snowflake(993883),
+            app=mock.Mock(traits.RESTAware),
+            channel_id=snowflakes.Snowflake(696969),
         )
 
         assert follow.get_channel() is None

@@ -25,8 +25,8 @@ import pytest
 
 from hikari import guilds
 from hikari import presences
-from hikari import traits
 from hikari import snowflakes
+from hikari import traits
 from hikari.events import guild_events
 from tests.hikari import hikari_test_helpers
 
@@ -55,7 +55,9 @@ class TestGuildEvent:
         event.app.cache.get_available_guild.assert_called_once_with(534123123)
 
     def test_get_guild_cacheless(self, event: guild_events.GuildEvent):
-        event = hikari_test_helpers.mock_class_namespace(guild_events.GuildEvent, app=mock.Mock(spec=traits.RESTAware))()
+        event = hikari_test_helpers.mock_class_namespace(
+            guild_events.GuildEvent, app=mock.Mock(spec=traits.RESTAware)
+        )()
 
         assert event.get_guild() is None
 

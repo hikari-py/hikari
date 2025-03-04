@@ -25,9 +25,10 @@ import typing
 import mock
 import pytest
 
-from hikari import channels, traits
+from hikari import channels
 from hikari import messages
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import users
 from hikari.events import message_events
