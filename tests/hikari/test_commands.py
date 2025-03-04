@@ -23,6 +23,7 @@ from __future__ import annotations
 import mock
 import pytest
 
+from hikari import applications
 from hikari import commands
 from hikari import snowflakes
 from hikari import traits
@@ -50,6 +51,8 @@ class TestPartialCommand:
             guild_id=snowflakes.Snowflake(31231235),
             version=snowflakes.Snowflake(43123123),
             name_localizations={},
+            integration_types=[applications.ApplicationIntegrationType.GUILD_INSTALL],
+            context_types=[applications.ApplicationContextType.GUILD],
         )
 
     @pytest.mark.asyncio

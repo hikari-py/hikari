@@ -23,6 +23,7 @@ from __future__ import annotations
 import mock
 import pytest
 
+from hikari import applications
 from hikari import channels
 from hikari import monetization
 from hikari import snowflakes
@@ -42,7 +43,7 @@ class TestComponentInteraction:
         return component_interactions.ComponentInteraction(
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
-            type=base_interactions.InteractionType.APPLICATION_COMMAND,
+            type=base_interactions.InteractionType.MESSAGE_COMPONENT,
             channel_id=snowflakes.Snowflake(3123123),
             guild_id=snowflakes.Snowflake(5412231),
             member=object(),
@@ -72,6 +73,10 @@ class TestComponentInteraction:
                     subscription_id=None,
                 )
             ],
+            authorizing_integration_owners={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
+            },
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
     def test_build_response(self, mock_component_interaction, mock_app):

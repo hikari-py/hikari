@@ -1289,6 +1289,14 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         alias="name_localizations", factory=dict, kw_only=True
     )
 
+    _integration_types: typing.Optional[typing.Sequence[applications.ApplicationIntegrationType]] = attrs.field(
+        alias="integration_types", factory=list, kw_only=True
+    )
+
+    _context_types: typing.Optional[typing.Sequence[applications.ApplicationContextType]] = attrs.field(
+        alias="context_types", factory=list, kw_only=True
+    )
+
     @property
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
@@ -1308,6 +1316,20 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def integration_types(self) -> typing.Sequence[applications.ApplicationIntegrationType]:
+        if self._integration_types:
+            return self._integration_types
+
+        return []
+
+    @property
+    def context_types(self) -> typing.Sequence[applications.ApplicationContextType]:
+        if self._context_types:
+            return self._context_types
+
+        return []
 
     def set_name(self, name: str, /) -> Self:
         self._name = name
@@ -1331,6 +1353,18 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._is_nsfw = state
         return self
 
+    def set_integration_types(
+        self, integration_types: typing.Optional[typing.Sequence[applications.ApplicationIntegrationType]]
+    ) -> Self:
+        self._integration_types = integration_types
+        return self
+
+    def set_context_types(
+        self, context_types: typing.Optional[typing.Sequence[applications.ApplicationContextType]]
+    ) -> Self:
+        self._context_types = context_types
+        return self
+
     @property
     def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         return self._name_localizations
@@ -1349,6 +1383,11 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data.put("name_localizations", self._name_localizations)
         data.put("dm_permission", self._is_dm_enabled)
         data.put("nsfw", self._is_nsfw)
+        if self._integration_types is not None:
+            data.put_array("integration_types", self._integration_types)
+
+        if self._context_types is not None:
+            data.put_array("contexts", self._context_types)
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by using it correctly.

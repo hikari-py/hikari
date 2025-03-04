@@ -23,6 +23,8 @@
 
 from __future__ import annotations
 
+from hikari.interactions import command_interactions, component_interactions, modal_interactions
+
 __all__: typing.Sequence[str] = (
     "CacheMappingView",
     "EmptyCacheView",
@@ -736,6 +738,11 @@ class MessageData(BaseData[messages.Message]):
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     components: tuple[components_.MessageActionRowComponent, ...] = attrs.field()
     thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field()
+    interaction_metadata: typing.Optional[typing.Union[
+        command_interactions.CommandMessageInteractionMetadata,
+        component_interactions.ComponentMessageInteractionMetadata,
+        modal_interactions.ModalMessageInteractionMetadata,
+    ]] = attrs.field()
 
     @classmethod
     def build_from_entity(
@@ -805,6 +812,7 @@ class MessageData(BaseData[messages.Message]):
             application_id=message.application_id,
             components=tuple(message.components),
             thread=message.thread,
+            interaction_metadata=message.interaction_metadata
         )
 
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
@@ -851,6 +859,7 @@ class MessageData(BaseData[messages.Message]):
             application_id=self.application_id,
             components=self.components,
             thread=self.thread,
+            interaction_metadata=self.interaction_metadata
         )
 
     def update(

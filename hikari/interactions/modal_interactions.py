@@ -23,6 +23,9 @@
 
 from __future__ import annotations
 
+from hikari.interactions import command_interactions
+from hikari.interactions import component_interactions
+
 __all__: list[str] = ["ModalResponseTypesT", "ModalInteraction", "ModalInteraction"]
 
 import typing
@@ -266,3 +269,17 @@ class ModalInteraction(
             Deferred interaction message response builder object.
         """
         return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
+
+
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ModalMessageInteractionMetadata(base_interactions.PartialMessageInteractionMetadata):
+    """FIXME: Do docs."""
+
+    original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the original response message, present only on follow-up messages."""
+
+    triggering_interaction_metadata: typing.Union[
+        command_interactions.CommandMessageInteractionMetadata,
+        component_interactions.ComponentMessageInteractionMetadata,
+    ] = attrs.field(eq=False, hash=False, repr=True)
+    """The metadata for the interaction that was used to open the modal."""
