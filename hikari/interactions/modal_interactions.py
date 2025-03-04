@@ -23,8 +23,8 @@
 
 from __future__ import annotations
 
-from hikari.interactions.command_interactions import CommandMessageInteractionMetadata
-from hikari.interactions.component_interactions import ComponentMessageInteractionMetadata
+from hikari.interactions import command_interactions
+from hikari.interactions import component_interactions
 
 __all__: list[str] = ["ModalResponseTypesT", "ModalInteraction", "ModalInteraction"]
 
@@ -129,9 +129,6 @@ class ModalInteraction(
 
     entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
     """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
-
-    interaction_metadata: typing.Optional[ModalMessageInteractionMetadata] = attrs.field(eq=False, repr=True)
-    """Sent if the message is sent as a result of an interaction."""
 
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the guild channel this interaction was triggered in.
@@ -282,6 +279,7 @@ class ModalMessageInteractionMetadata(base_interactions.PartialMessageInteractio
     """The ID of the original response message, present only on follow-up messages."""
 
     triggering_interaction_metadata: typing.Union[
-        CommandMessageInteractionMetadata, ComponentMessageInteractionMetadata
-    ] = attrs.field(eq=False, hash=False, repr=True)  # FIXME: Might have to do some mixin object for this?
+        command_interactions.CommandMessageInteractionMetadata,
+        component_interactions.ComponentMessageInteractionMetadata,
+    ] = attrs.field(eq=False, hash=False, repr=True)
     """The metadata for the interaction that was used to open the modal."""

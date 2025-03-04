@@ -5731,6 +5731,16 @@ class TestEntityFactoryImpl:
             "duration_secs": 1000.123,
             "waveform": "some encoded string",
         }
+    
+    @pytest.fixture
+    def partial_interaction_metadata_payload(self, user_payload):
+        return {
+            "id": "123456",
+            "type": 2,
+            "user": user_payload,
+            "authorizing_integration_owners": {"0": "123", "1": "456"},
+            "original_response_message_id": "9564",
+        }
 
     @pytest.fixture
     def message_payload(
@@ -5745,9 +5755,14 @@ class TestEntityFactoryImpl:
         partial_sticker_payload,
         attachment_payload,
         guild_public_thread_payload,
+        partial_interaction_metadata_payload,
     ):
         member_payload = member_payload.copy()
         del member_payload["user"]
+
+        partial_interaction_metadata_payload["target_user"] = user_payload
+        partial_interaction_metadata_payload["target_message_id"] = "59332"
+
         return {
             "id": "123",
             "channel_id": "456",
@@ -5785,6 +5800,7 @@ class TestEntityFactoryImpl:
             "interaction": {"id": "123123123", "type": 2, "name": "OKOKOK", "user": user_payload},
             "components": [action_row_payload, {"type": 1000000000}],
             "thread": guild_public_thread_payload,
+            "interaction_metadata": partial_interaction_metadata_payload
         }
 
     def test__deserialize_message_attachment(self, entity_factory_impl, attachment_payload):
@@ -5835,6 +5851,58 @@ class TestEntityFactoryImpl:
         assert attachment.is_ephemeral is False
         assert attachment.duration is None
         assert attachment.waveform is None
+
+    def test__deserialize_partial_message_interaction_metadata(
+        self,
+        entity_factory_impl,
+        partial_interaction_metadata_payload,
+        user_payload
+    ):
+        partial_message_interaction_metadata = entity_factory_impl._deserialize_command_message_interaction_metadata(partial_interaction_metadata_payload)
+
+        assert partial_message_interaction_metadata.interaction_id == snowflakes.Snowflake(123456)
+        assert partial_message_interaction_metadata.type == base_interactions.InteractionType.APPLICATION_COMMAND
+        assert partial_message_interaction_metadata.user == entity_factory_impl.deserialize_user(user_payload)
+        assert partial_message_interaction_metadata.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.GUILD_INSTALL
+        ] == snowflakes.Snowflake(123)
+        assert partial_message_interaction_metadata.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.USER_INSTALL
+        ] == snowflakes.Snowflake(456)
+        assert partial_message_interaction_metadata.original_response_message_id == snowflakes.Snowflake(9564)
+        assert isinstance(partial_message_interaction_metadata, base_interactions.PartialMessageInteractionMetadata)
+
+    def test__deserialize_command_message_interaction_metadata(
+        self,
+        entity_factory_impl,
+        partial_interaction_metadata_payload,
+        user_payload,
+    ):
+        partial_interaction_metadata_payload["target_user"] = user_payload
+        partial_interaction_metadata_payload["target_message_id"] = "59332"
+        
+        command_message_interaction_metadata = entity_factory_impl._deserialize_command_message_interaction_metadata(partial_interaction_metadata_payload)
+
+        assert command_message_interaction_metadata.target_user == entity_factory_impl.deserialize_user(user_payload)
+        assert command_message_interaction_metadata.target_message_id == snowflakes.Snowflake(59332)
+        assert isinstance(command_message_interaction_metadata, command_interactions.CommandMessageInteractionMetadata)
+
+    def test__deserialize_component_message_interaction_metadata(
+        self,
+        entity_factory_impl,
+        partial_interaction_metadata_payload
+    ):
+        partial_interaction_metadata_payload["interacted_message_id"] = "684831"
+        
+        component_message_interaction_metadata = entity_factory_impl._deserialize_component_message_interaction_metadata(partial_interaction_metadata_payload)
+
+        assert component_message_interaction_metadata.interacted_message_id == snowflakes.Snowflake(684831)
+        assert isinstance(component_message_interaction_metadata, component_interactions.ComponentMessageInteractionMetadata)
+
+    def test__deserialize_modal_message_interaction_metadata(
+        self,
+    ):
+        raise NotImplementedError("Implement me!")
 
     def test_deserialize_partial_message(
         self,
@@ -5932,6 +6000,21 @@ class TestEntityFactoryImpl:
             [action_row_payload], entity_factory_impl._message_component_type_mapping
         )
 
+        # InteractionMetadata
+        assert partial_message.interaction_metadata.interaction_id == snowflakes.Snowflake(123456)
+        assert partial_message.interaction_metadata.type == base_interactions.InteractionType.APPLICATION_COMMAND
+        assert partial_message.interaction_metadata.user == entity_factory_impl.deserialize_user(user_payload)
+        assert partial_message.interaction_metadata.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.GUILD_INSTALL
+        ] == snowflakes.Snowflake(123)
+        assert partial_message.interaction_metadata.authorizing_integration_owners[
+            application_models.ApplicationIntegrationType.USER_INSTALL
+        ] == snowflakes.Snowflake(456)
+        assert partial_message.interaction_metadata.original_response_message_id == snowflakes.Snowflake(9564)
+        assert partial_message.interaction_metadata.target_user == entity_factory_impl.deserialize_user(user_payload)
+        assert partial_message.interaction_metadata.target_message_id == snowflakes.Snowflake(59332)
+        assert isinstance(partial_message.interaction_metadata, command_interactions.CommandMessageInteractionMetadata)
+
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
         message_payload["edited_timestamp"] = None
@@ -5941,6 +6024,7 @@ class TestEntityFactoryImpl:
         del message_payload["message_reference"]["message_id"]
         del message_payload["message_reference"]["guild_id"]
         del message_payload["application"]["cover_image"]
+        del message_payload["interaction_metadata"]
 
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
 
@@ -5953,6 +6037,7 @@ class TestEntityFactoryImpl:
         assert partial_message.message_reference.id is None
         assert partial_message.message_reference.guild_id is None
         assert partial_message.referenced_message is None
+        assert partial_message.interaction_metadata is None
 
     def test_deserialize_partial_message_with_unset_fields(self, entity_factory_impl, mock_app):
         partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})

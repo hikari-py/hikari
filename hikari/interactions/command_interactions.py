@@ -327,9 +327,6 @@ class CommandInteraction(
     target_id: typing.Optional[snowflakes.Snowflake] = attrs.field(default=None, eq=False, hash=False, repr=True)
     """The target of the command. Only available if the command is a context menu command."""
 
-    interaction_metadata: typing.Optional[CommandMessageInteractionMetadata] = attrs.field(eq=False, repr=True)
-    """Sent if the message is sent as a result of an interaction."""
-
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 

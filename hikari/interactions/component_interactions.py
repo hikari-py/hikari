@@ -153,9 +153,6 @@ class ComponentInteraction(
     entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
     """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
 
-    interaction_metadata: typing.Optional[ComponentMessageInteractionMetadata] = attrs.field(eq=False, repr=True)
-    """Sent if the message is sent as a result of an interaction."""
-
     def build_response(self, type_: _ImmediateTypesT, /) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 

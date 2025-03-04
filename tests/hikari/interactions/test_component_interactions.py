@@ -43,7 +43,7 @@ class TestComponentInteraction:
         return component_interactions.ComponentInteraction(
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
-            type=base_interactions.InteractionType.APPLICATION_COMMAND,
+            type=base_interactions.InteractionType.MESSAGE_COMPONENT,
             channel_id=snowflakes.Snowflake(3123123),
             guild_id=snowflakes.Snowflake(5412231),
             member=object(),
