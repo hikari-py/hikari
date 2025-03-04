@@ -1,9 +1,0 @@
-graft hikari
-include LICENSE
-include setup.py
-include README.md
-include requirements.txt
-include server-requirements.txt
-include speedup-requirements.txt
-include pyproject.toml
-global-exclude *.py[cod]

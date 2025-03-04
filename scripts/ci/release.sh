@@ -32,10 +32,10 @@ if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && 
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
 if [ -z ${DEPLOY_WEBHOOK_URL+x} ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is missing' && exit 1; fi
 if [ -z "${DEPLOY_WEBHOOK_URL}" ]; then echo '$DEPLOY_WEBHOOK_URL environment variable is empty' && exit 1; fi
-if [ -z ${TWINE_USERNAME+x} ]; then echo '$TWINE_USERNAME environment variable is missing' && exit 1; fi
-if [ -z "${TWINE_USERNAME}" ]; then echo '$TWINE_USERNAME environment variable is empty' && exit 1; fi
-if [ -z ${TWINE_PASSWORD+x} ]; then echo '$TWINE_PASSWORD environment variable is missing' && exit 1; fi
-if [ -z "${TWINE_PASSWORD}" ]; then echo '$TWINE_PASSWORD environment variable is empty' && exit 1; fi
+if [ -z ${UV_PUBLISH_USERNAME+x} ]; then echo '$UV_PUBLISH_USERNAME environment variable is missing' && exit 1; fi
+if [ -z "${UV_PUBLISH_USERNAME}" ]; then echo '$UV_PUBLISH_USERNAME environment variable is empty' && exit 1; fi
+if [ -z ${UV_PUBLISH_PASSWORD+x} ]; then echo '$UV_PUBLISH_PASSWORD environment variable is missing' && exit 1; fi
+if [ -z "${UV_PUBLISH_PASSWORD}" ]; then echo '$UV_PUBLISH_PASSWORD environment variable is empty' && exit 1; fi
 
 about_version=$(sed -nr 's/^__version__: typing\.Final\[str\] = "([^"]*)"/\1/p' hikari/_about.py)
 if [ -z "${about_version}" ]; then
@@ -45,9 +45,6 @@ fi
 if [ "${about_version}" != "${VERSION}" ]; then
   echo "Variable '__version__' does not match the version this release is for! [__version__='${about_version}'; VERSION='${VERSION}']" && exit 1
 fi
-
-echo "===== INSTALLING DEPENDENCIES ====="
-pip install -r requirements.txt -r dev-requirements/release.txt -r dev-requirements.txt
 
 ref="$(git rev-parse HEAD)"
 
@@ -60,18 +57,16 @@ echo "==========================================================================
 python -m hikari
 echo "=========================================================================="
 
-python setup.py sdist bdist_wheel
+echo "-- Building package --"
+uv build
 echo "-- Contents of . --"
 ls -ahl
 echo
 echo "-- Contents of ./dist --"
 ls -ahl dist
 
-echo "-- Checking generated dists --"
-python -m twine check dist/*
-echo
 echo "-- Uploading to PyPI --"
-python -m twine upload --disable-progress-bar --skip-existing dist/* --non-interactive --repository-url https://upload.pypi.org/legacy/
+uv publish
 
 echo "===== SENDING WEBHOOK ====="
 curl \

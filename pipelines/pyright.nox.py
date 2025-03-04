@@ -35,20 +35,12 @@ def pyright(session: nox.Session) -> None:
     as hikari does not have 100% compatibility with pyright just yet. This
     exists to make it easier to test and eventually reach that 100% compatibility.
     """
-    session.install(
-        "-r",
-        "requirements.txt",
-        "-r",
-        "speedup-requirements.txt",
-        "-r",
-        "server-requirements.txt",
-        *nox.dev_requirements("pyright"),
-    )
+    session.install(".[speedups, server]", *nox.dev_groups("pyright"))
     session.run("pyright")
 
 
 @nox.session()
 def verify_types(session: nox.Session) -> None:
     """Verify the "type completeness" of types exported by the library using Pyright."""
-    session.install(".", *nox.dev_requirements("pyright"))
+    session.install(".", *nox.dev_groups("pyright"))
     session.run("pyright", "--verifytypes", config.MAIN_PACKAGE, "--ignoreexternal")

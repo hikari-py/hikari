@@ -31,8 +31,8 @@ posix_read() {
 }
 
 posix_read "Tag" VERSION
-posix_read "Twine username" TWINE_USERNAME
-posix_read "Twine password" TWINE_PASSWORD
+posix_read "PyPI username" UV_PUBLISH_USERNAME
+posix_read "PyPI password" UV_PUBLISH_PASSWORD
 posix_read "Discord deployment webhook URL" DEPLOY_WEBHOOK_URL
 
 bash scripts/ci/release.sh
