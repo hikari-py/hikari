@@ -68,6 +68,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
+from hikari.api import special_endpoints as special_endpoints_api
 from hikari.impl import buckets as buckets_impl
 from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
@@ -1442,13 +1443,20 @@ class RESTClientImpl(rest_api.RESTClient):
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
             if component is not None:
+                if isinstance(component, special_endpoints_api.MessageMedia):
+                    final_attachments.extend(component.attachments())
                 serialized_components = [component.build()]
             else:
                 serialized_components = []
 
         elif components is not undefined.UNDEFINED:
             if components is not None:
-                serialized_components = [component.build() for component in components]
+                if len(components) > 0:
+                    serialized_components = []
+                    for component in components:
+                        if isinstance(component, special_endpoints_api.MessageMedia):
+                            final_attachments.extend(component.attachments())
+                        serialized_components.append(component.build())
             else:
                 serialized_components = []
 
