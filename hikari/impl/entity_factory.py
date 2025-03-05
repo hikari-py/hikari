@@ -3190,7 +3190,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             user=self.deserialize_user(payload["user"]),
         )
 
-    def deserialize_partial_message(  # noqa: C901 - Too complex
+    def deserialize_partial_message(  # noqa: C901, CFQ001 - Too complex and too long
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
         author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED

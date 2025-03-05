@@ -1104,8 +1104,6 @@ class TestSlashCommandBuilder:
             "options": [],
             "name_localizations": {},
             "description_localizations": {},
-            "contexts": [],
-            "integration_types": [],
         }
 
     @pytest.mark.asyncio
@@ -1200,13 +1198,7 @@ class TestContextMenuBuilder:
 
         result = builder.build(mock.Mock())
 
-        assert result == {
-            "type": 3,
-            "name": "nameeeee",
-            "name_localizations": {},
-            "contexts": [],
-            "integration_types": [],
-        }
+        assert result == {"type": 3, "name": "nameeeee", "name_localizations": {}}
 
     @pytest.mark.asyncio
     async def test_create(self):
