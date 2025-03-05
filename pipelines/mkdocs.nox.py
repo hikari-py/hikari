@@ -42,7 +42,7 @@ def mkdocs(session: nox.Session):
     """Generate docs using mkdocs."""
     _setup_environ(session)
 
-    session.install("-e", ".", *nox.dev_requirements("mkdocs"))
+    nox.sync(session, self=True, groups=["mkdocs"])
 
     session.run("mkdocs", "build", "-d", config.DOCUMENTATION_OUTPUT_PATH)
 
@@ -52,7 +52,7 @@ def mkdocs_serve(session: nox.Session):
     """Start an HTTP server that serves the generated docs in real time."""
     _setup_environ(session)
 
-    session.install("-e", ".", *nox.dev_requirements("mkdocs"))
+    nox.sync(session, self=True, groups=["mkdocs"])
 
     if "--no-reload" in session.posargs:
         session.run("mkdocs", "serve", "--no-livereload")
