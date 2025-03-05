@@ -366,7 +366,7 @@ class PartialComponentV2(PartialComponent): # FIXME: This defo needs changing.
     """FIXME: Document me."""
 
     id: typing.Optional[int] = attrs.field()
-    """FIXME: Document me."""
+    """The ID of the interaction if set."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
@@ -406,103 +406,107 @@ class MediaResource:
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class SectionComponent(PartialComponentV2):
-    """FIXME: Document me."""
+    """Represents a section component."""
 
     components: typing.Sequence[TextDisplayComponent] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
-    """FIXME: Document me."""
+    """The sections components."""
 
     accessory: typing.Union[ButtonComponent, ThumbnailComponent] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
-    """FIXME: Document me."""
+    """The sections accessory."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class ThumbnailComponent(PartialComponentV2):
-    """FIXME: Document me."""
+    """Represents a thumbnail component."""
 
     media: MediaResource = attrs.field()
-    """FIXME: Document me."""
+    """The media for the thumbnail."""
 
     description: typing.Optional[str] = attrs.field()
-    """FIXME: Document me."""
+    """The description of the thumbnail."""
 
     spoiler: typing.Optional[bool] = attrs.field()
-    """FIXME: Document me."""
+    """If the thumbnail has a spoiler."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class TextDisplayComponent(PartialComponentV2):
-    """FIXME: Document me."""
+    """Represents a text display component."""
     
     content: str = attrs.field()
-    """FIXME: Document me."""
+    """The content of the text display."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MediaGalleryComponent(PartialComponentV2):
-    """FIXME: Document me."""
+    """Represents a media gallery component."""
 
     items: typing.Sequence[MediaGalleryItem] = attrs.field()
-    """FIXME: Document me."""
+    """The media gallery's items."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MediaGalleryItem:
-    """FIXME: Document me."""
+    """Represents a media gallery item."""
     
     media: MediaResource = attrs.field()
-    """FIXME: Document me."""
+    """The media for the gallery item."""
 
     description: typing.Optional[str] = attrs.field()
-    """FIXME: Document me."""
+    """The description of the gallery item."""
 
     spoiler: typing.Optional[bool] = attrs.field()
-    """FIXME: Document me."""
+    """If the gallery item has a spoiler."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class SeparatorComponent(PartialComponentV2):
-    """FIXME: Document me."""
+    """Represents the separator component."""
 
     spacing: typing.Optional[SpacingType] = attrs.field()
-    """FIXME: Document me."""
+    """The spacing for the separator."""
 
     divider: typing.Optional[bool] = attrs.field()
-    """FIXME: Document me."""
+    """If there is a divider for the separator."""
 
 
 @typing.final
 class SpacingType(int, enums.Enum):
-    """FIXME: Document me."""
+    """Spacing Type.
+    
+    The type of spacing for a [SeparatorComponent][]
+    """
 
     SMALL = 1
-    """FIXME: Document me."""
+    """A small separator."""
 
     LARGE = 2
-    """FIXME: Document me."""
+    """A large separator."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class FileComponent(PartialComponentV2):
-    """FIXME: Document me."""
+    """Represents a file component."""
 
     file: MediaResource = attrs.field()
-    """FIXME: Document me."""
+    """The media for the file."""
     
     spoiler: typing.Optional[bool] = attrs.field()
-    """FIXME: Document me."""
+    """If the file has a spoiler."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class ContainerComponent(PartialComponentV2):
-    """FIXME: Document me."""
+    """Represents a container component."""
 
     accent_color: typing.Optional[colors.Color] = attrs.field()
-    """FIXME: Document me."""
+    """The accent colour for the container."""
 
     spoiler: typing.Optional[bool] = attrs.field()
-    """FIXME: Document me."""
+    """If the container has a spoiler."""
 
     components: typing.Sequence[ContainerTypesT] = attrs.field()
+    """The components within the container."""
 
 TopLevelComponentTypesT = typing.Union[
     ActionRowComponent[PartialComponent],
