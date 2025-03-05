@@ -30,14 +30,4 @@ from pipelines import nox
 def audit(session: nox.Session) -> None:
     """Perform dependency scanning."""
     nox.sync(session, groups=["audit"])
-    session.run(
-        "pip-audit",
-        "-r",
-        "requirements.txt",
-        "-r",
-        "server-requirements.txt",
-        "-r",
-        "speedup-requirements.txt",
-        "--aliases",
-        "on",
-    )
+    session.run("uv-secure", "--forbid-yanked", "--desc", "--aliases")

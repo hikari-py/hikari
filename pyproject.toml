@@ -80,7 +80,7 @@ server = ["pynacl~=1.5"]
 [dependency-groups]
 nox = ["nox[uv]==2025.2.9"]
 
-audit = ["pip-audit"]
+audit = ["uv-secure"]
 codespell = ["codespell==2.3.0"]
 coverage = ["coverage[toml]==7.6.12"]
 flake8 = [
@@ -96,7 +96,7 @@ flake8 = [
     "flake8-fixme==1.1.1",             # "fix me" counter
     "flake8-functions==0.0.8",         # function linting
     "flake8-html==0.4.3",              # html output
-    "flake8-mutable==1.2.0",           # mutable default argumet detection
+    "flake8-mutable==1.2.0",           # mutable default argument detection
     "flake8-pep3101==2.1.0",           # new-style format strings only
     "flake8-print==5.0.0",             # complain about print statements in code
     "flake8-printf-formatting==1.1.2", # forbey printf-style python2 string formatting
