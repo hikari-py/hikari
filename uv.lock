@@ -601,11 +601,11 @@ wheels = [
 
 [[package]]
 name = "codespell"
-version = "2.3.0"
+version = "2.4.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a0/a9/98353dfc7afcdf18cffd2dd3e959a25eaaf2728cf450caa59af89648a8e4/codespell-2.3.0.tar.gz", hash = "sha256:360c7d10f75e65f67bad720af7007e1060a5d395670ec11a7ed1fed9dd17471f", size = 329791 }
+sdist = { url = "https://files.pythonhosted.org/packages/15/e0/709453393c0ea77d007d907dd436b3ee262e28b30995ea1aa36c6ffbccaf/codespell-2.4.1.tar.gz", hash = "sha256:299fcdcb09d23e81e35a671bbe746d5ad7e8385972e65dbb833a2eaac33c01e5", size = 344740 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/20/b6019add11e84f821184234cea0ad91442373489ef7ccfa3d73a71b908fa/codespell-2.3.0-py3-none-any.whl", hash = "sha256:a9c7cef2501c9cfede2110fd6d4e5e62296920efe9abfb84648df866e47f58d1", size = 329167 },
+    { url = "https://files.pythonhosted.org/packages/20/01/b394922252051e97aab231d416c86da3d8a6d781eeadcdca1082867de64e/codespell-2.4.1-py3-none-any.whl", hash = "sha256:3dadafa67df7e4a3dbf51e0d7315061b80d265f9552ebd699b3dd6834b47e425", size = 344501 },
 ]
 
 [[package]]
@@ -1287,7 +1287,7 @@ provides-extras = ["server", "speedups"]
 
 [package.metadata.requires-dev]
 audit = [{ name = "uv-secure" }]
-codespell = [{ name = "codespell", specifier = "==2.3.0" }]
+codespell = [{ name = "codespell", specifier = "==2.4.1" }]
 coverage = [{ name = "coverage", extras = ["toml"], specifier = "==7.6.12" }]
 flake8 = [
     { name = "flake8", specifier = "==7.1.2" },

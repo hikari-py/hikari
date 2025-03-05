@@ -81,7 +81,7 @@ server = ["pynacl~=1.5"]
 nox = ["nox[uv]==2025.2.9"]
 
 audit = ["uv-secure"]
-codespell = ["codespell==2.3.0"]
+codespell = ["codespell==2.4.1"]
 coverage = ["coverage[toml]==7.6.12"]
 flake8 = [
     "flake8==7.1.2",
