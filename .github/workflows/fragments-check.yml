@@ -26,7 +26,7 @@ jobs:
 
       - name: Check if changelog fragment was added
         run: |
-          uv pip install --group towncrier
+          uv sync --frozen --only-group towncrier
 
           if ! towncrier check --compare-with origin/${{ github.base_ref }}; then
             exit 1

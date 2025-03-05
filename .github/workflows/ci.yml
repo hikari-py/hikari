@@ -44,7 +44,7 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          uv pip install --group nox
+          uv sync --frozen --only-group nox
 
           nox -s pytest
           nox -s pytest-all-features -- --cov-append
@@ -97,7 +97,7 @@ jobs:
 
       - name: Combine coverage
         run: |
-          uv pip install --group coverage
+          uv sync --frozen --only-group coverage
 
           coverage combine
           coverage xml
@@ -124,7 +124,7 @@ jobs:
 
       - name: Install nox
         run: |
-          uv pip install --group nox
+          uv sync --frozen --only-group nox
 
       - name: Check stubs
         if: always()
@@ -190,7 +190,7 @@ jobs:
 
       - name: Test twemoji mapping
         run: |
-          uv pip install --group nox
+          uv sync --frozen --only-group nox
 
           nox -s twemoji-test
 
@@ -209,7 +209,7 @@ jobs:
 
       - name: Build documentation
         run: |
-          uv pip install --group nox
+          uv sync --frozen --only-group nox
           nox -s mkdocs
 
       - name: Upload artifacts

@@ -38,7 +38,7 @@ GIT = shutil.which("git")
 @nox.session()
 def reformat_code(session: nox.Session) -> None:
     """Remove trailing whitespace in source and then run ruff code formatter."""
-    session.install(*nox.dev_groups("ruff"))
+    nox.sync(session, groups=["ruff"])
 
     remove_trailing_whitespaces(session)
 
@@ -52,7 +52,7 @@ def reformat_code(session: nox.Session) -> None:
 @nox.session()
 def check_reformat_code(session: nox.Session) -> None:
     """TEMPORARY: Check if code is properly formatted."""
-    session.install(*nox.dev_groups("ruff"))
+    nox.sync(session, groups=["ruff"])
 
     # At the time of writing, sorting imports is not done when running formatting
     # and needs to be done with ruff check

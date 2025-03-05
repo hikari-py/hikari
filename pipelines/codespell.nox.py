@@ -30,7 +30,7 @@ IGNORED_WORDS = ["ro", "falsy", "ws"]
 @nox.session()
 def codespell(session: nox.Session) -> None:
     """Run codespell to check for spelling mistakes."""
-    session.install(*nox.dev_groups("codespell"))
+    nox.sync(session, groups=["codespell"])
     session.run(
         "codespell",
         "--builtin",

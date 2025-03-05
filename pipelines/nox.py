@@ -31,7 +31,7 @@ from nox.sessions import Session
 
 # Default sessions should be defined here
 _options.sessions = ["reformat-code", "codespell", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
-_options.default_venv_backend = "uv|venv"
+_options.default_venv_backend = "uv"
 
 _NoxCallbackSig = _typing.Callable[[Session], None]
 
@@ -45,10 +45,20 @@ def session(**kwargs: _typing.Any) -> _typing.Callable[[_NoxCallbackSig], _NoxCa
     return decorator
 
 
-def dev_groups(*groups: str) -> _typing.Sequence[str]:
+def sync(
+    session: Session, /, *, self: bool = False, extras: _typing.Sequence[str] = (), groups: _typing.Sequence[str] = ()
+) -> None:
+    if extras and not self:
+        raise RuntimeError("When specifying extras, set `self=True`.")
+
     args = []
+    for extra in extras:
+        args.extend(("--extra", extra))
 
+    group_flag = "--group" if self else "--only-group"
     for group in groups:
-        args.extend(("--group", group))
+        args.extend((group_flag, group))
 
-    return args
+    session.run_install(
+        "uv", "sync", "--frozen", *args, silent=True, env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
+    )

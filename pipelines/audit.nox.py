@@ -29,7 +29,7 @@ from pipelines import nox
 @nox.session()
 def audit(session: nox.Session) -> None:
     """Perform dependency scanning."""
-    session.install(*nox.dev_groups("audit"))
+    nox.sync(session, groups=["audit"])
     session.run(
         "pip-audit",
         "-r",

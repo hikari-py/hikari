@@ -78,7 +78,7 @@ server = ["pynacl~=1.5"]
 "CI" = "https://github.com/hikari-py/hikari/actions"
 
 [dependency-groups]
-nox = ["nox==2025.2.9"]
+nox = ["nox[uv]==2025.2.9"]
 
 audit = ["pip-audit"]
 codespell = ["codespell==2.3.0"]
@@ -139,7 +139,7 @@ slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
 
 [tool.uv]
-required-version = "~=0.5"
+required-version = "~=0.6"
 
 [tool.ruff]
 line-length = 120

@@ -20,8 +20,9 @@ repository.
 Please also refer to the [EffVer Versioning specification](https://jacobtomlinson.dev/effver/) for more information.
 
 More specifically:
+
 - Major bump: Big changes to the public facing API.
-- Minor bump: New features or changes that require some developer interaction to upgrade to, including 
+- Minor bump: New features or changes that require some developer interaction to upgrade to, including
   removal/renaming of features.
 - Micro bump: Bug fixes and new features that require no end developer interaction (deprecations can be included here).
 
@@ -35,6 +36,7 @@ match that of the versioning scheme. There are utilities under `hikari.internal.
 To aid with the generation of `CHANGELOG.md` as well as the releases changelog we use `towncrier`.
 
 You will need to install `towncrier` and `hikari` from source before making changelog additions.
+
 ```bash
 pip install --group towncrier -e .
 ```
@@ -62,11 +64,12 @@ Multiple fragment types can be created per pull request if it covers multiple ar
 We would like to keep consistency in naming branches in the remote.
 
 To push branches directly to the remote, you will have to name them like this:
-  - `feature/issue-number-small-info-on-branch`
+
+- `feature/issue-number-small-info-on-branch`
     - This should be used for branches that require more tasks to merge into before going as one MR into `master`.
-  - `bugfix/issue-number-small-info-on-branch`
+- `bugfix/issue-number-small-info-on-branch`
     - This should be used for bugfixes.
-  - `task/issue-number-small-info-on-branch`
+- `task/issue-number-small-info-on-branch`
     - This should be the default for any commit that doesn't fall in any of the cases above.
 
 `issue-number` is optional (only use if issue exists) and can be left out. `small-info-on-branch` should be replaced
@@ -77,6 +80,11 @@ with a small description of the branch.
 We have nox to help out with running pipelines locally and provides some helpful functionality.
 
 You will need to install `nox` locally before running any pipelines.
+
+> [!TIP]
+> We use the `uv` package manager as a faster drop-in replacement for pip. While it's not required to use in order to
+> contribute to hikari, it's highly recommended! If you use it, replace `pip` commands below with `uv pip`.
+
 ```bash
 pip install --group nox
 ```
@@ -96,13 +104,14 @@ You may run a single pipeline with `nox -s name` or multiple pipelines with `nox
 We have several jobs to ensure that the code is at its best that in can be.
 
 This includes:
-  - `test`
+
+- `test`
     - Run tests and installation of the package on different OS's and python versions.
-  - `linting`
+- `linting`
     - Linting (`flake8`), type checking (`mypy`), audit (`pip-audit`) and spelling (`codespell`).
-  - `twemoji`
+- `twemoji`
     - Force test all discord emojis.
-  - `pages`
+- `pages`
     - Generate webpage + documentation.
 
 All jobs will need to succeed before anything gets merged.

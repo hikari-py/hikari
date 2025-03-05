@@ -35,8 +35,7 @@ sed "/^__docs__.*/, \${s||__docs__: typing.Final[str] = \"https://docs.hikari-py
 echo "===== UPDATING CHANGELOG ====="
 echo "-- Installing dependencies --"
 # Installing our own package is necessary to have towncrier detect the version
-# FIXME: Change to allow also just using pip
-uv pip install --group towncrier .
+uv sync --frozen --group towncrier
 
 echo "-- Running towncrier --"
 towncrier --yes

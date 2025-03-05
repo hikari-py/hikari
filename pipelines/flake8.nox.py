@@ -40,7 +40,7 @@ def flake8_html(session: nox.Session) -> None:
 
 
 def _flake8(session: nox.Session, extra_args: typing.Sequence[str] = ()) -> None:
-    session.install(".", *nox.dev_groups("flake8"))
+    nox.sync(session, self=True, groups=["flake8"])
     session.run(
         "flake8",
         "--statistics",
