@@ -50,15 +50,18 @@ __all__: typing.Sequence[str] = (
     "SeparatorComponent",
     "SpacingType",
     "FileComponent",
+    "ContainerTypesT"
 )
 
 import typing
 
 import attrs
+import concurrent.futures
 
 from hikari import channels
 from hikari import emojis
 from hikari import files
+from hikari import colors
 from hikari.internal import enums
 
 
@@ -142,10 +145,10 @@ class ComponentType(int, enums.Enum):
     TEXT_DISPLAY = 10
     """FIXME: Document me."""
     
-    MEDIA_GALLERY = 11
+    THUMBNAIL = 11
     """FIXME: Document me."""
-    
-    THUMBNAIL = 12
+
+    MEDIA_GALLERY = 12
     """FIXME: Document me."""
     
     FILE = 13
@@ -154,7 +157,7 @@ class ComponentType(int, enums.Enum):
     SEPARATOR = 14
     """FIXME: Document me."""
     
-    CONTAINER = 16
+    CONTAINER = 17
     """FIXME: Document me."""
 
 
@@ -350,12 +353,45 @@ class PartialComponentV2(PartialComponent): # FIXME: This defo needs changing.
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
+class MediaResource(files.WebResource):
+    resource: files.Resource[files.AsyncReader] = attrs.field(repr=True)
+    """The resource this object wraps around."""
+
+    @property
+    @typing.final
+    def url(self) -> str:
+        """URL of this embed resource."""
+        return self.resource.url
+
+    @property
+    def filename(self) -> str:
+        """File name of this embed resource."""
+        return self.resource.filename
+
+    def stream(
+        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+    ) -> files.AsyncReaderContextManager[files.AsyncReader]:
+        """Produce a stream of data for the resource.
+
+        Parameters
+        ----------
+        executor
+            The executor to run in for blocking operations.
+            If [`None`][], then the default executor is used for the
+            current event loop.
+        head_only
+            If [`True`][], then the implementation may only retrieve
+            HEAD information if supported. This currently only has
+            any effect for web requests.
+        """
+        return self.resource.stream(executor=executor, head_only=head_only)
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
 class SectionComponent(PartialComponentV2):
     """FIXME: Document me."""
 
-    
-
-    components: typing.Sequence[TextDisplay] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
+    components: typing.Sequence[TextDisplayComponent] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
     """FIXME: Document me."""
 
     accessory: typing.Union[ButtonComponent, ThumbnailComponent] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
@@ -366,13 +402,13 @@ class SectionComponent(PartialComponentV2):
 class ThumbnailComponent(PartialComponentV2):
     """FIXME: Document me."""
 
-    media: files.Resourceish = attrs.field()
+    media: MediaResource = attrs.field()
     """FIXME: Document me."""
 
     description: typing.Optional[str] = attrs.field()
     """FIXME: Document me."""
 
-    has_spoiler: typing.Optional[bool] = attrs.field()
+    spoiler: typing.Optional[bool] = attrs.field()
     """FIXME: Document me."""
 
 
@@ -396,7 +432,7 @@ class MediaGalleryComponent(PartialComponentV2):
 class MediaGalleryItem:
     """FIXME: Document me."""
     
-    media: files.Resourceish = attrs.field()
+    media: MediaResource = attrs.field()
     """FIXME: Document me."""
 
     description: typing.Optional[str] = attrs.field()
@@ -410,10 +446,10 @@ class MediaGalleryItem:
 class SeparatorComponent(PartialComponentV2):
     """FIXME: Document me."""
 
-    spacing: SpacingType = attrs.field()
+    spacing: typing.Optional[SpacingType] = attrs.field()
     """FIXME: Document me."""
 
-    divider: bool = attrs.field()
+    divider: typing.Optional[bool] = attrs.field()
     """FIXME: Document me."""
 
 
@@ -432,12 +468,35 @@ class SpacingType(int, enums.Enum):
 class FileComponent(PartialComponentV2):
     """FIXME: Document me."""
 
-    file: files.Resourceish = attrs.field()
+    file: MediaResource = attrs.field()
     """FIXME: Document me."""
     
-    has_spoiler: bool = attrs.field()
+    spoiler: typing.Optional[bool] = attrs.field()
     """FIXME: Document me."""
 
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class ContainerComponent(PartialComponentV2):
+    """FIXME: Document me."""
+
+    accent_color: typing.Optional[colors.Color] = attrs.field()
+    """FIXME: Document me."""
+
+    spoiler: typing.Optional[bool] = attrs.field()
+    """FIXME: Document me."""
+
+    components: typing.Sequence[ContainerTypesT] = attrs.field()
+
+
+ContainerTypesT = typing.Union[
+    ActionRowComponent[PartialComponent],
+    TextDisplayComponent,
+    SectionComponent,
+    MediaGalleryComponent,
+    SeparatorComponent,
+    FileComponent
+]
+"""FIXME: Document me."""
 
 SelectMenuTypesT = typing.Union[
     typing.Literal[ComponentType.TEXT_SELECT_MENU],

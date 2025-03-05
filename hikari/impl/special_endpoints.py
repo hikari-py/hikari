@@ -45,6 +45,15 @@ __all__: typing.Sequence[str] = (
     "TextInputBuilder",
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
+    "MessageMediaItemBuilder",
+    "MessageSectionBuilder",
+    "MessageTextDisplayBuilder",
+    "MessageThumbnailBuilder",
+    "MessageMediaGalleryBuilder",
+    "MessageMediaGalleryItemBuilder",
+    "MessageSeparatorBuilder",
+    "MessageFileBuilder",
+    "MessageContainerBuilder",
     "ModalActionRowBuilder",
 )
 
@@ -2089,6 +2098,396 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
             "type": component_models.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
         }
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageMediaItemBuilder(special_endpoints.MessageMediaItemBuilder):
+    _resource: files.Resource[files.AsyncReader] = attrs.field(alias="resource")
+
+    @property
+    def resource(self) -> files.Resource[files.AsyncReader]:
+        return self._resource
+
+    @property
+    def url(self) -> str:
+        return self._resource.url
+    
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "url": self.url
+        }
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageSectionBuilder(special_endpoints.MessageSectionBuilder):
+    _components: list[MessageTextDisplayBuilder] = attrs.field(alias="components", factory=list)
+    _accessory: typing.Union[InteractiveButtonBuilder, LinkButtonBuilder, MessageThumbnailBuilder] = attrs.field(alias="accessory")
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.SECTION]:
+        return component_models.ComponentType.SECTION
+
+    @property
+    def components(self) -> typing.Sequence[MessageTextDisplayBuilder]:
+        return self._components.copy()
+    
+    @property
+    def accessory(self) -> typing.Union[InteractiveButtonBuilder, LinkButtonBuilder, MessageThumbnailBuilder]:
+        return self._accessory
+    
+    def add_component(
+        self,
+        component: MessageTextDisplayBuilder,
+    ) -> Self:
+        self._components.append(component)
+        return self
+    
+    def add_text_display(
+        self,
+        content: str,
+    ) -> Self:
+        component = MessageTextDisplayBuilder(
+            content=content
+        )
+        self.add_component(component)
+        return self
+    
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "type": self.type,
+            "components": [component.build() for component in self.components],
+            "accessory": self.accessory.build()
+        }
+    
+    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
+        if isinstance(self.accessory, special_endpoints.MessageThumbnailBuilder):
+            return self.accessory.attachments()
+        
+        return []
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageTextDisplayBuilder(special_endpoints.MessageTextDisplayBuilder):
+    _content: str = attrs.field(alias="content")
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.TEXT_DISPLAY]:
+        return component_models.ComponentType.TEXT_DISPLAY
+
+    @property
+    def content(self) -> str:
+        return self._content
+    
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "type": self.type,
+            "content": self.content
+        }
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
+    _media: MessageMediaItemBuilder = attrs.field(alias="media")
+    _description: typing.Optional[str] = attrs.field(alias="description")
+    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler")
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.THUMBNAIL]:
+        return component_models.ComponentType.THUMBNAIL
+
+    @property
+    def media(self) -> MessageMediaItemBuilder:
+        return self._media
+    
+    @property
+    def description(self) -> typing.Optional[str]:
+        return self._description
+    
+    @property
+    def spoiler(self) -> typing.Optional[bool]:
+        return self._spoiler
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("type", self.type)
+        payload.put("media", self.media.build())
+
+        if self.description is not None:
+            payload.put("description", self.description)
+
+        if self.spoiler is not None:
+            payload.put("spoiler", self.spoiler)
+
+        return payload
+    
+    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:        
+        return [self.media.resource]
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageMediaGalleryBuilder(special_endpoints.MessageMediaGalleryBuilder):
+    _items: list[MessageMediaGalleryItemBuilder] = attrs.field(alias="items", factory=list)
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.MEDIA_GALLERY]:
+        return component_models.ComponentType.MEDIA_GALLERY
+
+    @property
+    def items(self) -> list[MessageMediaGalleryItemBuilder]:
+        return self._items
+
+    def add_item(
+        self,
+        item: MessageMediaGalleryItemBuilder
+    ) -> Self:
+        self._items.append(item)
+        return self
+
+    def add_media_gallery_item(
+        self,
+        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
+        *,
+        description: typing.Optional[str] = None,
+        spoiler: typing.Optional[bool] = None,
+    ) -> Self:
+        if not isinstance(media, MessageMediaItemBuilder):
+            media = MessageMediaItemBuilder(
+                resource=files.ensure_resource(media)
+            )
+        item = MessageMediaGalleryItemBuilder(
+            media=media,
+            description=description,
+            spoiler=spoiler
+        )
+        self.add_item(item)
+        return self
+    
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        print("Itemssss:", self.items)
+        return {
+            "type": self.type,
+            "items": [item.build() for item in self.items]
+        }
+    
+    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
+        attachments: list[files.Resource[files.AsyncReader]] = []
+
+        for item in self.items:
+            attachments.extend(item.attachments())
+
+        return attachments
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageMediaGalleryItemBuilder(special_endpoints.MessageMediaGalleryItemBuilder):
+    _media: MessageMediaItemBuilder = attrs.field(alias="media")
+    _description: typing.Optional[str] = attrs.field(alias="description")
+    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler")
+
+    @property
+    def media(self) -> MessageMediaItemBuilder:
+        return self._media
+    
+    @property
+    def description(self) -> typing.Optional[str]:
+        return self._description
+    
+    @property
+    def spoiler(self) -> typing.Optional[bool]:
+        return self._spoiler
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+
+        payload.put("media", self.media.build())
+
+        if self.description is not None:
+            payload.put("description", self.description)
+
+        if self.spoiler is not None:
+            payload.put("spoiler", self.spoiler)
+
+        return payload
+    
+    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
+        return [self.media.resource]
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageSeparatorBuilder(special_endpoints.MessageSeparatorBuilder):
+    _spacing: typing.Optional[component_models.SpacingType] = attrs.field(alias="spacing")
+    _divider: typing.Optional[bool] = attrs.field(alias="divider")
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.SEPARATOR]:
+        return component_models.ComponentType.SEPARATOR
+
+    @property
+    def spacing(self) -> typing.Optional[component_models.SpacingType]:
+        return self._spacing
+
+    @property
+    def divider(self) -> typing.Optional[bool]:
+        return self._divider
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("type", self.type)
+
+        # FIXME: Should it error if both spacing and divider are None?
+
+        if self.spacing is not None:
+            payload.put("spacing", self.spacing)
+
+        if self.divider is not None:
+            payload.put("divider", self.divider)
+        
+        return payload
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageFileBuilder(special_endpoints.MessageFileBuilder):
+    _media: MessageMediaItemBuilder = attrs.field(alias="media")
+    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler")
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.THUMBNAIL]:
+        return component_models.ComponentType.THUMBNAIL
+
+    @property
+    def media(self) -> MessageMediaItemBuilder:
+        return self._media
+    
+    @property
+    def spoiler(self) -> typing.Optional[bool]:
+        return self._spoiler
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("type", self.type)
+        payload.put("media", self.media.build())
+
+        if self.spoiler is not None:
+            payload.put("spoiler", self.spoiler)
+
+        return payload
+    
+    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
+        return [self.media.resource]
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MessageContainerBuilder(special_endpoints.MessageContainerBuilder):
+    _accent_color: typing.Optional[colors.Color] = attrs.field(alias="accent_color")
+
+    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler")
+    
+    _components: list[special_endpoints.MessageContainerBuilderComponentsT] = attrs.field(alias="components", factory=list)
+
+    @property
+    def type(self) -> typing.Literal[component_models.ComponentType.CONTAINER]:
+        return component_models.ComponentType.CONTAINER
+
+    @property
+    def accent_color(self) -> typing.Optional[colors.Color]:
+        return self._accent_color
+    
+    @property
+    def spoiler(self) -> typing.Optional[bool]:
+        return self._spoiler
+    
+    @property
+    def components(self) -> typing.Sequence[special_endpoints.MessageContainerBuilderComponentsT]:
+        return self._components.copy()
+    
+    def add_component(
+        self,
+        component: special_endpoints.MessageContainerBuilderComponentsT
+    ) -> Self:
+        self._components.append(component)
+        return self
+    
+    def add_action_row(
+        self,
+        components: typing.Sequence[special_endpoints.ComponentBuilder]
+    ) -> Self:
+        component = MessageActionRowBuilder(
+            components=list(components)
+        )
+        self.add_component(component)
+        return self
+    
+    def add_text_display(
+        self,
+        content: str
+    ) -> Self:
+        component = MessageTextDisplayBuilder(
+            content=content
+        )
+        self.add_component(component)
+        return self
+    
+    def add_media_gallery(
+        self,
+        items: typing.Sequence[MessageMediaGalleryItemBuilder]
+    ) -> Self:
+        component = MessageMediaGalleryBuilder(
+            items=list(items)
+        )
+        self.add_component(component)
+        return self
+
+    def add_separator(
+        self,
+        *,
+        spacing: typing.Optional[component_models.SpacingType] = None,
+        divider: typing.Optional[bool] = None
+    ) -> Self:
+        component = MessageSeparatorBuilder(
+            spacing=spacing,
+            divider=divider
+        )
+        self.add_component(component)
+        return self
+    
+    def add_file(
+        self,
+        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
+        spoiler: typing.Optional[bool]
+    ) -> Self:
+        if not isinstance(media, MessageMediaItemBuilder):
+            media = MessageMediaItemBuilder(
+                resource=files.ensure_resource(media)
+            )
+        component = MessageFileBuilder(
+            media=media,
+            spoiler=spoiler
+        )
+        self.add_component(component)
+        return self
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("type", self.type)
+
+        if self.accent_color is not None:
+            payload.put("accent_color", self.accent_color)
+        
+        if self.spoiler is not None:
+            payload.put("spoiler", self.spoiler)
+
+        payload.put_array("components", [component.build() for component in self.components])
+
+        return payload
+
+    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
+        attachments: list[files.Resource[files.AsyncReader]] = []
+
+        for component in self.components:
+            if isinstance(component, special_endpoints.MessageMedia):
+                attachments.extend(component.attachments())
+
+        return attachments
 
 
 @attrs.define(kw_only=True, weakref_slot=False)

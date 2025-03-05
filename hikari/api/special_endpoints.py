@@ -45,6 +45,17 @@ __all__: typing.Sequence[str] = (
     "TextInputBuilder",
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
+    "MessageMedia",
+    "MessageMediaItemBuilder",
+    "MessageSectionBuilder",
+    "MessageTextDisplayBuilder",
+    "MessageThumbnailBuilder",
+    "MessageMediaGalleryBuilder",
+    "MessageMediaGalleryItemBuilder",
+    "MessageSeparatorBuilder",
+    "MessageFileBuilder",
+    "MessageContainerBuilder",
+    "MessageContainerBuilderComponentsT",
     "ModalActionRowBuilder",
 )
 
@@ -2190,6 +2201,264 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             If an invalid select menu type is passed.
         """
 
+
+class MessageMedia(abc.ABC):
+    """Message Media Protocol.
+    
+    This is implemented for all components that have attachments that can be added.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
+        """FIXME: Do docs."""
+        ...
+
+
+class MessageMediaItemBuilder(abc.ABC):
+    """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def resource(self) -> files.Resource[files.AsyncReader]:
+        """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def url(self) -> str:
+        """FIXME: Do docs."""
+    
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """FIXME: Do docs."""
+
+
+class MessageSectionBuilder(ComponentBuilder, MessageMedia, abc.ABC):
+    """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.SECTION]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[MessageTextDisplayBuilder]:
+        """FIXME: Do docs."""
+    
+    @property
+    @abc.abstractmethod
+    def accessory(self) -> typing.Union[InteractiveButtonBuilder, LinkButtonBuilder, MessageThumbnailBuilder]:
+        """FIXME: Do docs."""
+
+
+class MessageTextDisplayBuilder(ComponentBuilder, abc.ABC):
+    """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.TEXT_DISPLAY]:
+        """Type of component this builder represents."""
+    
+    @property
+    @abc.abstractmethod
+    def content(self) -> str:
+        """FIXME: Do docs."""
+
+
+class MessageThumbnailBuilder(ComponentBuilder, MessageMedia, abc.ABC):
+    """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.THUMBNAIL]:
+        """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def media(self) -> MessageMediaItemBuilder:
+        """FIXME: Do docs."""
+    
+    @property
+    @abc.abstractmethod
+    def description(self) -> typing.Optional[str]:
+        """FIXME: Do docs."""
+    
+    @property
+    @abc.abstractmethod
+    def spoiler(self) -> typing.Optional[bool]:
+        """FIXME: Do docs."""
+
+
+class MessageMediaGalleryBuilder(ComponentBuilder, MessageMedia, abc.ABC):
+    """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.MEDIA_GALLERY]:
+        """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def items(self) -> list[MessageMediaGalleryItemBuilder]:
+        """FIXME: Do docs."""
+
+    @abc.abstractmethod
+    def add_item(
+        self,
+        item: MessageMediaGalleryItemBuilder
+    ) -> Self:
+        """FIXME: Do docs."""
+
+    @abc.abstractmethod
+    def add_media_gallery_item(
+        self,
+        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
+        *,
+        description: typing.Optional[str] = None,
+        spoiler: typing.Optional[bool] = None,
+    ) -> Self:
+        """FIXME: Do docs."""
+
+
+class MessageMediaGalleryItemBuilder(MessageMedia, abc.ABC):
+    """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def media(self) -> MessageMediaItemBuilder:
+        """FIXME: Do docs."""
+    
+    @property
+    @abc.abstractmethod
+    def description(self) -> typing.Optional[str]:
+        """FIXME: Do docs."""
+    
+    @property
+    @abc.abstractmethod
+    def spoiler(self) -> typing.Optional[bool]:
+        """FIXME: Do docs."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """FIXME: Do docs."""
+
+
+class MessageSeparatorBuilder(ComponentBuilder, abc.ABC):
+    """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.SEPARATOR]:
+        """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def spacing(self) -> typing.Optional[components_.SpacingType]:
+        """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def divider(self) -> typing.Optional[bool]:
+        """FIXME: Do docs."""
+
+
+class MessageFileBuilder(ComponentBuilder, MessageMedia, abc.ABC):
+    """FIXME: Do docs."""
+    
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.THUMBNAIL]:
+        """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def media(self) -> MessageMediaItemBuilder:
+        """FIXME: Do docs."""
+    
+    @property
+    @abc.abstractmethod
+    def spoiler(self) -> typing.Optional[bool]:
+        """FIXME: Do docs."""
+
+
+class MessageContainerBuilder(ComponentBuilder, MessageMedia, abc.ABC):
+    """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> typing.Literal[components_.ComponentType.CONTAINER]:
+        """FIXME: Do docs."""
+
+    @property
+    @abc.abstractmethod
+    def accent_color(self) -> typing.Optional[colors.Color]:
+        """FIXME: Do docs."""
+    
+    @property
+    @abc.abstractmethod
+    def spoiler(self) -> typing.Optional[bool]:
+        """FIXME: Do docs."""
+    
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[MessageContainerBuilderComponentsT]:
+        """FIXME: Do docs."""
+    
+    @abc.abstractmethod
+    def add_component(
+        self,
+        component: MessageContainerBuilderComponentsT
+    ) -> Self:
+        """FIXME: Do docs."""
+    
+    @abc.abstractmethod
+    def add_action_row(
+        self,
+        components: typing.Sequence[MessageActionRowBuilder]
+    ) -> Self:
+        """FIXME: Do docs."""
+    
+    @abc.abstractmethod
+    def add_text_display(
+        self,
+        content: str
+    ) -> Self:
+        """FIXME: Do docs."""
+    
+    @abc.abstractmethod
+    def add_media_gallery(
+        self,
+        items: typing.Sequence[MessageMediaGalleryItemBuilder]
+    ) -> Self:
+        """FIXME: Do docs."""
+
+    @abc.abstractmethod
+    def add_separator(
+        self,
+        *,
+        spacing: typing.Optional[components_.SpacingType] = None,
+        divider: typing.Optional[bool] = None
+    ) -> Self:
+        """FIXME: Do docs."""
+    
+    @abc.abstractmethod
+    def add_file(
+        self,
+        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
+        spoiler: typing.Optional[bool]
+    ) -> Self:
+        """FIXME: Do docs."""
+
+MessageContainerBuilderComponentsT = typing.Union[ #FIXME: I got no idea where this should be put.
+    MessageActionRowBuilder,
+    MessageTextDisplayBuilder,
+    MessageSectionBuilder,
+    MessageMediaGalleryBuilder,
+    MessageSeparatorBuilder,
+    MessageFileBuilder
+]
 
 class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
     """Builder class for modal action row components."""
