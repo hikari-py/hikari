@@ -6,10 +6,17 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check-fragment-added:
     if: github.event.pull_request.user.type != 'Bot' && !contains(github.event.pull_request.labels.*.name, 'skip-fragment-check')
     runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -42,3 +49,34 @@ jobs:
           if [ "$changelog_fragments" != "$valid_changelog_fragments" ]; then
             exit 1
           fi
+
+      # We can also detect and rename idk.{}.md to valid changelog files
+      #
+      # The PR checkout is needed because we don't actually run on the checked
+      # out version of the PR.
+      - name: Rename 'idk' changelog fragments
+        if: always() && !cancelled()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr checkout ${{ github.event.pull_request.number }}
+
+          diff=$(git diff origin/${{ github.base_ref }} HEAD --name-only)
+          idk_changelog_fragments=$(echo "$diff" | grep "^changes/idk\.")
+
+          if [ -z "idk_changelog_fragments" ]; then
+            # Nothing to change
+            echo "Nothing to change, leaving as is"
+            exit 0
+          fi
+
+          while IFS= read -r filename; do
+            mv "$filename" ${filename/idk/${{ github.event.number }}}
+          done <<< "$idk_changelog_fragments"
+
+          git config --global user.name "hikari-bot"
+          git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
+
+          git add -A
+          git commit -m "[ci] rename 'idk' changelog fragments"
+          git push
