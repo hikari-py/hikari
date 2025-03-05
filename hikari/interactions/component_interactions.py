@@ -23,7 +23,12 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("ComponentInteraction", "COMPONENT_RESPONSE_TYPES", "ComponentResponseTypesT")
+__all__: typing.Sequence[str] = (
+    "ComponentInteraction",
+    "COMPONENT_RESPONSE_TYPES",
+    "ComponentResponseTypesT",
+    "ComponentInteractionMetadata",
+)
 
 import typing
 
@@ -319,7 +324,7 @@ class ComponentInteraction(
 
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class MessageComponentInteractionMetadata(base_interactions.PartialInteractionMetadata):
+class ComponentInteractionMetadata(base_interactions.PartialInteractionMetadata):
     """The interaction metadata for a component belonging to a message."""
 
     original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)

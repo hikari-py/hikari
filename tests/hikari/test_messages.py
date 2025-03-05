@@ -122,7 +122,7 @@ def message():
         application_id=123123,
         components=[],
         thread=None,
-        interaction_metadata=None
+        interaction_metadata=None,
     )
 
 

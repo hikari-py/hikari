@@ -1277,24 +1277,27 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(
         alias="id", default=undefined.UNDEFINED, kw_only=True
     )
+
     _default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions] = attrs.field(
         alias="default_member_permissions", default=undefined.UNDEFINED, kw_only=True
     )
+
     _is_dm_enabled: undefined.UndefinedOr[bool] = attrs.field(
         alias="is_dm_enabled", default=undefined.UNDEFINED, kw_only=True
     )
+
     _is_nsfw: undefined.UndefinedOr[bool] = attrs.field(alias="is_nsfw", default=undefined.UNDEFINED, kw_only=True)
 
     _name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
         alias="name_localizations", factory=dict, kw_only=True
     )
 
-    _integration_types: typing.Sequence[applications.ApplicationIntegrationType] = attrs.field(
-        alias="integration_types", factory=list, kw_only=True
+    _integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]] = attrs.field(
+        alias="integration_types", default=undefined.UNDEFINED, kw_only=True
     )
 
-    _context_types: typing.Sequence[applications.ApplicationContextType] = attrs.field(
-        alias="context_types", factory=list, kw_only=True
+    _context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]] = attrs.field(
+        alias="context_types", default=undefined.UNDEFINED, kw_only=True
     )
 
     @property
@@ -1318,11 +1321,11 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self._name
 
     @property
-    def integration_types(self) -> typing.Sequence[applications.ApplicationIntegrationType]:
+    def integration_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]:
         return self._integration_types
 
     @property
-    def context_types(self) -> typing.Sequence[applications.ApplicationContextType]:
+    def context_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]:
         return self._context_types
 
     @property
@@ -1352,13 +1355,13 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self
 
     def set_integration_types(
-        self, integration_types: typing.Optional[typing.Sequence[applications.ApplicationIntegrationType]]
+        self, integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]
     ) -> Self:
         self._integration_types = integration_types
         return self
 
     def set_context_types(
-        self, context_types: typing.Optional[typing.Sequence[applications.ApplicationContextType]]
+        self, context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]
     ) -> Self:
         self._context_types = context_types
         return self

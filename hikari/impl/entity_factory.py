@@ -3143,10 +3143,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_message_component_interaction_metadata(
         self, payload: data_binding.JSONObject
-    ) -> component_interactions.MessageComponentInteractionMetadata:
+    ) -> component_interactions.ComponentInteractionMetadata:
         partial_message_interaction_metadata = self._deserialize_partial_message_interaction_metadata(payload)
 
-        return component_interactions.MessageComponentInteractionMetadata(
+        return component_interactions.ComponentInteractionMetadata(
             interaction_id=partial_message_interaction_metadata.interaction_id,
             type=partial_message_interaction_metadata.type,
             user=partial_message_interaction_metadata.user,

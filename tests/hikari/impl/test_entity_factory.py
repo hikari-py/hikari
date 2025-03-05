@@ -5897,9 +5897,7 @@ class TestEntityFactoryImpl:
             )
         )
 
-        assert isinstance(
-            message_component_interaction_metadata, component_interactions.MessageComponentInteractionMetadata
-        )
+        assert isinstance(message_component_interaction_metadata, component_interactions.ComponentInteractionMetadata)
         assert message_component_interaction_metadata.interacted_message_id == snowflakes.Snowflake(684831)
 
     def test__deserialize_modal_interaction_metadata_with_commmand_interaction(
@@ -5941,7 +5939,7 @@ class TestEntityFactoryImpl:
 
         assert isinstance(
             modal_interaction_metadata.triggering_interaction_metadata,
-            component_interactions.MessageComponentInteractionMetadata,
+            component_interactions.ComponentInteractionMetadata,
         )
         assert modal_interaction_metadata.triggering_interaction_metadata.interacted_message_id == snowflakes.Snowflake(
             684831

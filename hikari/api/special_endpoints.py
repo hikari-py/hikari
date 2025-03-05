@@ -1029,12 +1029,12 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def integration_types(self) -> typing.Sequence[applications.ApplicationIntegrationType]:
+    def integration_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]:
         """The integration types allowed for this command."""
 
     @property
     @abc.abstractmethod
-    def context_types(self) -> typing.Sequence[applications.ApplicationContextType]:
+    def context_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]:
         """The context types allowed for this command."""
 
     @abc.abstractmethod
@@ -1136,7 +1136,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_integration_types(
-        self, integration_types: typing.Optional[typing.Sequence[applications.ApplicationIntegrationType]]
+        self, integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]
     ) -> Self:
         """Set the integration types for this command.
 
@@ -1153,7 +1153,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_context_types(
-        self, context_types: typing.Optional[typing.Sequence[applications.ApplicationContextType]]
+        self, context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]
     ) -> Self:
         """Set the context types for this command.
 

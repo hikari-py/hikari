@@ -79,7 +79,7 @@ class TestModalInteraction:
                     subscription_id=None,
                 )
             ],
-            authorizing_integration_owners= {
+            authorizing_integration_owners={
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
