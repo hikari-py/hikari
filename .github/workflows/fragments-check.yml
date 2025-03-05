@@ -56,11 +56,7 @@ jobs:
       # out version of the PR.
       - name: Rename 'idk' changelog fragments
         if: always() && !cancelled()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr checkout ${{ github.event.pull_request.number }}
-
           diff=$(git diff origin/${{ github.base_ref }} HEAD --name-only)
           idk_changelog_fragments=$(echo "$diff" | grep "^changes/idk\.")
 
