@@ -41,6 +41,15 @@ __all__: typing.Sequence[str] = (
     "ModalComponentTypesT",
     "MessageActionRowComponent",
     "ModalActionRowComponent",
+    "PartialComponentV2",
+    "SectionComponent",
+    "ThumbnailComponent",
+    "TextDisplayComponent",
+    "MediaGalleryComponent",
+    "MediaGalleryItem",
+    "SeparatorComponent",
+    "SpacingType",
+    "FileComponent",
 )
 
 import typing
@@ -333,7 +342,7 @@ class TextInputComponent(PartialComponent):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class ComponentBase:
+class PartialComponentV2(PartialComponent): # FIXME: This defo needs changing.
     """FIXME: Document me."""
 
     id: typing.Optional[int] = attrs.field()
@@ -341,8 +350,10 @@ class ComponentBase:
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class Section(ComponentBase):
+class SectionComponent(PartialComponentV2):
     """FIXME: Document me."""
+
+    
 
     components: typing.Sequence[TextDisplay] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
     """FIXME: Document me."""
@@ -352,7 +363,7 @@ class Section(ComponentBase):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class ThumbnailComponent(ComponentBase):
+class ThumbnailComponent(PartialComponentV2):
     """FIXME: Document me."""
 
     media: files.Resourceish = attrs.field()
@@ -364,8 +375,9 @@ class ThumbnailComponent(ComponentBase):
     has_spoiler: typing.Optional[bool] = attrs.field()
     """FIXME: Document me."""
 
+
 @attrs.define(kw_only=True, weakref_slot=False)
-class TextDisplay(ComponentBase):
+class TextDisplayComponent(PartialComponentV2):
     """FIXME: Document me."""
     
     content: str = attrs.field()
@@ -373,7 +385,7 @@ class TextDisplay(ComponentBase):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class MediaGallery(ComponentBase):
+class MediaGalleryComponent(PartialComponentV2):
     """FIXME: Document me."""
 
     items: typing.Sequence[MediaGalleryItem] = attrs.field()
@@ -395,7 +407,7 @@ class MediaGalleryItem:
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class Separator(ComponentBase):
+class SeparatorComponent(PartialComponentV2):
     """FIXME: Document me."""
 
     spacing: SpacingType = attrs.field()
@@ -417,7 +429,7 @@ class SpacingType(int, enums.Enum):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class FileComponent(ComponentBase):
+class FileComponent(PartialComponentV2):
     """FIXME: Document me."""
 
     file: files.Resourceish = attrs.field()
