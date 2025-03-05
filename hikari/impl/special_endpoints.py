@@ -1277,16 +1277,27 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(
         alias="id", default=undefined.UNDEFINED, kw_only=True
     )
+
     _default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions] = attrs.field(
         alias="default_member_permissions", default=undefined.UNDEFINED, kw_only=True
     )
+
     _is_dm_enabled: undefined.UndefinedOr[bool] = attrs.field(
         alias="is_dm_enabled", default=undefined.UNDEFINED, kw_only=True
     )
+
     _is_nsfw: undefined.UndefinedOr[bool] = attrs.field(alias="is_nsfw", default=undefined.UNDEFINED, kw_only=True)
 
     _name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
         alias="name_localizations", factory=dict, kw_only=True
+    )
+
+    _integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]] = attrs.field(
+        alias="integration_types", default=undefined.UNDEFINED, kw_only=True
+    )
+
+    _context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]] = attrs.field(
+        alias="context_types", default=undefined.UNDEFINED, kw_only=True
     )
 
     @property
@@ -1308,6 +1319,18 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def integration_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]:
+        return self._integration_types
+
+    @property
+    def context_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]:
+        return self._context_types
+
+    @property
+    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        return self._name_localizations
 
     def set_name(self, name: str, /) -> Self:
         self._name = name
@@ -1331,9 +1354,17 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._is_nsfw = state
         return self
 
-    @property
-    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
-        return self._name_localizations
+    def set_integration_types(
+        self, integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]
+    ) -> Self:
+        self._integration_types = integration_types
+        return self
+
+    def set_context_types(
+        self, context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]
+    ) -> Self:
+        self._context_types = context_types
+        return self
 
     def set_name_localizations(
         self, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
@@ -1349,6 +1380,8 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data.put("name_localizations", self._name_localizations)
         data.put("dm_permission", self._is_dm_enabled)
         data.put("nsfw", self._is_nsfw)
+        data.put_array("integration_types", self._integration_types)
+        data.put_array("contexts", self._context_types)
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by using it correctly.

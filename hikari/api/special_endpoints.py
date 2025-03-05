@@ -59,6 +59,7 @@ if typing.TYPE_CHECKING:
 
     from typing_extensions import Self
 
+    from hikari import applications
     from hikari import channels
     from hikari import colors
     from hikari import commands
@@ -1026,6 +1027,16 @@ class CommandBuilder(abc.ABC):
     def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         """Name localizations set for this command."""
 
+    @property
+    @abc.abstractmethod
+    def integration_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]:
+        """The integration types allowed for this command."""
+
+    @property
+    @abc.abstractmethod
+    def context_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]:
+        """The context types allowed for this command."""
+
     @abc.abstractmethod
     def set_name(self, name: str, /) -> Self:
         """Set the name of this command.
@@ -1116,6 +1127,40 @@ class CommandBuilder(abc.ABC):
         ----------
         name_localizations
             The name localizations to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
+
+    @abc.abstractmethod
+    def set_integration_types(
+        self, integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]
+    ) -> Self:
+        """Set the integration types for this command.
+
+        Parameters
+        ----------
+        integration_types
+            The integration types to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
+
+    @abc.abstractmethod
+    def set_context_types(
+        self, context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]
+    ) -> Self:
+        """Set the context types for this command.
+
+        Parameters
+        ----------
+        context_types
+            The context types to set for this command.
 
         Returns
         -------

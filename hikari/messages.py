@@ -606,6 +606,11 @@ class PartialMessage(snowflakes.Unique):
     )
     """Sequence of the components attached to this message."""
 
+    interaction_metadata: typing.Optional[base_interactions.PartialInteractionMetadata] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
+    """Sent if the message is sent as a result of an interaction."""
+
     @property
     def channel_mention_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
         """Ids of channels that reference channels in the target crosspost's guild.

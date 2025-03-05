@@ -34,6 +34,7 @@ __all__: typing.Sequence[str] = (
     "MESSAGE_RESPONSE_TYPES",
     "MessageResponseTypesT",
     "PartialInteraction",
+    "PartialInteractionMetadata",
     "ModalResponseMixin",
     "ResponseType",
 )
@@ -51,6 +52,7 @@ from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    from hikari import applications
     from hikari import embeds as embeds_
     from hikari import files
     from hikari import messages
@@ -219,10 +221,41 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     version: int = attrs.field(eq=False, repr=True)
     """Version of the interaction system this interaction is under."""
 
+    authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (
+        attrs.field(eq=False, repr=True)
+    )
+    """A mapping of the [applications.ApplicationIntegrationType] to the related guild or user ID."""
+
+    context: applications.ApplicationContextType = attrs.field(eq=False, repr=True)
+    """The interaction context."""
+
     @property
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.application_id
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class PartialInteractionMetadata:
+    """Metadata about the interaction, including the source of the interaction and relevant server and user IDs."""
+
+    interaction_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    """The ID for this message interaction."""
+
+    type: typing.Union[InteractionType, int] = attrs.field(eq=False, repr=True)
+    """The type of this message interaction."""
+
+    user: users.User = attrs.field(eq=False, repr=True)
+    """The user who triggered the interaction."""
+
+    authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (
+        attrs.field(eq=False, repr=True)
+    )
+    """A mapping of the [applications.ApplicationIntegrationType] to the related guild or user ID."""
+
+    original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=True, repr=True)
+    """The ID of the original response message."""
 
 
 class PremiumResponseMixin(PartialInteraction):
