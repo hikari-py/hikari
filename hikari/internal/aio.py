@@ -165,7 +165,7 @@ def get_or_make_loop() -> asyncio.AbstractEventLoop:
             warnings.simplefilter("ignore", DeprecationWarning)
             loop = asyncio.get_event_loop_policy().get_event_loop()
 
-        # Closed loops cannot be re-used.
+        # Closed loops cannot be reused.
         if not loop.is_closed():
             return loop
 
@@ -235,5 +235,5 @@ def destroy_loop(loop: asyncio.AbstractEventLoop, logger: logging.Logger) -> Non
     logger.debug("closing event loop")
     loop.close()
 
-    # Closed loops cannot be re-used so it should also be un-set.
+    # Closed loops cannot be reused so it should also be un-set.
     asyncio.set_event_loop(None)
