@@ -3305,13 +3305,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_role_mention_ids := payload.get("mention_roles"):
             role_mention_ids = [snowflakes.Snowflake(i) for i in raw_role_mention_ids]
 
-        interaction_metadata = None  # FIXME: I think this might need to change.
+        interaction_metadata = None
         if interaction_metadata_payload := payload.get("interaction_metadata"):
             interaction_metadata_type = base_interactions.InteractionType(interaction_metadata_payload["type"])
-            if interaction_metadata_deserializer := self._message_interaction_metadata_mapping.get(
+            if deserializer := self._message_interaction_metadata_mapping.get(
                 interaction_metadata_type
             ):
-                interaction_metadata = interaction_metadata_deserializer(interaction_metadata_payload)
+                interaction_metadata = deserializer(interaction_metadata_payload)
+            else:
+                _LOGGER.debug(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
+                raise errors.UnrecognisedEntityError(
+                    f"Unrecognised interaction metadata type: {interaction_metadata_type}"
+                )
 
         return message_models.PartialMessage(
             app=self._app,
@@ -3413,13 +3418,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         role_mention_ids = [snowflakes.Snowflake(i) for i in payload.get("mention_roles", ())]
         channel_mentions = {u.id: u for u in map(self.deserialize_partial_channel, payload.get("mention_channels", ()))}
 
-        interaction_metadata = None  # FIXME: I think this might need to change.
+        interaction_metadata = None
         if interaction_metadata_payload := payload.get("interaction_metadata"):
             interaction_metadata_type = base_interactions.InteractionType(interaction_metadata_payload["type"])
             if interaction_metadata_deserializer := self._message_interaction_metadata_mapping.get(
                 interaction_metadata_type
             ):
                 interaction_metadata = interaction_metadata_deserializer(interaction_metadata_payload)
+            else:
+                _LOGGER.debug(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
+                raise errors.UnrecognisedEntityError(
+                    f"Unrecognised interaction metadata type: {interaction_metadata_type}"
+                )
 
         return message_models.Message(
             app=self._app,

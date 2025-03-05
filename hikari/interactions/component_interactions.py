@@ -320,7 +320,7 @@ class ComponentInteraction(
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ComponentMessageInteractionMetadata(base_interactions.PartialMessageInteractionMetadata):
-    """FIXME: Do docs."""
+    """The interaction metadata for a component initiated message."""
 
     original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the original response message, present only on follow-up messages."""

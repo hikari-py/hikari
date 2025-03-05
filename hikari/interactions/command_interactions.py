@@ -446,7 +446,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class CommandMessageInteractionMetadata(base_interactions.PartialMessageInteractionMetadata):
-    """FIXME: Do docs."""
+    """The interaction metadata for a command initiated message."""
 
     target_user: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
     """The user the command was run on, present only on user command interactions."""
