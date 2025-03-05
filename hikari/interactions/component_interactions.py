@@ -319,8 +319,8 @@ class ComponentInteraction(
 
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class ComponentMessageInteractionMetadata(base_interactions.PartialMessageInteractionMetadata):
-    """The interaction metadata for a component initiated message."""
+class MessageComponentInteractionMetadata(base_interactions.PartialInteractionMetadata):
+    """The interaction metadata for a component belonging to a message."""
 
     original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the original response message, present only on follow-up messages."""

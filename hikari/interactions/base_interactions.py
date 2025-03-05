@@ -34,6 +34,7 @@ __all__: typing.Sequence[str] = (
     "MESSAGE_RESPONSE_TYPES",
     "MessageResponseTypesT",
     "PartialInteraction",
+    "PartialInteractionMetadata",
     "ModalResponseMixin",
     "ResponseType",
 )
@@ -236,7 +237,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
 
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class PartialMessageInteractionMetadata:
+class PartialInteractionMetadata:
     """Metadata about the interaction, including the source of the interaction and relevant server and user IDs."""
 
     interaction_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)

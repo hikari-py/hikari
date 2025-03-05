@@ -31,6 +31,7 @@ __all__: typing.Sequence[str] = (
     "CommandInteraction",
     "COMMAND_RESPONSE_TYPES",
     "CommandResponseTypesT",
+    "CommandInteractionMetadata",
 )
 
 import typing
@@ -76,12 +77,6 @@ The following types are valid for this:
 * [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]/`4`
 * [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
 """
-
-InteractionChannel = base_interactions.InteractionChannel
-"""Deprecated alias of [`hikari.interactions.base_interactions.InteractionChannel`][]."""
-
-ResolvedOptionData = base_interactions.ResolvedOptionData
-"""Deprecated alias of [`hikari.interactions.base_interactions.ResolvedOptionData`][]."""
 
 
 @attrs_extensions.with_copy
@@ -315,8 +310,8 @@ class CommandInteraction(
 ):
     """Represents a command interaction on Discord."""
 
-    app_permissions: typing.Optional[permissions_.Permissions] = attrs.field(eq=False, hash=False, repr=False)
-    """Permissions the bot has in this interaction's channel if it's in a guild."""
+    app_permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=False)
+    """Permissions the bot has in this interaction's channel."""
 
     options: typing.Sequence[CommandInteractionOption] = attrs.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
@@ -445,7 +440,7 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class CommandMessageInteractionMetadata(base_interactions.PartialMessageInteractionMetadata):
+class CommandInteractionMetadata(base_interactions.PartialInteractionMetadata):
     """The interaction metadata for a command initiated message."""
 
     target_user: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)

@@ -23,9 +23,6 @@
 
 from __future__ import annotations
 
-from hikari.interactions import command_interactions
-from hikari.interactions import component_interactions
-from hikari.interactions import modal_interactions
 
 __all__: typing.Sequence[str] = (
     "MessageType",
@@ -610,13 +607,9 @@ class PartialMessage(snowflakes.Unique):
     )
     """Sequence of the components attached to this message."""
 
-    interaction_metadata: typing.Optional[
-        typing.Union[
-            command_interactions.CommandMessageInteractionMetadata,
-            component_interactions.ComponentMessageInteractionMetadata,
-            modal_interactions.ModalMessageInteractionMetadata,
-        ]
-    ] = attrs.field(hash=False, eq=False, repr=False)
+    interaction_metadata: typing.Optional[base_interactions.PartialInteractionMetadata] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
     """Sent if the message is sent as a result of an interaction."""
 
     @property

@@ -860,7 +860,7 @@ class ApplicationRoleConnectionMetadataRecord:
 class ApplicationIntegrationConfiguration:
     """The Application Integration Configuration for the related [ApplicationIntegrationType][]."""
 
-    oauth2_install_parameters: typing.Optional[OAuth2InstallParameters]
+    oauth2_install_parameters: typing.Optional[OAuth2InstallParameters] = attrs.field(eq=False, hash=False, repr=True)
     """The OAuth2 Install parameters for the Application Integration."""
 
 
