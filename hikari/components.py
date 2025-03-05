@@ -49,6 +49,7 @@ import attrs
 
 from hikari import channels
 from hikari import emojis
+from hikari import files
 from hikari.internal import enums
 
 
@@ -332,63 +333,97 @@ class TextInputComponent(PartialComponent):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class Section:
+class ComponentBase:
     """FIXME: Document me."""
 
-    components: typing.Sequence[TextDisplay]
-    """FIXME: Document me."""
-    accessory: typing.Union[ButtonComponent, Thumbnail]
+    id: typing.Optional[int] = attrs.field()
     """FIXME: Document me."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class Thumbnail:
-    """FIXME: Document me."""
-    has_spoiler: bool
+class Section(ComponentBase):
     """FIXME: Document me."""
 
-@attrs.define(kw_only=True, weakref_slot=False)
-class TextDisplay:
+    components: typing.Sequence[TextDisplay] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
     """FIXME: Document me."""
-    content: str
+
+    accessory: typing.Union[ButtonComponent, ThumbnailComponent] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
     """FIXME: Document me."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class MediaGallery:
+class ThumbnailComponent(ComponentBase):
     """FIXME: Document me."""
-    items: typing.Sequence[MediaGalleryItem]
+
+    media: files.Resourceish = attrs.field()
+    """FIXME: Document me."""
+
+    description: typing.Optional[str] = attrs.field()
+    """FIXME: Document me."""
+
+    has_spoiler: typing.Optional[bool] = attrs.field()
+    """FIXME: Document me."""
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class TextDisplay(ComponentBase):
+    """FIXME: Document me."""
+    
+    content: str = attrs.field()
+    """FIXME: Document me."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MediaGallery(ComponentBase):
+    """FIXME: Document me."""
+
+    items: typing.Sequence[MediaGalleryItem] = attrs.field()
     """FIXME: Document me."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MediaGalleryItem:
     """FIXME: Document me."""
-    pass
+    
+    media: files.Resourceish = attrs.field()
+    """FIXME: Document me."""
+
+    description: typing.Optional[str] = attrs.field()
+    """FIXME: Document me."""
+
+    spoiler: typing.Optional[bool] = attrs.field()
+    """FIXME: Document me."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class Separator:
+class Separator(ComponentBase):
     """FIXME: Document me."""
-    spacing: SpacingType
+
+    spacing: SpacingType = attrs.field()
     """FIXME: Document me."""
-    has_divider: bool
+
+    divider: bool = attrs.field()
     """FIXME: Document me."""
 
 
 @typing.final
 class SpacingType(int, enums.Enum):
     """FIXME: Document me."""
+
     SMALL = 1
     """FIXME: Document me."""
+
     LARGE = 2
     """FIXME: Document me."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class FileComponent:
+class FileComponent(ComponentBase):
     """FIXME: Document me."""
-    has_spoiler: bool
+
+    file: files.Resourceish = attrs.field()
+    """FIXME: Document me."""
+    
+    has_spoiler: bool = attrs.field()
     """FIXME: Document me."""
 
 
