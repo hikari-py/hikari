@@ -1514,7 +1514,7 @@ def _build_emoji(
         A union of the custom emoji's id if defined (index 0) or the unicode
         emoji's string representation (index 1).
     """
-    # Since these builder classes may be re-used, this method should be called when the builder is being constructed.
+    # Since these builder classes may be reused, this method should be called when the builder is being constructed.
     if emoji is not undefined.UNDEFINED:
         if isinstance(emoji, (int, emojis.CustomEmoji)):
             return str(int(emoji)), undefined.UNDEFINED

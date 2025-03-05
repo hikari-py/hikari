@@ -1,1 +1,0 @@
-mypy[faster-cache]==1.15.0
