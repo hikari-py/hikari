@@ -50,6 +50,8 @@ __all__: typing.Sequence[str] = (
     "SeparatorComponent",
     "SpacingType",
     "FileComponent",
+    "ContainerComponent",
+    "TopLevelComponentTypesT",
     "ContainerTypesT"
 )
 
@@ -140,25 +142,40 @@ class ComponentType(int, enums.Enum):
     """
 
     SECTION = 9
-    """FIXME: Document me."""
+    """A section component.
+    
+    !!! note
+        As this is a container component it can never be contained within another
+        component and therefore will always be top-level.
+    """
     
     TEXT_DISPLAY = 10
-    """FIXME: Document me."""
+    """A text display component."""
     
     THUMBNAIL = 11
-    """FIXME: Document me."""
+    """A thumbnail component.
+    
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as [`hikari.components.ComponentType.SECTION`][].
+    """
 
     MEDIA_GALLERY = 12
-    """FIXME: Document me."""
+    """A media gallery component."""
     
     FILE = 13
-    """FIXME: Document me."""
+    """A file component."""
     
     SEPARATOR = 14
-    """FIXME: Document me."""
+    """A separator component."""
     
     CONTAINER = 17
-    """FIXME: Document me."""
+    """A container component.
+    
+    !!! note
+        As this is a container component it can never be contained within another
+        component and therefore will always be top-level.
+    """
 
 
 @typing.final
@@ -353,8 +370,8 @@ class PartialComponentV2(PartialComponent): # FIXME: This defo needs changing.
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class MediaResource(files.WebResource):
-    resource: files.Resource[files.AsyncReader] = attrs.field(repr=True)
+class MediaResource:
+    resource: files.WebResource = attrs.field(repr=True)
     """The resource this object wraps around."""
 
     @property
@@ -370,7 +387,7 @@ class MediaResource(files.WebResource):
 
     def stream(
         self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
-    ) -> files.AsyncReaderContextManager[files.AsyncReader]:
+    ) -> files.AsyncReaderContextManager[files.WebReader]:
         """Produce a stream of data for the resource.
 
         Parameters
@@ -487,6 +504,16 @@ class ContainerComponent(PartialComponentV2):
 
     components: typing.Sequence[ContainerTypesT] = attrs.field()
 
+TopLevelComponentTypesT = typing.Union[
+    ActionRowComponent[PartialComponent],
+    TextDisplayComponent,
+    SectionComponent,
+    MediaGalleryComponent,
+    SeparatorComponent,
+    FileComponent,
+    ContainerComponent
+]
+"""FIXME: Document me."""
 
 ContainerTypesT = typing.Union[
     ActionRowComponent[PartialComponent],
