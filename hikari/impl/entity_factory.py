@@ -3180,14 +3180,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             _LOGGER.debug(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
             raise errors.UnrecognisedEntityError(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
 
-    def _deserialize_message_interaction(self, payload: data_binding.JSONObject) -> message_models.MessageInteraction:
-        return message_models.MessageInteraction(
-            id=snowflakes.Snowflake(payload["id"]),
-            type=base_interactions.InteractionType(payload["type"]),
-            name=payload["name"],
-            user=self.deserialize_user(payload["user"]),
-        )
-
     def deserialize_partial_message(  # noqa: C901, CFQ001 - Too complex and too long
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
@@ -3263,10 +3255,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = undefined.UNDEFINED
         if raw_application_id := payload.get("application_id"):
             application_id = snowflakes.Snowflake(raw_application_id)
-
-        interaction: undefined.UndefinedNoneOr[message_models.MessageInteraction] = undefined.UNDEFINED
-        if interaction_payload := payload.get("interaction"):
-            interaction = self._deserialize_message_interaction(interaction_payload)
 
         components: undefined.UndefinedOr[list[component_models.MessageActionRowComponent]] = undefined.UNDEFINED
         if component_payloads := payload.get("components"):
@@ -3370,10 +3358,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["stickers"]]
         else:
             stickers = []
-
-        interaction: typing.Optional[message_models.MessageInteraction] = None
-        if interaction_payload := payload.get("interaction"):
-            interaction = self._deserialize_message_interaction(interaction_payload)
 
         thread: typing.Optional[channel_models.GuildThreadChannel] = None
         if thread_payload := payload.get("thread"):

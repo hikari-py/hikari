@@ -6026,13 +6026,6 @@ class TestEntityFactoryImpl:
         assert partial_message.nonce == "171000788183678976"
         assert partial_message.application_id == 123123123123
 
-        # MessageInteraction
-        assert partial_message.interaction.id == 123123123
-        assert partial_message.interaction.name == "OKOKOK"
-        assert partial_message.interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
-        assert partial_message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
-        assert isinstance(partial_message.interaction, message_models.MessageInteraction)
-
         assert partial_message.components == entity_factory_impl._deserialize_components(
             [action_row_payload], entity_factory_impl._message_component_type_mapping
         )
@@ -6226,13 +6219,6 @@ class TestEntityFactoryImpl:
 
         assert message.nonce == "171000788183678976"
         assert message.application_id == 123123123123
-
-        # MessageInteraction
-        assert message.interaction.id == 123123123
-        assert message.interaction.name == "OKOKOK"
-        assert message.interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
-        assert message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
-        assert isinstance(message.interaction, message_models.MessageInteraction)
 
         assert message.components == entity_factory_impl._deserialize_components(
             [action_row_payload], entity_factory_impl._message_component_type_mapping

@@ -33,7 +33,6 @@ __all__: typing.Sequence[str] = (
     "KnownCustomEmojiData",
     "RichActivityData",
     "MemberPresenceData",
-    "MessageInteractionData",
     "MessageData",
     "VoiceStateData",
     "RefCell",
@@ -659,29 +658,6 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
         )
 
 
-@attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, weakref_slot=False)
-class MessageInteractionData(BaseData[messages.MessageInteraction]):
-    """A model for storing message interaction data."""
-
-    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
-    type: typing.Union[base_interactions.InteractionType, int] = attrs.field(eq=False, repr=True)
-    name: str = attrs.field(eq=False, repr=True)
-    user: RefCell[users_.User] = attrs.field(eq=False, repr=True)
-
-    @classmethod
-    def build_from_entity(
-        cls, interaction: messages.MessageInteraction, /, *, user: typing.Optional[RefCell[users_.User]] = None
-    ) -> MessageInteractionData:
-        if user is None:
-            user = RefCell(interaction.user)
-
-        return MessageInteractionData(id=interaction.id, type=interaction.type, name=interaction.name, user=user)
-
-    def build_entity(self, _: traits.RESTAware, /) -> messages.MessageInteraction:
-        return messages.MessageInteraction(id=self.id, type=self.type, name=self.name, user=self.user.copy())
-
-
 def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
     return embeds_.Embed.from_received_embed(
         title=embed.title,
@@ -732,7 +708,6 @@ class MessageData(BaseData[messages.Message]):
     stickers: tuple[stickers_.PartialSticker, ...] = attrs.field()
     nonce: typing.Optional[str] = attrs.field()
     referenced_message: typing.Optional[RefCell[MessageData]] = attrs.field()
-    interaction: typing.Optional[MessageInteractionData] = attrs.field()
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     components: tuple[components_.MessageActionRowComponent, ...] = attrs.field()
     thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field()
@@ -754,12 +729,6 @@ class MessageData(BaseData[messages.Message]):
     ) -> MessageData:
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))
-
-        interaction = (
-            MessageInteractionData.build_from_entity(message.interaction, user=interaction_user)
-            if message.interaction
-            else None
-        )
 
         if not user_mentions and message.user_mentions is not undefined.UNDEFINED:
             user_mentions = {user_id: RefCell(copy.copy(user)) for user_id, user in message.user_mentions.items()}
@@ -802,7 +771,6 @@ class MessageData(BaseData[messages.Message]):
             stickers=tuple(map(copy.copy, message.stickers)),
             nonce=message.nonce,
             referenced_message=referenced_message,
-            interaction=interaction,
             application_id=message.application_id,
             components=tuple(message.components),
             thread=message.thread,
