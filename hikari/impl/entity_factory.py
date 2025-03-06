@@ -2324,7 +2324,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ]
 
         context_types = [
-            application_models.ApplicationContextType(int(context)) for context in (payload.get("contexts", ()) or ())
+            application_models.ApplicationContextType(int(context)) for context in payload.get("contexts") or ()
         ]
 
         return commands.SlashCommand(
