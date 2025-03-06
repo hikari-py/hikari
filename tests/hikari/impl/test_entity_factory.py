@@ -4052,7 +4052,6 @@ class TestEntityFactoryImpl:
         assert command.name == "good name"
         assert command.description == "very good description"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
         assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
@@ -4131,7 +4130,6 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_slash_command(payload)
 
         assert command.options is None
-        assert command.is_dm_enabled is True
         assert command.is_nsfw is False
         assert command.integration_types == []
         assert command.context_types == []
@@ -4820,7 +4818,6 @@ class TestEntityFactoryImpl:
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
         assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
@@ -4836,7 +4833,6 @@ class TestEntityFactoryImpl:
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
         assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
@@ -4853,7 +4849,6 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
-        assert command.is_dm_enabled is True
         assert command.is_nsfw is False
         assert command.integration_types == []
         assert command.context_types == []
