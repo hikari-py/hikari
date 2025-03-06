@@ -1282,10 +1282,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         alias="default_member_permissions", default=undefined.UNDEFINED, kw_only=True
     )
 
-    _is_dm_enabled: undefined.UndefinedOr[bool] = attrs.field(
-        alias="is_dm_enabled", default=undefined.UNDEFINED, kw_only=True
-    )
-
     _is_nsfw: undefined.UndefinedOr[bool] = attrs.field(alias="is_nsfw", default=undefined.UNDEFINED, kw_only=True)
 
     _name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
@@ -1307,10 +1303,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     @property
     def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
         return self._default_member_permissions
-
-    @property
-    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
-        return self._is_dm_enabled
 
     @property
     def is_nsfw(self) -> undefined.UndefinedOr[bool]:
@@ -1346,10 +1338,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._default_member_permissions = default_member_permissions
         return self
 
-    def set_is_dm_enabled(self, state: undefined.UndefinedOr[bool], /) -> Self:
-        self._is_dm_enabled = state
-        return self
-
     def set_is_nsfw(self, state: undefined.UndefinedOr[bool], /) -> Self:
         self._is_nsfw = state
         return self
@@ -1378,7 +1366,6 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data["type"] = self.type
         data.put_snowflake("id", self._id)
         data.put("name_localizations", self._name_localizations)
-        data.put("dm_permission", self._is_dm_enabled)
         data.put("nsfw", self._is_nsfw)
         data.put_array("integration_types", self._integration_types)
         data.put_array("contexts", self._context_types)
@@ -1460,7 +1447,6 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             name_localizations=self._name_localizations,
             description_localizations=self._description_localizations,
             default_member_permissions=self._default_member_permissions,
-            dm_enabled=self._is_dm_enabled,
             nsfw=self._is_nsfw,
         )
 
@@ -1493,7 +1479,6 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
             guild=guild,
             name_localizations=self._name_localizations,
             default_member_permissions=self._default_member_permissions,
-            dm_enabled=self._is_dm_enabled,
             nsfw=self.is_nsfw,
         )
 

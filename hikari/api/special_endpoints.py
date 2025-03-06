@@ -1011,14 +1011,6 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
-        """Whether this command is enabled in DMs with the bot.
-
-        Only applicable to globally-scoped commands.
-        """
-
-    @property
-    @abc.abstractmethod
     def is_nsfw(self) -> undefined.UndefinedOr[bool]:
         """Whether this command age-restricted."""
 
@@ -1085,21 +1077,6 @@ class CommandBuilder(abc.ABC):
         -------
         CommandBuilder
             Object of this command builder.
-        """
-
-    @abc.abstractmethod
-    def set_is_dm_enabled(self, state: undefined.UndefinedOr[bool], /) -> Self:
-        """Set whether this command will be enabled in DMs with the bot.
-
-        Parameters
-        ----------
-        state
-            Whether this command is enabled in DMs with the bot.
-
-        Returns
-        -------
-        CommandBuilder
-            Object of this command builder to allow for chained calls.
         """
 
     @abc.abstractmethod

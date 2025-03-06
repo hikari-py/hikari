@@ -2770,7 +2770,6 @@ class TestCacheImpl:
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
         )
-        mock_interaction = mock.Mock()
         mock_thread = mock.Mock()
         mock_interaction_metadata = mock.Mock()
 
@@ -2801,7 +2800,6 @@ class TestCacheImpl:
             nonce="aNonce",
             referenced_message=cache_utilities.RefCell(mock_referenced_message_data),
             stickers=(mock_sticker,),
-            interaction=mock_interaction,
             application_id=snowflakes.Snowflake(123123123123),
             components=(mock_component,),
             thread=mock_thread,
@@ -2859,7 +2857,6 @@ class TestCacheImpl:
         assert result.nonce == "aNonce"
         assert result.referenced_message is mock_referenced_message
         assert result.application_id == 123123123123
-        assert result.interaction is mock_interaction.build_entity.return_value
         assert result.components == (mock_component,)
         assert result.thread == mock_thread
         assert result.interaction_metadata == mock_interaction_metadata
@@ -2892,7 +2889,6 @@ class TestCacheImpl:
             nonce=None,
             referenced_message=None,
             stickers=(),
-            interaction=None,
             application_id=None,
             components=(),
             thread=None,
@@ -2920,7 +2916,6 @@ class TestCacheImpl:
         assert result.nonce is None
         assert result.referenced_message is None
         assert result.application_id is None
-        assert result.interaction is None
         assert result.interaction_metadata is None
 
     @pytest.mark.skip(reason="TODO")

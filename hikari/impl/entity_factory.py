@@ -2336,7 +2336,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             description=payload["description"],
             options=options,
             default_member_permissions=default_member_permissions,
-            is_dm_enabled=payload.get("dm_permission", True),
             is_nsfw=payload.get("nsfw", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
@@ -2386,7 +2385,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application_id=snowflakes.Snowflake(payload["application_id"]),
             name=payload["name"],
             default_member_permissions=default_member_permissions,
-            is_dm_enabled=payload.get("dm_permission", True),
             is_nsfw=payload.get("nsfw", False),
             guild_id=guild_id,
             version=snowflakes.Snowflake(payload["version"]),
@@ -3182,15 +3180,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             _LOGGER.debug(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
             raise errors.UnrecognisedEntityError(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
 
-    def _deserialize_message_interaction(self, payload: data_binding.JSONObject) -> message_models.MessageInteraction:
-        return message_models.MessageInteraction(
-            id=snowflakes.Snowflake(payload["id"]),
-            type=base_interactions.InteractionType(payload["type"]),
-            name=payload["name"],
-            user=self.deserialize_user(payload["user"]),
-        )
-
-    def deserialize_partial_message(  # noqa: C901, CFQ001 - Too complex and too long
+    def deserialize_partial_message(  # noqa: C901 - Too complex
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
         author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
@@ -3266,10 +3256,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_application_id := payload.get("application_id"):
             application_id = snowflakes.Snowflake(raw_application_id)
 
-        interaction: undefined.UndefinedNoneOr[message_models.MessageInteraction] = undefined.UNDEFINED
-        if interaction_payload := payload.get("interaction"):
-            interaction = self._deserialize_message_interaction(interaction_payload)
-
         components: undefined.UndefinedOr[list[component_models.MessageActionRowComponent]] = undefined.UNDEFINED
         if component_payloads := payload.get("components"):
             components = self._deserialize_components(component_payloads, self._message_component_type_mapping)
@@ -3317,7 +3303,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             stickers=stickers,
             nonce=payload.get("nonce", undefined.UNDEFINED),
             application_id=application_id,
-            interaction=interaction,
             components=components,
             channel_mentions=channel_mentions,
             user_mentions=user_mentions,
@@ -3373,10 +3358,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             stickers = []
 
-        interaction: typing.Optional[message_models.MessageInteraction] = None
-        if interaction_payload := payload.get("interaction"):
-            interaction = self._deserialize_message_interaction(interaction_payload)
-
         thread: typing.Optional[channel_models.GuildThreadChannel] = None
         if thread_payload := payload.get("thread"):
             thread = self.deserialize_guild_thread(thread_payload)
@@ -3421,7 +3402,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             stickers=stickers,
             nonce=payload.get("nonce"),
             application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
-            interaction=interaction,
             components=components,
             user_mentions=user_mentions,
             channel_mentions=channel_mentions,

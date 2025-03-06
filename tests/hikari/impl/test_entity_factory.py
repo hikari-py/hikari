@@ -4052,7 +4052,6 @@ class TestEntityFactoryImpl:
         assert command.name == "good name"
         assert command.description == "very good description"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
         assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
@@ -4131,7 +4130,6 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_slash_command(payload)
 
         assert command.options is None
-        assert command.is_dm_enabled is True
         assert command.is_nsfw is False
         assert command.integration_types == []
         assert command.context_types == []
@@ -4820,7 +4818,6 @@ class TestEntityFactoryImpl:
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
         assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
@@ -4836,7 +4833,6 @@ class TestEntityFactoryImpl:
         assert command.type == commands.CommandType.USER
         assert command.name == "good name"
         assert command.default_member_permissions == permission_models.Permissions.ADMINISTRATOR
-        assert command.is_dm_enabled is False
         assert command.is_nsfw is True
         assert command.version == 123321123
         assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
@@ -4853,7 +4849,6 @@ class TestEntityFactoryImpl:
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
 
-        assert command.is_dm_enabled is True
         assert command.is_nsfw is False
         assert command.integration_types == []
         assert command.context_types == []
@@ -5797,7 +5792,6 @@ class TestEntityFactoryImpl:
             "sticker_items": [partial_sticker_payload],
             "nonce": "171000788183678976",
             "application_id": "123123123123",
-            "interaction": {"id": "123123123", "type": 2, "name": "OKOKOK", "user": user_payload},
             "components": [action_row_payload, {"type": 1000000000}],
             "thread": guild_public_thread_payload,
             "interaction_metadata": partial_interaction_metadata_payload,
@@ -6031,13 +6025,6 @@ class TestEntityFactoryImpl:
         assert partial_message.nonce == "171000788183678976"
         assert partial_message.application_id == 123123123123
 
-        # MessageInteraction
-        assert partial_message.interaction.id == 123123123
-        assert partial_message.interaction.name == "OKOKOK"
-        assert partial_message.interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
-        assert partial_message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
-        assert isinstance(partial_message.interaction, message_models.MessageInteraction)
-
         assert partial_message.components == entity_factory_impl._deserialize_components(
             [action_row_payload], entity_factory_impl._message_component_type_mapping
         )
@@ -6112,7 +6099,6 @@ class TestEntityFactoryImpl:
         assert partial_message.stickers is undefined.UNDEFINED
         assert partial_message.nonce is undefined.UNDEFINED
         assert partial_message.application_id is undefined.UNDEFINED
-        assert partial_message.interaction is undefined.UNDEFINED
         assert partial_message.components is undefined.UNDEFINED
 
     def test_deserialize_partial_message_with_guild_id_but_no_author(self, entity_factory_impl):
@@ -6232,13 +6218,6 @@ class TestEntityFactoryImpl:
         assert message.nonce == "171000788183678976"
         assert message.application_id == 123123123123
 
-        # MessageInteraction
-        assert message.interaction.id == 123123123
-        assert message.interaction.name == "OKOKOK"
-        assert message.interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
-        assert message.interaction.user == entity_factory_impl.deserialize_user(user_payload)
-        assert isinstance(message.interaction, message_models.MessageInteraction)
-
         assert message.components == entity_factory_impl._deserialize_components(
             [action_row_payload], entity_factory_impl._message_component_type_mapping
         )
@@ -6329,7 +6308,6 @@ class TestEntityFactoryImpl:
         assert message.stickers == []
         assert message.nonce is None
         assert message.application_id is None
-        assert message.interaction is None
         assert message.components == []
 
     def test_deserialize_message_with_other_unset_fields(self, entity_factory_impl, message_payload):

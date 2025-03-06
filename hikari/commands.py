@@ -246,9 +246,6 @@ class PartialCommand(snowflakes.Unique):
     This excludes administrators of the guild and overwrites.
     """
 
-    is_dm_enabled: bool = attrs.field(eq=False, hash=False, repr=True)
-    """Whether this command is enabled in DMs with the bot."""
-
     is_nsfw: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this command is age-restricted."""
 
