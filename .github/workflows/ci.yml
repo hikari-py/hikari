@@ -48,8 +48,8 @@ jobs:
         run: |
           uv sync --frozen --only-group nox
 
-          nox -s pytest
-          nox -s pytest-all-features -- --cov-append
+          nox -s pytest -- --coverage
+          nox -s pytest-all-features -- --coverage --cov-append
 
           python scripts/ci/normalize_coverage.py
 
