@@ -4114,26 +4114,26 @@ class TestEntityFactoryImpl:
 
         assert command.guild_id == 123123
 
-    def test_deserialize_slash_command_with_null_and_unset_values(self, entity_factory_impl):
-        payload = {
-            "id": "1231231231",
-            "application_id": "12354123",
-            "guild_id": "49949494",
-            "type": 1,
-            "name": "good name",
-            "description": "very good description",
-            "options": [],
-            "default_member_permissions": 0,
-            "version": "43123",
-        }
+    def test_deserialize_slash_command_with_unset_values(self, entity_factory_impl, slash_command_payload):
+        del slash_command_payload["options"]
+        del slash_command_payload["nsfw"]
+        del slash_command_payload["integration_types"]
+        del slash_command_payload["contexts"]
 
-        command = entity_factory_impl.deserialize_slash_command(payload)
+        command = entity_factory_impl.deserialize_slash_command(slash_command_payload)
 
         assert command.options is None
         assert command.is_nsfw is False
         assert command.integration_types == []
         assert command.context_types == []
         assert isinstance(command, commands.SlashCommand)
+
+    def test_deserialize_slash_command_with_null_values(self, entity_factory_impl, slash_command_payload):
+        slash_command_payload["contexts"] = None
+
+        command = entity_factory_impl.deserialize_slash_command(payload=slash_command_payload)
+
+        assert command.context_types == []
 
     def test_deserialize_slash_command_standardizes_default_member_permissions(
         self, entity_factory_impl, slash_command_payload
@@ -4838,7 +4838,14 @@ class TestEntityFactoryImpl:
         assert command.integration_types == [application_models.ApplicationIntegrationType.GUILD_INSTALL]
         assert command.context_types == [application_models.ApplicationContextType.GUILD]
 
-    def test_deserialize_context_menu_command_with_with_null_and_unset_values(
+    def test_deserialize_context_menu_command_with_null_values(self, entity_factory_impl, slash_command_payload):
+        slash_command_payload["contexts"] = None
+
+        command = entity_factory_impl.deserialize_slash_command(payload=slash_command_payload)
+
+        assert command.context_types == []
+
+    def test_deserialize_context_menu_command_with_with__unset_values(
         self, entity_factory_impl, context_menu_command_payload
     ):
         del context_menu_command_payload["dm_permission"]
