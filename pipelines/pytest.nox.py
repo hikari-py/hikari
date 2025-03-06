@@ -67,10 +67,10 @@ def _pytest(
 ) -> None:
     nox.sync(session, self=True, extras=extras_install, groups=["pytest"])
 
-    if "--skip-coverage" in session.posargs:
-        session.posargs.remove("--skip-coverage")
-        flags = RUN_FLAGS
-    else:
-        flags = [*RUN_FLAGS, *COVERAGE_FLAGS]
+    flags = RUN_FLAGS
+
+    if "--coverage" in session.posargs:
+        session.posargs.remove("--coverage")
+        flags.extend(COVERAGE_FLAGS)
 
     session.run("python", *python_flags, "-m", "pytest", *flags, *session.posargs, config.TEST_PACKAGE)
