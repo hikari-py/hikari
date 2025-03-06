@@ -5546,11 +5546,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def text_input_payload(self):
-        return {
-            "type": 4,
-            "custom_id": "name",
-            "value": "Wumpus"
-        }
+        return {"type": 4, "custom_id": "name", "value": "Wumpus"}
 
     def test__deserialize_text_input(self, entity_factory_impl, text_input_payload):
         text_input = entity_factory_impl._deserialize_text_input(text_input_payload)
@@ -5563,17 +5559,11 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def media_payload(self):
-        return {
-            "url": "https://com.com.com.com.com.com.com.com.com.com/"
-        }
+        return {"url": "https://com.com.com.com.com.com.com.com.com.com/"}
 
     @pytest.fixture
     def text_display_payload(self):
-        return {
-            "type": 10,
-            "id": "text_display.id",
-            "content": "A text display!"
-        }
+        return {"type": 10, "id": "text_display.id", "content": "A text display!"}
 
     @pytest.fixture
     def thumbnail_payload(self, media_payload):
@@ -5582,51 +5572,28 @@ class TestEntityFactoryImpl:
             "id": "thumbnail.id",
             "media": media_payload,
             "description": "A cool description.",
-            "spoiler": False
+            "spoiler": False,
         }
 
     @pytest.fixture
     def section_payload(self, button_payload, text_display_payload):
-        return {
-            "type": 9,
-            "id": "section.id",
-            "accessory": button_payload,
-            "components": [text_display_payload]
-        }
+        return {"type": 9, "id": "section.id", "accessory": button_payload, "components": [text_display_payload]}
 
     @pytest.fixture
     def media_gallery_item_payload(self, media_payload):
-        return {
-            "media": media_payload,
-            "description": "Gallery item description?",
-            "spoiler": True
-        }
+        return {"media": media_payload, "description": "Gallery item description?", "spoiler": True}
 
     @pytest.fixture
     def media_gallery_payload(self, media_gallery_item_payload):
-        return {
-            "type": 12,
-            "id": "media_gallery.id",
-            "items": [media_gallery_item_payload]
-        }
+        return {"type": 12, "id": "media_gallery.id", "items": [media_gallery_item_payload]}
 
     @pytest.fixture
     def separator_payload(self):
-        return {
-            "type": 14,
-            "id": "separator.id",
-            "spacing": 1,
-            "divider": True
-        }
+        return {"type": 14, "id": "separator.id", "spacing": 1, "divider": True}
 
     @pytest.fixture
     def file_payload(self, media_payload):
-        return {
-            "type": 13,
-            "id": "file.id",
-            "file": media_payload,
-            "spoiler": False
-        }
+        return {"type": 13, "id": "file.id", "file": media_payload, "spoiler": False}
 
     @pytest.fixture
     def container_payload(self, file_payload):
@@ -5635,7 +5602,7 @@ class TestEntityFactoryImpl:
             "id": "container.id",
             "accent_color": 16757027,
             "spoiler": True,
-            "components": [file_payload]
+            "components": [file_payload],
         }
 
     def test__deserialize_media(self, entity_factory_impl, media_payload):
@@ -5654,21 +5621,18 @@ class TestEntityFactoryImpl:
 
         assert isinstance(action_row, component_models.ActionRowComponent)
 
-    def test__deserialize_action_row_component_with_unknown_component_type(self, entity_factory_impl, action_row_payload):
-        action_row_payload["components"] = [
-            {
-                "type": -9999
-            },
-            {
-                "type": 9999
-            }
-        ]
+    def test__deserialize_action_row_component_with_unknown_component_type(
+        self, entity_factory_impl, action_row_payload
+    ):
+        action_row_payload["components"] = [{"type": -9999}, {"type": 9999}]
 
         action_row = entity_factory_impl._deserialize_action_row_component(action_row_payload)
 
         assert action_row is None
 
-    def test__deserialize_section_component(self, entity_factory_impl, section_payload, button_payload, text_display_payload):
+    def test__deserialize_section_component(
+        self, entity_factory_impl, section_payload, button_payload, text_display_payload
+    ):
         section = entity_factory_impl._deserialize_section_component(section_payload)
 
         assert section.type == component_models.ComponentType.SECTION
@@ -5690,7 +5654,7 @@ class TestEntityFactoryImpl:
     def test__deserialize_section_component_with_unknown_accessory_type(self, entity_factory_impl, section_payload):
         section_payload["accessory"] = {"type": 9999}
         with pytest.raises(errors.UnrecognisedEntityError, match=r"Unknown accessory type 9999"):
-            section = entity_factory_impl._deserialize_section_component(section_payload)
+            entity_factory_impl._deserialize_section_component(section_payload)
 
     def test__deserialize_thumbnail_component(self, entity_factory_impl, thumbnail_payload, media_payload):
         thumbnail = entity_factory_impl._deserialize_thumbnail_component(thumbnail_payload)
@@ -5730,7 +5694,9 @@ class TestEntityFactoryImpl:
 
         assert text_display.id is None
 
-    def test__deserialize_media_gallery_component(self, entity_factory_impl, media_gallery_payload, media_gallery_item_payload):
+    def test__deserialize_media_gallery_component(
+        self, entity_factory_impl, media_gallery_payload, media_gallery_item_payload
+    ):
         media_gallery = entity_factory_impl._deserialize_media_gallery_component(media_gallery_payload)
 
         assert media_gallery.type == component_models.ComponentType.MEDIA_GALLERY
@@ -5842,7 +5808,7 @@ class TestEntityFactoryImpl:
         section_payload,
         media_gallery_payload,
         separator_payload,
-        file_payload
+        file_payload,
     ):
         message_components = entity_factory_impl._deserialize_message_components(
             [
@@ -5851,7 +5817,7 @@ class TestEntityFactoryImpl:
                 section_payload,
                 media_gallery_payload,
                 separator_payload,
-                file_payload
+                file_payload,
             ]
         )
 
@@ -5870,16 +5836,7 @@ class TestEntityFactoryImpl:
         assert message_components[5] == entity_factory_impl._deserialize_file_component(file_payload)
 
     def test__deserialize_message_components_handles_unknown_top_component_type(self, entity_factory_impl):
-        message_components = entity_factory_impl._deserialize_message_components(
-            [
-                {
-                    "type": 9999
-                },
-                {
-                    "type": -9999
-                }
-            ]
-        )
+        message_components = entity_factory_impl._deserialize_message_components([{"type": 9999}, {"type": -9999}])
 
         assert len(message_components) == 0
 
@@ -5892,11 +5849,11 @@ class TestEntityFactoryImpl:
 
         assert modal_components[0] == component_models.ModalActionRowComponent(
             type=component_models.ComponentType.ACTION_ROW,
-            components=[entity_factory_impl._deserialize_text_input(text_input_payload)]
+            components=[entity_factory_impl._deserialize_text_input(text_input_payload)],
         )
 
     def test__deserialize_modal_components_handles_unknown_top_component_type(self, entity_factory_impl):
-        modal_components = entity_factory_impl._deserialize_modal_components([{"type":  9999}])
+        modal_components = entity_factory_impl._deserialize_modal_components([{"type": 9999}])
 
         assert len(modal_components) == 0
 
