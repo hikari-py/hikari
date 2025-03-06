@@ -5792,7 +5792,6 @@ class TestEntityFactoryImpl:
             "sticker_items": [partial_sticker_payload],
             "nonce": "171000788183678976",
             "application_id": "123123123123",
-            "interaction": {"id": "123123123", "type": 2, "name": "OKOKOK", "user": user_payload},
             "components": [action_row_payload, {"type": 1000000000}],
             "thread": guild_public_thread_payload,
             "interaction_metadata": partial_interaction_metadata_payload,
@@ -6100,7 +6099,6 @@ class TestEntityFactoryImpl:
         assert partial_message.stickers is undefined.UNDEFINED
         assert partial_message.nonce is undefined.UNDEFINED
         assert partial_message.application_id is undefined.UNDEFINED
-        assert partial_message.interaction is undefined.UNDEFINED
         assert partial_message.components is undefined.UNDEFINED
 
     def test_deserialize_partial_message_with_guild_id_but_no_author(self, entity_factory_impl):
@@ -6310,7 +6308,6 @@ class TestEntityFactoryImpl:
         assert message.stickers == []
         assert message.nonce is None
         assert message.application_id is None
-        assert message.interaction is None
         assert message.components == []
 
     def test_deserialize_message_with_other_unset_fields(self, entity_factory_impl, message_payload):

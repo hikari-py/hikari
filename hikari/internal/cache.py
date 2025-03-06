@@ -817,7 +817,6 @@ class MessageData(BaseData[messages.Message]):
             stickers=tuple(map(copy.copy, self.stickers)),
             nonce=self.nonce,
             referenced_message=self.referenced_message.object.build_entity(app) if self.referenced_message else None,
-            interaction=self.interaction.build_entity(app) if self.interaction else None,
             application_id=self.application_id,
             components=self.components,
             thread=self.thread,

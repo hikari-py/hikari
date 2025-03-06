@@ -3180,7 +3180,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             _LOGGER.debug(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
             raise errors.UnrecognisedEntityError(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
 
-    def deserialize_partial_message(  # noqa: C901, CFQ001 - Too complex and too long
+    def deserialize_partial_message(  # noqa: C901 - Too complex
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
         author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
@@ -3303,7 +3303,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             stickers=stickers,
             nonce=payload.get("nonce", undefined.UNDEFINED),
             application_id=application_id,
-            interaction=interaction,
             components=components,
             channel_mentions=channel_mentions,
             user_mentions=user_mentions,
@@ -3403,7 +3402,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             stickers=stickers,
             nonce=payload.get("nonce"),
             application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
-            interaction=interaction,
             components=components,
             user_mentions=user_mentions,
             channel_mentions=channel_mentions,

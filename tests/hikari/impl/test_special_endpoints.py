@@ -1075,7 +1075,6 @@ class TestSlashCommandBuilder:
             "name": "we are number",
             "description": "one",
             "type": 1,
-            "dm_permission": True,
             "nsfw": True,
             "default_member_permissions": 8,
             "options": [mock_entity_factory.serialize_command_option.return_value],
@@ -1125,7 +1124,6 @@ class TestSlashCommandBuilder:
             name_localizations={locales.Locale.TR: "sayı"},
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
-            dm_enabled=True,
             nsfw=True,
         )
 
@@ -1153,7 +1151,6 @@ class TestSlashCommandBuilder:
             name_localizations={locales.Locale.TR: "sayı"},
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
-            dm_enabled=True,
             nsfw=True,
         )
 
@@ -1175,7 +1172,6 @@ class TestContextMenuBuilder:
         assert result == {
             "name": "we are number",
             "type": 2,
-            "dm_permission": True,
             "nsfw": True,
             "default_member_permissions": 8,
             "id": "3412312",
@@ -1211,7 +1207,6 @@ class TestContextMenuBuilder:
             guild=undefined.UNDEFINED,
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"meow": "nyan"},
-            dm_enabled=True,
             nsfw=True,
         )
 
@@ -1235,7 +1230,6 @@ class TestContextMenuBuilder:
             guild=765234123,
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"en-ghibli": "meow"},
-            dm_enabled=True,
             nsfw=True,
         )
 
