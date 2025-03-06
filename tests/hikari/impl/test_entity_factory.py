@@ -4097,6 +4097,13 @@ class TestEntityFactoryImpl:
         assert isinstance(option, commands.CommandOption)
         assert isinstance(command, commands.SlashCommand)
 
+    def test_deserialize_slash_command_with_null_context(self, entity_factory_impl, slash_command_payload):
+        slash_command_payload["contexts"] = None
+
+        command = entity_factory_impl.deserialize_slash_command(payload=slash_command_payload)
+
+        assert command.context_types == []
+
     def test_deserialize_slash_command_with_passed_through_guild_id(self, entity_factory_impl):
         payload = {
             "id": "1231231231",
