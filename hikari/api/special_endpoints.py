@@ -45,7 +45,6 @@ __all__: typing.Sequence[str] = (
     "TextInputBuilder",
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
-    "MessageMedia",
     "MessageMediaItemBuilder",
     "MessageSectionBuilder",
     "MessageTextDisplayBuilder",
@@ -1333,13 +1332,15 @@ class ComponentBuilder(abc.ABC):
         """Type of component this builder represents."""
 
     @abc.abstractmethod
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        """Build a JSON object from this builder.
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        """Build a JSON object from this builder and collects all attachments added as components.
 
         Returns
         -------
-        typing.MutableMapping[str, typing.Any]
-            The built json object representation of this builder.
+        tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]
+            The built json object representation of this builder, and the attachments added.
         """
 
 
@@ -1977,11 +1978,11 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def components(self) -> typing.Sequence[MessageActionRowBuilderComponentsT]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(self, component: ComponentBuilder, /) -> Self:
+    def add_component(self, component: MessageActionRowBuilderComponentsT, /) -> Self:
         """Add a component to this action row builder.
 
         !!! warning
@@ -2202,40 +2203,30 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         """
 
 
-class MessageMedia(abc.ABC):
-    """Message Media Protocol.
-    
-    This is implemented for all components that have attachments that can be added.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @abc.abstractmethod
-    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
-        """FIXME: Do docs."""
-        ...
+MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
+"""FIXME: Document me."""
 
 
 class MessageMediaItemBuilder(abc.ABC):
-    """FIXME: Do docs."""
+    """Builder class for media items."""
 
     @property
     @abc.abstractmethod
     def resource(self) -> files.Resource[files.AsyncReader]:
-        """FIXME: Do docs."""
+        """The resource attached to the media item."""
 
     @property
     @abc.abstractmethod
     def url(self) -> str:
-        """FIXME: Do docs."""
-    
+        """The url for the media item."""
+
     @abc.abstractmethod
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
+    def build(self) -> tuple[typing.MutableMapping[str, typing.Any], files.Resource[files.AsyncReader]]:
         """FIXME: Do docs."""
 
 
-class MessageSectionBuilder(ComponentBuilder, MessageMedia, abc.ABC):
-    """FIXME: Do docs."""
+class MessageSectionBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for section components."""
 
     @property
     @abc.abstractmethod
@@ -2245,71 +2236,119 @@ class MessageSectionBuilder(ComponentBuilder, MessageMedia, abc.ABC):
     @property
     @abc.abstractmethod
     def components(self) -> typing.Sequence[MessageTextDisplayBuilder]:
-        """FIXME: Do docs."""
-    
+        """The components attached to the section."""
+
     @property
     @abc.abstractmethod
     def accessory(self) -> typing.Union[InteractiveButtonBuilder, LinkButtonBuilder, MessageThumbnailBuilder]:
-        """FIXME: Do docs."""
+        """The accessory attached to the section."""
+
+    @abc.abstractmethod
+    def add_component(self, component: MessageTextDisplayBuilder) -> Self:
+        """Add a component to this section builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageSectionBuilder.add_text_display`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component
+            The component builder to add to the section.
+
+        Returns
+        -------
+        MessageSectionBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_text_display(self, content: str) -> Self:
+        """Add a text display component to this section builder.
+
+        Parameters
+        ----------
+        content
+            The content for the text display.
+
+        Returns
+        -------
+        MessageSectionBuilder
+            The builder object to enable chained calls.
+        """
 
 
 class MessageTextDisplayBuilder(ComponentBuilder, abc.ABC):
-    """FIXME: Do docs."""
+    """Builder class for text display components."""
 
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[components_.ComponentType.TEXT_DISPLAY]:
         """Type of component this builder represents."""
-    
+
     @property
     @abc.abstractmethod
     def content(self) -> str:
-        """FIXME: Do docs."""
+        """The content for the text display."""
 
 
-class MessageThumbnailBuilder(ComponentBuilder, MessageMedia, abc.ABC):
-    """FIXME: Do docs."""
+class MessageThumbnailBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for thumbnail components."""
 
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[components_.ComponentType.THUMBNAIL]:
-        """FIXME: Do docs."""
+        """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
     def media(self) -> MessageMediaItemBuilder:
-        """FIXME: Do docs."""
-    
+        """The media of this thumbnail."""
+
     @property
     @abc.abstractmethod
     def description(self) -> typing.Optional[str]:
-        """FIXME: Do docs."""
-    
+        """The description for the thumbnails media."""
+
     @property
     @abc.abstractmethod
     def spoiler(self) -> typing.Optional[bool]:
-        """FIXME: Do docs."""
+        """Whether the media has a spoiler."""
 
 
-class MessageMediaGalleryBuilder(ComponentBuilder, MessageMedia, abc.ABC):
-    """FIXME: Do docs."""
+class MessageMediaGalleryBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for media gallery components."""
 
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[components_.ComponentType.MEDIA_GALLERY]:
-        """FIXME: Do docs."""
+        """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
     def items(self) -> list[MessageMediaGalleryItemBuilder]:
-        """FIXME: Do docs."""
+        """The items in the media gallery."""
 
     @abc.abstractmethod
-    def add_item(
-        self,
-        item: MessageMediaGalleryItemBuilder
-    ) -> Self:
-        """FIXME: Do docs."""
+    def add_item(self, item: MessageMediaGalleryItemBuilder) -> Self:
+        """Add a component to this media gallery builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageMediaGalleryBuilder.add_media_gallery_item`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        item
+            The media gallery item builder to add to the section.
+
+        Returns
+        -------
+        MessageMediaGalleryBuilder
+            The builder object to enable chained calls.
+        """
 
     @abc.abstractmethod
     def add_media_gallery_item(
@@ -2319,146 +2358,233 @@ class MessageMediaGalleryBuilder(ComponentBuilder, MessageMedia, abc.ABC):
         description: typing.Optional[str] = None,
         spoiler: typing.Optional[bool] = None,
     ) -> Self:
-        """FIXME: Do docs."""
+        """Add a media gallery item component to this media gallery builder.
+
+        Parameters
+        ----------
+        media
+            The media for the gallery item.
+        description
+            The description for the media gallery item.
+        spoiler
+            Whether the media has a spoiler.
+
+        Returns
+        -------
+        MessageMediaGalleryBuilder
+            The builder object to enable chained calls.
+        """
 
 
-class MessageMediaGalleryItemBuilder(MessageMedia, abc.ABC):
-    """FIXME: Do docs."""
+class MessageMediaGalleryItemBuilder(abc.ABC):
+    """Builder class for a media gallery item."""
 
     @property
     @abc.abstractmethod
     def media(self) -> MessageMediaItemBuilder:
-        """FIXME: Do docs."""
-    
+        """The media for the gallery item."""
+
     @property
     @abc.abstractmethod
     def description(self) -> typing.Optional[str]:
-        """FIXME: Do docs."""
-    
+        """The description for the media gallery item."""
+
     @property
     @abc.abstractmethod
     def spoiler(self) -> typing.Optional[bool]:
-        """FIXME: Do docs."""
+        """Whether the media has a spoiler."""
 
     @abc.abstractmethod
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        """FIXME: Do docs."""
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        """Build a JSON object from this builder and collects all attachments added as components.
+
+        Returns
+        -------
+        tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]
+            The built json object representation of this builder, and the attachments added.
+        """
 
 
 class MessageSeparatorBuilder(ComponentBuilder, abc.ABC):
-    """FIXME: Do docs."""
+    """Builder class for separator components."""
 
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[components_.ComponentType.SEPARATOR]:
-        """FIXME: Do docs."""
+        """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
     def spacing(self) -> typing.Optional[components_.SpacingType]:
-        """FIXME: Do docs."""
+        """The spacing for the separator."""
 
     @property
     @abc.abstractmethod
     def divider(self) -> typing.Optional[bool]:
-        """FIXME: Do docs."""
+        """Whether the separator has a divider."""
 
 
-class MessageFileBuilder(ComponentBuilder, MessageMedia, abc.ABC):
-    """FIXME: Do docs."""
-    
+class MessageFileBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for file components."""
+
     @property
     @abc.abstractmethod
-    def type(self) -> typing.Literal[components_.ComponentType.THUMBNAIL]:
-        """FIXME: Do docs."""
+    def type(self) -> typing.Literal[components_.ComponentType.FILE]:
+        """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
     def media(self) -> MessageMediaItemBuilder:
-        """FIXME: Do docs."""
-    
+        """The media for the file."""
+
     @property
     @abc.abstractmethod
     def spoiler(self) -> typing.Optional[bool]:
-        """FIXME: Do docs."""
+        """Whether the file has a spoiler."""
 
 
-class MessageContainerBuilder(ComponentBuilder, MessageMedia, abc.ABC):
-    """FIXME: Do docs."""
+class MessageContainerBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for container components."""
 
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[components_.ComponentType.CONTAINER]:
-        """FIXME: Do docs."""
+        """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
     def accent_color(self) -> typing.Optional[colors.Color]:
-        """FIXME: Do docs."""
-    
+        """The accent color for the container."""
+
     @property
     @abc.abstractmethod
     def spoiler(self) -> typing.Optional[bool]:
-        """FIXME: Do docs."""
-    
+        """Whether the container has a spoiler."""
+
     @property
     @abc.abstractmethod
     def components(self) -> typing.Sequence[MessageContainerBuilderComponentsT]:
-        """FIXME: Do docs."""
-    
+        """The components attached to the container."""
+
     @abc.abstractmethod
-    def add_component(
-        self,
-        component: MessageContainerBuilderComponentsT
-    ) -> Self:
-        """FIXME: Do docs."""
-    
+    def add_component(self, component: MessageContainerBuilderComponentsT) -> Self:
+        """Add a component to this container builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageContainerBuilder.add_action_row`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_text_display`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_media_gallery`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_separator`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_file`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component
+            The component builder to add to the container.
+
+        Returns
+        -------
+        MessageContainerBuilder
+            The builder object to enable chained calls.
+        """
+
     @abc.abstractmethod
-    def add_action_row(
-        self,
-        components: typing.Sequence[MessageActionRowBuilder]
-    ) -> Self:
-        """FIXME: Do docs."""
-    
+    def add_action_row(self, components: typing.Sequence[MessageActionRowBuilderComponentsT]) -> Self:
+        """Add a action row component to this container builder.
+
+        Parameters
+        ----------
+        components
+            The components to add to the action row.
+
+        Returns
+        -------
+        MessageContainerBuilder
+            The builder object to enable chained calls.
+        """
+
     @abc.abstractmethod
-    def add_text_display(
-        self,
-        content: str
-    ) -> Self:
-        """FIXME: Do docs."""
-    
+    def add_text_display(self, content: str) -> Self:
+        """Add a text display component to this container builder.
+
+        Parameters
+        ----------
+        content
+            The content of the text display.
+
+        Returns
+        -------
+        MessageContainerBuilder
+            The builder object to enable chained calls.
+        """
+
     @abc.abstractmethod
-    def add_media_gallery(
-        self,
-        items: typing.Sequence[MessageMediaGalleryItemBuilder]
-    ) -> Self:
-        """FIXME: Do docs."""
+    def add_media_gallery(self, items: typing.Sequence[MessageMediaGalleryItemBuilder]) -> Self:
+        """Add a media gallery component to this container builder.
+
+        Parameters
+        ----------
+        items
+            The gallery media items to add to the media gallery.
+
+        Returns
+        -------
+        MessageContainerBuilder
+            The builder object to enable chained calls.
+        """
 
     @abc.abstractmethod
     def add_separator(
-        self,
-        *,
-        spacing: typing.Optional[components_.SpacingType] = None,
-        divider: typing.Optional[bool] = None
+        self, *, spacing: typing.Optional[components_.SpacingType] = None, divider: typing.Optional[bool] = None
     ) -> Self:
-        """FIXME: Do docs."""
-    
+        """Add a separator component to this container builder.
+
+        Parameters
+        ----------
+        spacing
+            The spacing for the separator.
+        divider
+            Whether the separator has a divider.
+
+        Returns
+        -------
+        MessageContainerBuilder
+            The builder object to enable chained calls.
+        """
+
     @abc.abstractmethod
     def add_file(
-        self,
-        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
-        spoiler: typing.Optional[bool]
+        self, media: typing.Union[files.Resourceish, MessageMediaItemBuilder], spoiler: typing.Optional[bool]
     ) -> Self:
-        """FIXME: Do docs."""
+        """Add a spoiler component to this container builder.
 
-MessageContainerBuilderComponentsT = typing.Union[ #FIXME: I got no idea where this should be put.
+        Parameters
+        ----------
+        media
+            The media for the file.
+        spoiler
+            Whether the file has a spoiler.
+
+        Returns
+        -------
+        MessageContainerBuilder
+            The builder object to enable chained calls.
+        """
+
+
+MessageContainerBuilderComponentsT = typing.Union[  # FIXME: I got no idea where this should be put.
     MessageActionRowBuilder,
     MessageTextDisplayBuilder,
     MessageSectionBuilder,
     MessageMediaGalleryBuilder,
     MessageSeparatorBuilder,
-    MessageFileBuilder
+    MessageFileBuilder,
 ]
+
 
 class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
     """Builder class for modal action row components."""

@@ -1552,7 +1552,9 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         self._is_disabled = state
         return self
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
 
         data["type"] = component_models.ComponentType.BUTTON
@@ -1569,7 +1571,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         data.put("custom_id", self._custom_id)
         data.put("url", self._url)
 
-        return data
+        return data, []
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
@@ -1739,7 +1741,9 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         self._max_values = value
         return self
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
 
         data["type"] = self._type
@@ -1748,7 +1752,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         data.put("min_values", self._min_values)
         data.put("max_values", self._max_values)
         data.put("disabled", self._is_disabled)
-        return data
+        return data, []
 
 
 @attrs.define(init=False, weakref_slot=False)
@@ -1840,11 +1844,13 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         self._options.append(option)
         return self
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        data = super().build()
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload, attachments = super().build()
 
-        data["options"] = [option.build() for option in self._options]
-        return data
+        payload["options"] = [option.build() for option in self._options]
+        return payload, attachments
 
 
 @attrs_extensions.with_copy
@@ -1865,11 +1871,13 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
         self._channel_types = value
         return self
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        data = super().build()
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload, attachments = super().build()
 
-        data["channel_types"] = self._channel_types
-        return data
+        payload["channel_types"] = self._channel_types
+        return payload, attachments
 
 
 @attrs_extensions.with_copy
@@ -1957,7 +1965,9 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         self._max_length = max_length
         return self
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
 
         data["type"] = component_models.ComponentType.TEXT_INPUT
@@ -1970,14 +1980,16 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         data.put("min_length", self._min_length)
         data.put("max_length", self._max_length)
 
-        return data
+        return data, []
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageActionRowBuilder`][]."""
 
-    _components: list[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
+    _components: list[special_endpoints.MessageActionRowBuilderComponentsT] = attrs.field(
+        alias="components", factory=list
+    )
     _stored_type: typing.Optional[int] = attrs.field(default=None, init=False)
 
     @property
@@ -1985,7 +1997,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         return component_models.ComponentType.ACTION_ROW
 
     @property
-    def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
+    def components(self) -> typing.Sequence[special_endpoints.MessageActionRowBuilderComponentsT]:
         return self._components.copy()
 
     def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
@@ -1996,7 +2008,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
         self._stored_type = type_
 
-    def add_component(self, component: special_endpoints.ComponentBuilder, /) -> Self:
+    def add_component(self, component: special_endpoints.MessageActionRowBuilderComponentsT, /) -> Self:
         self._assert_can_add_type(component.type)
         self._components.append(component)
         return self
@@ -2093,15 +2105,29 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         self.add_component(component)
         return component
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        return {
-            "type": component_models.ComponentType.ACTION_ROW,
-            "components": [component.build() for component in self._components],
-        }
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload = data_binding.JSONObjectBuilder()
+
+        payload.put("type", component_models.ComponentType.ACTION_ROW)
+
+        components_payload: typing.MutableSequence[typing.Any] = []
+        attachments: typing.MutableSequence[files.Resource[files.AsyncReader]] = []
+        for component in self.components:
+            component_payload, component_attachments = component.build()
+            components_payload.append(component_payload)
+            attachments.extend(component_attachments)
+
+        payload.put_array("components", components_payload)
+
+        return payload, attachments
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageMediaItemBuilder(special_endpoints.MessageMediaItemBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.MessageMediaItemBuilder`][]."""
+
     _resource: files.Resource[files.AsyncReader] = attrs.field(alias="resource")
 
     @property
@@ -2111,63 +2137,75 @@ class MessageMediaItemBuilder(special_endpoints.MessageMediaItemBuilder):
     @property
     def url(self) -> str:
         return self._resource.url
-    
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        return {
-            "url": self.url
-        }
+
+    def build(self) -> tuple[typing.MutableMapping[str, typing.Any], files.Resource[files.AsyncReader]]:
+        payload = {"url": self.url}
+
+        return payload, self.resource
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageSectionBuilder(special_endpoints.MessageSectionBuilder):
-    _components: list[MessageTextDisplayBuilder] = attrs.field(alias="components", factory=list)
-    _accessory: typing.Union[InteractiveButtonBuilder, LinkButtonBuilder, MessageThumbnailBuilder] = attrs.field(alias="accessory")
+    """Standard implementation of [`hikari.api.special_endpoints.MessageSectionBuilder`][]."""
+
+    _components: list[special_endpoints.MessageTextDisplayBuilder] = attrs.field(alias="components", factory=list)
+    _accessory: typing.Union[
+        special_endpoints.InteractiveButtonBuilder,
+        special_endpoints.LinkButtonBuilder,
+        special_endpoints.MessageThumbnailBuilder,
+    ] = attrs.field(alias="accessory")
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.SECTION]:
         return component_models.ComponentType.SECTION
 
     @property
-    def components(self) -> typing.Sequence[MessageTextDisplayBuilder]:
+    def components(self) -> typing.Sequence[special_endpoints.MessageTextDisplayBuilder]:
         return self._components.copy()
-    
+
     @property
-    def accessory(self) -> typing.Union[InteractiveButtonBuilder, LinkButtonBuilder, MessageThumbnailBuilder]:
-        return self._accessory
-    
-    def add_component(
+    def accessory(
         self,
-        component: MessageTextDisplayBuilder,
-    ) -> Self:
+    ) -> typing.Union[
+        special_endpoints.InteractiveButtonBuilder,
+        special_endpoints.LinkButtonBuilder,
+        special_endpoints.MessageThumbnailBuilder,
+    ]:
+        return self._accessory
+
+    def add_component(self, component: special_endpoints.MessageTextDisplayBuilder) -> Self:
         self._components.append(component)
         return self
-    
-    def add_text_display(
-        self,
-        content: str,
-    ) -> Self:
-        component = MessageTextDisplayBuilder(
-            content=content
-        )
+
+    def add_text_display(self, content: str) -> Self:
+        component = MessageTextDisplayBuilder(content=content)
         self.add_component(component)
         return self
-    
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        return {
-            "type": self.type,
-            "components": [component.build() for component in self.components],
-            "accessory": self.accessory.build()
-        }
-    
-    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
-        if isinstance(self.accessory, special_endpoints.MessageThumbnailBuilder):
-            return self.accessory.attachments()
-        
-        return []
+
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        accessory_payload, accessory_attachments = self.accessory.build()
+
+        attachments: list[files.Resource[files.AsyncReader]] = list(accessory_attachments)
+
+        components_payload: list[typing.Mapping[str, typing.Any]] = []
+
+        for component in self.components:
+            component_payload, component_attachments = component.build()
+
+            components_payload.append(component_payload)
+            attachments.extend(component_attachments)
+
+        payload = {"type": self.type, "components": components_payload, "accessory": accessory_payload}
+
+        return payload, attachments
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageTextDisplayBuilder(special_endpoints.MessageTextDisplayBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.MessageTextDisplayBuilder`][]."""
+
     _content: str = attrs.field(alias="content")
 
     @property
@@ -2177,19 +2215,22 @@ class MessageTextDisplayBuilder(special_endpoints.MessageTextDisplayBuilder):
     @property
     def content(self) -> str:
         return self._content
-    
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        return {
-            "type": self.type,
-            "content": self.content
-        }
+
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload = {"type": self.type, "content": self.content}
+
+        return payload, []
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.MessageThumbnailBuilder`][]."""
+
     _media: MessageMediaItemBuilder = attrs.field(alias="media")
-    _description: typing.Optional[str] = attrs.field(alias="description")
-    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler")
+    _description: typing.Optional[str] = attrs.field(alias="description", default=None)
+    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.THUMBNAIL]:
@@ -2198,19 +2239,23 @@ class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
     @property
     def media(self) -> MessageMediaItemBuilder:
         return self._media
-    
+
     @property
     def description(self) -> typing.Optional[str]:
         return self._description
-    
+
     @property
     def spoiler(self) -> typing.Optional[bool]:
         return self._spoiler
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
         payload.put("type", self.type)
-        payload.put("media", self.media.build())
+
+        media_payload, media_attachment = self.media.build()
+        payload.put("media", media_payload)
 
         if self.description is not None:
             payload.put("description", self.description)
@@ -2218,88 +2263,82 @@ class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
         if self.spoiler is not None:
             payload.put("spoiler", self.spoiler)
 
-        return payload
-    
-    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:        
-        return [self.media.resource]
+        return payload, [media_attachment]
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageMediaGalleryBuilder(special_endpoints.MessageMediaGalleryBuilder):
-    _items: list[MessageMediaGalleryItemBuilder] = attrs.field(alias="items", factory=list)
+    """Standard implementation of [`hikari.api.special_endpoints.MessageMediaGalleryBuilder`][]."""
+
+    _items: list[special_endpoints.MessageMediaGalleryItemBuilder] = attrs.field(alias="items", factory=list)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.MEDIA_GALLERY]:
         return component_models.ComponentType.MEDIA_GALLERY
 
     @property
-    def items(self) -> list[MessageMediaGalleryItemBuilder]:
+    def items(self) -> list[special_endpoints.MessageMediaGalleryItemBuilder]:
         return self._items
 
-    def add_item(
-        self,
-        item: MessageMediaGalleryItemBuilder
-    ) -> Self:
+    def add_item(self, item: special_endpoints.MessageMediaGalleryItemBuilder) -> Self:
         self._items.append(item)
         return self
 
     def add_media_gallery_item(
         self,
-        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
+        media: typing.Union[files.Resourceish, special_endpoints.MessageMediaItemBuilder],
         *,
         description: typing.Optional[str] = None,
         spoiler: typing.Optional[bool] = None,
     ) -> Self:
-        if not isinstance(media, MessageMediaItemBuilder):
-            media = MessageMediaItemBuilder(
-                resource=files.ensure_resource(media)
-            )
-        item = MessageMediaGalleryItemBuilder(
-            media=media,
-            description=description,
-            spoiler=spoiler
-        )
+        if not isinstance(media, special_endpoints.MessageMediaItemBuilder):
+            media = MessageMediaItemBuilder(resource=files.ensure_resource(media))
+        item = MessageMediaGalleryItemBuilder(media=media, description=description, spoiler=spoiler)
         self.add_item(item)
         return self
-    
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        print("Itemssss:", self.items)
-        return {
-            "type": self.type,
-            "items": [item.build() for item in self.items]
-        }
-    
-    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
+
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        items_payload: list[typing.MutableMapping[str, typing.Any]] = []
         attachments: list[files.Resource[files.AsyncReader]] = []
-
         for item in self.items:
-            attachments.extend(item.attachments())
+            item_payload, item_attachments = item.build()
+            items_payload.append(item_payload)
+            attachments.extend(item_attachments)
 
-        return attachments
+        payload = {"type": self.type, "items": items_payload}
+
+        return payload, attachments
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageMediaGalleryItemBuilder(special_endpoints.MessageMediaGalleryItemBuilder):
-    _media: MessageMediaItemBuilder = attrs.field(alias="media")
-    _description: typing.Optional[str] = attrs.field(alias="description")
-    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler")
+    """Standard implementation of [`hikari.api.special_endpoints.MessageMediaGalleryItemBuilder`][]."""
+
+    _media: special_endpoints.MessageMediaItemBuilder = attrs.field(alias="media")
+    _description: typing.Optional[str] = attrs.field(alias="description", default=None)
+    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
 
     @property
-    def media(self) -> MessageMediaItemBuilder:
+    def media(self) -> special_endpoints.MessageMediaItemBuilder:
         return self._media
-    
+
     @property
     def description(self) -> typing.Optional[str]:
         return self._description
-    
+
     @property
     def spoiler(self) -> typing.Optional[bool]:
         return self._spoiler
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
 
-        payload.put("media", self.media.build())
+        media_payload, media_attachment = self.media.build()
+        payload.put("media", media_payload)
 
         if self.description is not None:
             payload.put("description", self.description)
@@ -2307,16 +2346,15 @@ class MessageMediaGalleryItemBuilder(special_endpoints.MessageMediaGalleryItemBu
         if self.spoiler is not None:
             payload.put("spoiler", self.spoiler)
 
-        return payload
-    
-    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
-        return [self.media.resource]
+        return payload, [media_attachment]
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageSeparatorBuilder(special_endpoints.MessageSeparatorBuilder):
-    _spacing: typing.Optional[component_models.SpacingType] = attrs.field(alias="spacing")
-    _divider: typing.Optional[bool] = attrs.field(alias="divider")
+    """Standard implementation of [`hikari.api.special_endpoints.MessageSeparatorBuilder`][]."""
+
+    _spacing: typing.Optional[component_models.SpacingType] = attrs.field(alias="spacing", default=None)
+    _divider: typing.Optional[bool] = attrs.field(alias="divider", default=None)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.SEPARATOR]:
@@ -2330,7 +2368,9 @@ class MessageSeparatorBuilder(special_endpoints.MessageSeparatorBuilder):
     def divider(self) -> typing.Optional[bool]:
         return self._divider
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
         payload.put("type", self.type)
 
@@ -2341,48 +2381,54 @@ class MessageSeparatorBuilder(special_endpoints.MessageSeparatorBuilder):
 
         if self.divider is not None:
             payload.put("divider", self.divider)
-        
-        return payload
+
+        return payload, []
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageFileBuilder(special_endpoints.MessageFileBuilder):
-    _media: MessageMediaItemBuilder = attrs.field(alias="media")
-    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler")
+    """Standard implementation of [`hikari.api.special_endpoints.MessageFileBuilder`][]."""
+
+    _media: special_endpoints.MessageMediaItemBuilder = attrs.field(alias="media")
+    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
 
     @property
-    def type(self) -> typing.Literal[component_models.ComponentType.THUMBNAIL]:
-        return component_models.ComponentType.THUMBNAIL
+    def type(self) -> typing.Literal[component_models.ComponentType.FILE]:
+        return component_models.ComponentType.FILE
 
     @property
-    def media(self) -> MessageMediaItemBuilder:
+    def media(self) -> special_endpoints.MessageMediaItemBuilder:
         return self._media
-    
+
     @property
     def spoiler(self) -> typing.Optional[bool]:
         return self._spoiler
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
         payload.put("type", self.type)
-        payload.put("media", self.media.build())
+
+        media_payload, media_attachment = self.media.build()
+        payload.put("media", media_payload)
 
         if self.spoiler is not None:
             payload.put("spoiler", self.spoiler)
 
-        return payload
-    
-    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
-        return [self.media.resource]
+        return payload, [media_attachment]
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MessageContainerBuilder(special_endpoints.MessageContainerBuilder):
-    _accent_color: typing.Optional[colors.Color] = attrs.field(alias="accent_color")
+    """Standard implementation of [`hikari.api.special_endpoints.MessageContainerBuilder`][]."""
 
-    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler")
-    
-    _components: list[special_endpoints.MessageContainerBuilderComponentsT] = attrs.field(alias="components", factory=list)
+    _accent_color: typing.Optional[colors.Color] = attrs.field(alias="accent_color", default=None)
+    _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
+
+    _components: list[special_endpoints.MessageContainerBuilderComponentsT] = attrs.field(
+        alias="components", factory=list
+    )
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.CONTAINER]:
@@ -2391,103 +2437,74 @@ class MessageContainerBuilder(special_endpoints.MessageContainerBuilder):
     @property
     def accent_color(self) -> typing.Optional[colors.Color]:
         return self._accent_color
-    
+
     @property
     def spoiler(self) -> typing.Optional[bool]:
         return self._spoiler
-    
+
     @property
     def components(self) -> typing.Sequence[special_endpoints.MessageContainerBuilderComponentsT]:
         return self._components.copy()
-    
-    def add_component(
-        self,
-        component: special_endpoints.MessageContainerBuilderComponentsT
-    ) -> Self:
+
+    def add_component(self, component: special_endpoints.MessageContainerBuilderComponentsT) -> Self:
         self._components.append(component)
         return self
-    
-    def add_action_row(
-        self,
-        components: typing.Sequence[special_endpoints.ComponentBuilder]
-    ) -> Self:
-        component = MessageActionRowBuilder(
-            components=list(components)
-        )
+
+    def add_action_row(self, components: typing.Sequence[special_endpoints.MessageActionRowBuilderComponentsT]) -> Self:
+        component = MessageActionRowBuilder(components=list(components))
         self.add_component(component)
         return self
-    
-    def add_text_display(
-        self,
-        content: str
-    ) -> Self:
-        component = MessageTextDisplayBuilder(
-            content=content
-        )
+
+    def add_text_display(self, content: str) -> Self:
+        component = MessageTextDisplayBuilder(content=content)
         self.add_component(component)
         return self
-    
-    def add_media_gallery(
-        self,
-        items: typing.Sequence[MessageMediaGalleryItemBuilder]
-    ) -> Self:
-        component = MessageMediaGalleryBuilder(
-            items=list(items)
-        )
+
+    def add_media_gallery(self, items: typing.Sequence[special_endpoints.MessageMediaGalleryItemBuilder]) -> Self:
+        component = MessageMediaGalleryBuilder(items=list(items))
         self.add_component(component)
         return self
 
     def add_separator(
-        self,
-        *,
-        spacing: typing.Optional[component_models.SpacingType] = None,
-        divider: typing.Optional[bool] = None
+        self, *, spacing: typing.Optional[component_models.SpacingType] = None, divider: typing.Optional[bool] = None
     ) -> Self:
-        component = MessageSeparatorBuilder(
-            spacing=spacing,
-            divider=divider
-        )
-        self.add_component(component)
-        return self
-    
-    def add_file(
-        self,
-        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
-        spoiler: typing.Optional[bool]
-    ) -> Self:
-        if not isinstance(media, MessageMediaItemBuilder):
-            media = MessageMediaItemBuilder(
-                resource=files.ensure_resource(media)
-            )
-        component = MessageFileBuilder(
-            media=media,
-            spoiler=spoiler
-        )
+        component = MessageSeparatorBuilder(spacing=spacing, divider=divider)
         self.add_component(component)
         return self
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
+    def add_file(
+        self,
+        media: typing.Union[files.Resourceish, special_endpoints.MessageMediaItemBuilder],
+        spoiler: typing.Optional[bool],
+    ) -> Self:
+        if not isinstance(media, special_endpoints.MessageMediaItemBuilder):
+            media = MessageMediaItemBuilder(resource=files.ensure_resource(media))
+        component = MessageFileBuilder(media=media, spoiler=spoiler)
+        self.add_component(component)
+        return self
+
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
         payload.put("type", self.type)
 
         if self.accent_color is not None:
             payload.put("accent_color", self.accent_color)
-        
+
         if self.spoiler is not None:
             payload.put("spoiler", self.spoiler)
 
-        payload.put_array("components", [component.build() for component in self.components])
-
-        return payload
-
-    def attachments(self) -> typing.Sequence[files.Resource[files.AsyncReader]]:
-        attachments: list[files.Resource[files.AsyncReader]] = []
-
+        components_payload: typing.MutableSequence[typing.MutableMapping[str, typing.Any]] = []
+        attachments: typing.MutableSequence[files.Resource[files.AsyncReader]] = []
         for component in self.components:
-            if isinstance(component, special_endpoints.MessageMedia):
-                attachments.extend(component.attachments())
+            component_payload, component_attachments = component.build()
+            components_payload.append(component_payload)
+            attachments.extend(component_attachments)
 
-        return attachments
+        payload.put_array("components", components_payload)
+
+        return payload, attachments
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
@@ -2544,8 +2561,16 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
             )
         )
 
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        return {
-            "type": component_models.ComponentType.ACTION_ROW,
-            "components": [component.build() for component in self._components],
-        }
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        component_payloads: list[typing.MutableMapping[str, typing.Any]] = []
+        attachments: list[files.Resource[files.AsyncReader]] = []
+        for component in self.components:
+            component_payload, component_attachments = component.build()
+            component_payloads.append(component_payload)
+            attachments.extend(component_attachments)
+
+        payload = {"type": component_models.ComponentType.ACTION_ROW, "components": component_payloads}
+
+        return payload, attachments

@@ -2278,7 +2278,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        with_components: undefined.UndefinedOr[bool] = undefined.UNDEFINED
+        with_components: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
 

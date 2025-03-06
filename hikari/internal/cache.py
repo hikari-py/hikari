@@ -734,7 +734,7 @@ class MessageData(BaseData[messages.Message]):
     referenced_message: typing.Optional[RefCell[MessageData]] = attrs.field()
     interaction: typing.Optional[MessageInteractionData] = attrs.field()
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
-    components: tuple[components_.MessageActionRowComponent, ...] = attrs.field()
+    components: tuple[components_.TopLevelComponentTypesT, ...] = attrs.field()
     thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field()
 
     @classmethod

@@ -433,8 +433,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_audit_log_entry_converters",
         "_audit_log_event_mapping",
         "_command_mapping",
-        "_message_component_type_mapping",
+        "_action_row_component_type_mapping",
+        "_top_level_components_mapping",
         "_modal_component_type_mapping",
+        "_container_component_mapping",
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
         "_thread_channel_type_mapping",
@@ -506,7 +508,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             commands.CommandType.USER: self.deserialize_context_menu_command,
             commands.CommandType.MESSAGE: self.deserialize_context_menu_command,
         }
-        self._message_component_type_mapping: dict[
+        self._action_row_component_type_mapping: dict[
             int, typing.Callable[[data_binding.JSONObject], component_models.MessageComponentTypesT]
         ] = {
             component_models.ComponentType.BUTTON: self._deserialize_button,
@@ -515,6 +517,26 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_select_menu,
             component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_select_menu,
             component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_channel_select_menu,
+        }
+        self._top_level_components_mapping: typing.Mapping[
+            component_models.ComponentType,
+            typing.Callable[[data_binding.JSONObject], component_models.TopLevelComponentTypesT],
+        ] = {
+            component_models.ComponentType.SECTION: self._deserialize_section_component,
+            component_models.ComponentType.TEXT_DISPLAY: self._deserialize_text_display_component,
+            component_models.ComponentType.MEDIA_GALLERY: self._deserialize_media_gallery_component,
+            component_models.ComponentType.SEPARATOR: self._deserialize_separator_component,
+            component_models.ComponentType.FILE: self._deserialize_file_component,
+            component_models.ComponentType.CONTAINER: self._deserialize_container_component,
+        }
+        self._container_component_mapping: typing.Mapping[
+            component_models.ComponentType, typing.Callable[[data_binding.JSONObject], component_models.ContainerTypesT]
+        ] = {
+            component_models.ComponentType.SECTION: self._deserialize_section_component,
+            component_models.ComponentType.TEXT_DISPLAY: self._deserialize_text_display_component,
+            component_models.ComponentType.MEDIA_GALLERY: self._deserialize_media_gallery_component,
+            component_models.ComponentType.SEPARATOR: self._deserialize_separator_component,
+            component_models.ComponentType.FILE: self._deserialize_file_component,
         }
         self._modal_component_type_mapping: dict[
             int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]
@@ -2845,8 +2867,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ####################
 
     def _deserialize_modal_components(
-        self,
-        payloads: data_binding.JSONArray,
+        self, payloads: data_binding.JSONArray
     ) -> typing.Sequence[component_models.ModalActionRowComponent]:
         top_level_components: list[component_models.ModalActionRowComponent] = []
 
@@ -2878,8 +2899,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return top_level_components
 
     def _deserialize_message_components(
-        self,
-        payloads: data_binding.JSONArray,
+        self, payloads: data_binding.JSONArray
     ) -> typing.Sequence[component_models.TopLevelComponentTypesT]:
         top_level_components: list[component_models.TopLevelComponentTypesT] = []
 
@@ -2889,25 +2909,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if top_level_component_type == component_models.ComponentType.ACTION_ROW:
                 if action_row := self._deserialize_action_row_component(payload):
                     top_level_components.append(action_row)
-                
-            elif top_level_component_type == component_models.ComponentType.SECTION:
-                top_level_components.append(self._deserialize_section_component(payload))
-                
-            elif top_level_component_type == component_models.ComponentType.TEXT_DISPLAY:
-                top_level_components.append(self._deserialize_text_display_component(payload))
-                
-            elif top_level_component_type == component_models.ComponentType.MEDIA_GALLERY:
-                top_level_components.append(self._deserialize_media_gallery_component(payload))
-                
-            elif top_level_component_type == component_models.ComponentType.SEPARATOR:
-                top_level_components.append(self._deserialize_separator_component(payload))
-                
-            elif top_level_component_type == component_models.ComponentType.FILE:
-                top_level_components.append(self._deserialize_file_component(payload))
-                
-            elif top_level_component_type == component_models.ComponentType.CONTAINER:
-                top_level_components.append(self._deserialize_container_component(payload))
 
+            elif deserializer := self._top_level_components_mapping.get(top_level_component_type):
+                top_level_components.append(deserializer(payload))
             else:
                 _LOGGER.debug("Unknown component type %s", top_level_component_type)
                 continue
@@ -2988,25 +2992,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return component_models.TextInputComponent(
             type=component_models.ComponentType(payload["type"]), custom_id=payload["custom_id"], value=payload["value"]
         )
-    
-    def _deserialize_media(
-        self,
-        payload: data_binding.JSONObject
-    ) -> component_models.MediaResource:
+
+    def _deserialize_media(self, payload: data_binding.JSONObject) -> component_models.MediaResource:
         return component_models.MediaResource(
-            resource=files.URL(payload["url"]) #FIXME: Idk if this is how its supposed to work.
+            resource=files.URL(payload["url"])  # FIXME: Idk if this is how its supposed to work.
         )
 
     def _deserialize_action_row_component(
-        self,
-        payload: data_binding.JSONObject,
-    ) -> component_models.ActionRowComponent[component_models.PartialComponent] | None:
-        components: list[component_models.MessageComponentTypesT] = []
+        self, payload: data_binding.JSONObject
+    ) -> typing.Optional[component_models.ActionRowComponent[component_models.PartialComponent]]:
+        components: list[component_models.PartialComponent] = []
 
         for component_payload in payload["components"]:
             component_type = component_models.ComponentType(component_payload["type"])
 
-            if (deserializer := self._message_component_type_mapping.get(component_type)) is None:
+            if (deserializer := self._action_row_component_type_mapping.get(component_type)) is None:
                 _LOGGER.debug("Unknown component type %s", component_type)
                 continue
 
@@ -3015,131 +3015,108 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if components:
             # If we somehow get a top-level component full of unknown components, ignore the top-level
             # component all-together
-            return component_models.ActionRowComponent(type=component_models.ComponentType.ACTION_ROW, components=components)
+            return component_models.ActionRowComponent(
+                type=component_models.ComponentType.ACTION_ROW, components=components
+            )
 
-    def _deserialize_section_component(
-        self,
-        payload: data_binding.JSONObject,
-    ) -> component_models.SectionComponent:
+    def _deserialize_section_component(self, payload: data_binding.JSONObject) -> component_models.SectionComponent:
         accessory_payload = payload["accessory"]
 
         accessory_type = component_models.ComponentType(accessory_payload["type"])
 
+        accessory: component_models.ButtonComponent | component_models.ThumbnailComponent
         if accessory_type == component_models.ComponentType.BUTTON:
             accessory = self._deserialize_button(accessory_payload)
         elif accessory_type == component_models.ComponentType.THUMBNAIL:
             accessory = self._deserialize_thumbnail_component(accessory_payload)
         else:
             _LOGGER.debug("Unknown accessory type %s", accessory_type)
-            raise errors.UnrecognisedEntityError(f"Unknown accessory type {accessory_type}") #FIXME: Is this okay? it can currently only be a button or a thumbnail.
-
+            raise errors.UnrecognisedEntityError(
+                f"Unknown accessory type {accessory_type}"
+            )  # FIXME: Is this okay? it can currently only be a button or a thumbnail.
 
         return component_models.SectionComponent(
             type=component_models.ComponentType.SECTION,
             id=payload.get("id", None),
-            components=[self._deserialize_text_display_component(text_display_payload) for text_display_payload in payload["components"]],
-            accessory=accessory
+            components=[
+                self._deserialize_text_display_component(text_display_payload)
+                for text_display_payload in payload["components"]
+            ],
+            accessory=accessory,
         )
 
-    def _deserialize_thumbnail_component(
-        self,
-        payload: data_binding.JSONObject,
-    ) -> component_models.ThumbnailComponent:
+    def _deserialize_thumbnail_component(self, payload: data_binding.JSONObject) -> component_models.ThumbnailComponent:
         return component_models.ThumbnailComponent(
             type=component_models.ComponentType.THUMBNAIL,
             id=payload.get("id", None),
             media=self._deserialize_media(payload["media"]),
             description=payload.get("description", None),
-            spoiler=payload.get("spoiler", None)
+            spoiler=payload.get("spoiler", None),
         )
 
     def _deserialize_text_display_component(
-        self,
-        payload: data_binding.JSONObject,
+        self, payload: data_binding.JSONObject
     ) -> component_models.TextDisplayComponent:
         return component_models.TextDisplayComponent(
-            type=component_models.ComponentType.TEXT_DISPLAY,
-            id=payload.get("id", None),
-            content=payload["content"]
+            type=component_models.ComponentType.TEXT_DISPLAY, id=payload.get("id", None), content=payload["content"]
         )
 
     def _deserialize_media_gallery_component(
-        self,
-        payload: data_binding.JSONObject,
+        self, payload: data_binding.JSONObject
     ) -> component_models.MediaGalleryComponent:
-        print(payload)
         return component_models.MediaGalleryComponent(
             type=component_models.ComponentType.MEDIA_GALLERY,
             id=payload.get("id", None),
-            items=[self._deserialize_media_gallery_item(item) for item in payload["items"]]
+            items=[self._deserialize_media_gallery_item(item) for item in payload["items"]],
         )
 
-    def _deserialize_media_gallery_item(
-        self,
-        payload: data_binding.JSONObject
-    ) -> component_models.MediaGalleryItem:
+    def _deserialize_media_gallery_item(self, payload: data_binding.JSONObject) -> component_models.MediaGalleryItem:
         return component_models.MediaGalleryItem(
             media=self._deserialize_media(payload["media"]),
             description=payload.get("description", None),
-            spoiler=payload.get("spoiler", None)
+            spoiler=payload.get("spoiler", None),
         )
 
-    def _deserialize_separator_component(
-        self,
-        payload: data_binding.JSONObject,
-    ) -> component_models.SeparatorComponent:
+    def _deserialize_separator_component(self, payload: data_binding.JSONObject) -> component_models.SeparatorComponent:
         return component_models.SeparatorComponent(
             type=component_models.ComponentType.SEPARATOR,
             id=payload.get("id", None),
             spacing=component_models.SpacingType(payload["spacing"]) if "spacing" in payload else None,
-            divider=payload.get("divider", None)
+            divider=payload.get("divider", None),
         )
 
-    def _deserialize_file_component(
-        self,
-        payload: data_binding.JSONObject,
-    ) -> component_models.FileComponent:
+    def _deserialize_file_component(self, payload: data_binding.JSONObject) -> component_models.FileComponent:
         return component_models.FileComponent(
             type=component_models.ComponentType.FILE,
             id=payload.get("id", None),
-            file=component_models.MediaResource(resource=files.URL(payload["file"]["url"])), #FIXME: Idk if this is how its supposed to work.
-            spoiler=payload.get("spoiler", None)
+            file=self._deserialize_media(payload["file"]),  # FIXME: Idk if this is how its supposed to work.
+            spoiler=payload.get("spoiler", None),
         )
 
-    def _deserialize_container_component(
-        self,
-        payload: data_binding.JSONObject,
-    ) -> component_models.ContainerComponent:
+    def _deserialize_container_component(self, payload: data_binding.JSONObject) -> component_models.ContainerComponent:
         components: list[component_models.ContainerTypesT] = []
 
-        for component in payload["components"]:
-            component_type = component_models.ComponentType(component["type"])
+        for component_payload in payload["components"]:
+            component_type = component_models.ComponentType(component_payload["type"])
 
             if component_type == component_models.ComponentType.ACTION_ROW:
-                if action_row := self._deserialize_action_row_component(component):
+                if action_row := self._deserialize_action_row_component(component_payload):
                     components.append(action_row)
-                
-            elif component_type == component_models.ComponentType.SECTION:
-                components.append(self._deserialize_section_component(component))
-                
-            elif component_type == component_models.ComponentType.TEXT_DISPLAY:
-                components.append(self._deserialize_text_display_component(component))
-                
-            elif component_type == component_models.ComponentType.MEDIA_GALLERY:
-                components.append(self._deserialize_media_gallery_component(component))
-                
-            elif component_type == component_models.ComponentType.SEPARATOR:
-                components.append(self._deserialize_separator_component(component))
-                
-            elif component_type == component_models.ComponentType.FILE:
-                components.append(self._deserialize_file_component(component))
+
+                continue
+
+            if (deserializer := self._container_component_mapping.get(component_type)) is None:
+                _LOGGER.debug("Unknown component type %s", component_type)
+                continue
+
+            components.append(deserializer(component_payload))
 
         return component_models.ContainerComponent(
             type=component_models.ComponentType.CONTAINER,
             id=payload.get("id", None),
             accent_color=color_models.Color.from_int(payload["accent_color"]) if "accent_color" in payload else None,
             spoiler=payload.get("spoiler", None),
-            components=components
+            components=components,
         )
 
     ##################
@@ -3286,7 +3263,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if interaction_payload := payload.get("interaction"):
             interaction = self._deserialize_message_interaction(interaction_payload)
 
-        components: undefined.UndefinedOr[typing.Sequence[component_models.TopLevelComponentTypesT]] = undefined.UNDEFINED
+        components: undefined.UndefinedOr[typing.Sequence[component_models.TopLevelComponentTypesT]] = (
+            undefined.UNDEFINED
+        )
         if component_payloads := payload.get("components"):
             components = self._deserialize_message_components(component_payloads)
 

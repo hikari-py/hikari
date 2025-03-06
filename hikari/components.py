@@ -52,18 +52,18 @@ __all__: typing.Sequence[str] = (
     "FileComponent",
     "ContainerComponent",
     "TopLevelComponentTypesT",
-    "ContainerTypesT"
+    "ContainerTypesT",
 )
 
+import concurrent.futures
 import typing
 
 import attrs
-import concurrent.futures
 
 from hikari import channels
+from hikari import colors
 from hikari import emojis
 from hikari import files
-from hikari import colors
 from hikari.internal import enums
 
 
@@ -143,18 +143,18 @@ class ComponentType(int, enums.Enum):
 
     SECTION = 9
     """A section component.
-    
+
     !!! note
         As this is a container component it can never be contained within another
         component and therefore will always be top-level.
     """
-    
+
     TEXT_DISPLAY = 10
     """A text display component."""
-    
+
     THUMBNAIL = 11
     """A thumbnail component.
-    
+
     !!! note
         This cannot be top-level and must be within a container component such
         as [`hikari.components.ComponentType.SECTION`][].
@@ -162,16 +162,16 @@ class ComponentType(int, enums.Enum):
 
     MEDIA_GALLERY = 12
     """A media gallery component."""
-    
+
     FILE = 13
     """A file component."""
-    
+
     SEPARATOR = 14
     """A separator component."""
-    
+
     CONTAINER = 17
     """A container component.
-    
+
     !!! note
         As this is a container component it can never be contained within another
         component and therefore will always be top-level.
@@ -362,7 +362,7 @@ class TextInputComponent(PartialComponent):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class PartialComponentV2(PartialComponent): # FIXME: This defo needs changing.
+class PartialComponentV2(PartialComponent):  # FIXME: This defo needs changing.
     """FIXME: Document me."""
 
     id: typing.Optional[int] = attrs.field()
@@ -371,6 +371,8 @@ class PartialComponentV2(PartialComponent): # FIXME: This defo needs changing.
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MediaResource:
+    """Represents a media resource."""
+
     resource: files.WebResource = attrs.field(repr=True)
     """The resource this object wraps around."""
 
@@ -408,10 +410,14 @@ class MediaResource:
 class SectionComponent(PartialComponentV2):
     """Represents a section component."""
 
-    components: typing.Sequence[TextDisplayComponent] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
+    components: typing.Sequence[TextDisplayComponent] = (
+        attrs.field()
+    )  # FIXME: Told not to hardcode this, as it could change? what should it be?
     """The sections components."""
 
-    accessory: typing.Union[ButtonComponent, ThumbnailComponent] = attrs.field() # FIXME: Told not to hardcode this, as it could change? what should it be?
+    accessory: typing.Union[ButtonComponent, ThumbnailComponent] = (
+        attrs.field()
+    )  # FIXME: Told not to hardcode this, as it could change? what should it be?
     """The sections accessory."""
 
 
@@ -432,7 +438,7 @@ class ThumbnailComponent(PartialComponentV2):
 @attrs.define(kw_only=True, weakref_slot=False)
 class TextDisplayComponent(PartialComponentV2):
     """Represents a text display component."""
-    
+
     content: str = attrs.field()
     """The content of the text display."""
 
@@ -448,7 +454,7 @@ class MediaGalleryComponent(PartialComponentV2):
 @attrs.define(kw_only=True, weakref_slot=False)
 class MediaGalleryItem:
     """Represents a media gallery item."""
-    
+
     media: MediaResource = attrs.field()
     """The media for the gallery item."""
 
@@ -473,7 +479,7 @@ class SeparatorComponent(PartialComponentV2):
 @typing.final
 class SpacingType(int, enums.Enum):
     """Spacing Type.
-    
+
     The type of spacing for a [SeparatorComponent][]
     """
 
@@ -490,7 +496,7 @@ class FileComponent(PartialComponentV2):
 
     file: MediaResource = attrs.field()
     """The media for the file."""
-    
+
     spoiler: typing.Optional[bool] = attrs.field()
     """If the file has a spoiler."""
 
@@ -508,6 +514,7 @@ class ContainerComponent(PartialComponentV2):
     components: typing.Sequence[ContainerTypesT] = attrs.field()
     """The components within the container."""
 
+
 TopLevelComponentTypesT = typing.Union[
     ActionRowComponent[PartialComponent],
     TextDisplayComponent,
@@ -515,7 +522,7 @@ TopLevelComponentTypesT = typing.Union[
     MediaGalleryComponent,
     SeparatorComponent,
     FileComponent,
-    ContainerComponent
+    ContainerComponent,
 ]
 """FIXME: Document me."""
 
@@ -525,7 +532,7 @@ ContainerTypesT = typing.Union[
     SectionComponent,
     MediaGalleryComponent,
     SeparatorComponent,
-    FileComponent
+    FileComponent,
 ]
 """FIXME: Document me."""
 

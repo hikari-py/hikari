@@ -26,6 +26,7 @@ import mock
 import pytest
 
 from hikari import channels
+from hikari import colors
 from hikari import commands
 from hikari import components
 from hikari import emojis
@@ -1327,7 +1328,9 @@ class Test_ButtonBuilder:
             is_disabled=True,
         )
 
-        assert button.build() == {
+        payload, attachments = button.build()
+
+        assert payload == {
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.DANGER,
             "url": "https://example.com",
@@ -1337,29 +1340,39 @@ class Test_ButtonBuilder:
             "disabled": True,
         }
 
+        assert attachments == []
+
     @pytest.mark.parametrize("emoji", [123321, emojis.CustomEmoji(id=123321, name="", is_animated=True)])
     def test_build_with_custom_emoji(self, emoji: typing.Union[int, emojis.Emoji]):
         button = special_endpoints._ButtonBuilder(
             style=components.ButtonStyle.DANGER, emoji=emoji, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
         )
 
-        assert button.build() == {
+        payload, attachments = button.build()
+
+        assert payload == {
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.DANGER,
             "emoji": {"id": "123321"},
             "disabled": False,
         }
 
+        assert attachments == []
+
     def test_build_without_optional_fields(self):
         button = special_endpoints._ButtonBuilder(
             style=components.ButtonStyle.LINK, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
         )
 
-        assert button.build() == {
+        payload, attachments = button.build()
+
+        assert payload == {
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.LINK,
             "disabled": False,
         }
+
+        assert attachments == []
 
 
 class TestLinkButtonBuilder:
@@ -1504,7 +1517,9 @@ class TestSelectMenuBuilder:
             is_disabled=True,
         )
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
             "type": components.ComponentType.USER_SELECT_MENU,
             "custom_id": "45234fsdf",
             "placeholder": "meep",
@@ -1513,16 +1528,22 @@ class TestSelectMenuBuilder:
             "max_values": 23,
         }
 
+        assert attachments == []
+
     def test_build_without_optional_fields(self):
         menu = special_endpoints.SelectMenuBuilder(custom_id="o2o2o2", type=components.ComponentType.ROLE_SELECT_MENU)
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
             "type": components.ComponentType.ROLE_SELECT_MENU,
             "custom_id": "o2o2o2",
             "disabled": False,
             "min_values": 0,
             "max_values": 1,
         }
+
+        assert attachments == []
 
 
 class TestTextSelectMenuBuilder:
@@ -1573,7 +1594,9 @@ class TestTextSelectMenuBuilder:
             options=[special_endpoints.SelectOptionBuilder("meow", "vault")],
         )
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
             "type": components.ComponentType.TEXT_SELECT_MENU,
             "custom_id": "o2o2o2",
             "placeholder": "hi",
@@ -1583,10 +1606,14 @@ class TestTextSelectMenuBuilder:
             "options": [{"label": "meow", "value": "vault", "default": False}],
         }
 
+        assert attachments == []
+
     def test_build_without_optional_fields(self):
         menu = special_endpoints.TextSelectMenuBuilder(custom_id="fds  qw")
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
             "type": components.ComponentType.TEXT_SELECT_MENU,
             "custom_id": "fds  qw",
             "min_values": 0,
@@ -1594,6 +1621,8 @@ class TestTextSelectMenuBuilder:
             "disabled": False,
             "options": [],
         }
+
+        assert attachments == []
 
 
 class TestChannelSelectMenuBuilder:
@@ -1618,7 +1647,9 @@ class TestChannelSelectMenuBuilder:
             channel_types=[channels.ChannelType.GUILD_CATEGORY],
         )
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
             "type": components.ComponentType.CHANNEL_SELECT_MENU,
             "custom_id": "o2o2o2",
             "placeholder": "hi",
@@ -1628,10 +1659,14 @@ class TestChannelSelectMenuBuilder:
             "channel_types": [channels.ChannelType.GUILD_CATEGORY],
         }
 
+        assert attachments == []
+
     def test_build_without_optional_fields(self):
         menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="42312312")
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
             "type": components.ComponentType.CHANNEL_SELECT_MENU,
             "custom_id": "42312312",
             "min_values": 0,
@@ -1639,6 +1674,8 @@ class TestChannelSelectMenuBuilder:
             "disabled": False,
             "channel_types": [],
         }
+
+        assert attachments == []
 
 
 class TestTextInput:
@@ -1684,7 +1721,9 @@ class TestTextInput:
     def test_build_partial(self):
         text_input = special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
 
-        assert text_input.build() == {
+        payload, attachments = text_input.build()
+
+        assert payload == {
             "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
@@ -1693,6 +1732,8 @@ class TestTextInput:
             "min_length": 0,
             "max_length": 4000,
         }
+
+        assert attachments == []
 
     def test_build(self):
         text_input = special_endpoints.TextInputBuilder(
@@ -1705,7 +1746,9 @@ class TestTextInput:
             max_length=250,
         )
 
-        assert text_input.build() == {
+        payload, attachments = text_input.build()
+
+        assert payload == {
             "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
@@ -1716,6 +1759,8 @@ class TestTextInput:
             "min_length": 10,
             "max_length": 250,
         }
+
+        assert attachments == []
 
 
 class TestMessageActionRowBuilder:
@@ -1810,19 +1855,513 @@ class TestMessageActionRowBuilder:
         assert component.is_disabled is True
 
     def test_build(self):
-        mock_component_1 = mock.Mock(type=components.ComponentType.BUTTON)
-        mock_component_2 = mock.Mock(type=components.ComponentType.BUTTON)
-
-        row = (
-            special_endpoints.MessageActionRowBuilder().add_component(mock_component_1).add_component(mock_component_2)
+        mock_component_1 = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.BUTTON), ())),
+        )
+        mock_component_2 = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.BUTTON), ())),
         )
 
-        assert row.build() == {
+        row = special_endpoints.MessageActionRowBuilder(components=[mock_component_1, mock_component_2])
+
+        payload, attachments = row.build()
+
+        assert payload == {
             "type": components.ComponentType.ACTION_ROW,
-            "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
+            "components": [mock_component_1.build.return_value[0], mock_component_2.build.return_value[0]],
         }
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+        assert attachments == []
+
+
+class TestMessageMediaItemBuilder:
+    def test_build(self):
+        test_url = "attachment://some-test-file.png"
+        resource = mock.Mock(files.Resource[files.AsyncReader], url=test_url)
+
+        media_item = special_endpoints.MessageMediaItemBuilder(resource=resource)
+
+        payload, attachments = media_item.build()
+
+        assert payload == {"url": test_url}
+
+        assert attachments == resource
+
+
+class TestMessageSectionBuilder:
+    def test_type_property(self):
+        section = special_endpoints.MessageSectionBuilder(accessory=mock.Mock())
+
+        assert section.type is components.ComponentType.SECTION
+
+    def test_add_component(self):
+        section = special_endpoints.MessageSectionBuilder(accessory=mock.Mock())
+
+        assert section.components == []
+
+        text_display = special_endpoints.MessageTextDisplayBuilder(content="test content")
+
+        section.add_component(text_display)
+
+        assert section.components == [text_display]
+
+    def test_add_text_display(self):
+        section = special_endpoints.MessageSectionBuilder(accessory=mock.Mock())
+
+        assert section.components == []
+
+        section.add_text_display("test content")
+
+        assert len(section.components) == 1
+
+        assert section.components[0].content == "test content"
+
+    def test_build(self):
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        accessory = special_endpoints.MessageThumbnailBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource),
+            description="a cool image",
+            spoiler=False,
+        )
+
+        section = special_endpoints.MessageSectionBuilder(accessory=accessory)
+
+        section.add_text_display("A display?")
+
+        section.add_text_display("Yes, a display.")
+
+        payload, attachments = section.build()
+
+        assert payload == {
+            "type": components.ComponentType.SECTION,
+            "accessory": {
+                "type": components.ComponentType.THUMBNAIL,
+                "media": {"url": resource.url},
+                "description": "a cool image",
+                "spoiler": False,
+            },
+            "components": [
+                {"type": components.ComponentType.TEXT_DISPLAY, "content": "A display?"},
+                {"type": components.ComponentType.TEXT_DISPLAY, "content": "Yes, a display."},
+            ],
+        }
+
+        assert attachments == [resource]
+
+    def test_build_without_optional_fields(self):
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        accessory = special_endpoints.MessageThumbnailBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource),
+            description="a cool image",
+            spoiler=False,
+        )
+
+        section = special_endpoints.MessageSectionBuilder(accessory=accessory)
+
+        payload, attachments = section.build()
+
+        assert payload == {
+            "type": components.ComponentType.SECTION,
+            "accessory": {
+                "type": components.ComponentType.THUMBNAIL,
+                "media": {"url": resource.url},
+                "description": "a cool image",
+                "spoiler": False,
+            },
+            "components": [],
+        }
+
+        assert attachments == [resource]
+
+
+class TestMessageTextDisplayBuilder:
+    def test_type_property(self):
+        text_display = special_endpoints.MessageTextDisplayBuilder(content="A display?")
+
+        assert text_display.type is components.ComponentType.TEXT_DISPLAY
+
+    def test_build(self):
+        text_display = special_endpoints.MessageTextDisplayBuilder(content="A display?")
+
+        payload, attachments = text_display.build()
+
+        assert payload == {"type": components.ComponentType.TEXT_DISPLAY, "content": "A display?"}
+
+        assert attachments == []
+
+
+class TestMessageThumbnailBuilder:
+    def test_type_property(self):
+        thumbnail = special_endpoints.MessageThumbnailBuilder(media=mock.Mock())
+
+        assert thumbnail.type is components.ComponentType.THUMBNAIL
+
+    def test_build(self):
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        thumbnail = special_endpoints.MessageThumbnailBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource),
+            description="a cool image",
+            spoiler=False,
+        )
+
+        payload, attachments = thumbnail.build()
+
+        assert payload == {
+            "type": components.ComponentType.THUMBNAIL,
+            "media": {"url": resource.url},
+            "description": "a cool image",
+            "spoiler": False,
+        }
+
+        assert attachments == [resource]
+
+    def test_build_without_optional_fields(self):
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        thumbnail = special_endpoints.MessageThumbnailBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource)
+        )
+
+        payload, attachments = thumbnail.build()
+
+        assert payload == {"type": components.ComponentType.THUMBNAIL, "media": {"url": resource.url}}
+
+        assert attachments == [resource]
+
+
+class TestMessageMediaGalleryBuilder:
+    def test_type_property(self):
+        media_gallery = special_endpoints.MessageMediaGalleryBuilder()
+
+        assert media_gallery.type is components.ComponentType.MEDIA_GALLERY
+
+    def test_add_item(self):
+        media_gallery = special_endpoints.MessageMediaGalleryBuilder()
+
+        assert media_gallery.items == []
+
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource),
+            description="Some description",
+            spoiler=False,
+        )
+
+        media_gallery.add_item(media_gallery_item)
+
+        assert media_gallery.items == [media_gallery_item]
+
+    def test_add_media_gallery_item(self):
+        media_gallery = special_endpoints.MessageMediaGalleryBuilder()
+
+        assert media_gallery.items == []
+
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        media = special_endpoints.MessageMediaItemBuilder(resource=resource)
+
+        media_gallery.add_media_gallery_item(media, description="Some description", spoiler=False)
+
+        assert len(media_gallery.items) == 1
+
+        assert media_gallery.items[0].media == media
+        assert media_gallery.items[0].description == "Some description"
+        assert media_gallery.items[0].spoiler is False
+
+    def test_build(self):
+        media_gallery = special_endpoints.MessageMediaGalleryBuilder()
+
+        resource_1 = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+
+        resource_2 = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file-2.png")
+
+        media_gallery.add_media_gallery_item(
+            special_endpoints.MessageMediaItemBuilder(resource=resource_1),
+            description="Some description",
+            spoiler=False,
+        )
+
+        media_gallery.add_media_gallery_item(
+            special_endpoints.MessageMediaItemBuilder(resource=resource_2),
+            description="Some description 2",
+            spoiler=True,
+        )
+
+        payload, attachments = media_gallery.build()
+
+        assert payload == {
+            "type": components.ComponentType.MEDIA_GALLERY,
+            "items": [
+                {"media": {"url": resource_1.url}, "description": "Some description", "spoiler": False},
+                {"media": {"url": resource_2.url}, "description": "Some description 2", "spoiler": True},
+            ],
+        }
+
+        assert attachments == [resource_1, resource_2]
+
+    def test_build_without_optional_fields(self):
+        media_gallery = special_endpoints.MessageMediaGalleryBuilder()
+
+        payload, attachments = media_gallery.build()
+
+        assert payload == {"type": components.ComponentType.MEDIA_GALLERY, "items": []}
+
+        assert attachments == []
+
+
+class TestMessageMediaGalleryItemBuilder:
+    def test_build(self):
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource),
+            description="Some description",
+            spoiler=False,
+        )
+
+        payload, attachments = media_gallery_item.build()
+
+        assert payload == {"media": {"url": resource.url}, "description": "Some description", "spoiler": False}
+
+        assert attachments == [resource]
+
+    def test_build_without_optional_fields(self):
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource)
+        )
+
+        payload, attachments = media_gallery_item.build()
+
+        assert payload == {"media": {"url": resource.url}}
+
+        assert attachments == [resource]
+
+
+class TestMessageSeparatorBuilder:
+    def test_type_property(self):
+        separator = special_endpoints.MessageSeparatorBuilder()
+
+        assert separator.type is components.ComponentType.SEPARATOR
+
+    def test_build(self):
+        separator = special_endpoints.MessageSeparatorBuilder(spacing=components.SpacingType.SMALL, divider=True)
+
+        payload, attachments = separator.build()
+
+        assert payload == {
+            "type": components.ComponentType.SEPARATOR,
+            "spacing": components.SpacingType.SMALL,
+            "divider": True,
+        }
+
+        assert attachments == []
+
+    def test_build_without_optional_fields(self):
+        separator = special_endpoints.MessageSeparatorBuilder()
+
+        payload, attachments = separator.build()
+
+        assert payload == {"type": components.ComponentType.SEPARATOR}
+
+        assert attachments == []
+
+
+class TestMessageFileBuilder:
+    def test_type_property(self):
+        file = special_endpoints.MessageFileBuilder(media=mock.Mock())
+
+        assert file.type is components.ComponentType.FILE
+
+    def test_build(self):
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        file = special_endpoints.MessageFileBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource), spoiler=True
+        )
+
+        payload, attachments = file.build()
+
+        assert payload == {"type": components.ComponentType.FILE, "media": {"url": resource.url}, "spoiler": True}
+
+        assert attachments == [resource]
+
+    def test_build_without_optional_fields(self):
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        file = special_endpoints.MessageFileBuilder(media=special_endpoints.MessageMediaItemBuilder(resource=resource))
+
+        payload, attachments = file.build()
+
+        assert payload == {"type": components.ComponentType.FILE, "media": {"url": resource.url}}
+
+        assert attachments == [resource]
+
+
+class TestMessageContainerBuilder:
+    def test_type_property(self):
+        container = special_endpoints.MessageContainerBuilder()
+
+        assert container.type is components.ComponentType.CONTAINER
+
+    def test_add_component(self):
+        container = special_endpoints.MessageContainerBuilder()
+
+        assert container.components == []
+
+        component = special_endpoints.MessageSeparatorBuilder()
+
+        container.add_component(component)
+
+        assert container.components == [component]
+
+    def test_add_action_row(self):
+        container = special_endpoints.MessageContainerBuilder()
+
+        assert container.components == []
+
+        button = special_endpoints.InteractiveButtonBuilder(
+            style=components.ButtonStyle.DANGER, custom_id="button", label="test button"
+        )
+
+        container.add_action_row([button])
+
+        assert len(container.components) == 1
+
+        component = container.components[0]
+
+        assert isinstance(component, special_endpoints.MessageActionRowBuilder)
+
+        assert component.components == [button]
+
+    def test_add_text_display(self):
+        container = special_endpoints.MessageContainerBuilder()
+
+        assert container.components == []
+
+        container.add_text_display("A text display!")
+
+        assert len(container.components) == 1
+
+        component = container.components[0]
+
+        assert isinstance(component, special_endpoints.MessageTextDisplayBuilder)
+
+        assert component.content == "A text display!"
+
+    def test_add_media_gallery(self):
+        container = special_endpoints.MessageContainerBuilder()
+
+        assert container.components == []
+
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource),
+            description="Some description",
+            spoiler=False,
+        )
+
+        container.add_media_gallery([media_gallery_item])
+
+        assert len(container.components) == 1
+
+        component = container.components[0]
+
+        assert isinstance(component, special_endpoints.MessageMediaGalleryBuilder)
+
+        assert component.items == [media_gallery_item]
+
+    def test_add_separator(self):
+        container = special_endpoints.MessageContainerBuilder()
+
+        assert container.components == []
+
+        container.add_separator(spacing=components.SpacingType.LARGE, divider=False)
+
+        assert len(container.components) == 1
+
+        component = container.components[0]
+
+        assert isinstance(component, special_endpoints.MessageSeparatorBuilder)
+
+        assert component.spacing == components.SpacingType.LARGE
+        assert component.divider is False
+
+    def test_add_file(self):
+        container = special_endpoints.MessageContainerBuilder()
+
+        assert container.components == []
+
+        resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        media = special_endpoints.MessageMediaItemBuilder(resource=resource)
+        container.add_file(media=media, spoiler=True)
+
+        assert len(container.components) == 1
+
+        component = container.components[0]
+
+        assert isinstance(component, special_endpoints.MessageFileBuilder)
+
+        assert component.media == media
+        assert component.spoiler is True
+
+    def test_build(self):
+        accent_color = colors.Color.from_hex_code("#FFB123")
+        container = special_endpoints.MessageContainerBuilder(accent_color=accent_color, spoiler=True)
+
+        mock_button = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.BUTTON), ())),
+        )
+
+        container.add_action_row([mock_button])
+
+        container.add_text_display("A text display!")
+
+        resource_1 = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
+            media=special_endpoints.MessageMediaItemBuilder(resource=resource_1),
+            description="Some description",
+            spoiler=False,
+        )
+
+        container.add_media_gallery([media_gallery_item])
+
+        container.add_separator(spacing=components.SpacingType.LARGE, divider=False)
+
+        resource_2 = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
+        media = special_endpoints.MessageMediaItemBuilder(resource=resource_2)
+        container.add_file(media=media, spoiler=True)
+
+        payload, attachments = container.build()
+
+        assert payload == {
+            "type": components.ComponentType.CONTAINER,
+            "accent_color": accent_color,
+            "spoiler": True,
+            "components": [
+                {"type": components.ComponentType.ACTION_ROW, "components": [mock_button.build.return_value[0]]},
+                {"type": components.ComponentType.TEXT_DISPLAY, "content": "A text display!"},
+                {
+                    "type": components.ComponentType.MEDIA_GALLERY,
+                    "items": [{"media": {"url": resource_1.url}, "description": "Some description", "spoiler": False}],
+                },
+                {"type": components.ComponentType.SEPARATOR, "spacing": components.SpacingType.LARGE, "divider": False},
+                {"type": components.ComponentType.FILE, "media": {"url": resource_2.url}, "spoiler": True},
+            ],
+        }
+
+        mock_button.build.assert_called_once_with()
+
+        assert attachments == [resource_1, resource_2]
+
+    def test_build_without_optional_fields(self):
+        container = special_endpoints.MessageContainerBuilder()
+
+        payload, attachments = container.build()
+
+        assert payload == {"type": components.ComponentType.CONTAINER, "components": []}
+
+        assert attachments == []
 
 
 class TestModalActionRow:
@@ -1857,16 +2396,25 @@ class TestModalActionRow:
         assert menu.max_length == 447
 
     def test_build(self):
-        mock_component_1 = mock.Mock(type=components.ComponentType.TEXT_INPUT)
-        mock_component_2 = mock.Mock(type=components.ComponentType.TEXT_INPUT)
+        mock_component_1 = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.TEXT_INPUT), ())),
+        )
+        mock_component_2 = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.TEXT_INPUT), ())),
+        )
 
-        row = special_endpoints.ModalActionRowBuilder().add_component(mock_component_1).add_component(mock_component_2)
+        row = special_endpoints.ModalActionRowBuilder(components=[mock_component_1, mock_component_2])
 
-        result = row.build()
+        payload, attachments = row.build()
 
-        assert result == {
+        assert payload == {
             "type": components.ComponentType.ACTION_ROW,
-            "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
+            "components": [mock_component_1.build.return_value[0], mock_component_2.build.return_value[0]],
         }
+
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+        assert attachments == []
