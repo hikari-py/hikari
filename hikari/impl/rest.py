@@ -68,7 +68,6 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
-from hikari.api import special_endpoints as special_endpoints_api
 from hikari.impl import buckets as buckets_impl
 from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
@@ -1443,9 +1442,9 @@ class RESTClientImpl(rest_api.RESTClient):
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
             if component is not None:
-                if isinstance(component, special_endpoints_api.MessageMedia):
-                    final_attachments.extend(component.attachments())
-                serialized_components = [component.build()]
+                component_payload, component_attachments = component.build()
+                serialized_components = [component_payload]
+                final_attachments.extend(component_attachments)
             else:
                 serialized_components = []
 
@@ -1454,9 +1453,9 @@ class RESTClientImpl(rest_api.RESTClient):
                 if len(components) > 0:
                     serialized_components = []
                     for component in components:
-                        if isinstance(component, special_endpoints_api.MessageMedia):
-                            final_attachments.extend(component.attachments())
-                        serialized_components.append(component.build())
+                        component_payload, component_attachments = component.build()
+                        serialized_components.append(component_payload)
+                        final_attachments.extend(component_attachments)
             else:
                 serialized_components = []
 
@@ -1918,7 +1917,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
-        with_components: undefined.UndefinedOr[bool] = undefined.UNDEFINED
+        with_components: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages_.Message:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
@@ -2005,7 +2004,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        with_components: undefined.UndefinedOr[bool] = undefined.UNDEFINED
+        with_components: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages_.Message:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
