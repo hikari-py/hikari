@@ -1813,10 +1813,6 @@ class CacheImpl(cache.MutableCache):
         if message.user_mentions is not undefined.UNDEFINED:
             user_mentions = {user_id: self._set_user(user) for user_id, user in message.user_mentions.items()}
 
-        interaction_user: typing.Optional[cache_utility.RefCell[users.User]] = None
-        if message.interaction:
-            interaction_user = self._set_user(message.interaction.user)
-
         referenced_message: typing.Optional[cache_utility.RefCell[cache_utility.MessageData]] = None
         if message.referenced_message:
             reference_id = message.referenced_message.id
@@ -1838,16 +1834,8 @@ class CacheImpl(cache.MutableCache):
                 for user in user_mentions.values():
                     self._increment_ref_count(user)
 
-            if interaction_user:
-                self._increment_ref_count(interaction_user)
-
         message_data = cache_utility.MessageData.build_from_entity(
-            message,
-            author=author,
-            member=member,
-            user_mentions=user_mentions,
-            referenced_message=referenced_message,
-            interaction_user=interaction_user,
+            message, author=author, member=member, user_mentions=user_mentions, referenced_message=referenced_message
         )
 
         # Ensure any previously set message ref cell is in the right place before updating the cache.

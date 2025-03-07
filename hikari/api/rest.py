@@ -6980,7 +6980,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application slash command.
@@ -7011,10 +7010,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             If `0`, then it will be available for all members. Note that this doesn't affect
             administrators of the guild and overwrites.
-        dm_enabled
-            Whether this command is enabled in DMs with the bot.
-
-            This can only be applied to non-guild commands.
         nsfw
             Whether this command should be age-restricted.
 
@@ -7054,7 +7049,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application context menu command.
@@ -7080,10 +7074,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             If `0`, then it will be available for all members. Note that this doesn't affect
             administrators of the guild and overwrites.
-        dm_enabled
-            Whether this command is enabled in DMs with the bot.
-
-            This can only be applied to non-guild commands.
         nsfw
             Whether this command should be age-restricted.
 
@@ -7169,7 +7159,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         """Edit a registered application command.
 
@@ -7197,10 +7186,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             If `0`, then it will be available for all members. Note that this doesn't affect
             administrators of the guild and overwrites.
-        dm_enabled
-            Whether this command is enabled in DMs with the bot.
-
-            This can only be applied to non-guild commands.
 
         Returns
         -------

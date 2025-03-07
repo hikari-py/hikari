@@ -43,6 +43,10 @@ __all__: typing.Sequence[str] = (
     "TokenType",
     "ApplicationRoleConnectionMetadataRecordType",
     "ApplicationRoleConnectionMetadataRecord",
+    "OAuth2InstallParameters",
+    "ApplicationContextType",
+    "ApplicationIntegrationType",
+    "ApplicationIntegrationConfiguration",
     "get_token_id",
 )
 
@@ -634,6 +638,11 @@ class Application(guilds.PartialApplication):
     approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of guilds this application is part of."""
 
+    integration_types_config: typing.Mapping[ApplicationIntegrationType, ApplicationIntegrationConfiguration] = (
+        attrs.field(eq=False, hash=False, repr=False)
+    )
+    """The default scopes and permissions for each integration type."""
+
     @property
     def cover_image_url(self) -> typing.Optional[files.URL]:
         """Rich presence cover image URL for this application, if set."""
@@ -844,6 +853,52 @@ class ApplicationRoleConnectionMetadataRecord:
         eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of description localizations for this metadata field."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ApplicationIntegrationConfiguration:
+    """The Application Integration Configuration for the related [ApplicationIntegrationType][]."""
+
+    oauth2_install_parameters: typing.Optional[OAuth2InstallParameters] = attrs.field(eq=False, hash=False, repr=True)
+    """The OAuth2 Install parameters for the Application Integration."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class OAuth2InstallParameters:
+    """OAuth2 Install Parameters."""
+
+    scopes: typing.Sequence[OAuth2Scope] = attrs.field(eq=False, hash=False, repr=True)
+    """The scopes the application will be added to the server with."""
+
+    permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=True)
+    """The permissions that will be requested for the bot role."""
+
+
+@typing.final
+class ApplicationIntegrationType(int, enums.Enum):
+    """Where an application can be installed."""
+
+    GUILD_INSTALL = 0
+    """Application is installable to all guilds."""
+
+    USER_INSTALL = 1
+    """Application is installable to all users."""
+
+
+@typing.final
+class ApplicationContextType(int, enums.Enum):
+    """The context in which to install the application."""
+
+    GUILD = 0
+    """Command can be ran inside servers."""
+
+    BOT_DM = 1
+    """Command can be ran inside the bot's DM."""
+
+    PRIVATE_CHANNEL = 2
+    """Command can be ran inside any of the user's DM or Group DM's, other than the bot's DM."""
 
 
 def get_token_id(token: str) -> snowflakes.Snowflake:

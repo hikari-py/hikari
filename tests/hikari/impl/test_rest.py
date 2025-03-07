@@ -5689,7 +5689,6 @@ class TestRESTClientImplAsync:
             guild=StubModel(653452134),
             options=[mock_option],
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
         )
 
@@ -5703,7 +5702,6 @@ class TestRESTClientImplAsync:
                 "description": "not ok anymore",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
                 "default_member_permissions": 8,
-                "dm_permission": False,
                 "nsfw": True,
             },
         )
@@ -5756,7 +5754,6 @@ class TestRESTClientImplAsync:
             name_localizations={locales.Locale.TR: "hhh"},
             description_localizations={locales.Locale.TR: "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
         )
 
@@ -5774,7 +5771,6 @@ class TestRESTClientImplAsync:
             name_localizations={"tr": "hhh"},
             description_localizations={"tr": "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
         )
 
@@ -5789,7 +5785,6 @@ class TestRESTClientImplAsync:
             "okokok",
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
             name_localizations={locales.Locale.TR: "hhh"},
         )
@@ -5804,7 +5799,6 @@ class TestRESTClientImplAsync:
             name="okokok",
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
             name_localizations={"tr": "hhh"},
         )
@@ -5871,7 +5865,6 @@ class TestRESTClientImplAsync:
             description="cancelled",
             options=[mock_option],
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
-            dm_enabled=True,
         )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
@@ -5885,7 +5878,6 @@ class TestRESTClientImplAsync:
                 "description": "cancelled",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
                 "default_member_permissions": 4,
-                "dm_permission": True,
             },
         )
         rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)

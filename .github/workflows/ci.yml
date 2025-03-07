@@ -2,9 +2,11 @@ name: CI
 
 on:
   push:
-    branches-ignore:
-      - "dependabot/**"
+    branches:
+      - master
   pull_request:
+    branches:
+      - master
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -25,26 +27,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
+          # TODO(https://github.com/astral-sh/setup-uv/issues/226): Remove this.
+          prune-cache: ${{ matrix.os != 'windows-latest' }}
 
       - name: Test Installation
+        shell: bash
         run: |
-          pip install -r dev-requirements/build.txt
+          uv pip install .
+          uv pip uninstall hikari
 
-          pip install .
-          pip uninstall -y hikari
-
-          pip install .[speedups]
-          pip uninstall -y hikari
+          uv pip install .[speedups]
+          uv pip uninstall hikari
 
       - name: Run tests
+        shell: bash
         run: |
-          pip install -r dev-requirements.txt
-          nox -s pytest
-          nox -s pytest-all-features -- --cov-append
+          uv sync --frozen --only-group nox
+
+          nox -s pytest -- --coverage
+          nox -s pytest-all-features -- --coverage --cov-append
 
           python scripts/ci/normalize_coverage.py
 
@@ -65,8 +70,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.10"
 
@@ -94,7 +99,8 @@ jobs:
 
       - name: Combine coverage
         run: |
-          pip install -r dev-requirements/coverage.txt
+          uv sync --frozen --only-group coverage
+
           coverage combine
           coverage xml
           coverage report
@@ -113,15 +119,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: 3.9
+
+      - name: Install nox
+        run: |
+          uv sync --frozen --only-group nox
 
       - name: Check stubs
         if: always()
         run: |
-          pip install -r dev-requirements.txt
           nox -s generate-stubs
           if [ "$(git status --short)" ]; then
             echo "Stubs were not updated accordingly to the changes. Please run 'nox -s generate-stubs' and commit the changes to fix this."
@@ -176,14 +185,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: 3.9
 
       - name: Test twemoji mapping
         run: |
-          pip install -r dev-requirements.txt
+          uv sync --frozen --only-group nox
+
           nox -s twemoji-test
 
   docs:
@@ -193,15 +203,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
         with:
           # NOTE: This should be kept up to date with .readthedocs.yaml
           python-version: 3.11
 
       - name: Build documentation
         run: |
-          pip install -r dev-requirements.txt
+          uv sync --frozen --only-group nox
           nox -s mkdocs
 
       - name: Upload artifacts
