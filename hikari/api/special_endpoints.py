@@ -2232,6 +2232,8 @@ MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuild
 class MessageMediaItemBuilder(abc.ABC):
     """Builder class for media items."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def resource(self) -> files.Resource[files.AsyncReader]:
@@ -2249,6 +2251,8 @@ class MessageMediaItemBuilder(abc.ABC):
 
 class MessageSectionBuilder(ComponentBuilder, abc.ABC):
     """Builder class for section components."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -2304,6 +2308,8 @@ class MessageSectionBuilder(ComponentBuilder, abc.ABC):
 class MessageTextDisplayBuilder(ComponentBuilder, abc.ABC):
     """Builder class for text display components."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[components_.ComponentType.TEXT_DISPLAY]:
@@ -2317,6 +2323,8 @@ class MessageTextDisplayBuilder(ComponentBuilder, abc.ABC):
 
 class MessageThumbnailBuilder(ComponentBuilder, abc.ABC):
     """Builder class for thumbnail components."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -2341,6 +2349,8 @@ class MessageThumbnailBuilder(ComponentBuilder, abc.ABC):
 
 class MessageMediaGalleryBuilder(ComponentBuilder, abc.ABC):
     """Builder class for media gallery components."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
@@ -2401,6 +2411,8 @@ class MessageMediaGalleryBuilder(ComponentBuilder, abc.ABC):
 class MessageMediaGalleryItemBuilder(abc.ABC):
     """Builder class for a media gallery item."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def media(self) -> MessageMediaItemBuilder:
@@ -2432,6 +2444,8 @@ class MessageMediaGalleryItemBuilder(abc.ABC):
 class MessageSeparatorBuilder(ComponentBuilder, abc.ABC):
     """Builder class for separator components."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[components_.ComponentType.SEPARATOR]:
@@ -2451,6 +2465,8 @@ class MessageSeparatorBuilder(ComponentBuilder, abc.ABC):
 class MessageFileBuilder(ComponentBuilder, abc.ABC):
     """Builder class for file components."""
 
+    __slots__: typing.Sequence[str] = ()
+
     @property
     @abc.abstractmethod
     def type(self) -> typing.Literal[components_.ComponentType.FILE]:
@@ -2469,6 +2485,8 @@ class MessageFileBuilder(ComponentBuilder, abc.ABC):
 
 class MessageContainerBuilder(ComponentBuilder, abc.ABC):
     """Builder class for container components."""
+
+    __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod

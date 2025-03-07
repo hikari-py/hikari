@@ -3408,10 +3408,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_application_id := payload.get("application_id"):
             application_id = snowflakes.Snowflake(raw_application_id)
 
-        interaction: undefined.UndefinedNoneOr[message_models.MessageInteraction] = undefined.UNDEFINED
-        if interaction_payload := payload.get("interaction"):
-            interaction = self._deserialize_message_interaction(interaction_payload)
-
         components: undefined.UndefinedOr[typing.Sequence[component_models.TopLevelComponentTypesT]] = (
             undefined.UNDEFINED
         )
