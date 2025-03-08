@@ -5538,12 +5538,13 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def action_row_payload(self, button_payload):
-        return {"type": 1, "components": [button_payload]}
+        return {"type": 1, "id": 8394572, "components": [button_payload]}
 
     @pytest.fixture
     def button_payload(self, custom_emoji_payload):
         return {
             "type": 2,
+            "id": 9173652,
             "label": "Click me!",
             "style": 1,
             "emoji": custom_emoji_payload,
@@ -5552,10 +5553,11 @@ class TestEntityFactoryImpl:
             "disabled": True,
         }
 
-    def test_deserialize__deserialize_button(self, entity_factory_impl, button_payload, custom_emoji_payload):
+    def test__deserialize_button(self, entity_factory_impl, button_payload, custom_emoji_payload):
         button = entity_factory_impl._deserialize_button(button_payload)
 
         assert button.type is component_models.ComponentType.BUTTON
+        assert button.id == 9173652
         assert button.style is component_models.ButtonStyle.PRIMARY
         assert button.label == "Click me!"
         assert button.emoji == entity_factory_impl.deserialize_emoji(custom_emoji_payload)
@@ -5569,6 +5571,7 @@ class TestEntityFactoryImpl:
         button = entity_factory_impl._deserialize_button({"type": 2, "style": 5})
 
         assert button.type is component_models.ComponentType.BUTTON
+        assert button.id is None
         assert button.style is component_models.ButtonStyle.LINK
         assert button.label is None
         assert button.emoji is None
@@ -5580,6 +5583,7 @@ class TestEntityFactoryImpl:
     def select_menu_payload(self, custom_emoji_payload):
         return {
             "type": 5,
+            "id": 9830741,
             "custom_id": "Not an ID",
             "options": [
                 {
@@ -5600,6 +5604,7 @@ class TestEntityFactoryImpl:
         menu = entity_factory_impl._deserialize_text_select_menu(select_menu_payload)
 
         assert menu.type is component_models.ComponentType.USER_SELECT_MENU
+        assert menu.id == 9830741
         assert menu.custom_id == "Not an ID"
 
         # SelectMenuOption
@@ -5622,6 +5627,8 @@ class TestEntityFactoryImpl:
             {"type": 3, "custom_id": "Not an ID", "options": [{"label": "Trans", "value": "very trans"}]}
         )
 
+        assert menu.id is None
+
         # SelectMenuOption
         assert len(menu.options) == 1
         option = menu.options[0]
@@ -5636,12 +5643,13 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def text_input_payload(self):
-        return {"type": 4, "custom_id": "name", "value": "Wumpus"}
+        return {"type": 4, "id": 3904875, "custom_id": "name", "value": "Wumpus"}
 
     def test__deserialize_text_input(self, entity_factory_impl, text_input_payload):
         text_input = entity_factory_impl._deserialize_text_input(text_input_payload)
 
         assert text_input.type == component_models.ComponentType.TEXT_INPUT
+        assert text_input.id == 3904875
         assert text_input.custom_id == "name"
         assert text_input.value == "Wumpus"
 
@@ -5653,13 +5661,13 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def text_display_payload(self):
-        return {"type": 10, "id": "text_display.id", "content": "A text display!"}
+        return {"type": 10, "id": 9840745, "content": "A text display!"}
 
     @pytest.fixture
     def thumbnail_payload(self, media_payload):
         return {
             "type": 11,
-            "id": "thumbnail.id",
+            "id": 9824133,
             "media": media_payload,
             "description": "A cool description.",
             "spoiler": False,
@@ -5667,7 +5675,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def section_payload(self, button_payload, text_display_payload):
-        return {"type": 9, "id": "section.id", "accessory": button_payload, "components": [text_display_payload]}
+        return {"type": 9, "id": 9478385, "accessory": button_payload, "components": [text_display_payload]}
 
     @pytest.fixture
     def media_gallery_item_payload(self, media_payload):
@@ -5675,25 +5683,19 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def media_gallery_payload(self, media_gallery_item_payload):
-        return {"type": 12, "id": "media_gallery.id", "items": [media_gallery_item_payload]}
+        return {"type": 12, "id": 9267351, "items": [media_gallery_item_payload]}
 
     @pytest.fixture
     def separator_payload(self):
-        return {"type": 14, "id": "separator.id", "spacing": 1, "divider": True}
+        return {"type": 14, "id": 4920478, "spacing": 1, "divider": True}
 
     @pytest.fixture
     def file_payload(self, media_payload):
-        return {"type": 13, "id": "file.id", "file": media_payload, "spoiler": False}
+        return {"type": 13, "id": 2407385, "file": media_payload, "spoiler": False}
 
     @pytest.fixture
     def container_payload(self, file_payload):
-        return {
-            "type": 17,
-            "id": "container.id",
-            "accent_color": 16757027,
-            "spoiler": True,
-            "components": [file_payload],
-        }
+        return {"type": 17, "id": 5830957, "accent_color": 16757027, "spoiler": True, "components": [file_payload]}
 
     def test__deserialize_media(self, entity_factory_impl, media_payload):
         media = entity_factory_impl._deserialize_media(media_payload)
@@ -5707,9 +5709,19 @@ class TestEntityFactoryImpl:
 
         assert action_row.type == component_models.ComponentType.ACTION_ROW
 
+        assert action_row.id == 8394572
         assert action_row.components == [entity_factory_impl._deserialize_button(button_payload)]
 
         assert isinstance(action_row, component_models.ActionRowComponent)
+
+    def test__deserialize_action_row_component_with_unset_fields(
+        self, entity_factory_impl, action_row_payload, button_payload
+    ):
+        del action_row_payload["id"]
+
+        action_row = entity_factory_impl._deserialize_action_row_component(action_row_payload)
+
+        assert action_row.id is None
 
     def test__deserialize_action_row_component_with_unknown_component_type(
         self, entity_factory_impl, action_row_payload
@@ -5726,7 +5738,7 @@ class TestEntityFactoryImpl:
         section = entity_factory_impl._deserialize_section_component(section_payload)
 
         assert section.type == component_models.ComponentType.SECTION
-        assert section.id == "section.id"
+        assert section.id == 9478385
         assert section.accessory == entity_factory_impl._deserialize_button(button_payload)
         assert section.components == [entity_factory_impl._deserialize_text_display_component(text_display_payload)]
 
@@ -5750,7 +5762,7 @@ class TestEntityFactoryImpl:
         thumbnail = entity_factory_impl._deserialize_thumbnail_component(thumbnail_payload)
 
         assert thumbnail.type == component_models.ComponentType.THUMBNAIL
-        assert thumbnail.id == "thumbnail.id"
+        assert thumbnail.id == 9824133
         assert thumbnail.media == entity_factory_impl._deserialize_media(media_payload)
         assert thumbnail.description == "A cool description."
         assert thumbnail.spoiler is False
@@ -5772,7 +5784,7 @@ class TestEntityFactoryImpl:
         text_display = entity_factory_impl._deserialize_text_display_component(text_display_payload)
 
         assert text_display.type == component_models.ComponentType.TEXT_DISPLAY
-        assert text_display.id == "text_display.id"
+        assert text_display.id == 9840745
         assert text_display.content == "A text display!"
 
         assert isinstance(text_display, component_models.TextDisplayComponent)
@@ -5790,15 +5802,18 @@ class TestEntityFactoryImpl:
         media_gallery = entity_factory_impl._deserialize_media_gallery_component(media_gallery_payload)
 
         assert media_gallery.type == component_models.ComponentType.MEDIA_GALLERY
+        assert media_gallery.id == 9267351
         assert media_gallery.items == [entity_factory_impl._deserialize_media_gallery_item(media_gallery_item_payload)]
 
         assert isinstance(media_gallery, component_models.MediaGalleryComponent)
 
     def test__deserialize_media_gallery_component_with_unset_fields(self, entity_factory_impl, media_gallery_payload):
+        del media_gallery_payload["id"]
         media_gallery_payload["items"] = []
 
         media_gallery = entity_factory_impl._deserialize_media_gallery_component(media_gallery_payload)
 
+        assert media_gallery.id is None
         assert media_gallery.items == []
 
     def test__deserialize_media_gallery_item(self, entity_factory_impl, media_gallery_item_payload, media_payload):
@@ -5823,7 +5838,7 @@ class TestEntityFactoryImpl:
         separator = entity_factory_impl._deserialize_separator_component(separator_payload)
 
         assert separator.type == component_models.ComponentType.SEPARATOR
-        assert separator.id == "separator.id"
+        assert separator.id == 4920478
         assert separator.spacing == component_models.SpacingType.SMALL
         assert separator.divider is True
 
@@ -5844,7 +5859,7 @@ class TestEntityFactoryImpl:
         file = entity_factory_impl._deserialize_file_component(file_payload)
 
         assert file.type == component_models.ComponentType.FILE
-        assert file.id == "file.id"
+        assert file.id == 2407385
         assert file.file == entity_factory_impl._deserialize_media(media_payload)
         assert file.spoiler is False
 
@@ -5863,7 +5878,7 @@ class TestEntityFactoryImpl:
         container = entity_factory_impl._deserialize_container_component(container_payload)
 
         assert container.type == component_models.ComponentType.CONTAINER
-        assert container.id == "container.id"
+        assert container.id == 5830957
         assert container.accent_color == color_models.Color.from_hex_code("FFB123")
         assert container.spoiler is True
         assert container.components == [entity_factory_impl._deserialize_file_component(file_payload)]
@@ -5879,9 +5894,16 @@ class TestEntityFactoryImpl:
         container = entity_factory_impl._deserialize_container_component(container_payload)
 
         assert container.id is None
-        assert container.accent_color is None
+        assert container.accent_color is undefined.UNDEFINED
         assert container.spoiler is None
         assert container.components == []
+
+    def test__deserialize_container_component_with_nullable_fields(self, entity_factory_impl, container_payload):
+        container_payload["accent_color"] = None
+
+        container = entity_factory_impl._deserialize_container_component(container_payload)
+
+        assert container.accent_color is None
 
     def test__deserialize_container_component_with_unknown_component_type(self, entity_factory_impl, container_payload):
         container_payload["components"] = [{"type": 9999}]
@@ -5939,6 +5961,7 @@ class TestEntityFactoryImpl:
 
         assert modal_components[0] == component_models.ModalActionRowComponent(
             type=component_models.ComponentType.ACTION_ROW,
+            id=8394572,
             components=[entity_factory_impl._deserialize_text_input(text_input_payload)],
         )
 
