@@ -5657,7 +5657,14 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def media_payload(self):
-        return {"url": "https://com.com.com.com.com.com.com.com.com.com/"}
+        return {
+            "url": "https://com.com.com.com.com.com.com.com.com.com/",
+            "proxy_url": "https://example.example.example.example.example.example.example.example.example.example/",
+            "width": 9845,
+            "height": 1904,
+            "content_type": "ooga/booga",
+            "loading_state": 2,
+        }
 
     @pytest.fixture
     def text_display_payload(self):
@@ -5701,6 +5708,14 @@ class TestEntityFactoryImpl:
         media = entity_factory_impl._deserialize_media(media_payload)
 
         assert media.url == "https://com.com.com.com.com.com.com.com.com.com/"
+        assert (
+            media.proxy_url
+            == "https://example.example.example.example.example.example.example.example.example.example/"
+        )
+        assert media.width == 9845
+        assert media.height == 1904
+        assert media.content_type == "ooga/booga"
+        assert media.loading_state == component_models.MediaLoadingType.LOADED_SUCCESS
 
         assert isinstance(media, component_models.MediaResource)
 
