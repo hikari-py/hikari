@@ -2973,7 +2973,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 # If we somehow get a top-level component full of unknown components, ignore the top-level
                 # component all-together
                 top_level_components.append(
-                    component_models.ActionRowComponent(type=top_level_component_type, components=components)
+                    component_models.ActionRowComponent(
+                        type=top_level_component_type, id=payload.get("id"), components=components
+                    )
                 )
 
         return top_level_components
@@ -3002,6 +3004,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         emoji_payload = payload.get("emoji")
         return component_models.ButtonComponent(
             type=component_models.ComponentType(payload["type"]),
+            id=payload.get("id"),
             style=component_models.ButtonStyle(payload["style"]),
             label=payload.get("label"),
             emoji=self.deserialize_emoji(emoji_payload) if emoji_payload else None,
@@ -3013,6 +3016,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_select_menu(self, payload: data_binding.JSONObject) -> component_models.SelectMenuComponent:
         return component_models.SelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
+            id=payload.get("id"),
             custom_id=payload["custom_id"],
             placeholder=payload.get("placeholder"),
             min_values=payload.get("min_values", 1),
@@ -3042,6 +3046,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return component_models.TextSelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
+            id=payload.get("id"),
             custom_id=payload["custom_id"],
             options=options,
             placeholder=payload.get("placeholder"),
@@ -3060,6 +3065,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return component_models.ChannelSelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),
+            id=payload.get("id"),
             custom_id=payload["custom_id"],
             channel_types=channel_types,
             placeholder=payload.get("placeholder"),
@@ -3070,7 +3076,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_text_input(self, payload: data_binding.JSONObject) -> component_models.TextInputComponent:
         return component_models.TextInputComponent(
-            type=component_models.ComponentType(payload["type"]), custom_id=payload["custom_id"], value=payload["value"]
+            type=component_models.ComponentType(payload["type"]),
+            id=payload.get("id"),
+            custom_id=payload["custom_id"],
+            value=payload["value"],
         )
 
     def _deserialize_media(self, payload: data_binding.JSONObject) -> component_models.MediaResource:
@@ -3096,7 +3105,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             # If we somehow get a top-level component full of unknown components, ignore the top-level
             # component all-together
             return component_models.ActionRowComponent(
-                type=component_models.ComponentType.ACTION_ROW, components=components
+                type=component_models.ComponentType.ACTION_ROW, id=payload.get("id"), components=components
             )
 
     def _deserialize_section_component(self, payload: data_binding.JSONObject) -> component_models.SectionComponent:
@@ -3191,10 +3200,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             components.append(deserializer(component_payload))
 
+        accent_color: undefined.UndefinedNoneOr[color_models.Color] = undefined.UNDEFINED
+        if "accent_color" in payload:
+            if accent_color := payload["accent_color"]:
+                color_models.Color.from_int(accent_color)
+            else:
+                accent_color = None
+
         return component_models.ContainerComponent(
             type=component_models.ComponentType.CONTAINER,
             id=payload.get("id", None),
-            accent_color=color_models.Color.from_int(payload["accent_color"]) if "accent_color" in payload else None,
+            accent_color=accent_color,
             spoiler=payload.get("spoiler", None),
             components=components,
         )

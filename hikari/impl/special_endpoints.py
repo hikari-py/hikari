@@ -1521,6 +1521,7 @@ def _build_emoji(
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class _ButtonBuilder(special_endpoints.ButtonBuilder):
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _style: typing.Union[int, component_models.ButtonStyle] = attrs.field(alias="style")
     _custom_id: undefined.UndefinedOr[str] = attrs.field()
     _url: undefined.UndefinedOr[str] = attrs.field()
@@ -1538,6 +1539,10 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.BUTTON]:
         return component_models.ComponentType.BUTTON
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def style(self) -> typing.Union[int, component_models.ButtonStyle]:
@@ -1574,6 +1579,9 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         self,
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
+
+        if self._id:
+            data["id"] = self._id
 
         data["type"] = component_models.ComponentType.BUTTON
         data["style"] = self._style
@@ -1709,6 +1717,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     """Builder class for select menus."""
 
     _type: typing.Union[component_models.ComponentType, int] = attrs.field(alias="type")
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _custom_id: str = attrs.field(alias="custom_id")
     _placeholder: undefined.UndefinedOr[str] = attrs.field(alias="placeholder", default=undefined.UNDEFINED)
     _min_values: int = attrs.field(alias="min_values", default=0)
@@ -1718,6 +1727,10 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     @property
     def type(self) -> typing.Union[int, component_models.ComponentType]:
         return self._type
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def custom_id(self) -> str:
@@ -1764,6 +1777,9 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
 
+        if self._id:
+            data["id"] = self._id
+
         data["type"] = self._type
         data["custom_id"] = self._custom_id
         data.put("placeholder", self._placeholder)
@@ -1790,6 +1806,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     def __init__(
         self,
         *,
+        id: typing.Optional[int] = None,
         custom_id: str,
         parent: _ParentT,
         options: typing.Sequence[special_endpoints.SelectOptionBuilder] = (),
@@ -1803,6 +1820,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     def __init__(
         self: TextSelectMenuBuilder[typing.NoReturn],
         *,
+        id: typing.Optional[int] = None,
         custom_id: str,
         options: typing.Sequence[special_endpoints.SelectOptionBuilder] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1814,6 +1832,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     def __init__(
         self,
         *,
+        id: typing.Optional[int] = None,
         custom_id: str,
         parent: typing.Optional[_ParentT] = None,
         options: typing.Sequence[special_endpoints.SelectOptionBuilder] = (),
@@ -1824,6 +1843,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     ) -> None:
         super().__init__(
             type=component_models.ComponentType.TEXT_SELECT_MENU,
+            id=id,
             custom_id=custom_id,
             placeholder=placeholder,
             min_values=min_values,
@@ -1903,6 +1923,7 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
 class TextInputBuilder(special_endpoints.TextInputBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.TextInputBuilder`][]."""
 
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _custom_id: str = attrs.field(alias="custom_id")
     _label: str = attrs.field(alias="label")
 
@@ -1918,6 +1939,10 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.TEXT_INPUT]:
         return component_models.ComponentType.TEXT_INPUT
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def custom_id(self) -> str:
@@ -1988,6 +2013,9 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         data = data_binding.JSONObjectBuilder()
 
+        if self._id:
+            data["id"] = self._id
+
         data["type"] = component_models.ComponentType.TEXT_INPUT
         data["style"] = self._style
         data["custom_id"] = self._custom_id
@@ -2005,6 +2033,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
 class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageActionRowBuilder`][]."""
 
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _components: list[special_endpoints.MessageActionRowBuilderComponentsT] = attrs.field(
         alias="components", factory=list
     )
@@ -2013,6 +2042,10 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.ACTION_ROW]:
         return component_models.ComponentType.ACTION_ROW
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.MessageActionRowBuilderComponentsT]:
@@ -2040,10 +2073,11 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> Self:
         return self.add_component(
             InteractiveButtonBuilder(
-                style=style, custom_id=custom_id, emoji=emoji, label=label, is_disabled=is_disabled
+                id=id, style=style, custom_id=custom_id, emoji=emoji, label=label, is_disabled=is_disabled
             )
         )
 
@@ -2055,8 +2089,9 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> Self:
-        return self.add_component(LinkButtonBuilder(url=url, label=label, emoji=emoji, is_disabled=is_disabled))
+        return self.add_component(LinkButtonBuilder(id=id, url=url, label=label, emoji=emoji, is_disabled=is_disabled))
 
     def add_select_menu(
         self,
@@ -2068,10 +2103,12 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> Self:
         return self.add_component(
             SelectMenuBuilder(
                 type=type_,
+                id=id,
                 custom_id=custom_id,
                 placeholder=placeholder,
                 min_values=min_values,
@@ -2090,9 +2127,11 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> Self:
         return self.add_component(
             ChannelSelectMenuBuilder(
+                id=id,
                 custom_id=custom_id,
                 placeholder=placeholder,
                 channel_types=channel_types,
@@ -2111,8 +2150,10 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> special_endpoints.TextSelectMenuBuilder[Self]:
         component = TextSelectMenuBuilder(
+            id=id,
             custom_id=custom_id,
             parent=self,
             placeholder=placeholder,
@@ -2127,6 +2168,9 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         self,
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
+
+        if self._id:
+            payload["id"] = self._id
 
         payload.put("type", component_models.ComponentType.ACTION_ROW)
 
@@ -2166,6 +2210,7 @@ class MessageMediaItemBuilder(special_endpoints.MessageMediaItemBuilder):
 class MessageSectionBuilder(special_endpoints.MessageSectionBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageSectionBuilder`][]."""
 
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _components: list[special_endpoints.MessageTextDisplayBuilder] = attrs.field(alias="components", factory=list)
     _accessory: typing.Union[
         special_endpoints.InteractiveButtonBuilder,
@@ -2176,6 +2221,10 @@ class MessageSectionBuilder(special_endpoints.MessageSectionBuilder):
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.SECTION]:
         return component_models.ComponentType.SECTION
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.MessageTextDisplayBuilder]:
@@ -2195,8 +2244,8 @@ class MessageSectionBuilder(special_endpoints.MessageSectionBuilder):
         self._components.append(component)
         return self
 
-    def add_text_display(self, content: str) -> Self:
-        component = MessageTextDisplayBuilder(content=content)
+    def add_text_display(self, content: str, *, id: typing.Optional[int] = None) -> Self:
+        component = MessageTextDisplayBuilder(id=id, content=content)
         self.add_component(component)
         return self
 
@@ -2215,7 +2264,15 @@ class MessageSectionBuilder(special_endpoints.MessageSectionBuilder):
             components_payload.append(component_payload)
             attachments.extend(component_attachments)
 
-        payload = {"type": self.type, "components": components_payload, "accessory": accessory_payload}
+        payload = data_binding.JSONObjectBuilder()
+
+        payload["type"] = self.type
+
+        if self._id:
+            payload["id"] = self._id
+
+        payload["components"] = components_payload
+        payload["accessory"] = accessory_payload
 
         return payload, attachments
 
@@ -2224,11 +2281,16 @@ class MessageSectionBuilder(special_endpoints.MessageSectionBuilder):
 class MessageTextDisplayBuilder(special_endpoints.MessageTextDisplayBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageTextDisplayBuilder`][]."""
 
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _content: str = attrs.field(alias="content")
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.TEXT_DISPLAY]:
         return component_models.ComponentType.TEXT_DISPLAY
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def content(self) -> str:
@@ -2237,7 +2299,14 @@ class MessageTextDisplayBuilder(special_endpoints.MessageTextDisplayBuilder):
     def build(
         self,
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
-        payload = {"type": self.type, "content": self.content}
+        payload = data_binding.JSONObjectBuilder()
+
+        payload["type"] = self.type
+
+        if self._id:
+            payload["id"] = self._id
+
+        payload["content"] = self._content
 
         return payload, []
 
@@ -2246,6 +2315,7 @@ class MessageTextDisplayBuilder(special_endpoints.MessageTextDisplayBuilder):
 class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageThumbnailBuilder`][]."""
 
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _media: MessageMediaItemBuilder = attrs.field(alias="media")
     _description: typing.Optional[str] = attrs.field(alias="description", default=None)
     _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
@@ -2253,6 +2323,10 @@ class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.THUMBNAIL]:
         return component_models.ComponentType.THUMBNAIL
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def media(self) -> MessageMediaItemBuilder:
@@ -2270,16 +2344,19 @@ class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
         self,
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
-        payload.put("type", self.type)
+        payload["type"] = self.type
+
+        if self._id:
+            payload["id"] = self._id
 
         media_payload, media_attachment = self.media.build()
-        payload.put("media", media_payload)
+        payload["media"] = media_payload
 
         if self.description is not None:
-            payload.put("description", self.description)
+            payload["description"] = self.description
 
         if self.spoiler is not None:
-            payload.put("spoiler", self.spoiler)
+            payload["spoiler"] = self.spoiler
 
         return payload, [media_attachment]
 
@@ -2288,11 +2365,16 @@ class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
 class MessageMediaGalleryBuilder(special_endpoints.MessageMediaGalleryBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageMediaGalleryBuilder`][]."""
 
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _items: list[special_endpoints.MessageMediaGalleryItemBuilder] = attrs.field(alias="items", factory=list)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.MEDIA_GALLERY]:
         return component_models.ComponentType.MEDIA_GALLERY
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def items(self) -> list[special_endpoints.MessageMediaGalleryItemBuilder]:
@@ -2325,7 +2407,14 @@ class MessageMediaGalleryBuilder(special_endpoints.MessageMediaGalleryBuilder):
             items_payload.append(item_payload)
             attachments.extend(item_attachments)
 
-        payload = {"type": self.type, "items": items_payload}
+        payload = data_binding.JSONObjectBuilder()
+
+        payload["type"] = self.type
+
+        if self._id:
+            payload["id"] = self._id
+
+        payload["items"] = items_payload
 
         return payload, attachments
 
@@ -2371,12 +2460,17 @@ class MessageMediaGalleryItemBuilder(special_endpoints.MessageMediaGalleryItemBu
 class MessageSeparatorBuilder(special_endpoints.MessageSeparatorBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageSeparatorBuilder`][]."""
 
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _spacing: typing.Optional[component_models.SpacingType] = attrs.field(alias="spacing", default=None)
     _divider: typing.Optional[bool] = attrs.field(alias="divider", default=None)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.SEPARATOR]:
         return component_models.ComponentType.SEPARATOR
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def spacing(self) -> typing.Optional[component_models.SpacingType]:
@@ -2390,15 +2484,18 @@ class MessageSeparatorBuilder(special_endpoints.MessageSeparatorBuilder):
         self,
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
-        payload.put("type", self.type)
+        payload["type"] = self.type
+
+        if self._id:
+            payload["id"] = self._id
 
         # FIXME: Should it error if both spacing and divider are None?
 
         if self.spacing is not None:
-            payload.put("spacing", self.spacing)
+            payload["spacing"] = self.spacing
 
         if self.divider is not None:
-            payload.put("divider", self.divider)
+            payload["divider"] = self.divider
 
         return payload, []
 
@@ -2407,12 +2504,17 @@ class MessageSeparatorBuilder(special_endpoints.MessageSeparatorBuilder):
 class MessageFileBuilder(special_endpoints.MessageFileBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageFileBuilder`][]."""
 
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _media: special_endpoints.MessageMediaItemBuilder = attrs.field(alias="media")
     _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.FILE]:
         return component_models.ComponentType.FILE
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def media(self) -> special_endpoints.MessageMediaItemBuilder:
@@ -2426,13 +2528,16 @@ class MessageFileBuilder(special_endpoints.MessageFileBuilder):
         self,
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
-        payload.put("type", self.type)
+        payload["type"] = self.type
+
+        if self._id is not None:
+            payload["id"] = self._id
 
         media_payload, media_attachment = self.media.build()
-        payload.put("media", media_payload)
+        payload["media"] = media_payload
 
         if self.spoiler is not None:
-            payload.put("spoiler", self.spoiler)
+            payload["spoiler"] = self.spoiler
 
         return payload, [media_attachment]
 
@@ -2441,7 +2546,10 @@ class MessageFileBuilder(special_endpoints.MessageFileBuilder):
 class MessageContainerBuilder(special_endpoints.MessageContainerBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageContainerBuilder`][]."""
 
-    _accent_color: typing.Optional[colors.Color] = attrs.field(alias="accent_color", default=None)
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
+    _accent_color: undefined.UndefinedNoneOr[colors.Color] = attrs.field(
+        alias="accent_color", default=undefined.UNDEFINED
+    )
     _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
 
     _components: list[special_endpoints.MessageContainerBuilderComponentsT] = attrs.field(
@@ -2453,7 +2561,11 @@ class MessageContainerBuilder(special_endpoints.MessageContainerBuilder):
         return component_models.ComponentType.CONTAINER
 
     @property
-    def accent_color(self) -> typing.Optional[colors.Color]:
+    def id(self) -> typing.Optional[int]:
+        return self._id
+
+    @property
+    def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
         return self._accent_color
 
     @property
@@ -2468,36 +2580,52 @@ class MessageContainerBuilder(special_endpoints.MessageContainerBuilder):
         self._components.append(component)
         return self
 
-    def add_action_row(self, components: typing.Sequence[special_endpoints.MessageActionRowBuilderComponentsT]) -> Self:
-        component = MessageActionRowBuilder(components=list(components))
+    def add_action_row(
+        self,
+        components: typing.Sequence[special_endpoints.MessageActionRowBuilderComponentsT],
+        *,
+        id: typing.Optional[int] = None,
+    ) -> Self:
+        component = MessageActionRowBuilder(id=id, components=list(components))
         self.add_component(component)
         return self
 
-    def add_text_display(self, content: str) -> Self:
-        component = MessageTextDisplayBuilder(content=content)
+    def add_text_display(self, content: str, *, id: typing.Optional[int] = None) -> Self:
+        component = MessageTextDisplayBuilder(id=id, content=content)
         self.add_component(component)
         return self
 
-    def add_media_gallery(self, items: typing.Sequence[special_endpoints.MessageMediaGalleryItemBuilder]) -> Self:
-        component = MessageMediaGalleryBuilder(items=list(items))
+    def add_media_gallery(
+        self,
+        items: typing.Sequence[special_endpoints.MessageMediaGalleryItemBuilder],
+        *,
+        id: typing.Optional[int] = None,
+    ) -> Self:
+        component = MessageMediaGalleryBuilder(id=id, items=list(items))
         self.add_component(component)
         return self
 
     def add_separator(
-        self, *, spacing: typing.Optional[component_models.SpacingType] = None, divider: typing.Optional[bool] = None
+        self,
+        *,
+        spacing: typing.Optional[component_models.SpacingType] = None,
+        divider: typing.Optional[bool] = None,
+        id: typing.Optional[int] = None,
     ) -> Self:
-        component = MessageSeparatorBuilder(spacing=spacing, divider=divider)
+        component = MessageSeparatorBuilder(id=id, spacing=spacing, divider=divider)
         self.add_component(component)
         return self
 
     def add_file(
         self,
         media: typing.Union[files.Resourceish, special_endpoints.MessageMediaItemBuilder],
-        spoiler: typing.Optional[bool],
+        *,
+        spoiler: typing.Optional[bool] = None,
+        id: typing.Optional[int] = None,
     ) -> Self:
         if not isinstance(media, special_endpoints.MessageMediaItemBuilder):
             media = MessageMediaItemBuilder(resource=files.ensure_resource(media))
-        component = MessageFileBuilder(media=media, spoiler=spoiler)
+        component = MessageFileBuilder(id=id, media=media, spoiler=spoiler)
         self.add_component(component)
         return self
 
@@ -2505,13 +2633,15 @@ class MessageContainerBuilder(special_endpoints.MessageContainerBuilder):
         self,
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         payload = data_binding.JSONObjectBuilder()
-        payload.put("type", self.type)
+        payload["type"] = self.type
 
-        if self.accent_color is not None:
-            payload.put("accent_color", self.accent_color)
+        if self._id:
+            payload["id"] = self._id
+
+        payload.put("accent_color", self.accent_color)
 
         if self.spoiler is not None:
-            payload.put("spoiler", self.spoiler)
+            payload["spoiler"] = self.spoiler
 
         components_payload: typing.MutableSequence[typing.MutableMapping[str, typing.Any]] = []
         attachments: typing.MutableSequence[files.Resource[files.AsyncReader]] = []
@@ -2529,12 +2659,17 @@ class MessageContainerBuilder(special_endpoints.MessageContainerBuilder):
 class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.ModalActionRowBuilder`][]."""
 
+    _id: typing.Optional[int] = attrs.field(alias="id", default=None)
     _components: list[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
     _stored_type: typing.Optional[int] = attrs.field(init=False, default=None)
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.ACTION_ROW]:
         return component_models.ComponentType.ACTION_ROW
+
+    @property
+    def id(self) -> typing.Optional[int]:
+        return self._id
 
     @property
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
@@ -2584,11 +2719,19 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
         component_payloads: list[typing.MutableMapping[str, typing.Any]] = []
         attachments: list[files.Resource[files.AsyncReader]] = []
+
         for component in self.components:
             component_payload, component_attachments = component.build()
             component_payloads.append(component_payload)
             attachments.extend(component_attachments)
 
-        payload = {"type": component_models.ComponentType.ACTION_ROW, "components": component_payloads}
+        payload = data_binding.JSONObjectBuilder()
+
+        payload["type"] = self.type
+
+        if self._id:
+            payload["id"] = self._id
+
+        payload["components"] = component_payloads
 
         return payload, attachments

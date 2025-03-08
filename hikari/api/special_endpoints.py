@@ -1353,6 +1353,14 @@ class ComponentBuilder(abc.ABC):
     def type(self) -> typing.Union[int, components_.ComponentType]:
         """Type of component this builder represents."""
 
+    @property
+    @abc.abstractmethod
+    def id(self) -> typing.Optional[int]:
+        """ID of the component.
+
+        Auto populated through increment if not provided.
+        """
+
     @abc.abstractmethod
     def build(
         self,
@@ -2034,6 +2042,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> Self:
         """Add an interactive button component to this action row builder.
 
@@ -2053,6 +2062,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2069,6 +2082,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> Self:
         """Add a link button component to this action row builder.
 
@@ -2085,6 +2099,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2103,6 +2121,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> Self:
         """Add a select menu component to this action row builder.
 
@@ -2125,6 +2144,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2148,6 +2171,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> Self:
         """Add a channel select menu component to this action row builder.
 
@@ -2169,6 +2193,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2191,6 +2219,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: typing.Optional[int] = None,
     ) -> TextSelectMenuBuilder[Self]:
         """Add a select menu component to this action row builder.
 
@@ -2207,6 +2236,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2290,13 +2323,17 @@ class MessageSectionBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_text_display(self, content: str) -> Self:
+    def add_text_display(self, content: str, *, id: typing.Optional[int] = None) -> Self:
         """Add a text display component to this section builder.
 
         Parameters
         ----------
         content
             The content for the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2495,8 +2532,11 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def accent_color(self) -> typing.Optional[colors.Color]:
-        """The accent color for the container."""
+    def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
+        """The accent color for the container.
+
+        If undefined, the accent colour is hidden, if None, then no colour is set.
+        """
 
     @property
     @abc.abstractmethod
@@ -2533,13 +2573,19 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_action_row(self, components: typing.Sequence[MessageActionRowBuilderComponentsT]) -> Self:
+    def add_action_row(
+        self, components: typing.Sequence[MessageActionRowBuilderComponentsT], *, id: typing.Optional[int] = None
+    ) -> Self:
         """Add a action row component to this container builder.
 
         Parameters
         ----------
         components
             The components to add to the action row.
+        id
+            The ID to give to the action row.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2548,13 +2594,17 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_text_display(self, content: str) -> Self:
+    def add_text_display(self, content: str, *, id: typing.Optional[int] = None) -> Self:
         """Add a text display component to this container builder.
 
         Parameters
         ----------
         content
             The content of the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2563,13 +2613,19 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_media_gallery(self, items: typing.Sequence[MessageMediaGalleryItemBuilder]) -> Self:
+    def add_media_gallery(
+        self, items: typing.Sequence[MessageMediaGalleryItemBuilder], *, id: typing.Optional[int] = None
+    ) -> Self:
         """Add a media gallery component to this container builder.
 
         Parameters
         ----------
         items
             The gallery media items to add to the media gallery.
+        id
+            The ID to give to the media gallery.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2579,7 +2635,11 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
     @abc.abstractmethod
     def add_separator(
-        self, *, spacing: typing.Optional[components_.SpacingType] = None, divider: typing.Optional[bool] = None
+        self,
+        *,
+        spacing: typing.Optional[components_.SpacingType] = None,
+        divider: typing.Optional[bool] = None,
+        id: typing.Optional[int] = None,
     ) -> Self:
         """Add a separator component to this container builder.
 
@@ -2589,6 +2649,10 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
             The spacing for the separator.
         divider
             Whether the separator has a divider.
+        id
+            The ID to give to the separator.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2598,7 +2662,11 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
     @abc.abstractmethod
     def add_file(
-        self, media: typing.Union[files.Resourceish, MessageMediaItemBuilder], spoiler: typing.Optional[bool]
+        self,
+        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
+        *,
+        spoiler: typing.Optional[bool] = None,
+        id: typing.Optional[int] = None,
     ) -> Self:
         """Add a spoiler component to this container builder.
 
@@ -2608,6 +2676,10 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
             The media for the file.
         spoiler
             Whether the file has a spoiler.
+        id
+            The ID to give to the file.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------

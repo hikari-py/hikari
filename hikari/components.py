@@ -41,7 +41,6 @@ __all__: typing.Sequence[str] = (
     "ModalComponentTypesT",
     "MessageActionRowComponent",
     "ModalActionRowComponent",
-    "PartialComponentV2",
     "SectionComponent",
     "ThumbnailComponent",
     "TextDisplayComponent",
@@ -64,6 +63,7 @@ from hikari import channels
 from hikari import colors
 from hikari import emojis
 from hikari import files
+from hikari import undefined
 from hikari.internal import enums
 
 
@@ -218,12 +218,29 @@ class TextInputStyle(int, enums.Enum):
     """Intended for much longer inputs."""
 
 
+@typing.final
+class SpacingType(int, enums.Enum):
+    """Spacing Type.
+
+    The type of spacing for a [SeparatorComponent][]
+    """
+
+    SMALL = 1
+    """A small separator."""
+
+    LARGE = 2
+    """A large separator."""
+
+
 @attrs.define(kw_only=True, weakref_slot=False)
 class PartialComponent:
     """Base class for all component entities."""
 
     type: typing.Union[ComponentType, int] = attrs.field()
     """The type of component this is."""
+
+    id: typing.Optional[int] = attrs.field()
+    """The ID of the interaction."""
 
 
 AllowedComponentsT = typing.TypeVar("AllowedComponentsT", bound="PartialComponent")
@@ -362,14 +379,6 @@ class TextInputComponent(PartialComponent):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class PartialComponentV2(PartialComponent):  # FIXME: This defo needs changing.
-    """FIXME: Document me."""
-
-    id: typing.Optional[int] = attrs.field()
-    """The ID of the interaction if set."""
-
-
-@attrs.define(kw_only=True, weakref_slot=False)
 class MediaResource:
     """Represents a media resource."""
 
@@ -407,7 +416,7 @@ class MediaResource:
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class SectionComponent(PartialComponentV2):
+class SectionComponent(PartialComponent):
     """Represents a section component."""
 
     components: typing.Sequence[TextDisplayComponent] = (
@@ -422,7 +431,7 @@ class SectionComponent(PartialComponentV2):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class ThumbnailComponent(PartialComponentV2):
+class ThumbnailComponent(PartialComponent):
     """Represents a thumbnail component."""
 
     media: MediaResource = attrs.field()
@@ -436,7 +445,7 @@ class ThumbnailComponent(PartialComponentV2):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class TextDisplayComponent(PartialComponentV2):
+class TextDisplayComponent(PartialComponent):
     """Represents a text display component."""
 
     content: str = attrs.field()
@@ -444,7 +453,7 @@ class TextDisplayComponent(PartialComponentV2):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class MediaGalleryComponent(PartialComponentV2):
+class MediaGalleryComponent(PartialComponent):
     """Represents a media gallery component."""
 
     items: typing.Sequence[MediaGalleryItem] = attrs.field()
@@ -466,7 +475,7 @@ class MediaGalleryItem:
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class SeparatorComponent(PartialComponentV2):
+class SeparatorComponent(PartialComponent):
     """Represents the separator component."""
 
     spacing: typing.Optional[SpacingType] = attrs.field()
@@ -476,22 +485,8 @@ class SeparatorComponent(PartialComponentV2):
     """If there is a divider for the separator."""
 
 
-@typing.final
-class SpacingType(int, enums.Enum):
-    """Spacing Type.
-
-    The type of spacing for a [SeparatorComponent][]
-    """
-
-    SMALL = 1
-    """A small separator."""
-
-    LARGE = 2
-    """A large separator."""
-
-
 @attrs.define(kw_only=True, weakref_slot=False)
-class FileComponent(PartialComponentV2):
+class FileComponent(PartialComponent):
     """Represents a file component."""
 
     file: MediaResource = attrs.field()
@@ -502,11 +497,14 @@ class FileComponent(PartialComponentV2):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class ContainerComponent(PartialComponentV2):
+class ContainerComponent(PartialComponent):
     """Represents a container component."""
 
-    accent_color: typing.Optional[colors.Color] = attrs.field()
-    """The accent colour for the container."""
+    accent_color: undefined.UndefinedNoneOr[colors.Color] = attrs.field()
+    """The accent colour for the container.
+
+    If undefined, no accent color is set.
+    """
 
     spoiler: typing.Optional[bool] = attrs.field()
     """If the container has a spoiler."""
