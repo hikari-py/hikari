@@ -3084,7 +3084,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_media(self, payload: data_binding.JSONObject) -> component_models.MediaResource:
         return component_models.MediaResource(
-            resource=files.URL(payload["url"])  # FIXME: Idk if this is how its supposed to work.
+            resource=files.ensure_resource(payload["url"]),  # FIXME: Idk if this is how its supposed to work.
+            proxy_resource=files.ensure_resource(payload["proxy_url"]),
+            height=payload["height"],
+            width=payload["width"],
+            content_type=payload["content_type"],
+            loading_state=component_models.MediaLoadingType(payload["loading_state"]),
         )
 
     def _deserialize_action_row_component(

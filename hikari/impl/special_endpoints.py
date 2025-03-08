@@ -45,7 +45,7 @@ __all__: typing.Sequence[str] = (
     "TextInputBuilder",
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
-    "MessageMediaItemBuilder",
+    "MessageMediaResourceBuilder",
     "MessageSectionBuilder",
     "MessageTextDisplayBuilder",
     "MessageThumbnailBuilder",
@@ -2187,10 +2187,14 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class MessageMediaItemBuilder(special_endpoints.MessageMediaItemBuilder):
-    """Standard implementation of [`hikari.api.special_endpoints.MessageMediaItemBuilder`][]."""
+class MessageMediaResourceBuilder(special_endpoints.MessageMediaResourceBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.MessageMediaResourceBuilder`][]."""
 
     _resource: files.Resource[files.AsyncReader] = attrs.field(alias="resource")
+
+    @classmethod
+    def from_resource(cls, resource: files.Resourceish) -> MessageMediaResourceBuilder:
+        return MessageMediaResourceBuilder(resource=files.ensure_resource(resource))
 
     @property
     def resource(self) -> files.Resource[files.AsyncReader]:
@@ -2316,7 +2320,7 @@ class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageThumbnailBuilder`][]."""
 
     _id: typing.Optional[int] = attrs.field(alias="id", default=None)
-    _media: MessageMediaItemBuilder = attrs.field(alias="media")
+    _media: special_endpoints.MessageMediaResourceBuilder = attrs.field(alias="media")
     _description: typing.Optional[str] = attrs.field(alias="description", default=None)
     _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
 
@@ -2329,7 +2333,7 @@ class MessageThumbnailBuilder(special_endpoints.MessageThumbnailBuilder):
         return self._id
 
     @property
-    def media(self) -> MessageMediaItemBuilder:
+    def media(self) -> special_endpoints.MessageMediaResourceBuilder:
         return self._media
 
     @property
@@ -2386,13 +2390,11 @@ class MessageMediaGalleryBuilder(special_endpoints.MessageMediaGalleryBuilder):
 
     def add_media_gallery_item(
         self,
-        media: typing.Union[files.Resourceish, special_endpoints.MessageMediaItemBuilder],
+        media: special_endpoints.MessageMediaResourceBuilder,
         *,
         description: typing.Optional[str] = None,
         spoiler: typing.Optional[bool] = None,
     ) -> Self:
-        if not isinstance(media, special_endpoints.MessageMediaItemBuilder):
-            media = MessageMediaItemBuilder(resource=files.ensure_resource(media))
         item = MessageMediaGalleryItemBuilder(media=media, description=description, spoiler=spoiler)
         self.add_item(item)
         return self
@@ -2423,12 +2425,12 @@ class MessageMediaGalleryBuilder(special_endpoints.MessageMediaGalleryBuilder):
 class MessageMediaGalleryItemBuilder(special_endpoints.MessageMediaGalleryItemBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageMediaGalleryItemBuilder`][]."""
 
-    _media: special_endpoints.MessageMediaItemBuilder = attrs.field(alias="media")
+    _media: special_endpoints.MessageMediaResourceBuilder = attrs.field(alias="media")
     _description: typing.Optional[str] = attrs.field(alias="description", default=None)
     _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
 
     @property
-    def media(self) -> special_endpoints.MessageMediaItemBuilder:
+    def media(self) -> special_endpoints.MessageMediaResourceBuilder:
         return self._media
 
     @property
@@ -2505,7 +2507,7 @@ class MessageFileBuilder(special_endpoints.MessageFileBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageFileBuilder`][]."""
 
     _id: typing.Optional[int] = attrs.field(alias="id", default=None)
-    _media: special_endpoints.MessageMediaItemBuilder = attrs.field(alias="media")
+    _file: special_endpoints.MessageMediaResourceBuilder = attrs.field(alias="file")
     _spoiler: typing.Optional[bool] = attrs.field(alias="spoiler", default=None)
 
     @property
@@ -2517,8 +2519,8 @@ class MessageFileBuilder(special_endpoints.MessageFileBuilder):
         return self._id
 
     @property
-    def media(self) -> special_endpoints.MessageMediaItemBuilder:
-        return self._media
+    def file(self) -> special_endpoints.MessageMediaResourceBuilder:
+        return self._file
 
     @property
     def spoiler(self) -> typing.Optional[bool]:
@@ -2533,13 +2535,13 @@ class MessageFileBuilder(special_endpoints.MessageFileBuilder):
         if self._id is not None:
             payload["id"] = self._id
 
-        media_payload, media_attachment = self.media.build()
-        payload["media"] = media_payload
+        file_payload, file_attachment = self.file.build()
+        payload["file"] = file_payload
 
         if self.spoiler is not None:
             payload["spoiler"] = self.spoiler
 
-        return payload, [media_attachment]
+        return payload, [file_attachment]
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
@@ -2618,14 +2620,12 @@ class MessageContainerBuilder(special_endpoints.MessageContainerBuilder):
 
     def add_file(
         self,
-        media: typing.Union[files.Resourceish, special_endpoints.MessageMediaItemBuilder],
+        file: special_endpoints.MessageMediaResourceBuilder,
         *,
         spoiler: typing.Optional[bool] = None,
         id: typing.Optional[int] = None,
     ) -> Self:
-        if not isinstance(media, special_endpoints.MessageMediaItemBuilder):
-            media = MessageMediaItemBuilder(resource=files.ensure_resource(media))
-        component = MessageFileBuilder(id=id, media=media, spoiler=spoiler)
+        component = MessageFileBuilder(id=id, file=file, spoiler=spoiler)
         self.add_component(component)
         return self
 

@@ -45,7 +45,7 @@ __all__: typing.Sequence[str] = (
     "TextInputBuilder",
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
-    "MessageMediaItemBuilder",
+    "MessageMediaResourceBuilder",
     "MessageSectionBuilder",
     "MessageTextDisplayBuilder",
     "MessageThumbnailBuilder",
@@ -2262,10 +2262,15 @@ MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuild
 """FIXME: Document me."""
 
 
-class MessageMediaItemBuilder(abc.ABC):
+class MessageMediaResourceBuilder(abc.ABC):
     """Builder class for media items."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @classmethod
+    @abc.abstractmethod
+    def from_resource(cls, resource: files.Resourceish) -> MessageMediaResourceBuilder:
+        """Build a media resource from a [files.Resourceish][] object."""
 
     @property
     @abc.abstractmethod
@@ -2370,12 +2375,12 @@ class MessageThumbnailBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def media(self) -> MessageMediaItemBuilder:
+    def media(self) -> MessageMediaResourceBuilder:
         """The media of this thumbnail."""
 
     @property
     @abc.abstractmethod
-    def description(self) -> typing.Optional[str]:
+    def description(self) -> undefined.UndefinedNoneOr[str]:
         """The description for the thumbnails media."""
 
     @property
@@ -2422,7 +2427,7 @@ class MessageMediaGalleryBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_media_gallery_item(
         self,
-        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
+        media: MessageMediaResourceBuilder,
         *,
         description: typing.Optional[str] = None,
         spoiler: typing.Optional[bool] = None,
@@ -2452,7 +2457,7 @@ class MessageMediaGalleryItemBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def media(self) -> MessageMediaItemBuilder:
+    def media(self) -> MessageMediaResourceBuilder:
         """The media for the gallery item."""
 
     @property
@@ -2511,8 +2516,8 @@ class MessageFileBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def media(self) -> MessageMediaItemBuilder:
-        """The media for the file."""
+    def file(self) -> MessageMediaResourceBuilder:
+        """The file to attach."""
 
     @property
     @abc.abstractmethod
@@ -2663,7 +2668,7 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_file(
         self,
-        media: typing.Union[files.Resourceish, MessageMediaItemBuilder],
+        media: MessageMediaResourceBuilder,
         *,
         spoiler: typing.Optional[bool] = None,
         id: typing.Optional[int] = None,

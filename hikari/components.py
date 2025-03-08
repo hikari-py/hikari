@@ -41,6 +41,8 @@ __all__: typing.Sequence[str] = (
     "ModalComponentTypesT",
     "MessageActionRowComponent",
     "ModalActionRowComponent",
+    "MediaResource",
+    "MediaLoadingType",
     "SectionComponent",
     "ThumbnailComponent",
     "TextDisplayComponent",
@@ -232,6 +234,23 @@ class SpacingType(int, enums.Enum):
     """A large separator."""
 
 
+@typing.final
+class MediaLoadingType(int, enums.Enum):
+    """Media loading type."""
+
+    UNKNOWN = 0
+    """FIXME: Document me."""
+
+    LOADING = 1
+    """FIXME: Document me."""
+
+    LOADED_SUCCESS = 2
+    """FIXME: Document me."""
+
+    LOADED_NOT_FOUND = 3
+    """FIXME: Document me."""
+
+
 @attrs.define(kw_only=True, weakref_slot=False)
 class PartialComponent:
     """Base class for all component entities."""
@@ -379,11 +398,32 @@ class TextInputComponent(PartialComponent):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class MediaResource:
+class MediaResource(files.Resource[files.AsyncReader]):
     """Represents a media resource."""
 
-    resource: files.WebResource = attrs.field(repr=True)
+    resource: files.Resource[files.AsyncReader] = attrs.field(repr=True)
     """The resource this object wraps around."""
+
+    proxy_resource: typing.Optional[files.Resource[files.AsyncReader]] = attrs.field(default=None, repr=False)
+    """The proxied version of the resource, or [`None`][] if not present.
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed
+        and will be ignored during serialization. Expect this to be
+        populated on any received embed attached to a message event.
+    """
+
+    width: int = attrs.field(repr=True)
+    """The width of media item."""
+
+    height: int = attrs.field(repr=True)
+    """The height of the media item."""
+
+    content_type: str = attrs.field(repr=True)
+    """The content type of the media item."""
+
+    loading_state: MediaLoadingType = attrs.field(repr=True)
+    """The loading state of the media item."""
 
     @property
     @typing.final
@@ -396,9 +436,21 @@ class MediaResource:
         """File name of this embed resource."""
         return self.resource.filename
 
+    @property
+    @typing.final
+    def proxy_url(self) -> typing.Optional[str]:
+        """Proxied URL of this embed resource if applicable, else [`None`][]."""
+        return self.proxy_resource.url if self.proxy_resource else None
+
+    @property
+    @typing.final
+    def proxy_filename(self) -> typing.Optional[str]:
+        """File name of the proxied version of this embed resource if applicable, else [`None`][]."""
+        return self.proxy_resource.filename if self.proxy_resource else None
+
     def stream(
         self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
-    ) -> files.AsyncReaderContextManager[files.WebReader]:
+    ) -> files.AsyncReaderContextManager[files.AsyncReader]:
         """Produce a stream of data for the resource.
 
         Parameters
