@@ -413,16 +413,16 @@ class MediaResource(files.Resource[files.AsyncReader]):
         populated on any received embed attached to a message event.
     """
 
-    width: int = attrs.field(repr=True)
+    width: undefined.UndefinedNoneOr[int] = attrs.field(repr=True)
     """The width of media item."""
 
-    height: int = attrs.field(repr=True)
+    height: undefined.UndefinedNoneOr[int] = attrs.field(repr=True)
     """The height of the media item."""
 
-    content_type: str = attrs.field(repr=True)
+    content_type: undefined.UndefinedNoneOr[str] = attrs.field(repr=True)
     """The content type of the media item."""
 
-    loading_state: MediaLoadingType = attrs.field(repr=True)
+    loading_state: undefined.UndefinedNoneOr[MediaLoadingType] = attrs.field(repr=True)
     """The loading state of the media item."""
 
     @property

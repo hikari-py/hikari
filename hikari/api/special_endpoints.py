@@ -2258,10 +2258,6 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         """
 
 
-MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
-"""FIXME: Document me."""
-
-
 class MessageMediaResourceBuilder(abc.ABC):
     """Builder class for media items."""
 
@@ -2699,16 +2695,6 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
         """
 
 
-MessageContainerBuilderComponentsT = typing.Union[  # FIXME: I got no idea where this should be put.
-    MessageActionRowBuilder,
-    MessageTextDisplayBuilder,
-    MessageSectionBuilder,
-    MessageMediaGalleryBuilder,
-    MessageSeparatorBuilder,
-    MessageFileBuilder,
-]
-
-
 class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
     """Builder class for modal action row components."""
 
@@ -2789,3 +2775,20 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         ModalActionRowBuilder
             The modal action row builder to enable call chaining.
         """
+
+
+MessageContainerBuilderComponentsT = typing.Union[  # FIXME: I got no idea where this should be put.
+    MessageActionRowBuilder,
+    MessageTextDisplayBuilder,
+    MessageSectionBuilder,
+    MessageMediaGalleryBuilder,
+    MessageSeparatorBuilder,
+    MessageFileBuilder,
+]
+"""FIXME: Document me."""
+
+
+MessageActionRowBuilderComponentsT = typing.Union[  # FIXME: I got no idea where this should be put.
+    ButtonBuilder, SelectMenuBuilder
+]
+"""FIXME: Document me."""

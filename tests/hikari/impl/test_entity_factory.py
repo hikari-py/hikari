@@ -5719,6 +5719,34 @@ class TestEntityFactoryImpl:
 
         assert isinstance(media, component_models.MediaResource)
 
+    def test__deserialize_media_with_unset_fields(self, entity_factory_impl, media_payload):
+        del media_payload["proxy_url"]
+        del media_payload["width"]
+        del media_payload["height"]
+        del media_payload["content_type"]
+
+        media = entity_factory_impl._deserialize_media(media_payload)
+
+        assert media.proxy_url is None
+        assert media.width is undefined.UNDEFINED
+        assert media.height is undefined.UNDEFINED
+        assert media.content_type is undefined.UNDEFINED
+
+        assert isinstance(media, component_models.MediaResource)
+
+    def test__deserialize_media_with_nullable_fields(self, entity_factory_impl, media_payload):
+        media_payload["width"] = None
+        media_payload["height"] = None
+        media_payload["content_type"] = None
+
+        media = entity_factory_impl._deserialize_media(media_payload)
+
+        assert media.width is None
+        assert media.height is None
+        assert media.content_type is None
+
+        assert isinstance(media, component_models.MediaResource)
+
     def test__deserialize_action_row_component(self, entity_factory_impl, action_row_payload, button_payload):
         action_row = entity_factory_impl._deserialize_action_row_component(action_row_payload)
 

@@ -3083,13 +3083,32 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_media(self, payload: data_binding.JSONObject) -> component_models.MediaResource:
+        height: undefined.UndefinedNoneOr[int] = undefined.UNDEFINED
+        if "height" in payload:
+            height = payload.get("height")
+
+        width: undefined.UndefinedNoneOr[int] = undefined.UNDEFINED
+        if "width" in payload:
+            width = payload.get("width")
+
+        content_type: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED
+        if "content_type" in payload:
+            content_type = payload.get("content_type")
+
+        loading_state: undefined.UndefinedNoneOr[component_models.MediaLoadingType] = undefined.UNDEFINED
+        if "loading_state" in payload:
+            if state := payload.get("loading_state"):
+                loading_state = component_models.MediaLoadingType(state)
+            else:
+                loading_state = None
+
         return component_models.MediaResource(
             resource=files.ensure_resource(payload["url"]),  # FIXME: Idk if this is how its supposed to work.
-            proxy_resource=files.ensure_resource(payload["proxy_url"]),
-            height=payload["height"],
-            width=payload["width"],
-            content_type=payload["content_type"],
-            loading_state=component_models.MediaLoadingType(payload["loading_state"]),
+            proxy_resource=files.ensure_resource(payload["proxy_url"]) if "proxy_url" in payload else None,
+            height=height,
+            width=width,
+            content_type=content_type,
+            loading_state=loading_state,
         )
 
     def _deserialize_action_row_component(
@@ -3112,6 +3131,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return component_models.ActionRowComponent(
                 type=component_models.ComponentType.ACTION_ROW, id=payload.get("id"), components=components
             )
+
+        return None
 
     def _deserialize_section_component(self, payload: data_binding.JSONObject) -> component_models.SectionComponent:
         accessory_payload = payload["accessory"]
