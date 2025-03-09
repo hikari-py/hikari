@@ -61,14 +61,15 @@ import typing
 import attrs
 
 from hikari import channels
-from hikari import colors
 from hikari import emojis
 from hikari import files
-from hikari import undefined
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
+
+    from hikari import colors
+    from hikari import undefined
 
 
 @typing.final
