@@ -2284,7 +2284,13 @@ class MessageMediaResourceBuilder(abc.ABC):
 
     @abc.abstractmethod
     def build(self) -> tuple[typing.MutableMapping[str, typing.Any], files.Resource[files.AsyncReader]]:
-        """FIXME: Do docs."""
+        """Build a JSON object from this builder and collects all attachments added as components.
+
+        Returns
+        -------
+        tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]
+            The built json object representation of this builder, and the attachments added.
+        """
 
 
 class MessageSectionBuilder(ComponentBuilder, abc.ABC):
