@@ -1456,13 +1456,12 @@ class RESTClientImpl(rest_api.RESTClient):
                 serialized_components = []
 
         elif components is not undefined.UNDEFINED:
-            if components is not None:
-                if len(components) > 0:
-                    serialized_components = []
-                    for component in components:
-                        component_payload, component_attachments = component.build()
-                        serialized_components.append(component_payload)
-                        final_attachments.extend(component_attachments)
+            if components:
+                serialized_components = []
+                for component in components:
+                    component_payload, component_attachments = component.build()
+                    serialized_components.append(component_payload)
+                    final_attachments.extend(component_attachments)
             else:
                 serialized_components = []
 
