@@ -1924,7 +1924,6 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
-        with_components: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages_.Message:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
@@ -1932,10 +1931,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
+        query.put("with_components", True)
         query.put("thread_id", thread)
-
-        if with_components is not undefined.UNDEFINED:
-            query.put("with_components", with_components)
 
         body, form_builder = self._build_message_payload(
             content=content,
@@ -2011,16 +2008,13 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        with_components: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages_.Message:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         query = data_binding.StringMapBuilder()
+        query.put("with_components", True)
         query.put("thread_id", thread)
-
-        if with_components is not undefined.UNDEFINED:
-            query.put("with_components", with_components)
 
         body, form_builder = self._build_message_payload(
             content=content,

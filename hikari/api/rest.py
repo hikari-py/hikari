@@ -2167,8 +2167,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             specific roles.
         flags
             The flags to set for this webhook message.
-        with_components
-            Allows the webhook to send components.
 
         Returns
         -------
@@ -2278,7 +2276,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        with_components: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
 
@@ -2380,8 +2377,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             [`hikari.snowflakes.Snowflake`][], or
             [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
-        with_components
-            Allows the webhook to send components.
 
         Returns
         -------
