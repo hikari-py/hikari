@@ -5724,6 +5724,7 @@ class TestEntityFactoryImpl:
         del media_payload["width"]
         del media_payload["height"]
         del media_payload["content_type"]
+        del media_payload["loading_state"]
 
         media = entity_factory_impl._deserialize_media(media_payload)
 
@@ -5731,6 +5732,7 @@ class TestEntityFactoryImpl:
         assert media.width is undefined.UNDEFINED
         assert media.height is undefined.UNDEFINED
         assert media.content_type is undefined.UNDEFINED
+        assert media.loading_state is undefined.UNDEFINED
 
         assert isinstance(media, component_models.MediaResource)
 
@@ -5738,12 +5740,14 @@ class TestEntityFactoryImpl:
         media_payload["width"] = None
         media_payload["height"] = None
         media_payload["content_type"] = None
+        media_payload["loading_state"] = None
 
         media = entity_factory_impl._deserialize_media(media_payload)
 
         assert media.width is None
         assert media.height is None
         assert media.content_type is None
+        assert media.loading_state is None
 
         assert isinstance(media, component_models.MediaResource)
 
