@@ -154,7 +154,7 @@ class Permissions(enums.Flag):
     """Allows for sending messages in a channel."""
 
     SEND_TTS_MESSAGES = 1 << 12
-    """Allows for sending of [/tts][] messages."""
+    """Allows for sending of Text-To-Speech (`/tts`) messages."""
 
     MANAGE_MESSAGES = 1 << 13
     """Allows for deletion of other users messages.
