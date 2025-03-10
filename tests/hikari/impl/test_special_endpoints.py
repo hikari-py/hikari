@@ -2162,13 +2162,13 @@ class TestMessageSeparatorBuilder:
 
 class TestMessageFileBuilder:
     def test_type_property(self):
-        file = special_endpoints.MessageFileBuilder(file=mock.Mock())
+        file = special_endpoints.FileComponentBuilder(file=mock.Mock())
 
         assert file.type is components.ComponentType.FILE
 
     def test_build(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        file = special_endpoints.MessageFileBuilder(
+        file = special_endpoints.FileComponentBuilder(
             id=5855932, file=special_endpoints.MediaComponentBuilder(resource=resource), spoiler=True
         )
 
@@ -2185,7 +2185,7 @@ class TestMessageFileBuilder:
 
     def test_build_without_optional_fields(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        file = special_endpoints.MessageFileBuilder(file=special_endpoints.MediaComponentBuilder(resource=resource))
+        file = special_endpoints.FileComponentBuilder(file=special_endpoints.MediaComponentBuilder(resource=resource))
 
         payload, attachments = file.build()
 
@@ -2196,12 +2196,12 @@ class TestMessageFileBuilder:
 
 class TestMessageContainerBuilder:
     def test_type_property(self):
-        container = special_endpoints.MessageContainerBuilder()
+        container = special_endpoints.ContainerComponentBuilder()
 
         assert container.type is components.ComponentType.CONTAINER
 
     def test_add_component(self):
-        container = special_endpoints.MessageContainerBuilder()
+        container = special_endpoints.ContainerComponentBuilder()
 
         assert container.components == []
 
@@ -2212,7 +2212,7 @@ class TestMessageContainerBuilder:
         assert container.components == [component]
 
     def test_add_action_row(self):
-        container = special_endpoints.MessageContainerBuilder()
+        container = special_endpoints.ContainerComponentBuilder()
 
         assert container.components == []
 
@@ -2231,7 +2231,7 @@ class TestMessageContainerBuilder:
         assert component.components == [button]
 
     def test_add_text_display(self):
-        container = special_endpoints.MessageContainerBuilder()
+        container = special_endpoints.ContainerComponentBuilder()
 
         assert container.components == []
 
@@ -2246,7 +2246,7 @@ class TestMessageContainerBuilder:
         assert component.content == "A text display!"
 
     def test_add_media_gallery(self):
-        container = special_endpoints.MessageContainerBuilder()
+        container = special_endpoints.ContainerComponentBuilder()
 
         assert container.components == []
 
@@ -2268,7 +2268,7 @@ class TestMessageContainerBuilder:
         assert component.items == [media_gallery_item]
 
     def test_add_separator(self):
-        container = special_endpoints.MessageContainerBuilder()
+        container = special_endpoints.ContainerComponentBuilder()
 
         assert container.components == []
 
@@ -2284,7 +2284,7 @@ class TestMessageContainerBuilder:
         assert component.divider is False
 
     def test_add_file(self):
-        container = special_endpoints.MessageContainerBuilder()
+        container = special_endpoints.ContainerComponentBuilder()
 
         assert container.components == []
 
@@ -2296,14 +2296,14 @@ class TestMessageContainerBuilder:
 
         component = container.components[0]
 
-        assert isinstance(component, special_endpoints.MessageFileBuilder)
+        assert isinstance(component, special_endpoints.FileComponentBuilder)
 
         assert component.file == file
         assert component.spoiler is True
 
     def test_build(self):
         accent_color = colors.Color.from_hex_code("#FFB123")
-        container = special_endpoints.MessageContainerBuilder(id=5855932, accent_color=accent_color, spoiler=True)
+        container = special_endpoints.ContainerComponentBuilder(id=5855932, accent_color=accent_color, spoiler=True)
 
         mock_button = mock.Mock(
             special_endpoints.InteractiveButtonBuilder,
@@ -2368,7 +2368,7 @@ class TestMessageContainerBuilder:
         assert attachments == [resource_1, resource_2]
 
     def test_build_without_optional_fields(self):
-        container = special_endpoints.MessageContainerBuilder(accent_color=None)
+        container = special_endpoints.ContainerComponentBuilder(accent_color=None)
 
         payload, attachments = container.build()
 
@@ -2377,7 +2377,7 @@ class TestMessageContainerBuilder:
         assert attachments == []
 
     def test_build_without_undefined_fields(self):
-        container = special_endpoints.MessageContainerBuilder()
+        container = special_endpoints.ContainerComponentBuilder()
 
         payload, attachments = container.build()
 

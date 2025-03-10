@@ -51,9 +51,9 @@ __all__: typing.Sequence[str] = (
     "MediaGalleryComponentBuilder",
     "MediaGalleryItemBuilder",
     "SeparatorComponentBuilder",
-    "MessageFileBuilder",
-    "MessageContainerBuilder",
-    "MessageContainerBuilderComponentsT",
+    "FileComponentBuilder",
+    "ContainerComponentBuilder",
+    "ContainerBuilderComponentsT",
     "ModalActionRowBuilder",
 )
 
@@ -2271,11 +2271,11 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def components(self) -> typing.Sequence[ModalActionRowBuilderComponentsT]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(self, component: ComponentBuilder, /) -> Self:
+    def add_component(self, component: ModalActionRowBuilderComponentsT, /) -> Self:
         """Add a component to this action row builder.
 
         !!! warning
@@ -2356,9 +2356,10 @@ class SectionComponentBuilder(ComponentBuilder, abc.ABC):
     def components(self) -> typing.Sequence[TextDisplayComponentBuilder]:
         """The components attached to the section."""
 
+    # FIXME: Extract the return type union
     @property
     @abc.abstractmethod
-    def accessory(self) -> typing.Union[InteractiveButtonBuilder, LinkButtonBuilder, ThumbnailComponentBuilder]:
+    def accessory(self) -> typing.Union[ButtonBuilder, ThumbnailComponentBuilder]:
         """The accessory attached to the section."""
 
     @abc.abstractmethod
@@ -2439,8 +2440,8 @@ class ThumbnailComponentBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def spoiler(self) -> undefined.UndefinedOr[bool]:
-        """Whether the media has a spoiler."""
+    def is_spoiler(self) -> bool:
+        """Whether the media is marked as a spoiler."""
 
 
 class MediaGalleryComponentBuilder(ComponentBuilder, abc.ABC):
@@ -2484,7 +2485,7 @@ class MediaGalleryComponentBuilder(ComponentBuilder, abc.ABC):
         media: files.Resourceish,
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        spoiler: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        spoiler: bool = False,
     ) -> Self:
         """Add a media gallery item component to this media gallery builder.
 
@@ -2521,8 +2522,8 @@ class MediaGalleryItemBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def spoiler(self) -> undefined.UndefinedOr[bool]:
-        """Whether the media has a spoiler."""
+    def is_spoiler(self) -> bool:
+        """Whether the media is marked as a spoiler."""
 
     @abc.abstractmethod
     def build(
@@ -2558,7 +2559,7 @@ class SeparatorComponentBuilder(ComponentBuilder, abc.ABC):
         """Whether the separator has a divider."""
 
 
-class MessageFileBuilder(ComponentBuilder, abc.ABC):
+class FileComponentBuilder(ComponentBuilder, abc.ABC):
     """Builder class for file components."""
 
     __slots__: typing.Sequence[str] = ()
@@ -2575,11 +2576,11 @@ class MessageFileBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def spoiler(self) -> undefined.UndefinedOr[bool]:
+    def is_spoiler(self) -> bool:
         """Whether the file has a spoiler."""
 
 
-class MessageContainerBuilder(ComponentBuilder, abc.ABC):
+class ContainerComponentBuilder(ComponentBuilder, abc.ABC):
     """Builder class for container components."""
 
     __slots__: typing.Sequence[str] = ()
@@ -2599,16 +2600,16 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def spoiler(self) -> undefined.UndefinedOr[bool]:
+    def is_spoiler(self) -> bool:
         """Whether the container has a spoiler."""
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[MessageContainerBuilderComponentsT]:
+    def components(self) -> typing.Sequence[ContainerBuilderComponentsT]:
         """The components attached to the container."""
 
     @abc.abstractmethod
-    def add_component(self, component: MessageContainerBuilderComponentsT) -> Self:
+    def add_component(self, component: ContainerBuilderComponentsT) -> Self:
         """Add a component to this container builder.
 
         !!! warning
@@ -2627,7 +2628,7 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
         Returns
         -------
-        MessageContainerBuilder
+        ContainerComponentBuilder
             The builder object to enable chained calls.
         """
 
@@ -2651,7 +2652,7 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
         Returns
         -------
-        MessageContainerBuilder
+        ContainerComponentBuilder
             The builder object to enable chained calls.
         """
 
@@ -2670,7 +2671,7 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
         Returns
         -------
-        MessageContainerBuilder
+        ContainerComponentBuilder
             The builder object to enable chained calls.
         """
 
@@ -2691,7 +2692,7 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
         Returns
         -------
-        MessageContainerBuilder
+        ContainerComponentBuilder
             The builder object to enable chained calls.
         """
 
@@ -2699,8 +2700,8 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
     def add_separator(
         self,
         *,
-        spacing: undefined.UndefinedOr[components_.SpacingType] = undefined.UNDEFINED,
-        divider: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        spacing: components_.SpacingType = components_.SpacingType.SMALL,
+        divider: bool = False,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a separator component to this container builder.
@@ -2718,17 +2719,13 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
         Returns
         -------
-        MessageContainerBuilder
+        ContainerComponentBuilder
             The builder object to enable chained calls.
         """
 
     @abc.abstractmethod
     def add_file(
-        self,
-        file: files.Resourceish,
-        *,
-        spoiler: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        self, file: files.Resourceish, *, spoiler: bool = False, id: undefined.UndefinedOr[int] = undefined.UNDEFINED
     ) -> Self:
         """Add a spoiler component to this container builder.
 
@@ -2745,23 +2742,25 @@ class MessageContainerBuilder(ComponentBuilder, abc.ABC):
 
         Returns
         -------
-        MessageContainerBuilder
+        ContainerComponentBuilder
             The builder object to enable chained calls.
         """
 
 
-MessageContainerBuilderComponentsT = typing.Union[  # FIXME: I got no idea where this should be put.
+ContainerBuilderComponentsT = typing.Union[
     MessageActionRowBuilder,
     TextDisplayComponentBuilder,
     SectionComponentBuilder,
     MediaGalleryComponentBuilder,
     SeparatorComponentBuilder,
-    MessageFileBuilder,
+    FileComponentBuilder,
 ]
 """FIXME: Document me."""
 
 
-MessageActionRowBuilderComponentsT = typing.Union[  # FIXME: I got no idea where this should be put.
-    ButtonBuilder, SelectMenuBuilder
-]
+MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
 """FIXME: Document me."""
+
+ModalActionRowBuilderComponentsT = TextInputBuilder
+""""FIXME: Document me."""
+# FIXME: Add ModalActionRowBuilderComponentsT
