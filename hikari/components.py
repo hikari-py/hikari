@@ -558,7 +558,7 @@ class ContainerComponent(PartialComponent):
     """
 
     spoiler: bool = attrs.field()
-    """If the container has a spoiler."""
+    """Whether the container is marked as a spoiler."""
 
     components: typing.Sequence[ContainerTypesT] = attrs.field()
     """The components within the container."""
