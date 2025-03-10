@@ -5969,7 +5969,7 @@ class TestEntityFactoryImpl:
         separator_payload,
         file_payload,
     ):
-        message_components = entity_factory_impl._deserialize_message_components(
+        message_components = entity_factory_impl._deserialize_top_level_components(
             [
                 action_row_payload,
                 text_display_payload,
@@ -5995,7 +5995,7 @@ class TestEntityFactoryImpl:
         assert message_components[5] == entity_factory_impl._deserialize_file_component(file_payload)
 
     def test__deserialize_message_components_handles_unknown_top_component_type(self, entity_factory_impl):
-        message_components = entity_factory_impl._deserialize_message_components([{"type": 9999}, {"type": -9999}])
+        message_components = entity_factory_impl._deserialize_top_level_components([{"type": 9999}, {"type": -9999}])
 
         assert len(message_components) == 0
 
@@ -6417,7 +6417,7 @@ class TestEntityFactoryImpl:
         assert partial_message.application_id == 123123123123
 
         # Component
-        assert partial_message.components == entity_factory_impl._deserialize_message_components([action_row_payload])
+        assert partial_message.components == entity_factory_impl._deserialize_top_level_components([action_row_payload])
 
         # InteractionMetadata
         assert partial_message.interaction_metadata.interaction_id == snowflakes.Snowflake(123456)
@@ -6609,7 +6609,7 @@ class TestEntityFactoryImpl:
         assert message.application_id == 123123123123
 
         # Component
-        assert message.components == entity_factory_impl._deserialize_message_components([action_row_payload])
+        assert message.components == entity_factory_impl._deserialize_top_level_components([action_row_payload])
 
         # Thread
         assert isinstance(message.thread, channel_models.GuildPublicThread)

@@ -1881,39 +1881,25 @@ class TestMessageActionRowBuilder:
         assert attachments == []
 
 
-class TestMessageMediaResourceBuilder:
-    def test_build(self):
-        test_url = "attachment://some-test-file.png"
-        resource = mock.Mock(files.Resource[files.AsyncReader], url=test_url)
-
-        media_item = special_endpoints.MessageMediaResourceBuilder(resource=resource)
-
-        payload, attachments = media_item.build()
-
-        assert payload == {"url": test_url}
-
-        assert attachments == resource
-
-
 class TestMessageSectionBuilder:
     def test_type_property(self):
-        section = special_endpoints.MessageSectionBuilder(accessory=mock.Mock())
+        section = special_endpoints.SectionComponentBuilder(accessory=mock.Mock())
 
         assert section.type is components.ComponentType.SECTION
 
     def test_add_component(self):
-        section = special_endpoints.MessageSectionBuilder(accessory=mock.Mock())
+        section = special_endpoints.SectionComponentBuilder(accessory=mock.Mock())
 
         assert section.components == []
 
-        text_display = special_endpoints.MessageTextDisplayBuilder(content="test content")
+        text_display = special_endpoints.TextDisplayComponentBuilder(content="test content")
 
         section.add_component(text_display)
 
         assert section.components == [text_display]
 
     def test_add_text_display(self):
-        section = special_endpoints.MessageSectionBuilder(accessory=mock.Mock())
+        section = special_endpoints.SectionComponentBuilder(accessory=mock.Mock())
 
         assert section.components == []
 
@@ -1925,14 +1911,14 @@ class TestMessageSectionBuilder:
 
     def test_build(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        accessory = special_endpoints.MessageThumbnailBuilder(
+        accessory = special_endpoints.ThumbnailComponentComponentBuilder(
             id=2193485,
-            media=special_endpoints.MessageMediaResourceBuilder(resource=resource),
+            media=special_endpoints.MediaComponentBuilder(resource=resource),
             description="a cool image",
             spoiler=False,
         )
 
-        section = special_endpoints.MessageSectionBuilder(id=5855932, accessory=accessory)
+        section = special_endpoints.SectionComponentBuilder(id=5855932, accessory=accessory)
 
         section.add_text_display("A display?", id=4893723)
 
@@ -1960,13 +1946,11 @@ class TestMessageSectionBuilder:
 
     def test_build_without_optional_fields(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        accessory = special_endpoints.MessageThumbnailBuilder(
-            media=special_endpoints.MessageMediaResourceBuilder(resource=resource),
-            description="a cool image",
-            spoiler=False,
+        accessory = special_endpoints.ThumbnailComponentComponentBuilder(
+            media=special_endpoints.MediaComponentBuilder(resource=resource), description="a cool image", spoiler=False
         )
 
-        section = special_endpoints.MessageSectionBuilder(accessory=accessory)
+        section = special_endpoints.SectionComponentBuilder(accessory=accessory)
 
         payload, attachments = section.build()
 
@@ -1986,12 +1970,12 @@ class TestMessageSectionBuilder:
 
 class TestMessageTextDisplayBuilder:
     def test_type_property(self):
-        text_display = special_endpoints.MessageTextDisplayBuilder(content="A display?")
+        text_display = special_endpoints.TextDisplayComponentBuilder(content="A display?")
 
         assert text_display.type is components.ComponentType.TEXT_DISPLAY
 
     def test_build(self):
-        text_display = special_endpoints.MessageTextDisplayBuilder(id=5855932, content="A display?")
+        text_display = special_endpoints.TextDisplayComponentBuilder(id=5855932, content="A display?")
 
         payload, attachments = text_display.build()
 
@@ -2002,15 +1986,15 @@ class TestMessageTextDisplayBuilder:
 
 class TestMessageThumbnailBuilder:
     def test_type_property(self):
-        thumbnail = special_endpoints.MessageThumbnailBuilder(media=mock.Mock())
+        thumbnail = special_endpoints.ThumbnailComponentComponentBuilder(media=mock.Mock())
 
         assert thumbnail.type is components.ComponentType.THUMBNAIL
 
     def test_build(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        thumbnail = special_endpoints.MessageThumbnailBuilder(
+        thumbnail = special_endpoints.ThumbnailComponentComponentBuilder(
             id=5855932,
-            media=special_endpoints.MessageMediaResourceBuilder(resource=resource),
+            media=special_endpoints.MediaComponentBuilder(resource=resource),
             description="a cool image",
             spoiler=False,
         )
@@ -2029,8 +2013,8 @@ class TestMessageThumbnailBuilder:
 
     def test_build_without_optional_fields(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        thumbnail = special_endpoints.MessageThumbnailBuilder(
-            media=special_endpoints.MessageMediaResourceBuilder(resource=resource)
+        thumbnail = special_endpoints.ThumbnailComponentComponentBuilder(
+            media=special_endpoints.MediaComponentBuilder(resource=resource)
         )
 
         payload, attachments = thumbnail.build()
@@ -2042,18 +2026,18 @@ class TestMessageThumbnailBuilder:
 
 class TestMessageMediaGalleryBuilder:
     def test_type_property(self):
-        media_gallery = special_endpoints.MessageMediaGalleryBuilder()
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder()
 
         assert media_gallery.type is components.ComponentType.MEDIA_GALLERY
 
     def test_add_item(self):
-        media_gallery = special_endpoints.MessageMediaGalleryBuilder()
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder()
 
         assert media_gallery.items == []
 
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
-            media=special_endpoints.MessageMediaResourceBuilder(resource=resource),
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(
+            media=special_endpoints.MediaComponentBuilder(resource=resource),
             description="Some description",
             spoiler=False,
         )
@@ -2063,12 +2047,12 @@ class TestMessageMediaGalleryBuilder:
         assert media_gallery.items == [media_gallery_item]
 
     def test_add_media_gallery_item(self):
-        media_gallery = special_endpoints.MessageMediaGalleryBuilder()
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder()
 
         assert media_gallery.items == []
 
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        media = special_endpoints.MessageMediaResourceBuilder(resource=resource)
+        media = special_endpoints.MediaComponentBuilder(resource=resource)
 
         media_gallery.add_media_gallery_item(media, description="Some description", spoiler=False)
 
@@ -2079,22 +2063,18 @@ class TestMessageMediaGalleryBuilder:
         assert media_gallery.items[0].spoiler is False
 
     def test_build(self):
-        media_gallery = special_endpoints.MessageMediaGalleryBuilder(id=5855932)
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder(id=5855932)
 
         resource_1 = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
 
         resource_2 = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file-2.png")
 
         media_gallery.add_media_gallery_item(
-            special_endpoints.MessageMediaResourceBuilder(resource=resource_1),
-            description="Some description",
-            spoiler=False,
+            special_endpoints.MediaComponentBuilder(resource=resource_1), description="Some description", spoiler=False
         )
 
         media_gallery.add_media_gallery_item(
-            special_endpoints.MessageMediaResourceBuilder(resource=resource_2),
-            description="Some description 2",
-            spoiler=True,
+            special_endpoints.MediaComponentBuilder(resource=resource_2), description="Some description 2", spoiler=True
         )
 
         payload, attachments = media_gallery.build()
@@ -2111,7 +2091,7 @@ class TestMessageMediaGalleryBuilder:
         assert attachments == [resource_1, resource_2]
 
     def test_build_without_optional_fields(self):
-        media_gallery = special_endpoints.MessageMediaGalleryBuilder()
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder()
 
         payload, attachments = media_gallery.build()
 
@@ -2123,8 +2103,8 @@ class TestMessageMediaGalleryBuilder:
 class TestMessageMediaGalleryItemBuilder:
     def test_build(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
-            media=special_endpoints.MessageMediaResourceBuilder(resource=resource),
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(
+            media=special_endpoints.MediaComponentBuilder(resource=resource),
             description="Some description",
             spoiler=False,
         )
@@ -2137,8 +2117,8 @@ class TestMessageMediaGalleryItemBuilder:
 
     def test_build_without_optional_fields(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
-            media=special_endpoints.MessageMediaResourceBuilder(resource=resource)
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(
+            media=special_endpoints.MediaComponentBuilder(resource=resource)
         )
 
         payload, attachments = media_gallery_item.build()
@@ -2150,12 +2130,12 @@ class TestMessageMediaGalleryItemBuilder:
 
 class TestMessageSeparatorBuilder:
     def test_type_property(self):
-        separator = special_endpoints.MessageSeparatorBuilder()
+        separator = special_endpoints.SeparatorComponentBuilder()
 
         assert separator.type is components.ComponentType.SEPARATOR
 
     def test_build(self):
-        separator = special_endpoints.MessageSeparatorBuilder(
+        separator = special_endpoints.SeparatorComponentBuilder(
             id=5855932, spacing=components.SpacingType.SMALL, divider=True
         )
 
@@ -2171,7 +2151,7 @@ class TestMessageSeparatorBuilder:
         assert attachments == []
 
     def test_build_without_optional_fields(self):
-        separator = special_endpoints.MessageSeparatorBuilder()
+        separator = special_endpoints.SeparatorComponentBuilder()
 
         payload, attachments = separator.build()
 
@@ -2189,7 +2169,7 @@ class TestMessageFileBuilder:
     def test_build(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
         file = special_endpoints.MessageFileBuilder(
-            id=5855932, file=special_endpoints.MessageMediaResourceBuilder(resource=resource), spoiler=True
+            id=5855932, file=special_endpoints.MediaComponentBuilder(resource=resource), spoiler=True
         )
 
         payload, attachments = file.build()
@@ -2205,9 +2185,7 @@ class TestMessageFileBuilder:
 
     def test_build_without_optional_fields(self):
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        file = special_endpoints.MessageFileBuilder(
-            file=special_endpoints.MessageMediaResourceBuilder(resource=resource)
-        )
+        file = special_endpoints.MessageFileBuilder(file=special_endpoints.MediaComponentBuilder(resource=resource))
 
         payload, attachments = file.build()
 
@@ -2227,7 +2205,7 @@ class TestMessageContainerBuilder:
 
         assert container.components == []
 
-        component = special_endpoints.MessageSeparatorBuilder()
+        component = special_endpoints.SeparatorComponentBuilder()
 
         container.add_component(component)
 
@@ -2263,7 +2241,7 @@ class TestMessageContainerBuilder:
 
         component = container.components[0]
 
-        assert isinstance(component, special_endpoints.MessageTextDisplayBuilder)
+        assert isinstance(component, special_endpoints.TextDisplayComponentBuilder)
 
         assert component.content == "A text display!"
 
@@ -2273,8 +2251,8 @@ class TestMessageContainerBuilder:
         assert container.components == []
 
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
-            media=special_endpoints.MessageMediaResourceBuilder(resource=resource),
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(
+            media=special_endpoints.MediaComponentBuilder(resource=resource),
             description="Some description",
             spoiler=False,
         )
@@ -2285,7 +2263,7 @@ class TestMessageContainerBuilder:
 
         component = container.components[0]
 
-        assert isinstance(component, special_endpoints.MessageMediaGalleryBuilder)
+        assert isinstance(component, special_endpoints.MediaGalleryComponentBuilder)
 
         assert component.items == [media_gallery_item]
 
@@ -2300,7 +2278,7 @@ class TestMessageContainerBuilder:
 
         component = container.components[0]
 
-        assert isinstance(component, special_endpoints.MessageSeparatorBuilder)
+        assert isinstance(component, special_endpoints.SeparatorComponentBuilder)
 
         assert component.spacing == components.SpacingType.LARGE
         assert component.divider is False
@@ -2311,7 +2289,7 @@ class TestMessageContainerBuilder:
         assert container.components == []
 
         resource = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        file = special_endpoints.MessageMediaResourceBuilder(resource=resource)
+        file = special_endpoints.MediaComponentBuilder(resource=resource)
         container.add_file(file=file, spoiler=True)
 
         assert len(container.components) == 1
@@ -2337,8 +2315,8 @@ class TestMessageContainerBuilder:
         container.add_text_display("A text display!", id=8944352)
 
         resource_1 = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        media_gallery_item = special_endpoints.MessageMediaGalleryItemBuilder(
-            media=special_endpoints.MessageMediaResourceBuilder(resource=resource_1),
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(
+            media=special_endpoints.MediaComponentBuilder(resource=resource_1),
             description="Some description",
             spoiler=False,
         )
@@ -2348,7 +2326,7 @@ class TestMessageContainerBuilder:
         container.add_separator(spacing=components.SpacingType.LARGE, divider=False, id=9542323)
 
         resource_2 = mock.Mock(files.Resource[files.AsyncReader], url="attachment://some-test-file.png")
-        file = special_endpoints.MessageMediaResourceBuilder(resource=resource_2)
+        file = special_endpoints.MediaComponentBuilder(resource=resource_2)
         container.add_file(file=file, spoiler=True, id=2339534)
 
         payload, attachments = container.build()

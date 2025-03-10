@@ -261,7 +261,7 @@ class PartialComponent:
     type: typing.Union[ComponentType, int] = attrs.field()
     """The type of component this is."""
 
-    id: typing.Optional[int] = attrs.field()
+    id: int = attrs.field()
     """The ID of the interaction."""
 
 
@@ -474,14 +474,10 @@ class MediaResource(files.Resource[files.AsyncReader]):
 class SectionComponent(PartialComponent):
     """Represents a section component."""
 
-    components: typing.Sequence[TextDisplayComponent] = (
-        attrs.field()
-    )  # FIXME: Told not to hardcode this, as it could change? what should it be?
+    components: typing.Sequence[TextDisplayComponent] = attrs.field()
     """The sections components."""
 
-    accessory: typing.Union[ButtonComponent, ThumbnailComponent] = (
-        attrs.field()
-    )  # FIXME: Told not to hardcode this, as it could change? what should it be?
+    accessory: typing.Union[ButtonComponent, ThumbnailComponent] = attrs.field()
     """The sections accessory."""
 
 
@@ -525,7 +521,7 @@ class MediaGalleryItem:
     description: typing.Optional[str] = attrs.field()
     """The description of the gallery item."""
 
-    spoiler: typing.Optional[bool] = attrs.field()
+    spoiler: bool = attrs.field()
     """If the gallery item has a spoiler."""
 
 
@@ -533,10 +529,10 @@ class MediaGalleryItem:
 class SeparatorComponent(PartialComponent):
     """Represents the separator component."""
 
-    spacing: typing.Optional[SpacingType] = attrs.field()
+    spacing: SpacingType = attrs.field()
     """The spacing for the separator."""
 
-    divider: typing.Optional[bool] = attrs.field()
+    divider: bool = attrs.field()
     """If there is a divider for the separator."""
 
 
@@ -547,7 +543,7 @@ class FileComponent(PartialComponent):
     file: MediaResource = attrs.field()
     """The media for the file."""
 
-    spoiler: typing.Optional[bool] = attrs.field()
+    spoiler: bool = attrs.field()
     """If the file has a spoiler."""
 
 
@@ -561,7 +557,7 @@ class ContainerComponent(PartialComponent):
     If undefined, no accent color is set.
     """
 
-    spoiler: typing.Optional[bool] = attrs.field()
+    spoiler: bool = attrs.field()
     """If the container has a spoiler."""
 
     components: typing.Sequence[ContainerTypesT] = attrs.field()
@@ -587,6 +583,12 @@ ContainerTypesT = typing.Union[
     SeparatorComponent,
     FileComponent,
 ]
+"""FIXME: Document me."""
+
+SectionComponentTypesT = TextDisplayComponent
+"""FIXME: Document me."""
+
+SectionAccessoryTypesT = typing.Union[ButtonComponent, ThumbnailComponent]
 """FIXME: Document me."""
 
 SelectMenuTypesT = typing.Union[
