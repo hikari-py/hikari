@@ -1449,13 +1449,19 @@ class RESTClientImpl(rest_api.RESTClient):
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
             if component is not None:
-                serialized_components = [component.build()]
+                component_payload, component_attachments = component.build()
+                serialized_components = [component_payload]
+                final_attachments.extend(component_attachments)
             else:
                 serialized_components = []
 
         elif components is not undefined.UNDEFINED:
-            if components is not None:
-                serialized_components = [component.build() for component in components]
+            if components:
+                serialized_components = []
+                for component in components:
+                    component_payload, component_attachments = component.build()
+                    serialized_components.append(component_payload)
+                    final_attachments.extend(component_attachments)
             else:
                 serialized_components = []
 
@@ -1924,6 +1930,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
+        query.put("with_components", True)
         query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
@@ -2005,6 +2012,7 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         query = data_binding.StringMapBuilder()
+        query.put("with_components", True)
         query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
