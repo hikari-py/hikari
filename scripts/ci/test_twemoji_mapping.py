@@ -38,7 +38,7 @@ sys.path.append("..")
 from hikari import emojis
 
 TWEMOJI_REPO_BASE_URL = "https://github.com/discord/twemoji.git"
-DISCORD_EMOJI_MAPPING_URL = "https://emzi0767.gl-pages.emzi0767.dev/discord-emoji/discordEmojiMap-canary.min.json"
+DISCORD_EMOJI_MAPPING_URL = "https://emzi0767.mzgit.io/discord-emoji/discordEmojiMap-canary.min.json"
 
 try:
     tempdir = pathlib.Path(sys.argv[1])
