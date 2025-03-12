@@ -28,6 +28,7 @@ import pytest
 
 from hikari import applications as application_models
 from hikari import audit_logs as audit_log_models
+from hikari import auto_mod as auto_mod_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import commands
@@ -1460,7 +1461,17 @@ class TestEntityFactoryImpl:
     def partial_integration_payload(self):
         return {"id": "4949494949", "name": "Blah blah", "type": "twitch", "account": {"id": "543453", "name": "Blam"}}
 
-    def test_deserialize_audit_log_entry(self, entity_factory_impl, audit_log_entry_payload, mock_app):
+    def test_deserialize_audit_log_entry(
+        self,
+        entity_factory_impl,
+        auto_mod_rule_payload,
+        audit_log_entry_payload,
+        application_webhook_payload,
+        incoming_webhook_payload,
+        follower_webhook_payload,
+        partial_integration_payload,
+        mock_app,
+    ):
         entry = entity_factory_impl.deserialize_audit_log_entry(
             audit_log_entry_payload, guild_id=snowflakes.Snowflake(123321)
         )
@@ -1565,6 +1576,7 @@ class TestEntityFactoryImpl:
     def audit_log_payload(
         self,
         audit_log_entry_payload,
+        auto_mod_rule_payload,
         user_payload,
         incoming_webhook_payload,
         application_webhook_payload,
@@ -1576,6 +1588,7 @@ class TestEntityFactoryImpl:
     ):
         return {
             "audit_log_entries": [audit_log_entry_payload],
+            "auto_moderation_rules": [auto_mod_rule_payload],
             "integrations": [partial_integration_payload],
             "threads": [guild_public_thread_payload, guild_private_thread_payload, guild_news_thread_payload],
             "users": [user_payload],
@@ -1588,6 +1601,7 @@ class TestEntityFactoryImpl:
         mock_app,
         audit_log_payload,
         audit_log_entry_payload,
+        auto_mod_rule_payload,
         user_payload,
         incoming_webhook_payload,
         application_webhook_payload,
@@ -1598,6 +1612,10 @@ class TestEntityFactoryImpl:
         guild_news_thread_payload,
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload, guild_id=snowflakes.Snowflake(123321))
+
+        assert audit_log.auto_mod_rules == {
+            94594949494: entity_factory_impl.deserialize_auto_mod_rule(auto_mod_rule_payload)
+        }
 
         assert audit_log.entries == {
             694026906592477214: entity_factory_impl.deserialize_audit_log_entry(
@@ -1634,6 +1652,7 @@ class TestEntityFactoryImpl:
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(
             {
+                "auto_moderation_rules": [],
                 "webhooks": [incoming_webhook_payload, {"type": -99999}, application_webhook_payload],
                 "threads": [],
                 "users": [],
@@ -1653,6 +1672,7 @@ class TestEntityFactoryImpl:
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(
             {
+                "auto_moderation_rules": [],
                 "webhooks": {},
                 "threads": [guild_public_thread_payload, {"type": -99998}, guild_private_thread_payload],
                 "users": [],
@@ -1665,6 +1685,23 @@ class TestEntityFactoryImpl:
         assert audit_log.threads == {
             947643783913308301: entity_factory_impl.deserialize_guild_public_thread(guild_public_thread_payload),
             947690637610844210: entity_factory_impl.deserialize_guild_private_thread(guild_private_thread_payload),
+        }
+
+    def test_deserialize_audit_log_skips_unknown_auto_mod_rule_type(self, entity_factory_impl, auto_mod_rule_payload):
+        audit_log = entity_factory_impl.deserialize_audit_log(
+            {
+                "auto_moderation_rules": [{"id": "4949", "trigger_type": -6959595}, auto_mod_rule_payload],
+                "webhooks": [],
+                "users": [],
+                "audit_log_entries": [],
+                "integrations": [],
+                "threads": [],
+            },
+            guild_id=snowflakes.Snowflake(123321),
+        )
+
+        assert audit_log.auto_mod_rules == {
+            94594949494: entity_factory_impl.deserialize_auto_mod_rule(auto_mod_rule_payload)
         }
 
     ##################
@@ -7462,3 +7499,150 @@ class TestEntityFactoryImpl:
         assert stage_instance.topic == "Testing Testing, 123"
         assert stage_instance.privacy_level == stage_instance_models.StageInstancePrivacyLevel.GUILD_ONLY
         assert stage_instance.discoverable_disabled is False
+
+    def test_deserialize_auto_mod_action_for_block_messages(self, entity_factory_impl):
+        result = entity_factory_impl.deserialize_auto_mod_action({"type": 1})
+
+        assert result.type is auto_mod_models.AutoModActionType.BLOCK_MESSAGES
+        assert isinstance(result, auto_mod_models.AutoModBlockMessage)
+
+    def test_deserialize_auto_mod_action_for_send_alert_message(self, entity_factory_impl):
+        result = entity_factory_impl.deserialize_auto_mod_action({"type": 2, "metadata": {"channel_id": "43123123"}})
+
+        assert result.type is auto_mod_models.AutoModActionType.SEND_ALERT_MESSAGE
+        assert isinstance(result, auto_mod_models.AutoModSendAlertMessage)
+        assert result.channel_id == 43123123
+
+    def test_deserialize_auto_mod_action_for_timeout(self, entity_factory_impl):
+        result = entity_factory_impl.deserialize_auto_mod_action({"type": 3, "metadata": {"duration_seconds": 123321}})
+
+        assert result.type is auto_mod_models.AutoModActionType.TIMEOUT
+        assert isinstance(result, auto_mod_models.AutoModTimeout)
+        assert result.duration == datetime.timedelta(seconds=123321)
+
+    def test_deserialize_auto_mod_action_for_unknown_type(self, entity_factory_impl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_auto_mod_action({"type": -696969})
+
+    def test_serialize_auto_mod_action(self, entity_factory_impl):
+        result = entity_factory_impl.serialize_auto_mod_action(
+            auto_mod_models.AutoModBlockMessage(type=auto_mod_models.AutoModActionType.BLOCK_MESSAGES)
+        )
+
+        assert result == {"type": 1}
+
+    def test_serialize_auto_mod_action_for_send_alert_message(self, entity_factory_impl):
+        result = entity_factory_impl.serialize_auto_mod_action(
+            auto_mod_models.AutoModSendAlertMessage(
+                type=auto_mod_models.AutoModActionType.SEND_ALERT_MESSAGE, channel_id=534123321
+            )
+        )
+
+        assert result == {"type": 2, "metadata": {"channel_id": "534123321"}}
+
+    def test_serialize_auto_mod_action_for_timeout(self, entity_factory_impl):
+        result = entity_factory_impl.serialize_auto_mod_action(
+            auto_mod_models.AutoModTimeout(
+                type=auto_mod_models.AutoModActionType.TIMEOUT, duration=datetime.timedelta(seconds=123321)
+            )
+        )
+
+        assert result == {"type": 3, "metadata": {"duration_seconds": 123321}}
+
+    @pytest.fixture
+    def auto_mod_rule_payload(self):
+        return {
+            "id": "94594949494",
+            "guild_id": "9595939234",
+            "name": "hihihihi",
+            "creator_id": "595684849",
+            "event_type": 1,
+            "trigger_type": 4,
+            "trigger_metadata": {"presets": [1, 2, 3], "allow_list": ["okokok", "No"]},
+            "actions": [
+                {"type": 1},
+                {"type": 2, "metadata": {"channel_id": "43212123"}},
+                {"type": 3, "metadata": {"duration_seconds": 321123}},
+            ],
+            "enabled": True,
+            "exempt_roles": ["49493932", "123321"],
+            "exempt_channels": ["95959595", "31223"],
+        }
+
+    def test_deserialize_auto_mod_rule(self, entity_factory_impl, auto_mod_rule_payload):
+        result = entity_factory_impl.deserialize_auto_mod_rule(auto_mod_rule_payload)
+
+        assert result.id == 94594949494
+        assert result.guild_id == 9595939234
+        assert result.name == "hihihihi"
+        assert result.creator_id == 595684849
+        assert result.event_type is auto_mod_models.AutoModEventType.MESSAGE_SEND
+        assert isinstance(result.trigger, auto_mod_models.KeywordPresetTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.KEYWORD_PRESET
+        assert result.actions == [
+            entity_factory_impl.deserialize_auto_mod_action({"type": 1}),
+            entity_factory_impl.deserialize_auto_mod_action({"type": 2, "metadata": {"channel_id": "43212123"}}),
+            entity_factory_impl.deserialize_auto_mod_action({"type": 3, "metadata": {"duration_seconds": 321123}}),
+        ]
+        assert result.is_enabled is True
+        assert result.exempt_role_ids == [49493932, 123321]
+        assert result.exempt_channel_ids == [95959595, 31223]
+
+    def test_deserialize_auto_mod_rule_for_keyword_trigger(self, entity_factory_impl, auto_mod_rule_payload):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 1,
+                "trigger_metadata": {"keyword_filter": ["ok", "no", "bye"]},
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.KeywordTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.KEYWORD
+        assert result.trigger.keyword_filter == ["ok", "no", "bye"]
+
+    def test_deserialize_auto_mod_rule_for_harmful_link_trigger(self, entity_factory_impl, auto_mod_rule_payload):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 2,
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.HarmfulLinkTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.HARMFUL_LINK
+
+    def test_deserialize_auto_mod_rule_for_spam_trigger(self, entity_factory_impl, auto_mod_rule_payload):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 3,
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.SpamTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.SPAM

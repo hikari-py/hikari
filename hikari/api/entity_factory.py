@@ -33,6 +33,7 @@ from hikari import undefined
 if typing.TYPE_CHECKING:
     from hikari import applications as application_models
     from hikari import audit_logs as audit_log_models
+    from hikari import auto_mod as auto_mod_models
     from hikari import channels as channel_models
     from hikari import commands
     from hikari import embeds as embed_models
@@ -1993,4 +1994,53 @@ class EntityFactory(abc.ABC):
         -------
         hikari.stage_intances.StageInstance
             The deserialized stage instance object
+        """
+
+    ###################
+    # AUTO-MOD MODELS #
+    ###################
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_action(self, payload: data_binding.JSONObject) -> auto_mod_models.PartialAutoModAction:
+        """Parse a raw payload from Discord into an auto-moderation action object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.auto_mod.PartialAutoModAction
+            The deserialized auto-moderation action object.
+        """
+
+    @abc.abstractmethod
+    def serialize_auto_mod_action(self, action: auto_mod_models.PartialAutoModAction) -> data_binding.JSONObject:
+        """Serialize an auto-moderation action object to a json serializable dict.
+
+        Parameters
+        ----------
+        action : hikari.auto_mod.PartialAutoModAction
+            The auto-moderation action object to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the auto-moderation action object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_rule(self, payload: data_binding.JSONObject) -> auto_mod_models.AutoModRule:
+        """Parse a raw payload from Discord into an auto-moderation rule object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.auto_mod.AutoModRule
+            The deserialized auto-moderation rule object.
         """

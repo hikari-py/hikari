@@ -36,6 +36,7 @@ from hikari import undefined
 if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import audit_logs
+    from hikari import auto_mod
     from hikari import channels as channels_
     from hikari import colors
     from hikari import commands
@@ -8650,6 +8651,284 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             rate-limiting, such as limits per attribute. These cannot be
             detected or handled normally by Hikari due to their undocumented
             nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_auto_mod_rules(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Sequence[auto_mod.AutoModRule]:
+        """Fetch a guild's auto-moderation rules.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to fetch the auto-moderation rules of.
+
+        Returns
+        -------
+        typing.Sequence[hikari.auto_mod.AutoModRule]
+            Sequence of the guild's auto-moderation rules.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+    ) -> auto_mod.AutoModRule:
+        """Fetch a auto-moderation rule.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to fetch the auto-moderation rules of.
+        rule : hikari.snowflakes.SnowflakeishOr[hikari.auto_mod.AutoModRule]
+            Object or ID of the auto-moderation rule to fetch.
+
+        Returns
+        -------
+        hikari.auto_mod.AutoModRule
+            The fetched auto-moderation rule.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or rule was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
+        name: str,
+        event_type: typing.Union[int, auto_mod.AutoModEventType],
+        trigger_type: typing.Union[int, auto_mod.AutoModTriggerType],
+        actions: typing.Sequence[auto_mod.PartialAutoModAction],
+        allow_list: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        keyword_filter: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        presets: undefined.UndefinedOr[
+            typing.Sequence[typing.Union[int, auto_mod.AutoModKeywordPresetType]]
+        ] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = True,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        """Create an auto-moderation rule.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to create the auto-moderation rules in.
+        name : builtins.str
+            The rule's name.
+        event_type : typing.Union[builtins.int, hikari.auto_mod.AutoModEventType]
+            The type of user content creation event this rule should trigger on.
+        trigger_type : typing.Union[builtins.int, hikari.auto_mod.AutoModTriggerType]
+            The type of user content creation this should trigger on.
+            Note that the required fields very dependent on what this is set to.
+        actions : typing.Sequence[hikari.auto_mod.PartialAutoModAction]
+            Sequence of the actions to execute when this rule is triggered.
+        allow_list : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
+            A sequence of filters which will be exempt from triggering the preset trigger.
+            This supports a wildcard matching strategy which is documented at
+            https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+            This can only be set for KEYWORD_PRESET triggers.
+        keyword_filter : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
+            A sequence of filter strings this trigger checks for.
+            This supports a wildcard matching strategy which is documented at
+            https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+            This is required for and can only be set for KEYWORD triggers.
+        presets : hikari.undefined.UndefinedOr[typing.Sequence[typing.Union[builtins.int, hikari.auto_mod.AutoModKeywordPresetType]]]
+            Sequence of Discord's presets to match for.
+            This is required for and can only be set for KEYWORD_PRESET triggers.
+        enabled : hikari.undefined.UndefinedOr[builtins.bool]
+            Whether this auto-moderation rule should be enabled.
+        exempt_channels : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.PartialChannel]]
+            Sequence of up to 50 objects and IDs of channels which are not
+            effected by the rule.
+        exempt_roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
+            Sequence of up to 20 objects and IDs of roles which are not
+            effected by the rule.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.auto_mod.AutoModRule
+            The created auto-moderation rule.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission or if you try to
+            set a TIMEOUT action without the `MODERATE_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    async def edit_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[typing.Union[int, auto_mod.AutoModEventType]] = undefined.UNDEFINED,
+        actions: undefined.UndefinedOr[typing.Sequence[auto_mod.PartialAutoModAction]] = undefined.UNDEFINED,
+        allow_list: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        keyword_filter: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        presets: undefined.UndefinedOr[
+            typing.Sequence[typing.Union[int, auto_mod.AutoModKeywordPresetType]]
+        ] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        """Edit an auto-moderation rule.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to edit an auto-moderation rule in.
+        rule : hikari.snowflakes.SnowflakeishOr[hikari.auto_mod.AutoModRule]
+            Object or ID of the auto-moderation rule to edit.
+        name : hikari.undefined.UndefinedOr[builtins.str]
+            If specified, the rule's new name.
+        event_type : hikari.undefined.UndefinedOr[typing.Union[builtins.int, hikari.auto_mod.AutoModEventType]]
+            If specified, the type of user content creation event this rule
+            should trigger on.
+        actions : hikari.undefined.UndefinedOr[typing.Sequence[hikari.auto_mod.PartialAutoModAction]]
+            If specified, a sequence of the actions to execute when this rule
+            is triggered.
+        allow_list : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
+            If specified, a sequence of filters which will be exempt from
+            triggering the preset trigger.
+            This supports a wildcard matching strategy which is documented at
+            https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+            This can only be set for KEYWORD_PRESET triggers.
+        keyword_filter : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
+            If specified, a sequence of filter strings this trigger checks for.
+            This supports a wildcard matching strategy which is documented at
+            https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+            This is required for and can only be set for KEYWORD triggers.
+        presets : hikari.undefined.UndefinedOr[typing.Sequence[typing.Union[builtins.int, hikari.auto_mod.AutoModKeywordPresetType]]]
+            If specified, a sequence of Discord's presets to match for.
+            This is required for and can only be set for KEYWORD_PRESET triggers.
+        enabled : hikari.undefined.UndefinedOr[builtins.bool]
+            If specified, whether this auto-moderation rule should be enabled.
+        exempt_channels : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.PartialChannel]]
+            If specified, a sequence of up to 50 objects and IDs of channels
+            which are not effected by the rule.
+        exempt_roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
+            If specified, a sequence of up to 20 objects and IDs of roles which
+            are not effected by the rule.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.auto_mod.AutoModRule
+            The created auto-moderation rule.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission or if you try to
+            set a TIMEOUT action without the `MODERATE_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """  # noqa: E501 - Line too long
+
+    @abc.abstractmethod
+    async def delete_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Create an auto-moderation rule.
+
+        Parameters
+        ----------
+        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+            Object or ID of the guild to delete the auto-moderation rules of.
+        rule : hikari.snowflakes.SnowflakeishOr[hikari.auto_mod.AutoModRule]
+            Object or ID of the auto-moderation rule to delete.
+        reason : hikari.undefined.UndefinedOr[builtins.str]
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or rule was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """

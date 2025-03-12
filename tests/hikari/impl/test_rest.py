@@ -33,6 +33,7 @@ import pytest
 
 from hikari import applications
 from hikari import audit_logs
+from hikari import auto_mod
 from hikari import channels
 from hikari import colors
 from hikari import commands
@@ -6666,3 +6667,161 @@ class TestRESTClientImplAsync:
         await rest_client.delete_stage_instance(channel=StubModel(7334))
 
         rest_client._request.assert_called_once_with(expected_route)
+
+    async def test_fetch_auto_mod_rules(self, rest_client: rest.RESTClientImpl):
+        mock_payload_1 = {"id": "432123"}
+        mock_payload_2 = {"id": "949494994"}
+        mock_result_1 = mock.Mock()
+        mock_result_2 = mock.Mock()
+        rest_client._entity_factory.deserialize_auto_mod_rule.side_effect = [mock_result_1, mock_result_2]
+        expected_route = routes.GET_GUILD_AUTO_MODERATION_RULES.compile(guild=123321)
+        rest_client._request = mock.AsyncMock(return_value=[mock_payload_1, mock_payload_2])
+
+        result = await rest_client.fetch_auto_mod_rules(StubModel(123321))
+
+        assert result == [mock_result_1, mock_result_2]
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_has_calls(
+            [mock.call(mock_payload_1), mock.call(mock_payload_2)]
+        )
+
+    async def test_fetch_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.GET_GUILD_AUTO_MODERATION_RULE.compile(guild=123321, rule=5443123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "442123"})
+
+        result = await rest_client.fetch_auto_mod_rule(StubModel(123321), StubModel(5443123))
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_create_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
+        mock_action = {"type": "58585858"}
+        expected_route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=123321)
+        rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
+
+        result = await rest_client.create_auto_mod_rule(
+            StubModel(123321),
+            name="meow",
+            event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+            trigger_type=auto_mod.AutoModTriggerType.HARMFUL_LINK,
+            actions=[mock_action],
+            allow_list=["bye", "meeeeeeow"],
+            keyword_filter=["okokok", "no", "bye"],
+            presets=[auto_mod.AutoModKeywordPresetType.PROFANITY, auto_mod.AutoModKeywordPresetType.SEXUAL_CONTENT],
+            enabled=False,
+            exempt_roles=[StubModel(4212), StubModel(43123)],
+            exempt_channels=[StubModel(566), StubModel(333), StubModel(222)],
+            reason="a reason meow",
+        )
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "meow",
+                "event_type": 1,
+                "trigger_type": 2,
+                "trigger_metadata": {
+                    "keyword_filter": ["okokok", "no", "bye"],
+                    "presets": [1, 2],
+                    "allow_list": ["bye", "meeeeeeow"],
+                },
+                "actions": [rest_client._entity_factory.serialize_auto_mod_action.return_value],
+                "enabled": False,
+                "exempt_roles": ["4212", "43123"],
+                "exempt_channels": ["566", "333", "222"],
+            },
+            reason="a reason meow",
+        )
+        rest_client._entity_factory.serialize_auto_mod_action.assert_called_once_with(mock_action)
+
+    async def test_create_auto_mod_rule_partial(self, rest_client: rest.RESTClientImpl):
+        mock_action = {"type": "58585858"}
+        expected_route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=123321)
+        rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
+
+        result = await rest_client.create_auto_mod_rule(
+            StubModel(123321),
+            name="meow",
+            event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+            trigger_type=auto_mod.AutoModTriggerType.HARMFUL_LINK,
+            actions=[mock_action],
+        )
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "meow",
+                "event_type": 1,
+                "trigger_type": 2,
+                "actions": [rest_client._entity_factory.serialize_auto_mod_action.return_value],
+                "enabled": True,
+            },
+            reason=undefined.UNDEFINED,
+        )
+        rest_client._entity_factory.serialize_auto_mod_action.assert_called_once_with(mock_action)
+
+    async def test_edit_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
+        mock_action = {"type": "58585858"}
+        expected_route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=123321, rule=5412123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
+
+        result = await rest_client.edit_auto_mod_rule(
+            StubModel(123321),
+            StubModel(5412123),
+            name="meow",
+            event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+            actions=[mock_action],
+            allow_list=["bye", "beep"],
+            keyword_filter=["sdsdsd", "eee", "bye"],
+            presets=[auto_mod.AutoModKeywordPresetType.SEXUAL_CONTENT, auto_mod.AutoModKeywordPresetType.PROFANITY],
+            enabled=False,
+            exempt_roles=[StubModel(4545), StubModel(5656)],
+            exempt_channels=[StubModel(555), StubModel(666), StubModel(777)],
+            reason="nyaa nyaa",
+        )
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "meow",
+                "event_type": 1,
+                "trigger_metadata": {
+                    "keyword_filter": ["sdsdsd", "eee", "bye"],
+                    "presets": [2, 1],
+                    "allow_list": ["bye", "beep"],
+                },
+                "actions": [rest_client._entity_factory.serialize_auto_mod_action.return_value],
+                "enabled": False,
+                "exempt_roles": ["4545", "5656"],
+                "exempt_channels": ["555", "666", "777"],
+            },
+            reason="nyaa nyaa",
+        )
+        rest_client._entity_factory.serialize_auto_mod_action.assert_called_once_with(mock_action)
+
+    async def test_edit_auto_mod_rule_partial(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=123321, rule=44332222)
+        rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
+
+        result = await rest_client.edit_auto_mod_rule(StubModel(123321), StubModel(44332222))
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
+        rest_client._entity_factory.serialize_auto_mod_action.assert_not_called()
+
+    async def test_delete_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.DELETE_GUILD_AUTO_MODERATION_RULE.compile(guild=54123, rule=651234)
+        rest_client._request = mock.AsyncMock()
+
+        result = await rest_client.delete_auto_mod_rule(StubModel(54123), StubModel(651234), reason="ok hi")
+
+        assert result is None
+        rest_client._request.assert_awaited_once_with(expected_route, reason="ok hi")
