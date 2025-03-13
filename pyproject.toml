@@ -108,7 +108,7 @@ flake8 = [
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
-    "mkdocs-material[imaging]==9.6.7",
+    "mkdocs-material[imaging]==9.6.8",
     # Docstring parsing for API reference
     "mkdocstrings[python]==0.29.0",
     "griffe-inherited-docstrings==1.1.1",
