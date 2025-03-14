@@ -487,8 +487,8 @@ class ThumbnailComponent(PartialComponent):
     description: typing.Optional[str] = attrs.field()
     """The description of the thumbnail."""
 
-    spoiler: typing.Optional[bool] = attrs.field()
-    """If the thumbnail has a spoiler."""
+    is_spoiler: bool = attrs.field()
+    """Whether the thumbnail is marked as a spoiler."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
@@ -517,8 +517,8 @@ class MediaGalleryItem:
     description: typing.Optional[str] = attrs.field()
     """The description of the gallery item."""
 
-    spoiler: bool = attrs.field()
-    """If the gallery item has a spoiler."""
+    is_spoiler: bool = attrs.field()
+    """Whether the gallery item is marked as a spoiler."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
@@ -539,7 +539,7 @@ class FileComponent(PartialComponent):
     file: MediaResource = attrs.field()
     """The media for the file."""
 
-    spoiler: bool = attrs.field()
+    is_spoiler: bool = attrs.field()
     """If the file has a spoiler."""
 
 
@@ -547,13 +547,10 @@ class FileComponent(PartialComponent):
 class ContainerComponent(PartialComponent):
     """Represents a container component."""
 
-    accent_color: undefined.UndefinedNoneOr[colors.Color] = attrs.field()
-    """The accent colour for the container.
+    accent_color: typing.Optional[colors.Color] = attrs.field()
+    """The accent colour for the container."""
 
-    If undefined, no accent color is set.
-    """
-
-    spoiler: bool = attrs.field()
+    is_spoiler: bool = attrs.field()
     """Whether the container is marked as a spoiler."""
 
     components: typing.Sequence[ContainerTypesT] = attrs.field()

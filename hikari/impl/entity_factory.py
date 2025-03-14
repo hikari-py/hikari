@@ -3167,7 +3167,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=payload["id"],
             media=self._deserialize_media(payload["media"]),
             description=payload.get("description", None),
-            spoiler=payload.get("spoiler", False),
+            is_spoiler=payload.get("spoiler", False),
         )
 
     def _deserialize_text_display_component(
@@ -3190,7 +3190,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return component_models.MediaGalleryItem(
             media=self._deserialize_media(payload["media"]),
             description=payload.get("description"),
-            spoiler=payload.get("spoiler", False),
+            is_spoiler=payload.get("spoiler", False),
         )
 
     def _deserialize_separator_component(self, payload: data_binding.JSONObject) -> component_models.SeparatorComponent:
@@ -3206,7 +3206,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             type=component_models.ComponentType.FILE,
             id=payload["id"],
             file=self._deserialize_media(payload["file"]),
-            spoiler=payload.get("spoiler", False),
+            is_spoiler=payload.get("spoiler", False),
         )
 
     def _deserialize_container_component(self, payload: data_binding.JSONObject) -> component_models.ContainerComponent:
@@ -3227,18 +3227,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             components.append(deserializer(component_payload))
 
-        accent_color: undefined.UndefinedNoneOr[color_models.Color] = undefined.UNDEFINED
-        if "accent_color" in payload:
-            if accent_color := payload["accent_color"]:
-                color_models.Color.from_int(accent_color)
-            else:
-                accent_color = None
+        accent_color: typing.Optional[color_models.Color] = None
+        if raw_accent_color := payload.get("accent_color"):
+            accent_color = color_models.Color.from_int(raw_accent_color)
 
         return component_models.ContainerComponent(
             type=component_models.ComponentType.CONTAINER,
             id=payload.get("id", None),
             accent_color=accent_color,
-            spoiler=payload.get("spoiler", None),
+            is_spoiler=payload.get("spoiler", False),
             components=components,
         )
 
