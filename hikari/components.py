@@ -663,20 +663,6 @@ The following values are included in this:
 * [`hikari.components.ButtonStyle.DANGER`][]
 """
 
-
-InteractiveButtonTypes: typing.AbstractSet[InteractiveButtonTypesT] = frozenset(
-    [ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
-)
-"""Set of the [`hikari.components.ButtonStyle`][] which are valid for interactive buttons.
-
-The following values are included in this:
-
-* [`hikari.components.ButtonStyle.PRIMARY`][]
-* [`hikari.components.ButtonStyle.SECONDARY`][]
-* [`hikari.components.ButtonStyle.SUCCESS`][]
-* [`hikari.components.ButtonStyle.DANGER`][]
-"""
-
 MessageComponentTypesT = typing.Union[ButtonComponent, SelectMenuComponent]
 """Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
 
