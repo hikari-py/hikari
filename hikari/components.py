@@ -470,10 +470,10 @@ class MediaResource(files.Resource[files.AsyncReader]):
 class SectionComponent(PartialComponent):
     """Represents a section component."""
 
-    components: typing.Sequence[TextDisplayComponent] = attrs.field()
+    components: typing.Sequence[SectionComponentTypesT] = attrs.field()
     """The sections components."""
 
-    accessory: typing.Union[ButtonComponent, ThumbnailComponent] = attrs.field()
+    accessory: typing.Union[SectionAccessoryTypesT] = attrs.field()
     """The sections accessory."""
 
 
