@@ -398,7 +398,7 @@ class Intents(enums.Flag):
 
     ALL_MESSAGE_TYPING = DM_MESSAGE_TYPING | GUILD_MESSAGE_TYPING
     """All typing indicator intents."""
-    
+
     ALL_AUTO_MODERATION = AUTO_MODERATION_CONFIGURATION | AUTO_MODERATION_EXECUTION
     """All auto-moderation intents."""
 
