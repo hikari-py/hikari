@@ -80,10 +80,6 @@ class ComponentType(int, enums.Enum):
     """A non-interactive container component for other types of components.
 
     !!! note
-        As this is a container component it can never be contained within another
-        component and therefore will always be top-level.
-
-    !!! note
         As of writing this can only contain one component type.
     """
 
@@ -653,6 +649,20 @@ The following values are valid for this:
 * [`hikari.components.ButtonStyle.SUCCESS`][]
 * [`hikari.components.ButtonStyle.DANGER`][]
 """
+
+InteractiveButtonTypes: typing.AbstractSet[InteractiveButtonTypesT] = frozenset(
+    [ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
+)
+"""Set of the [`hikari.components.ButtonStyle`][] which are valid for interactive buttons.
+
+The following values are included in this:
+
+* [`hikari.components.ButtonStyle.PRIMARY`][]
+* [`hikari.components.ButtonStyle.SECONDARY`][]
+* [`hikari.components.ButtonStyle.SUCCESS`][]
+* [`hikari.components.ButtonStyle.DANGER`][]
+"""
+
 
 InteractiveButtonTypes: typing.AbstractSet[InteractiveButtonTypesT] = frozenset(
     [ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER]
