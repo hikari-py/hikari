@@ -1987,7 +1987,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -2006,7 +2006,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -2036,7 +2036,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns

@@ -138,13 +138,15 @@ class AutoModActionExecutionEvent(AutoModEvent):
 
     channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
     """ID of the channel the matching context was sent to.
-    This will be `builtins.None` if the message was blocked by auto-moderation
+
+    This will be [`None`][] if the message was blocked by auto-moderation
     of the matched content wasn't in a channel.
     """
 
     message_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
     """ID of the message the matching context was sent in.
-    This will be `builtins.None` if the message was blocked by auto-moderation
+
+    This will be [`None`][] if the message was blocked by auto-moderation
     or the matched content wasn't in a message.
     """
 
@@ -155,6 +157,7 @@ class AutoModActionExecutionEvent(AutoModEvent):
 
     content: typing.Optional[str] = attr.field(repr=False)
     """The user generated content which matched this rule.
+
     This will only be provided if the `MESSAGE_CONTENT` intent has
     been declared.
     """
@@ -164,6 +167,7 @@ class AutoModActionExecutionEvent(AutoModEvent):
 
     matched_content: typing.Optional[str] = attr.field(repr=False)
     """The substring in content which triggered the rule.
+
     This will only be provided if the `MESSAGE_CONTENT` intent has
     been declared and this is a keyword or keyword preset trigger.
     """

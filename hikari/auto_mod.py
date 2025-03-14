@@ -65,6 +65,7 @@ class AutoModActionType(int, enums.Enum):
 
     TIMEOUT = 3
     """Timeout the triggering message's author for a specified duration.
+
     This type can only be set for `KEYWORD` rules and requires the `MODERATE_MEMBERS`
     permission to use.
     """
@@ -178,6 +179,7 @@ class KeywordPresetTrigger(PartialAutoModTrigger):
 
     allow_list: typing.Sequence[str] = attr.field(eq=False, factory=list, hash=False, repr=False)
     """A sequence of filters which will be exempt from triggering the preset trigger.
+
     This supports a wildcard matching strategy which is documented at
     https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
     """
