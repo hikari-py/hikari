@@ -42,7 +42,7 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-import attr
+import attrs
 
 from hikari import snowflakes
 from hikari.internal import attrs_extensions
@@ -72,28 +72,28 @@ class AutoModActionType(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class PartialAutoModAction:
     """Base class for an action which is executed when a rule is triggered."""
 
-    type: AutoModActionType = attr.field()
+    type: AutoModActionType = attrs.field()
     """The type of auto-moderation action."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class AutoModBlockMessage(PartialAutoModAction):
     """Block the content of the triggering message."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class AutoModSendAlertMessage(PartialAutoModAction):
     """Log the triggering content to a specific channel."""
 
-    channel_id: snowflakes.Snowflake = attr.field()
+    channel_id: snowflakes.Snowflake = attrs.field()
     """ID of the channel to log trigger events to."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class AutoModTimeout(PartialAutoModAction):
     """Timeout the triggering message's author for a specified duration.
 
@@ -101,7 +101,7 @@ class AutoModTimeout(PartialAutoModAction):
     permission to use.
     """
 
-    duration: datetime.timedelta = attr.field()
+    duration: datetime.timedelta = attrs.field()
     """The total seconds to timeout the user for (max 2419200 seconds/4 weeks)."""
 
 
@@ -142,19 +142,19 @@ class AutoModKeywordPresetType(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class PartialAutoModTrigger:
     """Base class representing the content a rule triggers on."""
 
-    type: AutoModTriggerType = attr.field(eq=False, hash=False, repr=False)
+    type: AutoModTriggerType = attrs.field(eq=False, hash=False, repr=False)
     """The type action this triggers."""
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class KeywordTrigger(PartialAutoModTrigger):
     """A trigger based on matching message content against a list of keywords."""
 
-    keyword_filter: typing.Sequence[str] = attr.field(eq=False, hash=False, repr=False)
+    keyword_filter: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """The filter strings this trigger checks for.
     This supports a wildcard matching strategy which is documented at
     https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
@@ -173,57 +173,59 @@ class SpamTrigger(PartialAutoModTrigger):
     __slots__: typing.Sequence[str] = []
 
 
-@attr.define(kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class KeywordPresetTrigger(PartialAutoModTrigger):
     """A trigger based on a predefined set of presets provided by Discord."""
 
-    allow_list: typing.Sequence[str] = attr.field(eq=False, factory=list, hash=False, repr=False)
+    allow_list: typing.Sequence[str] = attrs.field(eq=False, factory=list, hash=False, repr=False)
     """A sequence of filters which will be exempt from triggering the preset trigger.
 
     This supports a wildcard matching strategy which is documented at
     https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
     """
 
-    presets: typing.Sequence[typing.Union[int, AutoModKeywordPresetType]] = attr.field(eq=False, hash=False, repr=False)
+    presets: typing.Sequence[typing.Union[int, AutoModKeywordPresetType]] = attrs.field(
+        eq=False, hash=False, repr=False
+    )
     """The predefined presets provided by Discord to match against."""
 
 
 @attrs_extensions.with_copy
-@attr.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
 class AutoModRule(snowflakes.Unique):
     """Auto moderation rule which defines how user content is filtered."""
 
-    app: traits.RESTAware = attr.field(
+    app: traits.RESTAware = attrs.field(
         repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """The client application that models may use for procedures."""
 
-    id: snowflakes.Snowflake = attr.field(eq=True, hash=True, repr=True)
+    id: snowflakes.Snowflake = attrs.field(eq=True, hash=True, repr=True)
     """The ID of this entity."""
 
-    guild_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this rule belongs to."""
 
-    name: str = attr.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The rule's name."""
 
-    creator_id: snowflakes.Snowflake = attr.field(eq=False, hash=False, repr=True)
+    creator_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the user who originally created this rule."""
 
-    event_type: AutoModEventType = attr.field(eq=False, hash=False, repr=True)
+    event_type: AutoModEventType = attrs.field(eq=False, hash=False, repr=True)
     """The type of event this rule triggers on."""
 
-    trigger: PartialAutoModTrigger = attr.field(eq=False, hash=False, repr=False)
+    trigger: PartialAutoModTrigger = attrs.field(eq=False, hash=False, repr=False)
     """The content this rule triggers on."""
 
-    actions: typing.Sequence[PartialAutoModAction] = attr.field(eq=False, hash=False, repr=False)
+    actions: typing.Sequence[PartialAutoModAction] = attrs.field(eq=False, hash=False, repr=False)
     """Sequence of the actions which will execute when this rule is triggered."""
 
-    is_enabled: bool = attr.field(eq=False, hash=False, repr=False)
+    is_enabled: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this rule is enabled."""
 
-    exempt_channel_ids: typing.Sequence[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    exempt_channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of IDs of (up to 20) channels which aren't effected by this rule."""
 
-    exempt_role_ids: typing.Sequence[snowflakes.Snowflake] = attr.field(eq=False, hash=False, repr=False)
+    exempt_role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of IDs of (up to 50) roles which aren't effected by this rule."""
