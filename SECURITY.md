@@ -5,5 +5,4 @@
 Instead, we encourage you to reach out to the maintainer team so we can assess the problem and later disclose it
 responsibly.
 
-If you believe you have found a security-related bug, please contact [davfsa](mailto:davfsa@gmail.com) and/or
-[FasterSpeeding](mailto:lucina@lmbyrne.dev).
+If you believe you have found a security-related bug, please contact [davfsa](mailto:davfsa@gmail.com).
