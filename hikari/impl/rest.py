@@ -87,6 +87,7 @@ if typing.TYPE_CHECKING:
     import types
 
     from hikari import audit_logs
+    from hikari import auto_mod
     from hikari import invites
     from hikari import sessions
     from hikari import stickers as stickers_
@@ -4609,3 +4610,111 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
         route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
         await self._request(route)
+
+    async def fetch_auto_mod_rules(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Sequence[auto_mod.AutoModRule]:
+        results = await self._request(routes.GET_GUILD_AUTO_MODERATION_RULES.compile(guild=guild))
+        assert isinstance(results, list)
+        return [self._entity_factory.deserialize_auto_mod_rule(rule) for rule in results]
+
+    async def fetch_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+    ) -> auto_mod.AutoModRule:
+        result = await self._request(routes.GET_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule))
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    async def create_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
+        name: str,
+        event_type: typing.Union[int, auto_mod.AutoModEventType],
+        trigger_type: typing.Union[int, auto_mod.AutoModTriggerType],
+        actions: typing.Sequence[auto_mod.PartialAutoModAction],
+        allow_list: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        keyword_filter: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        presets: undefined.UndefinedOr[
+            typing.Sequence[typing.Union[int, auto_mod.AutoModKeywordPresetType]]
+        ] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = True,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=guild)
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("name", name)
+        payload.put("event_type", event_type)
+        payload.put("trigger_type", trigger_type)
+        payload.put("enabled", enabled)
+        payload.put_snowflake_array("exempt_channels", exempt_channels)
+        payload.put_snowflake_array("exempt_roles", exempt_roles)
+
+        payload.put_array("actions", actions, conversion=self._entity_factory.serialize_auto_mod_action)
+
+        if not undefined.all_undefined(allow_list, keyword_filter, presets):
+            trigger_metadata = data_binding.JSONObjectBuilder()
+            trigger_metadata.put("allow_list", allow_list)
+            trigger_metadata.put("keyword_filter", keyword_filter)
+            trigger_metadata.put("presets", presets)
+            payload.put("trigger_metadata", trigger_metadata)
+
+        result = await self._request(route, json=payload, reason=reason)
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    async def edit_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[typing.Union[int, auto_mod.AutoModEventType]] = undefined.UNDEFINED,
+        actions: undefined.UndefinedOr[typing.Sequence[auto_mod.PartialAutoModAction]] = undefined.UNDEFINED,
+        allow_list: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        keyword_filter: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        presets: undefined.UndefinedOr[
+            typing.Sequence[typing.Union[int, auto_mod.AutoModKeywordPresetType]]
+        ] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule)
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("name", name)
+        payload.put("event_type", event_type)
+        payload.put("enabled", enabled)
+        payload.put_snowflake_array("exempt_channels", exempt_channels)
+        payload.put_snowflake_array("exempt_roles", exempt_roles)
+        payload.put_array("actions", actions, conversion=self._entity_factory.serialize_auto_mod_action)
+
+        if not undefined.all_undefined(allow_list, keyword_filter, presets):
+            trigger_metadata = data_binding.JSONObjectBuilder()
+            trigger_metadata.put("allow_list", allow_list)
+            trigger_metadata.put("keyword_filter", keyword_filter)
+            trigger_metadata.put("presets", presets)
+            payload.put("trigger_metadata", trigger_metadata)
+
+        result = await self._request(route, json=payload, reason=reason)
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    async def delete_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        await self._request(routes.DELETE_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule), reason=reason)
