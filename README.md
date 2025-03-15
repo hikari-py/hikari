@@ -254,13 +254,11 @@ implementing your own command handler.
 Hikari does not include a command framework by default, so you will want to pick a third party library to do it:
 
 - [`lightbulb`](https://github.com/tandemdude/hikari-lightbulb) - a simple and easy to use command framework for hikari.
-- [`tanjun`](https://github.com/FasterSpeeding/Tanjun) - a flexible command framework designed to extend hikari.
 - [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for hikari that keeps your project neat and tidy.
 - [`arc`](https://github.com/hypergonial/hikari-arc) - a bot framework with a focus on type-safety and correctness.
 
 There are also third party libraries to help you manage components:
 
-- [`yuyo`](https://github.com/FasterSpeeding/Yuyo) - A collection of utility classes and functions designed to expand Hikari.
 - [`miru`](https://github.com/hypergonial/hikari-miru) - A component handler for hikari, inspired by discord.py's views.
 - [`flare`](https://github.com/brazier-dev/hikari-flare/) - a component manager designed to write simple interactions with persistent data.
 
