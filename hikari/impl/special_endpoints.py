@@ -2266,10 +2266,8 @@ class SectionComponentBuilder(special_endpoints.SectionComponentBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.SectionComponentBuilder`][]."""
 
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
-    _components: list[special_endpoints.TextDisplayComponentBuilder] = attrs.field(alias="components", factory=list)
-    _accessory: typing.Union[special_endpoints.ButtonBuilder, special_endpoints.ThumbnailComponentBuilder] = (
-        attrs.field(alias="accessory")
-    )
+    _components: list[special_endpoints.SectionBuilderComponentsT] = attrs.field(alias="components", factory=list)
+    _accessory: special_endpoints.SectionBuilderAccessoriesT = attrs.field(alias="accessory")
 
     @property
     def type(self) -> typing.Literal[component_models.ComponentType.SECTION]:
@@ -2280,14 +2278,14 @@ class SectionComponentBuilder(special_endpoints.SectionComponentBuilder):
         return self._id
 
     @property
-    def components(self) -> typing.Sequence[special_endpoints.TextDisplayComponentBuilder]:
+    def components(self) -> typing.Sequence[special_endpoints.SectionBuilderComponentsT]:
         return self._components.copy()
 
     @property
-    def accessory(self) -> typing.Union[special_endpoints.ButtonBuilder, special_endpoints.ThumbnailComponentBuilder]:
+    def accessory(self) -> special_endpoints.SectionBuilderAccessoriesT:
         return self._accessory
 
-    def add_component(self, component: special_endpoints.TextDisplayComponentBuilder) -> Self:
+    def add_component(self, component: special_endpoints.SectionBuilderComponentsT) -> Self:
         self._components.append(component)
         return self
 

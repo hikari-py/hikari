@@ -53,7 +53,6 @@ __all__: typing.Sequence[str] = (
     "SeparatorComponentBuilder",
     "FileComponentBuilder",
     "ContainerComponentBuilder",
-    "ContainerBuilderComponentsT",
     "ModalActionRowBuilder",
 )
 
@@ -2353,17 +2352,16 @@ class SectionComponentBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[TextDisplayComponentBuilder]:
+    def components(self) -> typing.Sequence[SectionBuilderComponentsT]:
         """The components attached to the section."""
 
-    # FIXME: Extract the return type union
     @property
     @abc.abstractmethod
-    def accessory(self) -> typing.Union[ButtonBuilder, ThumbnailComponentBuilder]:
+    def accessory(self) -> SectionBuilderAccessoriesT:
         """The accessory attached to the section."""
 
     @abc.abstractmethod
-    def add_component(self, component: TextDisplayComponentBuilder) -> Self:
+    def add_component(self, component: SectionBuilderComponentsT) -> Self:
         """Add a component to this section builder.
 
         !!! warning
@@ -2747,40 +2745,19 @@ class ContainerComponentBuilder(ComponentBuilder, abc.ABC):
         """
 
 
-ContainerBuilderComponentsT = typing.Union[
-    MessageActionRowBuilder,
-    TextDisplayComponentBuilder,
-    SectionComponentBuilder,
-    MediaGalleryComponentBuilder,
-    SeparatorComponentBuilder,
-    FileComponentBuilder,
-]
-"""Type hints of the values which are valid for container builder components.
+if typing.TYPE_CHECKING:
+    MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
 
-The following values are valid for this:
+    ModalActionRowBuilderComponentsT = TextInputBuilder
 
-* [`hikari.api.special_endpoints.MessageActionRowBuilder`][]
-* [`hikari.api.special_endpoints.TextDisplayComponentBuilder`][]
-* [`hikari.api.special_endpoints.SectionComponentBuilder`][]
-* [`hikari.api.special_endpoints.MediaGalleryComponentBuilder`][]
-* [`hikari.api.special_endpoints.SeparatorComponentBuilder`][]
-* [`hikari.api.special_endpoints.FileComponentBuilder`][]
-"""
+    ContainerBuilderComponentsT = typing.Union[
+        MessageActionRowBuilder,
+        TextDisplayComponentBuilder,
+        SectionComponentBuilder,
+        MediaGalleryComponentBuilder,
+        SeparatorComponentBuilder,
+        FileComponentBuilder,
+    ]
 
-
-MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
-"""Type hints of the values which are valid for message action row builder components.
-
-The following values are valid for this:
-
-* [`hikari.api.special_endpoints.ButtonBuilder`][]
-* [`hikari.api.special_endpoints.SelectMenuBuilder`][]
-"""
-
-ModalActionRowBuilderComponentsT = TextInputBuilder
-"""Type hints of the values which are valid for modal action row builder components.
-
-The following values are valid for this:
-
-* [`hikari.api.special_endpoints.TextInputBuilder`][]
-"""
+    SectionBuilderAccessoriesT = typing.Union[ButtonBuilder, ThumbnailComponentBuilder]
+    SectionBuilderComponentsT = typing.Union[TextDisplayComponentBuilder]
