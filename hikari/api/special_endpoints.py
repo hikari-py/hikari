@@ -2755,11 +2755,32 @@ ContainerBuilderComponentsT = typing.Union[
     SeparatorComponentBuilder,
     FileComponentBuilder,
 ]
-"""FIXME: Document me."""
+"""Type hints of the values which are valid for container builder components.
+
+The following values are valid for this:
+
+* [`hikari.api.special_endpoints.MessageActionRowBuilder`][]
+* [`hikari.api.special_endpoints.TextDisplayComponentBuilder`][]
+* [`hikari.api.special_endpoints.SectionComponentBuilder`][]
+* [`hikari.api.special_endpoints.MediaGalleryComponentBuilder`][]
+* [`hikari.api.special_endpoints.SeparatorComponentBuilder`][]
+* [`hikari.api.special_endpoints.FileComponentBuilder`][]
+"""
 
 
 MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
-"""FIXME: Document me."""
+"""Type hints of the values which are valid for message action row builder components.
+
+The following values are valid for this:
+
+* [`hikari.api.special_endpoints.ButtonBuilder`][]
+* [`hikari.api.special_endpoints.SelectMenuBuilder`][]
+"""
 
 ModalActionRowBuilderComponentsT = TextInputBuilder
-""""FIXME: Document me."""
+"""Type hints of the values which are valid for modal action row builder components.
+
+The following values are valid for this:
+
+* [`hikari.api.special_endpoints.TextInputBuilder`][]
+"""
