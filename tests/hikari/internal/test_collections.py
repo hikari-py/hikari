@@ -77,9 +77,9 @@ class TestFreezableDict:
 
     def test___setitem__(self):
         mock_map = collections.FreezableDict({"hmm": "forearm", "cat": "bag", "ok": "bye"})
-        mock_map["bye"] = 4
+        mock_map["bye"] = "goobyyy"
 
-        assert mock_map == {"hmm": "forearm", "cat": "bag", "ok": "bye", "bye": 4}
+        assert mock_map == {"hmm": "forearm", "cat": "bag", "ok": "bye", "bye": "goobyyy"}
 
 
 class TestLimitedCapacityCacheMap:
@@ -110,45 +110,45 @@ class TestLimitedCapacityCacheMap:
         assert result == {"o": "no", "good": "bye"}
 
     def test___delitem___for_existing_entry(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map["Ok"] = 42
         del mock_map["Ok"]
         assert "Ok" not in mock_map
 
     def test___delitem___for_non_existing_entry(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         with pytest.raises(KeyError):
             del mock_map["Blam"]
 
     def test___getitem___for_existing_entry(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map["blat"] = 42
         assert mock_map["blat"] == 42
 
     def test___getitem___for_non_existing_entry(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         with pytest.raises(KeyError):
             mock_map["CIA"]
 
     def test___iter___(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map.update({"OK": "blam", "blaaa": "neoeo", "neon": "genesis", "evangelion": None})
         assert list(mock_map) == ["OK", "blaaa", "neon", "evangelion"]
 
     def test___len___(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map.update({"ooga": "blam", "blaaa": "neoeo", "the": "boys", "neon": "genesis", "evangelion": None})
         assert len(mock_map) == 5
 
     def test___setitem___when_limit_not_reached(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map["OK"] = 523
         mock_map["blam"] = 512387
         mock_map.update({"bll": "no", "ieiei": "lslsl"})
         assert mock_map == {"OK": 523, "blam": 512387, "bll": "no", "ieiei": "lslsl"}
 
     def test___setitem___when_limit_reached(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=4)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=4)
         mock_map.update({"bll": "no", "ieiei": "lslsl", "pacify": "me", "qt": "pie"})
         mock_map["eva"] = "Rei"
         mock_map.update({"shinji": "ikari"})
@@ -156,7 +156,9 @@ class TestLimitedCapacityCacheMap:
 
     def test___setitem___when_limit_reached_and_expire_callback_set(self):
         expire_callback = mock.Mock()
-        mock_map = collections.LimitedCapacityCacheMap(limit=4, on_expire=expire_callback)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(
+            limit=4, on_expire=expire_callback
+        )
         mock_map.update({"bll": "no", "ieiei": "lslsl", "pacify": "me", "qt": "pie"})
         mock_map["eva"] = "Rei"
         mock_map.update({"shinji": "ikari"})

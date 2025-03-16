@@ -26,9 +26,9 @@ import pytest
 from hikari import channels
 from hikari import components
 from hikari import monetization
+from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
-from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.interactions import modal_interactions
 
@@ -56,14 +56,17 @@ class TestModalInteraction:
             message=mock.Mock(),
             locale="es-ES",
             guild_locale="en-US",
-            app_permissions=543123,
-            components=special_endpoints.ModalActionRowBuilder(
-                components=[
-                    components.TextInputComponent(
-                        type=components.ComponentType.TEXT_INPUT, custom_id="le id", value="le value"
-                    )
-                ]
-            ),
+            app_permissions=permissions.Permissions.NONE,
+            components=[
+                components.ModalActionRowComponent(
+                    type=components.ComponentType.ACTION_ROW,
+                    components=[
+                        components.TextInputComponent(
+                            type=components.ComponentType.TEXT_INPUT, custom_id="le id", value="le value"
+                        )
+                    ],
+                )
+            ],
             entitlements=[
                 monetization.Entitlement(
                     id=snowflakes.Snowflake(123123),
@@ -102,18 +105,23 @@ class TestModalInteraction:
     async def test_fetch_channel(
         self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware
     ):
-        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableChannel)
-
-        assert await mock_modal_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
-
-        mock_app.rest.fetch_channel.assert_awaited_once_with(3123123)
+        with mock.patch.object(
+            mock_app.rest, "fetch_channel", mock.AsyncMock(return_value=mock.Mock(channels.TextableChannel))
+        ) as patched_fetch_channel:
+            assert await mock_modal_interaction.fetch_channel() is patched_fetch_channel.return_value
+            patched_fetch_channel.assert_awaited_once_with(3123123)
 
     def test_get_channel(self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware):
-        mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.GuildTextChannel)
+        with (
+            mock.patch.object(mock_modal_interaction, "app", mock.Mock(traits.CacheAware)) as patched_app,
+            mock.patch.object(patched_app, "cache") as patched_cache,
+            mock.patch.object(
+                patched_cache, "get_guild_channel", return_value=mock.Mock(channels.GuildTextChannel)
+            ) as patched_get_guild_channel,
+        ):
+            assert mock_modal_interaction.get_channel() is patched_get_guild_channel.return_value
 
-        assert mock_modal_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
-
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
+            patched_get_guild_channel.assert_called_once_with(3123123)
 
     def test_get_channel_without_cache(self, mock_modal_interaction: modal_interactions.ModalInteraction):
         mock_modal_interaction.app = mock.Mock(traits.RESTAware)
@@ -124,37 +132,44 @@ class TestModalInteraction:
     async def test_fetch_guild(
         self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware
     ):
-        mock_modal_interaction.guild_id = snowflakes.Snowflake(43123123)
-
-        assert await mock_modal_interaction.fetch_guild() is mock_app.rest.fetch_guild.return_value
-
-        mock_app.rest.fetch_guild.assert_awaited_once_with(43123123)
+        with (
+            mock.patch.object(mock_modal_interaction, "guild_id", snowflakes.Snowflake(43123123)),
+            mock.patch.object(mock_app.rest, "fetch_guild") as patched_fetch_guild,
+        ):
+            assert await mock_modal_interaction.fetch_guild() is patched_fetch_guild.return_value
+            patched_fetch_guild.assert_awaited_once_with(43123123)
 
     @pytest.mark.asyncio
     async def test_fetch_guild_for_dm_interaction(
         self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware
     ):
-        mock_modal_interaction.guild_id = None
+        with (
+            mock.patch.object(mock_modal_interaction, "guild_id", None),
+            mock.patch.object(mock_app.rest, "fetch_guild") as patched_fetch_guild,
+        ):
+            assert await mock_modal_interaction.fetch_guild() is None
 
-        assert await mock_modal_interaction.fetch_guild() is None
+            patched_fetch_guild.assert_not_called()
 
-        mock_app.rest.fetch_guild.assert_not_called()
+    def test_get_guild(self, mock_modal_interaction: modal_interactions.ModalInteraction):
+        with (
+            mock.patch.object(mock_modal_interaction, "app", mock.Mock(traits.CacheAware)) as patched_app,
+            mock.patch.object(patched_app, "cache") as patched_cache,
+            mock.patch.object(patched_cache, "get_guild") as patched_get_guild,
+        ):
+            assert mock_modal_interaction.get_guild() is patched_get_guild.return_value
+            patched_get_guild.assert_called_once_with(5412231)
 
-    def test_get_guild(self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware):
-        mock_modal_interaction.guild_id = snowflakes.Snowflake(874356)
+    def test_get_guild_for_dm_interaction(self, mock_modal_interaction: modal_interactions.ModalInteraction):
+        with (
+            mock.patch.object(mock_modal_interaction, "guild_id", None),
+            mock.patch.object(mock_modal_interaction, "app", mock.Mock(traits.CacheAware)) as patched_app,
+            mock.patch.object(patched_app, "cache") as patched_cache,
+            mock.patch.object(patched_cache, "get_guild") as patched_get_guild,
+        ):
+            assert mock_modal_interaction.get_guild() is None
 
-        assert mock_modal_interaction.get_guild() is mock_app.cache.get_guild.return_value
-
-        mock_app.cache.get_guild.assert_called_once_with(874356)
-
-    def test_get_guild_for_dm_interaction(
-        self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware
-    ):
-        mock_modal_interaction.guild_id = None
-
-        assert mock_modal_interaction.get_guild() is None
-
-        mock_app.cache.get_guild.assert_not_called()
+            patched_get_guild.assert_not_called()
 
     def test_get_guild_when_cacheless(
         self, mock_modal_interaction: modal_interactions.ModalInteraction, mock_app: traits.RESTAware

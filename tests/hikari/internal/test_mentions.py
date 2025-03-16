@@ -42,7 +42,9 @@ from hikari.internal import mentions
         ),
     ],
 )
-def test_generate_allowed_mentions(function_input: tuple[bool, ...], expected_output: typing.Mapping[str, typing.Any]):
+def test_generate_allowed_mentions(
+    function_input: tuple[bool, ...], expected_output: typing.MutableMapping[str, typing.Any]
+):
     returned = mentions.generate_allowed_mentions(*function_input)
     for k, v in expected_output.items():
         if isinstance(v, list):

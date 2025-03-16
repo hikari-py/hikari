@@ -29,6 +29,7 @@ from hikari import emojis
 from hikari import guilds
 from hikari import messages
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -89,9 +90,14 @@ class TestMessageApplication:
 
 
 @pytest.fixture
-def message() -> messages.Message:
+def mock_app() -> traits.RESTAware:
+    return mock.Mock(traits.RESTAware)
+
+
+@pytest.fixture
+def message(mock_app: traits.RESTAware) -> messages.Message:
     return messages.Message(
-        app=None,
+        app=mock_app,
         id=snowflakes.Snowflake(1234),
         channel_id=snowflakes.Snowflake(5678),
         guild_id=snowflakes.Snowflake(910112),
@@ -114,7 +120,7 @@ def message() -> messages.Message:
         activity=None,
         application=None,
         message_reference=None,
-        flags=None,
+        flags=messages.MessageFlag.NONE,
         nonce=None,
         referenced_message=None,
         stickers=[],
@@ -139,9 +145,12 @@ class TestMessage:
 
 
 @pytest.fixture
-def message_reference() -> messages.MessageReference:
+def message_reference(mock_app: traits.RESTAware) -> messages.MessageReference:
     return messages.MessageReference(
-        app=None, guild_id=snowflakes.Snowflake(123), channel_id=snowflakes.Snowflake(456), id=snowflakes.Snowflake(789)
+        app=mock_app,
+        guild_id=snowflakes.Snowflake(123),
+        channel_id=snowflakes.Snowflake(456),
+        id=snowflakes.Snowflake(789),
     )
 
 

@@ -25,80 +25,117 @@ import pytest
 
 from hikari import guilds
 from hikari import snowflakes
+from hikari import traits
+from hikari import users
+from hikari.api import shard as shard_api
 from hikari.events import member_events
-from tests.hikari import hikari_test_helpers
+
+
+@pytest.fixture
+def mock_app() -> traits.RESTAware:
+    return mock.Mock(traits.RESTAware)
 
 
 class TestMemberEvent:
+    class MockMemberEvent(member_events.MemberEvent):
+        def __init__(self, app: traits.RESTAware):
+            self._app = app
+            self._shard = mock.Mock()
+            self._guild_id = snowflakes.Snowflake(123)
+            self._user = mock.Mock(app=app, id=snowflakes.Snowflake(456))
+
+        @property
+        def app(self) -> traits.RESTAware:
+            return self._app
+
+        @property
+        def shard(self) -> shard_api.GatewayShard:
+            return self._shard
+
+        @property
+        def guild_id(self) -> snowflakes.Snowflake:
+            return self._guild_id
+
+        @property
+        def user(self) -> users.User:
+            return self._user
+
     @pytest.fixture
-    def event(self) -> member_events.MemberEvent:
-        cls = hikari_test_helpers.mock_class_namespace(
-            member_events.MemberEvent,
-            slots_=False,
-            guild_id=mock.PropertyMock(return_value=snowflakes.Snowflake(123)),
-            user=mock.Mock(id=456),
-        )
-        return cls()
+    def member_event(self, mock_app: traits.RESTAware) -> member_events.MemberEvent:
+        return TestMemberEvent.MockMemberEvent(mock_app)
 
-    def test_app_property(self, event: member_events.MemberEvent):
-        assert event.app is event.user.app
+    def test_app_property(self, member_event: member_events.MemberEvent):
+        assert member_event.app is member_event.user.app
 
-    def test_user_id_property(self, event: member_events.MemberEvent):
-        event.user_id == 456
+    def test_user_id_property(self, member_event: member_events.MemberEvent):
+        assert member_event.user_id == 456
 
-    def test_guild_when_no_cache_trait(self):
-        event = hikari_test_helpers.mock_class_namespace(member_events.MemberEvent, app=None)()
+    def test_guild_when_no_cache_trait(self, member_event: member_events.MemberEvent):
+        with mock.patch.object(member_event, "_app", None):
+            assert member_event.get_guild() is None
 
-        assert event.get_guild() is None
+    def test_get_guild_when_available(self, member_event: member_events.MemberEvent):
+        with (
+            mock.patch.object(member_event, "_app", mock.Mock(traits.CacheAware)) as patched_app,
+            mock.patch.object(patched_app, "cache") as patched_cache,
+            mock.patch.object(patched_cache, "get_available_guild") as patched_get_available_guild,
+            mock.patch.object(patched_cache, "get_unavailable_guild") as patched_get_unavailable_guild,
+        ):
+            result = member_event.get_guild()
 
-    def test_get_guild_when_available(self, event: member_events.MemberEvent):
-        result = event.get_guild()
+            assert result is patched_get_available_guild.return_value
+            patched_get_available_guild.assert_called_once_with(123)
+            patched_get_unavailable_guild.assert_not_called()
 
-        assert result is event.app.cache.get_available_guild.return_value
-        event.app.cache.get_available_guild.assert_called_once_with(123)
-        event.app.cache.get_unavailable_guild.assert_not_called()
+    def test_guild_when_unavailable(self, member_event: member_events.MemberEvent):
+        with (
+            mock.patch.object(member_event, "_app", mock.Mock(traits.CacheAware)) as patched_app,
+            mock.patch.object(patched_app, "cache") as patched_cache,
+            mock.patch.object(patched_cache, "get_available_guild", return_value=None) as patched_get_available_guild,
+            mock.patch.object(patched_cache, "get_unavailable_guild") as patched_get_unavailable_guild,
+        ):
+            result = member_event.get_guild()
 
-    def test_guild_when_unavailable(self, event: member_events.MemberEvent):
-        event.app.cache.get_available_guild.return_value = None
-        result = event.get_guild()
-
-        assert result is event.app.cache.get_unavailable_guild.return_value
-        event.app.cache.get_unavailable_guild.assert_called_once_with(123)
-        event.app.cache.get_available_guild.assert_called_once_with(123)
+            assert result is patched_get_unavailable_guild.return_value
+            patched_get_unavailable_guild.assert_called_once_with(123)
+            patched_get_available_guild.assert_called_once_with(123)
 
 
 class TestMemberCreateEvent:
     @pytest.fixture
     def event(self) -> member_events.MemberCreateEvent:
-        return member_events.MemberCreateEvent(shard=None, member=mock.Mock())
+        return member_events.MemberCreateEvent(shard=mock.Mock(), member=mock.Mock())
 
     def test_guild_property(self, event: member_events.MemberCreateEvent):
-        event.member.guild_id = snowflakes.Snowflake(123)
-        event.guild_id == 123
+        with mock.patch.object(event.member, "guild_id", snowflakes.Snowflake(123)):
+            assert event.guild_id == 123
 
     def test_user_property(self, event: member_events.MemberCreateEvent):
         user = mock.Mock()
-        event.member.user = user
-        event.user == user
+        with mock.patch.object(event.member, "user", user):
+            assert event.user == user
 
 
 class TestMemberUpdateEvent:
     @pytest.fixture
     def event(self) -> member_events.MemberUpdateEvent:
-        return member_events.MemberUpdateEvent(shard=None, member=mock.Mock(), old_member=mock.Mock(guilds.Member))
+        return member_events.MemberUpdateEvent(
+            shard=mock.Mock(), member=mock.Mock(), old_member=mock.Mock(guilds.Member)
+        )
 
     def test_guild_property(self, event: member_events.MemberUpdateEvent):
-        event.member.guild_id = snowflakes.Snowflake(123)
-        event.guild_id == 123
+        with mock.patch.object(event.member, "guild_id", snowflakes.Snowflake(123)):
+            assert event.guild_id == 123
 
     def test_user_property(self, event: member_events.MemberUpdateEvent):
         user = mock.Mock()
-        event.member.user = user
-        event.user == user
+        with mock.patch.object(event.member, "user", user):
+            assert event.user == user
 
     def test_old_user_property(self, event: member_events.MemberUpdateEvent):
-        event.member.guild_id = snowflakes.Snowflake(123)
-        event.member.id = 456
-
-        assert event.member.guild_id == 123
-        assert event.member.id == 456
+        with (
+            mock.patch.object(event.member, "guild_id", snowflakes.Snowflake(123)),
+            mock.patch.object(event.member, "id", 456),
+        ):
+            assert event.member.guild_id == 123
+            assert event.member.id == 456

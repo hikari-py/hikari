@@ -25,13 +25,16 @@ import typing
 import pytest
 
 from hikari import iterators
-from tests.hikari import hikari_test_helpers
 
 
 class TestLazyIterator:
+    class MockLazyIterator(iterators.LazyIterator[typing.Any]):
+        def __anext__(self) -> typing.Any:
+            pass
+
     @pytest.fixture
     def lazy_iterator(self) -> iterators.LazyIterator[typing.Any]:
-        return hikari_test_helpers.mock_class_namespace(iterators.LazyIterator)()
+        return TestLazyIterator.MockLazyIterator()
 
     def test_asynchronous_only(self, lazy_iterator: iterators.LazyIterator[typing.Any]):
         with pytest.raises(TypeError, match="is async-only, did you mean 'async for' or `anext`?"):

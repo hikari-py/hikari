@@ -156,7 +156,7 @@ class TestStringMapBuilder:
         assert dict(mapping) == {name: expect}
 
     def test_put_with_conversion_uses_return_value(self):
-        def convert(_):
+        def convert(_: str):
             return "yeah, i got called"
 
         mapping = data_binding.StringMapBuilder()
@@ -172,7 +172,7 @@ class TestStringMapBuilder:
         convert.assert_called_once_with(expect)
 
     def test_put_py_singleton_conversion_runs_before_check(self):
-        def convert(_):
+        def convert(_: str):
             return True
 
         mapping = data_binding.StringMapBuilder()
@@ -277,9 +277,7 @@ class TestJSONObjectBuilder:
             (snowflakes.Snowflake("100126"), "100126"),
         ],
     )
-    def test_put_snowflake(
-        self, input_value: typing.Union[int, str, MyUnique, snowflakes.Snowflake], expected_str: str
-    ):
+    def test_put_snowflake(self, input_value: snowflakes.Snowflake, expected_str: str):
         builder = data_binding.JSONObjectBuilder()
         builder.put_snowflake("WAWAWA!", input_value)
         assert builder == {"WAWAWA!": expected_str}
@@ -300,9 +298,7 @@ class TestJSONObjectBuilder:
             (snowflakes.Snowflake("100126"), "100126"),
         ],
     )
-    def test_put_snowflake_array_conversions(
-        self, input_value: typing.Union[int, str, MyUnique, snowflakes.Snowflake], expected_str: str
-    ):
+    def test_put_snowflake_array_conversions(self, input_value: snowflakes.Snowflake, expected_str: str):
         builder = data_binding.JSONObjectBuilder()
         builder.put_snowflake_array("WAWAWAH!", [input_value] * 5)
         assert builder == {"WAWAWAH!": [expected_str] * 5}

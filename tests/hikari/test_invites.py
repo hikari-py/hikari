@@ -20,21 +20,33 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import datetime
+
 import mock
 import pytest
 
-from hikari import invites, snowflakes
+from hikari import guilds
+from hikari import invites
+from hikari import snowflakes
 from hikari import urls
 from hikari.internal import routes
-from tests.hikari import hikari_test_helpers
 
 
 class TestInviteCode:
-    def test_str_operator(self):
-        mock_invite = hikari_test_helpers.mock_class_namespace(
-            invites.InviteCode, code=mock.PropertyMock(return_value="hikari")
-        )()
-        assert str(mock_invite) == "https://discord.gg/hikari"
+    class MockInviteCode(invites.InviteCode):
+        def __init__(self):
+            self._code = "hikari"
+
+        @property
+        def code(self) -> str:
+            return self._code
+
+    @pytest.fixture
+    def invite_code(self) -> invites.InviteCode:
+        return TestInviteCode.MockInviteCode()
+
+    def test_str_operator(self, invite_code: invites.InviteCode):
+        assert str(invite_code) == "https://discord.gg/hikari"
 
 
 class TestInviteGuild:
@@ -52,7 +64,7 @@ class TestInviteGuild:
             verification_level=1,
             vanity_url_code=None,
             welcome_screen=None,
-            nsfw_level=2,
+            nsfw_level=guilds.GuildNSFWLevel.SAFE,
         )
 
     def test_splash_url(self, model: invites.InviteGuild):
@@ -123,14 +135,33 @@ class TestInviteGuild:
 
 
 class TestInviteWithMetadata:
-    def test_uses_left(self):
-        mock_invite = hikari_test_helpers.mock_class_namespace(
-            invites.InviteWithMetadata, init_=False, max_uses=123, uses=55
-        )()
+    @pytest.fixture
+    def invite_with_metadata(self):
+        return invites.InviteWithMetadata(
+            app=mock.Mock(),
+            code="invite_code",
+            guild=mock.Mock(),
+            guild_id=snowflakes.Snowflake(12345),
+            channel=mock.Mock(),
+            channel_id=snowflakes.Snowflake(54321),
+            inviter=mock.Mock(),
+            target_type=invites.TargetType.EMBEDDED_APPLICATION,
+            target_user=mock.Mock(),
+            target_application=mock.Mock(),
+            approximate_active_member_count=3,
+            expires_at=datetime.datetime.fromtimestamp(3000),
+            approximate_member_count=10,
+            uses=55,
+            max_uses=123,
+            max_age=datetime.timedelta(3),
+            is_temporary=True,
+            created_at=datetime.datetime.fromtimestamp(2000),
+        )
 
-        assert mock_invite.uses_left == 68
+    def test_uses_left(self, invite_with_metadata: invites.InviteWithMetadata):
+        assert invite_with_metadata.uses_left == 68
 
-    def test_uses_left_when_none(self):
-        mock_invite = hikari_test_helpers.mock_class_namespace(invites.InviteWithMetadata, init_=False, max_uses=None)()
+    def test_uses_left_when_none(self, invite_with_metadata: invites.InviteWithMetadata):
+        invite_with_metadata.max_uses = None
 
-        assert mock_invite.uses_left is None
+        assert invite_with_metadata.uses_left is None

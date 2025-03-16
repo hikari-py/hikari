@@ -37,7 +37,7 @@ from tests.hikari import hikari_test_helpers
 
 @pytest.fixture
 def mock_app() -> traits.RESTAware:
-    return mock.Mock()
+    return mock.Mock(traits.RESTAware)
 
 
 class TestChannelFollow:
@@ -66,17 +66,21 @@ class TestChannelFollow:
         assert result is mock_app.rest.fetch_webhook.return_value
         mock_app.rest.fetch_webhook.assert_awaited_once_with(54123123)
 
-    def test_get_channel(self, mock_app: traits.RESTAware):
+    def test_get_channel(self):
         mock_channel = mock.Mock(spec=channels.GuildNewsChannel)
-        mock_app.cache.get_guild_channel = mock.Mock(return_value=mock_channel)
-        follow = channels.ChannelFollow(
-            webhook_id=snowflakes.Snowflake(993883), app=mock_app, channel_id=snowflakes.Snowflake(696969)
-        )
 
-        result = follow.get_channel()
+        app = mock.Mock(traits.CacheAware, rest=mock.Mock())
+        with mock.patch.object(
+            app.cache, "get_guild_channel", mock.Mock(return_value=mock_channel)
+        ) as patched_get_guild_channel:
+            follow = channels.ChannelFollow(
+                webhook_id=snowflakes.Snowflake(993883), app=app, channel_id=snowflakes.Snowflake(696969)
+            )
 
-        assert result is mock_channel
-        mock_app.cache.get_guild_channel.assert_called_once_with(696969)
+            result = follow.get_channel()
+
+            assert result is mock_channel
+            patched_get_guild_channel.assert_called_once_with(696969)
 
     def test_get_channel_when_no_cache_trait(self):
         follow = channels.ChannelFollow(
@@ -100,33 +104,31 @@ class TestPermissionOverwrite:
 
 class TestPartialChannel:
     @pytest.fixture
-    def model(self, mock_app: traits.RESTAware) -> channels.PartialChannel:
+    def partial_channel(self, mock_app: traits.RESTAware) -> channels.PartialChannel:
         return hikari_test_helpers.mock_class_namespace(channels.PartialChannel, rename_impl_=False)(
             app=mock_app, id=snowflakes.Snowflake(1234567), name="foo", type=channels.ChannelType.GUILD_NEWS
         )
 
-    def test_str_operator(self, model: channels.PartialChannel):
-        assert str(model) == "foo"
+    def test_str_operator(self, partial_channel: channels.PartialChannel):
+        assert str(partial_channel) == "foo"
 
-    def test_str_operator_when_name_is_None(self, model: channels.PartialChannel):
-        model.name = None
-        assert str(model) == "Unnamed PartialChannel ID 1234567"
+    def test_str_operator_when_name_is_None(self, partial_channel: channels.PartialChannel):
+        partial_channel.name = None
+        assert str(partial_channel) == "Unnamed PartialChannel ID 1234567"
 
-    def test_mention_property(self, model: channels.PartialChannel):
-        assert model.mention == "<#1234567>"
+    def test_mention_property(self, partial_channel: channels.PartialChannel):
+        assert partial_channel.mention == "<#1234567>"
 
     @pytest.mark.asyncio
-    async def test_delete(self, model: channels.PartialChannel):
-        model.app.rest.delete_channel = mock.AsyncMock()
-
-        assert await model.delete() is model.app.rest.delete_channel.return_value
-
-        model.app.rest.delete_channel.assert_called_once_with(1234567)
+    async def test_delete(self, partial_channel: channels.PartialChannel):
+        with mock.patch.object(partial_channel.app.rest, "delete_channel", mock.AsyncMock()) as patched_delete_channel:
+            assert await partial_channel.delete() is patched_delete_channel.return_value
+            patched_delete_channel.assert_called_once_with(1234567)
 
 
 class TestDMChannel:
     @pytest.fixture
-    def model(self, mock_app: traits.RESTAware) -> channels.DMChannel:
+    def dm_channel(self, mock_app: traits.RESTAware) -> channels.DMChannel:
         return channels.DMChannel(
             id=snowflakes.Snowflake(12345),
             name="steve",
@@ -136,16 +138,16 @@ class TestDMChannel:
             app=mock_app,
         )
 
-    def test_str_operator(self, model: channels.DMChannel):
-        assert str(model) == "DMChannel with: snoop#0420"
+    def test_str_operator(self, dm_channel: channels.DMChannel):
+        assert str(dm_channel) == "DMChannel with: snoop#0420"
 
-    def test_shard_id(self, model: channels.DMChannel):
-        assert model.shard_id == 0
+    def test_shard_id(self, dm_channel: channels.DMChannel):
+        assert dm_channel.shard_id == 0
 
 
 class TestGroupDMChannel:
     @pytest.fixture
-    def model(self, mock_app: traits.RESTAware) -> channels.GroupDMChannel:
+    def group_dm_channel(self, mock_app: traits.RESTAware) -> channels.GroupDMChannel:
         return channels.GroupDMChannel(
             app=mock_app,
             id=snowflakes.Snowflake(136134),
@@ -163,53 +165,53 @@ class TestGroupDMChannel:
             application_id=None,
         )
 
-    def test_str_operator(self, model: channels.GroupDMChannel):
-        assert str(model) == "super cool group dm"
+    def test_str_operator(self, group_dm_channel: channels.GroupDMChannel):
+        assert str(group_dm_channel) == "super cool group dm"
 
-    def test_str_operator_when_name_is_None(self, model: channels.GroupDMChannel):
-        model.name = None
-        assert str(model) == "GroupDMChannel with: snoop#0420, yeet#1012, nice#6969"
+    def test_str_operator_when_name_is_None(self, group_dm_channel: channels.GroupDMChannel):
+        group_dm_channel.name = None
+        assert str(group_dm_channel) == "GroupDMChannel with: snoop#0420, yeet#1012, nice#6969"
 
-    def test_icon_url(self):
-        channel = hikari_test_helpers.mock_class_namespace(
-            channels.GroupDMChannel, init_=False, make_icon_url=mock.Mock(return_value="icon-url-here.com")
-        )()
-        assert channel.icon_url == "icon-url-here.com"
-        channel.make_icon_url.assert_called_once()
+    def test_icon_url(self, group_dm_channel: channels.GroupDMChannel):
+        with mock.patch.object(
+            channels.GroupDMChannel, "make_icon_url", mock.Mock(return_value="icon-url-here.com")
+        ) as patched_make_icon_url:
+            assert group_dm_channel.icon_url == "icon-url-here.com"
+            patched_make_icon_url.assert_called_once()
 
-    def test_make_icon_url(self, model: channels.GroupDMChannel):
-        assert model.make_icon_url(ext="jpeg", size=16) == files.URL(
+    def test_make_icon_url(self, group_dm_channel: channels.GroupDMChannel):
+        assert group_dm_channel.make_icon_url(ext="jpeg", size=16) == files.URL(
             "https://cdn.discordapp.com/channel-icons/136134/1a2b3c.jpeg?size=16"
         )
 
-    def test_make_icon_url_without_optional_params(self, model: channels.GroupDMChannel):
-        assert model.make_icon_url() == files.URL(
+    def test_make_icon_url_without_optional_params(self, group_dm_channel: channels.GroupDMChannel):
+        assert group_dm_channel.make_icon_url() == files.URL(
             "https://cdn.discordapp.com/channel-icons/136134/1a2b3c.png?size=4096"
         )
 
-    def test_make_icon_url_when_hash_is_None(self, model: channels.GroupDMChannel):
-        model.icon_hash = None
-        assert model.make_icon_url() is None
+    def test_make_icon_url_when_hash_is_None(self, group_dm_channel: channels.GroupDMChannel):
+        group_dm_channel.icon_hash = None
+        assert group_dm_channel.make_icon_url() is None
 
 
 class TestTextChannel:
     @pytest.fixture
-    def model(self, mock_app: traits.RESTAware) -> channels.TextableChannel:
+    def text_channel(self, mock_app: traits.RESTAware) -> channels.TextableChannel:
         return hikari_test_helpers.mock_class_namespace(channels.TextableChannel)(
             app=mock_app, id=snowflakes.Snowflake(12345679), name="foo1", type=channels.ChannelType.GUILD_TEXT
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_history(self, model: channels.TextableChannel):
-        model.app.rest.fetch_messages = mock.AsyncMock()
+    async def test_fetch_history(self, text_channel: channels.TextableChannel):
+        text_channel.app.rest.fetch_messages = mock.AsyncMock()
 
-        await model.fetch_history(
+        await text_channel.fetch_history(
             before=datetime.datetime(2020, 4, 1, 1, 0, 0),
             after=datetime.datetime(2020, 4, 1, 0, 0, 0),
             around=datetime.datetime(2020, 4, 1, 0, 30, 0),
         )
 
-        model.app.rest.fetch_messages.assert_awaited_once_with(
+        text_channel.app.rest.fetch_messages.assert_awaited_once_with(
             12345679,
             before=datetime.datetime(2020, 4, 1, 1, 0, 0),
             after=datetime.datetime(2020, 4, 1, 0, 0, 0),
@@ -217,48 +219,48 @@ class TestTextChannel:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_message(self, model: channels.TextableChannel):
-        model.app.rest.fetch_message = mock.AsyncMock()
+    async def test_fetch_message(self, text_channel: channels.TextableChannel):
+        text_channel.app.rest.fetch_message = mock.AsyncMock()
 
-        assert await model.fetch_message(133742069) is model.app.rest.fetch_message.return_value
+        assert await text_channel.fetch_message(133742069) is text_channel.app.rest.fetch_message.return_value
 
-        model.app.rest.fetch_message.assert_awaited_once_with(12345679, 133742069)
-
-    @pytest.mark.asyncio
-    async def test_fetch_pins(self, model: channels.TextableChannel):
-        model.app.rest.fetch_pins = mock.AsyncMock()
-
-        await model.fetch_pins()
-
-        model.app.rest.fetch_pins.assert_awaited_once_with(12345679)
+        text_channel.app.rest.fetch_message.assert_awaited_once_with(12345679, 133742069)
 
     @pytest.mark.asyncio
-    async def test_pin_message(self, model: channels.TextableChannel):
-        model.app.rest.pin_message = mock.AsyncMock()
+    async def test_fetch_pins(self, text_channel: channels.TextableChannel):
+        text_channel.app.rest.fetch_pins = mock.AsyncMock()
 
-        assert await model.pin_message(77790) is model.app.rest.pin_message.return_value
+        await text_channel.fetch_pins()
 
-        model.app.rest.pin_message.assert_awaited_once_with(12345679, 77790)
-
-    @pytest.mark.asyncio
-    async def test_unpin_message(self, model: channels.TextableChannel):
-        model.app.rest.unpin_message = mock.AsyncMock()
-
-        assert await model.unpin_message(77790) is model.app.rest.unpin_message.return_value
-
-        model.app.rest.unpin_message.assert_awaited_once_with(12345679, 77790)
+        text_channel.app.rest.fetch_pins.assert_awaited_once_with(12345679)
 
     @pytest.mark.asyncio
-    async def test_delete_messages(self, model: channels.TextableChannel):
-        model.app.rest.delete_messages = mock.AsyncMock()
+    async def test_pin_message(self, text_channel: channels.TextableChannel):
+        text_channel.app.rest.pin_message = mock.AsyncMock()
 
-        await model.delete_messages([77790, 88890, 1800], 1337)
+        assert await text_channel.pin_message(77790) is text_channel.app.rest.pin_message.return_value
 
-        model.app.rest.delete_messages.assert_awaited_once_with(12345679, [77790, 88890, 1800], 1337)
+        text_channel.app.rest.pin_message.assert_awaited_once_with(12345679, 77790)
 
     @pytest.mark.asyncio
-    async def test_send(self, model: channels.TextableChannel):
-        model.app.rest.create_message = mock.AsyncMock()
+    async def test_unpin_message(self, text_channel: channels.TextableChannel):
+        text_channel.app.rest.unpin_message = mock.AsyncMock()
+
+        assert await text_channel.unpin_message(77790) is text_channel.app.rest.unpin_message.return_value
+
+        text_channel.app.rest.unpin_message.assert_awaited_once_with(12345679, 77790)
+
+    @pytest.mark.asyncio
+    async def test_delete_messages(self, text_channel: channels.TextableChannel):
+        text_channel.app.rest.delete_messages = mock.AsyncMock()
+
+        await text_channel.delete_messages([77790, 88890, 1800], 1337)
+
+        text_channel.app.rest.delete_messages.assert_awaited_once_with(12345679, [77790, 88890, 1800], 1337)
+
+    @pytest.mark.asyncio
+    async def test_send(self, text_channel: channels.TextableChannel):
+        text_channel.app.rest.create_message = mock.AsyncMock()
         mock_attachment = mock.Mock()
         mock_component = mock.Mock()
         mock_components = [mock.Mock(), mock.Mock()]
@@ -267,7 +269,7 @@ class TestTextChannel:
         mock_attachments = [mock.Mock(), mock.Mock(), mock.Mock()]
         mock_reply = mock.Mock()
 
-        await model.send(
+        await text_channel.send(
             content="test content",
             tts=True,
             attachment=mock_attachment,
@@ -287,7 +289,7 @@ class TestTextChannel:
             flags=6969,
         )
 
-        model.app.rest.create_message.assert_awaited_once_with(
+        text_channel.app.rest.create_message.assert_awaited_once_with(
             channel=12345679,
             content="test content",
             tts=True,
@@ -308,18 +310,18 @@ class TestTextChannel:
             flags=6969,
         )
 
-    def test_trigger_typing(self, model: channels.TextableChannel):
-        model.app.rest.trigger_typing = mock.Mock()
+    def test_trigger_typing(self, text_channel: channels.TextableChannel):
+        text_channel.app.rest.trigger_typing = mock.Mock()
 
-        model.trigger_typing()
+        text_channel.trigger_typing()
 
-        model.app.rest.trigger_typing.assert_called_once_with(12345679)
+        text_channel.app.rest.trigger_typing.assert_called_once_with(12345679)
 
 
 class TestGuildChannel:
     @pytest.fixture
-    def model(self, mock_app: traits.RESTAware) -> channels.GuildChannel:
-        return hikari_test_helpers.mock_class_namespace(channels.GuildChannel)(
+    def guild_channel(self, mock_app: traits.RESTAware) -> channels.GuildChannel:
+        return channels.GuildChannel(
             app=mock_app,
             id=snowflakes.Snowflake(69420),
             name="foo1",
@@ -328,28 +330,32 @@ class TestGuildChannel:
             parent_id=None,
         )
 
-    def test_shard_id_property_when_not_shard_aware(self, model: channels.GuildChannel):
-        model.app = None
+    def test_shard_id_property_when_not_shard_aware(self, guild_channel: channels.GuildChannel):
+        with mock.patch.object(guild_channel, "app", None):
+            assert guild_channel.shard_id is None
 
-        assert model.shard_id is None
-
-    def test_shard_id_property_when_guild_id_is_not_None(self, model: channels.GuildChannel):
-        model.app.shard_count = 3
-        assert model.shard_id == 2
-
-    @pytest.mark.asyncio
-    async def test_fetch_guild(self, model: channels.GuildChannel):
-        model.app.rest.fetch_guild = mock.AsyncMock()
-
-        assert await model.fetch_guild() is model.app.rest.fetch_guild.return_value
-
-        model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
+    def test_shard_id_property_when_guild_id_is_not_None(self, guild_channel: channels.GuildChannel):
+        with (
+            mock.patch.object(guild_channel, "app", mock.Mock(traits.ShardAware, rest=mock.Mock())) as patched_app,
+            mock.patch.object(patched_app, "shard_count", 3),
+        ):
+            assert guild_channel.shard_id == 2
 
     @pytest.mark.asyncio
-    async def test_edit(self, model: channels.GuildChannel):
-        model.app.rest.edit_channel = mock.AsyncMock()
+    async def test_fetch_guild(self, guild_channel: channels.GuildChannel):
+        guild_channel.app.rest.fetch_guild = mock.AsyncMock()
 
-        result = await model.edit(
+        assert await guild_channel.fetch_guild() is guild_channel.app.rest.fetch_guild.return_value
+
+        guild_channel.app.rest.fetch_guild.assert_awaited_once_with(123456789)
+
+    @pytest.mark.asyncio
+    async def test_edit(self, guild_channel: channels.GuildChannel):
+        guild_channel.app.rest.edit_channel = mock.AsyncMock()
+
+        permission_overwrite = mock.Mock(channels.PermissionOverwrite, id=123)
+
+        result = await guild_channel.edit(
             name="Supa fast boike",
             bitrate=420,
             reason="left right",
@@ -362,8 +368,8 @@ class TestGuildChannel:
             rate_limit_per_user=54123123,
             region="us-west",
             parent_category=341123123123,
-            permission_overwrites={123: "123"},
-            flags=12,
+            permission_overwrites=[permission_overwrite],
+            flags=channels.ChannelFlag.REQUIRE_TAG,
             archived=True,
             auto_archive_duration=1234,
             locked=True,
@@ -371,8 +377,8 @@ class TestGuildChannel:
             applied_tags=[12345, 54321],
         )
 
-        assert result is model.app.rest.edit_channel.return_value
-        model.app.rest.edit_channel.assert_awaited_once_with(
+        assert result is guild_channel.app.rest.edit_channel.return_value
+        guild_channel.app.rest.edit_channel.assert_awaited_once_with(
             69420,
             name="Supa fast boike",
             position=4423,
@@ -383,10 +389,10 @@ class TestGuildChannel:
             user_limit=123321,
             rate_limit_per_user=54123123,
             region="us-west",
-            permission_overwrites={123: "123"},
+            permission_overwrites=[permission_overwrite],
             parent_category=341123123123,
             default_auto_archive_duration=123312,
-            flags=12,
+            flags=channels.ChannelFlag.REQUIRE_TAG,
             archived=True,
             auto_archive_duration=1234,
             locked=True,
@@ -398,7 +404,7 @@ class TestGuildChannel:
 
 class TestPermissibleGuildChannel:
     @pytest.fixture
-    def model(self, mock_app: traits.RESTAware) -> channels.PermissibleGuildChannel:
+    def permissible_guild_channel(self, mock_app: traits.RESTAware) -> channels.PermissibleGuildChannel:
         return hikari_test_helpers.mock_class_namespace(channels.PermissibleGuildChannel)(
             app=mock_app,
             id=snowflakes.Snowflake(69420),
@@ -408,14 +414,14 @@ class TestPermissibleGuildChannel:
             is_nsfw=True,
             parent_id=None,
             position=54,
-            permission_overwrites=[],
+            permission_overwrites={},
         )
 
     @pytest.mark.asyncio
-    async def test_edit_overwrite(self, model: channels.PermissibleGuildChannel):
-        model.app.rest.edit_permission_overwrite = mock.AsyncMock()
+    async def test_edit_overwrite(self, permissible_guild_channel: channels.PermissibleGuildChannel):
+        permissible_guild_channel.app.rest.edit_permission_overwrite = mock.AsyncMock()
         user = mock.Mock(users.PartialUser)
-        await model.edit_overwrite(
+        await permissible_guild_channel.edit_overwrite(
             333,
             target_type=user,
             allow=permissions.Permissions.BAN_MEMBERS,
@@ -423,7 +429,7 @@ class TestPermissibleGuildChannel:
             reason="vrooom vroom",
         )
 
-        model.app.rest.edit_permission_overwrite.assert_called_once_with(
+        permissible_guild_channel.app.rest.edit_permission_overwrite.assert_called_once_with(
             69420,
             333,
             target_type=user,
@@ -433,14 +439,14 @@ class TestPermissibleGuildChannel:
         )
 
     @pytest.mark.asyncio
-    async def test_edit_overwrite_target_type_none(self, model: channels.PermissibleGuildChannel):
-        model.app.rest.edit_permission_overwrite = mock.AsyncMock()
+    async def test_edit_overwrite_target_type_none(self, permissible_guild_channel: channels.PermissibleGuildChannel):
+        permissible_guild_channel.app.rest.edit_permission_overwrite = mock.AsyncMock()
         user = mock.Mock(users.PartialUser)
-        await model.edit_overwrite(
+        await permissible_guild_channel.edit_overwrite(
             user, allow=permissions.Permissions.BAN_MEMBERS, deny=permissions.Permissions.CONNECT, reason="vrooom vroom"
         )
 
-        model.app.rest.edit_permission_overwrite.assert_called_once_with(
+        permissible_guild_channel.app.rest.edit_permission_overwrite.assert_called_once_with(
             69420,
             user,
             allow=permissions.Permissions.BAN_MEMBERS,
@@ -449,40 +455,49 @@ class TestPermissibleGuildChannel:
         )
 
     @pytest.mark.asyncio
-    async def test_remove_overwrite(self, model: channels.PermissibleGuildChannel):
-        model.app.rest.delete_permission_overwrite = mock.AsyncMock()
+    async def test_remove_overwrite(self, permissible_guild_channel: channels.PermissibleGuildChannel):
+        permissible_guild_channel.app.rest.delete_permission_overwrite = mock.AsyncMock()
 
-        await model.remove_overwrite(333)
+        await permissible_guild_channel.remove_overwrite(333)
 
-        model.app.rest.delete_permission_overwrite.assert_called_once_with(69420, 333)
+        permissible_guild_channel.app.rest.delete_permission_overwrite.assert_called_once_with(69420, 333)
 
-    def test_get_guild(self, model: channels.PermissibleGuildChannel):
+    def test_get_guild(self, permissible_guild_channel: channels.PermissibleGuildChannel):
         guild = mock.Mock(id=123456789)
-        model.app.cache.get_guild.side_effect = [guild]
 
-        assert model.get_guild() == guild
+        with (
+            mock.patch.object(
+                permissible_guild_channel, "app", mock.Mock(traits.CacheAware, rest=mock.Mock())
+            ) as patched_app,
+            mock.patch.object(patched_app.cache, "get_guild", side_effect=[guild]) as patched_get_guild,
+        ):
+            assert permissible_guild_channel.get_guild() == guild
+            patched_get_guild.assert_called_once_with(123456789)
 
-        model.app.cache.get_guild.assert_called_once_with(123456789)
+    def test_get_guild_when_guild_not_in_cache(self, permissible_guild_channel: channels.PermissibleGuildChannel):
+        with (
+            mock.patch.object(
+                permissible_guild_channel, "app", mock.Mock(traits.CacheAware, rest=mock.Mock())
+            ) as patched_app,
+            mock.patch.object(patched_app.cache, "get_guild", side_effect=[None]) as patched_get_guild,
+        ):
+            assert permissible_guild_channel.get_guild() is None
+            patched_get_guild.assert_called_once_with(123456789)
 
-    def test_get_guild_when_guild_not_in_cache(self, model: channels.PermissibleGuildChannel):
-        model.app.cache.get_guild.side_effect = [None]
+    def test_get_guild_when_no_cache_trait(self, permissible_guild_channel: channels.PermissibleGuildChannel):
+        permissible_guild_channel.app = mock.Mock(traits.RESTAware)
 
-        assert model.get_guild() is None
-
-        model.app.cache.get_guild.assert_called_once_with(123456789)
-
-    def test_get_guild_when_no_cache_trait(self, model: channels.PermissibleGuildChannel):
-        model.app = mock.Mock(traits.RESTAware)
-
-        assert model.get_guild() is None
+        assert permissible_guild_channel.get_guild() is None
 
     @pytest.mark.asyncio
-    async def test_fetch_guild(self, model: channels.PermissibleGuildChannel):
-        model.app.rest.fetch_guild = mock.AsyncMock()
+    async def test_fetch_guild(self, permissible_guild_channel: channels.PermissibleGuildChannel):
+        permissible_guild_channel.app.rest.fetch_guild = mock.AsyncMock()
 
-        assert await model.fetch_guild() == model.app.rest.fetch_guild.return_value
+        assert (
+            await permissible_guild_channel.fetch_guild() == permissible_guild_channel.app.rest.fetch_guild.return_value
+        )
 
-        model.app.rest.fetch_guild.assert_awaited_once_with(123456789)
+        permissible_guild_channel.app.rest.fetch_guild.assert_awaited_once_with(123456789)
 
 
 class TestForumTag:

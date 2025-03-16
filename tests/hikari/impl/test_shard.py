@@ -31,10 +31,11 @@ import aiohttp
 import mock
 import pytest
 
-from hikari import _about, snowflakes
+from hikari import _about
 from hikari import errors
 from hikari import intents
 from hikari import presences
+from hikari import snowflakes
 from hikari import urls
 from hikari.impl import config
 from hikari.impl import shard
@@ -160,9 +161,11 @@ class TestGatewayTransport:
     async def test_send_close(self, transport_impl: shard._GatewayTransport):
         transport_impl._sent_close = False
 
-        with mock.patch.object(asyncio, "wait_for", return_value=mock.AsyncMock()) as wait_for:
-            with mock.patch.object(asyncio, "sleep") as sleep:
-                await transport_impl.send_close(code=1234, message=b"some message")
+        with (
+            mock.patch.object(asyncio, "wait_for", return_value=mock.AsyncMock()) as wait_for,
+            mock.patch.object(asyncio, "sleep") as sleep,
+        ):
+            await transport_impl.send_close(code=1234, message=b"some message")
 
         wait_for.assert_awaited_once_with(transport_impl._ws.close.return_value, timeout=5)
         transport_impl._ws.close.assert_called_once_with(code=1234, message=b"some message")
@@ -519,7 +522,9 @@ def client(http_settings: config.HTTPSettings, proxy_settings: config.ProxySetti
 
 
 class TestGatewayShardImpl:
-    def test__init__when_unsupported_compression_format(self):
+    def test__init__when_unsupported_compression_format(
+        self, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
+    ):
         with pytest.raises(NotImplementedError, match=r"Unsupported compression format something"):
             shard.GatewayShardImpl(
                 event_manager=mock.Mock(),
@@ -809,7 +814,7 @@ class TestGatewayShardImplAsync:
 
     @pytest.mark.parametrize("kwargs", [{"query": "some query"}, {"limit": 1}])
     async def test_request_guild_members_when_specifiying_users_with_limit_or_query(
-        self, client: shard.GatewayShardImpl, kwargs: typing.Mapping[str, str | int]
+        self, client: shard.GatewayShardImpl, kwargs: typing.Mapping[str, typing.Any]
     ):
         client._intents = intents.Intents.GUILD_INTEGRATIONS
 

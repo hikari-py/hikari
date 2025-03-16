@@ -25,7 +25,8 @@ import typing
 import mock
 import pytest
 
-from hikari import snowflakes, traits
+from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari.interactions import base_interactions
 
@@ -67,20 +68,19 @@ class TestMessageResponseMixin:
 
     @pytest.mark.asyncio
     async def test_fetch_initial_response(
-        self,
-        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
-        mock_app: traits.RESTAware,
+        self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
-        result = await mock_message_response_mixin.fetch_initial_response()
+        with mock.patch.object(
+            mock_message_response_mixin.app.rest, "fetch_interaction_response"
+        ) as patched_fetch_interaction_response:
+            result = await mock_message_response_mixin.fetch_initial_response()
 
-        assert result is mock_app.rest.fetch_interaction_response.return_value
-        mock_app.rest.fetch_interaction_response.assert_awaited_once_with(651231, "399393939doodsodso")
+            assert result is patched_fetch_interaction_response.return_value
+            patched_fetch_interaction_response.assert_awaited_once_with(651231, "399393939doodsodso")
 
     @pytest.mark.asyncio
     async def test_create_initial_response_with_optional_args(
-        self,
-        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
-        mock_app: traits.RESTAware,
+        self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
         mock_embed_1 = mock.Mock()
         mock_embed_2 = mock.Mock()
@@ -88,73 +88,76 @@ class TestMessageResponseMixin:
         mock_components = mock.Mock(), mock.Mock()
         mock_attachment = mock.Mock()
         mock_attachments = mock.Mock(), mock.Mock()
-        await mock_message_response_mixin.create_initial_response(
-            base_interactions.ResponseType.MESSAGE_CREATE,
-            "content",
-            tts=True,
-            embed=mock_embed_1,
-            flags=64,
-            embeds=[mock_embed_2],
-            component=mock_component,
-            components=mock_components,
-            attachment=mock_attachment,
-            attachments=mock_attachments,
-            mentions_everyone=False,
-            user_mentions=[123432],
-            role_mentions=[6324523],
-        )
 
-        mock_app.rest.create_interaction_response.assert_awaited_once_with(
-            34123,
-            "399393939doodsodso",
-            base_interactions.ResponseType.MESSAGE_CREATE,
-            "content",
-            tts=True,
-            flags=64,
-            embed=mock_embed_1,
-            embeds=[mock_embed_2],
-            component=mock_component,
-            components=mock_components,
-            attachment=mock_attachment,
-            attachments=mock_attachments,
-            mentions_everyone=False,
-            user_mentions=[123432],
-            role_mentions=[6324523],
-        )
+        with mock.patch.object(
+            mock_message_response_mixin.app.rest, "create_interaction_response"
+        ) as patched_create_interaction_response:
+            await mock_message_response_mixin.create_initial_response(
+                base_interactions.ResponseType.MESSAGE_CREATE,
+                "content",
+                tts=True,
+                embed=mock_embed_1,
+                flags=64,
+                embeds=[mock_embed_2],
+                component=mock_component,
+                components=mock_components,
+                attachment=mock_attachment,
+                attachments=mock_attachments,
+                mentions_everyone=False,
+                user_mentions=[123432],
+                role_mentions=[6324523],
+            )
+
+            patched_create_interaction_response.assert_awaited_once_with(
+                34123,
+                "399393939doodsodso",
+                base_interactions.ResponseType.MESSAGE_CREATE,
+                "content",
+                tts=True,
+                flags=64,
+                embed=mock_embed_1,
+                embeds=[mock_embed_2],
+                component=mock_component,
+                components=mock_components,
+                attachment=mock_attachment,
+                attachments=mock_attachments,
+                mentions_everyone=False,
+                user_mentions=[123432],
+                role_mentions=[6324523],
+            )
 
     @pytest.mark.asyncio
     async def test_create_initial_response_without_optional_args(
-        self,
-        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
-        mock_app: traits.RESTAware,
+        self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
-        await mock_message_response_mixin.create_initial_response(
-            base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
-        )
+        with mock.patch.object(
+            mock_message_response_mixin.app.rest, "create_interaction_response"
+        ) as patched_create_interaction_response:
+            await mock_message_response_mixin.create_initial_response(
+                base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
+            )
 
-        mock_app.rest.create_interaction_response.assert_awaited_once_with(
-            34123,
-            "399393939doodsodso",
-            base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
-            undefined.UNDEFINED,
-            flags=undefined.UNDEFINED,
-            tts=undefined.UNDEFINED,
-            embed=undefined.UNDEFINED,
-            embeds=undefined.UNDEFINED,
-            component=undefined.UNDEFINED,
-            components=undefined.UNDEFINED,
-            attachment=undefined.UNDEFINED,
-            attachments=undefined.UNDEFINED,
-            mentions_everyone=undefined.UNDEFINED,
-            user_mentions=undefined.UNDEFINED,
-            role_mentions=undefined.UNDEFINED,
-        )
+            patched_create_interaction_response.assert_awaited_once_with(
+                34123,
+                "399393939doodsodso",
+                base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE,
+                undefined.UNDEFINED,
+                flags=undefined.UNDEFINED,
+                tts=undefined.UNDEFINED,
+                embed=undefined.UNDEFINED,
+                embeds=undefined.UNDEFINED,
+                component=undefined.UNDEFINED,
+                components=undefined.UNDEFINED,
+                attachment=undefined.UNDEFINED,
+                attachments=undefined.UNDEFINED,
+                mentions_everyone=undefined.UNDEFINED,
+                user_mentions=undefined.UNDEFINED,
+                role_mentions=undefined.UNDEFINED,
+            )
 
     @pytest.mark.asyncio
     async def test_edit_initial_response_with_optional_args(
-        self,
-        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
-        mock_app: traits.RESTAware,
+        self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
         mock_embed_1 = mock.Mock()
         mock_embed_2 = mock.Mock()
@@ -162,68 +165,73 @@ class TestMessageResponseMixin:
         mock_attachment_2 = mock.Mock()
         mock_component = mock.Mock()
         mock_components = mock.Mock(), mock.Mock()
-        result = await mock_message_response_mixin.edit_initial_response(
-            "new content",
-            embed=mock_embed_1,
-            embeds=[mock_embed_2],
-            attachment=mock_attachment_1,
-            attachments=[mock_attachment_2],
-            component=mock_component,
-            components=mock_components,
-            mentions_everyone=False,
-            user_mentions=[123123],
-            role_mentions=[562134],
-        )
 
-        assert result is mock_app.rest.edit_interaction_response.return_value
-        mock_app.rest.edit_interaction_response.assert_awaited_once_with(
-            651231,
-            "399393939doodsodso",
-            "new content",
-            embed=mock_embed_1,
-            embeds=[mock_embed_2],
-            attachment=mock_attachment_1,
-            attachments=[mock_attachment_2],
-            component=mock_component,
-            components=mock_components,
-            mentions_everyone=False,
-            user_mentions=[123123],
-            role_mentions=[562134],
-        )
+        with mock.patch.object(
+            mock_message_response_mixin.app.rest, "edit_interaction_response"
+        ) as patched_edit_interaction_response:
+            result = await mock_message_response_mixin.edit_initial_response(
+                "new content",
+                embed=mock_embed_1,
+                embeds=[mock_embed_2],
+                attachment=mock_attachment_1,
+                attachments=[mock_attachment_2],
+                component=mock_component,
+                components=mock_components,
+                mentions_everyone=False,
+                user_mentions=[123123],
+                role_mentions=[562134],
+            )
+
+            assert result is patched_edit_interaction_response.return_value
+            patched_edit_interaction_response.assert_awaited_once_with(
+                651231,
+                "399393939doodsodso",
+                "new content",
+                embed=mock_embed_1,
+                embeds=[mock_embed_2],
+                attachment=mock_attachment_1,
+                attachments=[mock_attachment_2],
+                component=mock_component,
+                components=mock_components,
+                mentions_everyone=False,
+                user_mentions=[123123],
+                role_mentions=[562134],
+            )
 
     @pytest.mark.asyncio
     async def test_edit_initial_response_without_optional_args(
-        self,
-        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
-        mock_app: traits.RESTAware,
+        self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
-        result = await mock_message_response_mixin.edit_initial_response()
+        with mock.patch.object(
+            mock_message_response_mixin.app.rest, "edit_interaction_response"
+        ) as patched_edit_interaction_response:
+            result = await mock_message_response_mixin.edit_initial_response()
 
-        assert result is mock_app.rest.edit_interaction_response.return_value
-        mock_app.rest.edit_interaction_response.assert_awaited_once_with(
-            651231,
-            "399393939doodsodso",
-            undefined.UNDEFINED,
-            embed=undefined.UNDEFINED,
-            embeds=undefined.UNDEFINED,
-            attachment=undefined.UNDEFINED,
-            attachments=undefined.UNDEFINED,
-            component=undefined.UNDEFINED,
-            components=undefined.UNDEFINED,
-            mentions_everyone=undefined.UNDEFINED,
-            user_mentions=undefined.UNDEFINED,
-            role_mentions=undefined.UNDEFINED,
-        )
+            assert result is patched_edit_interaction_response.return_value
+            patched_edit_interaction_response.assert_awaited_once_with(
+                651231,
+                "399393939doodsodso",
+                undefined.UNDEFINED,
+                embed=undefined.UNDEFINED,
+                embeds=undefined.UNDEFINED,
+                attachment=undefined.UNDEFINED,
+                attachments=undefined.UNDEFINED,
+                component=undefined.UNDEFINED,
+                components=undefined.UNDEFINED,
+                mentions_everyone=undefined.UNDEFINED,
+                user_mentions=undefined.UNDEFINED,
+                role_mentions=undefined.UNDEFINED,
+            )
 
     @pytest.mark.asyncio
     async def test_delete_initial_response(
-        self,
-        mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any],
-        mock_app: traits.RESTAware,
+        self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
-        await mock_message_response_mixin.delete_initial_response()
-
-        mock_app.rest.delete_interaction_response.assert_awaited_once_with(651231, "399393939doodsodso")
+        with mock.patch.object(
+            mock_message_response_mixin.app.rest, "delete_interaction_response"
+        ) as patched_delete_interaction_response:
+            await mock_message_response_mixin.delete_initial_response()
+            patched_delete_interaction_response.assert_awaited_once_with(651231, "399393939doodsodso")
 
 
 class TestModalResponseMixin:
@@ -242,11 +250,19 @@ class TestModalResponseMixin:
     async def test_create_modal_response(
         self, mock_modal_response_mixin: base_interactions.ModalResponseMixin, mock_app: traits.RESTAware
     ):
-        await mock_modal_response_mixin.create_modal_response("title", "custom_id", None, [])
+        with mock.patch.object(
+            mock_modal_response_mixin.app.rest, "create_modal_response"
+        ) as patched_create_modal_response:
+            await mock_modal_response_mixin.create_modal_response("title", "custom_id", undefined.UNDEFINED, [])
 
-        mock_app.rest.create_modal_response.assert_awaited_once_with(
-            34123, "399393939doodsodso", title="title", custom_id="custom_id", component=None, components=[]
-        )
+            patched_create_modal_response.assert_awaited_once_with(
+                34123,
+                "399393939doodsodso",
+                title="title",
+                custom_id="custom_id",
+                component=undefined.UNDEFINED,
+                components=[],
+            )
 
     def test_build_response(
         self, mock_modal_response_mixin: base_interactions.ModalResponseMixin, mock_app: traits.RESTAware

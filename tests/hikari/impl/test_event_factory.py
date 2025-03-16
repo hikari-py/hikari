@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import datetime
+import typing
 
 import mock
 import pytest
@@ -72,13 +73,16 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_application_command_permission_update_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_guild_command_permissions"
+        ) as patched_deserialize_guild_command_permissions:
+            event = event_factory.deserialize_application_command_permission_update_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_guild_command_permissions.assert_called_once_with(mock_payload)
+        patched_deserialize_guild_command_permissions.assert_called_once_with(mock_payload)
         assert isinstance(event, application_events.ApplicationCommandPermissionsUpdateEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
-        assert event.permissions is mock_app.entity_factory.deserialize_guild_command_permissions.return_value
+        assert event.permissions is patched_deserialize_guild_command_permissions.return_value
 
     ##################
     # CHANNEL EVENTS #
@@ -87,51 +91,57 @@ class TestEventFactoryImpl:
     def test_deserialize_guild_channel_create_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(
-            spec=channel_models.PermissibleGuildChannel
-        )
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_guild_channel_create_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory,
+            "deserialize_channel",
+            return_value=mock.Mock(spec=channel_models.PermissibleGuildChannel),
+        ) as patched_deserialize_channel:
+            event = event_factory.deserialize_guild_channel_create_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_channel.assert_called_once_with(mock_payload)
-        assert isinstance(event, channel_events.GuildChannelCreateEvent)
-        assert event.shard is mock_shard
-        assert event.channel is mock_app.entity_factory.deserialize_channel.return_value
+            patched_deserialize_channel.assert_called_once_with(mock_payload)
+            assert isinstance(event, channel_events.GuildChannelCreateEvent)
+            assert event.shard is mock_shard
+            assert event.channel is patched_deserialize_channel.return_value
 
     def test_deserialize_guild_channel_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(
-            spec=channel_models.PermissibleGuildChannel
-        )
         mock_old_channel = mock.Mock()
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_guild_channel_update_event(
-            mock_shard, mock_payload, old_channel=mock_old_channel
-        )
+        with mock.patch.object(
+            mock_app.entity_factory,
+            "deserialize_channel",
+            return_value=mock.Mock(spec=channel_models.PermissibleGuildChannel),
+        ) as patched_deserialize_channel:
+            event = event_factory.deserialize_guild_channel_update_event(
+                mock_shard, mock_payload, old_channel=mock_old_channel
+            )
 
-        mock_app.entity_factory.deserialize_channel.assert_called_once_with(mock_payload)
-        assert isinstance(event, channel_events.GuildChannelUpdateEvent)
-        assert event.shard is mock_shard
-        assert event.channel is mock_app.entity_factory.deserialize_channel.return_value
-        assert event.old_channel is mock_old_channel
+            patched_deserialize_channel.assert_called_once_with(mock_payload)
+            assert isinstance(event, channel_events.GuildChannelUpdateEvent)
+            assert event.shard is mock_shard
+            assert event.channel is patched_deserialize_channel.return_value
+            assert event.old_channel is mock_old_channel
 
     def test_deserialize_guild_channel_delete_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_app.entity_factory.deserialize_channel.return_value = mock.Mock(
-            spec=channel_models.PermissibleGuildChannel
-        )
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_guild_channel_delete_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory,
+            "deserialize_channel",
+            return_value=mock.Mock(spec=channel_models.PermissibleGuildChannel),
+        ) as patched_deserialize_channel:
+            event = event_factory.deserialize_guild_channel_delete_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_channel.assert_called_once_with(mock_payload)
-        assert isinstance(event, channel_events.GuildChannelDeleteEvent)
-        assert event.shard is mock_shard
-        assert event.channel is mock_app.entity_factory.deserialize_channel.return_value
+            patched_deserialize_channel.assert_called_once_with(mock_payload)
+            assert isinstance(event, channel_events.GuildChannelDeleteEvent)
+            assert event.shard is mock_shard
+            assert event.channel is patched_deserialize_channel.return_value
 
     def test_deserialize_channel_pins_update_event_for_guild(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -174,35 +184,38 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_guild_thread_create_event(mock_shard, mock_payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_guild_thread") as patched_deserialize_guild_thread:
+            event = event_factory.deserialize_guild_thread_create_event(mock_shard, mock_payload)
 
-        assert event.shard is mock_shard
-        assert event.thread is mock_app.entity_factory.deserialize_guild_thread.return_value
-        mock_app.entity_factory.deserialize_guild_thread.assert_called_once_with(mock_payload)
-        assert isinstance(event, channel_events.GuildThreadCreateEvent)
+            assert event.shard is mock_shard
+            assert event.thread is patched_deserialize_guild_thread.return_value
+            patched_deserialize_guild_thread.assert_called_once_with(mock_payload)
+            assert isinstance(event, channel_events.GuildThreadCreateEvent)
 
     def test_deserialize_guild_thread_access_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_guild_thread_access_event(mock_shard, mock_payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_guild_thread") as patched_deserialize_guild_thread:
+            event = event_factory.deserialize_guild_thread_access_event(mock_shard, mock_payload)
 
-        assert event.shard is mock_shard
-        assert event.thread is mock_app.entity_factory.deserialize_guild_thread.return_value
-        mock_app.entity_factory.deserialize_guild_thread.assert_called_once_with(mock_payload)
-        assert isinstance(event, channel_events.GuildThreadAccessEvent)
+            assert event.shard is mock_shard
+            assert event.thread is patched_deserialize_guild_thread.return_value
+            patched_deserialize_guild_thread.assert_called_once_with(mock_payload)
+            assert isinstance(event, channel_events.GuildThreadAccessEvent)
 
     def test_deserialize_guild_thread_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_guild_thread_update_event(mock_shard, mock_payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_guild_thread") as patched_deserialize_guild_thread:
+            event = event_factory.deserialize_guild_thread_update_event(mock_shard, mock_payload)
 
         assert event.shard is mock_shard
-        assert event.thread is mock_app.entity_factory.deserialize_guild_thread.return_value
-        mock_app.entity_factory.deserialize_guild_thread.assert_called_once_with(mock_payload)
+        assert event.thread is patched_deserialize_guild_thread.return_value
+        patched_deserialize_guild_thread.assert_called_once_with(mock_payload)
         assert isinstance(event, channel_events.GuildThreadUpdateEvent)
 
     def test_deserialize_guild_thread_delete_event(
@@ -227,7 +240,6 @@ class TestEventFactoryImpl:
         mock_other_thread_member_payload = {"id": "393994954", "user_id": "123321123"}
         mock_thread_member = mock.Mock(user_id=123321123)
         mock_other_thread_member = mock.Mock(user_id=5454234)
-        mock_app.entity_factory.deserialize_thread_member.side_effect = [mock_thread_member, mock_other_thread_member]
         payload = {
             "id": "92929929",
             "guild_id": "92929292",
@@ -236,7 +248,12 @@ class TestEventFactoryImpl:
             "removed_member_ids": ["4949534", "123321", "54234"],
         }
 
-        event = event_factory.deserialize_thread_members_update_event(mock_shard, payload)
+        with mock.patch.object(
+            mock_app.entity_factory,
+            "deserialize_thread_member",
+            side_effect=[mock_thread_member, mock_other_thread_member],
+        ) as patched_deserialize_thread_member:
+            event = event_factory.deserialize_thread_members_update_event(mock_shard, payload)
 
         assert event.app is mock_app
         assert event.shard is mock_shard
@@ -246,7 +263,7 @@ class TestEventFactoryImpl:
         assert event.removed_member_ids == [4949534, 123321, 54234]
         assert event.guild_members == {}
         assert event.guild_presences == {}
-        mock_app.entity_factory.deserialize_thread_member.assert_has_calls(
+        patched_deserialize_thread_member.assert_has_calls(
             [mock.call(mock_thread_member_payload), mock.call(mock_other_thread_member_payload)]
         )
 
@@ -275,9 +292,6 @@ class TestEventFactoryImpl:
         mock_other_presence = mock.Mock()
         mock_guild_member = mock.Mock()
         mock_other_guild_member = mock.Mock()
-        mock_app.entity_factory.deserialize_thread_member.side_effect = [mock_thread_member, mock_other_thread_member]
-        mock_app.entity_factory.deserialize_member.side_effect = [mock_guild_member, mock_other_guild_member]
-        mock_app.entity_factory.deserialize_member_presence.side_effect = [mock_presence, mock_other_presence]
         payload = {
             "id": "92929929",
             "guild_id": "123321123123",
@@ -286,7 +300,20 @@ class TestEventFactoryImpl:
             "removed_member_ids": ["4949534", "123321", "54234"],
         }
 
-        event = event_factory.deserialize_thread_members_update_event(mock_shard, payload)
+        with (
+            mock.patch.object(
+                mock_app.entity_factory,
+                "deserialize_thread_member",
+                side_effect=[mock_thread_member, mock_other_thread_member],
+            ) as patched_deserialize_thread_member,
+            mock.patch.object(
+                mock_app.entity_factory, "deserialize_member", side_effect=[mock_guild_member, mock_other_guild_member]
+            ) as patched_deserialize_member,
+            mock.patch.object(
+                mock_app.entity_factory, "deserialize_member_presence", side_effect=[mock_presence, mock_other_presence]
+            ) as patched_deserialize_member_presence,
+        ):
+            event = event_factory.deserialize_thread_members_update_event(mock_shard, payload)
 
         assert event.app is mock_app
         assert event.shard is mock_shard
@@ -296,16 +323,16 @@ class TestEventFactoryImpl:
         assert event.removed_member_ids == [4949534, 123321, 54234]
         assert event.guild_members == {3933993: mock_guild_member, 123321123: mock_other_guild_member}
         assert event.guild_presences == {3933993: mock_presence, 123321123: mock_other_presence}
-        mock_app.entity_factory.deserialize_thread_member.assert_has_calls(
+        patched_deserialize_thread_member.assert_has_calls(
             [mock.call(mock_thread_member_payload), mock.call(mock_other_thread_member_payload)]
         )
-        mock_app.entity_factory.deserialize_member.assert_has_calls(
+        patched_deserialize_member.assert_has_calls(
             [
                 mock.call(mock_guild_member_payload, guild_id=123321123123),
                 mock.call(mock_other_guild_member_payload, guild_id=123321123123),
             ]
         )
-        mock_app.entity_factory.deserialize_member_presence.assert_has_calls(
+        patched_deserialize_member_presence.assert_has_calls(
             [
                 mock.call(mock_presence_payload, guild_id=123321123123),
                 mock.call(mock_other_presence_payload, guild_id=123321123123),
@@ -337,12 +364,6 @@ class TestEventFactoryImpl:
         mock_not_in_thread = mock.Mock(id=94949494)
         mock_member = mock.Mock(thread_id=342123123)
         mock_other_member = mock.Mock(thread_id=5454123123)
-        mock_app.entity_factory.deserialize_guild_thread.side_effect = [
-            mock_thread,
-            mock_not_in_thread,
-            mock_other_thread,
-        ]
-        mock_app.entity_factory.deserialize_thread_member.side_effect = [mock_member, mock_other_member]
         mock_payload = {
             "guild_id": "43123123",
             "channel_ids": ["54123", "123431", "43939", "12343123"],
@@ -350,17 +371,27 @@ class TestEventFactoryImpl:
             "members": [mock_other_member_payload, mokc_member_payload],
         }
 
-        event = event_factory.deserialize_thread_list_sync_event(mock_shard, mock_payload)
+        with (
+            mock.patch.object(
+                mock_app.entity_factory,
+                "deserialize_guild_thread",
+                side_effect=[mock_thread, mock_not_in_thread, mock_other_thread],
+            ) as patched_deserialize_guild_thread,
+            mock.patch.object(
+                mock_app.entity_factory, "deserialize_thread_member", side_effect=[mock_member, mock_other_member]
+            ) as patched_deserialize_thread_member,
+        ):
+            event = event_factory.deserialize_thread_list_sync_event(mock_shard, mock_payload)
 
         assert event.app is mock_app
         assert event.shard is mock_shard
         assert event.guild_id == 43123123
         assert event.channel_ids == [54123, 123431, 43939, 12343123]
         assert event.threads == {342123123: mock_thread, 5454123123: mock_other_thread, 94949494: mock_not_in_thread}
-        mock_app.entity_factory.deserialize_thread_member.assert_has_calls(
+        patched_deserialize_thread_member.assert_has_calls(
             [mock.call(mock_other_member_payload), mock.call(mokc_member_payload)]
         )
-        mock_app.entity_factory.deserialize_guild_thread.assert_has_calls(
+        patched_deserialize_guild_thread.assert_has_calls(
             [
                 mock.call(mock_thread_payload, guild_id=43123123, member=mock_member),
                 mock.call(mock_not_in_thread_payload, guild_id=43123123, member=None),
@@ -371,7 +402,7 @@ class TestEventFactoryImpl:
     def test_deserialize_thread_list_sync_event_when_not_channel_ids(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
-        mock_payload = {"guild_id": "123321", "threads": [], "members": []}
+        mock_payload: typing.Mapping[str, typing.Any] = {"guild_id": "123321", "threads": [], "members": []}
 
         event = event_factory.deserialize_thread_list_sync_event(mock_shard, mock_payload)
 
@@ -395,12 +426,15 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_invite_create_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_invite_with_metadata"
+        ) as patched_deserialize_invite_with_metadata:
+            event = event_factory.deserialize_invite_create_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_invite_with_metadata.assert_called_once_with(mock_payload)
+        patched_deserialize_invite_with_metadata.assert_called_once_with(mock_payload)
         assert isinstance(event, channel_events.InviteCreateEvent)
         assert event.shard is mock_shard
-        assert event.invite is mock_app.entity_factory.deserialize_invite_with_metadata.return_value
+        assert event.invite is patched_deserialize_invite_with_metadata.return_value
 
     def test_deserialize_invite_delete_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -432,17 +466,19 @@ class TestEventFactoryImpl:
             "timestamp": 7634521233,
             "member": mock_member_payload,
         }
-        mock_app.entity_factory.deserialize_member.return_value = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_typing_start_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_member", return_value=mock.Mock(app=mock_app)
+        ) as patched_deserialize_member:
+            event = event_factory.deserialize_typing_start_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_member.assert_called_once_with(mock_member_payload, guild_id=123321)
+        patched_deserialize_member.assert_called_once_with(mock_member_payload, guild_id=123321)
         assert isinstance(event, typing_events.GuildTypingEvent)
         assert event.shard is mock_shard
         assert event.channel_id == 48585858
         assert event.guild_id == 123321
         assert event.timestamp == datetime.datetime(2211, 12, 6, 12, 20, 33, tzinfo=datetime.timezone.utc)
-        assert event.member == mock_app.entity_factory.deserialize_member.return_value
+        assert event.member == patched_deserialize_member.return_value
 
     def test_deserialize_typing_start_event_for_dm(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -467,14 +503,20 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_guild_available_event(mock_shard, mock_payload)
+        with (
+            mock.patch.object(mock_shard, "get_user_id") as patched_get_user_id,
+            mock.patch.object(
+                mock_app.entity_factory, "deserialize_gateway_guild"
+            ) as patched_deserialize_gateway_guild,
+        ):
+            event = event_factory.deserialize_guild_available_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            mock_payload, user_id=mock_shard.get_user_id.return_value
+        patched_deserialize_gateway_guild.assert_called_once_with(
+            mock_payload, user_id=patched_get_user_id.return_value
         )
         assert isinstance(event, guild_events.GuildAvailableEvent)
         assert event.shard is mock_shard
-        guild_definition = mock_app.entity_factory.deserialize_gateway_guild.return_value
+        guild_definition = patched_deserialize_gateway_guild.return_value
         assert event.guild is guild_definition.guild.return_value
         assert event.emojis is guild_definition.emojis.return_value
         assert event.stickers is guild_definition.stickers.return_value
@@ -491,21 +533,27 @@ class TestEventFactoryImpl:
         guild_definition.members.assert_called_once_with()
         guild_definition.presences.assert_called_once_with()
         guild_definition.voice_states.assert_called_once_with()
-        mock_shard.get_user_id.assert_called_once_with()
+        patched_get_user_id.assert_called_once_with()
 
     def test_deserialize_guild_join_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_guild_join_event(mock_shard, mock_payload)
+        with (
+            mock.patch.object(mock_shard, "get_user_id") as patched_get_user_id,
+            mock.patch.object(
+                mock_app.entity_factory, "deserialize_gateway_guild"
+            ) as patched_deserialize_gateway_guild,
+        ):
+            event = event_factory.deserialize_guild_join_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            mock_payload, user_id=mock_shard.get_user_id.return_value
+        patched_deserialize_gateway_guild.assert_called_once_with(
+            mock_payload, user_id=patched_get_user_id.return_value
         )
         assert isinstance(event, guild_events.GuildJoinEvent)
         assert event.shard is mock_shard
-        guild_definition = mock_app.entity_factory.deserialize_gateway_guild.return_value
+        guild_definition = patched_deserialize_gateway_guild.return_value
         assert event.guild is guild_definition.guild.return_value
         assert event.emojis is guild_definition.emojis.return_value
         assert event.roles is guild_definition.roles.return_value
@@ -513,7 +561,7 @@ class TestEventFactoryImpl:
         assert event.members is guild_definition.members.return_value
         assert event.presences is guild_definition.presences.return_value
         assert event.voice_states is guild_definition.voice_states.return_value
-        mock_shard.get_user_id.assert_called_once_with()
+        patched_get_user_id.assert_called_once_with()
 
     def test_deserialize_guild_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -521,14 +569,20 @@ class TestEventFactoryImpl:
         mock_payload = mock.Mock(app=mock_app)
         mock_old_guild = mock.Mock()
 
-        event = event_factory.deserialize_guild_update_event(mock_shard, mock_payload, old_guild=mock_old_guild)
+        with (
+            mock.patch.object(mock_shard, "get_user_id") as patched_get_user_id,
+            mock.patch.object(
+                mock_app.entity_factory, "deserialize_gateway_guild"
+            ) as patched_deserialize_gateway_guild,
+        ):
+            event = event_factory.deserialize_guild_update_event(mock_shard, mock_payload, old_guild=mock_old_guild)
 
-        mock_app.entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            mock_payload, user_id=mock_shard.get_user_id.return_value
+        patched_deserialize_gateway_guild.assert_called_once_with(
+            mock_payload, user_id=patched_get_user_id.return_value
         )
         assert isinstance(event, guild_events.GuildUpdateEvent)
         assert event.shard is mock_shard
-        guild_definition = mock_app.entity_factory.deserialize_gateway_guild.return_value
+        guild_definition = patched_deserialize_gateway_guild.return_value
         assert event.guild is guild_definition.guild.return_value
         assert event.emojis is guild_definition.emojis.return_value
         assert event.roles is guild_definition.roles.return_value
@@ -536,7 +590,7 @@ class TestEventFactoryImpl:
         guild_definition.guild.assert_called_once_with()
         guild_definition.emojis.assert_called_once_with()
         guild_definition.roles.assert_called_once_with()
-        mock_shard.get_user_id.assert_called_once_with()
+        patched_get_user_id.assert_called_once_with()
 
     def test_deserialize_guild_leave_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -570,13 +624,14 @@ class TestEventFactoryImpl:
         mock_user_payload = mock.Mock(app=mock_app)
         mock_payload = {"guild_id": "4212312", "user": mock_user_payload}
 
-        event = event_factory.deserialize_guild_ban_add_event(mock_shard, mock_payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_user") as patched_deserialize_user:
+            event = event_factory.deserialize_guild_ban_add_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_user.assert_called_once_with(mock_user_payload)
+        patched_deserialize_user.assert_called_once_with(mock_user_payload)
         assert isinstance(event, guild_events.BanCreateEvent)
         assert event.shard is mock_shard
         assert event.guild_id == 4212312
-        assert event.user is mock_app.entity_factory.deserialize_user.return_value
+        assert event.user is patched_deserialize_user.return_value
 
     def test_deserialize_guild_ban_remove_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -584,13 +639,14 @@ class TestEventFactoryImpl:
         mock_user_payload = mock.Mock(app=mock_app)
         mock_payload = {"guild_id": "9292929", "user": mock_user_payload}
 
-        event = event_factory.deserialize_guild_ban_remove_event(mock_shard, mock_payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_user") as patched_deserialize_user:
+            event = event_factory.deserialize_guild_ban_remove_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_user.assert_called_once_with(mock_user_payload)
+        patched_deserialize_user.assert_called_once_with(mock_user_payload)
         assert isinstance(event, guild_events.BanDeleteEvent)
         assert event.shard is mock_shard
         assert event.guild_id == 9292929
-        assert event.user is mock_app.entity_factory.deserialize_user.return_value
+        assert event.user is patched_deserialize_user.return_value
 
     def test_deserialize_guild_emojis_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -599,17 +655,18 @@ class TestEventFactoryImpl:
         mock_old_emojis = mock.Mock()
         mock_payload = {"guild_id": "123431", "emojis": [mock_emoji_payload]}
 
-        event = event_factory.deserialize_guild_emojis_update_event(
-            mock_shard, mock_payload, old_emojis=mock_old_emojis
-        )
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_known_custom_emoji"
+        ) as patched_deserialize_known_custom_emoji:
+            event = event_factory.deserialize_guild_emojis_update_event(
+                mock_shard, mock_payload, old_emojis=mock_old_emojis
+            )
 
-        mock_app.entity_factory.deserialize_known_custom_emoji.assert_called_once_with(
-            mock_emoji_payload, guild_id=123431
-        )
+        patched_deserialize_known_custom_emoji.assert_called_once_with(mock_emoji_payload, guild_id=123431)
         assert isinstance(event, guild_events.EmojisUpdateEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
-        assert event.emojis == [mock_app.entity_factory.deserialize_known_custom_emoji.return_value]
+        assert event.emojis == [patched_deserialize_known_custom_emoji.return_value]
         assert event.guild_id == 123431
         assert event.old_emojis is mock_old_emojis
 
@@ -620,15 +677,18 @@ class TestEventFactoryImpl:
         mock_old_stickers = mock.Mock()
         mock_payload = {"guild_id": "472", "stickers": [mock_sticker_payload]}
 
-        event = event_factory.deserialize_guild_stickers_update_event(
-            mock_shard, mock_payload, old_stickers=mock_old_stickers
-        )
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_guild_sticker"
+        ) as patched_deserialize_guild_sticker:
+            event = event_factory.deserialize_guild_stickers_update_event(
+                mock_shard, mock_payload, old_stickers=mock_old_stickers
+            )
 
-        mock_app.entity_factory.deserialize_guild_sticker.assert_called_once_with(mock_sticker_payload)
+        patched_deserialize_guild_sticker.assert_called_once_with(mock_sticker_payload)
         assert isinstance(event, guild_events.StickersUpdateEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
-        assert event.stickers == [mock_app.entity_factory.deserialize_guild_sticker.return_value]
+        assert event.stickers == [patched_deserialize_guild_sticker.return_value]
         assert event.guild_id == 472
         assert event.old_stickers is mock_old_stickers
 
@@ -637,13 +697,14 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_integration_create_event(mock_shard, mock_payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_integration") as patched_deserialize_integration:
+            event = event_factory.deserialize_integration_create_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_integration.assert_called_once_with(mock_payload)
+        patched_deserialize_integration.assert_called_once_with(mock_payload)
         assert isinstance(event, guild_events.IntegrationCreateEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
-        assert event.integration is mock_app.entity_factory.deserialize_integration.return_value
+        assert event.integration is patched_deserialize_integration.return_value
 
     def test_deserialize_integration_delete_event_with_application_id(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -673,31 +734,34 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_integration_update_event(mock_shard, mock_payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_integration") as patched_deserialize_integration:
+            event = event_factory.deserialize_integration_update_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_integration.assert_called_once_with(mock_payload)
+        patched_deserialize_integration.assert_called_once_with(mock_payload)
         assert isinstance(event, guild_events.IntegrationUpdateEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
-        assert event.integration is mock_app.entity_factory.deserialize_integration.return_value
+        assert event.integration is patched_deserialize_integration.return_value
 
     def test_deserialize_presence_update_event_with_only_user_id(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"user": {"id": "1231312"}}
         mock_old_presence = mock.Mock()
-        mock_app.entity_factory.deserialize_member_presence.return_value = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_presence_update_event(
-            mock_shard, mock_payload, old_presence=mock_old_presence
-        )
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_member_presence", return_value=mock.Mock(app=mock_app)
+        ) as patched_deserialize_member_presence:
+            event = event_factory.deserialize_presence_update_event(
+                mock_shard, mock_payload, old_presence=mock_old_presence
+            )
 
-        mock_app.entity_factory.deserialize_member_presence.assert_called_once_with(mock_payload)
+        patched_deserialize_member_presence.assert_called_once_with(mock_payload)
         assert isinstance(event, guild_events.PresenceUpdateEvent)
         assert event.shard is mock_shard
         assert event.old_presence is mock_old_presence
         assert event.user is None
-        assert event.presence is mock_app.entity_factory.deserialize_member_presence.return_value
+        assert event.presence is patched_deserialize_member_presence.return_value
 
     def test_deserialize_presence_update_event_with_full_user_object(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -718,11 +782,14 @@ class TestEventFactoryImpl:
         }
         mock_old_presence = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_presence_update_event(
-            mock_shard, mock_payload, old_presence=mock_old_presence
-        )
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_member_presence"
+        ) as patched_deserialize_member_presence:
+            event = event_factory.deserialize_presence_update_event(
+                mock_shard, mock_payload, old_presence=mock_old_presence
+            )
 
-        mock_app.entity_factory.deserialize_member_presence.assert_called_once_with(mock_payload)
+        patched_deserialize_member_presence.assert_called_once_with(mock_payload)
         assert isinstance(event, guild_events.PresenceUpdateEvent)
         assert event.shard is mock_shard
         assert event.old_presence is mock_old_presence
@@ -739,20 +806,22 @@ class TestEventFactoryImpl:
         assert event.user.is_system is False
         assert event.user.flags == 42
 
-        assert event.presence is mock_app.entity_factory.deserialize_member_presence.return_value
+        assert event.presence is patched_deserialize_member_presence.return_value
 
     def test_deserialize_presence_update_event_with_partial_user_object(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"user": {"id": "1231312", "e": "OK"}}
         mock_old_presence = mock.Mock()
-        mock_app.entity_factory.deserialize_member_presence.return_value = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_presence_update_event(
-            mock_shard, mock_payload, old_presence=mock_old_presence
-        )
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_member_presence", return_value=mock.Mock(app=mock_app)
+        ) as patched_deserialize_member_presence:
+            event = event_factory.deserialize_presence_update_event(
+                mock_shard, mock_payload, old_presence=mock_old_presence
+            )
 
-        mock_app.entity_factory.deserialize_member_presence.assert_called_once_with(mock_payload)
+        patched_deserialize_member_presence.assert_called_once_with(mock_payload)
         assert isinstance(event, guild_events.PresenceUpdateEvent)
         assert event.shard is mock_shard
         assert event.old_presence is mock_old_presence
@@ -769,17 +838,20 @@ class TestEventFactoryImpl:
         assert event.user.is_system is undefined.UNDEFINED
         assert event.user.flags is undefined.UNDEFINED
 
-        assert event.presence is mock_app.entity_factory.deserialize_member_presence.return_value
+        assert event.presence is patched_deserialize_member_presence.return_value
 
     def test_deserialize_audit_log_entry_create_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         payload = {"id": "439034093490"}
 
-        result = event_factory.deserialize_audit_log_entry_create_event(mock_shard, payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_audit_log_entry"
+        ) as patched_deserialize_audit_log_entry:
+            result = event_factory.deserialize_audit_log_entry_create_event(mock_shard, payload)
 
-        mock_app.entity_factory.deserialize_audit_log_entry.assert_called_once_with(payload)
-        assert result.entry is mock_app.entity_factory.deserialize_audit_log_entry.return_value
+        patched_deserialize_audit_log_entry.assert_called_once_with(payload)
+        assert result.entry is patched_deserialize_audit_log_entry.return_value
         assert result.shard is mock_shard
         assert isinstance(result, guild_events.AuditLogEntryCreateEvent)
 
@@ -792,11 +864,12 @@ class TestEventFactoryImpl:
     ):
         payload = {"id": "1561232344"}
 
-        result = event_factory.deserialize_interaction_create_event(mock_shard, payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_interaction") as patched_deserialize_interaction:
+            result = event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
-        mock_app.entity_factory.deserialize_interaction.assert_called_once_with(payload)
+        patched_deserialize_interaction.assert_called_once_with(payload)
         assert result.shard is mock_shard
-        assert result.interaction is mock_app.entity_factory.deserialize_interaction.return_value
+        assert result.interaction is patched_deserialize_interaction.return_value
         assert isinstance(result, interaction_events.InteractionCreateEvent)
 
     #################
@@ -808,12 +881,13 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_guild_member_add_event(mock_shard, mock_payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_member") as patched_deserialize_member:
+            event = event_factory.deserialize_guild_member_add_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_member.assert_called_once_with(mock_payload)
+        patched_deserialize_member.assert_called_once_with(mock_payload)
         assert isinstance(event, member_events.MemberCreateEvent)
         assert event.shard is mock_shard
-        assert event.member is mock_app.entity_factory.deserialize_member.return_value
+        assert event.member is patched_deserialize_member.return_value
 
     def test_deserialize_guild_member_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -821,14 +895,15 @@ class TestEventFactoryImpl:
         mock_payload = mock.Mock(app=mock_app)
         mock_old_member = mock.Mock()
 
-        event = event_factory.deserialize_guild_member_update_event(
-            mock_shard, mock_payload, old_member=mock_old_member
-        )
+        with mock.patch.object(mock_app.entity_factory, "deserialize_member") as patched_deserialize_member:
+            event = event_factory.deserialize_guild_member_update_event(
+                mock_shard, mock_payload, old_member=mock_old_member
+            )
 
-        mock_app.entity_factory.deserialize_member.assert_called_once_with(mock_payload)
+        patched_deserialize_member.assert_called_once_with(mock_payload)
         assert isinstance(event, member_events.MemberUpdateEvent)
         assert event.shard is mock_shard
-        assert event.member is mock_app.entity_factory.deserialize_member.return_value
+        assert event.member is patched_deserialize_member.return_value
         assert event.old_member is mock_old_member
 
     def test_deserialize_guild_member_remove_event(
@@ -838,15 +913,16 @@ class TestEventFactoryImpl:
         mock_old_member = mock.Mock()
         mock_payload = {"guild_id": "43123", "user": mock_user_payload}
 
-        event = event_factory.deserialize_guild_member_remove_event(
-            mock_shard, mock_payload, old_member=mock_old_member
-        )
+        with mock.patch.object(mock_app.entity_factory, "deserialize_user") as patched_deserialize_user:
+            event = event_factory.deserialize_guild_member_remove_event(
+                mock_shard, mock_payload, old_member=mock_old_member
+            )
 
-        mock_app.entity_factory.deserialize_user.assert_called_once_with(mock_user_payload)
+        patched_deserialize_user.assert_called_once_with(mock_user_payload)
         assert isinstance(event, member_events.MemberDeleteEvent)
         assert event.shard is mock_shard
         assert event.guild_id == 43123
-        assert event.user is mock_app.entity_factory.deserialize_user.return_value
+        assert event.user is patched_deserialize_user.return_value
         assert event.old_member is mock_old_member
 
     ###############
@@ -859,12 +935,13 @@ class TestEventFactoryImpl:
         mock_role_payload = mock.Mock(app=mock_app)
         mock_payload = {"role": mock_role_payload, "guild_id": "45123"}
 
-        event = event_factory.deserialize_guild_role_create_event(mock_shard, mock_payload)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_role") as patched_deserialize_role:
+            event = event_factory.deserialize_guild_role_create_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_role.assert_called_once_with(mock_role_payload, guild_id=45123)
+        patched_deserialize_role.assert_called_once_with(mock_role_payload, guild_id=45123)
         assert isinstance(event, role_events.RoleCreateEvent)
         assert event.shard is mock_shard
-        assert event.role is mock_app.entity_factory.deserialize_role.return_value
+        assert event.role is patched_deserialize_role.return_value
 
     def test_deserialize_guild_role_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -873,12 +950,13 @@ class TestEventFactoryImpl:
         mock_old_role = mock.Mock()
         mock_payload = {"role": mock_role_payload, "guild_id": "45123"}
 
-        event = event_factory.deserialize_guild_role_update_event(mock_shard, mock_payload, old_role=mock_old_role)
+        with mock.patch.object(mock_app.entity_factory, "deserialize_role") as patched_deserialize_role:
+            event = event_factory.deserialize_guild_role_update_event(mock_shard, mock_payload, old_role=mock_old_role)
 
-        mock_app.entity_factory.deserialize_role.assert_called_once_with(mock_role_payload, guild_id=45123)
+        patched_deserialize_role.assert_called_once_with(mock_role_payload, guild_id=45123)
         assert isinstance(event, role_events.RoleUpdateEvent)
         assert event.shard is mock_shard
-        assert event.role is mock_app.entity_factory.deserialize_role.return_value
+        assert event.role is patched_deserialize_role.return_value
         assert event.old_role is mock_old_role
 
     def test_deserialize_guild_role_delete_event(
@@ -905,39 +983,48 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_scheduled_event_create_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_scheduled_event"
+        ) as patched_deserialize_scheduled_event:
+            event = event_factory.deserialize_scheduled_event_create_event(mock_shard, mock_payload)
 
         assert event.shard is mock_shard
-        assert event.event is mock_app.entity_factory.deserialize_scheduled_event.return_value
+        assert event.event is patched_deserialize_scheduled_event.return_value
         assert isinstance(event, scheduled_events.ScheduledEventCreateEvent)
-        mock_app.entity_factory.deserialize_scheduled_event.assert_called_once_with(mock_payload)
+        patched_deserialize_scheduled_event.assert_called_once_with(mock_payload)
 
     def test_deserialize_scheduled_event_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_scheduled_event_update_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_scheduled_event"
+        ) as patched_deserialize_scheduled_event:
+            event = event_factory.deserialize_scheduled_event_update_event(mock_shard, mock_payload)
 
         assert event.shard is mock_shard
-        assert event.event is mock_app.entity_factory.deserialize_scheduled_event.return_value
+        assert event.event is patched_deserialize_scheduled_event.return_value
         assert isinstance(event, scheduled_events.ScheduledEventUpdateEvent)
-        mock_app.entity_factory.deserialize_scheduled_event.assert_called_once_with(mock_payload)
+        patched_deserialize_scheduled_event.assert_called_once_with(mock_payload)
 
     def test_deserialize_scheduled_event_delete_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_scheduled_event_delete_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_scheduled_event"
+        ) as patched_deserialize_scheduled_event:
+            event = event_factory.deserialize_scheduled_event_delete_event(mock_shard, mock_payload)
 
         assert event.shard is mock_shard
-        assert event.event is mock_app.entity_factory.deserialize_scheduled_event.return_value
+        assert event.event is patched_deserialize_scheduled_event.return_value
         assert isinstance(event, scheduled_events.ScheduledEventDeleteEvent)
-        mock_app.entity_factory.deserialize_scheduled_event.assert_called_once_with(mock_payload)
+        patched_deserialize_scheduled_event.assert_called_once_with(mock_payload)
 
     def test_deserialize_scheduled_event_user_add_event(
-        self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
+        self, event_factory: event_factory_.EventFactoryImpl, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"guild_id": "494949", "user_id": "123123123", "guild_scheduled_event_id": "49494944"}
 
@@ -950,7 +1037,7 @@ class TestEventFactoryImpl:
         assert isinstance(event, scheduled_events.ScheduledEventUserAddEvent)
 
     def test_deserialize_scheduled_event_user_remove_event(
-        self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
+        self, event_factory: event_factory_.EventFactoryImpl, mock_shard: shard.GatewayShard
     ):
         mock_payload = {"guild_id": "3244321", "user_id": "56423", "guild_scheduled_event_id": "1234312"}
 
@@ -1006,53 +1093,71 @@ class TestEventFactoryImpl:
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
-        mock_app.entity_factory.deserialize_message.return_value = mock.Mock(guild_id=123321)
 
-        event = event_factory.deserialize_message_create_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_message", mock.Mock(guild_id=123321)
+        ) as patched_deserialize_message:
+            event = event_factory.deserialize_message_create_event(mock_shard, mock_payload)
 
         assert isinstance(event, message_events.GuildMessageCreateEvent)
         assert event.shard is mock_shard
-        assert event.message is mock_app.entity_factory.deserialize_message.return_value
+        assert event.message is patched_deserialize_message.return_value
+        patched_deserialize_message.assert_called_once_with(mock_payload)
 
     def test_deserialize_message_create_event_in_dm(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
-        mock_app.entity_factory.deserialize_message.return_value = mock.Mock(guild_id=None)
 
-        event = event_factory.deserialize_message_create_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_message", return_value=mock.Mock(guild_id=None)
+        ) as patched_deserialize_message:
+            event = event_factory.deserialize_message_create_event(mock_shard, mock_payload)
 
         assert isinstance(event, message_events.DMMessageCreateEvent)
         assert event.shard is mock_shard
-        assert event.message is mock_app.entity_factory.deserialize_message.return_value
+        assert event.message is patched_deserialize_message.return_value
+        patched_deserialize_message.assert_called_once_with(mock_payload)
 
     def test_deserialize_message_update_event_in_guild(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
         mock_old_message = mock.Mock()
-        mock_app.entity_factory.deserialize_partial_message.return_value = mock.Mock(guild_id=123321, app=mock_app)
 
-        event = event_factory.deserialize_message_update_event(mock_shard, mock_payload, old_message=mock_old_message)
+        with mock.patch.object(
+            mock_app.entity_factory,
+            "deserialize_partial_message",
+            return_value=mock.Mock(guild_id=123321, app=mock_app),
+        ) as patched_deserialize_partial_message:
+            event = event_factory.deserialize_message_update_event(
+                mock_shard, mock_payload, old_message=mock_old_message
+            )
 
         assert isinstance(event, message_events.GuildMessageUpdateEvent)
         assert event.shard is mock_shard
-        assert event.message is mock_app.entity_factory.deserialize_partial_message.return_value
+        assert event.message is patched_deserialize_partial_message.return_value
         assert event.old_message is mock_old_message
+        patched_deserialize_partial_message.assert_called_once_with(mock_payload)
 
     def test_deserialize_message_update_event_in_dm(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
     ):
         mock_payload = mock.Mock(app=mock_app)
         mock_old_message = mock.Mock()
-        mock_app.entity_factory.deserialize_partial_message.return_value = mock.Mock(guild_id=None)
 
-        event = event_factory.deserialize_message_update_event(mock_shard, mock_payload, old_message=mock_old_message)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_partial_message", return_value=mock.Mock(guild_id=None, app=mock_app)
+        ) as patched_deserialize_partial_message:
+            event = event_factory.deserialize_message_update_event(
+                mock_shard, mock_payload, old_message=mock_old_message
+            )
 
         assert isinstance(event, message_events.DMMessageUpdateEvent)
         assert event.shard is mock_shard
-        assert event.message is mock_app.entity_factory.deserialize_partial_message.return_value
+        assert event.message is patched_deserialize_partial_message.return_value
         assert event.old_message is mock_old_message
+        patched_deserialize_partial_message.assert_called_once_with(mock_payload)
 
     def test_deserialize_message_delete_event_in_guild(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -1129,14 +1234,17 @@ class TestEventFactoryImpl:
             "emoji": {"id": "123312", "name": "okok", "animated": True},
         }
 
-        event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_member", return_value=mock.Mock(guild_id=None, app=mock_app)
+        ) as patched_deserialize_member:
+            event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_member.assert_called_once_with(mock_member_payload, guild_id=43949494)
+        patched_deserialize_member.assert_called_once_with(mock_member_payload, guild_id=43949494)
         assert isinstance(event, reaction_events.GuildReactionAddEvent)
         assert event.shard is mock_shard
         assert event.channel_id == 34123
         assert event.message_id == 43123123
-        assert event.member is mock_app.entity_factory.deserialize_member.return_value
+        assert event.member is patched_deserialize_member.return_value
         assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
         assert event.emoji_name == "okok"
         assert event.emoji_id == 123312
@@ -1452,16 +1560,18 @@ class TestEventFactoryImpl:
             "session_id": "kjsdjiodsaiosad",
             "application": {"id": "4123212", "flags": "4949494"},
         }
-        mock_app.entity_factory.deserialize_my_user.return_value = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_ready_event(mock_shard, mock_payload)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_my_user", return_value=mock.Mock(app=mock_app)
+        ) as patched_deserialize_my_user:
+            event = event_factory.deserialize_ready_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_my_user.assert_called_once_with(mock_user_payload)
+        patched_deserialize_my_user.assert_called_once_with(mock_user_payload)
         assert isinstance(event, shard_events.ShardReadyEvent)
         assert event.shard is mock_shard
         assert event.actual_gateway_version == 69
         assert event.resume_gateway_url == "testing.com"
-        assert event.my_user is mock_app.entity_factory.deserialize_my_user.return_value
+        assert event.my_user is patched_deserialize_my_user.return_value
         assert event.unavailable_guilds == [432123, 949494]
         assert event.session_id == "kjsdjiodsaiosad"
         assert event.application_id == 4123212
@@ -1509,21 +1619,25 @@ class TestEventFactoryImpl:
             "nonce": "OKOKOKOK",
         }
 
-        event = event_factory.deserialize_guild_member_chunk_event(mock_shard, mock_payload)
+        with (
+            mock.patch.object(mock_app.entity_factory, "deserialize_member") as patched_deserialize_member,
+            mock.patch.object(
+                mock_app.entity_factory, "deserialize_member_presence"
+            ) as patched_deserialize_member_presence,
+        ):
+            event = event_factory.deserialize_guild_member_chunk_event(mock_shard, mock_payload)
 
-        mock_app.entity_factory.deserialize_member.assert_called_once_with(mock_member_payload, guild_id=123432123)
-        mock_app.entity_factory.deserialize_member_presence.assert_called_once_with(
-            mock_presence_payload, guild_id=123432123
-        )
+        patched_deserialize_member.assert_called_once_with(mock_member_payload, guild_id=123432123)
+        patched_deserialize_member_presence.assert_called_once_with(mock_presence_payload, guild_id=123432123)
         assert isinstance(event, shard_events.MemberChunkEvent)
         assert event.app is mock_app
         assert event.shard is mock_shard
         assert event.guild_id == 123432123
-        assert event.members == {4222222: mock_app.entity_factory.deserialize_member.return_value}
+        assert event.members == {4222222: patched_deserialize_member.return_value}
         assert event.chunk_count == 54
         assert event.chunk_index == 3
         assert event.not_found == [34212312312, 323123123]
-        assert event.presences == {43123123: mock_app.entity_factory.deserialize_member_presence.return_value}
+        assert event.presences == {43123123: patched_deserialize_member_presence.return_value}
         assert event.nonce == "OKOKOKOK"
 
     def test_deserialize_guild_member_chunk_event_without_optional_fields(
@@ -1547,14 +1661,16 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock(app=mock_app)
         mock_old_user = mock.Mock()
-        mock_app.entity_factory.deserialize_my_user.return_value = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_own_user_update_event(mock_shard, mock_payload, old_user=mock_old_user)
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_my_user", return_value=mock.Mock(app=mock_app)
+        ) as patched_deserialize_my_user:
+            event = event_factory.deserialize_own_user_update_event(mock_shard, mock_payload, old_user=mock_old_user)
 
-        mock_app.entity_factory.deserialize_my_user.assert_called_once_with(mock_payload)
+        patched_deserialize_my_user.assert_called_once_with(mock_payload)
         assert isinstance(event, user_events.OwnUserUpdateEvent)
         assert event.shard is mock_shard
-        assert event.user is mock_app.entity_factory.deserialize_my_user.return_value
+        assert event.user is patched_deserialize_my_user.return_value
         assert event.old_user is mock_old_user
 
     ################
@@ -1566,16 +1682,18 @@ class TestEventFactoryImpl:
     ):
         mock_payload = mock.Mock()
         mock_old_voice_state = mock.Mock()
-        mock_app.entity_factory.deserialize_voice_state.return_value = mock.Mock(app=mock_app)
 
-        event = event_factory.deserialize_voice_state_update_event(
-            mock_shard, mock_payload, old_state=mock_old_voice_state
-        )
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_voice_state", return_value=mock.Mock(app=mock_app)
+        ) as patched_deserialize_voice_state:
+            event = event_factory.deserialize_voice_state_update_event(
+                mock_shard, mock_payload, old_state=mock_old_voice_state
+            )
 
-        mock_app.entity_factory.deserialize_voice_state.assert_called_once_with(mock_payload)
+        patched_deserialize_voice_state.assert_called_once_with(mock_payload)
         assert isinstance(event, voice_events.VoiceStateUpdateEvent)
         assert event.shard is mock_shard
-        assert event.state is mock_app.entity_factory.deserialize_voice_state.return_value
+        assert event.state is patched_deserialize_voice_state.return_value
         assert event.old_state is mock_old_voice_state
 
     def test_deserialize_voice_server_update_event(
@@ -1671,12 +1789,17 @@ class TestEventFactoryImpl:
             "privacy_level": 1,
             "discoverable_disabled": False,
         }
-        event = event_factory.deserialize_stage_instance_create_event(mock_shard, mock_payload)
+
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_stage_instance"
+        ) as patched_deserialize_stage_instance:
+            event = event_factory.deserialize_stage_instance_create_event(mock_shard, mock_payload)
+
         assert isinstance(event, stage_events.StageInstanceCreateEvent)
 
         assert event.shard is mock_shard
         assert event.app is event.stage_instance.app
-        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+        assert event.stage_instance == patched_deserialize_stage_instance.return_value
 
     def test_deserialize_stage_instance_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -1689,12 +1812,16 @@ class TestEventFactoryImpl:
             "privacy_level": 2,
             "discoverable_disabled": True,
         }
-        event = event_factory.deserialize_stage_instance_update_event(mock_shard, mock_payload)
+
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_stage_instance"
+        ) as patched_deserialize_stage_instance:
+            event = event_factory.deserialize_stage_instance_update_event(mock_shard, mock_payload)
         assert isinstance(event, stage_events.StageInstanceUpdateEvent)
 
         assert event.shard is mock_shard
         assert event.app is event.stage_instance.app
-        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+        assert event.stage_instance == patched_deserialize_stage_instance.return_value
 
     def test_deserialize_stage_instance_delete_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: traits.RESTAware, mock_shard: shard.GatewayShard
@@ -1707,9 +1834,14 @@ class TestEventFactoryImpl:
             "privacy_level": 2,
             "discoverable_disabled": True,
         }
-        event = event_factory.deserialize_stage_instance_delete_event(mock_shard, mock_payload)
+
+        with mock.patch.object(
+            mock_app.entity_factory, "deserialize_stage_instance"
+        ) as patched_deserialize_stage_instance:
+            event = event_factory.deserialize_stage_instance_delete_event(mock_shard, mock_payload)
+
         assert isinstance(event, stage_events.StageInstanceDeleteEvent)
 
         assert event.shard is mock_shard
         assert event.app is event.stage_instance.app
-        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+        assert event.stage_instance == patched_deserialize_stage_instance.return_value

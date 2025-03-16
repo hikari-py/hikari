@@ -581,7 +581,7 @@ class TestEventManagerBase:
         # On Python 3.12+ Asyncio uses this to get the task's context if set to call the
         # error handler in. We want to avoid for this test for simplicity.
         mock_task.get_context.return_value = None
-        event_manager._enabled_for_consumer = mock.Mock(return_value=True)
+        event_manager._enabled_for_consumer = mock.Mock()
         exc = Exception("aaaa!")
         consumer = mock.Mock(callback=mock.AsyncMock(side_effect=exc))
         error_handler = mock.MagicMock()

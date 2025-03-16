@@ -29,7 +29,7 @@ from hikari.events import user_events
 class TestOwnUserUpdateEvent:
     @pytest.fixture
     def event(self) -> user_events.OwnUserUpdateEvent:
-        return user_events.OwnUserUpdateEvent(shard=None, old_user=None, user=mock.Mock())
+        return user_events.OwnUserUpdateEvent(shard=mock.Mock(), old_user=None, user=mock.Mock())
 
     def test_app_property(self, event: user_events.OwnUserUpdateEvent):
         assert event.app is event.user.app

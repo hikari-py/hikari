@@ -65,7 +65,9 @@ class TestStickerPack:
 class TestPartialSticker:
     @pytest.fixture
     def model(self) -> stickers.PartialSticker:
-        return stickers.PartialSticker(id=snowflakes.Snowflake(123), name="testing", format_type="some")
+        return stickers.PartialSticker(
+            id=snowflakes.Snowflake(123), name="testing", format_type=stickers.StickerFormatType.PNG
+        )
 
     def test_image_url(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.PNG

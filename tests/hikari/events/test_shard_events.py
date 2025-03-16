@@ -20,9 +20,12 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
+from hikari import applications
 from hikari import snowflakes
 from hikari.events import shard_events
 
@@ -33,11 +36,11 @@ class TestShardReadyEvent:
         return shard_events.ShardReadyEvent(
             my_user=mock.Mock(),
             resume_gateway_url="testing",
-            shard=None,
+            shard=mock.Mock(),
             actual_gateway_version=1,
             session_id="ok",
             application_id=snowflakes.Snowflake(1),
-            application_flags=1,
+            application_flags=applications.ApplicationFlags.EMBEDDED,
             unavailable_guilds=[],
         )
 
@@ -68,12 +71,20 @@ class TestMemberChunkEvent:
     def test___getitem___with_slice(self, event: shard_events.MemberChunkEvent):
         mock_member_0 = mock.Mock()
         mock_member_1 = mock.Mock()
-        event.members = {snowflakes.Snowflake(1): mock.Mock(), snowflakes.Snowflake(55): mock.Mock(), snowflakes.Snowflake(99): mock_member_0, snowflakes.Snowflake(455): mock.Mock(), snowflakes.Snowflake(5444): mock_member_1}
+        event.members = {
+            snowflakes.Snowflake(1): mock.Mock(),
+            snowflakes.Snowflake(55): mock.Mock(),
+            snowflakes.Snowflake(99): mock_member_0,
+            snowflakes.Snowflake(455): mock.Mock(),
+            snowflakes.Snowflake(5444): mock_member_1,
+        }
 
         assert event[2:5:2] == (mock_member_0, mock_member_1)
 
     def test___getitem___with_valid_index(self, event: shard_events.MemberChunkEvent):
         mock_member = mock.Mock()
+        assert isinstance(event.members, typing.MutableMapping)  # FIXME: This seems hacky
+
         event.members[snowflakes.Snowflake(99)] = mock_member
         assert event[2] is mock_member
 

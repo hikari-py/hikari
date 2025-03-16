@@ -115,5 +115,6 @@ class TestExceptionEvent:
 
     @pytest.mark.asyncio
     async def test_retry(self, event: base_events.ExceptionEvent[mock.Mock]):
-        await event.retry()
-        event.failed_callback.assert_awaited_once_with(event.failed_event)
+        with mock.patch.object(event, "failed_callback") as patched_failed_callback:
+            await event.retry()
+            patched_failed_callback.assert_awaited_once_with(event.failed_event)

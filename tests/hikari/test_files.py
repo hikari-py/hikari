@@ -169,10 +169,16 @@ class TestResource:
                 except StopIteration:
                     raise StopAsyncIteration from None
 
-        class ResourceImpl(files.Resource):
+        class ResourceImpl(files.Resource[typing.Any]):
             stream = mock.Mock(return_value=MockReader())
-            url = "https://myspace.com/rickastley/lyrics.txt"
-            filename = "lyrics.txt"
+
+            @property
+            def url(self) -> str:
+                return "https://myspace.com/rickastley/lyrics.txt"
+
+            @property
+            def filename(self) -> str:
+                return "lyrics.txt"
 
         return ResourceImpl()
 

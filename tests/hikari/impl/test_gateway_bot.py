@@ -23,6 +23,7 @@ from __future__ import annotations
 import asyncio
 import concurrent.futures
 import contextlib
+import datetime
 import sys
 import typing
 import warnings
@@ -310,7 +311,8 @@ class TestGatewayBot:
         assert bot.intents is intents
 
     def test_get_me(self, bot: bot_impl.GatewayBot, cache: cache_impl.CacheImpl):
-        assert bot.get_me() is cache.get_me.return_value
+        with mock.patch.object(cache, "get_me") as patched_get_me:
+            assert bot.get_me() is patched_get_me.return_value
 
     def test_proxy_settings(self, bot: bot_impl.GatewayBot, proxy_settings: config.ProxySettings):
         assert bot.proxy_settings is proxy_settings
@@ -331,8 +333,8 @@ class TestGatewayBot:
     def test_rest(self, bot: bot_impl.GatewayBot, rest: rest_impl.RESTClientImpl):
         assert bot.rest is rest
 
-    @pytest.mark.parametrize(("closed_event", "expected"), [("something", True), (None, False)])
-    def test_is_alive(self, bot: bot_impl.GatewayBot, closed_event: str | None, expected: bool):
+    @pytest.mark.parametrize(("closed_event", "expected"), [(mock.Mock(asyncio.Event), True), (None, False)])
+    def test_is_alive(self, bot: bot_impl.GatewayBot, closed_event: asyncio.Event | None, expected: bool):
         bot._closed_event = closed_event
 
         assert bot.is_alive is expected
@@ -696,10 +698,10 @@ class TestGatewayBot:
                 check_for_updates=True,
                 shard_ids=(2, 10),
                 shard_count=20,
-                activity="some activity",
+                activity=presences.Activity(name="some activity"),
                 afk=True,
-                idle_since="some idle since",
-                status="some status",
+                idle_since=datetime.datetime.fromtimestamp(0),
+                status=presences.Status.IDLE,
                 large_threshold=500,
             )
 
@@ -726,10 +728,10 @@ class TestGatewayBot:
             [
                 mock.call(
                     bot,
-                    activity="some activity",
+                    activity=presences.Activity(name="some activity"),
                     afk=True,
-                    idle_since="some idle since",
-                    status="some status",
+                    idle_since=datetime.datetime.fromtimestamp(0),
+                    status=presences.Status.IDLE,
                     large_threshold=500,
                     shard_id=i,
                     shard_count=20,
@@ -773,7 +775,7 @@ class TestGatewayBot:
 
         # Assume that we already started one shard
         shard1 = mock.Mock()
-        bot._shards = {"1": shard1}
+        bot._shards = {1: shard1}
 
         stack = contextlib.ExitStack()
         start_one_shard = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_start_one_shard"))
@@ -815,7 +817,7 @@ class TestGatewayBot:
 
         # Assume that we already started one shard
         shard1 = mock.Mock()
-        bot._shards = {"1": shard1}
+        bot._shards = {1: shard1}
 
         stack = contextlib.ExitStack()
         start_one_shard = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_start_one_shard"))
@@ -850,17 +852,19 @@ class TestGatewayBot:
         event_type = mock.Mock()
         callback = mock.Mock()
 
-        bot.subscribe(event_type, callback)
+        with mock.patch.object(bot._event_manager, "subscribe") as patched_subscribe:
+            bot.subscribe(event_type, callback)
 
-        bot._event_manager.subscribe.assert_called_once_with(event_type, callback)
+        patched_subscribe.assert_called_once_with(event_type, callback)
 
     def test_unsubscribe(self, bot: bot_impl.GatewayBot):
         event_type = mock.Mock()
         callback = mock.Mock()
 
-        bot.unsubscribe(event_type, callback)
+        with mock.patch.object(bot._event_manager, "unsubscribe") as patched_unsubscribe:
+            bot.unsubscribe(event_type, callback)
 
-        bot._event_manager.unsubscribe.assert_called_once_with(event_type, callback)
+        patched_unsubscribe.assert_called_once_with(event_type, callback)
 
     @pytest.mark.asyncio
     async def test_wait_for(self, bot: bot_impl.GatewayBot):

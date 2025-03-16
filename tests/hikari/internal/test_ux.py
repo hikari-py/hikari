@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import contextlib
 import importlib
+import importlib.resources
 import logging
 import logging.config
 import os
@@ -33,6 +34,8 @@ import time
 import typing
 
 import colorlog
+import colorlog.escape_codes
+import colorlog.formatter
 import mock
 import pytest
 

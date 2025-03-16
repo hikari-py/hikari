@@ -20,27 +20,54 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
-from hikari import channels, snowflakes
+from hikari import channels
+from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import webhooks
-from tests.hikari import hikari_test_helpers
+
+
+@pytest.fixture
+def mock_app() -> traits.RESTAware:
+    return mock.AsyncMock(traits.RESTAware)
 
 
 class TestExecutableWebhook:
+    class MockedExecutableWebhook(webhooks.ExecutableWebhook):
+        def __init__(self, app: traits.RESTAware):
+            super().__init__()
+
+            self._app = app
+            self._webhook_id = snowflakes.Snowflake(548398213)
+            self._token = "webhook_token"
+
+        @property
+        def app(self) -> traits.RESTAware:
+            return self._app
+
+        @property
+        def webhook_id(self) -> snowflakes.Snowflake:
+            return self._webhook_id
+
+        @property
+        def token(self) -> typing.Optional[str]:
+            return self._token
+
     @pytest.fixture
-    def executable_webhook(self) -> webhooks.ExecutableWebhook:
-        return hikari_test_helpers.mock_class_namespace(
-            webhooks.ExecutableWebhook, slots_=False, app=mock.AsyncMock()
-        )()
+    def executable_webhook(self, mock_app: traits.RESTAware) -> webhooks.ExecutableWebhook:
+        return TestExecutableWebhook.MockedExecutableWebhook(mock_app)
 
     @pytest.mark.asyncio
     async def test_execute_when_no_token(self, executable_webhook: webhooks.ExecutableWebhook):
-        executable_webhook.token = None
-
-        with pytest.raises(ValueError, match=r"Cannot send a message using a webhook where we don't know the token"):
+        with (
+            mock.patch.object(executable_webhook, "_token", None),
+            pytest.raises(ValueError, match=r"Cannot send a message using a webhook where we don't know the token"),
+        ):
             await executable_webhook.execute()
 
     @pytest.mark.asyncio
@@ -52,85 +79,95 @@ class TestExecutableWebhook:
         mock_embed = mock.Mock()
         mock_embeds = mock.Mock(), mock.Mock()
 
-        result = await executable_webhook.execute(
-            content="coooo",
-            username="oopp",
-            avatar_url="urlurlurl",
-            tts=True,
-            attachment=mock_attachment_1,
-            attachments=mock_attachment_2,
-            component=mock_component,
-            components=mock_components,
-            embed=mock_embed,
-            embeds=mock_embeds,
-            mentions_everyone=False,
-            user_mentions=[1235432],
-            role_mentions=[65234123],
-            flags=64,
-        )
+        with mock.patch.object(
+            executable_webhook.app.rest, "execute_webhook", new_callable=mock.AsyncMock
+        ) as patched_execute_webhook:
+            result = await executable_webhook.execute(
+                content="coooo",
+                username="oopp",
+                avatar_url="urlurlurl",
+                tts=True,
+                attachment=mock_attachment_1,
+                attachments=mock_attachment_2,
+                component=mock_component,
+                components=mock_components,
+                embed=mock_embed,
+                embeds=mock_embeds,
+                mentions_everyone=False,
+                user_mentions=[1235432],
+                role_mentions=[65234123],
+                flags=64,
+            )
 
-        assert result is executable_webhook.app.rest.execute_webhook.return_value
-        executable_webhook.app.rest.execute_webhook.assert_awaited_once_with(
-            webhook=executable_webhook.webhook_id,
-            token=executable_webhook.token,
-            content="coooo",
-            username="oopp",
-            avatar_url="urlurlurl",
-            tts=True,
-            attachment=mock_attachment_1,
-            attachments=mock_attachment_2,
-            component=mock_component,
-            components=mock_components,
-            embed=mock_embed,
-            embeds=mock_embeds,
-            mentions_everyone=False,
-            user_mentions=[1235432],
-            role_mentions=[65234123],
-            flags=64,
-        )
+            assert result is patched_execute_webhook.return_value
+            patched_execute_webhook.assert_awaited_once_with(
+                webhook=executable_webhook.webhook_id,
+                token=executable_webhook.token,
+                content="coooo",
+                username="oopp",
+                avatar_url="urlurlurl",
+                tts=True,
+                attachment=mock_attachment_1,
+                attachments=mock_attachment_2,
+                component=mock_component,
+                components=mock_components,
+                embed=mock_embed,
+                embeds=mock_embeds,
+                mentions_everyone=False,
+                user_mentions=[1235432],
+                role_mentions=[65234123],
+                flags=64,
+            )
 
     @pytest.mark.asyncio
     async def test_execute_without_optionals(self, executable_webhook: webhooks.ExecutableWebhook):
-        result = await executable_webhook.execute()
+        with mock.patch.object(
+            executable_webhook.app.rest, "execute_webhook", new_callable=mock.AsyncMock
+        ) as patched_execute_webhook:
+            result = await executable_webhook.execute()
 
-        assert result is executable_webhook.app.rest.execute_webhook.return_value
-        executable_webhook.app.rest.execute_webhook.assert_awaited_once_with(
-            webhook=executable_webhook.webhook_id,
-            token=executable_webhook.token,
-            content=undefined.UNDEFINED,
-            username=undefined.UNDEFINED,
-            avatar_url=undefined.UNDEFINED,
-            tts=undefined.UNDEFINED,
-            attachment=undefined.UNDEFINED,
-            attachments=undefined.UNDEFINED,
-            component=undefined.UNDEFINED,
-            components=undefined.UNDEFINED,
-            embed=undefined.UNDEFINED,
-            embeds=undefined.UNDEFINED,
-            mentions_everyone=undefined.UNDEFINED,
-            user_mentions=undefined.UNDEFINED,
-            role_mentions=undefined.UNDEFINED,
-            flags=undefined.UNDEFINED,
-        )
+            assert result is patched_execute_webhook.return_value
+            patched_execute_webhook.assert_awaited_once_with(
+                webhook=executable_webhook.webhook_id,
+                token=executable_webhook.token,
+                content=undefined.UNDEFINED,
+                username=undefined.UNDEFINED,
+                avatar_url=undefined.UNDEFINED,
+                tts=undefined.UNDEFINED,
+                attachment=undefined.UNDEFINED,
+                attachments=undefined.UNDEFINED,
+                component=undefined.UNDEFINED,
+                components=undefined.UNDEFINED,
+                embed=undefined.UNDEFINED,
+                embeds=undefined.UNDEFINED,
+                mentions_everyone=undefined.UNDEFINED,
+                user_mentions=undefined.UNDEFINED,
+                role_mentions=undefined.UNDEFINED,
+                flags=undefined.UNDEFINED,
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_message(self, executable_webhook: webhooks.ExecutableWebhook):
         message = mock.Mock()
         returned_message = mock.Mock()
-        executable_webhook.app.rest.fetch_webhook_message = mock.AsyncMock(return_value=returned_message)
 
-        returned = await executable_webhook.fetch_message(message)
+        with mock.patch.object(
+            executable_webhook.app.rest, "fetch_webhook_message", new=mock.AsyncMock(return_value=returned_message)
+        ) as patched_fetch_webhook_message:
+            returned = await executable_webhook.fetch_message(message)
 
-        assert returned is returned_message
+            assert returned is returned_message
 
-        executable_webhook.app.rest.fetch_webhook_message.assert_awaited_once_with(
-            executable_webhook.webhook_id, token=executable_webhook.token, message=message
-        )
+            patched_fetch_webhook_message.assert_awaited_once_with(
+                executable_webhook.webhook_id, token=executable_webhook.token, message=message
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_message_when_no_token(self, executable_webhook: webhooks.ExecutableWebhook):
-        executable_webhook.token = None
-        with pytest.raises(ValueError, match=r"Cannot fetch a message using a webhook where we don't know the token"):
+        with (
+            mock.patch.object(executable_webhook, "_token", None),
+            pytest.raises(ValueError, match=r"Cannot fetch a message using a webhook where we don't know the token"),
+        ):
             await executable_webhook.fetch_message(987)
 
     @pytest.mark.asyncio
@@ -141,58 +178,74 @@ class TestExecutableWebhook:
         component = mock.Mock()
         components = mock.Mock()
 
-        returned = await executable_webhook.edit_message(
-            message,
-            content="test",
-            embed=embed,
-            embeds=[embed, embed],
-            attachment=attachment,
-            attachments=[attachment, attachment],
-            component=component,
-            components=components,
-            mentions_everyone=False,
-            user_mentions=True,
-            role_mentions=[567, 890],
-        )
+        with (
+            mock.patch.object(executable_webhook.app, "rest") as patched_rest,
+            mock.patch.object(
+                patched_rest, "edit_webhook_message", new_callable=mock.AsyncMock
+            ) as patched_edit_webhook_message,
+        ):
+            returned = await executable_webhook.edit_message(
+                message,
+                content="test",
+                embed=embed,
+                embeds=[embed, embed],
+                attachment=attachment,
+                attachments=[attachment, attachment],
+                component=component,
+                components=components,
+                mentions_everyone=False,
+                user_mentions=True,
+                role_mentions=[567, 890],
+            )
 
-        assert returned is executable_webhook.app.rest.edit_webhook_message.return_value
+            assert returned is patched_edit_webhook_message.return_value
 
-        executable_webhook.app.rest.edit_webhook_message.assert_awaited_once_with(
-            executable_webhook.webhook_id,
-            token=executable_webhook.token,
-            message=message,
-            content="test",
-            embed=embed,
-            embeds=[embed, embed],
-            attachment=attachment,
-            attachments=[attachment, attachment],
-            component=component,
-            components=components,
-            mentions_everyone=False,
-            user_mentions=True,
-            role_mentions=[567, 890],
-        )
+            patched_edit_webhook_message.assert_awaited_once_with(
+                executable_webhook.webhook_id,
+                token=executable_webhook.token,
+                message=message,
+                content="test",
+                embed=embed,
+                embeds=[embed, embed],
+                attachment=attachment,
+                attachments=[attachment, attachment],
+                component=component,
+                components=components,
+                mentions_everyone=False,
+                user_mentions=True,
+                role_mentions=[567, 890],
+            )
 
     @pytest.mark.asyncio
     async def test_edit_message_when_no_token(self, executable_webhook: webhooks.ExecutableWebhook):
-        executable_webhook.token = None
-        with pytest.raises(ValueError, match=r"Cannot edit a message using a webhook where we don't know the token"):
+        with (
+            mock.patch.object(executable_webhook, "_token", None),
+            pytest.raises(ValueError, match=r"Cannot edit a message using a webhook where we don't know the token"),
+        ):
             await executable_webhook.edit_message(987)
 
     @pytest.mark.asyncio
     async def test_delete_message(self, executable_webhook: webhooks.ExecutableWebhook):
         message = mock.Mock()
 
-        await executable_webhook.delete_message(message)
+        with (
+            mock.patch.object(executable_webhook.app, "rest") as patched_rest,
+            mock.patch.object(
+                patched_rest, "delete_webhook_message", new_callable=mock.AsyncMock
+            ) as patched_delete_webhook_message,
+        ):
+            await executable_webhook.delete_message(message)
 
-        executable_webhook.app.rest.delete_webhook_message.assert_awaited_once_with(
-            executable_webhook.webhook_id, token=executable_webhook.token, message=message
-        )
+            patched_delete_webhook_message.assert_awaited_once_with(
+                executable_webhook.webhook_id, token=executable_webhook.token, message=message
+            )
 
     @pytest.mark.asyncio
     async def test_delete_message_when_no_token(self, executable_webhook: webhooks.ExecutableWebhook):
-        executable_webhook.token = None
-        with pytest.raises(ValueError, match=r"Cannot delete a message using a webhook where we don't know the token"):
+        with (
+            mock.patch.object(executable_webhook, "_token", None),
+            pytest.raises(ValueError, match=r"Cannot delete a message using a webhook where we don't know the token"),
+        ):
             assert await executable_webhook.delete_message(987)
 
 
@@ -212,8 +265,8 @@ class TestPartialWebhook:
         assert str(webhook) == "not a webhook"
 
     def test_str_when_name_is_None(self, webhook: webhooks.PartialWebhook):
-        webhook.name = None
-        assert str(webhook) == "Unnamed webhook ID 987654321"
+        with mock.patch.object(webhook, "name", None):
+            assert str(webhook) == "Unnamed webhook ID 987654321"
 
     def test_mention_property(self, webhook: webhooks.PartialWebhook):
         assert webhook.mention == "<@987654321>"
@@ -227,6 +280,7 @@ class TestPartialWebhook:
     def test_make_avatar_url(self, webhook: webhooks.PartialWebhook):
         result = webhook.make_avatar_url(ext="jpeg", size=2048)
 
+        assert result is not None
         assert result.url == "https://cdn.discordapp.com/avatars/987654321/hook.jpeg?size=2048"
 
     def test_make_avatar_url_when_no_avatar(self, webhook: webhooks.PartialWebhook):
@@ -258,160 +312,202 @@ class TestIncomingWebhook:
     async def test_delete(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
 
-        await webhook.delete()
+        with mock.patch.object(
+            webhook.app.rest, "delete_webhook", new_callable=mock.AsyncMock
+        ) as patched_delete_webhook:
+            await webhook.delete()
 
-        webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
+            patched_delete_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
 
     @pytest.mark.asyncio
     async def test_delete_uses_token_property(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "123321"
 
-        await webhook.delete()
+        with mock.patch.object(
+            webhook.app.rest, "delete_webhook", new_callable=mock.AsyncMock
+        ) as patched_delete_webhook:
+            await webhook.delete()
 
-        webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321, token="123321")
+            patched_delete_webhook.assert_awaited_once_with(987654321, token="123321")
 
     @pytest.mark.asyncio
     async def test_delete_use_token_is_true(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "322312"
 
-        await webhook.delete(use_token=True)
+        with mock.patch.object(
+            webhook.app.rest, "delete_webhook", new_callable=mock.AsyncMock
+        ) as patched_delete_webhook:
+            await webhook.delete(use_token=True)
 
-        webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321, token="322312")
+            patched_delete_webhook.assert_awaited_once_with(987654321, token="322312")
 
     @pytest.mark.asyncio
     async def test_delete_use_token_is_true_without_token(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
 
-        with pytest.raises(ValueError, match="This webhook's token is unknown, so cannot be used"):
-            await webhook.delete(use_token=True)
+        with mock.patch.object(
+            webhook.app.rest, "delete_webhook", new_callable=mock.AsyncMock
+        ) as patched_delete_webhook:
+            with pytest.raises(ValueError, match="This webhook's token is unknown, so cannot be used"):
+                await webhook.delete(use_token=True)
 
-        webhook.app.rest.delete_webhook.assert_not_called()
+            patched_delete_webhook.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_delete_use_token_is_false(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "322312"
 
-        await webhook.delete(use_token=False)
+        with mock.patch.object(
+            webhook.app.rest, "delete_webhook", new_callable=mock.AsyncMock
+        ) as patched_delete_webhook:
+            await webhook.delete(use_token=False)
 
-        webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
+            patched_delete_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
 
     @pytest.mark.asyncio
     async def test_edit(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
-        webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
-        mock_avatar = mock.Mock()
+        with mock.patch.object(
+            webhook.app.rest, "edit_webhook", new=mock.AsyncMock(return_value=mock.Mock(webhooks.IncomingWebhook))
+        ) as patched_edit_webhook:
+            mock_avatar = mock.Mock()
 
-        result = await webhook.edit(name="OK", avatar=mock_avatar, channel=33333, reason="byebye")
+            result = await webhook.edit(name="OK", avatar=mock_avatar, channel=33333, reason="byebye")
 
-        assert result is webhook.app.rest.edit_webhook.return_value
-        webhook.app.rest.edit_webhook.assert_awaited_once_with(
-            987654321, token=undefined.UNDEFINED, name="OK", avatar=mock_avatar, channel=33333, reason="byebye"
-        )
+            assert result is patched_edit_webhook.return_value
+            patched_edit_webhook.assert_awaited_once_with(
+                987654321, token=undefined.UNDEFINED, name="OK", avatar=mock_avatar, channel=33333, reason="byebye"
+            )
 
     @pytest.mark.asyncio
     async def test_edit_uses_token_property(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "aye"
-        webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
-        mock_avatar = mock.Mock()
+        with mock.patch.object(
+            webhook.app.rest, "edit_webhook", new=mock.AsyncMock(return_value=mock.Mock(webhooks.IncomingWebhook))
+        ) as patched_edit_webhook:
+            mock_avatar = mock.Mock()
 
-        result = await webhook.edit(name="bye", avatar=mock_avatar, channel=33333, reason="byebye")
+            result = await webhook.edit(name="bye", avatar=mock_avatar, channel=33333, reason="byebye")
 
-        assert result is webhook.app.rest.edit_webhook.return_value
-        webhook.app.rest.edit_webhook.assert_awaited_once_with(
-            987654321, token="aye", name="bye", avatar=mock_avatar, channel=33333, reason="byebye"
-        )
+            assert result is patched_edit_webhook.return_value
+            patched_edit_webhook.assert_awaited_once_with(
+                987654321, token="aye", name="bye", avatar=mock_avatar, channel=33333, reason="byebye"
+            )
 
     @pytest.mark.asyncio
     async def test_edit_when_use_token_is_true(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "owoowow"
-        webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
-        mock_avatar = mock.Mock()
+        with mock.patch.object(
+            webhook.app.rest, "edit_webhook", new=mock.AsyncMock(return_value=mock.Mock(webhooks.IncomingWebhook))
+        ) as patched_edit_webhook:
+            mock_avatar = mock.Mock()
 
-        result = await webhook.edit(use_token=True, name="hiu", avatar=mock_avatar, channel=231, reason="sus")
+            result = await webhook.edit(use_token=True, name="hiu", avatar=mock_avatar, channel=231, reason="sus")
 
-        assert result is webhook.app.rest.edit_webhook.return_value
-        webhook.app.rest.edit_webhook.assert_awaited_once_with(
-            987654321, token="owoowow", name="hiu", avatar=mock_avatar, channel=231, reason="sus"
-        )
+            assert result is patched_edit_webhook.return_value
+            patched_edit_webhook.assert_awaited_once_with(
+                987654321, token="owoowow", name="hiu", avatar=mock_avatar, channel=231, reason="sus"
+            )
 
     @pytest.mark.asyncio
     async def test_edit_when_use_token_is_true_and_no_token(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
 
-        with pytest.raises(ValueError, match="This webhook's token is unknown, so cannot be used"):
+        with (
+            mock.patch.object(
+                webhook.app.rest, "edit_webhook", new=mock.AsyncMock(return_value=mock.Mock(webhooks.IncomingWebhook))
+            ) as patched_edit_webhook,
+            pytest.raises(ValueError, match="This webhook's token is unknown, so cannot be used"),
+        ):
             await webhook.edit(use_token=True)
 
-        webhook.app.rest.edit_webhook.assert_not_called()
+        patched_edit_webhook.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_edit_when_use_token_is_false(self, webhook: webhooks.IncomingWebhook):
         webhook.token = "owoowow"
-        webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
-        mock_avatar = mock.Mock()
+        with mock.patch.object(
+            webhook.app.rest, "edit_webhook", new=mock.AsyncMock(return_value=mock.Mock(webhooks.IncomingWebhook))
+        ) as patched_edit_webhook:
+            mock_avatar = mock.Mock()
 
-        result = await webhook.edit(use_token=False, name="eee", avatar=mock_avatar, channel=231, reason="rrr")
+            result = await webhook.edit(use_token=False, name="eee", avatar=mock_avatar, channel=231, reason="rrr")
 
-        assert result is webhook.app.rest.edit_webhook.return_value
-        webhook.app.rest.edit_webhook.assert_awaited_once_with(
-            987654321, token=undefined.UNDEFINED, name="eee", avatar=mock_avatar, channel=231, reason="rrr"
-        )
+            assert result is patched_edit_webhook.return_value
+            patched_edit_webhook.assert_awaited_once_with(
+                987654321, token=undefined.UNDEFINED, name="eee", avatar=mock_avatar, channel=231, reason="rrr"
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_channel(self, webhook: webhooks.IncomingWebhook):
-        webhook.app.rest.fetch_channel.return_value = mock.Mock(channels.GuildTextChannel)
+        with mock.patch.object(
+            webhook.app.rest, "fetch_channel", new=mock.AsyncMock(return_value=mock.Mock(channels.GuildTextChannel))
+        ) as patched_fetch_channel:
+            assert await webhook.fetch_channel() is patched_fetch_channel.return_value
 
-        assert await webhook.fetch_channel() is webhook.app.rest.fetch_channel.return_value
-
-        webhook.app.rest.fetch_channel.assert_awaited_once_with(webhook.channel_id)
+            patched_fetch_channel.assert_awaited_once_with(webhook.channel_id)
 
     @pytest.mark.asyncio
     async def test_fetch_self(self, webhook: webhooks.IncomingWebhook):
-        webhook.token = None
-        webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
+        with (
+            mock.patch.object(webhook, "token", None),
+            mock.patch.object(
+                webhook.app.rest, "fetch_webhook", new=mock.AsyncMock(return_value=mock.Mock(webhooks.IncomingWebhook))
+            ) as patched_fetch_webhook,
+        ):
+            result = await webhook.fetch_self()
 
-        result = await webhook.fetch_self()
-
-        assert result is webhook.app.rest.fetch_webhook.return_value
-        webhook.app.rest.fetch_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
+            assert result is patched_fetch_webhook.return_value
+            patched_fetch_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
 
     @pytest.mark.asyncio
     async def test_fetch_self_uses_token_property(self, webhook: webhooks.IncomingWebhook):
-        webhook.token = "no gnomo"
-        webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
+        with (
+            mock.patch.object(webhook, "token", "no gnomo"),
+            mock.patch.object(
+                webhook.app.rest, "fetch_webhook", new=mock.AsyncMock(return_value=mock.Mock(webhooks.IncomingWebhook))
+            ) as patched_fetch_webhook,
+        ):
+            result = await webhook.fetch_self()
 
-        result = await webhook.fetch_self()
-
-        assert result is webhook.app.rest.fetch_webhook.return_value
-        webhook.app.rest.fetch_webhook.assert_awaited_once_with(987654321, token="no gnomo")
+            assert result is patched_fetch_webhook.return_value
+            patched_fetch_webhook.assert_awaited_once_with(987654321, token="no gnomo")
 
     @pytest.mark.asyncio
     async def test_fetch_self_when_use_token_is_true(self, webhook: webhooks.IncomingWebhook):
-        webhook.token = "no momo"
-        webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
+        with (
+            mock.patch.object(webhook, "token", "no momo"),
+            mock.patch.object(
+                webhook.app.rest, "fetch_webhook", new=mock.AsyncMock(return_value=mock.Mock(webhooks.IncomingWebhook))
+            ) as patched_fetch_webhook,
+        ):
+            result = await webhook.fetch_self(use_token=True)
 
-        result = await webhook.fetch_self(use_token=True)
-
-        assert result is webhook.app.rest.fetch_webhook.return_value
-        webhook.app.rest.fetch_webhook.assert_awaited_once_with(987654321, token="no momo")
+            assert result is patched_fetch_webhook.return_value
+            patched_fetch_webhook.assert_awaited_once_with(987654321, token="no momo")
 
     @pytest.mark.asyncio
     async def test_fetch_self_when_use_token_is_true_without_token_property(self, webhook: webhooks.IncomingWebhook):
         webhook.token = None
 
-        with pytest.raises(ValueError, match="This webhook's token is unknown, so cannot be used"):
-            await webhook.fetch_self(use_token=True)
+        with mock.patch.object(webhook.app.rest, "fetch_webhook") as patched_fetch_webhook:
+            with pytest.raises(ValueError, match="This webhook's token is unknown, so cannot be used"):
+                await webhook.fetch_self(use_token=True)
 
-        webhook.app.rest.fetch_webhook.assert_not_called()
+            patched_fetch_webhook.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_fetch_self_when_use_token_is_false(self, webhook: webhooks.IncomingWebhook):
-        webhook.token = "no momo"
-        webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.IncomingWebhook)
+        with (
+            mock.patch.object(webhook, "token", "no momo"),
+            mock.patch.object(
+                webhook.app.rest, "fetch_webhook", new=mock.AsyncMock(return_value=mock.Mock(webhooks.IncomingWebhook))
+            ) as patched_fetch_webhook,
+        ):
+            result = await webhook.fetch_self(use_token=False)
 
-        result = await webhook.fetch_self(use_token=False)
-
-        assert result is webhook.app.rest.fetch_webhook.return_value
-        webhook.app.rest.fetch_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
+            assert result is patched_fetch_webhook.return_value
+            patched_fetch_webhook.assert_awaited_once_with(987654321, token=undefined.UNDEFINED)
 
 
 class TestChannelFollowerWebhook:
@@ -433,35 +529,44 @@ class TestChannelFollowerWebhook:
 
     @pytest.mark.asyncio
     async def test_delete(self, webhook: webhooks.ChannelFollowerWebhook):
-        await webhook.delete()
+        with mock.patch.object(webhook.app.rest, "delete_webhook") as patched_delete_webhook:
+            await webhook.delete()
 
-        webhook.app.rest.delete_webhook.assert_awaited_once_with(987654321)
+            patched_delete_webhook.assert_awaited_once_with(987654321)
 
     @pytest.mark.asyncio
     async def test_edit(self, webhook: webhooks.ChannelFollowerWebhook):
         mock_avatar = mock.Mock()
-        webhook.app.rest.edit_webhook.return_value = mock.Mock(webhooks.ChannelFollowerWebhook)
 
-        result = await webhook.edit(name="hi", avatar=mock_avatar, channel=43123, reason="ok")
+        with mock.patch.object(
+            webhook.app.rest,
+            "edit_webhook",
+            new=mock.AsyncMock(return_value=mock.Mock(webhooks.ChannelFollowerWebhook)),
+        ) as patched_edit_webhook:
+            result = await webhook.edit(name="hi", avatar=mock_avatar, channel=43123, reason="ok")
 
-        assert result is webhook.app.rest.edit_webhook.return_value
-        webhook.app.rest.edit_webhook.assert_awaited_once_with(
-            987654321, name="hi", avatar=mock_avatar, channel=43123, reason="ok"
-        )
+            assert result is patched_edit_webhook.return_value
+            patched_edit_webhook.assert_awaited_once_with(
+                987654321, name="hi", avatar=mock_avatar, channel=43123, reason="ok"
+            )
 
     @pytest.mark.asyncio
     async def test_fetch_channel(self, webhook: webhooks.ChannelFollowerWebhook):
-        webhook.app.rest.fetch_channel.return_value = mock.Mock(channels.GuildTextChannel)
+        with mock.patch.object(
+            webhook.app.rest, "fetch_channel", new=mock.AsyncMock(return_value=mock.Mock(channels.GuildTextChannel))
+        ) as patched_fetch_channel:
+            assert await webhook.fetch_channel() is patched_fetch_channel.return_value
 
-        assert await webhook.fetch_channel() is webhook.app.rest.fetch_channel.return_value
-
-        webhook.app.rest.fetch_channel.assert_awaited_once_with(webhook.channel_id)
+            patched_fetch_channel.assert_awaited_once_with(webhook.channel_id)
 
     @pytest.mark.asyncio
     async def test_fetch_self(self, webhook: webhooks.ChannelFollowerWebhook):
-        webhook.app.rest.fetch_webhook.return_value = mock.Mock(webhooks.ChannelFollowerWebhook)
+        with mock.patch.object(
+            webhook.app.rest,
+            "fetch_webhook",
+            new=mock.AsyncMock(return_value=mock.Mock(webhooks.ChannelFollowerWebhook)),
+        ) as patched_fetch_webhook:
+            result = await webhook.fetch_self()
 
-        result = await webhook.fetch_self()
-
-        assert result is webhook.app.rest.fetch_webhook.return_value
-        webhook.app.rest.fetch_webhook.assert_awaited_once_with(987654321)
+            assert result is patched_fetch_webhook.return_value
+            patched_fetch_webhook.assert_awaited_once_with(987654321)

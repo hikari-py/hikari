@@ -24,6 +24,7 @@ import mock
 import pytest
 
 from hikari import commands
+from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -44,7 +45,7 @@ class TestPartialCommand:
             type=commands.CommandType.SLASH,
             application_id=snowflakes.Snowflake(65234123),
             name="Name",
-            default_member_permissions=None,
+            default_member_permissions=permissions.Permissions.NONE,
             is_dm_enabled=False,
             is_nsfw=True,
             guild_id=snowflakes.Snowflake(31231235),
@@ -54,94 +55,116 @@ class TestPartialCommand:
 
     @pytest.mark.asyncio
     async def test_fetch_self(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
-        result = await mock_command.fetch_self()
+        with mock.patch.object(mock_app.rest, "fetch_application_command") as patched_fetch_application_command:
+            result = await mock_command.fetch_self()
 
-        assert result is mock_app.rest.fetch_application_command.return_value
-        mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
+            assert result is patched_fetch_application_command.return_value
+            patched_fetch_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
     @pytest.mark.asyncio
     async def test_fetch_self_when_guild_id_is_none(
         self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware
     ):
-        mock_command.guild_id = None
+        with (
+            mock.patch.object(mock_command, "guild_id", None),
+            mock.patch.object(mock_app.rest, "fetch_application_command") as patched_fetch_application_command,
+        ):
+            result = await mock_command.fetch_self()
 
-        result = await mock_command.fetch_self()
-
-        assert result is mock_app.rest.fetch_application_command.return_value
-        mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
+            assert result is patched_fetch_application_command.return_value
+            patched_fetch_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
     @pytest.mark.asyncio
     async def test_edit_without_optional_args(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
-        result = await mock_command.edit()
+        with mock.patch.object(mock_app.rest, "edit_application_command") as patched_edit_application_command:
+            result = await mock_command.edit()
 
-        assert result is mock_app.rest.edit_application_command.return_value
-        mock_app.rest.edit_application_command.assert_awaited_once_with(
-            65234123,
-            34123123,
-            31231235,
-            name=undefined.UNDEFINED,
-            description=undefined.UNDEFINED,
-            options=undefined.UNDEFINED,
-        )
+            assert result is patched_edit_application_command.return_value
+            patched_edit_application_command.assert_awaited_once_with(
+                65234123,
+                34123123,
+                31231235,
+                name=undefined.UNDEFINED,
+                description=undefined.UNDEFINED,
+                options=undefined.UNDEFINED,
+            )
 
     @pytest.mark.asyncio
     async def test_edit_with_optional_args(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         mock_option = mock.Mock()
-        result = await mock_command.edit(name="new name", description="very descrypt", options=[mock_option])
 
-        assert result is mock_app.rest.edit_application_command.return_value
-        mock_app.rest.edit_application_command.assert_awaited_once_with(
-            65234123, 34123123, 31231235, name="new name", description="very descrypt", options=[mock_option]
-        )
+        with mock.patch.object(mock_app.rest, "edit_application_command") as patched_edit_application_command:
+            result = await mock_command.edit(name="new name", description="very descrypt", options=[mock_option])
+
+            assert result is patched_edit_application_command.return_value
+            patched_edit_application_command.assert_awaited_once_with(
+                65234123, 34123123, 31231235, name="new name", description="very descrypt", options=[mock_option]
+            )
 
     @pytest.mark.asyncio
     async def test_edit_when_guild_id_is_none(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         mock_command.guild_id = None
 
-        result = await mock_command.edit()
+        with (
+            mock.patch.object(mock_command, "guild_id", None),
+            mock.patch.object(mock_app.rest, "edit_application_command") as patched_edit_application_command,
+        ):
+            result = await mock_command.edit()
 
-        assert result is mock_app.rest.edit_application_command.return_value
-        mock_app.rest.edit_application_command.assert_awaited_once_with(
-            65234123,
-            34123123,
-            undefined.UNDEFINED,
-            name=undefined.UNDEFINED,
-            description=undefined.UNDEFINED,
-            options=undefined.UNDEFINED,
-        )
+            assert result is patched_edit_application_command.return_value
+            patched_edit_application_command.assert_awaited_once_with(
+                65234123,
+                34123123,
+                undefined.UNDEFINED,
+                name=undefined.UNDEFINED,
+                description=undefined.UNDEFINED,
+                options=undefined.UNDEFINED,
+            )
 
     @pytest.mark.asyncio
     async def test_delete(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
-        await mock_command.delete()
+        with mock.patch.object(mock_app.rest, "delete_application_command") as patched_delete_application_command:
+            await mock_command.delete()
 
-        mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
+            patched_delete_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
     @pytest.mark.asyncio
     async def test_delete_when_guild_id_is_none(
         self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware
     ):
-        mock_command.guild_id = None
+        with (
+            mock.patch.object(mock_command, "guild_id", None),
+            mock.patch.object(mock_app.rest, "delete_application_command") as patched_delete_application_command,
+        ):
+            await mock_command.delete()
 
-        await mock_command.delete()
-
-        mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
+            patched_delete_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
     @pytest.mark.asyncio
     async def test_fetch_guild_permissions(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
-        result = await mock_command.fetch_guild_permissions(123321)
+        with mock.patch.object(
+            mock_app.rest, "fetch_application_command_permissions"
+        ) as patched_fetch_application_command_permissions:
+            result = await mock_command.fetch_guild_permissions(123321)
 
-        assert result is mock_app.rest.fetch_application_command_permissions.return_value
-        mock_app.rest.fetch_application_command_permissions.assert_awaited_once_with(
-            application=mock_command.application_id, guild=123321, command=mock_command.id
-        )
+            assert result is patched_fetch_application_command_permissions.return_value
+            patched_fetch_application_command_permissions.assert_awaited_once_with(
+                application=mock_command.application_id, guild=123321, command=mock_command.id
+            )
 
     @pytest.mark.asyncio
     async def test_set_guild_permissions(self, mock_command: commands.PartialCommand, mock_app: traits.RESTAware):
         mock_permissions = mock.Mock()
 
-        result = await mock_command.set_guild_permissions(312123, mock_permissions)
+        with mock.patch.object(
+            mock_app.rest, "set_application_command_permissions"
+        ) as patched_set_application_command_permissions:
+            result = await mock_command.set_guild_permissions(312123, mock_permissions)
 
-        assert result is mock_app.rest.set_application_command_permissions.return_value
-        mock_app.rest.set_application_command_permissions.assert_awaited_once_with(
-            application=mock_command.application_id, guild=312123, command=mock_command.id, permissions=mock_permissions
-        )
+            assert result is patched_set_application_command_permissions.return_value
+            patched_set_application_command_permissions.assert_awaited_once_with(
+                application=mock_command.application_id,
+                guild=312123,
+                command=mock_command.id,
+                permissions=mock_permissions,
+            )

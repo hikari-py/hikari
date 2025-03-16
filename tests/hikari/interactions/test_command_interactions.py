@@ -27,6 +27,7 @@ import pytest
 
 from hikari import channels
 from hikari import monetization
+from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
 from hikari.impl import special_endpoints
@@ -60,7 +61,7 @@ class TestCommandInteraction:
             resolved=None,
             locale="es-ES",
             guild_locale="en-US",
-            app_permissions=543123,
+            app_permissions=permissions.Permissions.NONE,
             registered_guild_id=snowflakes.Snowflake(12345678),
             entitlements=[
                 monetization.Entitlement(
@@ -102,26 +103,35 @@ class TestCommandInteraction:
     async def test_fetch_channel(
         self, mock_command_interaction: command_interactions.CommandInteraction, mock_app: traits.RESTAware
     ):
-        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableGuildChannel)
-        assert await mock_command_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
-
-        mock_app.rest.fetch_channel.assert_awaited_once_with(3123123)
+        with mock.patch.object(
+            mock_command_interaction.app.rest, "fetch_channel", return_value=mock.Mock(channels.TextableGuildChannel)
+        ) as patched_fetch_channel:
+            assert await mock_command_interaction.fetch_channel() is patched_fetch_channel.return_value
+            patched_fetch_channel.assert_awaited_once_with(3123123)
 
     def test_get_channel(
         self, mock_command_interaction: command_interactions.CommandInteraction, mock_app: traits.RESTAware
     ):
-        mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.TextableGuildChannel)
-
-        assert mock_command_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
+        with (
+            mock.patch.object(mock_command_interaction, "app", mock.Mock(traits.CacheAware)) as patched_app,
+            mock.patch.object(patched_app, "cache") as patched_cache,
+            mock.patch.object(
+                patched_cache, "get_guild_channel", return_value=mock.Mock(channels.TextableGuildChannel)
+            ) as patched_get_guild_channel,
+        ):
+            assert mock_command_interaction.get_channel() is patched_get_guild_channel.return_value
+            patched_get_guild_channel.assert_called_once_with(3123123)
 
     def test_get_channel_when_not_cached(
         self, mock_command_interaction: command_interactions.CommandInteraction, mock_app: traits.RESTAware
     ):
-        mock_app.cache.get_guild_channel.return_value = None
-
-        assert mock_command_interaction.get_channel() is None
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
+        with (
+            mock.patch.object(mock_command_interaction, "app", mock.Mock(traits.CacheAware)) as patched_app,
+            mock.patch.object(patched_app, "cache") as patched_cache,
+            mock.patch.object(patched_cache, "get_guild_channel", return_value=None) as patched_get_guild_channel,
+        ):
+            assert mock_command_interaction.get_channel() is None
+            patched_get_guild_channel.assert_called_once_with(3123123)
 
     def test_get_channel_without_cache(self, mock_command_interaction: command_interactions.CommandInteraction):
         mock_command_interaction.app = mock.Mock(traits.RESTAware)
@@ -189,11 +199,13 @@ class TestAutocompleteInteraction:
     async def test_create_response(
         self,
         mock_autocomplete_interaction: command_interactions.AutocompleteInteraction,
-        mock_app: traits.RESTAware,
         mock_command_choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
     ):
-        await mock_autocomplete_interaction.create_response(mock_command_choices)
+        with mock.patch.object(
+            mock_autocomplete_interaction.app.rest, "create_autocomplete_response"
+        ) as patched_create_autocomplete_response:
+            await mock_autocomplete_interaction.create_response(mock_command_choices)
 
-        mock_app.rest.create_autocomplete_response.assert_awaited_once_with(
-            2312312, "httptptptptptptptp", mock_command_choices
-        )
+            patched_create_autocomplete_response.assert_awaited_once_with(
+                2312312, "httptptptptptptptp", mock_command_choices
+            )

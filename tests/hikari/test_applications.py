@@ -25,19 +25,20 @@ import datetime
 import mock
 import pytest
 
-from hikari import applications, snowflakes
+from hikari import applications
+from hikari import snowflakes
+from hikari import traits
 from hikari import urls
 from hikari import users
-from hikari.errors import ForbiddenError
-from hikari.errors import UnauthorizedError
 from hikari.internal import routes
-from tests.hikari import hikari_test_helpers
 
 
 class TestTeamMember:
     @pytest.fixture
     def model(self) -> applications.TeamMember:
-        return applications.TeamMember(membership_state=4, permissions=["*"], team_id=snowflakes.Snowflake(34123), user=mock.Mock(users.User))
+        return applications.TeamMember(
+            membership_state=4, permissions=["*"], team_id=snowflakes.Snowflake(34123), user=mock.Mock(users.User)
+        )
 
     def test_app_property(self, model: applications.TeamMember):
         assert model.app is model.user.app
@@ -90,108 +91,107 @@ class TestTeamMember:
 
 class TestTeam:
     @pytest.fixture
-    def model(self) -> applications.Team:
-        return hikari_test_helpers.mock_class_namespace(
-            applications.Team, slots_=False, init_=False, id=123, icon_hash="ahashicon"
-        )()
+    def team(self) -> applications.Team:
+        return applications.Team(
+            app=mock.Mock(traits.RESTAware),
+            id=snowflakes.Snowflake(123),
+            name="beanos",
+            icon_hash="icon_hash",
+            members={},
+            owner_id=snowflakes.Snowflake(456),
+        )
 
-    def test_str_operator(self):
-        team = applications.Team(id=snowflakes.Snowflake(696969), app=mock.Mock(), name="test", icon_hash="", members=[], owner_id=snowflakes.Snowflake(0))
-        assert str(team) == "Team test (696969)"
+    def test_str_operator(self, team: applications.Team):
+        assert str(team) == "Team beanos (123)"
 
-    def test_icon_url_property(self, model: applications.Team):
-        model.make_icon_url = mock.Mock(return_value="url")
+    def test_icon_url_property(self, team: applications.Team):
+        with mock.patch.object(
+            applications.Team, "make_icon_url", mock.Mock(return_value="url")
+        ) as patched_make_icon_url:
+            assert team.icon_url == "url"
 
-        assert model.icon_url == "url"
+            patched_make_icon_url.assert_called_once_with()
 
-        model.make_icon_url.assert_called_once_with()
-
-    def test_make_icon_url_when_hash_is_None(self, model: applications.Team):
-        model.icon_hash = None
+    def test_make_icon_url_when_hash_is_None(self, team: applications.Team):
+        team.icon_hash = None
 
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(ext="jpeg", size=1) is None
+            assert team.make_icon_url(ext="jpeg", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
-    def test_make_icon_url_when_hash_is_not_None(self, model: applications.Team):
+    def test_make_icon_url_when_hash_is_not_None(self, team: applications.Team):
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(ext="jpeg", size=1) == "file"
+            assert team.make_icon_url(ext="jpeg", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, team_id=123, hash="ahashicon", size=1, file_format="jpeg"
+            urls.CDN_URL, team_id=123, hash="icon_hash", size=1, file_format="jpeg"
         )
 
 
 class TestApplication:
     @pytest.fixture
-    def model(self) -> applications.Application:
-        return hikari_test_helpers.mock_class_namespace(
-            applications.Application,
-            init_=False,
-            slots_=False,
-            id=123,
-            icon_hash="ahashicon",
-            cover_image_hash="ahashcover",
-        )()
+    def application(self) -> applications.Application:
+        return applications.Application(
+            id=snowflakes.Snowflake(123),
+            name="application",
+            description="application_description",
+            icon_hash="icon_hash",
+            app=mock.Mock(traits.RESTAware),
+            is_bot_public=True,
+            is_bot_code_grant_required=False,
+            owner=mock.Mock(),
+            rpc_origins=[],
+            flags=applications.ApplicationFlags.EMBEDDED,
+            public_key=b"application",
+            team=mock.Mock(),
+            cover_image_hash="cover_image_hash",
+            terms_of_service_url="terms_of_service_url",
+            privacy_policy_url="privacy_policy_url",
+            role_connections_verification_url="role_connections_verification_url",
+            custom_install_url="custom_install_url",
+            tags=[],
+            install_parameters=mock.Mock(),
+            approximate_guild_count=1,
+        )
 
-    def test_cover_image_url_property(self, model: applications.Application):
-        model.make_cover_image_url = mock.Mock(return_value="url")
-
-        assert model.cover_image_url == "url"
-
-        model.make_cover_image_url.assert_called_once_with()
-
-    def test_make_cover_image_url_when_hash_is_None(self, model: applications.Application):
-        model.cover_image_hash = None
-
+    def test_cover_image_url_property(self, application: applications.Application):
         with mock.patch.object(
-            routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
-        ) as route:
-            assert model.make_cover_image_url(ext="jpeg", size=1) is None
+            applications.Application, "make_cover_image_url", mock.Mock(return_value="url")
+        ) as patched_make_cover_image_url:
+            assert application.cover_image_url == "url"
 
-        route.compile_to_file.assert_not_called()
+            patched_make_cover_image_url.assert_called_once_with()
 
-    def test_make_cover_image_url_when_hash_is_not_None(self, model: applications.Application):
-        with mock.patch.object(
-            routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
-        ) as route:
-            assert model.make_cover_image_url(ext="jpeg", size=1) == "file"
+    def test_make_cover_image_url_when_hash_is_None(self, application: applications.Application):
+        application.cover_image_hash = None
 
-        route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
+        with (
+            mock.patch.object(routes, "CDN_APPLICATION_COVER") as patched_route,
+            mock.patch.object(
+                patched_route, "compile_to_file", mock.Mock(return_value="file")
+            ) as patched_compile_to_file,
+        ):
+            assert application.make_cover_image_url(ext="jpeg", size=1) is None
+
+        patched_compile_to_file.assert_not_called()
+
+    def test_make_cover_image_url_when_hash_is_not_None(self, application: applications.Application):
+        with (
+            mock.patch.object(routes, "CDN_APPLICATION_COVER") as patched_route,
+            mock.patch.object(
+                patched_route, "compile_to_file", mock.Mock(return_value="file")
+            ) as patched_compile_to_file,
+        ):
+            assert application.make_cover_image_url(ext="jpeg", size=1) == "file"
+
+        patched_compile_to_file.assert_called_once_with(
+            urls.CDN_URL, application_id=123, hash="cover_image_hash", size=1, file_format="jpeg"
         )
-
-    @pytest.mark.asyncio
-    async def test_fetch_guild(self, model: applications.Application):
-        model.guild_id = 1234
-        model.fetch_guild = mock.AsyncMock()
-
-        model.fetch_guild.return_value.id = model.guild_id
-        assert (await model.fetch_guild()).id == model.guild_id
-
-        model.fetch_guild.side_effect = UnauthorizedError(
-            "blah blah", "interesting", "foo bar", "this is an error", 403
-        )
-        with pytest.raises(UnauthorizedError):
-            await model.fetch_guild()
-
-    @pytest.mark.asyncio
-    async def test_fetch_guild_preview(self, model: applications.Application):
-        model.fetch_guild_preview = mock.AsyncMock()
-
-        model.fetch_guild_preview.return_value.description = "poggers"
-        assert (await model.fetch_guild_preview()).description == "poggers"
-
-        model.fetch_guild_preview.side_effect = ForbiddenError(
-            "blah blah", "interesting", "foo bar", "this is an error", 403
-        )
-        with pytest.raises(ForbiddenError):
-            await model.fetch_guild_preview()
 
 
 class TestPartialOAuth2Token:

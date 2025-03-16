@@ -40,9 +40,10 @@ class TestEmbedResource:
     def test_stream(self, resource: embeds.EmbedResource):
         mock_executor = mock.Mock()
 
-        assert resource.stream(executor=mock_executor, head_only=True) is resource.resource.stream.return_value
+        with mock.patch.object(resource.resource, "stream") as patched_stream:
+            assert resource.stream(executor=mock_executor, head_only=True) is patched_stream.return_value
 
-        resource.resource.stream.assert_called_once_with(executor=mock_executor, head_only=True)
+            patched_stream.assert_called_once_with(executor=mock_executor, head_only=True)
 
 
 class TestEmbedResourceWithProxy:
@@ -51,6 +52,7 @@ class TestEmbedResourceWithProxy:
         return embeds.EmbedResourceWithProxy(resource=mock.Mock(), proxy_resource=mock.Mock())
 
     def test_proxy_url(self, resource_with_proxy: embeds.EmbedResourceWithProxy):
+        assert resource_with_proxy.proxy_resource is not None
         assert resource_with_proxy.proxy_url is resource_with_proxy.proxy_resource.url
 
     def test_proxy_url_when_resource_is_none(self, resource_with_proxy: embeds.EmbedResourceWithProxy):
@@ -58,6 +60,7 @@ class TestEmbedResourceWithProxy:
         assert resource_with_proxy.proxy_url is None
 
     def test_proxy_filename(self, resource_with_proxy: embeds.EmbedResourceWithProxy):
+        assert resource_with_proxy.proxy_resource is not None
         assert resource_with_proxy.proxy_filename is resource_with_proxy.proxy_resource.filename
 
     def test_proxy_filename_when_resource_is_none(self, resource_with_proxy: embeds.EmbedResourceWithProxy):

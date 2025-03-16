@@ -68,7 +68,7 @@ def permission_overwrite_payload() -> typing.Mapping[str, typing.Any]:
 
 @pytest.fixture
 def guild_text_channel_payload(
-    permission_overwrite_payload: typing.Mapping[str, typing.Any],
+    permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
 ) -> typing.Mapping[str, typing.Any]:
     return {
         "id": "123",
@@ -89,7 +89,7 @@ def guild_text_channel_payload(
 
 @pytest.fixture
 def guild_voice_channel_payload(
-    permission_overwrite_payload: typing.Mapping[str, typing.Any],
+    permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
 ) -> typing.Mapping[str, typing.Any]:
     return {
         "id": "555",
@@ -110,7 +110,7 @@ def guild_voice_channel_payload(
 
 @pytest.fixture
 def guild_news_channel_payload(
-    permission_overwrite_payload: typing.Mapping[str, typing.Any],
+    permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
 ) -> typing.Mapping[str, typing.Any]:
     return {
         "id": "7777",
@@ -142,7 +142,7 @@ def thread_member_payload() -> typing.Mapping[str, typing.Any]:
 
 @pytest.fixture
 def guild_news_thread_payload(
-    thread_member_payload: typing.Mapping[str, typing.Any],
+    thread_member_payload: typing.MutableMapping[str, typing.Any],
 ) -> typing.Mapping[str, typing.Any]:
     return {
         "id": "946900871160164393",
@@ -169,7 +169,7 @@ def guild_news_thread_payload(
 
 @pytest.fixture
 def guild_public_thread_payload(
-    thread_member_payload: typing.Mapping[str, typing.Any],
+    thread_member_payload: typing.MutableMapping[str, typing.Any],
 ) -> typing.Mapping[str, typing.Any]:
     return {
         "id": "947643783913308301",
@@ -197,7 +197,7 @@ def guild_public_thread_payload(
 
 @pytest.fixture
 def guild_private_thread_payload(
-    thread_member_payload: typing.Mapping[str, typing.Any],
+    thread_member_payload: typing.MutableMapping[str, typing.Any],
 ) -> typing.Mapping[str, typing.Any]:
     return {
         "id": "947690637610844210",
@@ -244,7 +244,7 @@ def custom_emoji_payload() -> typing.Mapping[str, typing.Any]:
 
 
 @pytest.fixture
-def known_custom_emoji_payload(user_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+def known_custom_emoji_payload(user_payload: typing.MutableMapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
     return {
         "id": "12345",
         "name": "testing",
@@ -258,7 +258,7 @@ def known_custom_emoji_payload(user_payload: typing.Mapping[str, typing.Any]) ->
 
 
 @pytest.fixture
-def member_payload(user_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+def member_payload(user_payload: typing.MutableMapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
     return {
         "nick": "foobarbaz",
         "roles": ["11111", "22222", "33333", "44444"],
@@ -274,7 +274,9 @@ def member_payload(user_payload: typing.Mapping[str, typing.Any]) -> typing.Mapp
 
 
 @pytest.fixture
-def presence_activity_payload(custom_emoji_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+def presence_activity_payload(
+    custom_emoji_payload: typing.MutableMapping[str, typing.Any],
+) -> typing.Mapping[str, typing.Any]:
     return {
         "name": "an activity",
         "type": 1,
@@ -301,7 +303,8 @@ def presence_activity_payload(custom_emoji_payload: typing.Mapping[str, typing.A
 
 @pytest.fixture
 def member_presence_payload(
-    user_payload: typing.Mapping[str, typing.Any], presence_activity_payload: typing.Mapping[str, typing.Any]
+    user_payload: typing.MutableMapping[str, typing.Any],
+    presence_activity_payload: typing.MutableMapping[str, typing.Any],
 ) -> typing.Mapping[str, typing.Any]:
     return {
         "user": user_payload,
@@ -338,7 +341,7 @@ def guild_role_payload() -> typing.Mapping[str, typing.Any]:
 
 
 @pytest.fixture
-def voice_state_payload(member_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+def voice_state_payload(member_payload: typing.MutableMapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
     return {
         "guild_id": "929292929292992",
         "channel_id": "157733188964188161",
@@ -411,9 +414,9 @@ class TestGatewayGuildDefinition:
     def test_channels(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_text_channel_payload: typing.Mapping[str, typing.Any],
-        guild_voice_channel_payload: typing.Mapping[str, typing.Any],
-        guild_news_channel_payload: typing.Mapping[str, typing.Any],
+        guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_voice_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_channel_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {
@@ -440,16 +443,17 @@ class TestGatewayGuildDefinition:
             {"id": "265828729970753537"}, user_id=snowflakes.Snowflake(43123)
         )
         mock_channel = mock.Mock()
-        guild_definition._channels = {"123321": mock_channel}
-        entity_factory_impl.deserialize_guild_text_channel = mock.Mock()
-        entity_factory_impl.deserialize_guild_voice_channel = mock.Mock()
-        entity_factory_impl.deserialize_guild_news_channel = mock.Mock()
 
-        assert guild_definition.channels() == {"123321": mock_channel}
+        with mock.patch.object(guild_definition, "_channels", {"123321": mock_channel}):
+            entity_factory_impl.deserialize_guild_text_channel = mock.Mock()
+            entity_factory_impl.deserialize_guild_voice_channel = mock.Mock()
+            entity_factory_impl.deserialize_guild_news_channel = mock.Mock()
 
-        entity_factory_impl.deserialize_guild_text_channel.assert_not_called()
-        entity_factory_impl.deserialize_guild_voice_channel.assert_not_called()
-        entity_factory_impl.deserialize_guild_news_channel.assert_not_called()
+            assert guild_definition.channels() == {"123321": mock_channel}
+
+            entity_factory_impl.deserialize_guild_text_channel.assert_not_called()
+            entity_factory_impl.deserialize_guild_voice_channel.assert_not_called()
+            entity_factory_impl.deserialize_guild_news_channel.assert_not_called()
 
     def test_channels_ignores_unrecognised_channels(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
@@ -461,7 +465,7 @@ class TestGatewayGuildDefinition:
     def test_emojis(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        known_custom_emoji_payload: typing.Mapping[str, typing.Any],
+        known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537", "emojis": [known_custom_emoji_payload]}, user_id=snowflakes.Snowflake(43123)
@@ -479,11 +483,11 @@ class TestGatewayGuildDefinition:
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537"}, user_id=snowflakes.Snowflake(43123)
         )
-        guild_definition._emojis = {"21323232": mock_emoji}
 
-        assert guild_definition.emojis() == {"21323232": mock_emoji}
+        with mock.patch.object(guild_definition, "_emojis", {"21323232": mock_emoji}):
+            assert guild_definition.emojis() == {"21323232": mock_emoji}
 
-        entity_factory_impl.deserialize_known_custom_emoji.assert_not_called()
+            entity_factory_impl.deserialize_known_custom_emoji.assert_not_called()
 
     def test_guild(self, entity_factory_impl: entity_factory.EntityFactoryImpl, mock_app: traits.RESTAware):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
@@ -674,18 +678,21 @@ class TestGatewayGuildDefinition:
 
     def test_guild_returns_cached_values(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
         mock_guild = mock.Mock()
+
         entity_factory_impl.set_guild_attributes = mock.Mock()
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "9393939"}, user_id=snowflakes.Snowflake(43123)
         )
-        guild_definition._guild = mock_guild
 
-        assert guild_definition.guild() is mock_guild
+        with mock.patch.object(guild_definition, "_guild", mock_guild):
+            assert guild_definition.guild() is mock_guild
 
         entity_factory_impl.set_guild_attributes.assert_not_called()
 
     def test_members(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, member_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        member_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537", "members": [member_payload]}, user_id=snowflakes.Snowflake(43123)
@@ -703,16 +710,15 @@ class TestGatewayGuildDefinition:
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "92929292"}, user_id=snowflakes.Snowflake(43123)
         )
-        guild_definition._members = {"93939393": mock_member}
 
-        assert guild_definition.members() == {"93939393": mock_member}
-
-        entity_factory_impl.deserialize_member.assert_not_called()
+        with mock.patch.object(guild_definition, "_members", {"93939393": mock_member}):
+            assert guild_definition.members() == {"93939393": mock_member}
+            entity_factory_impl.deserialize_member.assert_not_called()
 
     def test_presences(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        member_presence_payload: typing.Mapping[str, typing.Any],
+        member_presence_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537", "presences": [member_presence_payload]}, user_id=snowflakes.Snowflake(43123)
@@ -730,14 +736,16 @@ class TestGatewayGuildDefinition:
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "29292992"}, user_id=snowflakes.Snowflake(43123)
         )
-        guild_definition._presences = {"3939393993": mock_presence}
 
-        assert guild_definition.presences() == {"3939393993": mock_presence}
+        with mock.patch.object(guild_definition, "_presences", {"3939393993": mock_presence}):
+            assert guild_definition.presences() == {"3939393993": mock_presence}
 
-        entity_factory_impl.deserialize_member_presence.assert_not_called()
+            entity_factory_impl.deserialize_member_presence.assert_not_called()
 
     def test_roles(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_role_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537", "roles": [guild_role_payload]}, user_id=snowflakes.Snowflake(43123)
@@ -755,18 +763,18 @@ class TestGatewayGuildDefinition:
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "9292929"}, user_id=snowflakes.Snowflake(43123)
         )
-        guild_definition._roles = {"32132123123": mock_role}
 
-        assert guild_definition.roles() == {"32132123123": mock_role}
+        with mock.patch.object(guild_definition, "_roles", {"32132123123": mock_role}):
+            assert guild_definition.roles() == {"32132123123": mock_role}
 
-        entity_factory_impl.deserialize_role.assert_not_called()
+            entity_factory_impl.deserialize_role.assert_not_called()
 
     def test_threads(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {
@@ -800,11 +808,10 @@ class TestGatewayGuildDefinition:
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "92929292"}, user_id=snowflakes.Snowflake(43123)
         )
-        guild_definition._threads = {54312312: mock_thread}
 
-        assert guild_definition.threads() == {54312312: mock_thread}
-
-        entity_factory_impl.deserialize_guild_thread.assert_not_called()
+        with mock.patch.object(guild_definition, "_threads", {54312312: mock_thread}):
+            assert guild_definition.threads() == {54312312: mock_thread}
+            entity_factory_impl.deserialize_guild_thread.assert_not_called()
 
     def test_threads_when_no_threads_field(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
         entity_factory_impl.deserialize_guild_thread = mock.Mock()
@@ -836,8 +843,8 @@ class TestGatewayGuildDefinition:
     def test_voice_states(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        member_payload: typing.Mapping[str, typing.Any],
-        voice_state_payload: typing.Mapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        voice_state_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537", "voice_states": [voice_state_payload], "members": [member_payload]},
@@ -875,7 +882,7 @@ class TestEntityFactoryImpl:
     ######################
 
     @pytest.fixture
-    def partial_integration(self) -> typing.Mapping[str, typing.Any]:
+    def partial_integration(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "123123123123123",
             "name": "A Name",
@@ -885,8 +892,8 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def own_connection_payload(
-        self, partial_integration: typing.Mapping[str, typing.Any]
-    ) -> typing.Mapping[str, typing.Any]:
+        self, partial_integration: typing.MutableMapping[str, typing.Any]
+    ) -> typing.MutableMapping[str, typing.Any]:
         return {
             "friend_sync": False,
             "id": "2513849648abc",
@@ -902,8 +909,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_own_connection(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        own_connection_payload: typing.Mapping[str, typing.Any],
-        partial_integration: typing.Mapping[str, typing.Any],
+        own_connection_payload: typing.MutableMapping[str, typing.Any],
+        partial_integration: typing.MutableMapping[str, typing.Any],
     ):
         own_connection = entity_factory_impl.deserialize_own_connection(own_connection_payload)
         assert own_connection.id == "2513849648abc"
@@ -920,7 +927,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_own_connection_with_nullable_and_optional_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        own_connection_payload: typing.Mapping[str, typing.Any],
+        own_connection_payload: typing.MutableMapping[str, typing.Any],
     ):
         del own_connection_payload["integrations"]
         del own_connection_payload["revoked"]
@@ -937,7 +944,7 @@ class TestEntityFactoryImpl:
         assert isinstance(own_connection, application_models.OwnConnection)
 
     @pytest.fixture
-    def own_guild_payload(self) -> typing.Mapping[str, typing.Any]:
+    def own_guild_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "152559372126519269",
             "name": "Isopropyl",
@@ -953,7 +960,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        own_guild_payload: typing.Mapping[str, typing.Any],
+        own_guild_payload: typing.MutableMapping[str, typing.Any],
     ):
         own_guild = entity_factory_impl.deserialize_own_guild(own_guild_payload)
 
@@ -984,7 +991,7 @@ class TestEntityFactoryImpl:
         assert own_guild.icon_hash is None
 
     @pytest.fixture
-    def role_connection_payload(self) -> typing.Mapping[str, typing.Any]:
+    def role_connection_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "platform_name": "Muck",
             "platform_username": "Muck Muck Muck",
@@ -994,7 +1001,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_own_application_role_connection(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        role_connection_payload: typing.Mapping[str, typing.Any],
+        role_connection_payload: typing.MutableMapping[str, typing.Any],
     ):
         role_connection = entity_factory_impl.deserialize_own_application_role_connection(role_connection_payload)
 
@@ -1004,12 +1011,14 @@ class TestEntityFactoryImpl:
         assert isinstance(role_connection, application_models.OwnApplicationRoleConnection)
 
     @pytest.fixture
-    def owner_payload(self, user_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+    def owner_payload(self, user_payload: typing.MutableMapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
         return {**user_payload, "flags": 1 << 10}
 
     @pytest.fixture
     def application_payload(
-        self, owner_payload: typing.Mapping[str, typing.Any], user_payload: typing.Mapping[str, typing.Any]
+        self,
+        owner_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "209333111222",
@@ -1045,9 +1054,9 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        application_payload: typing.Mapping[str, typing.Any],
-        owner_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        application_payload: typing.MutableMapping[str, typing.Any],
+        owner_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         application = entity_factory_impl.deserialize_application(application_payload)
 
@@ -1072,6 +1081,7 @@ class TestEntityFactoryImpl:
         assert application.icon_hash == "iwiwiwiwiw"
         assert application.approximate_guild_count == 10000
         # Install Parameters
+        assert application.install_parameters is not None
         assert application.install_parameters.scopes == [
             application_models.OAuth2Scope.BOT,
             application_models.OAuth2Scope.APPLICATIONS_COMMANDS,
@@ -1079,6 +1089,7 @@ class TestEntityFactoryImpl:
         assert application.install_parameters.permissions == permission_models.Permissions.ADMINISTRATOR
         assert isinstance(application.install_parameters, application_models.ApplicationInstallParameters)
         # Team
+        assert application.team is not None
         assert application.team.id == 202020202
         assert application.team.name == "Hikari Development"
         assert application.team.icon_hash == "hashtag"
@@ -1100,7 +1111,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        owner_payload: typing.Mapping[str, typing.Any],
+        owner_payload: typing.MutableMapping[str, typing.Any],
     ):
         application = entity_factory_impl.deserialize_application(
             {
@@ -1128,7 +1139,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        owner_payload: typing.Mapping[str, typing.Any],
+        owner_payload: typing.MutableMapping[str, typing.Any],
     ):
         application = entity_factory_impl.deserialize_application(
             {
@@ -1158,7 +1169,7 @@ class TestEntityFactoryImpl:
         assert application.tags == []
 
     @pytest.fixture
-    def invite_application_payload(self) -> typing.Mapping[str, typing.Any]:
+    def invite_application_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "773336526917861400",
             "name": "Betrayal.io",
@@ -1170,8 +1181,8 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def authorization_information_payload(
-        self, user_payload: typing.Mapping[str, typing.Any]
-    ) -> typing.Mapping[str, typing.Any]:
+        self, user_payload: typing.MutableMapping[str, typing.Any]
+    ) -> typing.MutableMapping[str, typing.Any]:
         return {
             "application": {
                 "id": "4123123123123",
@@ -1193,8 +1204,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_authorization_information(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        authorization_information_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        authorization_information_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         authorization_information = entity_factory_impl.deserialize_authorization_information(
             authorization_information_payload
@@ -1221,7 +1232,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_authorization_information_with_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        authorization_information_payload: typing.Mapping[str, typing.Any],
+        authorization_information_payload: typing.MutableMapping[str, typing.Any],
     ):
         del authorization_information_payload["application"]["icon"]
         del authorization_information_payload["application"]["bot_public"]
@@ -1241,7 +1252,7 @@ class TestEntityFactoryImpl:
         assert authorization_information.application.privacy_policy_url is None
 
     @pytest.fixture
-    def application_connection_metadata_record_payload(self) -> typing.Mapping[str, typing.Any]:
+    def application_connection_metadata_record_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "type": 7,
             "key": "developer_value",
@@ -1257,7 +1268,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_application_connection_metadata_record(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        application_connection_metadata_record_payload: typing.Mapping[str, typing.Any],
+        application_connection_metadata_record_payload: typing.MutableMapping[str, typing.Any],
     ):
         record = entity_factory_impl.deserialize_application_connection_metadata_record(
             application_connection_metadata_record_payload
@@ -1276,7 +1287,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_application_connection_metadata_record_with_missing_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        application_connection_metadata_record_payload: typing.Mapping[str, typing.Any],
+        application_connection_metadata_record_payload: typing.MutableMapping[str, typing.Any],
     ):
         del application_connection_metadata_record_payload["name_localizations"]
         del application_connection_metadata_record_payload["description_localizations"]
@@ -1312,7 +1323,7 @@ class TestEntityFactoryImpl:
         assert entity_factory_impl.serialize_application_connection_metadata_record(record) == expected_result
 
     @pytest.fixture
-    def client_credentials_payload(self) -> typing.Mapping[str, typing.Any]:
+    def client_credentials_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "access_token": "6qrZcUqja7812RVdnEKjpzOL4CvHBFG",
             "token_type": "Bearer",
@@ -1323,7 +1334,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_token(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        client_credentials_payload: typing.Mapping[str, typing.Any],
+        client_credentials_payload: typing.MutableMapping[str, typing.Any],
     ):
         partial_token = entity_factory_impl.deserialize_partial_token(client_credentials_payload)
 
@@ -1339,8 +1350,8 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def access_token_payload(
         self,
-        rest_guild_payload: typing.Mapping[str, typing.Any],
-        incoming_webhook_payload: typing.Mapping[str, typing.Any],
+        rest_guild_payload: typing.MutableMapping[str, typing.Any],
+        incoming_webhook_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "token_type": "Bearer",
@@ -1355,9 +1366,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_authorization_token(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        access_token_payload: typing.Mapping[str, typing.Any],
-        rest_guild_payload: typing.Mapping[str, typing.Any],
-        incoming_webhook_payload: typing.Mapping[str, typing.Any],
+        access_token_payload: typing.MutableMapping[str, typing.Any],
+        rest_guild_payload: typing.MutableMapping[str, typing.Any],
+        incoming_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         access_token = entity_factory_impl.deserialize_authorization_token(access_token_payload)
 
@@ -1375,7 +1386,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_authorization_token_without_optional_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        access_token_payload: typing.Mapping[str, typing.Any],
+        access_token_payload: typing.MutableMapping[str, typing.Any],
     ):
         del access_token_payload["guild"]
         del access_token_payload["webhook"]
@@ -1386,7 +1397,7 @@ class TestEntityFactoryImpl:
         assert access_token.webhook is None
 
     @pytest.fixture
-    def implicit_token_payload(self) -> typing.Mapping[str, typing.Any]:
+    def implicit_token_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "access_token": "RTfP0OK99U3kbRtHOoKLmJbOn45PjL",
             "token_type": "Basic",
@@ -1396,9 +1407,7 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_implicit_token(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        implicit_token_payload: typing.Mapping[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, implicit_token_payload: dict[str, str]
     ):
         implicit_token = entity_factory_impl.deserialize_implicit_token(implicit_token_payload)
 
@@ -1410,9 +1419,7 @@ class TestEntityFactoryImpl:
         assert isinstance(implicit_token, application_models.OAuth2ImplicitToken)
 
     def test_deserialize_implicit_token_without_state(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        implicit_token_payload: typing.Mapping[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, implicit_token_payload: dict[str, str]
     ):
         del implicit_token_payload["state"]
 
@@ -1449,13 +1456,13 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def overwrite_info_payload(self) -> typing.Mapping[str, typing.Any]:
+    def overwrite_info_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"id": "123123123", "type": 0, "role_name": "aRole"}
 
     def test__deserialize_channel_overwrite_entry_info(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        overwrite_info_payload: typing.Mapping[str, typing.Any],
+        overwrite_info_payload: typing.MutableMapping[str, typing.Any],
     ):
         overwrite_entry_info = entity_factory_impl._deserialize_channel_overwrite_entry_info(overwrite_info_payload)
         assert overwrite_entry_info.id == 123123123
@@ -1464,13 +1471,13 @@ class TestEntityFactoryImpl:
         assert isinstance(overwrite_entry_info, audit_log_models.ChannelOverwriteEntryInfo)
 
     @pytest.fixture
-    def message_pin_info_payload(self) -> typing.Mapping[str, typing.Any]:
+    def message_pin_info_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"channel_id": "123123123", "message_id": "69696969"}
 
     def test__deserialize_message_pin_entry_info(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        message_pin_info_payload: typing.Mapping[str, typing.Any],
+        message_pin_info_payload: typing.MutableMapping[str, typing.Any],
     ):
         message_pin_info = entity_factory_impl._deserialize_message_pin_entry_info(message_pin_info_payload)
         assert message_pin_info.channel_id == 123123123
@@ -1478,13 +1485,13 @@ class TestEntityFactoryImpl:
         assert isinstance(message_pin_info, audit_log_models.MessagePinEntryInfo)
 
     @pytest.fixture
-    def member_prune_info_payload(self) -> typing.Mapping[str, typing.Any]:
+    def member_prune_info_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"delete_member_days": "7", "members_removed": "1"}
 
     def test__deserialize_member_prune_entry_info(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        member_prune_info_payload: typing.Mapping[str, typing.Any],
+        member_prune_info_payload: typing.MutableMapping[str, typing.Any],
     ):
         member_prune_info = entity_factory_impl._deserialize_member_prune_entry_info(member_prune_info_payload)
         assert member_prune_info.delete_member_days == datetime.timedelta(days=7)
@@ -1492,13 +1499,13 @@ class TestEntityFactoryImpl:
         assert isinstance(member_prune_info, audit_log_models.MemberPruneEntryInfo)
 
     @pytest.fixture
-    def message_bulk_delete_info_payload(self) -> typing.Mapping[str, typing.Any]:
+    def message_bulk_delete_info_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"count": "42"}
 
     def test__deserialize_message_bulk_delete_entry_info(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        message_bulk_delete_info_payload: typing.Mapping[str, typing.Any],
+        message_bulk_delete_info_payload: typing.MutableMapping[str, typing.Any],
     ):
         message_bulk_delete_entry_info = entity_factory_impl._deserialize_message_bulk_delete_entry_info(
             message_bulk_delete_info_payload
@@ -1507,13 +1514,13 @@ class TestEntityFactoryImpl:
         assert isinstance(message_bulk_delete_entry_info, audit_log_models.MessageBulkDeleteEntryInfo)
 
     @pytest.fixture
-    def message_delete_info_payload(self) -> typing.Mapping[str, typing.Any]:
+    def message_delete_info_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"count": "42", "channel_id": "4206942069"}
 
     def test__deserialize_message_delete_entry_info(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        message_delete_info_payload: typing.Mapping[str, typing.Any],
+        message_delete_info_payload: typing.MutableMapping[str, typing.Any],
     ):
         message_delete_entry_info = entity_factory_impl._deserialize_message_delete_entry_info(
             message_delete_info_payload
@@ -1523,13 +1530,13 @@ class TestEntityFactoryImpl:
         assert isinstance(message_delete_entry_info, audit_log_models.MessageDeleteEntryInfo)
 
     @pytest.fixture
-    def member_disconnect_info_payload(self) -> typing.Mapping[str, typing.Any]:
+    def member_disconnect_info_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"count": "42"}
 
     def test__deserialize_member_disconnect_entry_info(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        member_disconnect_info_payload: typing.Mapping[str, typing.Any],
+        member_disconnect_info_payload: typing.MutableMapping[str, typing.Any],
     ):
         member_disconnect_entry_info = entity_factory_impl._deserialize_member_disconnect_entry_info(
             member_disconnect_info_payload
@@ -1538,20 +1545,20 @@ class TestEntityFactoryImpl:
         assert isinstance(member_disconnect_entry_info, audit_log_models.MemberDisconnectEntryInfo)
 
     @pytest.fixture
-    def member_move_info_payload(self) -> typing.Mapping[str, typing.Any]:
+    def member_move_info_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"count": "42", "channel_id": "22222222"}
 
     def test__deserialize_member_move_entry_info(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        member_move_info_payload: typing.Mapping[str, typing.Any],
+        member_move_info_payload: typing.MutableMapping[str, typing.Any],
     ):
         member_move_entry_info = entity_factory_impl._deserialize_member_move_entry_info(member_move_info_payload)
         assert member_move_entry_info.channel_id == 22222222
         assert isinstance(member_move_entry_info, audit_log_models.MemberMoveEntryInfo)
 
     @pytest.fixture
-    def audit_log_entry_payload(self) -> typing.Mapping[str, typing.Any]:
+    def audit_log_entry_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "action_type": 14,
             "changes": [
@@ -1569,13 +1576,13 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def partial_integration_payload(self) -> typing.Mapping[str, typing.Any]:
+    def partial_integration_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"id": "4949494949", "name": "Blah blah", "type": "twitch", "account": {"id": "543453", "name": "Blam"}}
 
     def test_deserialize_audit_log_entry(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        audit_log_entry_payload: typing.Mapping[str, typing.Any],
+        audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
         mock_app: traits.RESTAware,
     ):
         entry = entity_factory_impl.deserialize_audit_log_entry(
@@ -1612,7 +1619,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_audit_log_entry_when_guild_id_in_payload(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        audit_log_entry_payload: typing.Mapping[str, typing.Any],
+        audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
         mock_app: traits.RESTAware,
     ):
         audit_log_entry_payload["guild_id"] = 431123123
@@ -1624,7 +1631,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_audit_log_entry_with_unset_or_unknown_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        audit_log_entry_payload: typing.Mapping[str, typing.Any],
+        audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
     ):
         # Unset fields
         audit_log_entry_payload["changes"] = None
@@ -1648,7 +1655,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_audit_log_entry_with_unhandled_change_key(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        audit_log_entry_payload: typing.Mapping[str, typing.Any],
+        audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
     ):
         # Unset fields
         audit_log_entry_payload["changes"][0]["key"] = "name"
@@ -1666,7 +1673,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_audit_log_entry_with_change_key_unknown(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        audit_log_entry_payload: typing.Mapping[str, typing.Any],
+        audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
     ):
         # Unset fields
         audit_log_entry_payload["changes"][0]["key"] = "unknown"
@@ -1684,7 +1691,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_audit_log_entry_for_unknown_action_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        audit_log_entry_payload: typing.Mapping[str, typing.Any],
+        audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
     ):
         # Unset fields
         audit_log_entry_payload["action_type"] = 1000
@@ -1698,15 +1705,15 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def audit_log_payload(
         self,
-        audit_log_entry_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        incoming_webhook_payload: typing.Mapping[str, typing.Any],
-        application_webhook_payload: typing.Mapping[str, typing.Any],
-        follower_webhook_payload: typing.Mapping[str, typing.Any],
-        partial_integration_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
+        audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        incoming_webhook_payload: typing.MutableMapping[str, typing.Any],
+        application_webhook_payload: typing.MutableMapping[str, typing.Any],
+        follower_webhook_payload: typing.MutableMapping[str, typing.Any],
+        partial_integration_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "audit_log_entries": [audit_log_entry_payload],
@@ -1720,16 +1727,16 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        audit_log_payload: typing.Mapping[str, typing.Any],
-        audit_log_entry_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        incoming_webhook_payload: typing.Mapping[str, typing.Any],
-        application_webhook_payload: typing.Mapping[str, typing.Any],
-        follower_webhook_payload: typing.Mapping[str, typing.Any],
-        partial_integration_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
+        audit_log_payload: typing.MutableMapping[str, typing.Any],
+        audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        incoming_webhook_payload: typing.MutableMapping[str, typing.Any],
+        application_webhook_payload: typing.MutableMapping[str, typing.Any],
+        follower_webhook_payload: typing.MutableMapping[str, typing.Any],
+        partial_integration_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload, guild_id=snowflakes.Snowflake(123321))
 
@@ -1755,7 +1762,9 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_audit_log_with_action_type_unknown_gets_ignored(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, audit_log_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        audit_log_payload: typing.MutableMapping[str, typing.Any],
     ):
         # Unset fields
         audit_log_payload["audit_log_entries"][0]["action_type"] = 1000
@@ -1768,8 +1777,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_audit_log_skips_unknown_webhook_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        incoming_webhook_payload: typing.Mapping[str, typing.Any],
-        application_webhook_payload: typing.Mapping[str, typing.Any],
+        incoming_webhook_payload: typing.MutableMapping[str, typing.Any],
+        application_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(
             {
@@ -1790,8 +1799,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_audit_log_skips_unknown_thread_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(
             {
@@ -1848,14 +1857,14 @@ class TestEntityFactoryImpl:
         assert payload == {"id": "123123", "type": int(type), "allow": "42", "deny": "62"}
 
     @pytest.fixture
-    def partial_channel_payload(self) -> typing.Mapping[str, typing.Any]:
+    def partial_channel_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"id": "561884984214814750", "name": "general", "type": 0}
 
     def test_deserialize_partial_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        partial_channel_payload: typing.Mapping[str, typing.Any],
+        partial_channel_payload: typing.MutableMapping[str, typing.Any],
     ):
         partial_channel = entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
         assert partial_channel.app is mock_app
@@ -1868,15 +1877,17 @@ class TestEntityFactoryImpl:
         assert entity_factory_impl.deserialize_partial_channel({"id": "22", "type": 0}).name is None
 
     @pytest.fixture
-    def dm_channel_payload(self, user_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+    def dm_channel_payload(
+        self, user_payload: typing.MutableMapping[str, typing.Any]
+    ) -> typing.Mapping[str, typing.Any]:
         return {"id": "123", "last_message_id": "456", "type": 1, "recipients": [user_payload]}
 
     def test_deserialize_dm_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        dm_channel_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        dm_channel_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         dm_channel = entity_factory_impl.deserialize_dm(dm_channel_payload)
         assert dm_channel.app is mock_app
@@ -1888,7 +1899,9 @@ class TestEntityFactoryImpl:
         assert isinstance(dm_channel, channel_models.DMChannel)
 
     def test_deserialize_dm_channel_with_null_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, user_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         dm_channel = entity_factory_impl.deserialize_dm(
             {"id": "123", "last_message_id": None, "type": 1, "recipients": [user_payload]}
@@ -1896,14 +1909,16 @@ class TestEntityFactoryImpl:
         assert dm_channel.last_message_id is None
 
     def test_deserialize_dm_channel_with_unsetfields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, user_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         dm_channel = entity_factory_impl.deserialize_dm({"id": "123", "type": 1, "recipients": [user_payload]})
         assert dm_channel.last_message_id is None
 
     @pytest.fixture
     def group_dm_channel_payload(
-        self, user_payload: typing.Mapping[str, typing.Any]
+        self, user_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "123",
@@ -1921,8 +1936,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        group_dm_channel_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        group_dm_channel_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         group_dm = entity_factory_impl.deserialize_group_dm(group_dm_channel_payload)
         assert group_dm.app is mock_app
@@ -1937,7 +1952,9 @@ class TestEntityFactoryImpl:
         assert isinstance(group_dm, channel_models.GroupDMChannel)
 
     def test_test_deserialize_group_dm_channel_with_unset_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, user_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         group_dm = entity_factory_impl.deserialize_group_dm(
             {
@@ -1955,7 +1972,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def guild_category_payload(
-        self, permission_overwrite_payload: typing.Mapping[str, typing.Any]
+        self, permission_overwrite_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "123",
@@ -1972,8 +1989,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_category_payload: typing.Mapping[str, typing.Any],
-        permission_overwrite_payload: typing.Mapping[str, typing.Any],
+        guild_category_payload: typing.MutableMapping[str, typing.Any],
+        permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_category = entity_factory_impl.deserialize_guild_category(guild_category_payload)
         assert guild_category.app is mock_app
@@ -1993,7 +2010,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_category_with_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        permission_overwrite_payload: typing.Mapping[str, typing.Any],
+        permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_category = entity_factory_impl.deserialize_guild_category(
             {
@@ -2011,7 +2028,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_category_with_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        permission_overwrite_payload: typing.Mapping[str, typing.Any],
+        permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_category = entity_factory_impl.deserialize_guild_category(
             {
@@ -2031,8 +2048,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_text_channel_payload: typing.Mapping[str, typing.Any],
-        permission_overwrite_payload: typing.Mapping[str, typing.Any],
+        guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
+        permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_text_channel = entity_factory_impl.deserialize_guild_text_channel(guild_text_channel_payload)
         assert guild_text_channel.app is mock_app
@@ -2104,8 +2121,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_news_channel_payload: typing.Mapping[str, typing.Any],
-        permission_overwrite_payload: typing.Mapping[str, typing.Any],
+        guild_news_channel_payload: typing.MutableMapping[str, typing.Any],
+        permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         news_channel = entity_factory_impl.deserialize_guild_news_channel(guild_news_channel_payload)
         assert news_channel.app is mock_app
@@ -2174,8 +2191,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_voice_channel_payload: typing.Mapping[str, typing.Any],
-        permission_overwrite_payload: typing.Mapping[str, typing.Any],
+        guild_voice_channel_payload: typing.MutableMapping[str, typing.Any],
+        permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         voice_channel = entity_factory_impl.deserialize_guild_voice_channel(guild_voice_channel_payload)
         assert voice_channel.id == 555
@@ -2238,7 +2255,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def guild_stage_channel_payload(
-        self, permission_overwrite_payload: typing.Mapping[str, typing.Any]
+        self, permission_overwrite_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "555",
@@ -2259,8 +2276,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_stage_channel_payload: typing.Mapping[str, typing.Any],
-        permission_overwrite_payload: typing.Mapping[str, typing.Any],
+        guild_stage_channel_payload: typing.MutableMapping[str, typing.Any],
+        permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         voice_channel = entity_factory_impl.deserialize_guild_stage_channel(guild_stage_channel_payload)
         assert voice_channel.id == 555
@@ -2324,7 +2341,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def guild_forum_channel_payload(
-        self, permission_overwrite_payload: typing.Mapping[str, typing.Any]
+        self, permission_overwrite_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "961367432532987974",
@@ -2360,8 +2377,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_forum_channel_payload: typing.Mapping[str, typing.Any],
-        permission_overwrite_payload: typing.Mapping[str, typing.Any],
+        guild_forum_channel_payload: typing.MutableMapping[str, typing.Any],
+        permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         forum_channel = entity_factory_impl.deserialize_guild_forum_channel(guild_forum_channel_payload)
         assert forum_channel.app is mock_app
@@ -2405,7 +2422,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_forum_channel_with_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_forum_channel_payload: typing.Mapping[str, typing.Any],
+        guild_forum_channel_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_forum_channel_payload["topic"] = None
         guild_forum_channel_payload["parent_id"] = None
@@ -2426,7 +2443,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_forum_channel_with_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_forum_channel_payload: typing.Mapping[str, typing.Any],
+        guild_forum_channel_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_forum_channel_payload["available_tags"]
         del guild_forum_channel_payload["default_reaction_emoji"]
@@ -2469,7 +2486,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_thread_member(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        thread_member_payload: typing.Mapping[str, typing.Any],
+        thread_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         thread_member = entity_factory_impl.deserialize_thread_member(thread_member_payload)
 
@@ -2481,10 +2498,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_thread_member_with_passed_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        thread_member_payload: typing.Mapping[str, typing.Any],
+        thread_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         thread_member = entity_factory_impl.deserialize_thread_member(
-            {"join_timestamp": "2022-02-28T01:49:03.599821+00:00", "flags": 494949}, thread_id=snowflakes.Snowflake(123321), user_id=snowflakes.Snowflake(65132123)
+            {"join_timestamp": "2022-02-28T01:49:03.599821+00:00", "flags": 494949},
+            thread_id=snowflakes.Snowflake(123321),
+            user_id=snowflakes.Snowflake(65132123),
         )
 
         assert thread_member.thread_id == 123321
@@ -2493,9 +2512,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_thread_returns_right_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         for payload, expected_type in [
             (guild_news_thread_payload, channel_models.GuildNewsThread),
@@ -2507,9 +2526,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_thread_returns_right_type_with_passed_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         mock_member = mock.Mock()
         for payload in [guild_news_thread_payload, guild_public_thread_payload, guild_private_thread_payload]:
@@ -2525,9 +2544,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_thread_returns_right_type_with_passed_user_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         for payload in [guild_news_thread_payload, guild_public_thread_payload, guild_private_thread_payload]:
             # These may be sharing the same member payload so we need to copy it first
@@ -2536,6 +2555,7 @@ class TestEntityFactoryImpl:
 
             result = entity_factory_impl.deserialize_guild_thread(payload, user_id=snowflakes.Snowflake(763423454))
 
+            assert result.member is not None
             assert result.member.user_id == 763423454
 
     @pytest.mark.parametrize(
@@ -2558,8 +2578,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
-        thread_member_payload: typing.Mapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
+        thread_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         thread = entity_factory_impl.deserialize_guild_news_thread(guild_news_thread_payload)
 
@@ -2591,7 +2611,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_news_thread_when_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_news_thread_payload["last_message_id"] = None
 
@@ -2602,7 +2622,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_news_thread_when_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_news_thread_payload["last_message_id"]
         del guild_news_thread_payload["guild_id"]
@@ -2621,7 +2641,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_news_thread_when_passed_through_member(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_news_thread_payload["member"]
         mock_member = mock.Mock()
@@ -2633,7 +2653,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_news_thread_when_passed_through_user_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_news_thread_payload["member"]["user_id"]
 
@@ -2641,14 +2661,15 @@ class TestEntityFactoryImpl:
             guild_news_thread_payload, user_id=snowflakes.Snowflake(763423454)
         )
 
+        assert thread.member is not None
         assert thread.member.user_id == 763423454
 
     def test_deserialize_guild_public_thread(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        thread_member_payload: typing.Mapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        thread_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         thread = entity_factory_impl.deserialize_guild_public_thread(guild_public_thread_payload)
 
@@ -2679,7 +2700,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_public_thread_when_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_public_thread_payload["last_message_id"] = None
 
@@ -2690,7 +2711,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_public_thread_when_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_public_thread_payload["last_message_id"]
         del guild_public_thread_payload["guild_id"]
@@ -2713,7 +2734,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_public_thread_when_passed_through_member(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_public_thread_payload["member"]
         mock_member = mock.Mock()
@@ -2725,7 +2746,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_public_thread_when_passed_through_user_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_public_thread_payload["member"]["user_id"]
 
@@ -2733,14 +2754,15 @@ class TestEntityFactoryImpl:
             guild_public_thread_payload, user_id=snowflakes.Snowflake(22123)
         )
 
+        assert thread.member is not None
         assert thread.member.user_id == 22123
 
     def test_deserialize_guild_private_thread(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
-        thread_member_payload: typing.Mapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
+        thread_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         thread = entity_factory_impl.deserialize_guild_private_thread(guild_private_thread_payload)
 
@@ -2772,7 +2794,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_private_thread_when_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_private_thread_payload["last_message_id"] = None
 
@@ -2783,7 +2805,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_private_thread_when_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_private_thread_payload["last_message_id"]
         del guild_private_thread_payload["guild_id"]
@@ -2802,7 +2824,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_private_thread_when_passed_through_member(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_private_thread_payload["member"]
         mock_member = mock.Mock()
@@ -2814,7 +2836,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_private_thread_when_passed_through_user_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_private_thread_payload["member"]["user_id"]
 
@@ -2822,22 +2844,23 @@ class TestEntityFactoryImpl:
             guild_private_thread_payload, user_id=snowflakes.Snowflake(22123)
         )
 
+        assert thread.member is not None
         assert thread.member.user_id == 22123
 
     def test_deserialize_channel_returns_right_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        dm_channel_payload: typing.Mapping[str, typing.Any],
-        group_dm_channel_payload: typing.Mapping[str, typing.Any],
-        guild_category_payload: typing.Mapping[str, typing.Any],
-        guild_text_channel_payload: typing.Mapping[str, typing.Any],
-        guild_news_channel_payload: typing.Mapping[str, typing.Any],
-        guild_voice_channel_payload: typing.Mapping[str, typing.Any],
-        guild_stage_channel_payload: typing.Mapping[str, typing.Any],
-        guild_forum_channel_payload: typing.Mapping[str, typing.Any],
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        dm_channel_payload: typing.MutableMapping[str, typing.Any],
+        group_dm_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_category_payload: typing.MutableMapping[str, typing.Any],
+        guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_voice_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_stage_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_forum_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         for payload, expected_type in [
             (dm_channel_payload, channel_models.DMChannel),
@@ -2857,14 +2880,14 @@ class TestEntityFactoryImpl:
     def test_deserialize_channel_when_passed_guild_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_category_payload: typing.Mapping[str, typing.Any],
-        guild_text_channel_payload: typing.Mapping[str, typing.Any],
-        guild_news_channel_payload: typing.Mapping[str, typing.Any],
-        guild_voice_channel_payload: typing.Mapping[str, typing.Any],
-        guild_stage_channel_payload: typing.Mapping[str, typing.Any],
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
+        guild_category_payload: typing.MutableMapping[str, typing.Any],
+        guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_voice_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_stage_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
     ):
         for payload in [
             guild_category_payload,
@@ -2905,7 +2928,10 @@ class TestEntityFactoryImpl:
             # are the ones we mock
             entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
 
-            assert entity_factory_impl.deserialize_channel(payload, guild_id=snowflakes.Snowflake(123)) is expected_fn.return_value
+            assert (
+                entity_factory_impl.deserialize_channel(payload, guild_id=snowflakes.Snowflake(123))
+                is expected_fn.return_value
+            )
 
         expected_fn.assert_called_once_with(payload, guild_id=123)
 
@@ -2918,7 +2944,10 @@ class TestEntityFactoryImpl:
             # are the ones we mock
             entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
 
-            assert entity_factory_impl.deserialize_channel(payload, guild_id=snowflakes.Snowflake(123123123)) is expected_fn.return_value
+            assert (
+                entity_factory_impl.deserialize_channel(payload, guild_id=snowflakes.Snowflake(123123123))
+                is expected_fn.return_value
+            )
 
         expected_fn.assert_called_once_with(payload)
 
@@ -2931,7 +2960,7 @@ class TestEntityFactoryImpl:
     ################
 
     @pytest.fixture
-    def embed_payload(self) -> typing.Mapping[str, typing.Any]:
+    def embed_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "title": "embed title",
             "description": "embed description",
@@ -2972,7 +3001,9 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_embed_with_full_embed(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, embed_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        embed_payload: typing.MutableMapping[str, typing.Any],
     ):
         embed = entity_factory_impl.deserialize_embed(embed_payload)
         assert embed.title == "embed title"
@@ -2982,36 +3013,49 @@ class TestEntityFactoryImpl:
         assert embed.color == color_models.Color(14014915)
         assert isinstance(embed.color, color_models.Color)
         # EmbedFooter
+        assert embed.footer is not None
         assert embed.footer.text == "footer text"
+        assert embed.footer.icon is not None
         assert embed.footer.icon.resource.url == "https://somewhere.com/footer.png"
+        assert embed.footer.icon.proxy_resource is not None
         assert embed.footer.icon.proxy_resource.url == "https://media.somewhere.com/footer.png"
         assert isinstance(embed.footer, embed_models.EmbedFooter)
         # EmbedImage
+        assert embed.image is not None
         assert embed.image.resource.url == "https://somewhere.com/image.png"
+        assert embed.image.proxy_resource is not None
         assert embed.image.proxy_resource.url == "https://media.somewhere.com/image.png"
         assert embed.image.height == 122
         assert embed.image.width == 133
         assert isinstance(embed.image, embed_models.EmbedImage)
         # EmbedThumbnail
+        assert embed.thumbnail is not None
         assert embed.thumbnail.resource.url == "https://somewhere.com/thumbnail.png"
+        assert embed.thumbnail.proxy_resource is not None
         assert embed.thumbnail.proxy_resource.url == "https://media.somewhere.com/thumbnail.png"
         assert embed.thumbnail.height == 123
         assert embed.thumbnail.width == 456
         assert isinstance(embed.thumbnail, embed_models.EmbedImage)
         # EmbedVideo
+        assert embed.video is not None
         assert embed.video.resource.url == "https://somewhere.com/video.mp4"
+        assert embed.video.proxy_resource is not None
         assert embed.video.proxy_resource.url == "https://somewhere.com/proxy/video.mp4"
         assert embed.video.height == 1234
         assert embed.video.width == 4567
         assert isinstance(embed.video, embed_models.EmbedVideo)
         # EmbedProvider
+        assert embed.provider is not None
         assert embed.provider.name == "some name"
         assert embed.provider.url == "https://somewhere.com/provider"
         assert isinstance(embed.provider, embed_models.EmbedProvider)
         # EmbedAuthor
+        assert embed.author is not None
         assert embed.author.name == "some name"
         assert embed.author.url == "https://somewhere.com/author-url"
+        assert embed.author.icon is not None
         assert embed.author.icon.resource.url == "https://somewhere.com/author.png"
+        assert embed.author.icon.proxy_resource is not None
         assert embed.author.icon.proxy_resource.url == "https://media.somewhere.com/author.png"
         assert isinstance(embed.author, embed_models.EmbedAuthor)
         # EmbedField
@@ -3023,7 +3067,9 @@ class TestEntityFactoryImpl:
         assert isinstance(field, embed_models.EmbedField)
 
     def test_deserialize_embed_with_partial_sub_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, embed_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        embed_payload: typing.MutableMapping[str, typing.Any],
     ):
         embed = entity_factory_impl.deserialize_embed(
             {
@@ -3036,33 +3082,41 @@ class TestEntityFactoryImpl:
             }
         )
         # EmbedFooter
+        assert embed.footer is not None
         assert embed.footer.text == "footer text"
         assert embed.footer.icon is None
         # EmbedImage
+        assert embed.image is not None
         assert embed.image.resource.url == "https://blahblah.blahblahblah"
         assert embed.image.proxy_resource is None
         assert embed.image.width is None
         assert embed.image.height is None
         # EmbedThumbnail
+        assert embed.thumbnail is not None
         assert embed.thumbnail.resource.url == "https://blahblah2.blahblahblah"
         assert embed.thumbnail.proxy_resource is None
         assert embed.thumbnail.height is None
         assert embed.thumbnail.width is None
         # EmbedVideo
+        assert embed.video is not None
         assert embed.video.resource.url == "https://blahblah3.blahblahblah"
         assert embed.video.proxy_resource is None
         assert embed.video.height is None
         assert embed.video.width is None
         # EmbedProvider
+        assert embed.provider is not None
         assert embed.provider.name is None
         assert embed.provider.url == "https://blahbla5h.blahblahblah"
         # EmbedAuthor
+        assert embed.author is not None
         assert embed.author.name == "author name"
         assert embed.author.url is None
         assert embed.author.icon is None
 
     def test_deserialize_embed_with_other_null_sub_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, embed_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        embed_payload: typing.MutableMapping[str, typing.Any],
     ):
         embed = entity_factory_impl.deserialize_embed(
             {
@@ -3073,15 +3127,19 @@ class TestEntityFactoryImpl:
             }
         )
         # EmbedProvider
+        assert embed.provider is not None
         assert embed.provider.name == "name name"
         assert embed.provider.url is None
         # EmbedAuthor
+        assert embed.author is not None
         assert embed.author.name is None
         assert embed.author.url == "urlurlurl"
         assert embed.author.icon is None
 
     def test_deserialize_embed_with_partial_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, embed_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        embed_payload: typing.MutableMapping[str, typing.Any],
     ):
         embed = entity_factory_impl.deserialize_embed(
             {
@@ -3095,6 +3153,7 @@ class TestEntityFactoryImpl:
             }
         )
         # EmbedFooter
+        assert embed.footer is not None
         assert embed.footer.text == "footer text"
         assert embed.footer.icon is None
         # EmbedImage
@@ -3106,6 +3165,7 @@ class TestEntityFactoryImpl:
         # EmbedProvider
         assert embed.provider is None
         # EmbedAuthor
+        assert embed.author is not None
         assert embed.author.name == "author name"
         assert embed.author.url is None
         assert embed.author.icon is None
@@ -3277,7 +3337,9 @@ class TestEntityFactoryImpl:
         ],
     )
     def test_serialize_embed_validators(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, field_kwargs: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        field_kwargs: typing.MutableMapping[str, typing.Any],
     ):
         embed_obj = embed_models.Embed()
         embed_obj.add_field(**field_kwargs)
@@ -3296,8 +3358,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_custom_emoji(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
-        custom_emoji_payload: typing.Mapping[str, typing.Any],
+        custom_emoji_payload: typing.MutableMapping[str, typing.Any],
     ):
         emoji = entity_factory_impl.deserialize_custom_emoji(custom_emoji_payload)
         assert emoji.id == snowflakes.Snowflake(691225175349395456)
@@ -3306,10 +3367,7 @@ class TestEntityFactoryImpl:
         assert isinstance(emoji, emoji_models.CustomEmoji)
 
     def test_deserialize_custom_emoji_with_unset_and_null_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
-        custom_emoji_payload: typing.Mapping[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl
     ):
         emoji = entity_factory_impl.deserialize_custom_emoji({"id": "691225175349395456", "name": None})
         assert emoji.is_animated is False
@@ -3319,8 +3377,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        user_payload: typing.Mapping[str, typing.Any],
-        known_custom_emoji_payload: typing.Mapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
     ):
         emoji = entity_factory_impl.deserialize_known_custom_emoji(
             known_custom_emoji_payload, guild_id=snowflakes.Snowflake(1235123)
@@ -3361,7 +3419,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_emoji_returns_expected_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        payload: typing.Mapping[str, typing.Any],
+        payload: typing.MutableMapping[str, typing.Any],
         expected_type: typing.Union[typing.Type[emoji_models.UnicodeEmoji], typing.Type[emoji_models.CustomEmoji]],
     ):
         isinstance(entity_factory_impl.deserialize_emoji(payload), expected_type)
@@ -3371,7 +3429,7 @@ class TestEntityFactoryImpl:
     ##################
 
     @pytest.fixture
-    def gateway_bot_payload(self) -> typing.Mapping[str, typing.Any]:
+    def gateway_bot_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "url": "wss://gateway.discord.gg",
             "shards": 1,
@@ -3381,7 +3439,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_gateway_bot(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        gateway_bot_payload: typing.Mapping[str, typing.Any],
+        gateway_bot_payload: typing.MutableMapping[str, typing.Any],
     ):
         gateway_bot = entity_factory_impl.deserialize_gateway_bot_info(gateway_bot_payload)
         assert isinstance(gateway_bot, gateway_models.GatewayBotInfo)
@@ -3399,14 +3457,14 @@ class TestEntityFactoryImpl:
     ################
 
     @pytest.fixture
-    def guild_embed_payload(self) -> typing.Mapping[str, typing.Any]:
+    def guild_embed_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"channel_id": "123123123", "enabled": True}
 
     def test_deserialize_widget_embed(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_embed_payload: typing.Mapping[str, typing.Any],
+        guild_embed_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_embed = entity_factory_impl.deserialize_guild_widget(guild_embed_payload)
         assert guild_embed.app is mock_app
@@ -3420,7 +3478,7 @@ class TestEntityFactoryImpl:
         assert entity_factory_impl.deserialize_guild_widget({"channel_id": None, "enabled": True}).channel_id is None
 
     @pytest.fixture
-    def guild_welcome_screen_payload(self) -> typing.Mapping[str, typing.Any]:
+    def guild_welcome_screen_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "description": "What does the fox say? Nico Nico Nico NIIIIIIIIIIIIIIIIIIIIIII!!!!",
             "welcome_channels": [
@@ -3450,7 +3508,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_welcome_screen_payload: typing.Mapping[str, typing.Any],
+        guild_welcome_screen_payload: typing.MutableMapping[str, typing.Any],
     ):
         welcome_screen = entity_factory_impl.deserialize_welcome_screen(guild_welcome_screen_payload)
 
@@ -3513,8 +3571,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        member_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         member_payload = {**member_payload, "guild_id": "76543325"}
         member = entity_factory_impl.deserialize_member(member_payload)
@@ -3538,8 +3596,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        member_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         # While this isn't a legitimate case based on the current behaviour of the API, we still want to cover this
         # to ensure no duplication occurs.
@@ -3558,7 +3616,9 @@ class TestEntityFactoryImpl:
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_with_null_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, user_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         member = entity_factory_impl.deserialize_member(
             {
@@ -3582,7 +3642,9 @@ class TestEntityFactoryImpl:
         assert isinstance(member, guild_models.Member)
 
     def test_deserialize_member_with_undefined_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, user_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         member = entity_factory_impl.deserialize_member(
             {
@@ -3622,7 +3684,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_role_payload: typing.Mapping[str, typing.Any],
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
         assert guild_role.app is mock_app
@@ -3647,7 +3709,9 @@ class TestEntityFactoryImpl:
         assert isinstance(guild_role, guild_models.Role)
 
     def test_deserialize_role_with_missing_or_unset_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_role_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_role_payload["tags"] = {}
         guild_role_payload["unicode_emoji"] = None
@@ -3661,7 +3725,9 @@ class TestEntityFactoryImpl:
         assert guild_role.unicode_emoji is None
 
     def test_deserialize_role_with_no_tags(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, guild_role_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_role_payload["tags"]
         guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
@@ -3672,7 +3738,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_integration(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        partial_integration_payload: typing.Mapping[str, typing.Any],
+        partial_integration_payload: typing.MutableMapping[str, typing.Any],
     ):
         partial_integration = entity_factory_impl.deserialize_partial_integration(partial_integration_payload)
         assert partial_integration.id == 4949494949
@@ -3685,7 +3751,9 @@ class TestEntityFactoryImpl:
         assert isinstance(partial_integration.account, guild_models.IntegrationAccount)
 
     @pytest.fixture
-    def integration_payload(self, user_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+    def integration_payload(
+        self, user_payload: typing.MutableMapping[str, typing.Any]
+    ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "420",
             "name": "blaze it",
@@ -3720,8 +3788,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_integration(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        integration_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        integration_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         integration = entity_factory_impl.deserialize_integration(integration_payload)
         assert integration.id == 420
@@ -3746,6 +3814,7 @@ class TestEntityFactoryImpl:
         )
         assert integration.subscriber_count == 69
         # IntegrationApplication
+        assert integration.application is not None
         assert integration.application.id == 123
         assert integration.application.name == "some bot"
         assert integration.application.icon_hash == "123abc"
@@ -3802,19 +3871,20 @@ class TestEntityFactoryImpl:
                 },
             }
         )
+        assert integration.application is not None
         assert integration.application.bot is None
 
     @pytest.fixture
     def guild_member_ban_payload(
-        self, user_payload: typing.Mapping[str, typing.Any]
+        self, user_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {"reason": "Get nyaa'ed", "user": user_payload}
 
     def test_deserialize_guild_member_ban(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_member_ban_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        guild_member_ban_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         member_ban = entity_factory_impl.deserialize_guild_member_ban(guild_member_ban_payload)
         assert member_ban.reason == "Get nyaa'ed"
@@ -3822,13 +3892,15 @@ class TestEntityFactoryImpl:
         assert isinstance(member_ban, guild_models.GuildBan)
 
     def test_deserialize_guild_member_ban_with_null_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, user_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         assert entity_factory_impl.deserialize_guild_member_ban({"reason": None, "user": user_payload}).reason is None
 
     @pytest.fixture
     def guild_preview_payload(
-        self, known_custom_emoji_payload: typing.Mapping[str, typing.Any]
+        self, known_custom_emoji_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "152559372126519269",
@@ -3847,8 +3919,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_preview_payload: typing.Mapping[str, typing.Any],
-        known_custom_emoji_payload: typing.Mapping[str, typing.Any],
+        guild_preview_payload: typing.MutableMapping[str, typing.Any],
+        known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_preview = entity_factory_impl.deserialize_guild_preview(guild_preview_payload)
         assert guild_preview.app is mock_app
@@ -3868,12 +3940,7 @@ class TestEntityFactoryImpl:
         assert guild_preview.description == "A DESCRIPTION."
         assert isinstance(guild_preview, guild_models.GuildPreview)
 
-    def test_deserialize_guild_preview_with_null_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
-        guild_preview_payload: typing.Mapping[str, typing.Any],
-    ):
+    def test_deserialize_guild_preview_with_null_fields(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
         guild_preview = entity_factory_impl.deserialize_guild_preview(
             {
                 "id": "152559372126519269",
@@ -3896,9 +3963,9 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def rest_guild_payload(
         self,
-        known_custom_emoji_payload: typing.Mapping[str, typing.Any],
-        guild_sticker_payload: typing.Mapping[str, typing.Any],
-        guild_role_payload: typing.Mapping[str, typing.Any],
+        known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
+        guild_sticker_payload: typing.MutableMapping[str, typing.Any],
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "afk_channel_id": "99998888777766",
@@ -3944,10 +4011,10 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        rest_guild_payload: typing.Mapping[str, typing.Any],
-        known_custom_emoji_payload: typing.Mapping[str, typing.Any],
-        guild_role_payload: typing.Mapping[str, typing.Any],
-        guild_sticker_payload: typing.Mapping[str, typing.Any],
+        rest_guild_payload: typing.MutableMapping[str, typing.Any],
+        known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
+        guild_sticker_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild = entity_factory_impl.deserialize_rest_guild(rest_guild_payload)
         assert guild.app is mock_app
@@ -4105,17 +4172,17 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def gateway_guild_payload(
         self,
-        guild_text_channel_payload: typing.Mapping[str, typing.Any],
-        guild_voice_channel_payload: typing.Mapping[str, typing.Any],
-        guild_news_channel_payload: typing.Mapping[str, typing.Any],
-        known_custom_emoji_payload: typing.Mapping[str, typing.Any],
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
-        member_payload: typing.Mapping[str, typing.Any],
-        member_presence_payload: typing.Mapping[str, typing.Any],
-        guild_role_payload: typing.Mapping[str, typing.Any],
-        voice_state_payload: typing.Mapping[str, typing.Any],
+        guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_voice_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_channel_payload: typing.MutableMapping[str, typing.Any],
+        known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
+        guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        member_presence_payload: typing.MutableMapping[str, typing.Any],
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
+        voice_state_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "afk_channel_id": "99998888777766",
@@ -4167,18 +4234,15 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        gateway_guild_payload: typing.Mapping[str, typing.Any],
-        guild_text_channel_payload: typing.Mapping[str, typing.Any],
-        guild_voice_channel_payload: typing.Mapping[str, typing.Any],
-        guild_news_channel_payload: typing.Mapping[str, typing.Any],
-        guild_news_thread_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
-        guild_private_thread_payload: typing.Mapping[str, typing.Any],
-        known_custom_emoji_payload: typing.Mapping[str, typing.Any],
-        member_payload: typing.Mapping[str, typing.Any],
-        member_presence_payload: typing.Mapping[str, typing.Any],
-        guild_role_payload: typing.Mapping[str, typing.Any],
-        voice_state_payload: typing.Mapping[str, typing.Any],
+        gateway_guild_payload: typing.MutableMapping[str, typing.Any],
+        guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_voice_channel_payload: typing.MutableMapping[str, typing.Any],
+        guild_news_channel_payload: typing.MutableMapping[str, typing.Any],
+        known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        member_presence_payload: typing.MutableMapping[str, typing.Any],
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
+        voice_state_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             gateway_guild_payload, user_id=snowflakes.Snowflake(43123)
@@ -4383,7 +4447,7 @@ class TestEntityFactoryImpl:
     ######################
 
     @pytest.fixture
-    def slash_command_payload(self) -> typing.Mapping[str, typing.Any]:
+    def slash_command_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "1231231231",
             "application_id": "12354123",
@@ -4429,7 +4493,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        slash_command_payload: typing.Mapping[str, typing.Any],
+        slash_command_payload: typing.MutableMapping[str, typing.Any],
     ):
         command = entity_factory_impl.deserialize_slash_command(payload=slash_command_payload)
 
@@ -4445,6 +4509,7 @@ class TestEntityFactoryImpl:
         assert command.version == 123321123
 
         # CommandOption
+        assert command.options is not None
         assert len(command.options) == 1
         option = command.options[0]
         assert option.type is commands.OptionType.SUB_COMMAND
@@ -4463,6 +4528,7 @@ class TestEntityFactoryImpl:
         assert option.min_length == 1
         assert option.max_length == 44
 
+        assert option.options is not None
         assert len(option.options) == 1
         suboption = option.options[0]
         assert suboption.type is commands.OptionType.USER
@@ -4473,6 +4539,7 @@ class TestEntityFactoryImpl:
         assert suboption.channel_types is None
 
         # CommandChoice
+        assert suboption.choices is not None
         assert len(suboption.choices) == 1
         choice = suboption.choices[0]
         assert isinstance(choice, commands.CommandChoice)
@@ -4487,7 +4554,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_slash_command_with_passed_through_guild_id(
         self, entity_factory_impl: entity_factory.EntityFactoryImpl
     ):
-        payload = {
+        payload: typing.Mapping[str, typing.Any] = {
             "id": "1231231231",
             "guild_id": "987654321",
             "application_id": "12354123",
@@ -4506,7 +4573,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_slash_command_with_null_and_unset_values(
         self, entity_factory_impl: entity_factory.EntityFactoryImpl
     ):
-        payload = {
+        payload: typing.Mapping[str, typing.Any] = {
             "id": "1231231231",
             "application_id": "12354123",
             "guild_id": "49949494",
@@ -4528,7 +4595,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_slash_command_standardizes_default_member_permissions(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        slash_command_payload: typing.Mapping[str, typing.Any],
+        slash_command_payload: typing.MutableMapping[str, typing.Any],
     ):
         slash_command_payload["default_member_permissions"] = 0
 
@@ -4552,7 +4619,10 @@ class TestEntityFactoryImpl:
             # are the ones we mock
             entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
 
-            assert entity_factory_impl.deserialize_command(payload, guild_id=snowflakes.Snowflake(123)) is expected_fn.return_value
+            assert (
+                entity_factory_impl.deserialize_command(payload, guild_id=snowflakes.Snowflake(123))
+                is expected_fn.return_value
+            )
 
         expected_fn.assert_called_once_with(payload, guild_id=123)
 
@@ -4561,7 +4631,7 @@ class TestEntityFactoryImpl:
             entity_factory_impl.deserialize_command({"type": -111})
 
     @pytest.fixture
-    def guild_command_permissions_payload(self) -> typing.Mapping[str, typing.Any]:
+    def guild_command_permissions_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "123321",
             "application_id": "431321123",
@@ -4572,7 +4642,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_command_permissions(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_command_permissions_payload: typing.Mapping[str, typing.Any],
+        guild_command_permissions_payload: typing.MutableMapping[str, typing.Any],
     ):
         command = entity_factory_impl.deserialize_guild_command_permissions(guild_command_permissions_payload)
 
@@ -4598,7 +4668,7 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def partial_interaction_payload(self) -> typing.Mapping[str, typing.Any]:
+    def partial_interaction_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "795459528803745843",
             "token": "-- token redacted --",
@@ -4611,7 +4681,7 @@ class TestEntityFactoryImpl:
         self,
         mock_app: traits.RESTAware,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        partial_interaction_payload: typing.Mapping[str, typing.Any],
+        partial_interaction_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_partial_interaction(partial_interaction_payload)
 
@@ -4625,7 +4695,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def interaction_member_payload(
-        self, user_payload: typing.Mapping[str, typing.Any]
+        self, user_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "user": user_payload,
@@ -4643,10 +4713,12 @@ class TestEntityFactoryImpl:
     def test__deserialize_interaction_member(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        interaction_member_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
-        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=snowflakes.Snowflake(43123123))
+        member = entity_factory_impl._deserialize_interaction_member(
+            interaction_member_payload, guild_id=snowflakes.Snowflake(43123123)
+        )
         assert member.id == 115590097100865541
         assert member.joined_at == datetime.datetime(2020, 9, 27, 22, 58, 10, 282000, tzinfo=datetime.timezone.utc)
         assert member.nickname == "Snab"
@@ -4673,7 +4745,7 @@ class TestEntityFactoryImpl:
     def test__deserialize_interaction_member_when_guild_id_already_in_roles_doesnt_duplicate(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        interaction_member_payload: typing.Mapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction_member_payload["roles"] = [
             582345963851743243,
@@ -4683,7 +4755,9 @@ class TestEntityFactoryImpl:
             43123123,
         ]
 
-        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=snowflakes.Snowflake(43123123))
+        member = entity_factory_impl._deserialize_interaction_member(
+            interaction_member_payload, guild_id=snowflakes.Snowflake(43123123)
+        )
         assert member.role_ids == [
             582345963851743243,
             582689893965365248,
@@ -4695,13 +4769,15 @@ class TestEntityFactoryImpl:
     def test__deserialize_interaction_member_with_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        interaction_member_payload: typing.Mapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         del interaction_member_payload["premium_since"]
         del interaction_member_payload["avatar"]
         del interaction_member_payload["communication_disabled_until"]
 
-        member = entity_factory_impl._deserialize_interaction_member(interaction_member_payload, guild_id=snowflakes.Snowflake(43123123))
+        member = entity_factory_impl._deserialize_interaction_member(
+            interaction_member_payload, guild_id=snowflakes.Snowflake(43123123)
+        )
 
         assert member.guild_avatar_hash is None
         assert member.premium_since is None
@@ -4710,7 +4786,7 @@ class TestEntityFactoryImpl:
     def test__deserialize_interaction_member_with_passed_user(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        interaction_member_payload: typing.Mapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         mock_user = mock.Mock()
         member = entity_factory_impl._deserialize_interaction_member(
@@ -4722,12 +4798,12 @@ class TestEntityFactoryImpl:
     def test__deserialize_resolved_option_data(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        interaction_resolved_data_payload: typing.Mapping[str, typing.Any],
-        attachment_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        guild_role_payload: typing.Mapping[str, typing.Any],
-        interaction_member_payload: typing.Mapping[str, typing.Any],
-        message_payload: typing.Mapping[str, typing.Any],
+        interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
+        attachment_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
+        message_payload: typing.MutableMapping[str, typing.Any],
     ):
         resolved = entity_factory_impl._deserialize_resolved_option_data(
             interaction_resolved_data_payload, guild_id=snowflakes.Snowflake(123321)
@@ -4743,14 +4819,18 @@ class TestEntityFactoryImpl:
         assert len(resolved.members) == 1
         member = resolved.members[snowflakes.Snowflake(115590097100865541)]
         assert member == entity_factory_impl._deserialize_interaction_member(
-            interaction_member_payload, guild_id=snowflakes.Snowflake(123321), user=entity_factory_impl.deserialize_user(user_payload)
+            interaction_member_payload,
+            guild_id=snowflakes.Snowflake(123321),
+            user=entity_factory_impl.deserialize_user(user_payload),
         )
 
         assert resolved.attachments == {
             690922406474154014: entity_factory_impl._deserialize_message_attachment(attachment_payload)
         }
         assert resolved.roles == {
-            41771983423143936: entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(123321))
+            41771983423143936: entity_factory_impl.deserialize_role(
+                guild_role_payload, guild_id=snowflakes.Snowflake(123321)
+            )
         }
         assert resolved.users == {115590097100865541: entity_factory_impl.deserialize_user(user_payload)}
         assert resolved.messages == {123: entity_factory_impl.deserialize_message(message_payload)}
@@ -4772,11 +4852,11 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def interaction_resolved_data_payload(
         self,
-        interaction_member_payload: typing.Mapping[str, typing.Any],
-        attachment_payload: typing.Mapping[str, typing.Any],
-        guild_role_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        message_payload: typing.Mapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
+        attachment_payload: typing.MutableMapping[str, typing.Any],
+        guild_role_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        message_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "attachments": {"690922406474154014": attachment_payload},
@@ -4797,8 +4877,8 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def command_interaction_payload(
         self,
-        interaction_member_payload: typing.Mapping[str, typing.Any],
-        interaction_resolved_data_payload: typing.Mapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
+        interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "3490190239012093",
@@ -4849,9 +4929,9 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        command_interaction_payload: typing.Mapping[str, typing.Any],
-        interaction_member_payload: typing.Mapping[str, typing.Any],
-        interaction_resolved_data_payload: typing.Mapping[str, typing.Any],
+        command_interaction_payload: typing.MutableMapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
+        interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
         assert interaction.app is mock_app
@@ -4869,6 +4949,7 @@ class TestEntityFactoryImpl:
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
             interaction_member_payload, guild_id=snowflakes.Snowflake(43123123)
         )
+        assert interaction.member is not None
         assert interaction.user is interaction.member.user
         assert interaction.command_id == 43123123
         assert interaction.command_name == "okokokok"
@@ -4886,6 +4967,7 @@ class TestEntityFactoryImpl:
         assert option.name == "an option"
         assert option.value is None
         assert option.type is commands.OptionType.SUB_COMMAND
+        assert option.options is not None
         assert len(option.options) == 2
 
         sub_option1 = option.options[0]
@@ -4908,7 +4990,9 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def context_menu_command_interaction_payload(
-        self, interaction_member_payload: typing.Mapping[str, typing.Any], user_payload: typing.Mapping[str, typing.Any]
+        self,
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "3490190239012093",
@@ -4949,7 +5033,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_command_interaction_with_context_menu_field(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        context_menu_command_interaction_payload: typing.Mapping[str, typing.Any],
+        context_menu_command_interaction_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(context_menu_command_interaction_payload)
         assert interaction.target_id == 115590097100865541
@@ -4958,8 +5042,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_command_interaction_with_null_attributes(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        command_interaction_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        command_interaction_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         del command_interaction_payload["guild_id"]
         del command_interaction_payload["member"]
@@ -4984,9 +5068,9 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def autocomplete_interaction_payload(
         self,
-        member_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        interaction_resolved_data_payload: typing.Mapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "3490190239012093",
@@ -5036,9 +5120,9 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        member_payload: typing.Mapping[str, typing.Any],
-        autocomplete_interaction_payload: typing.Mapping[str, typing.Any],
-        interaction_resolved_data_payload: typing.Mapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        autocomplete_interaction_payload: typing.MutableMapping[str, typing.Any],
+        interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
     ):
         entity_factory_impl._deserialize_interaction_member = mock.Mock()
         entity_factory_impl._deserialize_resolved_option_data = mock.Mock()
@@ -5064,6 +5148,7 @@ class TestEntityFactoryImpl:
         assert option.name == "options"
         assert option.value is None
         assert option.type is commands.OptionType.SUB_COMMAND
+        assert option.options is not None
         assert len(option.options) == 2
 
         sub_option1 = option.options[0]
@@ -5089,8 +5174,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_autocomplete_interaction_with_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        user_payload: typing.Mapping[str, typing.Any],
-        autocomplete_interaction_payload: typing.Mapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        autocomplete_interaction_payload: typing.MutableMapping[str, typing.Any],
     ):
         del autocomplete_interaction_payload["guild_locale"]
         del autocomplete_interaction_payload["guild_id"]
@@ -5202,7 +5287,7 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def context_menu_command_payload(self) -> typing.Mapping[str, typing.Any]:
+    def context_menu_command_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "1231231231",
             "application_id": "12354123",
@@ -5218,7 +5303,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_context_menu_command(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        context_menu_command_payload: typing.Mapping[str, typing.Any],
+        context_menu_command_payload: typing.MutableMapping[str, typing.Any],
     ):
         command = entity_factory_impl.deserialize_context_menu_command(context_menu_command_payload)
         assert isinstance(command, commands.ContextMenuCommand)
@@ -5236,9 +5321,11 @@ class TestEntityFactoryImpl:
     def test_deserialize_context_menu_command_with_guild_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        context_menu_command_payload: typing.Mapping[str, typing.Any],
+        context_menu_command_payload: typing.MutableMapping[str, typing.Any],
     ):
-        command = entity_factory_impl.deserialize_command(context_menu_command_payload, guild_id=snowflakes.Snowflake(123))
+        command = entity_factory_impl.deserialize_command(
+            context_menu_command_payload, guild_id=snowflakes.Snowflake(123)
+        )
         assert isinstance(command, commands.ContextMenuCommand)
 
         assert command.id == 1231231231
@@ -5254,7 +5341,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_context_menu_command_with_with_null_and_unset_values(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        context_menu_command_payload: typing.Mapping[str, typing.Any],
+        context_menu_command_payload: typing.MutableMapping[str, typing.Any],
     ):
         del context_menu_command_payload["dm_permission"]
         del context_menu_command_payload["nsfw"]
@@ -5268,7 +5355,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_context_menu_command_default_member_permissions(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        context_menu_command_payload: typing.Mapping[str, typing.Any],
+        context_menu_command_payload: typing.MutableMapping[str, typing.Any],
     ):
         context_menu_command_payload["default_member_permissions"] = 0
 
@@ -5279,9 +5366,9 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def component_interaction_payload(
         self,
-        interaction_member_payload: typing.Mapping[str, typing.Any],
-        message_payload: typing.Mapping[str, typing.Any],
-        interaction_resolved_data_payload: typing.Mapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
+        message_payload: typing.MutableMapping[str, typing.Any],
+        interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "version": 1,
@@ -5321,11 +5408,11 @@ class TestEntityFactoryImpl:
     def test_deserialize_component_interaction(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        component_interaction_payload: typing.Mapping[str, typing.Any],
-        interaction_member_payload: typing.Mapping[str, typing.Any],
+        component_interaction_payload: typing.MutableMapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
         mock_app: traits.RESTAware,
-        message_payload: typing.Mapping[str, typing.Any],
-        interaction_resolved_data_payload: typing.Mapping[str, typing.Any],
+        message_payload: typing.MutableMapping[str, typing.Any],
+        interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_component_interaction(component_interaction_payload)
 
@@ -5343,6 +5430,7 @@ class TestEntityFactoryImpl:
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
             interaction_member_payload, guild_id=snowflakes.Snowflake(290926798626357999)
         )
+        assert interaction.member is not None
         assert interaction.user is interaction.member.user
         assert interaction.values == ["1", "2", "67"]
         assert interaction.locale == "es-ES"
@@ -5362,8 +5450,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_component_interaction_with_undefined_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        user_payload: typing.Mapping[str, typing.Any],
-        message_payload: typing.Mapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        message_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_component_interaction(
             {
@@ -5405,8 +5493,8 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def modal_interaction_payload(
         self,
-        interaction_member_payload: typing.Mapping[str, typing.Any],
-        message_payload: typing.Mapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
+        message_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "version": 1,
@@ -5447,9 +5535,9 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        modal_interaction_payload: typing.Mapping[str, typing.Any],
-        interaction_member_payload: typing.Mapping[str, typing.Any],
-        message_payload: typing.Mapping[str, typing.Any],
+        modal_interaction_payload: typing.MutableMapping[str, typing.Any],
+        interaction_member_payload: typing.MutableMapping[str, typing.Any],
+        message_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
         assert interaction.app is mock_app
@@ -5464,6 +5552,7 @@ class TestEntityFactoryImpl:
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(
             interaction_member_payload, guild_id=snowflakes.Snowflake(290926798626357999)
         )
+        assert interaction.member is not None
         assert interaction.user is interaction.member.user
         assert isinstance(interaction, modal_interactions.ModalInteraction)
 
@@ -5481,8 +5570,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_modal_interaction_with_user(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        modal_interaction_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        modal_interaction_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         modal_interaction_payload["member"] = None
         modal_interaction_payload["user"] = user_payload
@@ -5493,7 +5582,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_modal_interaction_with_unrecognized_component(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        modal_interaction_payload: typing.Mapping[str, typing.Any],
+        modal_interaction_payload: typing.MutableMapping[str, typing.Any],
     ):
         modal_interaction_payload["data"]["components"] = [{"type": 0}]
 
@@ -5505,11 +5594,11 @@ class TestEntityFactoryImpl:
     ##################
 
     @pytest.fixture
-    def partial_sticker_payload(self) -> typing.Mapping[str, typing.Any]:
+    def partial_sticker_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"id": "749046696482439188", "name": "Thinking", "format_type": 3}
 
     @pytest.fixture
-    def standard_sticker_payload(self) -> typing.Mapping[str, typing.Any]:
+    def standard_sticker_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "749046696482439188",
             "name": "Thinking",
@@ -5521,7 +5610,9 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def guild_sticker_payload(self, user_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+    def guild_sticker_payload(
+        self, user_payload: typing.MutableMapping[str, typing.Any]
+    ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "749046696482439188",
             "name": "Thinking",
@@ -5535,7 +5626,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def sticker_pack_payload(
-        self, standard_sticker_payload: typing.Mapping[str, typing.Any]
+        self, standard_sticker_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "123",
@@ -5550,7 +5641,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_sticker(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        partial_sticker_payload: typing.Mapping[str, typing.Any],
+        partial_sticker_payload: typing.MutableMapping[str, typing.Any],
     ):
         partial_sticker = entity_factory_impl.deserialize_partial_sticker(partial_sticker_payload)
 
@@ -5561,7 +5652,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_standard_sticker(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        standard_sticker_payload: typing.Mapping[str, typing.Any],
+        standard_sticker_payload: typing.MutableMapping[str, typing.Any],
     ):
         standard_sticker = entity_factory_impl.deserialize_standard_sticker(standard_sticker_payload)
 
@@ -5576,8 +5667,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_sticker(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_sticker_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        guild_sticker_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_sticker = entity_factory_impl.deserialize_guild_sticker(guild_sticker_payload)
 
@@ -5593,7 +5684,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_sticker_with_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_sticker_payload: typing.Mapping[str, typing.Any],
+        guild_sticker_payload: typing.MutableMapping[str, typing.Any],
     ):
         del guild_sticker_payload["user"]
 
@@ -5604,7 +5695,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_sticker_pack(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        sticker_pack_payload: typing.Mapping[str, typing.Any],
+        sticker_pack_payload: typing.MutableMapping[str, typing.Any],
     ):
         pack = entity_factory_impl.deserialize_sticker_pack(sticker_pack_payload)
 
@@ -5628,7 +5719,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_sticker_pack_with_optional_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        sticker_pack_payload: typing.Mapping[str, typing.Any],
+        sticker_pack_payload: typing.MutableMapping[str, typing.Any],
     ):
         del sticker_pack_payload["cover_sticker_id"]
         del sticker_pack_payload["banner_asset_id"]
@@ -5641,7 +5732,7 @@ class TestEntityFactoryImpl:
     def test_stickers(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        guild_sticker_payload: typing.Mapping[str, typing.Any],
+        guild_sticker_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "265828729970753537", "stickers": [guild_sticker_payload]}, user_id=snowflakes.Snowflake(123321)
@@ -5660,24 +5751,24 @@ class TestEntityFactoryImpl:
             )
 
             mock_sticker = mock.Mock()
-            guild_definition._stickers = {"54545454": mock_sticker}
 
-            assert guild_definition.stickers() == {"54545454": mock_sticker}
-            mock_deserialize_guild_sticker.assert_not_called()
+            with mock.patch.object(guild_definition, "_stickers", {"54545454": mock_sticker}):
+                assert guild_definition.stickers() == {"54545454": mock_sticker}
+                mock_deserialize_guild_sticker.assert_not_called()
 
     #################
     # INVITE MODELS #
     #################
 
     @pytest.fixture
-    def vanity_url_payload(self) -> typing.Mapping[str, typing.Any]:
+    def vanity_url_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"code": "iamacode", "uses": 42}
 
     def test_deserialize_vanity_url(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        vanity_url_payload: typing.Mapping[str, typing.Any],
+        vanity_url_payload: typing.MutableMapping[str, typing.Any],
     ):
         vanity_url = entity_factory_impl.deserialize_vanity_url(vanity_url_payload)
         assert vanity_url.app is mock_app
@@ -5686,17 +5777,17 @@ class TestEntityFactoryImpl:
         assert isinstance(vanity_url, invite_models.VanityURL)
 
     @pytest.fixture
-    def alternative_user_payload(self) -> typing.Mapping[str, typing.Any]:
+    def alternative_user_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"id": "1231231", "username": "soad", "discriminator": "3333", "avatar": None}
 
     @pytest.fixture
     def invite_payload(
         self,
-        partial_channel_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        alternative_user_payload: typing.Mapping[str, typing.Any],
-        guild_welcome_screen_payload: typing.Mapping[str, typing.Any],
-        invite_application_payload: typing.Mapping[str, typing.Any],
+        partial_channel_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        alternative_user_payload: typing.MutableMapping[str, typing.Any],
+        guild_welcome_screen_payload: typing.MutableMapping[str, typing.Any],
+        invite_application_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "code": "aCode",
@@ -5727,17 +5818,18 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        invite_payload: typing.Mapping[str, typing.Any],
-        partial_channel_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        guild_welcome_screen_payload: typing.Mapping[str, typing.Any],
-        alternative_user_payload: typing.Mapping[str, typing.Any],
-        application_payload: typing.Mapping[str, typing.Any],
+        invite_payload: typing.MutableMapping[str, typing.Any],
+        partial_channel_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        guild_welcome_screen_payload: typing.MutableMapping[str, typing.Any],
+        alternative_user_payload: typing.MutableMapping[str, typing.Any],
+        application_payload: typing.MutableMapping[str, typing.Any],
     ):
         invite = entity_factory_impl.deserialize_invite(invite_payload)
         assert invite.app is mock_app
         assert invite.code == "aCode"
         # InviteGuild
+        assert invite.guild is not None
         assert invite.guild.id == 56188492224814744
         assert invite.guild.name == "Testin' Your Scene"
         assert invite.guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
@@ -5765,6 +5857,7 @@ class TestEntityFactoryImpl:
 
         # InviteApplication
         application = invite.target_application
+        assert application is not None
         assert application.app is mock_app
         assert application.id == 773336526917861400
         assert application.name == "Betrayal.io"
@@ -5777,12 +5870,7 @@ class TestEntityFactoryImpl:
         assert application.cover_image_hash == "0227b2e89ea08d666c43003fbadbc72a (but as cover)"
         assert isinstance(application, application_models.InviteApplication)
 
-    def test_deserialize_invite_with_null_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        partial_channel_payload: typing.Mapping[str, typing.Any],
-        invite_application_payload: typing.Mapping[str, typing.Any],
-    ):
+    def test_deserialize_invite_with_null_fields(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
         invite = entity_factory_impl.deserialize_invite(
             {
                 "code": "aCode",
@@ -5799,13 +5887,10 @@ class TestEntityFactoryImpl:
             }
         )
         assert invite.expires_at is None
+        assert invite.target_application is not None
         assert invite.target_application.description is None
 
-    def test_deserialize_invite_with_unset_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        partial_channel_payload: typing.Mapping[str, typing.Any],
-    ):
+    def test_deserialize_invite_with_unset_fields(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
         invite = entity_factory_impl.deserialize_invite(
             {
                 "code": "aCode",
@@ -5824,7 +5909,9 @@ class TestEntityFactoryImpl:
         assert invite.expires_at is None
 
     def test_deserialize_invite_with_unset_sub_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, invite_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        invite_payload: typing.MutableMapping[str, typing.Any],
     ):
         del invite_payload["guild"]["welcome_screen"]
         invite_payload["target_application"] = {
@@ -5836,7 +5923,9 @@ class TestEntityFactoryImpl:
 
         invite = entity_factory_impl.deserialize_invite(invite_payload)
 
+        assert invite.guild is not None
         assert invite.guild.welcome_screen is None
+        assert invite.target_application is not None
         assert invite.target_application.icon_hash is None
         assert invite.target_application.cover_image_hash is None
 
@@ -5852,11 +5941,11 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def invite_with_metadata_payload(
         self,
-        partial_channel_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        alternative_user_payload: typing.Mapping[str, typing.Any],
-        guild_welcome_screen_payload: typing.Mapping[str, typing.Any],
-        invite_application_payload: typing.Mapping[str, typing.Any],
+        partial_channel_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        alternative_user_payload: typing.MutableMapping[str, typing.Any],
+        guild_welcome_screen_payload: typing.MutableMapping[str, typing.Any],
+        invite_application_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "code": "aCode",
@@ -5891,17 +5980,17 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        invite_with_metadata_payload: typing.Mapping[str, typing.Any],
-        partial_channel_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        alternative_user_payload: typing.Mapping[str, typing.Any],
-        guild_welcome_screen_payload: typing.Mapping[str, typing.Any],
-        invite_application_payload: typing.Mapping[str, typing.Any],
+        invite_with_metadata_payload: typing.MutableMapping[str, typing.Any],
+        partial_channel_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        alternative_user_payload: typing.MutableMapping[str, typing.Any],
+        guild_welcome_screen_payload: typing.MutableMapping[str, typing.Any],
     ):
         invite_with_metadata = entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload)
         assert invite_with_metadata.app is mock_app
         assert invite_with_metadata.code == "aCode"
         # InviteGuild
+        assert invite_with_metadata.guild is not None
         assert invite_with_metadata.guild.id == 56188492224814744
         assert invite_with_metadata.guild.name == "Testin' Your Scene"
         assert invite_with_metadata.guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
@@ -5936,6 +6025,7 @@ class TestEntityFactoryImpl:
 
         # InviteApplication
         application = invite_with_metadata.target_application
+        assert application is not None
         assert application.app is mock_app
         assert application.id == 773336526917861400
         assert application.name == "Betrayal.io"
@@ -5951,7 +6041,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_invite_with_metadata_with_unset_and_0_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        partial_channel_payload: typing.Mapping[str, typing.Any],
+        partial_channel_payload: typing.MutableMapping[str, typing.Any],
     ):
         invite_with_metadata = entity_factory_impl.deserialize_invite_with_metadata(
             {
@@ -5978,17 +6068,18 @@ class TestEntityFactoryImpl:
     def test_deserialize_invite_with_metadata_with_null_guild_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        invite_with_metadata_payload: typing.Mapping[str, typing.Any],
+        invite_with_metadata_payload: typing.MutableMapping[str, typing.Any],
     ):
         del invite_with_metadata_payload["guild"]["welcome_screen"]
 
         invite = entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload)
+        assert invite.guild is not None
         assert invite.guild.welcome_screen is None
 
     def test_max_age_when_zero(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        invite_with_metadata_payload: typing.Mapping[str, typing.Any],
+        invite_with_metadata_payload: typing.MutableMapping[str, typing.Any],
     ):
         invite_with_metadata_payload["max_age"] = 0
         assert entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload).max_age is None
@@ -5998,11 +6089,15 @@ class TestEntityFactoryImpl:
     ####################
 
     @pytest.fixture
-    def action_row_payload(self, button_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+    def action_row_payload(
+        self, button_payload: typing.MutableMapping[str, typing.Any]
+    ) -> typing.Mapping[str, typing.Any]:
         return {"type": 1, "components": [button_payload]}
 
     @pytest.fixture
-    def button_payload(self, custom_emoji_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+    def button_payload(
+        self, custom_emoji_payload: typing.MutableMapping[str, typing.Any]
+    ) -> typing.Mapping[str, typing.Any]:
         return {
             "type": 2,
             "label": "Click me!",
@@ -6016,8 +6111,8 @@ class TestEntityFactoryImpl:
     def test_deserialize__deserialize_button(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        button_payload: typing.Mapping[str, typing.Any],
-        custom_emoji_payload: typing.Mapping[str, typing.Any],
+        button_payload: typing.MutableMapping[str, typing.Any],
+        custom_emoji_payload: typing.MutableMapping[str, typing.Any],
     ):
         button = entity_factory_impl._deserialize_button(button_payload)
 
@@ -6030,10 +6125,7 @@ class TestEntityFactoryImpl:
         assert button.url == "okokok"
 
     def test_deserialize__deserialize_button_with_unset_fields(
-        self,
-        entity_factory_impl: entity_factory.EntityFactoryImpl,
-        button_payload: typing.Mapping[str, typing.Any],
-        custom_emoji_payload: typing.Mapping[str, typing.Any],
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl
     ):
         button = entity_factory_impl._deserialize_button({"type": 2, "style": 5})
 
@@ -6047,7 +6139,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def select_menu_payload(
-        self, custom_emoji_payload: typing.Mapping[str, typing.Any]
+        self, custom_emoji_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "type": 5,
@@ -6070,8 +6162,8 @@ class TestEntityFactoryImpl:
     def test__deserialize_text_select_menu(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        select_menu_payload: typing.Mapping[str, typing.Any],
-        custom_emoji_payload: typing.Mapping[str, typing.Any],
+        select_menu_payload: typing.MutableMapping[str, typing.Any],
+        custom_emoji_payload: typing.MutableMapping[str, typing.Any],
     ):
         menu = entity_factory_impl._deserialize_text_select_menu(select_menu_payload)
 
@@ -6165,7 +6257,7 @@ class TestEntityFactoryImpl:
     ##################
 
     @pytest.fixture
-    def partial_application_payload(self) -> typing.Mapping[str, typing.Any]:
+    def partial_application_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "456",
             "name": "hikari",
@@ -6175,7 +6267,9 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def referenced_message(self, user_payload: typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]:
+    def referenced_message(
+        self, user_payload: typing.MutableMapping[str, typing.Any]
+    ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "12312312",
             "channel_id": "949494",
@@ -6195,7 +6289,7 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def attachment_payload(self) -> typing.Mapping[str, typing.Any]:
+    def attachment_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "690922406474154014",
             "filename": "IMG.jpg",
@@ -6215,17 +6309,18 @@ class TestEntityFactoryImpl:
     @pytest.fixture
     def message_payload(
         self,
-        user_payload: typing.Mapping[str, typing.Any],
-        member_payload: typing.Mapping[str, typing.Any],
-        custom_emoji_payload: typing.Mapping[str, typing.Any],
-        partial_application_payload: typing.Mapping[str, typing.Any],
-        embed_payload: typing.Mapping[str, typing.Any],
-        referenced_message: typing.Mapping[str, typing.Any],
-        action_row_payload: typing.Mapping[str, typing.Any],
-        partial_sticker_payload: typing.Mapping[str, typing.Any],
-        attachment_payload: typing.Mapping[str, typing.Any],
-        guild_public_thread_payload: typing.Mapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        custom_emoji_payload: typing.MutableMapping[str, typing.Any],
+        partial_application_payload: typing.MutableMapping[str, typing.Any],
+        embed_payload: typing.MutableMapping[str, typing.Any],
+        referenced_message: typing.MutableMapping[str, typing.Any],
+        action_row_payload: typing.MutableMapping[str, typing.Any],
+        partial_sticker_payload: typing.MutableMapping[str, typing.Any],
+        attachment_payload: typing.MutableMapping[str, typing.Any],
+        guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
+        assert isinstance(member_payload, dict)
         member_payload = member_payload.copy()
         del member_payload["user"]
         return {
@@ -6268,7 +6363,9 @@ class TestEntityFactoryImpl:
         }
 
     def test__deserialize_message_attachment(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, attachment_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        attachment_payload: typing.MutableMapping[str, typing.Any],
     ):
         attachment = entity_factory_impl._deserialize_message_attachment(attachment_payload)
 
@@ -6288,7 +6385,9 @@ class TestEntityFactoryImpl:
         assert isinstance(attachment, message_models.Attachment)
 
     def test__deserialize_message_attachment_with_null_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, attachment_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        attachment_payload: typing.MutableMapping[str, typing.Any],
     ):
         attachment_payload["height"] = None
         attachment_payload["width"] = None
@@ -6300,7 +6399,9 @@ class TestEntityFactoryImpl:
         assert isinstance(attachment, message_models.Attachment)
 
     def test__deserialize_message_attachment_with_unset_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, attachment_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        attachment_payload: typing.MutableMapping[str, typing.Any],
     ):
         del attachment_payload["title"]
         del attachment_payload["description"]
@@ -6326,15 +6427,14 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        message_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        member_payload: typing.Mapping[str, typing.Any],
-        partial_application_payload: typing.Mapping[str, typing.Any],
-        custom_emoji_payload: typing.Mapping[str, typing.Any],
-        embed_payload: typing.Mapping[str, typing.Any],
-        referenced_message: typing.Mapping[str, typing.Any],
-        action_row_payload: typing.Mapping[str, typing.Any],
-        attachment_payload: typing.Mapping[str, typing.Any],
+        message_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        custom_emoji_payload: typing.MutableMapping[str, typing.Any],
+        embed_payload: typing.MutableMapping[str, typing.Any],
+        referenced_message: typing.MutableMapping[str, typing.Any],
+        action_row_payload: typing.MutableMapping[str, typing.Any],
+        attachment_payload: typing.MutableMapping[str, typing.Any],
     ):
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
 
@@ -6363,6 +6463,7 @@ class TestEntityFactoryImpl:
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
         assert partial_message.embeds == [expected_embed]
         # Reaction
+        assert partial_message.reactions is not undefined.UNDEFINED
         reaction = partial_message.reactions[0]
         assert reaction.count == 100
         assert reaction.is_me is True
@@ -6375,11 +6476,15 @@ class TestEntityFactoryImpl:
         assert partial_message.type == message_models.MessageType.DEFAULT
 
         # Activity
+        assert partial_message.activity is not undefined.UNDEFINED
+        assert partial_message.activity is not None
         assert partial_message.activity.type == message_models.MessageActivityType.JOIN_REQUEST
         assert partial_message.activity.party_id == "ae488379-351d-4a4f-ad32-2b9b01c91657"
         assert isinstance(partial_message.activity, message_models.MessageActivity)
 
         # Message Activity
+        assert partial_message.application is not undefined.UNDEFINED
+        assert partial_message.application is not None
         assert partial_message.application.id == 456
         assert partial_message.application.name == "hikari"
         assert partial_message.application.description == "The best application"
@@ -6387,6 +6492,8 @@ class TestEntityFactoryImpl:
         assert partial_message.application.cover_image_hash == "58982a23790c4f22787b05d3be38a026"
         assert isinstance(partial_message.application, message_models.MessageApplication)
         # MessageReference
+        assert partial_message.message_reference is not undefined.UNDEFINED
+        assert partial_message.message_reference is not None
         assert partial_message.message_reference.app is mock_app
         assert partial_message.message_reference.id == 306588351130107906
         assert partial_message.message_reference.channel_id == 278325129692446722
@@ -6397,6 +6504,7 @@ class TestEntityFactoryImpl:
         assert partial_message.flags == message_models.MessageFlag.IS_CROSSPOST
 
         # Sticker
+        assert partial_message.stickers is not undefined.UNDEFINED
         assert len(partial_message.stickers) == 1
         sticker = partial_message.stickers[0]
         assert sticker.id == 749046696482439188
@@ -6408,6 +6516,8 @@ class TestEntityFactoryImpl:
         assert partial_message.application_id == 123123123123
 
         # MessageInteraction
+        assert partial_message.interaction is not undefined.UNDEFINED
+        assert partial_message.interaction is not None
         assert partial_message.interaction.id == 123123123
         assert partial_message.interaction.name == "OKOKOK"
         assert partial_message.interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
@@ -6419,7 +6529,9 @@ class TestEntityFactoryImpl:
         )
 
     def test_deserialize_partial_message_with_partial_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, message_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        message_payload: typing.MutableMapping[str, typing.Any],
     ):
         message_payload["content"] = ""
         message_payload["edited_timestamp"] = None
@@ -6436,8 +6548,12 @@ class TestEntityFactoryImpl:
         assert partial_message.edited_timestamp is None
         assert partial_message.guild_id is not None
         assert partial_message.member is undefined.UNDEFINED
+        assert partial_message.application is not undefined.UNDEFINED
+        assert partial_message.application is not None
         assert partial_message.application.icon_hash is None
         assert partial_message.application.cover_image_hash is None
+        assert partial_message.message_reference is not undefined.UNDEFINED
+        assert partial_message.message_reference is not None
         assert partial_message.message_reference.id is None
         assert partial_message.message_reference.guild_id is None
         assert partial_message.referenced_message is None
@@ -6488,13 +6604,16 @@ class TestEntityFactoryImpl:
         assert partial_message.member is None
 
     def test_deserialize_partial_message_deserializes_old_stickers_field(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, message_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        message_payload: typing.MutableMapping[str, typing.Any],
     ):
         message_payload["stickers"] = message_payload["sticker_items"]
         del message_payload["sticker_items"]
 
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
 
+        assert partial_message.stickers is not undefined.UNDEFINED
         assert len(partial_message.stickers) == 1
         sticker = partial_message.stickers[0]
         assert sticker.id == 749046696482439188
@@ -6506,13 +6625,13 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        message_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        member_payload: typing.Mapping[str, typing.Any],
-        custom_emoji_payload: typing.Mapping[str, typing.Any],
-        embed_payload: typing.Mapping[str, typing.Any],
-        referenced_message: typing.Mapping[str, typing.Any],
-        action_row_payload: typing.Mapping[str, typing.Any],
+        message_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
+        custom_emoji_payload: typing.MutableMapping[str, typing.Any],
+        embed_payload: typing.MutableMapping[str, typing.Any],
+        referenced_message: typing.MutableMapping[str, typing.Any],
+        action_row_payload: typing.MutableMapping[str, typing.Any],
     ):
         message = entity_factory_impl.deserialize_message(message_payload)
 
@@ -6566,11 +6685,13 @@ class TestEntityFactoryImpl:
         assert message.type == message_models.MessageType.DEFAULT
 
         # Activity
+        assert message.activity is not None
         assert message.activity.type == message_models.MessageActivityType.JOIN_REQUEST
         assert message.activity.party_id == "ae488379-351d-4a4f-ad32-2b9b01c91657"
         assert isinstance(message.activity, message_models.MessageActivity)
 
         # MessageApplication
+        assert message.application is not None
         assert message.application.id == 456
         assert message.application.name == "hikari"
         assert message.application.description == "The best application"
@@ -6579,6 +6700,7 @@ class TestEntityFactoryImpl:
         assert isinstance(message.application, message_models.MessageApplication)
 
         # MessageReference
+        assert message.message_reference
         assert message.message_reference.app is mock_app
         assert message.message_reference.id == 306588351130107906
         assert message.message_reference.channel_id == 278325129692446722
@@ -6600,6 +6722,7 @@ class TestEntityFactoryImpl:
         assert message.application_id == 123123123123
 
         # MessageInteraction
+        assert message.interaction is not None
         assert message.interaction.id == 123123123
         assert message.interaction.name == "OKOKOK"
         assert message.interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
@@ -6621,7 +6744,9 @@ class TestEntityFactoryImpl:
         assert message.thread.name == "e"
 
     def test_deserialize_message_with_unset_sub_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, message_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        message_payload: typing.MutableMapping[str, typing.Any],
     ):
         del message_payload["application"]["cover_image"]
         del message_payload["activity"]["party_id"]
@@ -6635,14 +6760,17 @@ class TestEntityFactoryImpl:
         assert message.channel_mentions == {}
 
         # Activity
+        assert message.activity is not None
         assert message.activity.party_id is None
         assert isinstance(message.activity, message_models.MessageActivity)
 
         # MessageApplication
+        assert message.application is not None
         assert message.application.cover_image_hash is None
         assert isinstance(message.application, message_models.MessageApplication)
 
         # MessageReference
+        assert message.message_reference is not None
         assert message.message_reference.id is None
         assert message.message_reference.guild_id is None
         assert isinstance(message.message_reference, message_models.MessageReference)
@@ -6651,12 +6779,15 @@ class TestEntityFactoryImpl:
         assert message.thread is None
 
     def test_deserialize_message_with_null_sub_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, message_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        message_payload: typing.MutableMapping[str, typing.Any],
     ):
         message_payload["application"]["icon"] = None
         message = entity_factory_impl.deserialize_message(message_payload)
 
         # MessageApplication
+        assert message.application is not None
         assert message.application.icon_hash is None
         assert isinstance(message.application, message_models.MessageApplication)
 
@@ -6664,9 +6795,9 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        user_payload: typing.Mapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
-        message_payload = {
+        message_payload: typing.Mapping[str, typing.Any] = {
             "id": "123",
             "channel_id": "456",
             "author": user_payload,
@@ -6709,7 +6840,9 @@ class TestEntityFactoryImpl:
         assert message.components == []
 
     def test_deserialize_message_with_other_unset_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, message_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        message_payload: typing.MutableMapping[str, typing.Any],
     ):
         message_payload["application"]["icon"] = None
         message_payload["referenced_message"] = None
@@ -6717,13 +6850,16 @@ class TestEntityFactoryImpl:
         del message_payload["application"]["cover_image"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
+        assert message.application is not None
         assert message.application.cover_image_hash is None
         assert message.application.icon_hash is None
         assert message.referenced_message is None
         assert message.member is None
 
     def test_deserialize_message_deserializes_old_stickers_field(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, message_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        message_payload: typing.MutableMapping[str, typing.Any],
     ):
         message_payload["stickers"] = message_payload["sticker_items"]
         del message_payload["sticker_items"]
@@ -6745,9 +6881,9 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        member_presence_payload: typing.Mapping[str, typing.Any],
-        custom_emoji_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        member_presence_payload: typing.MutableMapping[str, typing.Any],
+        custom_emoji_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         presence = entity_factory_impl.deserialize_member_presence(member_presence_payload)
         assert presence.app is mock_app
@@ -6762,6 +6898,7 @@ class TestEntityFactoryImpl:
         assert activity.url == "https://69.420.owouwunyaa"
         assert activity.created_at == datetime.datetime(2020, 3, 23, 20, 53, 12, 798000, tzinfo=datetime.timezone.utc)
         # ActivityTimestamps
+        assert activity.timestamps is not None
         assert activity.timestamps.start == datetime.datetime(
             2020, 3, 23, 20, 53, 12, 798000, tzinfo=datetime.timezone.utc
         )
@@ -6809,8 +6946,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_member_presence_with_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        user_payload: typing.Mapping[str, typing.Any],
-        presence_activity_payload: typing.Mapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        presence_activity_payload: typing.MutableMapping[str, typing.Any],
     ):
         presence = entity_factory_impl.deserialize_member_presence(
             {
@@ -6829,7 +6966,9 @@ class TestEntityFactoryImpl:
         assert presence.client_status.web is presence_models.Status.OFFLINE
 
     def test_deserialize_member_presence_with_unset_activity_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, user_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         presence = entity_factory_impl.deserialize_member_presence(
             {
@@ -6857,7 +6996,9 @@ class TestEntityFactoryImpl:
         assert activity.buttons == []
 
     def test_deserialize_member_presence_with_null_activity_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, user_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         presence = entity_factory_impl.deserialize_member_presence(
             {
@@ -6899,7 +7040,9 @@ class TestEntityFactoryImpl:
         assert activity.emoji is None
 
     def test_deserialize_member_presence_with_unset_activity_sub_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, user_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         presence = entity_factory_impl.deserialize_member_presence(
             {
@@ -6956,7 +7099,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def scheduled_external_event_payload(
-        self, user_payload: typing.Mapping[str, typing.Any]
+        self, user_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "9497609168686982223",
@@ -6982,8 +7125,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_external_event_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        scheduled_external_event_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
         assert event.app is mock_app
@@ -7006,7 +7149,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_external_event_payload: typing.Mapping[str, typing.Any],
+        scheduled_external_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         scheduled_external_event_payload["description"] = None
         scheduled_external_event_payload["image"] = None
@@ -7020,7 +7163,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_external_event_payload: typing.Mapping[str, typing.Any],
+        scheduled_external_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         del scheduled_external_event_payload["creator"]
         del scheduled_external_event_payload["description"]
@@ -7036,7 +7179,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def scheduled_stage_event_payload(
-        self, user_payload: typing.Mapping[str, typing.Any]
+        self, user_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "9497014470822052443",
@@ -7062,8 +7205,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_stage_event_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        scheduled_stage_event_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         event = entity_factory_impl.deserialize_scheduled_stage_event(scheduled_stage_event_payload)
 
@@ -7087,7 +7230,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_stage_event_payload: typing.Mapping[str, typing.Any],
+        scheduled_stage_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         scheduled_stage_event_payload["description"] = None
         scheduled_stage_event_payload["image"] = None
@@ -7103,7 +7246,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_stage_event_payload: typing.Mapping[str, typing.Any],
+        scheduled_stage_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         del scheduled_stage_event_payload["creator"]
         del scheduled_stage_event_payload["description"]
@@ -7119,7 +7262,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def scheduled_voice_event_payload(
-        self, user_payload: typing.Mapping[str, typing.Any]
+        self, user_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "id": "949760834287063133",
@@ -7145,8 +7288,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_voice_event_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        scheduled_voice_event_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         event = entity_factory_impl.deserialize_scheduled_voice_event(scheduled_voice_event_payload)
 
@@ -7170,7 +7313,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_voice_event_payload: typing.Mapping[str, typing.Any],
+        scheduled_voice_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         scheduled_voice_event_payload["description"] = None
         scheduled_voice_event_payload["image"] = None
@@ -7186,7 +7329,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: mock.Mock,
-        scheduled_voice_event_payload: typing.Mapping[str, typing.Any],
+        scheduled_voice_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         del scheduled_voice_event_payload["creator"]
         del scheduled_voice_event_payload["description"]
@@ -7203,9 +7346,9 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_event_returns_right_type(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        scheduled_external_event_payload: typing.Mapping[str, typing.Any],
-        scheduled_stage_event_payload: typing.Mapping[str, typing.Any],
-        scheduled_voice_event_payload: typing.Mapping[str, typing.Any],
+        scheduled_external_event_payload: typing.MutableMapping[str, typing.Any],
+        scheduled_stage_event_payload: typing.MutableMapping[str, typing.Any],
+        scheduled_voice_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         for cls, payload in [
             (scheduled_event_models.ScheduledExternalEvent, scheduled_external_event_payload),
@@ -7222,8 +7365,11 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def scheduled_event_user_payload(
-        self, user_payload: typing.Mapping[str, typing.Any], member_payload: typing.Mapping[str, typing.Any]
+        self,
+        user_payload: typing.MutableMapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
+        assert isinstance(member_payload, dict)
         member_payload = member_payload.copy()
         del member_payload["user"]
         return {"guild_scheduled_event_id": "49494949499494", "user": user_payload, "member": member_payload}
@@ -7231,29 +7377,35 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_event_user(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        scheduled_event_user_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        member_payload: typing.Mapping[str, typing.Any],
+        scheduled_event_user_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
     ):
         del member_payload["user"]
-        user = entity_factory_impl.deserialize_scheduled_event_user(scheduled_event_user_payload, guild_id=snowflakes.Snowflake(123321))
+        user = entity_factory_impl.deserialize_scheduled_event_user(
+            scheduled_event_user_payload, guild_id=snowflakes.Snowflake(123321)
+        )
 
         assert user.event_id == 49494949499494
         assert user.user == entity_factory_impl.deserialize_user(user_payload)
         assert user.member == entity_factory_impl.deserialize_member(
-            member_payload, user=entity_factory_impl.deserialize_user(user_payload), guild_id=snowflakes.Snowflake(123321)
+            member_payload,
+            user=entity_factory_impl.deserialize_user(user_payload),
+            guild_id=snowflakes.Snowflake(123321),
         )
         assert isinstance(user, scheduled_event_models.ScheduledEventUser)
 
     def test_deserialize_scheduled_event_user_when_no_member(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        scheduled_event_user_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        scheduled_event_user_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         del scheduled_event_user_payload["member"]
 
-        event = entity_factory_impl.deserialize_scheduled_event_user(scheduled_event_user_payload, guild_id=snowflakes.Snowflake(123321))
+        event = entity_factory_impl.deserialize_scheduled_event_user(
+            scheduled_event_user_payload, guild_id=snowflakes.Snowflake(123321)
+        )
 
         assert event.member is None
         assert event.user == entity_factory_impl.deserialize_user(user_payload)
@@ -7264,7 +7416,9 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def template_payload(
-        self, guild_text_channel_payload: typing.Mapping[str, typing.Any], user_payload: typing.Mapping[str, typing.Any]
+        self,
+        guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "code": "4rDaewUKeYVj",
@@ -7307,9 +7461,9 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        template_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
-        guild_text_channel_payload: typing.Mapping[str, typing.Any],
+        template_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
+        guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
     ):
         template = entity_factory_impl.deserialize_template(template_payload)
         assert template.app is mock_app
@@ -7360,8 +7514,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_template_with_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        template_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        template_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         template = entity_factory_impl.deserialize_template(
             {
@@ -7414,7 +7568,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        user_payload: typing.Mapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         user = entity_factory_impl.deserialize_user(user_payload)
         assert user.app is mock_app
@@ -7433,7 +7587,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        user_payload: typing.Mapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         user = entity_factory_impl.deserialize_user(
             {
@@ -7450,7 +7604,7 @@ class TestEntityFactoryImpl:
         assert user.flags == user_models.UserFlag.NONE
 
     @pytest.fixture
-    def my_user_payload(self) -> typing.Mapping[str, typing.Any]:
+    def my_user_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "379953393319542784",
             "username": "qt pi",
@@ -7474,7 +7628,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        my_user_payload: typing.Mapping[str, typing.Any],
+        my_user_payload: typing.MutableMapping[str, typing.Any],
     ):
         my_user = entity_factory_impl.deserialize_my_user(my_user_payload)
         assert my_user.app is mock_app
@@ -7500,7 +7654,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        my_user_payload: typing.Mapping[str, typing.Any],
+        my_user_payload: typing.MutableMapping[str, typing.Any],
     ):
         my_user = entity_factory_impl.deserialize_my_user(
             {
@@ -7533,8 +7687,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        voice_state_payload: typing.Mapping[str, typing.Any],
-        member_payload: typing.Mapping[str, typing.Any],
+        voice_state_payload: typing.MutableMapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
     ):
         voice_state = entity_factory_impl.deserialize_voice_state(voice_state_payload)
         assert voice_state.app is mock_app
@@ -7560,8 +7714,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_voice_state_with_injected_guild_id(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        voice_state_payload: typing.Mapping[str, typing.Any],
-        member_payload: typing.Mapping[str, typing.Any],
+        voice_state_payload: typing.MutableMapping[str, typing.Any],
+        member_payload: typing.MutableMapping[str, typing.Any],
     ):
         voice_state = entity_factory_impl.deserialize_voice_state(
             {
@@ -7587,7 +7741,9 @@ class TestEntityFactoryImpl:
         )
 
     def test_deserialize_voice_state_with_null_and_unset_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, member_payload: typing.Mapping[str, typing.Any]
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        member_payload: typing.MutableMapping[str, typing.Any],
     ):
         voice_state = entity_factory_impl.deserialize_voice_state(
             {
@@ -7610,13 +7766,13 @@ class TestEntityFactoryImpl:
         assert voice_state.requested_to_speak_at is None
 
     @pytest.fixture
-    def voice_region_payload(self) -> typing.Mapping[str, typing.Any]:
+    def voice_region_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {"id": "london", "name": "LONDON", "optimal": False, "deprecated": True, "custom": False}
 
     def test_deserialize_voice_region(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        voice_region_payload: typing.Mapping[str, typing.Any],
+        voice_region_payload: typing.MutableMapping[str, typing.Any],
     ):
         voice_region = entity_factory_impl.deserialize_voice_region(voice_region_payload)
         assert voice_region.id == "london"
@@ -7632,7 +7788,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def incoming_webhook_payload(
-        self, user_payload: typing.Mapping[str, typing.Any]
+        self, user_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "name": "test webhook",
@@ -7648,7 +7804,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def follower_webhook_payload(
-        self, user_payload: typing.Mapping[str, typing.Any], partial_channel_payload: typing.Mapping[str, typing.Any]
+        self, user_payload: typing.MutableMapping[str, typing.Any]
     ) -> typing.Mapping[str, typing.Any]:
         return {
             "type": 2,
@@ -7668,7 +7824,7 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def application_webhook_payload(self) -> typing.Mapping[str, typing.Any]:
+    def application_webhook_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "type": 3,
             "id": "658822586720976555",
@@ -7683,8 +7839,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        incoming_webhook_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        incoming_webhook_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         webhook = entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload)
 
@@ -7706,8 +7862,8 @@ class TestEntityFactoryImpl:
     def test_deserialize_incoming_webhook_with_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        incoming_webhook_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        incoming_webhook_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         del incoming_webhook_payload["user"]
         del incoming_webhook_payload["token"]
@@ -7729,8 +7885,8 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        follower_webhook_payload: typing.Mapping[str, typing.Any],
-        user_payload: typing.Mapping[str, typing.Any],
+        follower_webhook_payload: typing.MutableMapping[str, typing.Any],
+        user_payload: typing.MutableMapping[str, typing.Any],
     ):
         webhook = entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload)
 
@@ -7743,12 +7899,14 @@ class TestEntityFactoryImpl:
         assert webhook.guild_id == 56188498421443265
         assert webhook.application_id == 312123123
 
+        assert webhook.source_guild is not None
         assert webhook.source_guild.app is mock_app
         assert webhook.source_guild.id == 56188498421476534
         assert webhook.source_guild.name == "Guildy name"
         assert webhook.source_guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
         assert isinstance(webhook.source_guild, guild_models.PartialGuild)
 
+        assert webhook.source_channel is not None
         assert webhook.source_channel.id == 5618852344134324
         assert webhook.source_channel.name == "announcements"
         assert webhook.source_channel.type == channel_models.ChannelType.GUILD_NEWS
@@ -7761,7 +7919,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        follower_webhook_payload: typing.Mapping[str, typing.Any],
+        follower_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         follower_webhook_payload["avatar"] = None
         del follower_webhook_payload["user"]
@@ -7781,19 +7939,20 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        follower_webhook_payload: typing.Mapping[str, typing.Any],
+        follower_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         follower_webhook_payload["source_channel"]["type"] = channel_models.ChannelType.GUILD_VOICE
 
         webhook = entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload)
 
+        assert webhook.source_channel is not None
         assert webhook.source_channel.type == channel_models.ChannelType.GUILD_VOICE
 
     def test_deserialize_application_webhook(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        application_webhook_payload: typing.Mapping[str, typing.Any],
+        application_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         webhook = entity_factory_impl.deserialize_application_webhook(application_webhook_payload)
 
@@ -7809,7 +7968,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        application_webhook_payload: typing.Mapping[str, typing.Any],
+        application_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         application_webhook_payload["avatar"] = None
 
@@ -7848,7 +8007,7 @@ class TestEntityFactoryImpl:
     ##################
 
     @pytest.fixture
-    def entitlement_payload(self) -> typing.Mapping[str, typing.Any]:
+    def entitlement_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "696969696969696",
             "sku_id": "420420420420420",
@@ -7863,7 +8022,7 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def sku_payload(self) -> typing.Mapping[str, typing.Any]:
+    def sku_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "420420420420420",
             "type": 5,
@@ -7876,7 +8035,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_entitlement(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        entitlement_payload: typing.Mapping[str, typing.Any],
+        entitlement_payload: typing.MutableMapping[str, typing.Any],
     ):
         entitlement = entity_factory_impl.deserialize_entitlement(entitlement_payload)
 
@@ -7893,7 +8052,7 @@ class TestEntityFactoryImpl:
         assert isinstance(entitlement, monetization_models.Entitlement)
 
     def test_deserialize_sku(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, sku_payload: typing.Mapping[str, typing.Any]
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, sku_payload: typing.MutableMapping[str, typing.Any]
     ):
         sku = entity_factory_impl.deserialize_sku(sku_payload)
 
@@ -7910,7 +8069,7 @@ class TestEntityFactoryImpl:
     #########################
 
     @pytest.fixture
-    def stage_instance_payload(self) -> typing.Mapping[str, typing.Any]:
+    def stage_instance_payload(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
@@ -7925,7 +8084,7 @@ class TestEntityFactoryImpl:
         self,
         mock_app: traits.RESTAware,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        stage_instance_payload: typing.Mapping[str, typing.Any],
+        stage_instance_payload: typing.MutableMapping[str, typing.Any],
     ):
         stage_instance = entity_factory_impl.deserialize_stage_instance(stage_instance_payload)
 

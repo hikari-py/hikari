@@ -100,7 +100,9 @@ class TestUnique:
     @pytest.fixture
     def neko_unique(self, neko_snowflake: snowflakes.Snowflake) -> snowflakes.Unique:
         class NekoUnique(snowflakes.Unique):
-            id = neko_snowflake
+            @property
+            def id(self) -> snowflakes.Snowflake:
+                return neko_snowflake
 
         return NekoUnique()
 
@@ -117,10 +119,14 @@ class TestUnique:
 
     def test__eq__(self, neko_snowflake: snowflakes.Snowflake, raw_id: int):
         class NekoUnique(snowflakes.Unique):
-            id = neko_snowflake
+            @property
+            def id(self) -> snowflakes.Snowflake:
+                return neko_snowflake
 
         class NekoUnique2(snowflakes.Unique):
-            id = neko_snowflake
+            @property
+            def id(self) -> snowflakes.Snowflake:
+                return neko_snowflake
 
         unique1 = NekoUnique()
         unique2 = NekoUnique()

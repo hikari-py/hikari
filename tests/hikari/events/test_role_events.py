@@ -23,7 +23,8 @@ from __future__ import annotations
 import mock
 import pytest
 
-from hikari import guilds, snowflakes
+from hikari import guilds
+from hikari import snowflakes
 from hikari.events import role_events
 
 
@@ -63,8 +64,10 @@ class TestRoleUpdateEvent:
         assert event.role_id == 123
 
     def test_old_role(self, event: role_events.RoleUpdateEvent):
-        event.old_role.guild_id = snowflakes.Snowflake(123)
-        event.old_role.id = snowflakes.Snowflake(456)
-
-        assert event.old_role.guild_id == 123
-        assert event.old_role.id == 456
+        with (
+            mock.patch.object(event.old_role, "guild_id", snowflakes.Snowflake(123)),
+            mock.patch.object(event.old_role, "id", snowflakes.Snowflake(456)),
+        ):
+            assert event.old_role is not None
+            assert event.old_role.guild_id == 123
+            assert event.old_role.id == 456

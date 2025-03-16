@@ -33,7 +33,9 @@ import aiohttp.web_runner
 import mock
 import multidict
 
-from hikari import files, snowflakes
+from hikari import files
+from hikari import snowflakes
+from hikari.api import entity_factory
 
 try:
     import nacl.exceptions
@@ -242,7 +244,7 @@ def test_interaction_server_init_when_no_pynacl():
 @pytest.mark.skipif(not nacl_present, reason="PyNacl not present")
 class TestInteractionServer:
     @pytest.fixture
-    def mock_entity_factory(self):
+    def mock_entity_factory(self) -> entity_factory.EntityFactory:
         return mock.Mock(entity_factory_impl.EntityFactoryImpl)
 
     @pytest.fixture
@@ -251,7 +253,7 @@ class TestInteractionServer:
 
     @pytest.fixture
     def mock_interaction_server(
-        self, mock_entity_factory: interaction_server_impl.InteractionServer, mock_rest_client: rest_impl.RESTClientImpl
+        self, mock_entity_factory: entity_factory.EntityFactory, mock_rest_client: rest_impl.RESTClientImpl
     ):
         cls = hikari_test_helpers.mock_class_namespace(interaction_server_impl.InteractionServer, slots_=False)
         stack = contextlib.ExitStack()
@@ -667,7 +669,12 @@ class TestInteractionServer:
         mock_file_1 = mock.Mock()
         mock_file_2 = mock.Mock()
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=snowflakes.Snowflake(123), application_id=snowflakes.Snowflake(541324), type=2, token="ok", version=1
+            app=None,
+            id=snowflakes.Snowflake(123),
+            application_id=snowflakes.Snowflake(541324),
+            type=2,
+            token="ok",
+            version=1,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         mock_listener = mock.AsyncMock(return_value=mock_builder)
@@ -708,7 +715,12 @@ class TestInteractionServer:
         mock_file_1 = mock.Mock()
         mock_file_2 = mock.Mock()
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=snowflakes.Snowflake(123), application_id=snowflakes.Snowflake(541324), type=2, token="ok", version=1
+            app=mock.Mock(),
+            id=snowflakes.Snowflake(123),
+            application_id=snowflakes.Snowflake(541324),
+            type=2,
+            token="ok",
+            version=1,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         g_called = False
@@ -825,9 +837,11 @@ class TestInteractionServer:
         mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
         mock_interaction_server._public_key = mock.Mock()
-        mock_entity_factory.deserialize_interaction.side_effect = errors.UnrecognisedEntityError("blah")
 
-        result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
+        with mock.patch.object(
+            mock_entity_factory, "deserialize_interaction", side_effect=errors.UnrecognisedEntityError("blah")
+        ):
+            result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
@@ -844,9 +858,11 @@ class TestInteractionServer:
     ):
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
-        mock_entity_factory.deserialize_interaction.side_effect = mock_exception
 
-        with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
+        with (
+            mock.patch.object(mock_entity_factory, "deserialize_interaction", side_effect=mock_exception),
+            mock.patch.object(asyncio, "get_running_loop") as get_running_loop,
+        ):
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
             get_running_loop.return_value.call_exception_handler.assert_called_once_with(
@@ -873,7 +889,12 @@ class TestInteractionServer:
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=snowflakes.Snowflake(123), application_id=snowflakes.Snowflake(541324), type=2, token="ok", version=1
+            app=mock.Mock(),
+            id=snowflakes.Snowflake(123),
+            application_id=snowflakes.Snowflake(541324),
+            type=2,
+            token="ok",
+            version=1,
         )
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.Mock(side_effect=mock_exception)
@@ -902,7 +923,12 @@ class TestInteractionServer:
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=snowflakes.Snowflake(123), application_id=snowflakes.Snowflake(541324), type=2, token="ok", version=1
+            app=mock.Mock(),
+            id=snowflakes.Snowflake(123),
+            application_id=snowflakes.Snowflake(541324),
+            type=2,
+            token="ok",
+            version=1,
         )
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
         mock_interaction_server.set_listener(
@@ -933,7 +959,12 @@ class TestInteractionServer:
         mock_exception = TypeError("OK")
         mock_interaction_server._dumps = mock.Mock(side_effect=mock_exception)
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=snowflakes.Snowflake(123), application_id=snowflakes.Snowflake(541324), type=2, token="ok", version=1
+            app=mock.Mock(),
+            id=snowflakes.Snowflake(123),
+            application_id=snowflakes.Snowflake(541324),
+            type=2,
+            token="ok",
+            version=1,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No"}, [])))
         mock_interaction_server.set_listener(
@@ -956,9 +987,7 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio
     async def test_on_interaction_when_no_registered_listener(
-        self,
-        mock_interaction_server: interaction_server_impl.InteractionServer,
-        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
         mock_interaction_server._public_key = mock.Mock()
 

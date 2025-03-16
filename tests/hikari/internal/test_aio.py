@@ -215,7 +215,7 @@ class TestAllOf:
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
 
-        async def quickly_run_task(task):
+        async def quickly_run_task(task: asyncio.Task[typing.Sequence[typing.Any]]):
             try:
                 await asyncio.wait_for(asyncio.shield(task), timeout=0.01)
             except asyncio.TimeoutError:

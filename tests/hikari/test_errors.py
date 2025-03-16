@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import http
 import inspect
+import typing
 
 import mock
 import pytest
@@ -76,7 +77,12 @@ class TestHTTPResponseError:
     @pytest.fixture
     def error(self) -> errors.HTTPResponseError:
         return errors.HTTPResponseError(
-            "https://some.url", http.HTTPStatus.BAD_REQUEST, {}, "raw body", "message", 12345
+            url="https://some.url",
+            status=http.HTTPStatus.BAD_REQUEST,
+            headers={},
+            raw_body="raw body",
+            message="message",
+            code=12345,
         )
 
     def test_str(self, error: errors.HTTPResponseError):
@@ -87,8 +93,8 @@ class TestHTTPResponseError:
         assert str(error) == "Unknown Status 699: (12345) 'message' for https://some.url"
 
     def test_str_when_message_is_None(self, error: errors.HTTPResponseError):
-        error.message = None
-        assert str(error) == "Bad Request 400: (12345) 'raw body' for https://some.url"
+        with mock.patch.object(error, "message", None):
+            assert str(error) == "Bad Request 400: (12345) 'raw body' for https://some.url"
 
     def test_str_when_code_is_zero(self, error: errors.HTTPResponseError):
         error.code = 0
@@ -102,24 +108,19 @@ class TestHTTPResponseError:
 class TestBadRequestError:
     @pytest.fixture
     def error(self) -> errors.BadRequestError:
-        return errors.BadRequestError(
-            "https://some.url",
-            http.HTTPStatus.BAD_REQUEST,
-            {},
-            "raw body",
-            errors={
-                "": [{"code": "012", "message": "test error"}],
-                "components": {
-                    "0": {
-                        "_errors": [
-                            {"code": "123", "message": "something went wrong"},
-                            {"code": "456", "message": "but more things too!"},
-                        ]
-                    }
-                },
-                "attachments": {"1": {"_errors": [{"code": "789", "message": "at this point, all wrong!"}]}},
+        errors_payload: typing.Mapping[str, typing.Any] = {
+            "": [{"code": "012", "message": "test error"}],
+            "components": {
+                "0": {
+                    "_errors": [
+                        {"code": "123", "message": "something went wrong"},
+                        {"code": "456", "message": "but more things too!"},
+                    ]
+                }
             },
-        )
+            "attachments": {"1": {"_errors": [{"code": "789", "message": "at this point, all wrong!"}]}},
+        }
+        return errors.BadRequestError(url="https://some.url", headers={}, raw_body="raw body", errors=errors_payload)
 
     def test_str(self, error: errors.BadRequestError):
         assert str(error) == inspect.cleandoc(
@@ -182,9 +183,7 @@ class TestBadRequestError:
         )
 
     def test_str_when_cached(self, error: errors.BadRequestError):
-        error._cached_str = "ok"
-
-        with mock.patch.object(errors, "_dump_errors") as dump_errors:
+        with mock.patch.object(error, "_cached_str", "ok"), mock.patch.object(errors, "_dump_errors") as dump_errors:
             assert str(error) == "ok"
 
         dump_errors.assert_not_called()
@@ -202,7 +201,13 @@ class TestRateLimitTooLongError:
     @pytest.fixture
     def error(self) -> errors.RateLimitTooLongError:
         return errors.RateLimitTooLongError(
-            route="some route", is_global=False, retry_after=0, max_retry_after=60, reset_at=0, limit=0, period=0
+            route=mock.PropertyMock(return_value="some route"),
+            is_global=False,
+            retry_after=0,
+            max_retry_after=60,
+            reset_at=0,
+            limit=0,
+            period=0,
         )
 
     def test_remaining(self, error: errors.RateLimitTooLongError):
@@ -211,7 +216,7 @@ class TestRateLimitTooLongError:
     def test_str(self, error: errors.RateLimitTooLongError):
         assert str(error) == (
             "The request has been rejected, as you would be waiting for more than "
-            "the max retry-after (60) on route 'some route' [is_global=False]"
+            f"the max retry-after (60) on route '{error.route}' [is_global=False]"
         )
 
 
