@@ -238,16 +238,16 @@ class MediaLoadingType(int, enums.Enum):
     """Media loading type."""
 
     UNKNOWN = 0
-    """FIXME: Document me."""
+    """Media is in an unknown loading state."""
 
     LOADING = 1
-    """FIXME: Document me."""
+    """Media is loading."""
 
     LOADED_SUCCESS = 2
-    """FIXME: Document me."""
+    """Media has successfully loaded."""
 
     LOADED_NOT_FOUND = 3
-    """FIXME: Document me."""
+    """Media was not found."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
@@ -473,7 +473,7 @@ class SectionComponent(PartialComponent):
     components: typing.Sequence[SectionComponentTypesT] = attrs.field()
     """The sections components."""
 
-    accessory: typing.Union[SectionAccessoryTypesT] = attrs.field()
+    accessory: SectionAccessoryTypesT = attrs.field()
     """The sections accessory."""
 
 
@@ -566,7 +566,18 @@ TopLevelComponentTypesT = typing.Union[
     FileComponent,
     ContainerComponent,
 ]
-"""FIXME: Document me."""
+"""Type hints of the values which are valid for top level components.
+
+The following values are valid for this:
+
+* [`hikari.components.ActionRowComponent`][]
+* [`hikari.components.TextDisplayComponent`][]
+* [`hikari.components.SectionComponent`][]
+* [`hikari.components.MediaGalleryComponent`][]
+* [`hikari.components.SeparatorComponent`][]
+* [`hikari.components.FileComponent`][]
+* [`hikari.components.ContainerComponent`][]
+"""
 
 ContainerTypesT = typing.Union[
     ActionRowComponent[PartialComponent],
@@ -576,13 +587,34 @@ ContainerTypesT = typing.Union[
     SeparatorComponent,
     FileComponent,
 ]
-"""FIXME: Document me."""
+"""Type hints of the values which are valid for container components.
+
+The following values are valid for this:
+
+* [`hikari.components.ActionRowComponent`][]
+* [`hikari.components.TextDisplayComponent`][]
+* [`hikari.components.SectionComponent`][]
+* [`hikari.components.MediaGalleryComponent`][]
+* [`hikari.components.SeparatorComponent`][]
+* [`hikari.components.FileComponent`][]
+"""
 
 SectionComponentTypesT = TextDisplayComponent
-"""FIXME: Document me."""
+"""Type hints of the values which are valid for section components.
+
+The following values are valid for this:
+
+* [`hikari.components.TextDisplayComponent`][]
+"""
 
 SectionAccessoryTypesT = typing.Union[ButtonComponent, ThumbnailComponent]
-"""FIXME: Document me."""
+"""Type hints of the values which are valid for section accessories.
+
+The following values are valid for this:
+
+* [`hikari.components.ButtonComponent`][]
+* [`hikari.components.ThumbnailComponent`][]
+"""
 
 SelectMenuTypesT = typing.Union[
     typing.Literal[ComponentType.TEXT_SELECT_MENU],
