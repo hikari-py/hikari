@@ -30,7 +30,7 @@ python -m pip install -U hikari
 py -3 -m pip install -U hikari
 ```
 
-----
+---
 
 ## Bots
 
@@ -215,7 +215,7 @@ rest = hikari.RESTApp()
 
 async def print_my_user(token):
     await rest.start()
-  
+
     # We acquire a client with a given token. This allows one REST app instance
     # with one internal connection pool to be reused.
     async with rest.acquire(token) as client:
@@ -223,7 +223,7 @@ async def print_my_user(token):
         print(my_user)
 
     await rest.close()
-        
+
 asyncio.run(print_my_user("user token acquired through OAuth here"))
 ```
 
@@ -233,8 +233,8 @@ asyncio.run(print_my_user("user token acquired through OAuth here"))
 
 Optional features can be specified when installing hikari:
 
-* `server` - Install dependencies required to enable Hikari's standard interaction server (RESTBot) functionality.
-* `speedups` - Detailed in [`hikari[speedups]`](#hikarispeedups).
+- `server` - Install dependencies required to enable Hikari's standard interaction server (RESTBot) functionality.
+- `speedups` - Detailed in [`hikari[speedups]`](#hikarispeedups).
 
 Example:
 
@@ -253,13 +253,14 @@ implementing your own command handler.
 
 Hikari does not include a command framework by default, so you will want to pick a third party library to do it:
 
-- [`arc`](https://github.com/hypergonial/hikari-arc) - a bot framework with a focus on type-safety and correctness.
-- [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for hikari that keeps your project neat and tidy.
 - [`lightbulb`](https://github.com/tandemdude/hikari-lightbulb) - a simple and easy to use command framework for hikari.
 - [`tanjun`](https://github.com/FasterSpeeding/Tanjun) - a flexible command framework designed to extend hikari.
+- [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for hikari that keeps your project neat and tidy.
+- [`arc`](https://github.com/hypergonial/hikari-arc) - a bot framework with a focus on type-safety and correctness.
 
 There are also third party libraries to help you manage components:
 
+- [`yuyo`](https://github.com/FasterSpeeding/Yuyo) - A collection of utility classes and functions designed to expand Hikari.
 - [`miru`](https://github.com/hypergonial/hikari-miru) - A component handler for hikari, inspired by discord.py's views.
 - [`flare`](https://github.com/brazier-dev/hikari-flare/) - a component manager designed to write simple interactions with persistent data.
 

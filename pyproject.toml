@@ -108,9 +108,9 @@ flake8 = [
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
-    "mkdocs-material[imaging]==9.6.7",
+    "mkdocs-material[imaging]==9.6.8",
     # Docstring parsing for API reference
-    "mkdocstrings[python]==0.28.2",
+    "mkdocstrings[python]==0.29.0",
     "griffe-inherited-docstrings==1.1.1",
     # Generate API reference pages dynamically
     "mkdocs-gen-files==0.5.0",
@@ -134,7 +134,7 @@ pytest = [
     { include-group = "coverage" },
 ]
 release = ["twine==6.1.0"]
-ruff = ["ruff==0.9.10"]
+ruff = ["ruff==0.11.0"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
 

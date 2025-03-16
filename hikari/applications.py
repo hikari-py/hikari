@@ -263,7 +263,7 @@ class ConnectionVisibility(int, enums.Enum):
 class OwnConnection:
     """Represents a user's connection with a third party account.
 
-    Returned by the [GET Current User Connections][] endpoint.
+    Returned by the `GET Current User Connections` endpoint.
     """
 
     id: str = attrs.field(hash=True, repr=True)

@@ -182,7 +182,7 @@ class Color(int):
 
         Examples
         --------
-        [(123, 234, 47)][]
+        `(123, 234, 47)`
         """
         return (self >> 16) & 0xFF, (self >> 8) & 0xFF, self & 0xFF
 
@@ -194,7 +194,7 @@ class Color(int):
 
         Examples
         --------
-        [(0.1, 0.2, 0.76)][]
+        `(0.1, 0.2, 0.76)`
         """
         r, g, b = self.rgb
         return r / 0xFF, g / 0xFF, b / 0xFF
