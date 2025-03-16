@@ -43,7 +43,16 @@ except ModuleNotFoundError:
 
 
 # Default sessions should be defined here
-_options.sessions = ["reformat-code", "codespell", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
+_options.sessions = [
+    "reformat-code",
+    "codespell",
+    "pytest",
+    "flake8",
+    "slotscheck",
+    "mypy",
+    "verify-types",
+    "verify-test-types",
+]
 _options.default_venv_backend = venv_backend
 
 _NoxCallbackSig = _typing.Callable[[Session], None]
