@@ -52,3 +52,10 @@ def verify_types(session: nox.Session) -> None:
     """Verify the "type completeness" of types exported by the library using Pyright."""
     session.install(".", *nox.dev_requirements("pyright"))
     session.run("pyright", "--verifytypes", config.MAIN_PACKAGE, "--ignoreexternal")
+
+
+@nox.session()
+def verify_test_types(session: nox.Session) -> None:
+    """Verify the "type completeness" of the test types using Pyright."""
+    session.install(".", *nox.dev_requirements("pyright"))
+    session.run("pyright", config.TEST_PACKAGE)

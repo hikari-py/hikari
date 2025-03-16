@@ -144,6 +144,11 @@ jobs:
         run: |
           nox -s verify-types
 
+      - name: Verify test types
+        if: always()
+        run: |
+          nox -s verify-test-types
+
       - name: Flake8
         if: always()
         run: |
