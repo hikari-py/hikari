@@ -155,7 +155,7 @@ jobs:
       - name: Pyright (tests)
         if: always()
         run: |
-          nox -s pyright-tests 
+          nox -s pyright-tests
 
       - name: Flake8
         if: always()

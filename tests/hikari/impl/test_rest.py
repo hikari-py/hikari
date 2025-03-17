@@ -21,12 +21,12 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import contextlib
 import datetime
 import http
 import re
 import typing
-import concurrent.futures
 
 import aiohttp
 import mock
