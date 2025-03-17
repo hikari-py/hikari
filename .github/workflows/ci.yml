@@ -46,7 +46,6 @@ jobs:
         run: |
           pip install -r dev-requirements.txt
           nox -s pytest
-          nox -s pytest-tests
           nox -s pytest-all-features -- --cov-append
 
           python scripts/ci/normalize_coverage.py
@@ -145,6 +144,11 @@ jobs:
         run: |
           nox -s verify-types
 
+      - name: Pyright (tests)
+        if: always()
+        run: |
+          nox -s pyright-tests 
+
       - name: Flake8
         if: always()
         run: |
@@ -217,7 +221,7 @@ jobs:
 
   # Allows us to add this as a required check in Github branch rules, as all the other jobs are subject to change
   ci-done:
-    needs: [upload-coverage, linting, twemoji, docs]
+    needs: [ upload-coverage, linting, twemoji, docs ]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest
