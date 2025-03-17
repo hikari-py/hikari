@@ -3815,7 +3815,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             answers.append(answer)
 
-        results = undefined.UNDEFINED
+        results: undefined.UndefinedOr[poll_models.PollResult] = undefined.UNDEFINED
         if (result_payload := payload.get("result")) is not None:
             is_finalized = result_payload["is_finalized"]
 

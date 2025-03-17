@@ -1274,6 +1274,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1359,6 +1360,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
+        poll
+            If provided, the poll to set on the message.
         mentions_everyone
             If provided, sanitation for `@everyone` mentions. If
             [`hikari.undefined.UNDEFINED`][], then the previous setting is
@@ -2050,6 +2053,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -2146,6 +2150,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll FIXME: Can polls be added to webhooks?
+            If provided, the message poll.
         tts
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
@@ -2272,6 +2278,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -2358,6 +2365,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
+        poll FIXME: Should this be removed?
+            If provided, the poll to set on the message.
         mentions_everyone
             If provided, sanitation for `@everyone` mentions. If
             [`hikari.undefined.UNDEFINED`][], then the previous setting is
@@ -4791,6 +4800,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -4873,6 +4883,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the message poll.
         sticker
             If provided, the object or ID of a sticker to send on the message.
 
@@ -7511,6 +7523,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -7560,6 +7573,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to add to the message.
         flags
             If provided, the message flags this response should have.
 
@@ -7633,6 +7648,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -7709,6 +7725,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
+        poll
+            If provided, the poll to set on the message.
         mentions_everyone
             If provided, whether the message should parse @everyone/@here
             mentions.

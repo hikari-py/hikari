@@ -1609,6 +1609,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1628,6 +1629,7 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             flags=flags,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
@@ -1908,6 +1910,7 @@ class RESTClientImpl(rest_api.RESTClient):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1934,6 +1937,7 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             tts=tts,
             flags=flags,
             mentions_everyone=mentions_everyone,
@@ -1993,6 +1997,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -2015,6 +2020,7 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
@@ -3043,6 +3049,7 @@ class RESTClientImpl(rest_api.RESTClient):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -3086,6 +3093,7 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             sticker=sticker,
             stickers=stickers,
             tts=tts,
@@ -4105,6 +4113,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -4123,6 +4132,7 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             tts=tts,
             flags=flags,
             mentions_everyone=mentions_everyone,
@@ -4157,6 +4167,9 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedNoneOr[
+            special_endpoints.PollBuilder
+        ] = undefined.UNDEFINED,  # FIXME: Idk if this is allowed.
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -4175,6 +4188,7 @@ class RESTClientImpl(rest_api.RESTClient):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
