@@ -300,7 +300,7 @@ class TestColor:
 
     @pytest.mark.parametrize(
         ("input_string", "value_error_match"),
-        [
+        [  # FIXME: This is a weird issue. It does not like the one with set().
             ("blah", r"Could not transform 'blah' into a Color object"),
             ("0xfff1", r"Color code is invalid length\. Must be 3 or 6 digits"),
             (lambda: 22, r"Could not transform <function TestColor\.<lambda> at 0x[a-zA-Z0-9]+> into a Color object"),

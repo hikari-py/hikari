@@ -679,7 +679,9 @@ class TestGatewayGuildDefinition:
     def test_guild_returns_cached_values(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
         mock_guild = mock.Mock()
 
-        entity_factory_impl.set_guild_attributes = mock.Mock()
+        entity_factory_impl.set_guild_attributes = (
+            mock.Mock()
+        )  # FIXME: Seems this is calling an object that does not actually exist.
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "9393939"}, user_id=snowflakes.Snowflake(43123)
         )
@@ -687,7 +689,7 @@ class TestGatewayGuildDefinition:
         with mock.patch.object(guild_definition, "_guild", mock_guild):
             assert guild_definition.guild() is mock_guild
 
-        entity_factory_impl.set_guild_attributes.assert_not_called()
+        entity_factory_impl.set_guild_attributes.assert_not_called()  # FIXME: Seems this is calling an object that does not actually exist.
 
     def test_members(
         self,
@@ -866,7 +868,9 @@ class TestGatewayGuildDefinition:
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {"id": "292929"}, user_id=snowflakes.Snowflake(43123)
         )
-        guild_definition._voice_states = {"9393939393": mock_voice_state}
+        guild_definition._voice_states = {
+            "9393939393": mock_voice_state
+        }  # FIXME: Seems this is calling an object that does not actually exist.
 
         assert guild_definition.voice_states() == {"9393939393": mock_voice_state}
 
@@ -1594,9 +1598,11 @@ class TestEntityFactoryImpl:
         assert entry.target_id == 115590097100865541
         assert entry.user_id == 560984860634644482
         assert entry.action_type == audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_UPDATE
-        assert entry.options.id == 115590097100865541
-        assert entry.options.type == channel_models.PermissionOverwriteType.MEMBER
-        assert entry.options.role_name is None
+        assert entry.options.id == 115590097100865541  # FIXME: I am unsure as to how to fix this
+        assert (
+            entry.options.type == channel_models.PermissionOverwriteType.MEMBER
+        )  # FIXME: I am unsure as to how to fix this
+        assert entry.options.role_name is None  # FIXME: I am unsure as to how to fix this
         assert entry.guild_id == 123321
         assert entry.reason == "An artificial insanity."
 
@@ -1604,23 +1610,24 @@ class TestEntityFactoryImpl:
         change = entry.changes[0]
         assert change.key == audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER
 
+        assert change.new_value is not None
         assert len(change.new_value) == 1
         role = change.new_value[568651298858074123]
-        role.app is mock_app
-        role.id == 568651298858074123
-        role.name == "Casual"
+        assert role.app is mock_app
+        assert role.id == 568651298858074123
+        assert role.name == "Casual"
 
+        assert change.old_value is not None
         assert len(change.old_value) == 1
         role = change.old_value[123123123312312]
-        role.app is mock_app
-        role.id == 123123123312312
-        role.name == "aRole"
+        assert role.app is mock_app
+        assert role.id == 123123123312312
+        assert role.name == "aRole"
 
     def test_deserialize_audit_log_entry_when_guild_id_in_payload(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
-        mock_app: traits.RESTAware,
     ):
         audit_log_entry_payload["guild_id"] = 431123123
 
@@ -3195,6 +3202,7 @@ class TestEntityFactoryImpl:
     def test_serialize_embed_with_non_url_resources_provides_attachments(
         self, entity_factory_impl: entity_factory.EntityFactoryImpl
     ):
+        # FIXME: I am unsure as to how to fix these below files.File() types.
         footer_icon = embed_models.EmbedResource(resource=files.File("cat.png"))
         thumbnail = embed_models.EmbedImage(resource=files.File("dog.png"))
         image = embed_models.EmbedImage(resource=files.Bytes(b"potato kung fu", "sushi.pdf"))
@@ -3250,6 +3258,7 @@ class TestEntityFactoryImpl:
             def filename(self) -> str:
                 return "lolbook.png"
 
+        # FIXME: I am unsure as to how to fix these below files.File() types.
         footer_icon = embed_models.EmbedResource(resource=files.URL("http://http.cat"))
         thumbnail = embed_models.EmbedImage(resource=DummyWebResource())
         image = embed_models.EmbedImage(resource=files.URL("http://bazbork.com"))

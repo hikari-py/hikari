@@ -56,7 +56,7 @@ class TestGenerateWeakListener:
             TypeError,
             match=r"dead weak referenced subscriber method cannot be executed, try actually closing your event streamers",
         ):
-            await call_weak_method(None)
+            await call_weak_method(mock.Mock())
 
     @pytest.mark.asyncio
     async def test__generate_weak_listener(self):
@@ -73,16 +73,11 @@ class TestGenerateWeakListener:
         mock_listener.assert_awaited_once_with(mock_event)
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock()
-
-
 class TestEventStream:
     def test___enter___and___exit__(self):
         stub_stream = hikari_test_helpers.mock_class_namespace(
             event_manager_base.EventStream, open=mock.Mock(), close=mock.Mock()
-        )(mock_app, base_events.Event, timeout=None)
+        )(mock.Mock(), base_events.Event, timeout=None)
 
         with stub_stream:
             stub_stream.open.assert_called_once_with()
@@ -92,8 +87,8 @@ class TestEventStream:
         stub_stream.close.assert_called_once_with()
 
     @pytest.mark.asyncio
-    async def test__listener_when_filter_returns_false(self, mock_app: traits.RESTAware):
-        stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None)
+    async def test__listener_when_filter_returns_false(self):
+        stream = event_manager_base.EventStream(mock.Mock(), base_events.Event, timeout=None)
         stream.filter(lambda _: False)
         mock_event = mock.Mock()
 
@@ -102,8 +97,8 @@ class TestEventStream:
 
     @hikari_test_helpers.timeout()
     @pytest.mark.asyncio
-    async def test__listener_when_filter_passes_and_queue_full(self, mock_app: traits.RESTAware):
-        stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=2)
+    async def test__listener_when_filter_passes_and_queue_full(self):
+        stream = event_manager_base.EventStream(mock.Mock(), base_events.Event, timeout=None, limit=2)
         stream._queue.append(mock.Mock())
         stream._queue.append(mock.Mock())
         stream.filter(lambda _: True)
@@ -117,8 +112,8 @@ class TestEventStream:
 
     @hikari_test_helpers.timeout()
     @pytest.mark.asyncio
-    async def test__listener_when_filter_passes_and_queue_not_full(self, mock_app: traits.RESTAware):
-        stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=None)
+    async def test__listener_when_filter_passes_and_queue_not_full(self):
+        stream = event_manager_base.EventStream(mock.Mock(), base_events.Event, timeout=None, limit=None)
         stream._queue.append(mock.Mock())
         stream._queue.append(mock.Mock())
         stream.filter(lambda _: True)
@@ -228,10 +223,12 @@ class TestEventStream:
         del streamer
         close_method.assert_not_called()
 
-    def test_close_for_inactive_stream(self, mock_app: traits.RESTAware):
-        stream = event_manager_base.EventStream(mock_app, base_events.Event, timeout=None, limit=None)
+    def test_close_for_inactive_stream(self):
+        app = mock.Mock()
+
+        stream = event_manager_base.EventStream(app.event_manager, base_events.Event, timeout=None, limit=None)
         stream.close()
-        mock_app.event_manager.unsubscribe.assert_not_called()
+        app.event_manager.unsubscribe.assert_not_called()
 
     def test_close_for_active_stream(self):
         mock_registered_listener = mock.Mock()
@@ -273,7 +270,7 @@ class TestEventStream:
         first_fails = mock.Mock(attr=True)
         second_fail = mock.Mock(attr=False)
 
-        def predicate(obj):
+        def predicate(obj: typing.Any):
             return obj in (first_pass, second_pass)
 
         stream.filter(predicate, attr=True)
@@ -300,7 +297,7 @@ class TestEventStream:
         await stream._listener(second_pass)
         await stream._listener(second_fail)
 
-        def predicate(obj):
+        def predicate(obj: typing.Any):
             return obj in (first_pass, second_pass)
 
         with stream:
@@ -430,7 +427,7 @@ class TestEventManagerBase:
             async def not_a_listener(self):
                 raise NotImplementedError
 
-        manager = StubManager(mock.Mock(), 0, cache_components=config.CacheComponents.NONE)
+        manager = StubManager(mock.Mock(), intents.Intents.NONE, cache_components=config.CacheComponents.NONE)
         assert manager._consumers == {
             "foo": event_manager_base._Consumer(manager.on_foo, 9, False),
             "bar": event_manager_base._Consumer(manager.on_bar, 105, False),
@@ -439,9 +436,9 @@ class TestEventManagerBase:
         }
 
     def test__increment_listener_group_count(self, event_manager: EventManagerBaseImpl):
-        on_foo_consumer = event_manager_base._Consumer(None, 9, False)
-        on_bar_consumer = event_manager_base._Consumer(None, 105, False)
-        on_bat_consumer = event_manager_base._Consumer(None, 1, False)
+        on_foo_consumer = event_manager_base._Consumer(mock.Mock(), 9, False)
+        on_bar_consumer = event_manager_base._Consumer(mock.Mock(), 105, False)
+        on_bat_consumer = event_manager_base._Consumer(mock.Mock(), 1, False)
         event_manager._consumers = {"foo": on_foo_consumer, "bar": on_bar_consumer, "bat": on_bat_consumer}
 
         event_manager._increment_listener_group_count(shard_events.ShardEvent, 1)
@@ -451,9 +448,9 @@ class TestEventManagerBase:
         assert on_bat_consumer.listener_group_count == 0
 
     def test__increment_waiter_group_count(self, event_manager: EventManagerBaseImpl):
-        on_foo_consumer = event_manager_base._Consumer(None, 9, False)
-        on_bar_consumer = event_manager_base._Consumer(None, 105, False)
-        on_bat_consumer = event_manager_base._Consumer(None, 1, False)
+        on_foo_consumer = event_manager_base._Consumer(mock.Mock(), 9, False)
+        on_bar_consumer = event_manager_base._Consumer(mock.Mock(), 105, False)
+        on_bat_consumer = event_manager_base._Consumer(mock.Mock(), 1, False)
         event_manager._consumers = {"foo": on_foo_consumer, "bar": on_bar_consumer, "bat": on_bat_consumer}
 
         event_manager._increment_waiter_group_count(shard_events.ShardEvent, 1)

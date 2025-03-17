@@ -240,7 +240,9 @@ class TestRESTBot:
             assert result.proxy_settings is config.ProxySettings.return_value
 
     @pytest.mark.parametrize(("close_event", "expected"), [(mock.Mock(), True), (None, False)])
-    def test_is_alive_property(self, mock_rest_bot: rest_bot_impl.RESTBot, close_event: object | None, expected: bool):
+    def test_is_alive_property(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, close_event: asyncio.Event | None, expected: bool
+    ):
         mock_rest_bot._close_event = close_event
         assert mock_rest_bot.is_alive is expected
 
@@ -562,7 +564,12 @@ class TestRESTBot:
         mock_rest_bot.add_startup_callback(mock_callback_2)
         mock_rest_bot._is_closing = True
 
-        with mock.patch.object(ux, "check_for_updates"):
+        with (
+            mock.patch.object(mock_rest_client, "start") as patched_start,
+            mock.patch.object(mock_rest_client, "close") as patched_close,
+            mock.patch.object(mock_interaction_server, "start") as patched_interaction_server_start,
+            mock.patch.object(ux, "check_for_updates") as patched_check_for_updates,
+        ):
             await mock_rest_bot.start(
                 backlog=34123,
                 check_for_updates=False,
@@ -576,9 +583,9 @@ class TestRESTBot:
                 ssl_context=mock_ssl_context,
             )
 
-            ux.check_for_updates.assert_not_called()
+            patched_check_for_updates.assert_not_called()
 
-        mock_interaction_server.start.assert_awaited_once_with(
+        patched_interaction_server_start.assert_awaited_once_with(
             backlog=34123,
             host="hostostosot",
             port=123123123,
@@ -589,8 +596,8 @@ class TestRESTBot:
             shutdown_timeout=4312312.3132132,
             ssl_context=mock_ssl_context,
         )
-        mock_rest_client.start.assert_called_once_with()
-        mock_rest_client.close.assert_not_called()
+        patched_start.assert_called_once_with()
+        patched_close.assert_not_called()
         assert mock_rest_bot._is_closing is False
         mock_callback_1.assert_awaited_once_with(mock_rest_bot)
         mock_callback_2.assert_awaited_once_with(mock_rest_bot)
@@ -611,7 +618,12 @@ class TestRESTBot:
         mock_rest_bot.add_startup_callback(mock_callback_1)
         mock_rest_bot.add_startup_callback(mock_callback_2)
 
-        with mock.patch.object(ux, "check_for_updates"):
+        with (
+            mock.patch.object(mock_rest_client, "start") as patched_start,
+            mock.patch.object(mock_rest_client, "close") as patched_close,
+            mock.patch.object(mock_interaction_server, "start") as patched_interaction_server_start,
+            mock.patch.object(ux, "check_for_updates") as patched_check_for_updates,
+        ):
             with pytest.raises(TypeError) as exc_info:
                 await mock_rest_bot.start(
                     backlog=34123,
@@ -627,11 +639,11 @@ class TestRESTBot:
                 )
 
             assert exc_info.value is mock_error
-            ux.check_for_updates.assert_not_called()
+            patched_check_for_updates.assert_not_called()
 
-        mock_interaction_server.start.assert_not_called()
-        mock_rest_client.start.assert_called_once_with()
-        mock_rest_client.close.assert_awaited_once_with()
+        patched_interaction_server_start.assert_not_called()
+        patched_start.assert_called_once_with()
+        patched_close.assert_awaited_once_with()
         assert mock_rest_bot._is_closing is False
         mock_callback_1.assert_awaited_once_with(mock_rest_bot)
         mock_callback_2.assert_not_called()
@@ -647,7 +659,7 @@ class TestRESTBot:
         stack.enter_context(mock.patch.object(asyncio, "create_task"))
         stack.enter_context(mock.patch.object(ux, "check_for_updates", new=mock.Mock()))
 
-        with stack:
+        with mock.patch.object(asyncio, "create_task") as patched_create_task, stack:
             await mock_rest_bot.start(
                 backlog=34123,
                 check_for_updates=True,
@@ -661,7 +673,7 @@ class TestRESTBot:
                 ssl_context=mock.Mock(),
             )
 
-            asyncio.create_task.assert_called_once_with(
+            patched_create_task.assert_called_once_with(
                 ux.check_for_updates.return_value, name="check for package updates"
             )
             ux.check_for_updates.assert_called_once_with(mock_http_settings, mock_proxy_settings)

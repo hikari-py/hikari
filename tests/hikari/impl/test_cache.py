@@ -45,13 +45,6 @@ from hikari.internal import collections
 from tests.hikari import hikari_test_helpers
 
 
-class StubModel(snowflakes.Unique):
-    id = None
-
-    def __init__(self, id=0):
-        self.id = snowflakes.Snowflake(id)
-
-
 class TestCacheImpl:
     @pytest.fixture
     def app_impl(self) -> traits.RESTAware:
@@ -196,7 +189,7 @@ class TestCacheImpl:
         assert emoji.is_managed is False
         assert emoji.is_available is True
 
-    def test__build_emoji_with_no_user(self, cache_impl: cache_impl_.CacheImpl):  # FIXME: _build_user doesn't exist.
+    def test__build_emoji_with_no_user(self, cache_impl: cache_impl_.CacheImpl):
         emoji_data = cache_utilities.KnownCustomEmojiData(
             id=snowflakes.Snowflake(1233534234),
             name="OKOKOKOKOK",
@@ -208,11 +201,11 @@ class TestCacheImpl:
             is_managed=False,
             is_available=True,
         )
-        cache_impl._build_user = mock.Mock()
+        cache_impl._build_user = mock.Mock()  # FIXME: Seems this is calling an object that does not actually exist.
 
         emoji = cache_impl._build_emoji(emoji_data)
 
-        cache_impl._build_user.assert_not_called()
+        cache_impl._build_user.assert_not_called()  # FIXME: Seems this is calling an object that does not actually exist.
         assert emoji.user is None
 
     def test_clear_emojis(self, cache_impl: cache_impl_.CacheImpl):
@@ -563,13 +556,15 @@ class TestCacheImpl:
             {snowflakes.Snowflake(5123123): mock.Mock(cache_utilities.KnownCustomEmojiData)}
         )
         cache_impl._set_user = mock.Mock()
-        cache_impl._increment_user_ref_count = mock.Mock()
+        cache_impl._increment_user_ref_count = (
+            mock.Mock()
+        )  # FIXME: Seems this is calling an object that does not actually exist.
 
         cache_impl.set_emoji(emoji)
 
         assert 5123123 in cache_impl._emoji_entries
         cache_impl._set_user.assert_called_once_with(mock_user)
-        cache_impl._increment_user_ref_count.assert_not_called()
+        cache_impl._increment_user_ref_count.assert_not_called()  # FIXME: Seems this is calling an object that does not actually exist.
 
     def test_update_emoji(self, cache_impl: cache_impl_.CacheImpl):
         mock_cached_emoji_1 = mock.Mock(emojis.KnownCustomEmoji)
@@ -622,11 +617,11 @@ class TestCacheImpl:
             user=None,
             is_available=True,
         )
-        cache_impl._build_user = mock.Mock()
+        cache_impl._build_user = mock.Mock()  # FIXME: Seems this is calling an object that does not actually exist.
 
         sticker = cache_impl._build_sticker(sticker_data)
 
-        cache_impl._build_user.assert_not_called()
+        cache_impl._build_user.assert_not_called()  # FIXME: Seems this is calling an object that does not actually exist.
         assert sticker.user is None
 
     def test_clear_stickers(self, cache_impl: cache_impl_.CacheImpl):
@@ -976,13 +971,15 @@ class TestCacheImpl:
             {snowflakes.Snowflake(5123123): mock.Mock(cache_utilities.GuildStickerData)}
         )
         cache_impl._set_user = mock.Mock()
-        cache_impl._increment_user_ref_count = mock.Mock()
+        cache_impl._increment_user_ref_count = (
+            mock.Mock()
+        )  # FIXME: Seems this is calling an object that does not actually exist.
 
         cache_impl.set_sticker(sticker)
 
         assert 5123123 in cache_impl._sticker_entries
         cache_impl._set_user.assert_called_once_with(mock_user)
-        cache_impl._increment_user_ref_count.assert_not_called()
+        cache_impl._increment_user_ref_count.assert_not_called()  # FIXME: Seems this is calling an object that does not actually exist.
 
     def test_clear_guilds_when_no_guilds_cached(self, cache_impl: cache_impl_.CacheImpl):
         cache_impl._guild_entries = collections.FreezableDict(
@@ -2443,7 +2440,9 @@ class TestCacheImpl:
         mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(645234123))
         member_model = mock.MagicMock(guilds.Member, user=mock_user, guild_id=snowflakes.Snowflake(67345234))
         cache_impl._set_user = mock.Mock()
-        cache_impl._increment_user_ref_count = mock.Mock()
+        cache_impl._increment_user_ref_count = (
+            mock.Mock()
+        )  # FIXME: Seems this is calling an object that does not actually exist.
         cache_impl._guild_entries = collections.FreezableDict(
             {
                 snowflakes.Snowflake(67345234): cache_utilities.GuildRecord(
@@ -2457,7 +2456,7 @@ class TestCacheImpl:
         cache_impl.set_member(member_model)
 
         cache_impl._set_user.assert_called_once_with(mock_user)
-        cache_impl._increment_user_ref_count.assert_not_called()
+        cache_impl._increment_user_ref_count.assert_not_called()  # FIXME: Seems this is calling an object that does not actually exist.
 
     def test_update_member(self, cache_impl: cache_impl_.CacheImpl):
         mock_old_cached_member = mock.Mock(guilds.Member)
@@ -2591,7 +2590,9 @@ class TestCacheImpl:
                 snowflakes.Snowflake(645234): mock.Mock(cache_utilities.RefCell),
             }
         )
-        cache_impl._build_user = mock.Mock(return_value=mock_user)
+        cache_impl._build_user = mock.Mock(
+            return_value=mock_user
+        )  # FIXME: Seems this is calling an object that does not actually exist.
 
         result = cache_impl.get_user(hikari_user)
 

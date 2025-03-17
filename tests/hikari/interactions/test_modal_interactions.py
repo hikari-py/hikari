@@ -179,4 +179,4 @@ class TestModalInteraction:
 
         assert mock_modal_interaction.get_guild() is None
 
-        mock_app.cache.get_guild.assert_not_called()
+        mock_app.cache.get_guild.assert_not_called()  # FIXME: This isn't an easy thing to patch, because it complains that the mock app does not have the attribute cache anyways, so it can never be called.

@@ -27,6 +27,7 @@ import http
 import re
 import typing
 from concurrent.futures import Executor
+from unittest.mock import AsyncMock
 
 import aiohttp
 import mock
@@ -58,6 +59,7 @@ from hikari import urls
 from hikari import users
 from hikari import voices
 from hikari import webhooks
+from hikari.api import RESTClient
 from hikari.api import cache
 from hikari.api import rest as rest_api
 from hikari.impl import config
@@ -1079,27 +1081,30 @@ class TestRESTClientImpl:
         self, rest_client: rest.RESTClientImpl, client_session_owner: bool, bucket_manager_owner: bool
     ):
         rest_client._close_event = mock_close_event = mock.Mock()
-        rest_client._client_session.close = client_close = mock.AsyncMock()
-        rest_client._bucket_manager.close = bucket_close = mock.AsyncMock()
         rest_client._client_session_owner = client_session_owner
         rest_client._bucket_manager_owner = bucket_manager_owner
 
-        await rest_client.close()
+        with (
+            mock.patch.object(rest_client._client_session, "close", mock.AsyncMock()) as patched__client_session_close,
+            mock.patch.object(rest_client, "_bucket_manager") as patched__bucket_manager,
+            mock.patch.object(patched__bucket_manager, "close", mock.AsyncMock()) as patched__bucket_manager_close,
+        ):
+            await rest_client.close()
 
         mock_close_event.set.assert_called_once_with()
         assert rest_client._close_event is None
 
         if client_session_owner:
-            client_close.assert_awaited_once_with()
+            patched__client_session_close.assert_awaited_once_with()
             assert rest_client._client_session is None
         else:
-            client_close.assert_not_called()
+            patched__client_session_close.assert_not_called()
             assert rest_client._client_session is not None
 
         if bucket_manager_owner:
-            bucket_close.assert_awaited_once_with()
+            patched__bucket_manager_close.assert_awaited_once_with()
         else:
-            rest_client._bucket_manager.assert_not_called()
+            patched__bucket_manager.assert_not_called()
 
     @pytest.mark.parametrize("client_session_owner", [True, False])
     @pytest.mark.parametrize("bucket_manager_owner", [True, False])
@@ -1113,10 +1118,12 @@ class TestRESTClientImpl:
         rest_client._client_session_owner = client_session_owner
         rest_client._bucket_manager_owner = bucket_manager_owner
 
-        with mock.patch.object(net, "create_client_session") as create_client_session:
-            with mock.patch.object(net, "create_tcp_connector") as create_tcp_connector:
-                with mock.patch.object(asyncio, "Event") as event:
-                    rest_client.start()
+        with (
+            mock.patch.object(net, "create_client_session") as create_client_session,
+            mock.patch.object(net, "create_tcp_connector") as create_tcp_connector,
+            mock.patch.object(asyncio, "Event") as event,
+        ):
+            rest_client.start()
 
         assert rest_client._close_event is event.return_value
 

@@ -378,11 +378,11 @@ class TestGatewayBot:
         voice: voice_impl.VoiceComponentImpl,
         cache: cache_impl.CacheImpl,
     ):
-        def null_call(arg):
+        def null_call(arg: typing.Any):
             return arg
 
         class AwaitableMock:
-            def __init__(self, error=None):
+            def __init__(self, error: typing.Any = None):
                 self._awaited_count = 0
                 self._error = error
 
@@ -471,14 +471,14 @@ class TestGatewayBot:
         event_manager.dispatch.assert_called_once_with(event)
 
     def test_get_listeners(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
-        event = mock.Mock()
+        event = mock.Mock
 
         assert bot.get_listeners(event, polymorphic=False) is event_manager.get_listeners.return_value
 
         event_manager.get_listeners.assert_called_once_with(event, polymorphic=False)
 
     @pytest.mark.asyncio
-    async def test_join(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
+    async def test_join(self, bot: bot_impl.GatewayBot):
         bot._closed_event = mock.AsyncMock()
 
         await bot.join()
@@ -486,16 +486,14 @@ class TestGatewayBot:
         bot._closed_event.wait.assert_awaited_once_with()
 
     @pytest.mark.asyncio
-    async def test_join_when_not_running(
-        self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl
-    ):
+    async def test_join_when_not_running(self, bot: bot_impl.GatewayBot):
         bot._closed_event = None
 
         with pytest.raises(errors.ComponentStateConflictError):
             await bot.join()
 
     def test_listen(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
-        event = mock.Mock()
+        event = mock.Mock
 
         assert bot.listen(event) is event_manager.listen.return_value
 
@@ -515,7 +513,7 @@ class TestGatewayBot:
 
     def test_run_when_shard_ids_specified_without_shard_count(self, bot: bot_impl.GatewayBot):
         with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
-            bot.run(shard_ids={1})
+            bot.run(shard_ids=[1])
 
     def test_run_with_asyncio_debug(self, bot: bot_impl.GatewayBot):
         stack = contextlib.ExitStack()
@@ -759,9 +757,7 @@ class TestGatewayBot:
         self,
         bot: bot_impl.GatewayBot,
         rest: rest_impl.RESTClientImpl,
-        voice: voice_impl.VoiceComponentImpl,
         event_manager: event_manager_impl.EventManagerImpl,
-        event_factory: event_factory_impl.EventFactoryImpl,
     ):
         class MockSessionStartLimit:
             remaining = 10
@@ -840,13 +836,17 @@ class TestGatewayBot:
         )
 
     def test_stream(self, bot: bot_impl.GatewayBot):
-        event_type = mock.Mock()
+        event_type = mock.Mock
 
-        with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
+        with (
+            mock.patch.object(bot, "_event_manager") as patched__event_manager,
+            mock.patch.object(patched__event_manager, "stream") as patched_stream,
+            mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as patched_check_if_alive,
+        ):
             bot.stream(event_type, timeout=100, limit=400)
 
-        check_if_alive.assert_called_once_with()
-        bot._event_manager.stream.assert_called_once_with(event_type, timeout=100, limit=400)
+        patched_check_if_alive.assert_called_once_with()
+        patched_stream.assert_called_once_with(event_type, timeout=100, limit=400)
 
     def test_subscribe(self, bot: bot_impl.GatewayBot):
         event_type = mock.Mock()
@@ -868,7 +868,7 @@ class TestGatewayBot:
 
     @pytest.mark.asyncio
     async def test_wait_for(self, bot: bot_impl.GatewayBot):
-        event_type = mock.Mock()
+        event_type = mock.Mock
         predicate = mock.Mock()
         bot._event_manager.wait_for = mock.AsyncMock()
 

@@ -81,7 +81,7 @@ def mock_class_namespace(
     return type(name, (klass,), namespace)
 
 
-def retry(max_retries):
+def retry(max_retries: int):
     def decorator(func):
         assert asyncio.iscoroutinefunction(func), "retry only supports coroutine functions currently"
 

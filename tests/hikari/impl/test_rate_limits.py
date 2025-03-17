@@ -64,7 +64,9 @@ class TestBurstRateLimiter:
         return MockBurstLimiterImpl(__name__)
 
     @pytest.mark.parametrize(("queue", "is_empty"), [(["foo", "bar", "baz"], False), ([], True)])
-    def test_is_empty(self, queue: typing.Sequence[str], is_empty: bool, mock_burst_limiter: MockBurstLimiterImpl):
+    def test_is_empty(
+        self, queue: list[asyncio.Future[typing.Any]], is_empty: bool, mock_burst_limiter: MockBurstLimiterImpl
+    ):
         mock_burst_limiter.queue = queue
         assert mock_burst_limiter.is_empty is is_empty
 

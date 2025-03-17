@@ -11,7 +11,13 @@ from hikari import guilds
 from hikari import messages
 from hikari import snowflakes
 from hikari import stickers
+from hikari import traits
 from hikari import users
+
+
+@pytest.fixture
+def hikari_app() -> traits.RESTAware:
+    return mock.Mock(spec=traits.RESTAware)
 
 
 @pytest.fixture

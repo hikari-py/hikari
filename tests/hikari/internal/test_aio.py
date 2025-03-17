@@ -82,7 +82,8 @@ class TestCompletedFuture:
 
     @pytest.mark.asyncio
     async def test_non_default_result(self):
-        assert aio.completed_future(...).result() is ...
+        obj = mock.Mock
+        assert aio.completed_future(obj).result() is obj
 
 
 @pytest.mark.asyncio

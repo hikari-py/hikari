@@ -217,14 +217,14 @@ class TestGatewayTransport:
 
     @pytest.mark.asyncio
     async def test__handle_other_message_when_TEXT(self, transport_impl: shard._GatewayTransport):
-        stub_response = StubResponse(type=aiohttp.WSMsgType.TEXT)
+        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.TEXT)
 
         with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
             transport_impl._handle_other_message(stub_response)
 
     @pytest.mark.asyncio
     async def test__handle_other_message_when_BINARY(self, transport_impl: shard._GatewayTransport):
-        stub_response = StubResponse(type=aiohttp.WSMsgType.BINARY)
+        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY)
 
         with pytest.raises(errors.GatewayError, match="Unexpected message type received BINARY, expected TEXT"):
             transport_impl._handle_other_message(stub_response)
@@ -243,7 +243,7 @@ class TestGatewayTransport:
     def test__handle_other_message_when_message_type_is_CLOSE_and_should_reconnect(
         self, code: int | errors.ShardCloseCode, transport_impl: shard._GatewayTransport
     ):
-        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="some error extra", data=code)
+        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.CLOSE, extra="some error extra", data=code)
 
         with pytest.raises(errors.GatewayServerClosedConnectionError) as exinfo:
             transport_impl._handle_other_message(stub_response)
@@ -257,7 +257,7 @@ class TestGatewayTransport:
     def test__handle_other_message_when_message_type_is_CLOSE_and_should_not_reconnect(
         self, code: int, transport_impl: shard._GatewayTransport
     ):
-        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="don't reconnect", data=code)
+        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.CLOSE, extra="don't reconnect", data=code)
 
         with pytest.raises(errors.GatewayServerClosedConnectionError) as exinfo:
             transport_impl._handle_other_message(stub_response)
@@ -268,13 +268,13 @@ class TestGatewayTransport:
         assert exception.can_reconnect is False
 
     def test__handle_other_message_when_message_type_is_CLOSING(self, transport_impl: shard._GatewayTransport):
-        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSING)
+        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.CLOSING)
 
         with pytest.raises(errors.GatewayError, match="Socket has closed"):
             transport_impl._handle_other_message(stub_response)
 
     def test__handle_other_message_when_message_type_is_CLOSED(self, transport_impl: shard._GatewayTransport):
-        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSED)
+        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.CLOSED)
 
         with pytest.raises(errors.GatewayError, match="Socket has closed"):
             transport_impl._handle_other_message(stub_response)
@@ -315,9 +315,9 @@ class TestGatewayTransport:
     async def test__receive_and_check_zlib_when_payload_split_across_frames(
         self, transport_impl: shard._GatewayTransport
     ):
-        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
-        response2 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\xc9W(\xcf/\xcaIQ\x04\x00\x00")
-        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
+        response1 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
+        response2 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"\xc9W(\xcf/\xcaIQ\x04\x00\x00")
+        response3 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
         transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
 
         assert await transport_impl._receive_and_check_zlib() == b"Hello world!"
@@ -328,7 +328,9 @@ class TestGatewayTransport:
     async def test__receive_and_check_zlib_when_full_payload_in_one_frame(
         self, transport_impl: shard._GatewayTransport
     ):
-        response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xdaJLD\x07\x00\x00\x00\x00\xff\xff")
+        response = mock.Mock(
+            aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"x\xdaJLD\x07\x00\x00\x00\x00\xff\xff"
+        )
         transport_impl._ws.receive = mock.AsyncMock(return_value=response)
 
         assert await transport_impl._receive_and_check_zlib() == b"aaaaaaaaaaaaaaaaaa"
@@ -349,9 +351,9 @@ class TestGatewayTransport:
     async def test__receive_and_check_zlib_when_issue_during_reception_of_multiple_frames(
         self, transport_impl: shard._GatewayTransport
     ):
-        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
+        response1 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
         response2 = StubResponse(type=aiohttp.WSMsgType.ERROR, data="Something broke!")
-        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
+        response3 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
         transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
         transport_impl._ws.exception = mock.Mock(return_value=None)
 
@@ -463,7 +465,9 @@ class TestGatewayTransport:
         ("error", "reason"),
         [
             (
-                aiohttp.WSServerHandshakeError(status=123, message="some error", request_info=None, history=None),
+                aiohttp.WSServerHandshakeError(
+                    status=123, message="some error", request_info=None, history=None
+                ),  # FIXME: I have no clue how to change this one. I think the easiest way to do this would be to just type ignore, but otherwise the proper objects could be built.
                 "WSServerHandshakeError(None, None, status=123, message='some error')",
             ),
             (aiohttp.ClientOSError("some os error"), "some os error"),
@@ -565,8 +569,10 @@ class TestGatewayShardImpl:
         client._intents = mock_intents
         assert client.intents is mock_intents
 
-    @pytest.mark.parametrize(("keep_alive_task", "expected"), [(None, False), ("some", True)])
-    def test_is_alive_property(self, client: shard.GatewayShardImpl, keep_alive_task: str | None, expected: bool):
+    @pytest.mark.parametrize(("keep_alive_task", "expected"), [(None, False), (mock.Mock(asyncio.Task), True)])
+    def test_is_alive_property(
+        self, client: shard.GatewayShardImpl, keep_alive_task: asyncio.Task[None] | None, expected: bool
+    ):
         client._keep_alive_task = keep_alive_task
 
         assert client.is_alive is expected
@@ -577,13 +583,17 @@ class TestGatewayShardImpl:
             (None, None, False),
             (None, True, False),
             (None, False, False),
-            ("something", None, False),
-            ("something", True, True),
-            ("something", False, False),
+            (mock.Mock(shard._GatewayTransport), None, False),
+            (mock.Mock(shard._GatewayTransport), True, True),
+            (mock.Mock(shard._GatewayTransport), False, False),
         ],
     )
     def test_is_connected_property(
-        self, client: shard.GatewayShardImpl, ws: str | None, handshake_event: bool | None, expected: bool
+        self,
+        client: shard.GatewayShardImpl,
+        ws: shard._GatewayTransport | None,
+        handshake_event: bool | None,
+        expected: bool,
     ):
         client._ws = ws
         client._handshake_event = (
@@ -995,8 +1005,8 @@ class TestGatewayShardImplAsync:
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
         client._seq = None
-        client._large_threshold = "your mom"
-        client._intents = 9
+        client._large_threshold = 3784598347
+        client._intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILDS
 
         heartbeat_task = mock.Mock()
         poll_events_task = mock.Mock()
@@ -1058,7 +1068,7 @@ class TestGatewayShardImplAsync:
                 "d": {
                     "token": "sometoken",
                     "compress": False,
-                    "large_threshold": "your mom",
+                    "large_threshold": 3784598347,
                     "properties": {
                         "os": "Potato OS ARM64",
                         "browser": "hikari (1.0.0, aiohttp 4.0)",
@@ -1292,7 +1302,7 @@ class TestGatewayShardImplAsync:
         payload = {"op": 9, "d": True}
 
         client._seq = 123
-        client._session_id = 456
+        client._session_id = "a cool session id"
         client._ws = mock.Mock(receive_json=mock.AsyncMock(side_effect=[payload, RuntimeError]))
         client._handshake_event = mock.Mock()
 
@@ -1300,14 +1310,14 @@ class TestGatewayShardImplAsync:
 
         assert client._ws.receive_json.await_count == 1
         assert client._seq == 123
-        assert client._session_id == 456
+        assert client._session_id == "a cool session id"
         client._handshake_event.set.assert_not_called()
 
     async def test__poll_events_on_invalid_session_when_cant_resume(self, client: shard.GatewayShardImpl):
         payload = {"op": 9, "d": False}
 
         client._seq = 123
-        client._session_id = 456
+        client._session_id = "a cool session id"
         client._ws = mock.Mock(receive_json=mock.AsyncMock(side_effect=[payload, RuntimeError]))
         client._handshake_event = mock.Mock()
 

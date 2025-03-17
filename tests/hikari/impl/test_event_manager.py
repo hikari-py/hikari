@@ -29,6 +29,7 @@ import typing
 import mock
 import pytest
 
+from hikari import GatewayGuild
 from hikari import channels
 from hikari import errors
 from hikari import intents
@@ -793,40 +794,47 @@ class TestEventManagerImpl:
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=False)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
 
-        with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+            mock.patch.object(
+                event_factory, "deserialize_guild_available_event"
+            ) as patched_deserialize_guild_available_event,
+            mock.patch.object(event_factory, "deserialize_guild_join_event") as patched_deserialize_guild_join_event,
+            mock.patch.object(entity_factory, "deserialize_gateway_guild") as patched_deserialize_gateway_guild,
+            mock.patch.object(shard, "get_user_id") as patched_get_user_id,
+            mock.patch.object(event_manager, "_request_guild_members") as request_guild_members,
+        ):
             await event_manager_impl.on_guild_create(shard, payload)
 
         if include_unavailable:
             event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildAvailableEvent)
         else:
             event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildJoinEvent)
-
-        event_factory.deserialize_guild_join_event.assert_not_called()
-        event_factory.deserialize_guild_available_event.assert_not_called()
-        entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            payload, user_id=shard.get_user_id.return_value
-        )
-        event_manager_impl._cache.update_guild.assert_not_called()
-        event_manager_impl._cache.clear_guild_channels_for_guild.assert_not_called()
-        event_manager_impl._cache.set_guild_channel.assert_not_called()
-        event_manager_impl._cache.clear_threads_for_guild.assert_not_called()
-        event_manager_impl._cache.set_thread.assert_not_called()
-        event_manager_impl._cache.clear_emojis_for_guild.assert_not_called()
-        event_manager_impl._cache.set_emoji.assert_not_called()
-        event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
-        event_manager_impl._cache.set_sticker.assert_not_called()
-        event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
-        event_manager_impl._cache.set_role.assert_not_called()
-        event_manager_impl._cache.clear_members_for_guild.assert_not_called()
-        event_manager_impl._cache.set_member.assert_not_called()
-        event_manager_impl._cache.clear_presences_for_guild.assert_not_called()
-        event_manager_impl._cache.set_presence.assert_not_called()
-        event_manager_impl._cache.clear_voice_states_for_guild.assert_not_called()
-        event_manager_impl._cache.set_voice_state.assert_not_called()
-        shard.get_user_id.assert_called_once_with()
+        patched_deserialize_guild_join_event.assert_not_called()
+        patched_deserialize_guild_available_event.assert_not_called()
+        patched_deserialize_gateway_guild.assert_called_once_with(payload, user_id=patched_get_user_id.return_value)
+        patched__cache.update_guild.assert_not_called()
+        patched__cache.clear_guild_channels_for_guild.assert_not_called()
+        patched__cache.set_guild_channel.assert_not_called()
+        patched__cache.clear_threads_for_guild.assert_not_called()
+        patched__cache.set_thread.assert_not_called()
+        patched__cache.clear_emojis_for_guild.assert_not_called()
+        patched__cache.set_emoji.assert_not_called()
+        patched__cache.clear_stickers_for_guild.assert_not_called()
+        patched__cache.set_sticker.assert_not_called()
+        patched__cache.clear_roles_for_guild.assert_not_called()
+        patched__cache.set_role.assert_not_called()
+        patched__cache.clear_members_for_guild.assert_not_called()
+        patched__cache.set_member.assert_not_called()
+        patched__cache.clear_presences_for_guild.assert_not_called()
+        patched__cache.set_presence.assert_not_called()
+        patched__cache.clear_voice_states_for_guild.assert_not_called()
+        patched__cache.set_voice_state.assert_not_called()
+        patched_get_user_id.assert_called_once_with()
         request_guild_members.assert_not_called()
 
-        event_manager_impl.dispatch.assert_not_called()
+        patched_dispatch.assert_not_called()
 
     @pytest.mark.parametrize(
         ("include_unavailable", "only_my_member"), [(True, True), (True, False), (False, True), (False, False)]
@@ -845,9 +853,9 @@ class TestEventManagerImpl:
         event_manager_impl._intents = intents.Intents.NONE
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
-        event_manager_impl._cache.settings.only_my_member = only_my_member
-        shard.get_user_id.return_value = 1
-        gateway_guild = entity_factory.deserialize_gateway_guild.return_value
+        # event_manager_impl._cache.settings.only_my_member = only_my_member
+        # shard.get_user_id.return_value = 1
+        gateway_guild = mock.Mock()
         gateway_guild.channels.return_value = {1: "channel1", 2: "channel2"}
         gateway_guild.emojis.return_value = {1: "emoji1", 2: "emoji2"}
         gateway_guild.roles.return_value = {1: "role1", 2: "role2"}
@@ -857,7 +865,20 @@ class TestEventManagerImpl:
         gateway_guild.stickers.return_value = {1: "sticker1", 2: "sticker2"}
         gateway_guild.threads.return_value = {1: "thread1", 2: "thread2"}
 
-        with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+            mock.patch.object(
+                event_factory, "deserialize_guild_available_event"
+            ) as patched_deserialize_guild_available_event,
+            mock.patch.object(event_factory, "deserialize_guild_join_event") as patched_deserialize_guild_join_event,
+            mock.patch.object(
+                entity_factory, "deserialize_gateway_guild", return_value=gateway_guild
+            ) as patched_deserialize_gateway_guild,
+            mock.patch.object(shard, "get_user_id", return_value=1) as patched_get_user_id,
+            mock.patch.object(patched__cache.settings, "only_my_member", only_my_member),
+            mock.patch.object(event_manager, "_request_guild_members") as request_guild_members,
+        ):
             await event_manager_impl.on_guild_create(shard, payload)
 
         if include_unavailable:
@@ -865,36 +886,34 @@ class TestEventManagerImpl:
         else:
             event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildJoinEvent)
 
-        event_factory.deserialize_guild_join_event.assert_not_called()
-        event_factory.deserialize_guild_available_event.assert_not_called()
-        entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            payload, user_id=shard.get_user_id.return_value
-        )
-        event_manager_impl._cache.update_guild.assert_called_once_with(gateway_guild.guild.return_value)
-        event_manager_impl._cache.clear_guild_channels_for_guild.assert_called_once_with(gateway_guild.id)
-        event_manager_impl._cache.set_guild_channel.assert_has_calls([mock.call("channel1"), mock.call("channel2")])
-        event_manager_impl._cache.clear_threads_for_guild.assert_called_once_with(gateway_guild.id)
-        event_manager_impl._cache.set_thread.assert_has_calls([mock.call("thread1"), mock.call("thread2")])
-        event_manager_impl._cache.clear_emojis_for_guild.assert_called_once_with(gateway_guild.id)
-        event_manager_impl._cache.set_emoji.assert_has_calls([mock.call("emoji1"), mock.call("emoji2")])
-        event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(gateway_guild.id)
-        event_manager_impl._cache.set_sticker.assert_has_calls([mock.call("sticker1"), mock.call("sticker2")])
-        event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(gateway_guild.id)
-        event_manager_impl._cache.set_role.assert_has_calls([mock.call("role1"), mock.call("role2")])
-        event_manager_impl._cache.clear_members_for_guild.assert_called_once_with(gateway_guild.id)
+        patched_deserialize_guild_join_event.assert_not_called()
+        patched_deserialize_guild_available_event.assert_not_called()
+        patched_deserialize_gateway_guild.assert_called_once_with(payload, user_id=patched_get_user_id.return_value)
+        patched__cache.update_guild.assert_called_once_with(gateway_guild.guild.return_value)
+        patched__cache.clear_guild_channels_for_guild.assert_called_once_with(gateway_guild.id)
+        patched__cache.set_guild_channel.assert_has_calls([mock.call("channel1"), mock.call("channel2")])
+        patched__cache.clear_threads_for_guild.assert_called_once_with(gateway_guild.id)
+        patched__cache.set_thread.assert_has_calls([mock.call("thread1"), mock.call("thread2")])
+        patched__cache.clear_emojis_for_guild.assert_called_once_with(gateway_guild.id)
+        patched__cache.set_emoji.assert_has_calls([mock.call("emoji1"), mock.call("emoji2")])
+        patched__cache.clear_stickers_for_guild.assert_called_once_with(gateway_guild.id)
+        patched__cache.set_sticker.assert_has_calls([mock.call("sticker1"), mock.call("sticker2")])
+        patched__cache.clear_roles_for_guild.assert_called_once_with(gateway_guild.id)
+        patched__cache.set_role.assert_has_calls([mock.call("role1"), mock.call("role2")])
+        patched__cache.clear_members_for_guild.assert_called_once_with(gateway_guild.id)
         if only_my_member:
-            event_manager_impl._cache.set_member.assert_called_once_with("member1")
-            shard.get_user_id.assert_has_calls([mock.call(), mock.call()])
+            patched__cache.set_member.assert_called_once_with("member1")
+            patched_get_user_id.assert_has_calls([mock.call(), mock.call()])
         else:
-            event_manager_impl._cache.set_member.assert_has_calls([mock.call("member1"), mock.call("member2")])
-            shard.get_user_id.assert_called_once_with()
-        event_manager_impl._cache.clear_presences_for_guild.assert_called_once_with(gateway_guild.id)
-        event_manager_impl._cache.set_presence.assert_has_calls([mock.call("presence1"), mock.call("presence2")])
-        event_manager_impl._cache.clear_voice_states_for_guild.assert_called_once_with(gateway_guild.id)
-        event_manager_impl._cache.set_voice_state.assert_has_calls([mock.call("voice1"), mock.call("voice2")])
+            patched__cache.set_member.assert_has_calls([mock.call("member1"), mock.call("member2")])
+            patched_get_user_id.assert_called_once_with()
+        patched__cache.clear_presences_for_guild.assert_called_once_with(gateway_guild.id)
+        patched__cache.set_presence.assert_has_calls([mock.call("presence1"), mock.call("presence2")])
+        patched__cache.clear_voice_states_for_guild.assert_called_once_with(gateway_guild.id)
+        patched__cache.set_voice_state.assert_has_calls([mock.call("voice1"), mock.call("voice2")])
         request_guild_members.assert_not_called()
 
-        event_manager_impl.dispatch.assert_not_called()
+        patched_dispatch.assert_not_called()
 
     @pytest.mark.parametrize("include_unavailable", [True, False])
     @pytest.mark.asyncio
@@ -1108,13 +1127,18 @@ class TestEventManagerImpl:
             roles={555: mock_role}, emojis={333: mock_emoji}, guild=mock.Mock(id=123), stickers={444: mock_sticker}
         )
 
-        event_factory.deserialize_guild_update_event.return_value = event
-        event_manager_impl._cache.get_guild.return_value = old_guild
-
-        await event_manager_impl.on_guild_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_update_event", return_value=event
+            ) as patched_deserialize_guild_update_event,
+            mock.patch.object(event_manager_impl._cache, "get_guild", return_value=old_guild) as patched_get_guild,
+            mock.patch.object(shard, "get_user_id") as patched_get_user_id,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            await event_manager_impl.on_guild_update(shard, payload)
 
         event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildUpdateEvent)
-        event_manager_impl._cache.get_guild.assert_called_once_with(123)
+        patched_get_guild.assert_called_once_with(123)
         event_manager_impl._cache.update_guild.assert_called_once_with(event.guild)
         event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.set_role.assert_called_once_with(mock_role)
@@ -1123,9 +1147,9 @@ class TestEventManagerImpl:
         event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.set_sticker.assert_called_once_with(mock_sticker)
         entity_factory.deserialize_gateway_guild.assert_not_called()
-        event_factory.deserialize_guild_update_event.assert_called_once_with(shard, payload, old_guild=old_guild)
-        event_manager_impl.dispatch.assert_awaited_once_with(event)
-        shard.get_user_id.assert_not_called()
+        patched_deserialize_guild_update_event.assert_called_once_with(shard, payload, old_guild=old_guild)
+        patched_dispatch.assert_awaited_once_with(event)
+        patched_get_user_id.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_on_guild_update_all_cache_components_and_not_dispatching(
@@ -1146,10 +1170,14 @@ class TestEventManagerImpl:
         guild_definition.roles.return_value = {1: mock_role}
         guild_definition.stickers.return_value = {4: mock_sticker}
 
-        await event_manager_impl.on_guild_update(shard, payload)
+        with (
+            mock.patch.object(shard, "get_user_id") as patched_get_user_id,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            await event_manager_impl.on_guild_update(shard, payload)
 
         entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            {"id": 123}, user_id=shard.get_user_id.return_value
+            {"id": 123}, user_id=patched_get_user_id.return_value
         )
         event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildUpdateEvent)
         event_manager_impl._cache.update_guild.assert_called_once_with(guild_definition.guild.return_value)
@@ -1159,9 +1187,9 @@ class TestEventManagerImpl:
         event_manager_impl._cache.set_sticker.assert_called_once_with(mock_sticker)
         event_manager_impl._cache.clear_roles_for_guild.assert_called_once_with(123)
         event_manager_impl._cache.set_role.assert_called_once_with(mock_role)
-        shard.get_user_id.assert_called_once_with()
+        patched_get_user_id.assert_called_once_with()
         event_factory.deserialize_guild_update_event.assert_not_called()
-        event_manager_impl.dispatch.assert_not_called()
+        patched_dispatch.assert_not_called()
         guild_definition.emojis.assert_called_once_with()
         guild_definition.roles.assert_called_once_with()
         guild_definition.guild.assert_called_once_with()
@@ -1179,10 +1207,14 @@ class TestEventManagerImpl:
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
         guild_definition = entity_factory.deserialize_gateway_guild.return_value
 
-        await event_manager_impl.on_guild_update(shard, payload)
+        with (
+            mock.patch.object(shard, "get_user_id") as patched_get_user_id,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            await event_manager_impl.on_guild_update(shard, payload)
 
         entity_factory.deserialize_gateway_guild.assert_called_once_with(
-            {"id": 123}, user_id=shard.get_user_id.return_value
+            {"id": 123}, user_id=patched_get_user_id.return_value
         )
         event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildUpdateEvent)
         event_manager_impl._cache.update_guild.assert_not_called()
@@ -1193,11 +1225,11 @@ class TestEventManagerImpl:
         event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
         event_manager_impl._cache.set_role.assert_not_called()
         event_factory.deserialize_guild_update_event.assert_not_called()
-        event_manager_impl.dispatch.assert_not_called()
+        patched_dispatch.assert_not_called()
         guild_definition.emojis.assert_not_called()
         guild_definition.roles.assert_not_called()
         guild_definition.guild.assert_not_called()
-        shard.get_user_id.assert_called_once_with()
+        patched_get_user_id.assert_called_once_with()
 
     @pytest.mark.asyncio
     async def test_on_guild_update_stateless_and_dispatching(
@@ -1205,7 +1237,6 @@ class TestEventManagerImpl:
         stateless_event_manager_impl: event_manager.EventManagerImpl,
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
-        entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
         payload: typing.Mapping[str, typing.Any] = {"id": 123}
         stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
@@ -1239,7 +1270,8 @@ class TestEventManagerImpl:
 
         event_factory.deserialize_guild_leave_event.return_value = event
 
-        await event_manager_impl.on_guild_delete(shard, payload)
+        with mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch:
+            await event_manager_impl.on_guild_delete(shard, payload)
 
         event_manager_impl._cache.delete_guild.assert_called_once_with(123)
         event_manager_impl._cache.clear_voice_states_for_guild.assert_called_once_with(123)
@@ -1254,7 +1286,7 @@ class TestEventManagerImpl:
         event_factory.deserialize_guild_leave_event.assert_called_once_with(
             shard, payload, old_guild=event_manager_impl._cache.delete_guild.return_value
         )
-        event_manager_impl.dispatch.assert_awaited_once_with(event)
+        patched_dispatch.assert_awaited_once_with(event)
 
     @pytest.mark.asyncio
     async def test_on_guild_delete_stateful_when_unavailable(

@@ -320,14 +320,14 @@ class TestInteractionServer:
         mock_interaction_server: interaction_server_impl.InteractionServer,
         mock_rest_client: rest_impl.RESTClientImpl,
     ):
-        mock_rest_client.token_type = "Bot"
+        # mock_rest_client.token_type = "Bot"
         mock_interaction_server._application_fetch_lock = None
         mock_rest_client.fetch_application.return_value.public_key = (
             b"e\xb9\xf8\xac]eH\xb1\xe1D\xafaW\xdd\x1c.\xc1s\xfd<\x82\t\xeaO\xd4w\xaf\xc4\x1b\xd0\x8f\xc5"
         )
         results = []
 
-        with mock.patch.object(asyncio, "Lock") as lock_class:
+        with mock.patch.object(mock_rest_client, "token_type", "Bot"), mock.patch.object(asyncio, "Lock") as lock_class:
             # Run some times to make sure it does not overwrite it
             for _ in range(5):
                 results.append(await mock_interaction_server._fetch_public_key())

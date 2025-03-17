@@ -144,7 +144,7 @@ async def test_generate_bad_request_error_without_json_response():
         real_url = "https://some.url"
         status = http.HTTPStatus.BAD_REQUEST
         headers = {}
-        json = mock.AsyncMock(side_effect=aiohttp.ContentTypeError(None, None))
+        json = mock.AsyncMock(side_effect=aiohttp.ContentTypeError(mock.Mock(), ()))
 
         async def read(self):
             return "some raw body"

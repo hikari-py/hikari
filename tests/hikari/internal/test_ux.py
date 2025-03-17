@@ -267,7 +267,9 @@ class TestPrintBanner:
         write.assert_not_called()
 
     @pytest.fixture
-    def mock_args(self):
+    def mock_args(
+        self,
+    ):  # FIXME: I am unsure how this should be typed. It wants to type itself as a Generator[None, Any, None] but it doesn't seem right.
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(platform, "release", return_value="1.0.0"))
         stack.enter_context(mock.patch.object(platform, "system", return_value="Potato"))
