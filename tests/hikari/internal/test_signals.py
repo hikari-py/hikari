@@ -20,7 +20,6 @@
 # SOFTWARE.
 from __future__ import annotations
 
-import contextlib
 import signal
 
 import mock
@@ -52,14 +51,13 @@ class TestHandleInterrupt:
     def test_behaviour(self):
         loop = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        register_signal_handler = stack.enter_context(mock.patch.object(signal, "signal"))
-        interrupt_handler = stack.enter_context(mock.patch.object(signals, "_interrupt_handler"))
-        stack.enter_context(mock.patch.object(signal, "SIGINT", new=2, create=True))
-        stack.enter_context(mock.patch.object(signal, "SIGTERM", new=15, create=True))
-        stack.enter_context(mock.patch.object(signals, "_INTERRUPT_SIGNALS", ("SIGINT", "SIGTERM", "UNIMPLEMENTED")))
-
-        with stack:
+        with (
+            mock.patch.object(signal, "signal") as register_signal_handler,
+            mock.patch.object(signals, "_interrupt_handler") as interrupt_handler,
+            mock.patch.object(signal, "SIGINT", new=2, create=True),
+            mock.patch.object(signal, "SIGTERM", new=15, create=True),
+            mock.patch.object(signals, "_INTERRUPT_SIGNALS", ("SIGINT", "SIGTERM", "UNIMPLEMENTED")),
+        ):
             with signals.handle_interrupts(True, loop, True):
                 interrupt_handler.assert_called_once_with(loop)
 

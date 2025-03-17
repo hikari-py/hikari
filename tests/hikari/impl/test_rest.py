@@ -340,11 +340,11 @@ class TestRESTApp:
     def test_acquire(self, rest_app: rest.RESTApp):
         rest_app._client_session = mock.Mock()
         rest_app._bucket_manager = mock.Mock()
-        stack = contextlib.ExitStack()
-        mock_entity_factory = stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl"))
-        mock_client = stack.enter_context(mock.patch.object(rest, "RESTClientImpl"))
 
-        with stack:
+        with (
+            mock.patch.object(entity_factory, "EntityFactoryImpl") as mock_entity_factory,
+            mock.patch.object(rest, "RESTClientImpl") as mock_client,
+        ):
             rest_app.acquire(token="token", token_type="Type")
 
         mock_client.assert_called_once_with(
@@ -373,11 +373,11 @@ class TestRESTApp:
     def test_acquire_defaults_to_bearer_for_a_string_token(self, rest_app: rest.RESTApp):
         rest_app._client_session = mock.Mock()
         rest_app._bucket_manager = mock.Mock()
-        stack = contextlib.ExitStack()
-        mock_entity_factory = stack.enter_context(mock.patch.object(entity_factory, "EntityFactoryImpl"))
-        mock_client = stack.enter_context(mock.patch.object(rest, "RESTClientImpl"))
 
-        with stack:
+        with (
+            mock.patch.object(entity_factory, "EntityFactoryImpl") as mock_entity_factory,
+            mock.patch.object(rest, "RESTClientImpl") as mock_client,
+        ):
             rest_app.acquire(token="token")
 
         mock_client.assert_called_once_with(
@@ -1644,16 +1644,13 @@ class TestRESTClientImpl:
     def test__build_message_payload_embed_content_syntactic_sugar(self, rest_client: rest.RESTClientImpl):
         embed = mock.Mock(embeds.Embed)
 
-        stack = contextlib.ExitStack()
-        generate_allowed_mentions = stack.enter_context(
-            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
-        )
-
         with (
             mock.patch.object(
                 rest_client.entity_factory, "serialize_embed", return_value=({"embed": 1}, [])
             ) as patched_serialize_embed,
-            stack,
+            mock.patch.object(
+                mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
+            ) as generate_allowed_mentions,
         ):
             body, form = rest_client._build_message_payload(content=embed)
 
@@ -1673,16 +1670,13 @@ class TestRESTClientImpl:
         attachment = mock.Mock(files.Resource)
         resource_attachment = mock.Mock(filename="attachment.png")
 
-        stack = contextlib.ExitStack()
-        ensure_resource = stack.enter_context(
-            mock.patch.object(files, "ensure_resource", return_value=resource_attachment)
-        )
-        generate_allowed_mentions = stack.enter_context(
-            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
-        )
-        url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
-
-        with stack:
+        with (
+            mock.patch.object(files, "ensure_resource", return_value=resource_attachment) as ensure_resource,
+            mock.patch.object(
+                mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
+            ) as generate_allowed_mentions,
+            mock.patch.object(data_binding, "URLEncodedFormBuilder") as url_encoded_form,
+        ):
             body, form = rest_client._build_message_payload(content=attachment)
 
         # Returned
@@ -1718,20 +1712,17 @@ class TestRESTClientImpl:
         user_mentions = mock.Mock()
         role_mentions = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        ensure_resource = stack.enter_context(
-            mock.patch.object(files, "ensure_resource", side_effect=[resource_attachment1, resource_attachment2])
-        )
-        generate_allowed_mentions = stack.enter_context(
-            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
-        )
-        url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
-
         with (
             mock.patch.object(
                 rest_client.entity_factory, "serialize_embed", return_value=({"embed": 1}, [embed_attachment])
             ) as patched_serialize_embed,
-            stack,
+            mock.patch.object(
+                files, "ensure_resource", side_effect=[resource_attachment1, resource_attachment2]
+            ) as ensure_resource,
+            mock.patch.object(
+                mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
+            ) as generate_allowed_mentions,
+            mock.patch.object(data_binding, "URLEncodedFormBuilder") as url_encoded_form,
         ):
             body, form = rest_client._build_message_payload(
                 content=987654321,
@@ -1806,8 +1797,15 @@ class TestRESTClientImpl:
         user_mentions = mock.Mock()
         role_mentions = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        ensure_resource = stack.enter_context(
+        serialize_embed_side_effect = [
+            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
+            ({"embed": 2}, [embed_attachment3, embed_attachment4]),
+        ]
+
+        with (
+            mock.patch.object(
+                rest_client.entity_factory, "serialize_embed", side_effect=serialize_embed_side_effect
+            ) as patched_serialize_embed,
             mock.patch.object(
                 files,
                 "ensure_resource",
@@ -1819,22 +1817,11 @@ class TestRESTClientImpl:
                     resource_attachment5,
                     resource_attachment6,
                 ],
-            )
-        )
-        generate_allowed_mentions = stack.enter_context(
-            mock.patch.object(mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1})
-        )
-        url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
-        serialize_embed_side_effect = [
-            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
-            ({"embed": 2}, [embed_attachment3, embed_attachment4]),
-        ]
-
-        with (
+            ) as ensure_resource,
             mock.patch.object(
-                rest_client.entity_factory, "serialize_embed", side_effect=serialize_embed_side_effect
-            ) as patched_serialize_embed,
-            stack,
+                mentions, "generate_allowed_mentions", return_value={"allowed_mentions": 1}
+            ) as generate_allowed_mentions,
+            mock.patch.object(data_binding, "URLEncodedFormBuilder") as url_encoded_form,
         ):
             body, form = rest_client._build_message_payload(
                 content=987654321,
@@ -1927,8 +1914,13 @@ class TestRESTClientImpl:
         embed_attachment3 = mock.Mock()
         embed_attachment4 = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        ensure_resource = stack.enter_context(
+        serialize_embed_side_effect = [
+            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
+            ({"embed": 2}, [embed_attachment3, embed_attachment4]),
+        ]
+
+        with (
+            mock.patch.object(rest_client.entity_factory, "serialize_embed", side_effect=serialize_embed_side_effect),
             mock.patch.object(
                 files,
                 "ensure_resource",
@@ -1939,17 +1931,8 @@ class TestRESTClientImpl:
                     resource_attachment4,
                     resource_attachment5,
                 ],
-            )
-        )
-        url_encoded_form = stack.enter_context(mock.patch.object(data_binding, "URLEncodedFormBuilder"))
-        serialize_embed_side_effect = [
-            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
-            ({"embed": 2}, [embed_attachment3, embed_attachment4]),
-        ]
-
-        with (
-            mock.patch.object(rest_client.entity_factory, "serialize_embed", side_effect=serialize_embed_side_effect),
-            stack,
+            ) as ensure_resource,
+            mock.patch.object(data_binding, "URLEncodedFormBuilder") as url_encoded_form,
         ):
             body, form = rest_client._build_message_payload(
                 content=987654321,
@@ -2450,20 +2433,6 @@ class TestRESTClientImplAsync:
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(pytest.raises(exit_exception))
-        exponential_backoff = stack.enter_context(
-            mock.patch.object(
-                rate_limits,
-                "ExponentialBackOff",
-                return_value=mock.Mock(__next__=mock.Mock(side_effect=[1, 2, 3, 4, 5])),
-            )
-        )
-        asyncio_sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
-        generate_error_response = stack.enter_context(
-            mock.patch.object(net, "generate_error_response", return_value=exit_exception)
-        )
-
         with (
             mock.patch.object(rest_client, "_client_session") as patched__client_session,
             mock.patch.object(rest_client, "_parse_ratelimits", new_callable=mock.AsyncMock, return_value=None),
@@ -2471,7 +2440,14 @@ class TestRESTClientImplAsync:
             mock.patch.object(
                 patched__client_session, "request", new_callable=mock.AsyncMock, return_value=StubResponse()
             ) as patched_request,
-            stack,
+            mock.patch.object(
+                rate_limits,
+                "ExponentialBackOff",
+                return_value=mock.Mock(__next__=mock.Mock(side_effect=[1, 2, 3, 4, 5])),
+            ) as exponential_backoff,
+            mock.patch.object(asyncio, "sleep") as asyncio_sleep,
+            mock.patch.object(net, "generate_error_response", return_value=exit_exception) as generate_error_response,
+            pytest.raises(exit_exception),
         ):
             await rest_client._perform_request(route)
 
@@ -2488,22 +2464,17 @@ class TestRESTClientImplAsync:
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
         mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exception))
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(pytest.raises(errors.HTTPError))
-        exponential_backoff = stack.enter_context(
-            mock.patch.object(
-                rate_limits,
-                "ExponentialBackOff",
-                return_value=mock.Mock(__next__=mock.Mock(side_effect=[1, 2, 3, 4, 5])),
-            )
-        )
-        asyncio_sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
-
         with (
             mock.patch.object(rest_client, "_client_session", mock_session),
             mock.patch.object(rest_client, "_parse_ratelimits", new_callable=mock.AsyncMock),
             mock.patch.object(rest_client, "_max_retries", 3),
-            stack,
+            mock.patch.object(
+                rate_limits,
+                "ExponentialBackOff",
+                return_value=mock.Mock(__next__=mock.Mock(side_effect=[1, 2, 3, 4, 5])),
+            ) as exponential_backoff,
+            mock.patch.object(asyncio, "sleep") as asyncio_sleep,
+            pytest.raises(errors.HTTPError),
         ):
             await rest_client._perform_request(route)
 
@@ -5512,7 +5483,6 @@ class TestRESTClientImplAsync:
         mock_partial_guild: guilds.PartialGuild,
         mock_guild_voice_channel: channels.GuildVoiceChannel,
         mock_user: users.User,
-        file_resource: type[MockFileResource],
     ):
         icon_resource = MockFileResource("icon data")
         splash_resource = MockFileResource("splash data")

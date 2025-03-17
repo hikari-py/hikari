@@ -21,7 +21,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import gc
 import sys
 import typing
@@ -34,7 +33,6 @@ import pytest
 from hikari import errors
 from hikari import intents
 from hikari import iterators
-from hikari import traits
 from hikari.api import config
 from hikari.events import base_events
 from hikari.events import member_events
@@ -821,12 +819,10 @@ class TestEventManagerBase:
             async def test(event): ...
 
     def test_listen_when_param_provided_in_decorator(self, event_manager: EventManagerBaseImpl):
-        stack = contextlib.ExitStack()
-
-        subscribe = stack.enter_context(mock.patch.object(event_manager_base.EventManagerBase, "subscribe"))
-        resolve_signature = stack.enter_context(mock.patch.object(reflect, "resolve_signature"))
-
-        with stack:
+        with (
+            mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe,
+            mock.patch.object(reflect, "resolve_signature") as resolve_signature,
+        ):
 
             @event_manager.listen(member_events.MemberCreateEvent)
             async def test(event): ...
@@ -835,12 +831,10 @@ class TestEventManagerBase:
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
 
     def test_listen_when_multiple_params_provided_in_decorator(self, event_manager: EventManagerBaseImpl):
-        stack = contextlib.ExitStack()
-
-        subscribe = stack.enter_context(mock.patch.object(event_manager_base.EventManagerBase, "subscribe"))
-        resolve_signature = stack.enter_context(mock.patch.object(reflect, "resolve_signature"))
-
-        with stack:
+        with (
+            mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe,
+            mock.patch.object(reflect, "resolve_signature") as resolve_signature,
+        ):
 
             @event_manager.listen(member_events.MemberCreateEvent, member_events.MemberDeleteEvent)
             async def test(event): ...

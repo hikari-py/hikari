@@ -21,7 +21,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import re
 import threading
 import typing
@@ -256,10 +255,8 @@ class TestInteractionServer:
         self, mock_entity_factory: entity_factory.EntityFactory, mock_rest_client: rest_impl.RESTClientImpl
     ):
         cls = hikari_test_helpers.mock_class_namespace(interaction_server_impl.InteractionServer, slots_=False)
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client))
 
-        with stack:
+        with mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client):
             return cls(entity_factory=mock_entity_factory, rest_client=mock_rest_client)
 
     def test___init__(
@@ -268,10 +265,7 @@ class TestInteractionServer:
         mock_dumps = mock.Mock()
         mock_loads = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
-
-        with stack:
+        with mock.patch.object(aiohttp.web, "Application"):
             result = interaction_server_impl.InteractionServer(
                 dumps=mock_dumps,
                 entity_factory=mock_entity_factory,
@@ -292,10 +286,7 @@ class TestInteractionServer:
         mock_dumps = mock.Mock()
         mock_loads = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
-
-        with stack:
+        with mock.patch.object(aiohttp.web, "Application"):
             result = interaction_server_impl.InteractionServer(
                 dumps=mock_dumps,
                 entity_factory=mock_entity_factory,
@@ -1006,15 +997,15 @@ class TestInteractionServer:
         mock_socket = mock.Mock()
         mock_interaction_server._is_closing = True
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web, "UnixSite", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web, "SockSite", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
-        stack.enter_context(mock.patch.object(asyncio, "Event"))
 
-        with stack:
+        with (
+            mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()) as web_tcp_site,
+            mock.patch.object(aiohttp.web, "UnixSite", return_value=mock.AsyncMock()) as web_unix_site,
+            mock.patch.object(aiohttp.web, "SockSite", return_value=mock.AsyncMock()) as web_sock_site,
+            mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()) as web_app_runner,
+            mock.patch.object(aiohttp.web, "Application") as web_application,
+            mock.patch.object(asyncio, "Event") as event,
+        ):
             await mock_interaction_server.start(
                 backlog=123123,
                 host="hoototototo",
@@ -1027,45 +1018,43 @@ class TestInteractionServer:
                 ssl_context=mock_context,
             )
 
-            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
+        mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
-            aiohttp.web.Application.assert_called_once_with()
-            aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
-                [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
-            )
-            aiohttp.web_runner.AppRunner.assert_called_once_with(
-                aiohttp.web.Application.return_value, access_log=interaction_server_impl._LOGGER
-            )
-            aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
-            aiohttp.web.TCPSite.assert_called_once_with(
-                aiohttp.web_runner.AppRunner.return_value,
-                "hoototototo",
-                port=123123123,
-                shutdown_timeout=3232.3232,
-                ssl_context=mock_context,
-                backlog=123123,
-                reuse_address=True,
-                reuse_port=False,
-            )
-            aiohttp.web.UnixSite.assert_called_once_with(
-                aiohttp.web_runner.AppRunner.return_value,
-                "hshshshshsh",
-                shutdown_timeout=3232.3232,
-                ssl_context=mock_context,
-                backlog=123123,
-            )
-            aiohttp.web.SockSite.assert_called_once_with(
-                aiohttp.web_runner.AppRunner.return_value,
-                mock_socket,
-                shutdown_timeout=3232.3232,
-                ssl_context=mock_context,
-                backlog=123123,
-            )
-            aiohttp.web.TCPSite.return_value.start.assert_awaited_once()
-            aiohttp.web.UnixSite.return_value.start.assert_awaited_once()
-            aiohttp.web.SockSite.return_value.start.assert_awaited_once()
-            assert mock_interaction_server._close_event is asyncio.Event.return_value
-            assert mock_interaction_server._is_closing is False
+        web_application.assert_called_once_with()
+        web_application.return_value.add_routes.assert_called_once_with(
+            [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
+        )
+        web_app_runner.assert_called_once_with(web_application.return_value, access_log=interaction_server_impl._LOGGER)
+        web_app_runner.return_value.setup.assert_awaited_once()
+        web_tcp_site.assert_called_once_with(
+            web_app_runner.return_value,
+            "hoototototo",
+            port=123123123,
+            shutdown_timeout=3232.3232,
+            ssl_context=mock_context,
+            backlog=123123,
+            reuse_address=True,
+            reuse_port=False,
+        )
+        web_unix_site.assert_called_once_with(
+            web_app_runner.return_value,
+            "hshshshshsh",
+            shutdown_timeout=3232.3232,
+            ssl_context=mock_context,
+            backlog=123123,
+        )
+        web_sock_site.assert_called_once_with(
+            web_app_runner.return_value,
+            mock_socket,
+            shutdown_timeout=3232.3232,
+            ssl_context=mock_context,
+            backlog=123123,
+        )
+        web_tcp_site.return_value.start.assert_awaited_once()
+        web_unix_site.return_value.start.assert_awaited_once()
+        web_sock_site.return_value.start.assert_awaited_once()
+        assert mock_interaction_server._close_event is event.return_value
+        assert mock_interaction_server._is_closing is False
 
     @pytest.mark.asyncio
     async def test_start_with_default_behaviour(
@@ -1073,34 +1062,32 @@ class TestInteractionServer:
     ):
         mock_context = mock.Mock()
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
 
-        with stack:
+        with (
+            mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()) as web_tcp_site,
+            mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()) as web_app_runner,
+            mock.patch.object(aiohttp.web, "Application") as web_application,
+        ):
             await mock_interaction_server.start(ssl_context=mock_context)
 
-            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
+        mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
-            aiohttp.web.Application.assert_called_once_with()
-            aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
-                [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
-            )
-            aiohttp.web_runner.AppRunner.assert_called_once_with(
-                aiohttp.web.Application.return_value, access_log=interaction_server_impl._LOGGER
-            )
-            aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
-            aiohttp.web.TCPSite.assert_called_once_with(
-                aiohttp.web_runner.AppRunner.return_value,
-                port=None,
-                shutdown_timeout=60.0,
-                ssl_context=mock_context,
-                backlog=128,
-                reuse_address=None,
-                reuse_port=None,
-            )
-            aiohttp.web.TCPSite.return_value.start.assert_awaited_once()
+        web_application.assert_called_once_with()
+        web_application.return_value.add_routes.assert_called_once_with(
+            [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
+        )
+        web_app_runner.assert_called_once_with(web_application.return_value, access_log=interaction_server_impl._LOGGER)
+        web_app_runner.AppRunner.return_value.setup.assert_awaited_once()
+        web_tcp_site.assert_called_once_with(
+            web_app_runner.return_value,
+            port=None,
+            shutdown_timeout=60.0,
+            ssl_context=mock_context,
+            backlog=128,
+            reuse_address=None,
+            reuse_port=None,
+        )
+        web_tcp_site.return_value.start.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_start_with_default_behaviour_and_not_main_thread(
@@ -1108,119 +1095,109 @@ class TestInteractionServer:
     ):
         mock_context = mock.Mock()
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
-        stack.enter_context(mock.patch.object(threading, "current_thread"))
 
-        with stack:
+        with (
+            mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()) as web_tcp_site,
+            mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()) as web_app_runner,
+            mock.patch.object(aiohttp.web, "Application") as web_application,
+            mock.patch.object(threading, "current_thread"),
+        ):
             await mock_interaction_server.start(ssl_context=mock_context)
 
-            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
+        mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
-            aiohttp.web.Application.assert_called_once_with()
-            aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
-                [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
-            )
-            aiohttp.web_runner.AppRunner.assert_called_once_with(
-                aiohttp.web.Application.return_value, access_log=interaction_server_impl._LOGGER
-            )
-            aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
-            aiohttp.web.TCPSite.assert_called_once_with(
-                aiohttp.web_runner.AppRunner.return_value,
-                port=None,
-                shutdown_timeout=60.0,
-                ssl_context=mock_context,
-                backlog=128,
-                reuse_address=None,
-                reuse_port=None,
-            )
-            aiohttp.web.TCPSite.return_value.start.assert_awaited_once()
+        web_application.assert_called_once_with()
+        web_application.return_value.add_routes.assert_called_once_with(
+            [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
+        )
+        web_app_runner.assert_called_once_with(web_application.return_value, access_log=interaction_server_impl._LOGGER)
+        web_app_runner.return_value.setup.assert_awaited_once()
+        web_tcp_site.assert_called_once_with(
+            web_app_runner.return_value,
+            port=None,
+            shutdown_timeout=60.0,
+            ssl_context=mock_context,
+            backlog=128,
+            reuse_address=None,
+            reuse_port=None,
+        )
+        web_tcp_site.return_value.start.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_start_with_multiple_hosts(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_context = mock.Mock()
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
 
-        with stack:
+        with (
+            mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()) as web_tcp_site,
+            mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()) as web_app_runner,
+            mock.patch.object(aiohttp.web, "Application") as web_application,
+        ):
             await mock_interaction_server.start(ssl_context=mock_context, host=["123", "4312"], port=453123)
 
-            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
+        mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
-            aiohttp.web.Application.assert_called_once_with()
-            aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
-                [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
-            )
-            aiohttp.web_runner.AppRunner.assert_called_once_with(
-                aiohttp.web.Application.return_value, access_log=interaction_server_impl._LOGGER
-            )
-            aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
-            aiohttp.web.TCPSite.assert_has_calls(
-                [
-                    mock.call(
-                        aiohttp.web_runner.AppRunner.return_value,
-                        "123",
-                        port=453123,
-                        shutdown_timeout=60.0,
-                        ssl_context=mock_context,
-                        backlog=128,
-                        reuse_address=None,
-                        reuse_port=None,
-                    ),
-                    mock.call(
-                        aiohttp.web_runner.AppRunner.return_value,
-                        "4312",
-                        port=453123,
-                        shutdown_timeout=60.0,
-                        ssl_context=mock_context,
-                        backlog=128,
-                        reuse_address=None,
-                        reuse_port=None,
-                    ),
-                ]
-            )
-            aiohttp.web.TCPSite.return_value.start.assert_has_awaits([mock.call(), mock.call()])
+        web_application.assert_called_once_with()
+        web_application.return_value.add_routes.assert_called_once_with(
+            [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
+        )
+        web_app_runner.assert_called_once_with(web_application.return_value, access_log=interaction_server_impl._LOGGER)
+        web_app_runner.return_value.setup.assert_awaited_once()
+        web_tcp_site.assert_has_calls(
+            [
+                mock.call(
+                    web_app_runner.return_value,
+                    "123",
+                    port=453123,
+                    shutdown_timeout=60.0,
+                    ssl_context=mock_context,
+                    backlog=128,
+                    reuse_address=None,
+                    reuse_port=None,
+                ),
+                mock.call(
+                    web_app_runner.return_value,
+                    "4312",
+                    port=453123,
+                    shutdown_timeout=60.0,
+                    ssl_context=mock_context,
+                    backlog=128,
+                    reuse_address=None,
+                    reuse_port=None,
+                ),
+            ]
+        )
+        web_tcp_site.return_value.start.assert_has_awaits([mock.call(), mock.call()])
 
     @pytest.mark.asyncio
     async def test_start_when_no_tcp_sites(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_socket = mock.Mock()
         mock_context = mock.Mock()
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web, "Application"))
-        stack.enter_context(mock.patch.object(aiohttp.web, "SockSite", return_value=mock.AsyncMock()))
-        stack.enter_context(mock.patch.object(aiohttp.web, "UnixSite", return_value=mock.AsyncMock()))
 
-        with stack:
+        with (
+            mock.patch.object(aiohttp.web, "SockSite", return_value=mock.AsyncMock()) as web_sock_site,
+            mock.patch.object(aiohttp.web, "UnixSite", return_value=mock.AsyncMock()) as web_unix_site,
+            mock.patch.object(aiohttp.web, "TCPSite", return_value=mock.AsyncMock()) as web_tcp_site,
+            mock.patch.object(aiohttp.web_runner, "AppRunner", return_value=mock.AsyncMock()) as web_app_runner,
+            mock.patch.object(aiohttp.web, "Application") as web_application,
+        ):
             await mock_interaction_server.start(ssl_context=mock_context, socket=mock_socket)
 
-            mock_interaction_server._fetch_public_key.assert_awaited_once_with()
+        mock_interaction_server._fetch_public_key.assert_awaited_once_with()
 
-            aiohttp.web.Application.assert_called_once_with()
-            aiohttp.web.Application.return_value.add_routes.assert_called_once_with(
-                [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
-            )
-            aiohttp.web_runner.AppRunner.assert_called_once_with(
-                aiohttp.web.Application.return_value, access_log=interaction_server_impl._LOGGER
-            )
-            aiohttp.web_runner.AppRunner.return_value.setup.assert_awaited_once()
-            aiohttp.web.TCPSite.assert_not_called()
-            aiohttp.web.UnixSite.assert_not_called()
-            aiohttp.web.SockSite.assert_called_once_with(
-                aiohttp.web_runner.AppRunner.return_value,
-                mock_socket,
-                shutdown_timeout=60.0,
-                ssl_context=mock_context,
-                backlog=128,
-            )
-            aiohttp.web.SockSite.return_value.start.assert_awaited_once()
+        web_application.assert_called_once_with()
+        web_application.return_value.add_routes.assert_called_once_with(
+            [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
+        )
+        web_app_runner.assert_called_once_with(web_application.return_value, access_log=interaction_server_impl._LOGGER)
+        web_app_runner.return_value.setup.assert_awaited_once()
+        web_tcp_site.assert_not_called()
+        web_unix_site.assert_not_called()
+        web_sock_site.assert_called_once_with(
+            web_app_runner.return_value, mock_socket, shutdown_timeout=60.0, ssl_context=mock_context, backlog=128
+        )
+        web_sock_site.return_value.start.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_start_when_already_running(self, mock_interaction_server: interaction_server_impl.InteractionServer):

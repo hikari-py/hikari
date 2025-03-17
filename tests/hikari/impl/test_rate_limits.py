@@ -379,16 +379,13 @@ class TestWindowedBurstRateLimiter:
 
             return next(reset_time_iter)
 
-        stack = contextlib.ExitStack()
-        rl = stack.enter_context(rate_limits.WindowedBurstRateLimiter(__name__, 0, window))
-        stack.enter_context(
+        with (
+            rate_limits.WindowedBurstRateLimiter(__name__, 0, window) as rl,
             mock.patch.object(
                 rate_limits.WindowedBurstRateLimiter, "get_time_until_reset", new=mock_get_time_until_reset
-            )
-        )
-        stack.enter_context(mock.patch.object(asyncio, "sleep"))
-
-        with stack:
+            ),
+            mock.patch.object(asyncio, "sleep"),
+        ):
             rl.queue = list(futures)
             rl.reset_at = time.perf_counter()
             await rl.throttle()

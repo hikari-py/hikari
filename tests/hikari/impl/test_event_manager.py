@@ -22,14 +22,12 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import contextlib
 import random
 import typing
 
 import mock
 import pytest
 
-from hikari import GatewayGuild
 from hikari import channels
 from hikari import errors
 from hikari import intents
@@ -46,17 +44,17 @@ from tests.hikari import hikari_test_helpers
 
 
 def test_fixed_size_nonce():
-    stack = contextlib.ExitStack()
-    monotonic = stack.enter_context(mock.patch.object(time, "monotonic_ns"))
-    monotonic.return_value.to_bytes = mock.Mock(return_value="foo")
-
-    randbits = stack.enter_context(mock.patch.object(random, "getrandbits"))
-    randbits.return_value.to_bytes = mock.Mock(return_value="bar")
-
-    encode = stack.enter_context(mock.patch.object(base64, "b64encode"))
-    encode.return_value.decode = mock.Mock(return_value="nonce")
-
-    with stack:
+    with (
+        mock.patch.object(
+            time, "monotonic_ns", return_value=mock.Mock(to_bytes=mock.Mock(return_value="foo"))
+        ) as monotonic,
+        mock.patch.object(
+            random, "getrandbits", return_value=mock.Mock(to_bytes=mock.Mock(return_value="bar"))
+        ) as randbits,
+        mock.patch.object(
+            base64, "b64encode", return_value=mock.Mock(decode=mock.Mock(return_value="nonce"))
+        ) as encode,
+    ):
         assert event_manager._fixed_size_nonce() == "nonce"
 
     monotonic.assert_called_once_with()

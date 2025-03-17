@@ -21,7 +21,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import time
 import typing
 
@@ -94,15 +93,15 @@ class TestRESTBucket:
 
     @pytest.mark.asyncio
     async def test_acquire_when_too_long_ratelimit(self, compiled_route: routes.CompiledRoute):
-        stack = contextlib.ExitStack()
-        rl = stack.enter_context(buckets.RESTBucket("spaghetti", compiled_route, mock.Mock(), 60))
-        rl._lock = mock.Mock(acquire=mock.AsyncMock())
-        rl.reset_at = time.perf_counter() + 999999999999999999999999999
-        stack.enter_context(mock.patch.object(buckets.RESTBucket, "is_rate_limited", return_value=True))
-        stack.enter_context(pytest.raises(errors.RateLimitTooLongError))
+        with (
+            buckets.RESTBucket("spaghetti", compiled_route, mock.Mock(), 60) as rl,
+            mock.patch.object(buckets.RESTBucket, "is_rate_limited", return_value=True),
+        ):
+            rl._lock = mock.Mock(acquire=mock.AsyncMock())
+            rl.reset_at = time.perf_counter() + 999999999999999999999999999
 
-        with stack:
-            await rl.acquire()
+            with pytest.raises(errors.RateLimitTooLongError):
+                await rl.acquire()
 
         rl._lock.acquire.assert_awaited_once_with()
         rl._lock.release.assert_called_once_with()
@@ -221,10 +220,12 @@ class TestRESTBucketManager:
     async def test_gc_makes_gc_pass(self, bucket_manager: buckets.RESTBucketManager):
         class ExitError(Exception): ...
 
-        with mock.patch.object(buckets.RESTBucketManager, "_purge_stale_buckets") as purge_stale_buckets:
-            with mock.patch.object(asyncio, "sleep", side_effect=[None, ExitError]):
-                with pytest.raises(ExitError):
-                    await bucket_manager._gc(0.001, 33)
+        with (
+            mock.patch.object(buckets.RESTBucketManager, "_purge_stale_buckets") as purge_stale_buckets,
+            mock.patch.object(asyncio, "sleep", side_effect=[None, ExitError]),
+            pytest.raises(ExitError),
+        ):
+            await bucket_manager._gc(0.001, 33)
 
         purge_stale_buckets.assert_called_with(33)
 
@@ -382,16 +383,15 @@ class TestRESTBucketManager:
         bucket = mock.Mock()
         bucket_manager._real_hashes_to_buckets["UNKNOWN;auth_hash;bobs"] = bucket
 
-        stack = contextlib.ExitStack()
-        create_authentication_hash = stack.enter_context(
-            mock.patch.object(buckets, "_create_authentication_hash", return_value="auth_hash")
-        )
-        create_unknown_hash = stack.enter_context(
-            mock.patch.object(buckets, "_create_unknown_hash", return_value="UNKNOWN;auth_hash;bobs")
-        )
-        stack.enter_context(mock.patch.object(hikari_date, "monotonic", return_value=27))
-
-        with stack:
+        with (
+            mock.patch.object(hikari_date, "monotonic", return_value=27),
+            mock.patch.object(
+                buckets, "_create_authentication_hash", return_value="auth_hash"
+            ) as create_authentication_hash,
+            mock.patch.object(
+                buckets, "_create_unknown_hash", return_value="UNKNOWN;auth_hash;bobs"
+            ) as create_unknown_hash,
+        ):
             bucket_manager.update_rate_limits(route, "auth", "blep", 22, 23, 3.56)
 
         assert bucket_manager._routes_to_hashes[route.route] == "blep"

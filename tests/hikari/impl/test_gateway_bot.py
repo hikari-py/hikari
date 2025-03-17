@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
-import contextlib
 import datetime
 import sys
 import typing
@@ -138,18 +137,17 @@ class TestGatewayBot:
         proxy_settings: config.ProxySettings,
         http_settings: config.HTTPSettings,
     ):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(cache_impl, "CacheImpl", return_value=cache))
-        stack.enter_context(mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=entity_factory))
-        stack.enter_context(mock.patch.object(event_factory_impl, "EventFactoryImpl", return_value=event_factory))
-        stack.enter_context(mock.patch.object(event_manager_impl, "EventManagerImpl", return_value=event_manager))
-        stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl", return_value=voice))
-        stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=rest))
-        stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
-        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-
-        with stack:
+        with (
+            mock.patch.object(cache_impl, "CacheImpl", return_value=cache),
+            mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=entity_factory),
+            mock.patch.object(event_factory_impl, "EventFactoryImpl", return_value=event_factory),
+            mock.patch.object(event_manager_impl, "EventManagerImpl", return_value=event_manager),
+            mock.patch.object(voice_impl, "VoiceComponentImpl", return_value=voice),
+            mock.patch.object(rest_impl, "RESTClientImpl", return_value=rest),
+            mock.patch.object(ux, "init_logging"),
+            mock.patch.object(bot_impl.GatewayBot, "print_banner"),
+            mock.patch.object(ux, "warn_if_not_optimized"),
+        ):
             return bot_impl.GatewayBot(
                 "token",
                 executor=executor,
@@ -160,23 +158,23 @@ class TestGatewayBot:
             )
 
     def test_init(self):
-        stack = contextlib.ExitStack()
-        cache = stack.enter_context(mock.patch.object(cache_impl, "CacheImpl"))
-        entity_factory = stack.enter_context(mock.patch.object(entity_factory_impl, "EntityFactoryImpl"))
-        event_factory = stack.enter_context(mock.patch.object(event_factory_impl, "EventFactoryImpl"))
-        event_manager = stack.enter_context(mock.patch.object(event_manager_impl, "EventManagerImpl"))
-        voice = stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl"))
-        rest = stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
-        init_logging = stack.enter_context(mock.patch.object(ux, "init_logging"))
-        warn_if_not_optimized = stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-        print_banner = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
         executor = mock.Mock()
         cache_settings = mock.Mock()
         http_settings = mock.Mock()
         proxy_settings = mock.Mock()
         intents = mock.Mock()
 
-        with stack:
+        with (
+            mock.patch.object(cache_impl, "CacheImpl") as cache,
+            mock.patch.object(entity_factory_impl, "EntityFactoryImpl") as entity_factory,
+            mock.patch.object(event_factory_impl, "EventFactoryImpl") as event_factory,
+            mock.patch.object(event_manager_impl, "EventManagerImpl") as event_manager,
+            mock.patch.object(voice_impl, "VoiceComponentImpl") as voice,
+            mock.patch.object(rest_impl, "RESTClientImpl") as rest,
+            mock.patch.object(ux, "init_logging") as init_logging,
+            mock.patch.object(ux, "warn_if_not_optimized") as warn_if_not_optimized,
+            mock.patch.object(bot_impl.GatewayBot, "print_banner") as print_banner,
+        ):
             bot = bot_impl.GatewayBot(
                 "token",
                 allow_color=False,
@@ -234,21 +232,20 @@ class TestGatewayBot:
         warn_if_not_optimized.assert_called_once_with(True)
 
     def test_init_when_no_settings(self):
-        stack = contextlib.ExitStack()
-        cache = stack.enter_context(mock.patch.object(cache_impl, "CacheImpl"))
-        stack.enter_context(mock.patch.object(entity_factory_impl, "EntityFactoryImpl"))
-        stack.enter_context(mock.patch.object(event_factory_impl, "EventFactoryImpl"))
-        stack.enter_context(mock.patch.object(event_manager_impl, "EventManagerImpl"))
-        stack.enter_context(mock.patch.object(voice_impl, "VoiceComponentImpl"))
-        stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
-        stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
-        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-        http_settings = stack.enter_context(mock.patch.object(config, "HTTPSettings"))
-        proxy_settings = stack.enter_context(mock.patch.object(config, "ProxySettings"))
-        cache_settings = stack.enter_context(mock.patch.object(config, "CacheSettings"))
-
-        with stack:
+        with (
+            mock.patch.object(cache_impl, "CacheImpl") as cache,
+            mock.patch.object(entity_factory_impl, "EntityFactoryImpl"),
+            mock.patch.object(event_factory_impl, "EventFactoryImpl"),
+            mock.patch.object(event_manager_impl, "EventManagerImpl"),
+            mock.patch.object(voice_impl, "VoiceComponentImpl"),
+            mock.patch.object(rest_impl, "RESTClientImpl"),
+            mock.patch.object(ux, "init_logging"),
+            mock.patch.object(bot_impl.GatewayBot, "print_banner"),
+            mock.patch.object(ux, "warn_if_not_optimized"),
+            mock.patch.object(config, "HTTPSettings") as http_settings,
+            mock.patch.object(config, "ProxySettings") as proxy_settings,
+            mock.patch.object(config, "CacheSettings") as cache_settings,
+        ):
             bot = bot_impl.GatewayBot("token", cache_settings=None, http_settings=None, proxy_settings=None)
 
         assert bot._http_settings is http_settings.return_value
@@ -259,12 +256,11 @@ class TestGatewayBot:
         cache_settings.assert_called_once_with()
 
     def test_init_strips_token(self):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
-        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-
-        with stack:
+        with (
+            mock.patch.object(ux, "init_logging"),
+            mock.patch.object(bot_impl.GatewayBot, "print_banner"),
+            mock.patch.object(ux, "warn_if_not_optimized"),
+        ):
             bot = bot_impl.GatewayBot(
                 "\n\r token yeet \r\n", cache_settings=None, http_settings=None, proxy_settings=None
             )
@@ -401,13 +397,6 @@ class TestGatewayBot:
             def assert_awaited_once(self):
                 assert self._awaited_count == 1
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(asyncio, "as_completed", side_effect=null_call))
-        ensure_future = stack.enter_context(mock.patch.object(asyncio, "ensure_future", side_effect=null_call))
-        get_running_loop = stack.enter_context(mock.patch.object(asyncio, "get_running_loop"))
-        mock_future = mock.Mock()
-        get_running_loop.return_value.create_future.return_value = mock_future
-
         event_manager.dispatch = mock.AsyncMock()
         rest.close = AwaitableMock()
         voice.close = AwaitableMock()
@@ -419,7 +408,15 @@ class TestGatewayBot:
         shard2 = mock.Mock(id=2, close=AwaitableMock())
         bot._shards = {0: shard0, 1: shard1, 2: shard2}
 
-        with stack:
+        mock_future = mock.Mock()
+
+        with (
+            mock.patch.object(asyncio, "as_completed", side_effect=null_call),
+            mock.patch.object(asyncio, "ensure_future", side_effect=null_call) as ensure_future,
+            mock.patch.object(
+                asyncio, "get_running_loop", return_value=mock.Mock(create_future=mock.Mock(return_value=mock_future))
+            ) as get_running_loop,
+        ):
             await bot.close()
 
         # Events and args
@@ -516,65 +513,57 @@ class TestGatewayBot:
             bot.run(shard_ids=[1])
 
     def test_run_with_asyncio_debug(self, bot: bot_impl.GatewayBot):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        stack.enter_context(
-            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock())
-        )
-        loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
+        loop = mock.Mock()
 
-        with stack:
+        with (
+            mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()),
+            mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()),
+            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock()),
+            mock.patch.object(aio, "get_or_make_loop", return_value=loop),
+        ):
             bot.run(close_loop=False, asyncio_debug=True)
 
         loop.set_debug.assert_called_once_with(True)
 
     def test_run_with_coroutine_tracking_depth(self, bot: bot_impl.GatewayBot):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        stack.enter_context(
-            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock())
-        )
-        stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
-        coroutine_tracking_depth = stack.enter_context(
-            mock.patch.object(sys, "set_coroutine_origin_tracking_depth", create=True, side_effect=AttributeError)
-        )
-
-        with stack:
+        with (
+            mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()),
+            mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()),
+            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock()),
+            mock.patch.object(aio, "get_or_make_loop"),
+            mock.patch.object(
+                sys, "set_coroutine_origin_tracking_depth", create=True, side_effect=AttributeError
+            ) as coroutine_tracking_depth,
+        ):
             bot.run(close_loop=False, coroutine_tracking_depth=100)
 
         coroutine_tracking_depth.assert_called_once_with(100)
 
     def test_run_with_close_passed_executor(self, bot: bot_impl.GatewayBot):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        stack.enter_context(
-            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock())
-        )
-        stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
         executor = mock.Mock()
         bot._executor = executor
 
-        with stack:
+        with (
+            mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()),
+            mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()),
+            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock()),
+            mock.patch.object(aio, "get_or_make_loop"),
+        ):
             bot.run(close_loop=False, close_passed_executor=True)
 
         executor.shutdown.assert_called_once_with(wait=True)
         assert bot._executor is None
 
     def test_run_when_close_loop(self, bot: bot_impl.GatewayBot):
-        stack = contextlib.ExitStack()
-        logger = stack.enter_context(mock.patch.object(bot_impl, "_LOGGER"))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        stack.enter_context(
-            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock())
-        )
-        destroy_loop = stack.enter_context(mock.patch.object(aio, "destroy_loop"))
-        loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
-
-        with stack:
+        loop = mock.Mock()
+        with (
+            mock.patch.object(bot_impl, "_LOGGER") as logger,
+            mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()),
+            mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()),
+            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock()),
+            mock.patch.object(aio, "destroy_loop") as destroy_loop,
+            mock.patch.object(aio, "get_or_make_loop", return_value=loop),
+        ):
             bot.run(close_loop=True)
 
         destroy_loop.assert_called_once_with(loop, logger)
@@ -589,16 +578,16 @@ class TestGatewayBot:
         shard_ids = mock.Mock()
         shard_count = mock.Mock()
         status = mock.Mock()
+        loop = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        start_function = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()))
-        join_function = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()))
-        handle_interrupts = stack.enter_context(
-            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock())
-        )
-        loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop")).return_value
-
-        with stack:
+        with (
+            mock.patch.object(bot_impl.GatewayBot, "start", new=mock.Mock()) as start_function,
+            mock.patch.object(bot_impl.GatewayBot, "join", new=mock.Mock()) as join_function,
+            mock.patch.object(
+                signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock()
+            ) as handle_interrupts,
+            mock.patch.object(aio, "get_or_make_loop", return_value=loop),
+        ):
             bot.run(
                 activity=activity,
                 afk=afk,
@@ -677,21 +666,20 @@ class TestGatewayBot:
             bot._shards[kwargs["shard_id"]] = next(shards_iter)
             return mock_start_one_shard(*args, **kwargs)
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(bot_impl, "_validate_activity"))
-        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_start_one_shard", new=_mock_start_one_shard))
-        create_task = stack.enter_context(mock.patch.object(asyncio, "create_task"))
-        gather = stack.enter_context(mock.patch.object(asyncio, "gather"))
-        event = stack.enter_context(mock.patch.object(asyncio, "Event"))
-        first_completed = stack.enter_context(
-            mock.patch.object(aio, "first_completed", side_effect=[None, asyncio.TimeoutError, None])
-        )
-        check_for_updates = stack.enter_context(mock.patch.object(ux, "check_for_updates", new=mock.Mock()))
-
         event_manager.dispatch = mock.AsyncMock()
         rest.fetch_gateway_bot_info = mock.AsyncMock(return_value=MockInfo())
 
-        with stack:
+        with (
+            mock.patch.object(bot_impl, "_validate_activity"),
+            mock.patch.object(bot_impl.GatewayBot, "_start_one_shard", new=_mock_start_one_shard),
+            mock.patch.object(asyncio, "create_task") as create_task,
+            mock.patch.object(asyncio, "gather") as gather,
+            mock.patch.object(asyncio, "Event") as event,
+            mock.patch.object(
+                aio, "first_completed", side_effect=[None, asyncio.TimeoutError, None]
+            ) as first_completed,
+            mock.patch.object(ux, "check_for_updates", new=mock.Mock()) as check_for_updates,
+        ):
             await bot.start(
                 check_for_updates=True,
                 shard_ids=(2, 10),
@@ -773,17 +761,14 @@ class TestGatewayBot:
         shard1 = mock.Mock()
         bot._shards = {1: shard1}
 
-        stack = contextlib.ExitStack()
-        start_one_shard = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_start_one_shard"))
-        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
-        event = stack.enter_context(
-            mock.patch.object(asyncio, "Event", return_value=mock.Mock(is_set=mock.Mock(return_value=True)))
-        )
-
         event_manager.dispatch = mock.AsyncMock()
         rest.fetch_gateway_bot_info = mock.AsyncMock(return_value=MockInfo())
 
-        with stack:
+        with (
+            mock.patch.object(bot_impl.GatewayBot, "_start_one_shard") as start_one_shard,
+            mock.patch.object(aio, "first_completed") as first_completed,
+            mock.patch.object(asyncio, "Event", return_value=mock.Mock(is_set=mock.Mock(return_value=True))) as event,
+        ):
             await bot.start(shard_ids=(2, 10), shard_count=20, check_for_updates=False)
 
         start_one_shard.assert_not_called()
@@ -815,18 +800,15 @@ class TestGatewayBot:
         shard1 = mock.Mock()
         bot._shards = {1: shard1}
 
-        stack = contextlib.ExitStack()
-        start_one_shard = stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "_start_one_shard"))
-        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
-        event = stack.enter_context(
-            mock.patch.object(asyncio, "Event", return_value=mock.Mock(is_set=mock.Mock(return_value=False)))
-        )
-        stack.enter_context(pytest.raises(RuntimeError, match="One or more shards closed while starting"))
-
         event_manager.dispatch = mock.AsyncMock()
         rest.fetch_gateway_bot_info = mock.AsyncMock(return_value=MockInfo())
 
-        with stack:
+        with (
+            mock.patch.object(bot_impl.GatewayBot, "_start_one_shard") as start_one_shard,
+            mock.patch.object(aio, "first_completed") as first_completed,
+            mock.patch.object(asyncio, "Event", return_value=mock.Mock(is_set=mock.Mock(return_value=False))) as event,
+            pytest.raises(RuntimeError, match="One or more shards closed while starting"),
+        ):
             await bot.start(shard_ids=(2, 10), shard_count=20, check_for_updates=False)
 
         start_one_shard.assert_not_called()

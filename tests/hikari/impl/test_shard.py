@@ -439,13 +439,12 @@ class TestGatewayTransport:
         websocket = mock.Mock()
         exit_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[client_session, websocket]))
 
-        stack = contextlib.ExitStack()
-        sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
-        stack.enter_context(mock.patch.object(net, "create_tcp_connector", side_effect=RuntimeError))
-        stack.enter_context(mock.patch.object(contextlib, "AsyncExitStack", return_value=exit_stack))
-        stack.enter_context(pytest.raises(RuntimeError))
-
-        with stack:
+        with (
+            mock.patch.object(asyncio, "sleep") as sleep,
+            mock.patch.object(net, "create_tcp_connector", side_effect=RuntimeError),
+            mock.patch.object(contextlib, "AsyncExitStack", return_value=exit_stack),
+            pytest.raises(RuntimeError),
+        ):
             await shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
@@ -488,15 +487,12 @@ class TestGatewayTransport:
         websocket = mock.Mock()
         exit_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[client_session, websocket]))
 
-        stack = contextlib.ExitStack()
-        sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
-        stack.enter_context(mock.patch.object(net, "create_tcp_connector", side_effect=error))
-        stack.enter_context(mock.patch.object(contextlib, "AsyncExitStack", return_value=exit_stack))
-        stack.enter_context(
-            pytest.raises(errors.GatewayConnectionError, match=re.escape(f"Failed to connect to server: {reason!r}"))
-        )
-
-        with stack:
+        with (
+            mock.patch.object(asyncio, "sleep") as sleep,
+            mock.patch.object(net, "create_tcp_connector", side_effect=error),
+            mock.patch.object(contextlib, "AsyncExitStack", return_value=exit_stack),
+            pytest.raises(errors.GatewayConnectionError, match=re.escape(f"Failed to connect to server: {reason!r}")),
+        ):
             await shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
@@ -889,15 +885,14 @@ class TestGatewayShardImplAsync:
         client._shard_id = 20
         handshake_event = mock.Mock(is_set=mock.Mock(return_value=False))
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(aio, "first_completed"))
-        stack.enter_context(mock.patch.object(asyncio, "shield"))
-        stack.enter_context(mock.patch.object(asyncio, "create_task"))
-        stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_keep_alive", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(asyncio, "Event", return_value=handshake_event))
-        stack.enter_context(pytest.raises(RuntimeError, match="shard 20 was closed before it could start successfully"))
-
-        with stack:
+        with (
+            mock.patch.object(aio, "first_completed"),
+            mock.patch.object(asyncio, "shield"),
+            mock.patch.object(asyncio, "create_task"),
+            mock.patch.object(shard.GatewayShardImpl, "_keep_alive", new=mock.Mock()),
+            mock.patch.object(asyncio, "Event", return_value=handshake_event),
+            pytest.raises(RuntimeError, match="shard 20 was closed before it could start successfully"),
+        ):
             await client.start()
 
         assert client._keep_alive_task is None
@@ -908,14 +903,13 @@ class TestGatewayShardImplAsync:
         handshake_event = mock.Mock(is_set=mock.Mock(return_value=True))
         keep_alive_task = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
-        shield = stack.enter_context(mock.patch.object(asyncio, "shield"))
-        create_task = stack.enter_context(mock.patch.object(asyncio, "create_task", return_value=keep_alive_task))
-        keep_alive = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_keep_alive", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(asyncio, "Event", return_value=handshake_event))
-
-        with stack:
+        with (
+            mock.patch.object(aio, "first_completed") as first_completed,
+            mock.patch.object(asyncio, "shield") as shield,
+            mock.patch.object(asyncio, "create_task", return_value=keep_alive_task) as create_task,
+            mock.patch.object(shard.GatewayShardImpl, "_keep_alive", new=mock.Mock()) as keep_alive,
+            mock.patch.object(asyncio, "Event", return_value=handshake_event),
+        ):
             await client.start()
 
         assert client._keep_alive_task is keep_alive_task
@@ -925,20 +919,24 @@ class TestGatewayShardImplAsync:
         first_completed.assert_awaited_once_with(handshake_event.wait.return_value, shield.return_value)
 
     async def test_update_presence(self, client: shard.GatewayShardImpl):
-        with mock.patch.object(shard.GatewayShardImpl, "_serialize_and_store_presence_payload") as presence:
-            with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
-                with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
-                    await client.update_presence(
-                        idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None
-                    )
+        with (
+            mock.patch.object(shard.GatewayShardImpl, "_serialize_and_store_presence_payload") as presence,
+            mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive,
+            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
+        ):
+            await client.update_presence(
+                idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None
+            )
 
         send_json.assert_awaited_once_with({"op": 3, "d": presence.return_value})
         check_if_alive.assert_called_once_with()
 
     async def test_update_voice_state(self, client: shard.GatewayShardImpl):
-        with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
-            with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
-                await client.update_voice_state(123456, 6969420, self_mute=False, self_deaf=True)
+        with (
+            mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive,
+            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
+        ):
+            await client.update_voice_state(123456, 6969420, self_mute=False, self_deaf=True)
 
         send_json.assert_awaited_once_with(
             {"op": 4, "d": {"guild_id": "123456", "channel_id": "6969420", "self_mute": False, "self_deaf": True}}
@@ -946,9 +944,11 @@ class TestGatewayShardImplAsync:
         check_if_alive.assert_called_once_with()
 
     async def test_update_voice_state_without_optionals(self, client: shard.GatewayShardImpl):
-        with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
-            with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
-                await client.update_voice_state(123456, 6969420)
+        with (
+            mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive,
+            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
+        ):
+            await client.update_voice_state(123456, 6969420)
 
         send_json.assert_awaited_once_with({"op": 4, "d": {"guild_id": "123456", "channel_id": "6969420"}})
         check_if_alive.assert_called_once_with()
@@ -960,13 +960,12 @@ class TestGatewayShardImplAsync:
 
         class ExitException(Exception): ...
 
-        stack = contextlib.ExitStack()
-        sleep = stack.enter_context(mock.patch.object(asyncio, "sleep", side_effect=[None, ExitException]))
-        stack.enter_context(mock.patch.object(time, "monotonic", return_value=10))
-        send_heartbeat = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_send_heartbeat"))
-        stack.enter_context(pytest.raises(ExitException))
-
-        with stack:
+        with (
+            mock.patch.object(asyncio, "sleep", side_effect=[None, ExitException]) as sleep,
+            mock.patch.object(time, "monotonic", return_value=10),
+            mock.patch.object(shard.GatewayShardImpl, "_send_heartbeat") as send_heartbeat,
+            pytest.raises(ExitException),
+        ):
             await client._heartbeat(20)
 
         assert send_heartbeat.await_count == 2
@@ -1013,31 +1012,26 @@ class TestGatewayShardImplAsync:
         shielded_heartbeat_task = mock.Mock()
         shielded_poll_events_task = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        create_task = stack.enter_context(
-            mock.patch.object(asyncio, "create_task", side_effect=[heartbeat_task, poll_events_task])
-        )
-        shield = stack.enter_context(
-            mock.patch.object(asyncio, "shield", side_effect=[shielded_heartbeat_task, shielded_poll_events_task])
-        )
-        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
-        log_filterer = stack.enter_context(mock.patch.object(shard, "_log_filterer"))
-        serialize_and_store_presence_payload = stack.enter_context(
-            mock.patch.object(shard.GatewayShardImpl, "_serialize_and_store_presence_payload")
-        )
-        send_json = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_send_json"))
-        heartbeat = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()))
-        poll_events = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()))
-        gateway_transport_connect = stack.enter_context(
-            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
-        )
-        stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
-        stack.enter_context(mock.patch.object(platform, "system", return_value="Potato OS"))
-        stack.enter_context(mock.patch.object(platform, "architecture", return_value=["ARM64"]))
-        stack.enter_context(mock.patch.object(aiohttp, "__version__", new="4.0"))
-        stack.enter_context(mock.patch.object(_about, "__version__", new="1.0.0"))
-
-        with stack:
+        with (
+            mock.patch.object(asyncio, "create_task", side_effect=[heartbeat_task, poll_events_task]) as create_task,
+            mock.patch.object(
+                asyncio, "shield", side_effect=[shielded_heartbeat_task, shielded_poll_events_task]
+            ) as shield,
+            mock.patch.object(aio, "first_completed") as first_completed,
+            mock.patch.object(shard, "_log_filterer") as log_filterer,
+            mock.patch.object(
+                shard.GatewayShardImpl, "_serialize_and_store_presence_payload"
+            ) as serialize_and_store_presence_payload,
+            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
+            mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()) as heartbeat,
+            mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()) as poll_events,
+            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws) as gateway_transport_connect,
+            mock.patch.object(urls, "VERSION", new=400),
+            mock.patch.object(platform, "system", return_value="Potato OS"),
+            mock.patch.object(platform, "architecture", return_value=["ARM64"]),
+            mock.patch.object(aiohttp, "__version__", new="4.0"),
+            mock.patch.object(_about, "__version__", new="1.0.0"),
+        ):
             assert await client._connect() == (heartbeat_task, poll_events_task)
 
         log_filterer.assert_called_once_with(b"sometoken")
@@ -1107,24 +1101,19 @@ class TestGatewayShardImplAsync:
         shielded_heartbeat_task = mock.Mock()
         shielded_poll_events_task = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        create_task = stack.enter_context(
-            mock.patch.object(asyncio, "create_task", side_effect=[heartbeat_task, poll_events_task])
-        )
-        shield = stack.enter_context(
-            mock.patch.object(asyncio, "shield", side_effect=[shielded_heartbeat_task, shielded_poll_events_task])
-        )
-        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
-        log_filterer = stack.enter_context(mock.patch.object(shard, "_log_filterer"))
-        send_json = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_send_json"))
-        heartbeat = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()))
-        poll_events = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()))
-        gateway_transport_connect = stack.enter_context(
-            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
-        )
-        stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
-
-        with stack:
+        with (
+            mock.patch.object(asyncio, "create_task", side_effect=[heartbeat_task, poll_events_task]) as create_task,
+            mock.patch.object(
+                asyncio, "shield", side_effect=[shielded_heartbeat_task, shielded_poll_events_task]
+            ) as shield,
+            mock.patch.object(aio, "first_completed") as first_completed,
+            mock.patch.object(shard, "_log_filterer") as log_filterer,
+            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
+            mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()) as heartbeat,
+            mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()) as poll_events,
+            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws) as gateway_transport_connect,
+            mock.patch.object(urls, "VERSION", new=400),
+        ):
             assert await client._connect() == (heartbeat_task, poll_events_task)
 
         log_filterer.assert_called_once_with(b"sometoken")
@@ -1166,13 +1155,10 @@ class TestGatewayShardImplAsync:
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(pytest.raises(errors.GatewayError))
-        gateway_transport_connect = stack.enter_context(
-            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
-        )
-
-        with stack:
+        with (
+            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws) as gateway_transport_connect,
+            pytest.raises(errors.GatewayError),
+        ):
             assert await client._connect()
 
         gateway_transport_connect.return_value.send_close.assert_awaited_once_with(
