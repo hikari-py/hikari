@@ -101,7 +101,7 @@ norecursedirs = [
     ".venv",
     "venv",
     "public",
-    "ci",
+    "pipelines",
 ]
 filterwarnings = [
     "error", # Treat warnings as errors
