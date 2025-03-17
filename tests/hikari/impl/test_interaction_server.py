@@ -312,7 +312,6 @@ class TestInteractionServer:
         mock_interaction_server: interaction_server_impl.InteractionServer,
         mock_rest_client: rest_impl.RESTClientImpl,
     ):
-        # mock_rest_client.token_type = "Bot"
         mock_interaction_server._application_fetch_lock = None
         mock_rest_client.fetch_application.return_value.public_key = (
             b"e\xb9\xf8\xac]eH\xb1\xe1D\xafaW\xdd\x1c.\xc1s\xfd<\x82\t\xeaO\xd4w\xaf\xc4\x1b\xd0\x8f\xc5"
@@ -861,14 +860,6 @@ class TestInteractionServer:
         ):
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
-            get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-                {
-                    "message": "Exception occurred during interaction deserialization",
-                    "payload": {"type": 2},
-                    "exception": mock_exception,
-                }
-            )
-
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
         assert result.files == ()
@@ -876,11 +867,31 @@ class TestInteractionServer:
         assert result.payload == b"Exception occurred during interaction deserialization"
         assert result.status_code == 500
 
+        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
+            {
+                "message": "Exception occurred during interaction deserialization",
+                "payload": {"type": 2},
+                "exception": mock_exception,
+            }
+        )
+
     @pytest.mark.asyncio
     async def test_on_interaction_on_dispatch_error(
-        self, mock_interaction_server: interaction_server_impl.InteractionServer
+        self,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
         mock_interaction_server._public_key = mock.Mock()
+        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
+        )
         mock_exception = TypeError("OK")
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.Mock(side_effect=mock_exception)
@@ -889,10 +900,6 @@ class TestInteractionServer:
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
-        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-            {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
-        )
-
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
         assert result.files == ()
@@ -900,11 +907,27 @@ class TestInteractionServer:
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
 
+        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
+            {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
+        )
+
     @pytest.mark.asyncio
     async def test_on_interaction_when_response_builder_error(
-        self, mock_interaction_server: interaction_server_impl.InteractionServer
+        self,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
         mock_interaction_server._public_key = mock.Mock()
+        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
+        )
         mock_exception = TypeError("OK")
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
         mock_interaction_server.set_listener(
@@ -914,10 +937,6 @@ class TestInteractionServer:
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
-        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-            {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
-        )
-
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
         assert result.files == ()
@@ -925,11 +944,27 @@ class TestInteractionServer:
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
 
+        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
+            {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
+        )
+
     @pytest.mark.asyncio
     async def test_on_interaction_when_json_encode_fails(
-        self, mock_interaction_server: interaction_server_impl.InteractionServer
+        self,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
         mock_interaction_server._public_key = mock.Mock()
+        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
+        )
         mock_exception = TypeError("OK")
         mock_interaction_server._dumps = mock.Mock(side_effect=mock_exception)
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No"}, [])))
@@ -940,16 +975,16 @@ class TestInteractionServer:
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
-        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-            {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
-        )
-
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
         assert result.files == ()
         assert result.headers is None
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
+
+        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
+            {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
+        )
 
     @pytest.mark.asyncio
     async def test_on_interaction_when_no_registered_listener(
