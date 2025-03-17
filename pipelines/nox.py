@@ -47,11 +47,11 @@ _options.sessions = [
     "reformat-code",
     "codespell",
     "pytest",
+    "pyright-tests",
     "flake8",
     "slotscheck",
     "mypy",
     "verify-types",
-    "verify-test-types",
 ]
 _options.default_venv_backend = venv_backend
 
