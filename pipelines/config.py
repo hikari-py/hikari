@@ -31,7 +31,6 @@ EXAMPLE_SCRIPTS = "examples"
 # Directories
 ARTIFACT_DIRECTORY = "public"
 DOCUMENTATION_DIRECTORY = "docs"
-DEV_REQUIREMENTS_DIRECTORY = "dev-requirements"
 
 # Linting and test configs
 FLAKE8_REPORT = _os.path.join(ARTIFACT_DIRECTORY, "flake8")

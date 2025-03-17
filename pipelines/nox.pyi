@@ -18,14 +18,19 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from __future__ import annotations
 
-import pathlib
-import runpy
-import sys
+import typing as _typing
 
-sys.path.append(".")
+import nox as _nox
 
-ci_path = pathlib.Path("pipelines")
-for f in ci_path.glob("*.nox.py"):
-    runpy.run_path(str(f))
+session = _nox.session
+Session = _nox.Session
+
+def sync(
+    session: _nox.Session,
+    /,
+    *,
+    self: bool = False,
+    extras: _typing.Sequence[str] = (),
+    groups: _typing.Sequence[str] = (),
+) -> None: ...

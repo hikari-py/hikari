@@ -23,35 +23,33 @@
 
 from __future__ import annotations
 
-import typing as _typing
+import typing
 
-from nox import options as _options
-from nox import session as _session
-from nox.sessions import Session
+import nox
+
+NoxCallbackSigT = typing.Callable[[nox.Session], None]
 
 # Default sessions should be defined here
-_options.sessions = ["reformat-code", "codespell", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
-_options.default_venv_backend = "uv"
-
-_NoxCallbackSig = _typing.Callable[[Session], None]
+nox.options.sessions = ["reformat-code", "codespell", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
+nox.options.default_venv_backend = "uv"
 
 
-def session(**kwargs: _typing.Any) -> _typing.Callable[[_NoxCallbackSig], _NoxCallbackSig]:
-    def decorator(func: _NoxCallbackSig) -> _NoxCallbackSig:
+def session(**kwargs: typing.Any) -> typing.Callable[[NoxCallbackSigT], NoxCallbackSigT]:
+    def decorator(func: NoxCallbackSigT) -> NoxCallbackSigT:
         name = func.__name__.replace("_", "-")
         reuse_venv = kwargs.pop("reuse_venv", True)
-        return _session(name=name, reuse_venv=reuse_venv, **kwargs)(func)
+        return nox.session(name=name, reuse_venv=reuse_venv, **kwargs)(func)
 
     return decorator
 
 
 def sync(
-    session: Session, /, *, self: bool = False, extras: _typing.Sequence[str] = (), groups: _typing.Sequence[str] = ()
+    session: nox.Session, /, *, self: bool = False, extras: typing.Sequence[str] = (), groups: typing.Sequence[str] = ()
 ) -> None:
     if extras and not self:
         raise RuntimeError("When specifying extras, set `self=True`.")
 
-    args = []
+    args: list[str] = []
     for extra in extras:
         args.extend(("--extra", extra))
 
