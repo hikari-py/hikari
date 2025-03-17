@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import builtins
 import operator
+import typing
 import warnings
 
 import mock
@@ -62,7 +63,9 @@ class TestEnum:
         ("args", "kwargs"),
         [([str], {"metaclass": enums._EnumMeta}), ([enums.Enum], {"metaclass": enums._EnumMeta}), ([enums.Enum], {})],
     )
-    def test_init_enum_type_with_one_base_is_TypeError(self, args, kwargs):
+    def test_init_enum_type_with_one_base_is_TypeError(
+        self, args: typing.Sequence[type], kwargs: typing.Mapping[str, typing.Any]
+    ):
         with pytest.raises(TypeError):
 
             class Enum(*args, **kwargs):
@@ -71,7 +74,9 @@ class TestEnum:
     @pytest.mark.parametrize(
         ("args", "kwargs"), [([enums.Enum, str], {"metaclass": enums._EnumMeta}), ([enums.Enum, str], {})]
     )
-    def test_init_enum_type_with_bases_in_wrong_order_is_TypeError(self, args, kwargs):
+    def test_init_enum_type_with_bases_in_wrong_order_is_TypeError(
+        self, args: typing.Sequence[type], kwargs: typing.Mapping[str, typing.Any]
+    ):
         with pytest.raises(TypeError):
 
             class Enum(*args, **kwargs):
@@ -282,7 +287,7 @@ class TestEnum:
         assert str(TestEnum1.FOO) == "Ok"
 
     @pytest.mark.parametrize(("type_", "value"), [(int, 42), (str, "ok"), (bytes, b"no"), (float, 4.56), (complex, 3j)])
-    def test_inherits_type_dunder_method_behaviour(self, type_, value):
+    def test_inherits_type_dunder_method_behaviour(self, type_: type, value: typing.Union[int, str]):
         class TestEnum(type_, enums.Enum):
             BAR = value
 

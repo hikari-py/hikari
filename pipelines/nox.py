@@ -30,7 +30,16 @@ from nox import session as _session
 from nox.sessions import Session
 
 # Default sessions should be defined here
-_options.sessions = ["reformat-code", "codespell", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
+_options.sessions = [
+    "reformat-code",
+    "codespell",
+    "pytest",
+    "pyright-tests",
+    "flake8",
+    "slotscheck",
+    "mypy",
+    "verify-types",
+]
 _options.default_venv_backend = "uv"
 
 _NoxCallbackSig = _typing.Callable[[Session], None]

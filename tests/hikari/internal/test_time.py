@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import datetime
+import typing
 
 import mock
 import pytest
@@ -38,6 +39,7 @@ def test_parse_iso_8601_date_with_negative_timezone():
     assert date.minute == 22
     assert date.second == 33
     assert date.microsecond == 23456
+    assert date.tzinfo is not None
     offset = date.tzinfo.utcoffset(None)
     assert offset == datetime.timedelta(hours=-2, minutes=-30)
 
@@ -52,6 +54,7 @@ def test_slow_parse_iso_8601_date_with_positive_timezone():
     assert date.minute == 22
     assert date.second == 33
     assert date.microsecond == 23456
+    assert date.tzinfo is not None
     offset = date.tzinfo.utcoffset(None)
     assert offset == datetime.timedelta(hours=2, minutes=30)
 
@@ -66,6 +69,7 @@ def test_parse_iso_8601_date_with_zulu():
     assert date.minute == 22
     assert date.second == 33
     assert date.microsecond == 23456
+    assert date.tzinfo is not None
     offset = date.tzinfo.utcoffset(None)
     assert offset == datetime.timedelta(seconds=0)
 
@@ -146,7 +150,7 @@ def test_unix_epoch_to_datetime_with_out_of_range_negative_timestamp():
         (datetime.timedelta(days=-5, seconds=-3, milliseconds=12), 0),
     ],
 )
-def test_timespan_to_int(input_value, expected_result):
+def test_timespan_to_int(input_value: typing.Union[int, float, datetime.timedelta], expected_result: int):
     assert time.timespan_to_int(input_value) == expected_result
 
 

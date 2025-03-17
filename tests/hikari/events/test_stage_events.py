@@ -29,30 +29,30 @@ from hikari.events import stage_events
 
 class TestStageInstanceCreateEvent:
     @pytest.fixture
-    def event(self):
-        return stage_events.StageInstanceCreateEvent(shard=object(), stage_instance=mock.Mock())
+    def event(self) -> stage_events.StageInstanceCreateEvent:
+        return stage_events.StageInstanceCreateEvent(shard=mock.Mock(), stage_instance=mock.Mock())
 
-    def test_app_property(self, event):
+    def test_app_property(self, event: stage_events.StageInstanceCreateEvent):
         assert event.app is event.stage_instance.app
 
 
 class TestStageInstanceUpdateEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> stage_events.StageInstanceUpdateEvent:
         return stage_events.StageInstanceUpdateEvent(
-            shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
+            shard=mock.Mock(), stage_instance=mock.Mock(stage_instances.StageInstance)
         )
 
-    def test_app_property(self, event):
+    def test_app_property(self, event: stage_events.StageInstanceUpdateEvent):
         assert event.app is event.stage_instance.app
 
 
 class TestStageInstanceDeleteEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> stage_events.StageInstanceDeleteEvent:
         return stage_events.StageInstanceDeleteEvent(
-            shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
+            shard=mock.Mock(), stage_instance=mock.Mock(stage_instances.StageInstance)
         )
 
-    def test_app_property(self, event):
+    def test_app_property(self, event: stage_events.StageInstanceDeleteEvent):
         assert event.app is event.stage_instance.app

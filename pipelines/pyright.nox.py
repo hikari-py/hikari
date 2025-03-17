@@ -40,6 +40,13 @@ def pyright(session: nox.Session) -> None:
 
 
 @nox.session()
+def pyright_tests(session: nox.Session) -> None:
+    """Perform type analysis on the tests using Pyright."""
+    nox.sync(session, self=True, extras=["speedups", "server"], groups=["pyright"])
+    session.run("pyright", config.TEST_PACKAGE)
+
+
+@nox.session()
 def verify_types(session: nox.Session) -> None:
     """Verify the "type completeness" of types exported by the library using Pyright."""
     nox.sync(session, self=True, groups=["pyright"])
