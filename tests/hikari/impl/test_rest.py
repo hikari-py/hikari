@@ -27,7 +27,6 @@ import http
 import re
 import typing
 from concurrent.futures import Executor
-from unittest.mock import AsyncMock
 
 import aiohttp
 import mock
@@ -59,7 +58,6 @@ from hikari import urls
 from hikari import users
 from hikari import voices
 from hikari import webhooks
-from hikari.api import RESTClient
 from hikari.api import cache
 from hikari.api import rest as rest_api
 from hikari.impl import config
@@ -482,15 +480,8 @@ class MockFileResource(files.Resource[typing.Any]):
 
 
 @pytest.fixture
-def file_resource() -> type[files.Resource[typing.Any]]:
-    return MockFileResource
-
-
-@pytest.fixture
-def file_resource_patch(
-    file_resource: type[MockFileResource],
-) -> typing.Generator[files.Resource[typing.Any], typing.Any, None]:
-    resource = file_resource("some data")
+def file_resource_patch() -> typing.Generator[files.Resource[typing.Any], typing.Any, None]:
+    resource = MockFileResource("some data")
     with mock.patch.object(files, "ensure_resource", return_value=resource):
         yield resource
 
@@ -5523,9 +5514,9 @@ class TestRESTClientImplAsync:
         mock_user: users.User,
         file_resource: type[MockFileResource],
     ):
-        icon_resource = file_resource("icon data")
-        splash_resource = file_resource("splash data")
-        banner_resource = file_resource("banner data")
+        icon_resource = MockFileResource("icon data")
+        splash_resource = MockFileResource("splash data")
+        banner_resource = MockFileResource("banner data")
         expected_route = routes.PATCH_GUILD.compile(guild=123)
         expected_json = {
             "name": "hikari",
@@ -7384,11 +7375,9 @@ class TestRESTClientImplAsync:
             patched__request.assert_awaited_once_with(expected_route, json={"name": "ok a name"})
             patched_deserialize_rest_guild.assert_called_once_with({"id": "543123123"})
 
-    async def test_create_guild_from_template_with_icon(
-        self, rest_client: rest.RESTClientImpl, file_resource: type[MockFileResource]
-    ):
+    async def test_create_guild_from_template_with_icon(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.POST_TEMPLATE.compile(template="odkkdkdkd")
-        icon_resource = file_resource("icon data")
+        icon_resource = MockFileResource("icon data")
 
         with (
             mock.patch.object(files, "ensure_resource", return_value=icon_resource),
