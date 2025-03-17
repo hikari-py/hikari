@@ -25,7 +25,7 @@ import typing
 import mock
 import pytest
 
-from hikari import channels
+from hikari import channels, polls
 from hikari import commands
 from hikari import components
 from hikari import emojis
@@ -1870,3 +1870,147 @@ class TestModalActionRow:
         }
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+
+class TestPollBuilder:
+    def test_add_answer(self):
+        poll_builder = special_endpoints.PollBuilder(question=mock.Mock(), allow_multiselect=False)
+
+        assert poll_builder.answers == []
+
+        answer = special_endpoints.PollAnswerBuilder(poll_media=mock.Mock())
+
+        poll_builder.add_answer(answer)
+
+        assert poll_builder.answers == [answer]
+
+    def test_add_poll_answer(self):
+        poll_builder = special_endpoints.PollBuilder(question=mock.Mock(), allow_multiselect=False)
+
+        assert poll_builder.answers == []
+
+        media = special_endpoints.PollMediaBuilder(text="poll_media_text")
+
+        poll_builder.add_poll_answer(media)
+
+        assert len(poll_builder.answers) == 1
+
+        assert poll_builder.answers[0].poll_media == media
+
+    def test_build(self):
+        poll_builder = special_endpoints.PollBuilder(
+            question=special_endpoints.PollMediaBuilder(
+                text="question_text",
+                emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(123), name="question_emoji", is_animated=False)
+            ),
+            answers=[
+                special_endpoints.PollAnswerBuilder(
+                    poll_media=special_endpoints.PollMediaBuilder(
+                        text="answer_1_text",
+                        emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(456), name="question_emoji", is_animated=False)
+                    )
+                ),
+                special_endpoints.PollAnswerBuilder(
+                    poll_media=special_endpoints.PollMediaBuilder(
+                        text="answer_2_text",
+                    ),
+                ),
+                special_endpoints.PollAnswerBuilder(
+                    poll_media=special_endpoints.PollMediaBuilder(
+                        emoji=emojis.UnicodeEmoji("👀")
+                    )
+                )
+            ],
+            duration=9,
+            allow_multiselect=True,
+            layout_type=polls.PollLayoutType.DEFAULT
+        )
+
+        assert poll_builder.build() == {
+            "question": {
+                "text": "question_text",
+                "emoji": {
+                    "id": 123
+                }
+            },
+            "answers": [
+                {
+                    "poll_media": {
+                        "text": "answer_1_text",
+                        "emoji": {
+                            "id": 456
+                        }
+                    }
+
+                },
+                {
+                    "poll_media": {
+                        "text": "answer_2_text",
+                    }
+                },
+                {
+                    "poll_media": {
+                        "emoji": {
+                            "name": "👀"
+                        }
+                    }
+                }
+            ],
+            "duration": 9,
+            "allow_multiselect": True,
+            "layout_type": polls.PollLayoutType.DEFAULT
+        }
+
+    def test_build_without_optional_fields(self):
+        poll_builder = special_endpoints.PollBuilder(
+            question=special_endpoints.PollMediaBuilder(
+                text="question_text",
+                emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(123), name="question_emoji", is_animated=False)
+            ),
+            allow_multiselect=True,
+        )
+
+        assert poll_builder.build() == {
+            "question": {
+                "text": "question_text",
+                "emoji": {
+                    "id": 123
+                }
+            },
+            "answers": [],
+            "allow_multiselect": True,
+        }
+
+
+class TestPollAnswerBuilder:
+    def test_build(self):
+        poll_answer = special_endpoints.PollAnswerBuilder(
+            poll_media=special_endpoints.PollMediaBuilder(
+                text="answer_1_text",
+                emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(456), name="question_emoji", is_animated=False)
+            )
+        )
+
+        assert poll_answer.build() == {
+            "poll_media": {
+                "text": "answer_1_text",
+                "emoji": {
+                    "id": 456
+                }
+            }
+        }
+
+
+class TestPollMediaBuilder:
+    def test_build(self):
+        poll_media = special_endpoints.PollMediaBuilder(
+            text="question_text",
+            emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(123), name="question_emoji", is_animated=False)
+        )
+
+        assert poll_media.build() == {
+            "text": "question_text",
+            "emoji": {
+                "id": 123
+            }
+        }

@@ -46,6 +46,9 @@ __all__: typing.Sequence[str] = (
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "PollBuilder",
+    "PollAnswerBuilder",
+    "PollMediaBuilder",
 )
 
 import asyncio
@@ -62,6 +65,7 @@ from hikari import files
 from hikari import iterators
 from hikari import locales
 from hikari import messages
+from hikari import polls
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
@@ -2150,3 +2154,110 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
             "type": component_models.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
         }
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PollBuilder(special_endpoints.PollBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.PollBuilder`][]."""
+
+    _question: PollMediaBuilder = attrs.field(alias="question")
+
+    _answers: list[special_endpoints.PollAnswerBuilder] = attrs.field(alias="answers", factory=list)
+
+    _duration: undefined.UndefinedOr[int] = attrs.field(alias="duration", default=undefined.UNDEFINED)
+
+    _allow_multiselect: bool = attrs.field(alias="allow_multiselect")
+
+    _layout_type: undefined.UndefinedOr[polls.PollLayoutType] = attrs.field(
+        alias="layout_type", default=undefined.UNDEFINED
+    )
+
+    @property
+    def question(self) -> undefined.UndefinedOr[PollMediaBuilder]:
+        return self._question
+
+    @property
+    def answers(self) -> typing.Sequence[special_endpoints.PollAnswerBuilder]:
+        return self._answers
+
+    @property
+    def duration(self) -> undefined.UndefinedOr[int]:
+        return self._duration
+
+    @property
+    def allow_multiselect(self) -> bool:
+        return self._allow_multiselect
+
+    @property
+    def layout_type(self) -> undefined.UndefinedOr[polls.PollLayoutType]:
+        return self._layout_type
+
+    def add_answer(self, answer: special_endpoints.PollAnswerBuilder) -> Self:
+        self._answers.append(answer)
+        return self
+
+    def add_poll_answer(self, poll_media: special_endpoints.PollMediaBuilder) -> Self:
+        answer = PollAnswerBuilder(poll_media=poll_media)
+        self.add_answer(answer)
+        return self
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+
+        payload.put("question", self._question.build())
+        payload.put("answers", [answer.build() for answer in self._answers])
+        payload.put("duration", self._duration)
+        payload.put("allow_multiselect", self._allow_multiselect)
+        payload.put("layout_type", self._layout_type)
+
+        return payload
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PollAnswerBuilder(special_endpoints.PollAnswerBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.PollAnswerBuilder`][]."""
+
+    _poll_media: special_endpoints.PollMediaBuilder = attrs.field(alias="poll_media")
+
+    @property
+    def poll_media(self) -> undefined.UndefinedOr[special_endpoints.PollMediaBuilder]:
+        return self._poll_media
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {"poll_media": self._poll_media.build()}
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PollMediaBuilder(special_endpoints.PollMediaBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.PollMediaBuilder`][]."""
+
+    _text: undefined.UndefinedOr[str] = attrs.field(alias="text", default=undefined.UNDEFINED)
+
+    _emoji: undefined.UndefinedOr[emojis.Emoji] = attrs.field(alias="emoji", default=undefined.UNDEFINED)
+
+    @property
+    def text(self) -> undefined.UndefinedOr[str]:
+        return self._text
+
+    @property
+    def emoji(self) -> undefined.UndefinedOr[emojis.Emoji]:
+        return self._emoji
+
+    def build(
+        self,
+    ) -> typing.MutableMapping[
+        str, typing.Any
+    ]:  # FIXME: Should we complain if the answer does not have at least one of the items (text/emoji)
+        payload = data_binding.JSONObjectBuilder()
+
+        payload.put("text", self._text)
+
+        if (
+            self._emoji is not undefined.UNDEFINED
+        ):  # FIXME: This is a little cursed, but its kinda what discord asks for so...
+            if isinstance(self._emoji, emojis.CustomEmoji):
+                payload.put("emoji", {"id": self._emoji.id})
+            else:
+                payload.put("emoji", {"name": self._emoji.name})
+
+        return payload

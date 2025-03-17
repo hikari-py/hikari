@@ -24,16 +24,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = (
-    "PollMedia",
-    "PollAnswer",
-    "PollResult",
-    "PollAnswerCount",
-    "PollLayoutType",
-    "PartialPoll",
-    "PollBuilder",
-    "Poll",
-)
+__all__: typing.Sequence[str] = ("PollMedia", "PollAnswer", "PollResult", "PollAnswerCount", "PollLayoutType", "Poll")
 
 import typing
 
@@ -46,13 +37,6 @@ from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     import datetime
-
-
-def _ensure_optional_emoji(emoji: typing.Optional[typing.Union[str, emojis.Emoji]]) -> emojis.Emoji | None:
-    """Ensure the object is a [hikari.emojis.Emoji][]."""
-    if emoji is not None:
-        return emojis.Emoji.parse(emoji) if isinstance(emoji, str) else emoji
-    return None
 
 
 @attrs_extensions.with_copy
@@ -113,213 +97,25 @@ class PollLayoutType(int, enums.Enum):
     """The default layout of a poll."""
 
 
-class PartialPoll:
-    """Base class for all poll objects."""
-
-    __slots__: typing.Sequence[str] = ("_question", "_answers", "_allow_multiselect", "_layout_type", "_counter")
-
-    def __init__(self, question: str, allow_multiselect: bool, layout_type: typing.Union[int, PollLayoutType]):
-        self._question = PollMedia(text=question)  # Only text is supported for question
-        self._allow_multiselect = allow_multiselect
-        self._layout_type = layout_type
-
-    @property
-    def question(self) -> PollMedia:
-        """Returns the question of the poll."""
-        return self._question
-
-    @question.setter
-    def question(self, value: str) -> None:
-        self._question = PollMedia(text=value)
-
-    @property
-    def allow_multiselect(self) -> bool:
-        """Returns whether the poll allows multiple answers."""
-        return self._allow_multiselect
-
-    @allow_multiselect.setter
-    def allow_multiselect(self, value: bool) -> None:
-        self._allow_multiselect = value
-
-    @property
-    def layout_type(self) -> PollLayoutType:
-        """Returns the layout type of the poll."""
-        return PollLayoutType(self._layout_type)
-
-    @layout_type.setter
-    def layout_type(self, value: typing.Union[int, PollLayoutType]) -> None:
-        self._layout_type = value
-
-
-class PollBuilder(PartialPoll):
-    """Poll Builder.
-
-    Build a new poll to send as a message to discord.
-
-    Parameters
-    ----------
-    question
-        The question you wish to ask.
-    """  # TODO: Improve this docstring
-
-    __slots__: typing.Sequence[str] = ("_duration",)
-
-    def __init__(
-        self,
-        question: str,
-        duration: int,
-        allow_multiselect: bool,
-        layout_type: typing.Union[int, PollLayoutType] = PollLayoutType.DEFAULT,
-    ):
-        super().__init__(question=question, allow_multiselect=allow_multiselect, layout_type=layout_type)
-        self._duration = duration
-
-        # Answer is required, but we want users to user add_answer() instead of
-        # providing at initialization.
-        #
-        # Considering that answer ID can be arbitrary, `list`-based approaches
-        # like that of hikari.embeds.Embed._fields, while feasible to implement,
-        # would decrease long-term maintainability. I'm opting to use a `dict`
-        # here to simplify the implementation with some performance trade-off
-        # due to hashmap overhead.
-        self._answers: typing.MutableSequence[PollAnswer] = []
-
-    @property
-    def duration(self) -> int:
-        """Returns the duration of the poll."""
-        return self._duration
-
-    @duration.setter
-    def duration(self, value: int) -> None:
-        self._duration = value
-
-    @property
-    def answers(self) -> typing.Iterable[PollAnswer]:
-        """Returns the answers of the poll.
-
-        !!! note
-            Use [`hikari.polls.PollBuilder.add_answer`][] to add a new answer,
-            [`hikari.polls.PollBuilder.edit_answer`][] to edit an existing answer, or
-            [`hikari.polls.PollBuilder.remove_answer`][] to remove an answer.
-        """
-        return self._answers
-
-    def add_answer(self, text: str, emoji: typing.Optional[emojis.Emoji]) -> PartialPoll:
-        """
-        Add an answer to the poll.
-
-        Parameters
-        ----------
-        text
-            The text of the answer to add.
-        emoji
-            The emoji associated with the answer.
-
-        Returns
-        -------
-        PartialPoll
-            This poll. Allows for call chaining.
-        """
-        self._answers.append(
-            PollAnswer(answer_id=-1, poll_media=PollMedia(text=text, emoji=_ensure_optional_emoji(emoji)))
-        )
-
-        return self
-
-    def edit_answer(
-        self,
-        index: int,
-        *,
-        text: typing.Optional[str] = None,
-        emoji: undefined.UndefinedNoneOr[typing.Union[str, emojis.Emoji]] = undefined.UNDEFINED,
-    ) -> PartialPoll:
-        """
-        Edit an answer in the poll.
-
-        Parameters
-        ----------
-        index
-            The index of the answer you want to edit.
-        text
-            The new text of the answer.
-        emoji
-            The new emoji associated with the answer.
-
-        Returns
-        -------
-        PartialPoll
-            This poll. Allows for call chaining.
-        """
-        answer = self._answers[index]
-        if text:
-            answer.poll_media.text = text
-        if emoji is not undefined.UNDEFINED:
-            answer.poll_media.emoji = _ensure_optional_emoji(emoji)
-
-        return self
-
-    def remove_answer(self, answer_id: int) -> PartialPoll:
-        """
-        Remove an answer from the poll.
-
-        Parameters
-        ----------
-        answer_id
-            The ID of the answer to remove.
-
-        Returns
-        -------
-        PartialPoll
-            This poll. Allows for call chaining.
-
-        Raises
-        ------
-        KeyError
-            Raised when the answer ID is not found in the poll.
-        """
-        del self._answers[answer_id]
-
-        return self
-
-
-class Poll(PartialPoll):
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
+class Poll:
     """Represents an existing poll."""
 
-    __slots__: typing.Sequence[str] = ("_expiry", "_results")
+    question: PollMedia = attrs.field(repr=True)
+    """The question of the poll."""
 
-    def __init__(
-        self,
-        question: str,
-        answers: typing.Sequence[PollAnswer],
-        allow_multiselect: bool,
-        expiry: datetime.datetime,
-        results: typing.Optional[PollResult],
-        layout_type: typing.Union[int, PollLayoutType] = PollLayoutType.DEFAULT,
-    ):
-        super().__init__(question=question, allow_multiselect=allow_multiselect, layout_type=layout_type)
-        self._answers = answers
-        self._expiry = expiry
-        self._results = results
+    answers: typing.Sequence[PollAnswer] = attrs.field(repr=True)
+    """The answers attached to the poll."""
 
-    @property
-    def answers(self) -> typing.Iterable[PollAnswer]:
-        """Returns the answers of the poll."""
-        return self._answers
+    expiry: datetime.datetime = attrs.field(repr=True)
+    """The expiry time for the poll."""
 
-    @property
-    def expiry(self) -> datetime.datetime:
-        """Returns whether the poll has expired."""
-        return self._expiry
+    allow_multiselect: bool = attrs.field(repr=True)
+    """Whether a user can select multiple answers."""
 
-    @property
-    def results(self) -> typing.Optional[PollResult]:
-        """Returns the result of the poll.
+    layout_type: PollLayoutType = attrs.field(repr=True)
+    """The type of layout the poll uses."""
 
-        !!! note
-            According to Discord, their backend does not always return `results`,
-            this is meant to be interpreted as "unknown result" rather than "no
-            result". Please refer to the
-            [official documentation](https://discord.com/developers/docs/resources/poll#poll-results-object)
-            for more information.
-        """
-        return self._results
+    results: undefined.UndefinedOr[PollResult] = attrs.field(repr=True)
+    """The results of the poll."""

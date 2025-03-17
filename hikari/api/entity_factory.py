@@ -2014,18 +2014,3 @@ class EntityFactory(abc.ABC):
         hikari.polls.Poll
             The deserialized poll object.
         """
-
-    @abc.abstractmethod
-    def serialize_poll(self, poll: poll_models.PollBuilder) -> data_binding.JSONObject:
-        """Serialize a poll object to a json serializable dict.
-
-        Parameters
-        ----------
-        poll
-            The poll object to serialize.
-
-        Returns
-        -------
-        hikari.internal.data_binding.JSONObject
-            The serialized representation of the poll.
-        """

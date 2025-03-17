@@ -49,7 +49,6 @@ if typing.TYPE_CHECKING:
     from hikari import messages as messages_
     from hikari import monetization
     from hikari import permissions as permissions_
-    from hikari import polls
     from hikari import sessions
     from hikari import snowflakes
     from hikari import stage_instances
@@ -1049,7 +1048,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        poll: undefined.UndefinedOr[polls.PollBuilder] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]

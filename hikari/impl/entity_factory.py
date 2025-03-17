@@ -3794,24 +3794,28 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ###############
     # POLL MODELS #
     ###############
+
+    def _deserialize_poll_media(self, payload: data_binding.JSONObject) -> poll_models.PollMedia:
+        return poll_models.PollMedia(
+            text=payload["text"], emoji=self.deserialize_emoji(payload["emoji"]) if "emoji" in payload else None
+        )
+
     def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
-        question = payload["question"]["text"]
+        question = self._deserialize_poll_media(payload["question"])
         expiry = time.iso8601_datetime_string_to_datetime(payload["expiry"])
         allow_multiselect = payload["allow_multiselect"]
         layout_type = poll_models.PollLayoutType(payload["layout_type"])
 
         answers: typing.MutableSequence[poll_models.PollAnswer] = []
         for answer_payload in payload["answers"]:
-            answer_id = answer_payload["answer_id"]
-
-            emoji = answer_payload["poll_media"]["emoji"]
-            poll_media = poll_models.PollMedia(
-                text=answer_payload["poll_media"]["text"], emoji=self.deserialize_emoji(emoji) if emoji else None
+            answer = poll_models.PollAnswer(
+                answer_id=answer_payload["answer_id"],
+                poll_media=self._deserialize_poll_media(answer_payload["poll_media"]),
             )
 
-            answers.append(poll_models.PollAnswer(answer_id=answer_id, poll_media=poll_media))
+            answers.append(answer)
 
-        results = None
+        results = undefined.UNDEFINED
         if (result_payload := payload.get("result")) is not None:
             is_finalized = result_payload["is_finalized"]
 
@@ -3831,26 +3835,3 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             layout_type=layout_type,
             results=results,
         )
-
-    def _serialize_poll_media(self, poll_media: poll_models.PollMedia) -> data_binding.JSONObject:
-        serialised_poll_media: typing.MutableMapping[str, typing.Any] = {"text": poll_media.text}
-
-        if isinstance(poll_media.emoji, emoji_models.UnicodeEmoji):
-            serialised_poll_media["emoji"] = {"name": poll_media.emoji.name}
-        elif isinstance(poll_media.emoji, emoji_models.CustomEmoji):
-            serialised_poll_media["emoji"] = {"name": poll_media.emoji.name, "id": poll_media.emoji.id}
-
-        return serialised_poll_media
-
-    def serialize_poll(self, poll: poll_models.PollBuilder) -> data_binding.JSONObject:
-        answers: typing.MutableSequence[typing.Any] = []
-        for answer in poll.answers:
-            answers.append({"poll_media": self._serialize_poll_media(answer.poll_media)})
-
-        return {
-            "question": self._serialize_poll_media(poll.question),
-            "answers": answers,
-            "duration": poll.duration,
-            "allow_multiselect": poll.allow_multiselect,
-            "layout_type": poll.layout_type.value,
-        }

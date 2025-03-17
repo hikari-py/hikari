@@ -46,12 +46,16 @@ __all__: typing.Sequence[str] = (
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "PollBuilder",
+    "PollAnswerBuilder",
+    "PollMediaBuilder",
 )
 
 import abc
 import typing
 
 from hikari import components as components_
+from hikari import polls
 from hikari import undefined
 
 if typing.TYPE_CHECKING:
@@ -2270,4 +2274,122 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         -------
         ModalActionRowBuilder
             The modal action row builder to enable call chaining.
+        """
+
+
+class PollBuilder(abc.ABC):
+    """Builder class for polls."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def question(self) -> undefined.UndefinedOr[PollMediaBuilder]:
+        """The question for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def answers(self) -> typing.Sequence[PollAnswerBuilder]:
+        """The answers for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def duration(self) -> undefined.UndefinedOr[int]:
+        """The duration of the poll."""
+
+    @property
+    @abc.abstractmethod
+    def allow_multiselect(self) -> bool:
+        """Whether a user can select multiple answers."""
+
+    @property
+    @abc.abstractmethod
+    def layout_type(self) -> undefined.UndefinedOr[polls.PollLayoutType]:
+        """The layout type for the poll."""
+
+    @abc.abstractmethod
+    def add_answer(self, answer: PollAnswerBuilder) -> Self:
+        """Add an answer to the poll.
+
+        Parameters
+        ----------
+        answer
+            The answer to add to the poll.
+
+        Returns
+        -------
+        PollAnswerBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_poll_answer(self, poll_media: PollMediaBuilder) -> Self:
+        """Add a poll answer to the poll.
+
+        Parameters
+        ----------
+        poll_media
+            The poll media to add to the poll answer.
+
+        Returns
+        -------
+        PollAnswerBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class PollAnswerBuilder(abc.ABC):
+    """Builder class for poll answers."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def poll_media(self) -> undefined.UndefinedOr[PollMediaBuilder]:
+        """The media for the answer object."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class PollMediaBuilder(abc.ABC):
+    """Builder class for poll media objects."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def text(self) -> undefined.UndefinedOr[str]:
+        """The text for the media object."""
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> undefined.UndefinedOr[emojis.Emoji]:
+        """The emoji for the media object."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
         """
