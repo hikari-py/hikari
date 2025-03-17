@@ -988,6 +988,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = self._loads(await response.read())
         assert isinstance(body, dict)
+        if "retry_after" not in body:
+            # This is most probably a Cloudflare ban, so just output the entire
+            # body to the console and abort the request.
+            raise errors.HTTPResponseError(
+                str(response.real_url), http.HTTPStatus.TOO_MANY_REQUESTS, response.headers, str(body), str(body)
+            )
+
         body_retry_after = float(body["retry_after"])
 
         if body.get("global", False) is True:
@@ -1142,12 +1149,32 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_channel_follow(response)
 
     async def delete_channel(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         route = routes.DELETE_CHANNEL.compile(channel=channel)
-        response = await self._request(route)
+        response = await self._request(route, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
+
+    async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
+        route = routes.GET_MY_GUILD_VOICE_STATE.compile(guild=guild)
+
+        response = await self._request(route)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_voice_state(response)
+
+    async def fetch_voice_state(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> voices.VoiceState:
+        route = routes.GET_GUILD_VOICE_STATE.compile(guild=guild, user=user)
+
+        response = await self._request(route)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_voice_state(response)
 
     async def edit_my_voice_state(
         self,
@@ -1622,9 +1649,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     async def delete_messages(
         self,
@@ -1636,6 +1665,7 @@ class RESTClientImpl(rest_api.RESTClient):
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
@@ -1670,7 +1700,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 if len(chunk) == 1:
                     message = chunk[0]
                     try:
-                        await self.delete_message(channel, message)
+                        await self.delete_message(channel, message, reason=reason)
                     except errors.NotFoundError as ex:
                         # If the message is not found then this error should be suppressed
                         # to keep consistency with how the bulk delete endpoint functions.
@@ -1682,7 +1712,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 else:
                     body = data_binding.JSONObjectBuilder()
                     body.put_snowflake_array("messages", chunk)
-                    await self._request(route, json=body)
+                    await self._request(route, json=body, reason=reason)
                     deleted += chunk
 
             except Exception as ex:
@@ -2429,8 +2459,10 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Sequence[emojis.KnownCustomEmoji]:
         route = routes.GET_APPLICATION_EMOJIS.compile(application=application)
         response = await self._request(route)
-        assert isinstance(response, list)
-        return [self._entity_factory.deserialize_known_custom_emoji(emoji_payload) for emoji_payload in response]
+        assert isinstance(response, dict)
+        return [
+            self._entity_factory.deserialize_known_custom_emoji(emoji_payload) for emoji_payload in response["items"]
+        ]
 
     async def create_application_emoji(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
@@ -3415,6 +3447,15 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory, self._request, guild, newest_first, str(start_at)
         )
 
+    async def fetch_role(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+    ) -> guilds.Role:
+        route = routes.GET_GUILD_ROLE.compile(guild=guild, role=role)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        guild_id = snowflakes.Snowflake(guild)
+        return self._entity_factory.deserialize_role(response, guild_id=guild_id)
+
     async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
         response = await self._request(route)
@@ -3812,7 +3853,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
@@ -3833,7 +3873,6 @@ class RESTClientImpl(rest_api.RESTClient):
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
-        body.put("dm_permission", dm_enabled)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -3856,7 +3895,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
@@ -3869,7 +3907,6 @@ class RESTClientImpl(rest_api.RESTClient):
             name_localizations=name_localizations,
             description_localizations=description_localizations,
             default_member_permissions=default_member_permissions,
-            dm_enabled=dm_enabled,
             nsfw=nsfw,
         )
         return self._entity_factory.deserialize_slash_command(
@@ -3889,7 +3926,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
@@ -3899,7 +3935,6 @@ class RESTClientImpl(rest_api.RESTClient):
             guild=guild,
             name_localizations=name_localizations,
             default_member_permissions=default_member_permissions,
-            dm_enabled=dm_enabled,
             nsfw=nsfw,
         )
         return self._entity_factory.deserialize_context_menu_command(
@@ -3935,7 +3970,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
@@ -3954,7 +3988,6 @@ class RESTClientImpl(rest_api.RESTClient):
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
-        body.put("dm_permission", dm_enabled)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)

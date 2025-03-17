@@ -64,4 +64,6 @@ prof/
 # Logs
 *.log
 
+# Misc
 Pipfile*
+pyrightconfig.json

@@ -1550,7 +1550,8 @@ class CacheImpl(cache.MutableCache):
         for user_id, voice_state in guild_record.voice_states.items():
             if voice_state.channel_id == channel_id:
                 cached_voice_states[user_id] = voice_state
-                self._garbage_collect_member(guild_record, voice_state.member, decrement=1)
+                if voice_state.member:
+                    self._garbage_collect_member(guild_record, voice_state.member, decrement=1)
 
         if not guild_record.voice_states:
             guild_record.voice_states = None
@@ -1574,7 +1575,8 @@ class CacheImpl(cache.MutableCache):
         guild_record.voice_states = None
 
         for voice_state in cached_voice_states.values():
-            self._garbage_collect_member(guild_record, voice_state.member, decrement=1)
+            if voice_state.member:
+                self._garbage_collect_member(guild_record, voice_state.member, decrement=1)
 
         self._remove_guild_record_if_empty(guild_id, guild_record)
         return cache_utility.CacheMappingView(cached_voice_states, builder=self._build_voice_state)
@@ -1601,7 +1603,9 @@ class CacheImpl(cache.MutableCache):
         if not guild_record.voice_states:
             guild_record.voice_states = None
 
-        self._garbage_collect_member(guild_record, voice_state_data.member, decrement=1)
+        if voice_state_data.member:
+            self._garbage_collect_member(guild_record, voice_state_data.member, decrement=1)
+
         self._remove_guild_record_if_empty(guild_id, guild_record)
         return self._build_voice_state(voice_state_data)
 
@@ -1679,11 +1683,16 @@ class CacheImpl(cache.MutableCache):
         if guild_record.voice_states is None:  # TODO: test when this is not None
             guild_record.voice_states = collections.FreezableDict()
 
-        member = self._set_member(voice_state.member)
-        voice_state_data = cache_utility.VoiceStateData.build_from_entity(voice_state, member=member)
+        # If the member is missing for some reason, try our best to find
+        # it and store it along side the voice state
+        if voice_state.member:
+            member = self._set_member(voice_state.member)
+            if voice_state.user_id not in guild_record.voice_states:
+                self._increment_ref_count(member)
+        else:
+            member = None
 
-        if voice_state.user_id not in guild_record.voice_states:
-            self._increment_ref_count(member)
+        voice_state_data = cache_utility.VoiceStateData.build_from_entity(voice_state, member=member)
 
         guild_record.voice_states[voice_state.user_id] = voice_state_data
 
@@ -1804,10 +1813,6 @@ class CacheImpl(cache.MutableCache):
         if message.user_mentions is not undefined.UNDEFINED:
             user_mentions = {user_id: self._set_user(user) for user_id, user in message.user_mentions.items()}
 
-        interaction_user: typing.Optional[cache_utility.RefCell[users.User]] = None
-        if message.interaction:
-            interaction_user = self._set_user(message.interaction.user)
-
         referenced_message: typing.Optional[cache_utility.RefCell[cache_utility.MessageData]] = None
         if message.referenced_message:
             reference_id = message.referenced_message.id
@@ -1829,16 +1834,8 @@ class CacheImpl(cache.MutableCache):
                 for user in user_mentions.values():
                     self._increment_ref_count(user)
 
-            if interaction_user:
-                self._increment_ref_count(interaction_user)
-
         message_data = cache_utility.MessageData.build_from_entity(
-            message,
-            author=author,
-            member=member,
-            user_mentions=user_mentions,
-            referenced_message=referenced_message,
-            interaction_user=interaction_user,
+            message, author=author, member=member, user_mentions=user_mentions, referenced_message=referenced_message
         )
 
         # Ensure any previously set message ref cell is in the right place before updating the cache.

@@ -32,6 +32,7 @@ import aiohttp.web_runner
 import mock
 import multidict
 
+from hikari import applications
 from hikari import files
 from hikari import snowflakes
 from hikari.api import entity_factory
@@ -666,6 +667,8 @@ class TestInteractionServer:
             type=2,
             token="ok",
             version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         mock_listener = mock.AsyncMock(return_value=mock_builder)
@@ -712,6 +715,8 @@ class TestInteractionServer:
             type=2,
             token="ok",
             version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         g_called = False
@@ -873,20 +878,10 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio
     async def test_on_interaction_on_dispatch_error(
-        self,
-        mock_interaction_server: interaction_server_impl.InteractionServer,
-        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
-        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=mock.Mock(),
-            id=snowflakes.Snowflake(123),
-            application_id=snowflakes.Snowflake(541324),
-            type=2,
-            token="ok",
-            version=1,
-        )
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.Mock(side_effect=mock_exception)
         )
@@ -894,9 +889,9 @@ class TestInteractionServer:
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
-            get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-                {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
-            )
+        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
+            {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
+        )
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
@@ -907,20 +902,10 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio
     async def test_on_interaction_when_response_builder_error(
-        self,
-        mock_interaction_server: interaction_server_impl.InteractionServer,
-        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
-        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=mock.Mock(),
-            id=snowflakes.Snowflake(123),
-            application_id=snowflakes.Snowflake(541324),
-            type=2,
-            token="ok",
-            version=1,
-        )
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.AsyncMock(return_value=mock_builder)
@@ -929,9 +914,9 @@ class TestInteractionServer:
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
-            get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-                {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
-            )
+        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
+            {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
+        )
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
@@ -942,21 +927,11 @@ class TestInteractionServer:
 
     @pytest.mark.asyncio
     async def test_on_interaction_when_json_encode_fails(
-        self,
-        mock_interaction_server: interaction_server_impl.InteractionServer,
-        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
         mock_interaction_server._dumps = mock.Mock(side_effect=mock_exception)
-        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=mock.Mock(),
-            id=snowflakes.Snowflake(123),
-            application_id=snowflakes.Snowflake(541324),
-            type=2,
-            token="ok",
-            version=1,
-        )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No"}, [])))
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.AsyncMock(return_value=mock_builder)
@@ -965,9 +940,9 @@ class TestInteractionServer:
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
-            get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-                {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
-            )
+        get_running_loop.return_value.call_exception_handler.assert_called_once_with(
+            {"message": "Exception occurred during interaction dispatch", "exception": mock_exception}
+        )
 
         assert result.content_type == "text/plain"
         assert result.charset == "UTF-8"
@@ -1077,7 +1052,7 @@ class TestInteractionServer:
             [aiohttp.web.post("/", mock_interaction_server.aiohttp_hook)]
         )
         web_app_runner.assert_called_once_with(web_application.return_value, access_log=interaction_server_impl._LOGGER)
-        web_app_runner.AppRunner.return_value.setup.assert_awaited_once()
+        web_app_runner.return_value.setup.assert_awaited_once()
         web_tcp_site.assert_called_once_with(
             web_app_runner.return_value,
             port=None,

@@ -26,7 +26,7 @@ import datetime
 import http
 import re
 import typing
-from concurrent.futures import Executor
+import concurrent.futures
 
 import aiohttp
 import mock
@@ -88,7 +88,7 @@ class TestRestProvider:
         return StubRestClient()
 
     @pytest.fixture
-    def executor(self) -> Executor:
+    def executor(self) -> concurrent.futures.Executor:
         return mock.Mock()
 
     @pytest.fixture
@@ -97,7 +97,10 @@ class TestRestProvider:
 
     @pytest.fixture
     def rest_provider(
-        self, rest_client: StubRestClient, executor: Executor, entity_factory: entity_factory.EntityFactoryImpl
+        self,
+        rest_client: StubRestClient,
+        executor: concurrent.futures.Executor,
+        entity_factory: entity_factory.EntityFactoryImpl,
     ):
         return rest._RESTProvider(lambda: entity_factory, executor, lambda: rest_client)
 
@@ -115,7 +118,7 @@ class TestRestProvider:
     ):
         assert rest_provider.entity_factory == entity_factory
 
-    def test_executor_property(self, rest_provider: rest._RESTProvider, executor: Executor):
+    def test_executor_property(self, rest_provider: rest._RESTProvider, executor: concurrent.futures.Executor):
         assert rest_provider.executor == executor
 
 
@@ -475,7 +478,7 @@ class MockFileResource(files.Resource[typing.Any]):
     def __init__(self, stream_data: str):
         self._stream = MockStream(data=stream_data)
 
-    def stream(self, executor: Executor):
+    def stream(self, executor: concurrent.futures.Executor):
         return self._stream
 
 
@@ -692,10 +695,10 @@ def make_mock_message(id: int) -> messages.Message:
         stickers=[],
         nonce=None,
         referenced_message=None,
-        interaction=None,
         application_id=None,
         components=[],
         thread=None,
+        interaction_metadata=None,
     )
 
 
@@ -743,6 +746,7 @@ def mock_application() -> applications.Application:
         tags=[],
         install_parameters=None,
         approximate_guild_count=0,
+        integration_types_config={},
     )
 
 
@@ -826,11 +830,12 @@ def mock_partial_command(mock_application: applications.Application) -> commands
         application_id=mock_application.id,
         name="partial_command_name",
         default_member_permissions=permissions.Permissions.NONE,
-        is_dm_enabled=False,
         is_nsfw=False,
         guild_id=None,
         version=snowflakes.Snowflake(1),
         name_localizations={},
+        integration_types=[],
+        context_types=[],
     )
 
 
@@ -843,6 +848,8 @@ def mock_partial_interaction(mock_application: applications.Application) -> inte
         type=interactions.InteractionType.APPLICATION_COMMAND,
         token="partial_interaction_token",
         version=1,
+        context=applications.ApplicationContextType.GUILD,
+        authorizing_integration_owners={},
     )
 
 
@@ -2865,11 +2872,11 @@ class TestRESTClientImplAsync:
                 rest_client, "_request", mock.AsyncMock(return_value={"id": "NNNNN"})
             ) as patched__request,
         ):
-            result = await rest_client.delete_channel(mock_channel)
+            result = await rest_client.delete_channel(mock_channel, reason="Why not :D")
 
             assert result is patched_deserialize_channel.return_value
             patched_deserialize_channel.assert_called_once_with(patched__request.return_value)
-            patched__request.assert_awaited_once_with(expected_route)
+            patched__request.assert_awaited_once_with(expected_route, reason="Why not :D")
 
     async def test_edit_my_voice_state_when_requesting_to_speak(
         self,
@@ -3514,9 +3521,9 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=4560, message=101)
 
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
-            await rest_client.delete_message(mock_guild_text_channel, mock_message)
+            await rest_client.delete_message(mock_guild_text_channel, mock_message, reason="broke laws")
 
-            patched__request.assert_awaited_once_with(expected_route)
+        patched__request.assert_awaited_once_with(expected_route, reason="broke laws")
 
     async def test_delete_messages(
         self, rest_client: rest.RESTClientImpl, mock_guild_text_channel: channels.GuildTextChannel
@@ -3528,10 +3535,13 @@ class TestRESTClientImplAsync:
         expected_json2 = {"messages": [str(i) for i in range(100, 200)]}
 
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
-            await rest_client.delete_messages(mock_guild_text_channel, *messages_list)
+            await rest_client.delete_messages(mock_guild_text_channel, *messages_list, reason="broke laws")
 
             patched__request.assert_has_awaits(
-                [mock.call(expected_route, json=expected_json1), mock.call(expected_route, json=expected_json2)]
+                [
+                    mock.call(expected_route, json=expected_json1, reason="broke laws"),
+                    mock.call(expected_route, json=expected_json2, reason="broke laws"),
+                ]
             )
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_message_not_found(
@@ -3549,12 +3559,14 @@ class TestRESTClientImplAsync:
                 side_effect=errors.NotFoundError(url="", headers={}, raw_body="", code=10008),
             ) as patched_delete_message,
         ):
-            await rest_client.delete_messages(mock_guild_text_channel, *messages)
+            await rest_client.delete_messages(mock_guild_text_channel, *messages, reason="broke laws")
 
-            patched__request.assert_awaited_once_with(
-                routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=mock_guild_text_channel), json=expected_json
-            )
-            patched_delete_message.assert_awaited_once_with(mock_guild_text_channel, message)
+        patched__request.assert_awaited_once_with(
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=mock_guild_text_channel),
+            json=expected_json,
+            reason="broke laws",
+        )
+        patched_delete_message.assert_awaited_once_with(mock_guild_text_channel, message, reason="broke laws")
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_channel_not_found(
         self, rest_client: rest.RESTClientImpl, mock_guild_text_channel: channels.GuildTextChannel
@@ -3570,14 +3582,16 @@ class TestRESTClientImplAsync:
             mock.patch.object(rest_client, "delete_message", side_effect=mock_not_found) as patched_delete_message,
             pytest.raises(errors.BulkDeleteError) as exc_info,
         ):
-            await rest_client.delete_messages(mock_guild_text_channel, *messages)
+            await rest_client.delete_messages(mock_guild_text_channel, *messages, reason="broke laws")
 
         assert exc_info.value.__cause__ is mock_not_found
 
         patched__request.assert_awaited_once_with(
-            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=mock_guild_text_channel), json=expected_json
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=mock_guild_text_channel),
+            json=expected_json,
+            reason="broke laws",
         )
-        patched_delete_message.assert_awaited_once_with(mock_guild_text_channel, message)
+        patched_delete_message.assert_awaited_once_with(mock_guild_text_channel, message, reason="broke laws")
 
     async def test_delete_messages_when_one_message_left_in_chunk(
         self, rest_client: rest.RESTClientImpl, mock_guild_text_channel: channels.GuildTextChannel
@@ -3587,15 +3601,19 @@ class TestRESTClientImplAsync:
         expected_json = {"messages": [str(i) for i in range(100)]}
 
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
-            await rest_client.delete_messages(mock_guild_text_channel, *messages)
+            await rest_client.delete_messages(mock_guild_text_channel, *messages, reason="broke laws")
 
             patched__request.assert_has_awaits(
                 [
                     mock.call(
                         routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=mock_guild_text_channel),
                         json=expected_json,
+                        reason="broke laws",
                     ),
-                    mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=mock_guild_text_channel, message=message)),
+                    mock.call(
+                        routes.DELETE_CHANNEL_MESSAGE.compile(channel=mock_guild_text_channel, message=message),
+                        reason="broke laws",
+                    ),
                 ]
             )
 
@@ -3608,7 +3626,7 @@ class TestRESTClientImplAsync:
             mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock, side_effect=Exception),
             pytest.raises(errors.BulkDeleteError),
         ):
-            await rest_client.delete_messages(mock_guild_text_channel, *messages)
+            await rest_client.delete_messages(mock_guild_text_channel, *messages, reason="broke laws")
 
     async def test_delete_messages_with_iterable(
         self, rest_client: rest.RESTClientImpl, mock_guild_text_channel: channels.GuildTextChannel
@@ -3619,17 +3637,21 @@ class TestRESTClientImplAsync:
         message_2 = make_mock_message(6523)
 
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
-            await rest_client.delete_messages(mock_guild_text_channel, message_list, message_1, message_2)
+            await rest_client.delete_messages(
+                mock_guild_text_channel, message_list, message_1, message_2, reason="broke laws"
+            )
 
             patched__request.assert_has_awaits(
                 [
                     mock.call(
                         routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=mock_guild_text_channel),
                         json={"messages": [str(i) for i in range(100)]},
+                        reason="broke laws",
                     ),
                     mock.call(
                         routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=mock_guild_text_channel),
                         json={"messages": ["100", "444", "6523"]},
+                        reason="broke laws",
                     ),
                 ]
             )
@@ -3647,10 +3669,12 @@ class TestRESTClientImplAsync:
                     mock.call(
                         routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=mock_guild_text_channel),
                         json={"messages": [str(i) for i in range(100)]},
+                        reason=undefined.UNDEFINED,
                     ),
                     mock.call(
                         routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=mock_guild_text_channel),
                         json={"messages": ["100", "101", "102"]},
+                        reason=undefined.UNDEFINED,
                     ),
                 ]
             )
@@ -5184,7 +5208,7 @@ class TestRESTClientImplAsync:
 
         with (
             mock.patch.object(
-                rest_client, "_request", new_callable=mock.AsyncMock, return_value=[{"id": "456"}, {"id": "789"}]
+                rest_client, "_request", return_value={"items": [{"id": "456"}, {"id": "789"}]}
             ) as patched__request,
             mock.patch.object(
                 rest_client.entity_factory, "deserialize_known_custom_emoji", side_effect=[emoji1, emoji2]
@@ -7581,7 +7605,6 @@ class TestRESTClientImplAsync:
                 guild=mock_partial_guild,
                 options=[mock_option],
                 default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-                dm_enabled=False,
                 nsfw=True,
             )
 
@@ -7595,7 +7618,6 @@ class TestRESTClientImplAsync:
                     "description": "not ok anymore",
                     "options": [patched_serialize_command_option.return_value],
                     "default_member_permissions": 8,
-                    "dm_permission": False,
                     "nsfw": True,
                 },
             )
@@ -7667,7 +7689,6 @@ class TestRESTClientImplAsync:
                 name_localizations={locales.Locale.TR: "hhh"},
                 description_localizations={locales.Locale.TR: "jello"},
                 default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-                dm_enabled=False,
                 nsfw=True,
             )
 
@@ -7685,7 +7706,6 @@ class TestRESTClientImplAsync:
                 name_localizations={"tr": "hhh"},
                 description_localizations={"tr": "jello"},
                 default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-                dm_enabled=False,
                 nsfw=True,
             )
 
@@ -7707,7 +7727,6 @@ class TestRESTClientImplAsync:
                 "okokok",
                 guild=mock_partial_guild,
                 default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-                dm_enabled=False,
                 nsfw=True,
                 name_localizations={locales.Locale.TR: "hhh"},
             )
@@ -7722,7 +7741,6 @@ class TestRESTClientImplAsync:
                 name="okokok",
                 guild=mock_partial_guild,
                 default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-                dm_enabled=False,
                 nsfw=True,
                 name_localizations={"tr": "hhh"},
             )
@@ -7831,7 +7849,6 @@ class TestRESTClientImplAsync:
                 description="cancelled",
                 options=[mock_option],
                 default_member_permissions=permissions.Permissions.BAN_MEMBERS,
-                dm_enabled=True,
             )
 
             assert result is patched_deserialize_command.return_value
@@ -7843,7 +7860,6 @@ class TestRESTClientImplAsync:
                     "description": "cancelled",
                     "options": [patched_serialize_command_option.return_value],
                     "default_member_permissions": 4,
-                    "dm_permission": True,
                 },
             )
             patched_serialize_command_option.assert_called_once_with(mock_option)

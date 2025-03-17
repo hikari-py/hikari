@@ -104,7 +104,11 @@ if typing.TYPE_CHECKING:
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
 
-    class _ThreadDeserializeSig(typing.Protocol["_GuildThreadChannelCovT"]):
+    _GuildThreadChannelCovT = typing.TypeVar(
+        "_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True
+    )
+
+    class _ThreadDeserializeSig(typing.Protocol[_GuildThreadChannelCovT]):
         def __call__(
             self,
             payload: data_binding.JSONObject,
@@ -118,7 +122,6 @@ if typing.TYPE_CHECKING:
 
 _ParentT = typing.TypeVar("_ParentT")
 _GuildThreadChannelT = typing.TypeVar("_GuildThreadChannelT", bound=channels.GuildThreadChannel)
-_GuildThreadChannelCovT = typing.TypeVar("_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True)
 
 
 @typing.final
@@ -830,7 +833,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
 
     def __init__(
         self,
-        deserialize: _ThreadDeserializeSig[_GuildThreadChannelCovT],
+        deserialize: _ThreadDeserializeSig[_GuildThreadChannelT],
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
         route: routes.CompiledRoute,
@@ -846,7 +849,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
         self._request_call = request_call
         self._route = route
 
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelCovT, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelT, typing.Any, None]]:
         if not self._has_more:
             return None
 
@@ -1274,16 +1277,23 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     _id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(
         alias="id", default=undefined.UNDEFINED, kw_only=True
     )
+
     _default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions] = attrs.field(
         alias="default_member_permissions", default=undefined.UNDEFINED, kw_only=True
     )
-    _is_dm_enabled: undefined.UndefinedOr[bool] = attrs.field(
-        alias="is_dm_enabled", default=undefined.UNDEFINED, kw_only=True
-    )
+
     _is_nsfw: undefined.UndefinedOr[bool] = attrs.field(alias="is_nsfw", default=undefined.UNDEFINED, kw_only=True)
 
     _name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
         alias="name_localizations", factory=dict, kw_only=True
+    )
+
+    _integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]] = attrs.field(
+        alias="integration_types", default=undefined.UNDEFINED, kw_only=True
+    )
+
+    _context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]] = attrs.field(
+        alias="context_types", default=undefined.UNDEFINED, kw_only=True
     )
 
     @property
@@ -1295,16 +1305,24 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self._default_member_permissions
 
     @property
-    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
-        return self._is_dm_enabled
-
-    @property
     def is_nsfw(self) -> undefined.UndefinedOr[bool]:
         return self._is_nsfw
 
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def integration_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]:
+        return self._integration_types
+
+    @property
+    def context_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]:
+        return self._context_types
+
+    @property
+    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+        return self._name_localizations
 
     def set_name(self, name: str, /) -> Self:
         self._name = name
@@ -1320,17 +1338,21 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         self._default_member_permissions = default_member_permissions
         return self
 
-    def set_is_dm_enabled(self, state: undefined.UndefinedOr[bool], /) -> Self:
-        self._is_dm_enabled = state
-        return self
-
     def set_is_nsfw(self, state: undefined.UndefinedOr[bool], /) -> Self:
         self._is_nsfw = state
         return self
 
-    @property
-    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
-        return self._name_localizations
+    def set_integration_types(
+        self, integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]
+    ) -> Self:
+        self._integration_types = integration_types
+        return self
+
+    def set_context_types(
+        self, context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]
+    ) -> Self:
+        self._context_types = context_types
+        return self
 
     def set_name_localizations(
         self, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
@@ -1344,8 +1366,9 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         data["type"] = self.type
         data.put_snowflake("id", self._id)
         data.put("name_localizations", self._name_localizations)
-        data.put("dm_permission", self._is_dm_enabled)
         data.put("nsfw", self._is_nsfw)
+        data.put_array("integration_types", self._integration_types)
+        data.put_array("contexts", self._context_types)
 
         # Discord considers 0 the same thing as ADMINISTRATORS, but we make it nicer to work with
         # by using it correctly.
@@ -1424,7 +1447,6 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
             name_localizations=self._name_localizations,
             description_localizations=self._description_localizations,
             default_member_permissions=self._default_member_permissions,
-            dm_enabled=self._is_dm_enabled,
             nsfw=self._is_nsfw,
         )
 
@@ -1457,7 +1479,6 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
             guild=guild,
             name_localizations=self._name_localizations,
             default_member_permissions=self._default_member_permissions,
-            dm_enabled=self._is_dm_enabled,
             nsfw=self.is_nsfw,
         )
 
@@ -1478,7 +1499,7 @@ def _build_emoji(
         A union of the custom emoji's id if defined (index 0) or the unicode
         emoji's string representation (index 1).
     """
-    # Since these builder classes may be re-used, this method should be called when the builder is being constructed.
+    # Since these builder classes may be reused, this method should be called when the builder is being constructed.
     if emoji is not undefined.UNDEFINED:
         if isinstance(emoji, (int, emojis.CustomEmoji)):
             return str(int(emoji)), undefined.UNDEFINED

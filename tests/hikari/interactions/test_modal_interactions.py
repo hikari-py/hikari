@@ -23,6 +23,7 @@ from __future__ import annotations
 import mock
 import pytest
 
+from hikari import applications
 from hikari import channels
 from hikari import components
 from hikari import monetization
@@ -81,6 +82,10 @@ class TestModalInteraction:
                     subscription_id=None,
                 )
             ],
+            authorizing_integration_owners={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
+            },
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
     def test_build_response(

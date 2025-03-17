@@ -33,7 +33,6 @@ __all__: typing.Sequence[str] = (
     "KnownCustomEmojiData",
     "RichActivityData",
     "MemberPresenceData",
-    "MessageInteractionData",
     "MessageData",
     "VoiceStateData",
     "RefCell",
@@ -403,6 +402,7 @@ class MemberData(BaseData[guilds.Member]):
     is_mute: undefined.UndefinedOr[bool] = attrs.field()
     is_pending: undefined.UndefinedOr[bool] = attrs.field()
     raw_communication_disabled_until: typing.Optional[datetime.datetime] = attrs.field()
+    guild_flags: typing.Union[guilds.GuildMemberFlags, int] = attrs.field()
     # meta-attribute
     has_been_deleted: bool = attrs.field(default=False, init=False)
 
@@ -421,6 +421,7 @@ class MemberData(BaseData[guilds.Member]):
             is_pending=member.is_pending,
             user=user or RefCell(copy.copy(member.user)),
             raw_communication_disabled_until=member.raw_communication_disabled_until,
+            guild_flags=member.guild_flags,
             # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
             role_ids=tuple(member.role_ids),
         )
@@ -438,6 +439,7 @@ class MemberData(BaseData[guilds.Member]):
             is_pending=self.is_pending,
             raw_communication_disabled_until=self.raw_communication_disabled_until,
             user=self.user.copy(),
+            guild_flags=self.guild_flags,
         )
 
 
@@ -656,29 +658,6 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
         )
 
 
-@attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=False, weakref_slot=False)
-class MessageInteractionData(BaseData[messages.MessageInteraction]):
-    """A model for storing message interaction data."""
-
-    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
-    type: typing.Union[base_interactions.InteractionType, int] = attrs.field(eq=False, repr=True)
-    name: str = attrs.field(eq=False, repr=True)
-    user: RefCell[users_.User] = attrs.field(eq=False, repr=True)
-
-    @classmethod
-    def build_from_entity(
-        cls, interaction: messages.MessageInteraction, /, *, user: typing.Optional[RefCell[users_.User]] = None
-    ) -> MessageInteractionData:
-        if user is None:
-            user = RefCell(interaction.user)
-
-        return MessageInteractionData(id=interaction.id, type=interaction.type, name=interaction.name, user=user)
-
-    def build_entity(self, _: traits.RESTAware, /) -> messages.MessageInteraction:
-        return messages.MessageInteraction(id=self.id, type=self.type, name=self.name, user=self.user.copy())
-
-
 def _copy_embed(embed: embeds_.Embed) -> embeds_.Embed:
     return embeds_.Embed.from_received_embed(
         title=embed.title,
@@ -729,10 +708,10 @@ class MessageData(BaseData[messages.Message]):
     stickers: tuple[stickers_.PartialSticker, ...] = attrs.field()
     nonce: typing.Optional[str] = attrs.field()
     referenced_message: typing.Optional[RefCell[MessageData]] = attrs.field()
-    interaction: typing.Optional[MessageInteractionData] = attrs.field()
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     components: tuple[components_.MessageActionRowComponent, ...] = attrs.field()
     thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field()
+    interaction_metadata: typing.Optional[base_interactions.PartialInteractionMetadata] = attrs.field()
 
     @classmethod
     def build_from_entity(
@@ -750,12 +729,6 @@ class MessageData(BaseData[messages.Message]):
     ) -> MessageData:
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))
-
-        interaction = (
-            MessageInteractionData.build_from_entity(message.interaction, user=interaction_user)
-            if message.interaction
-            else None
-        )
 
         if not user_mentions and message.user_mentions is not undefined.UNDEFINED:
             user_mentions = {user_id: RefCell(copy.copy(user)) for user_id, user in message.user_mentions.items()}
@@ -798,10 +771,10 @@ class MessageData(BaseData[messages.Message]):
             stickers=tuple(map(copy.copy, message.stickers)),
             nonce=message.nonce,
             referenced_message=referenced_message,
-            interaction=interaction,
             application_id=message.application_id,
             components=tuple(message.components),
             thread=message.thread,
+            interaction_metadata=message.interaction_metadata,
         )
 
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
@@ -844,10 +817,10 @@ class MessageData(BaseData[messages.Message]):
             stickers=tuple(map(copy.copy, self.stickers)),
             nonce=self.nonce,
             referenced_message=self.referenced_message.object.build_entity(app) if self.referenced_message else None,
-            interaction=self.interaction.build_entity(app) if self.interaction else None,
             application_id=self.application_id,
             components=self.components,
             thread=self.thread,
+            interaction_metadata=self.interaction_metadata,
         )
 
     def update(
@@ -901,6 +874,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
 
     channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
+    user_id: snowflakes.Snowflake = attrs.field()
     is_guild_deafened: bool = attrs.field()
     is_guild_muted: bool = attrs.field()
     is_self_deafened: bool = attrs.field()
@@ -908,13 +882,14 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     is_streaming: bool = attrs.field()
     is_suppressed: bool = attrs.field()
     is_video_enabled: bool = attrs.field()
-    member: RefCell[MemberData] = attrs.field()
+    member: typing.Optional[RefCell[MemberData]] = attrs.field()
     session_id: str = attrs.field()
     requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field()
 
     def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
-        member = self.member.object.build_entity(app)
+        member = self.member.object.build_entity(app) if self.member else None
         return voices.VoiceState(
+            app=app,
             channel_id=self.channel_id,
             guild_id=self.guild_id,
             is_guild_deafened=self.is_guild_deafened,
@@ -924,9 +899,8 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_streaming=self.is_streaming,
             is_suppressed=self.is_suppressed,
             is_video_enabled=self.is_video_enabled,
-            user_id=member.user.id,
+            user_id=self.user_id,
             session_id=self.session_id,
-            app=app,
             member=member,
             requested_to_speak_at=self.requested_to_speak_at,
         )
@@ -938,6 +912,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
         return cls(
             channel_id=voice_state.channel_id,
             guild_id=voice_state.guild_id,
+            user_id=voice_state.user_id,
             is_self_deafened=voice_state.is_self_deafened,
             is_self_muted=voice_state.is_self_muted,
             is_guild_deafened=voice_state.is_guild_deafened,
@@ -945,7 +920,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
             is_streaming=voice_state.is_streaming,
             is_suppressed=voice_state.is_suppressed,
             is_video_enabled=voice_state.is_video_enabled,
-            member=member or RefCell(MemberData.build_from_entity(voice_state.member)),
+            member=member,
             session_id=voice_state.session_id,
             requested_to_speak_at=voice_state.requested_to_speak_at,
         )

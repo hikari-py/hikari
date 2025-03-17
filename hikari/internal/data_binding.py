@@ -99,15 +99,18 @@ _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
 _UTF_8: typing.Final[str] = "utf-8"
 
 default_json_dumps: JSONEncoder
-"""Default json encoder to use."""
+"""Default JSON encoder to use."""
 
 default_json_loads: JSONDecoder
-"""Default json decoder to use."""
+"""Default JSON decoder to use."""
 
 try:
     import orjson
 
-    default_json_dumps = orjson.dumps
+    def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
+        """Encode a JSON object to [`bytes`][]."""
+        return orjson.dumps(obj, option=orjson.OPT_NON_STR_KEYS)
+
     default_json_loads = orjson.loads
 except ModuleNotFoundError:
     import json
@@ -115,7 +118,7 @@ except ModuleNotFoundError:
     _json_separators = (",", ":")
 
     def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
-        """Encode a JSON object to a [`str`][]."""
+        """Encode a JSON object to [`bytes`][]."""
         return json.dumps(obj, separators=_json_separators).encode(_UTF_8)
 
     default_json_loads = json.loads

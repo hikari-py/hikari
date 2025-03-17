@@ -94,10 +94,10 @@ def hikari_message() -> messages.Message:
         stickers=[],
         nonce=None,
         referenced_message=None,
-        interaction=None,
         application_id=None,
         components=[],
         thread=None,
+        interaction_metadata=None,
     )
 
 

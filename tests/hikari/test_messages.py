@@ -124,10 +124,10 @@ def message(mock_app: traits.RESTAware) -> messages.Message:
         nonce=None,
         referenced_message=None,
         stickers=[],
-        interaction=None,
         application_id=snowflakes.Snowflake(123123),
         components=[],
         thread=None,
+        interaction_metadata=None,
     )
 
 

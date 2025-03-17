@@ -2016,6 +2016,7 @@ class TestCacheImpl:
             raw_communication_disabled_until=datetime.datetime(
                 2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
             ),
+            guild_flags=guilds.GuildMemberFlags(1),
         )
 
         member = cache_impl._build_member(cache_utilities.RefCell(member_data))
@@ -2034,6 +2035,7 @@ class TestCacheImpl:
         assert member.raw_communication_disabled_until == datetime.datetime(
             2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
         )
+        assert member.guild_flags == guilds.GuildMemberFlags.DID_REJOIN
 
     def test_clear_members(self, cache_impl: cache_impl_.CacheImpl):
         mock_user_1 = cache_utilities.RefCell(mock.Mock(id=snowflakes.Snowflake(2123123)))
@@ -2404,6 +2406,7 @@ class TestCacheImpl:
             raw_communication_disabled_until=datetime.datetime(
                 2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
             ),
+            guild_flags=guilds.GuildMemberFlags(1),
         )
         cache_impl._set_user = mock.Mock(return_value=mock_user_ref)
         cache_impl._increment_ref_count = mock.Mock()
@@ -2435,6 +2438,7 @@ class TestCacheImpl:
         assert member_entry.object.raw_communication_disabled_until == datetime.datetime(
             2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
         )
+        assert member_entry.object.guild_flags == guilds.GuildMemberFlags.DID_REJOIN
 
     def test_set_member_doesnt_increment_user_ref_count_for_pre_cached_member(self, cache_impl: cache_impl_.CacheImpl):
         mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(645234123))
@@ -2651,6 +2655,7 @@ class TestCacheImpl:
         voice_state_data = cache_utilities.VoiceStateData(
             channel_id=snowflakes.Snowflake(4651234123),
             guild_id=snowflakes.Snowflake(54123123),
+            user_id=snowflakes.Snowflake(7512312),
             is_guild_deafened=True,
             is_guild_muted=False,
             is_self_deafened=True,
@@ -2994,8 +2999,8 @@ class TestCacheImpl:
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
         )
-        mock_interaction = mock.Mock()
         mock_thread = mock.Mock()
+        mock_interaction_metadata = mock.Mock()
 
         message_data = cache_utilities.MessageData(
             id=snowflakes.Snowflake(32123123),
@@ -3024,10 +3029,10 @@ class TestCacheImpl:
             nonce="aNonce",
             referenced_message=cache_utilities.RefCell(mock_referenced_message_data),
             stickers=(mock_sticker,),
-            interaction=mock_interaction,
             application_id=snowflakes.Snowflake(123123123123),
             components=(mock_component,),
             thread=mock_thread,
+            interaction_metadata=mock_interaction_metadata,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -3081,9 +3086,9 @@ class TestCacheImpl:
         assert result.nonce == "aNonce"
         assert result.referenced_message is mock_referenced_message
         assert result.application_id == 123123123123
-        assert result.interaction is mock_interaction.build_entity.return_value
         assert result.components == (mock_component,)
         assert result.thread == mock_thread
+        assert result.interaction_metadata == mock_interaction_metadata
 
     def test__build_message_with_null_fields(self, cache_impl: cache_impl_.CacheImpl):
         message_data = cache_utilities.MessageData(
@@ -3113,10 +3118,10 @@ class TestCacheImpl:
             nonce=None,
             referenced_message=None,
             stickers=(),
-            interaction=None,
             application_id=None,
             components=(),
             thread=None,
+            interaction_metadata=None,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -3140,7 +3145,7 @@ class TestCacheImpl:
         assert result.nonce is None
         assert result.referenced_message is None
         assert result.application_id is None
-        assert result.interaction is None
+        assert result.interaction_metadata is None
 
     @pytest.mark.skip(reason="TODO")
     def test_clear_messages(self, cache_impl: cache_impl_.CacheImpl): ...

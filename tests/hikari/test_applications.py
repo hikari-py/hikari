@@ -157,6 +157,7 @@ class TestApplication:
             tags=[],
             install_parameters=mock.Mock(),
             approximate_guild_count=1,
+            integration_types_config={},
         )
 
     def test_cover_image_url_property(self, application: applications.Application):

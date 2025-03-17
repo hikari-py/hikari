@@ -82,15 +82,7 @@ REFORMATTING_FILE_EXTS = (
     ".pl",
 )
 
-PYTHON_REFORMATTING_PATHS = (
-    MAIN_PACKAGE,
-    TEST_PACKAGE,
-    EXAMPLE_SCRIPTS,
-    "scripts",
-    "pipelines",
-    "setup.py",
-    "noxfile.py",
-)
+PYTHON_REFORMATTING_PATHS = (MAIN_PACKAGE, TEST_PACKAGE, EXAMPLE_SCRIPTS, "scripts", "pipelines", "noxfile.py")
 
 FULL_REFORMATTING_PATHS = (
     *PYTHON_REFORMATTING_PATHS,
