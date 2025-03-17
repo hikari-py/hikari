@@ -448,7 +448,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_section_component_mapping",
     )
 
-    def __init__(self, app: traits.RESTAware) -> None:
+    def __init__(self, app: traits.RESTAware) -> None:  # noqa: CFQ001 - Too long
         self._app = app
         self._audit_log_entry_converters: dict[str, typing.Callable[[typing.Any], typing.Any]] = {
             audit_log_models.AuditLogChangeKey.OWNER_ID: snowflakes.Snowflake,
