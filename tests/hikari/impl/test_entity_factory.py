@@ -6058,7 +6058,6 @@ class TestEntityFactoryImpl:
         # Poll
         assert partial_message.poll == entity_factory_impl.deserialize_poll(poll_payload)
 
-
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
         message_payload["edited_timestamp"] = None
@@ -6148,7 +6147,7 @@ class TestEntityFactoryImpl:
         embed_payload,
         referenced_message,
         action_row_payload,
-        poll_payload
+        poll_payload,
     ):
         message = entity_factory_impl.deserialize_message(message_payload)
 

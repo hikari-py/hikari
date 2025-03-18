@@ -1918,9 +1918,9 @@ class TestPollBuilder:
         )
 
         assert poll_builder.build() == {
-            "question": {"text": "question_text", "emoji": {"id": 123}},
+            "question": {"text": "question_text", "emoji": {"id": "123"}},
             "answers": [
-                {"poll_media": {"text": "answer_1_text", "emoji": {"id": 456}}},
+                {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456"}}},
                 {"poll_media": {"text": "answer_2_text"}},
                 {"poll_media": {"emoji": {"name": "👀"}}},
             ],
@@ -1939,7 +1939,7 @@ class TestPollBuilder:
         )
 
         assert poll_builder.build() == {
-            "question": {"text": "question_text", "emoji": {"id": 123}},
+            "question": {"text": "question_text", "emoji": {"id": "123"}},
             "answers": [],
             "allow_multiselect": True,
         }
@@ -1954,7 +1954,7 @@ class TestPollAnswerBuilder:
             )
         )
 
-        assert poll_answer.build() == {"poll_media": {"text": "answer_1_text", "emoji": {"id": 456}}}
+        assert poll_answer.build() == {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456"}}}
 
 
 class TestPollMediaBuilder:
@@ -1964,4 +1964,4 @@ class TestPollMediaBuilder:
             emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(123), name="question_emoji", is_animated=False),
         )
 
-        assert poll_media.build() == {"text": "question_text", "emoji": {"id": 123}}
+        assert poll_media.build() == {"text": "question_text", "emoji": {"id": "123"}}
