@@ -32,6 +32,7 @@ import aiohttp.web_runner
 import mock
 import multidict
 
+from hikari import applications
 from hikari import files
 
 try:
@@ -666,7 +667,14 @@ class TestInteractionServer:
         mock_file_1 = mock.Mock()
         mock_file_2 = mock.Mock()
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         mock_listener = mock.AsyncMock(return_value=mock_builder)
@@ -707,7 +715,14 @@ class TestInteractionServer:
         mock_file_1 = mock.Mock()
         mock_file_2 = mock.Mock()
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         g_called = False
@@ -872,7 +887,14 @@ class TestInteractionServer:
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.Mock(side_effect=mock_exception)
@@ -901,7 +923,14 @@ class TestInteractionServer:
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
         mock_interaction_server.set_listener(
@@ -932,7 +961,14 @@ class TestInteractionServer:
         mock_exception = TypeError("OK")
         mock_interaction_server._dumps = mock.Mock(side_effect=mock_exception)
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No"}, [])))
         mock_interaction_server.set_listener(

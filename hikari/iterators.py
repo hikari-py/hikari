@@ -776,7 +776,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     async def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]: ...
 
     async def __anext__(self) -> ValueT:
-        # This sneaky snippet of code lets us use generators rather than lists.
+        # This sneaky snippet of code let's us use generators rather than lists.
         # This is important, as we can use this to make generators that
         # deserialize loads of items lazy. If we only want 10 messages of
         # history, we can use the same code and prefetch 100 without any

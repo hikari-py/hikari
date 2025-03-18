@@ -357,7 +357,7 @@ def _name_resolver(members: dict[int, _Flag], value: int) -> typing.Generator[st
     while bit <= value:
         if member := members.get(bit):
             # Use ._value_ to prevent overhead of making new members each time.
-            # Also lets my testing logic for the cache size be more accurate.
+            # Also let's my testing logic for the cache size be more accurate.
             if member._value_ & remaining == member._value_:
                 remaining ^= member._value_
                 yield member.name

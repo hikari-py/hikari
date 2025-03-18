@@ -167,9 +167,9 @@ class GuildTypingEvent(TypingEvent):
             The channel.
         """
         channel = await super().fetch_channel()
-        assert isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"expected TextableGuildChannel from API, got {channel}"
+        assert isinstance(channel, channels.TextableGuildChannel), (
+            f"expected TextableGuildChannel from API, got {channel}"
+        )
         return channel
 
     async def fetch_guild(self) -> guilds.Guild:
@@ -214,9 +214,9 @@ class GuildTypingEvent(TypingEvent):
             return None
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"expected TextableGuildChannel from cache, got {channel}"
+        assert channel is None or isinstance(channel, channels.TextableGuildChannel), (
+            f"expected TextableGuildChannel from cache, got {channel}"
+        )
         return channel
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:

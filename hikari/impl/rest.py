@@ -988,6 +988,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = self._loads(await response.read())
         assert isinstance(body, dict)
+        if "retry_after" not in body:
+            # This is most probably a Cloudflare ban, so just output the entire
+            # body to the console and abort the request.
+            raise errors.HTTPResponseError(
+                str(response.real_url), http.HTTPStatus.TOO_MANY_REQUESTS, response.headers, str(body), str(body)
+            )
+
         body_retry_after = float(body["retry_after"])
 
         if body.get("global", False) is True:
@@ -3846,7 +3853,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
@@ -3867,7 +3873,6 @@ class RESTClientImpl(rest_api.RESTClient):
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
-        body.put("dm_permission", dm_enabled)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -3890,7 +3895,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
@@ -3903,7 +3907,6 @@ class RESTClientImpl(rest_api.RESTClient):
             name_localizations=name_localizations,
             description_localizations=description_localizations,
             default_member_permissions=default_member_permissions,
-            dm_enabled=dm_enabled,
             nsfw=nsfw,
         )
         return self._entity_factory.deserialize_slash_command(
@@ -3923,7 +3926,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
@@ -3933,7 +3935,6 @@ class RESTClientImpl(rest_api.RESTClient):
             guild=guild,
             name_localizations=name_localizations,
             default_member_permissions=default_member_permissions,
-            dm_enabled=dm_enabled,
             nsfw=nsfw,
         )
         return self._entity_factory.deserialize_context_menu_command(
@@ -3969,7 +3970,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
@@ -3988,7 +3988,6 @@ class RESTClientImpl(rest_api.RESTClient):
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
-        body.put("dm_permission", dm_enabled)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)

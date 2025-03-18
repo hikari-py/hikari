@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,13 +18,19 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from __future__ import annotations
 
-from pipelines import nox
+import typing as _typing
 
+import nox as _nox
 
-@nox.session()
-def twemoji_test(session: nox.Session):
-    """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
-    nox.sync(session, self=True)
-    session.run("python", "scripts/ci/test_twemoji_mapping.py", session.create_tmp())
+session = _nox.session
+Session = _nox.Session
+
+def sync(
+    session: _nox.Session,
+    /,
+    *,
+    self: bool = False,
+    extras: _typing.Sequence[str] = (),
+    groups: _typing.Sequence[str] = (),
+) -> None: ...

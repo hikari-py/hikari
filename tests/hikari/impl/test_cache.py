@@ -2770,8 +2770,8 @@ class TestCacheImpl:
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
         )
-        mock_interaction = mock.Mock()
         mock_thread = mock.Mock()
+        mock_interaction_metadata = mock.Mock()
 
         message_data = cache_utilities.MessageData(
             id=snowflakes.Snowflake(32123123),
@@ -2800,10 +2800,10 @@ class TestCacheImpl:
             nonce="aNonce",
             referenced_message=cache_utilities.RefCell(mock_referenced_message_data),
             stickers=(mock_sticker,),
-            interaction=mock_interaction,
             application_id=snowflakes.Snowflake(123123123123),
             components=(mock_component,),
             thread=mock_thread,
+            interaction_metadata=mock_interaction_metadata,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2857,9 +2857,9 @@ class TestCacheImpl:
         assert result.nonce == "aNonce"
         assert result.referenced_message is mock_referenced_message
         assert result.application_id == 123123123123
-        assert result.interaction is mock_interaction.build_entity.return_value
         assert result.components == (mock_component,)
         assert result.thread == mock_thread
+        assert result.interaction_metadata == mock_interaction_metadata
 
     def test__build_message_with_null_fields(self, cache_impl):
         message_data = cache_utilities.MessageData(
@@ -2889,10 +2889,10 @@ class TestCacheImpl:
             nonce=None,
             referenced_message=None,
             stickers=(),
-            interaction=None,
             application_id=None,
             components=(),
             thread=None,
+            interaction_metadata=None,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2916,7 +2916,7 @@ class TestCacheImpl:
         assert result.nonce is None
         assert result.referenced_message is None
         assert result.application_id is None
-        assert result.interaction is None
+        assert result.interaction_metadata is None
 
     @pytest.mark.skip(reason="TODO")
     def test_clear_messages(self, cache_impl):
