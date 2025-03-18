@@ -20,7 +20,6 @@
 # SOFTWARE.
 from __future__ import annotations
 
-import mock
 import pytest
 
 from hikari import snowflakes
@@ -28,16 +27,11 @@ from hikari import stage_instances
 from hikari import traits
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock()
-
-
 class TestStageInstance:
     @pytest.fixture
-    def stage_instance(self, mock_app: traits.RESTAware) -> stage_instances.StageInstance:
+    def stage_instance(self, hikari_app: traits.RESTAware) -> stage_instances.StageInstance:
         return stage_instances.StageInstance(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(123),
             channel_id=snowflakes.Snowflake(6969),
             guild_id=snowflakes.Snowflake(420),
@@ -50,8 +44,8 @@ class TestStageInstance:
     def test_id_property(self, stage_instance: stage_instances.StageInstance):
         assert stage_instance.id == 123
 
-    def test_app_property(self, stage_instance: stage_instances.StageInstance, mock_app: traits.RESTAware):
-        assert stage_instance.app is mock_app
+    def test_app_property(self, stage_instance: stage_instances.StageInstance, hikari_app: traits.RESTAware):
+        assert stage_instance.app is hikari_app
 
     def test_channel_id_property(self, stage_instance: stage_instances.StageInstance):
         assert stage_instance.channel_id == 6969

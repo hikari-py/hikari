@@ -29,17 +29,12 @@ from hikari import snowflakes
 from hikari import traits
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
 @pytest.mark.asyncio
 class TestMessagePinEntryInfo:
     @pytest.fixture
-    def message_pin_entry_info(mock_app: traits.RESTAware) -> audit_logs.MessagePinEntryInfo:
+    def message_pin_entry_info(hikari_app: traits.RESTAware) -> audit_logs.MessagePinEntryInfo:
         return audit_logs.MessagePinEntryInfo(
-            app=mock_app, channel_id=snowflakes.Snowflake(123), message_id=snowflakes.Snowflake(456)
+            app=hikari_app, channel_id=snowflakes.Snowflake(123), message_id=snowflakes.Snowflake(456)
         )
 
     async def test_fetch_channel(self, message_pin_entry_info: audit_logs.MessagePinEntryInfo):
@@ -93,9 +88,9 @@ class TestMemberMoveEntryInfo:
 
 class TestAuditLogEntry:
     @pytest.fixture
-    def audit_log_entry(mock_app: traits.RESTAware) -> audit_logs.AuditLogEntry:
+    def audit_log_entry(hikari_app: traits.RESTAware) -> audit_logs.AuditLogEntry:
         return audit_logs.AuditLogEntry(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(123),
             target_id=None,
             changes=[],

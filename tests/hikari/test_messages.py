@@ -90,14 +90,9 @@ class TestMessageApplication:
 
 
 @pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
-@pytest.fixture
-def message(mock_app: traits.RESTAware) -> messages.Message:
+def message(hikari_app: traits.RESTAware) -> messages.Message:
     return messages.Message(
-        app=mock_app,
+        app=hikari_app,
         id=snowflakes.Snowflake(1234),
         channel_id=snowflakes.Snowflake(5678),
         guild_id=snowflakes.Snowflake(910112),
@@ -145,9 +140,9 @@ class TestMessage:
 
 
 @pytest.fixture
-def message_reference(mock_app: traits.RESTAware) -> messages.MessageReference:
+def message_reference(hikari_app: traits.RESTAware) -> messages.MessageReference:
     return messages.MessageReference(
-        app=mock_app,
+        app=hikari_app,
         guild_id=snowflakes.Snowflake(123),
         channel_id=snowflakes.Snowflake(456),
         id=snowflakes.Snowflake(789),

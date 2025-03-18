@@ -34,13 +34,9 @@ from hikari.internal import routes
 
 class TestScheduledEvent:
     @pytest.fixture
-    def mock_app(self) -> traits.RESTAware:
-        return mock.Mock(traits.RESTAware)
-
-    @pytest.fixture
-    def scheduled_event(self, mock_app: traits.RESTAware) -> scheduled_events.ScheduledEvent:
+    def scheduled_event(self, hikari_app: traits.RESTAware) -> scheduled_events.ScheduledEvent:
         return scheduled_events.ScheduledEvent(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(123456),
             guild_id=snowflakes.Snowflake(654321),
             name="scheduled_event",

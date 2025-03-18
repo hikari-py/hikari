@@ -33,11 +33,6 @@ from hikari.api import shard as shard_api
 from hikari.events import typing_events
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
 class TestTypingEvent:
     class MockTypingEvent(typing_events.TypingEvent):
         def __init__(self, app: traits.RESTAware):
@@ -68,8 +63,8 @@ class TestTypingEvent:
             return self._timestamp
 
     @pytest.fixture
-    def typing_event(self, mock_app: traits.RESTAware) -> typing_events.TypingEvent:
-        return TestTypingEvent.MockTypingEvent(mock_app)
+    def typing_event(self, hikari_app: traits.RESTAware) -> typing_events.TypingEvent:
+        return TestTypingEvent.MockTypingEvent(hikari_app)
 
     def test_get_user_when_no_cache(self, typing_event: typing_events.TypingEvent):
         with mock.patch.object(typing_event, "_app", None):

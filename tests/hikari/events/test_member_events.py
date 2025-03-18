@@ -31,11 +31,6 @@ from hikari.api import shard as shard_api
 from hikari.events import member_events
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
 class TestMemberEvent:
     class MockMemberEvent(member_events.MemberEvent):
         def __init__(self, app: traits.RESTAware):
@@ -61,8 +56,8 @@ class TestMemberEvent:
             return self._user
 
     @pytest.fixture
-    def member_event(self, mock_app: traits.RESTAware) -> member_events.MemberEvent:
-        return TestMemberEvent.MockMemberEvent(mock_app)
+    def member_event(self, hikari_app: traits.RESTAware) -> member_events.MemberEvent:
+        return TestMemberEvent.MockMemberEvent(hikari_app)
 
     def test_app_property(self, member_event: member_events.MemberEvent):
         assert member_event.app is member_event.user.app

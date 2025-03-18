@@ -33,11 +33,6 @@ from hikari.api import shard as shard_api
 from hikari.events import reaction_events
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
 class TestReactionAddEvent:
     class MockReactionAddEvent(reaction_events.ReactionAddEvent):
         def __init__(self, app: traits.RESTAware):
@@ -83,8 +78,8 @@ class TestReactionAddEvent:
             return self._is_animated
 
     @pytest.fixture
-    def reaction_add_event(self, mock_app: traits.RESTAware) -> reaction_events.ReactionAddEvent:
-        return TestReactionAddEvent.MockReactionAddEvent(mock_app)
+    def reaction_add_event(self, hikari_app: traits.RESTAware) -> reaction_events.ReactionAddEvent:
+        return TestReactionAddEvent.MockReactionAddEvent(hikari_app)
 
     def test_is_for_emoji_when_custom_emoji_matches(self, reaction_add_event: reaction_events.ReactionAddEvent):
         assert reaction_add_event.is_for_emoji(
@@ -176,8 +171,8 @@ class TestReactionDeleteEvent:
             return self._emoji_id
 
     @pytest.fixture
-    def reaction_delete_event(self, mock_app: traits.RESTAware) -> reaction_events.ReactionDeleteEvent:
-        return TestReactionDeleteEvent.MockReactionDeleteEvent(mock_app)
+    def reaction_delete_event(self, hikari_app: traits.RESTAware) -> reaction_events.ReactionDeleteEvent:
+        return TestReactionDeleteEvent.MockReactionDeleteEvent(hikari_app)
 
     def test_is_for_emoji_when_custom_emoji_matches(self, reaction_delete_event: reaction_events.ReactionDeleteEvent):
         assert reaction_delete_event.is_for_emoji(
@@ -264,8 +259,8 @@ class TestReactionDeleteEmojiEvent:
             return self._emoji_id
 
     @pytest.fixture
-    def reaction_delete_emoji_event(self, mock_app: traits.RESTAware) -> reaction_events.ReactionDeleteEmojiEvent:
-        return TestReactionDeleteEmojiEvent.MockReactionDeleteEmojiEvent(mock_app)
+    def reaction_delete_emoji_event(self, hikari_app: traits.RESTAware) -> reaction_events.ReactionDeleteEmojiEvent:
+        return TestReactionDeleteEmojiEvent.MockReactionDeleteEmojiEvent(hikari_app)
 
     def test_is_for_emoji_when_custom_emoji_matches(
         self, reaction_delete_emoji_event: reaction_events.ReactionDeleteEmojiEvent

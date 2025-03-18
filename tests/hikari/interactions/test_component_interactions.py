@@ -33,16 +33,11 @@ from hikari.interactions import base_interactions
 from hikari.interactions import component_interactions
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(rest=mock.AsyncMock())
-
-
 class TestComponentInteraction:
     @pytest.fixture
-    def mock_component_interaction(self, mock_app: traits.RESTAware) -> component_interactions.ComponentInteraction:
+    def mock_component_interaction(self, hikari_app: traits.RESTAware) -> component_interactions.ComponentInteraction:
         return component_interactions.ComponentInteraction(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.MESSAGE_COMPONENT,
             channel_id=snowflakes.Snowflake(3123123),
@@ -81,13 +76,13 @@ class TestComponentInteraction:
         )
 
     def test_build_response(
-        self, mock_component_interaction: component_interactions.ComponentInteraction, mock_app: traits.RESTAware
+        self, mock_component_interaction: component_interactions.ComponentInteraction, hikari_app: traits.RESTAware
     ):
-        mock_app.rest.interaction_message_builder = mock.Mock()
+        hikari_app.rest.interaction_message_builder = mock.Mock()
         response = mock_component_interaction.build_response(4)
 
-        assert response is mock_app.rest.interaction_message_builder.return_value
-        mock_app.rest.interaction_message_builder.assert_called_once_with(4)
+        assert response is hikari_app.rest.interaction_message_builder.return_value
+        hikari_app.rest.interaction_message_builder.assert_called_once_with(4)
 
     def test_build_response_with_invalid_type(
         self, mock_component_interaction: component_interactions.ComponentInteraction
@@ -96,13 +91,13 @@ class TestComponentInteraction:
             mock_component_interaction.build_response(999)  # pyright: ignore [reportArgumentType]
 
     def test_build_deferred_response(
-        self, mock_component_interaction: component_interactions.ComponentInteraction, mock_app: traits.RESTAware
+        self, mock_component_interaction: component_interactions.ComponentInteraction, hikari_app: traits.RESTAware
     ):
-        mock_app.rest.interaction_deferred_builder = mock.Mock()
+        hikari_app.rest.interaction_deferred_builder = mock.Mock()
         response = mock_component_interaction.build_deferred_response(5)
 
-        assert response is mock_app.rest.interaction_deferred_builder.return_value
-        mock_app.rest.interaction_deferred_builder.assert_called_once_with(5)
+        assert response is hikari_app.rest.interaction_deferred_builder.return_value
+        hikari_app.rest.interaction_deferred_builder.assert_called_once_with(5)
 
     def test_build_deferred_response_with_invalid_type(
         self, mock_component_interaction: component_interactions.ComponentInteraction
@@ -113,7 +108,10 @@ class TestComponentInteraction:
     @pytest.mark.asyncio
     async def test_fetch_channel(self, mock_component_interaction: component_interactions.ComponentInteraction):
         with mock.patch.object(
-            mock_component_interaction.app.rest, "fetch_channel", return_value=mock.Mock(channels.TextableChannel)
+            mock_component_interaction.app.rest,
+            "fetch_channel",
+            new_callable=mock.AsyncMock,
+            return_value=mock.Mock(channels.TextableChannel),
         ) as patched_fetch_channel:
             assert await mock_component_interaction.fetch_channel() is patched_fetch_channel.return_value
 
@@ -150,7 +148,9 @@ class TestComponentInteraction:
     async def test_fetch_guild(self, mock_component_interaction: component_interactions.ComponentInteraction):
         with (
             mock.patch.object(mock_component_interaction, "guild_id", snowflakes.Snowflake(43123123)),
-            mock.patch.object(mock_component_interaction.app.rest, "fetch_guild") as patched_fetch_guild,
+            mock.patch.object(
+                mock_component_interaction.app.rest, "fetch_guild", mock.AsyncMock()
+            ) as patched_fetch_guild,
         ):
             assert await mock_component_interaction.fetch_guild() is patched_fetch_guild.return_value
 
@@ -191,11 +191,11 @@ class TestComponentInteraction:
             patched_get_guild.assert_not_called()
 
     def test_get_guild_when_cacheless(
-        self, mock_component_interaction: component_interactions.ComponentInteraction, mock_app: traits.RESTAware
+        self, mock_component_interaction: component_interactions.ComponentInteraction, hikari_app: traits.RESTAware
     ):
         mock_component_interaction.guild_id = snowflakes.Snowflake(321123)
         mock_component_interaction.app = mock.Mock(traits.RESTAware)
 
         assert mock_component_interaction.get_guild() is None
 
-        mock_app.cache.get_guild.assert_not_called()  # FIXME: This isn't an easy thing to patch, because it complains that the mock app does not have the attribute cache anyways, so it can never be called.
+        # hikari_app.cache.get_guild.assert_not_called()  # FIXME: This isn't an easy thing to patch, because it complains that the mock app does not have the attribute cache anyways, so it can never be called.

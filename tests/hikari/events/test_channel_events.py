@@ -32,11 +32,6 @@ from hikari.api import shard as shard_api
 from hikari.events import channel_events
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
 class TestGuildChannelEvent:
     class MockGuildChannelEvent(channel_events.GuildChannelEvent):
         def __init__(self, app: traits.RESTAware):
@@ -62,8 +57,8 @@ class TestGuildChannelEvent:
             return self._guild_id
 
     @pytest.fixture
-    def guild_channel_event(self, mock_app: traits.RESTAware) -> channel_events.GuildChannelEvent:
-        return TestGuildChannelEvent.MockGuildChannelEvent(mock_app)
+    def guild_channel_event(self, hikari_app: traits.RESTAware) -> channel_events.GuildChannelEvent:
+        return TestGuildChannelEvent.MockGuildChannelEvent(hikari_app)
 
     def test_get_guild_when_available(self, guild_channel_event: channel_events.GuildChannelEvent):
         with (
@@ -246,8 +241,8 @@ class TestInviteEvent:
             return self._code
 
     @pytest.fixture
-    def invite_event(self, mock_app: traits.RESTAware) -> channel_events.InviteEvent:
-        return TestInviteEvent.MockInviteEvent(mock_app)
+    def invite_event(self, hikari_app: traits.RESTAware) -> channel_events.InviteEvent:
+        return TestInviteEvent.MockInviteEvent(hikari_app)
 
     async def test_fetch_invite(self, invite_event: channel_events.InviteEvent):
         invite_event.app.rest.fetch_invite = mock.AsyncMock()
@@ -330,14 +325,14 @@ class TestGuildThreadEvent:
             return self._thread_id
 
     @pytest.mark.asyncio
-    async def test_fetch_channel(self, mock_app: traits.RESTAware):
+    async def test_fetch_channel(self, hikari_app: traits.RESTAware):
         with mock.patch.object(
-            mock_app.rest,
+            hikari_app.rest,
             "fetch_channel",
             new_callable=mock.AsyncMock,
             return_value=mock.Mock(channels.GuildThreadChannel),
         ) as patched_fetch_channel:
-            event = TestGuildThreadEvent.MockGuildThreadEvent(mock_app)
+            event = TestGuildThreadEvent.MockGuildThreadEvent(hikari_app)
 
             result = await event.fetch_channel()
 

@@ -32,11 +32,6 @@ from hikari import undefined
 from hikari import webhooks
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.AsyncMock(traits.RESTAware)
-
-
 class TestExecutableWebhook:
     class MockedExecutableWebhook(webhooks.ExecutableWebhook):
         def __init__(self, app: traits.RESTAware):
@@ -59,8 +54,8 @@ class TestExecutableWebhook:
             return self._token
 
     @pytest.fixture
-    def executable_webhook(self, mock_app: traits.RESTAware) -> webhooks.ExecutableWebhook:
-        return TestExecutableWebhook.MockedExecutableWebhook(mock_app)
+    def executable_webhook(self, hikari_app: traits.RESTAware) -> webhooks.ExecutableWebhook:
+        return TestExecutableWebhook.MockedExecutableWebhook(hikari_app)
 
     @pytest.mark.asyncio
     async def test_execute_when_no_token(self, executable_webhook: webhooks.ExecutableWebhook):

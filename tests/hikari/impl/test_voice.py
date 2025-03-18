@@ -36,7 +36,7 @@ from hikari.impl import voice
 class TestVoiceComponentImpl:
     @pytest.fixture
     def mock_app(self) -> traits.GatewayBotAware:
-        return mock.Mock()
+        return mock.Mock(traits.GatewayBotAware)
 
     @pytest.fixture
     def voice_client(self, mock_app: traits.GatewayBotAware) -> voice.VoiceComponentImpl:

@@ -32,16 +32,11 @@ from hikari import undefined
 from hikari.interactions import base_interactions
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
-
-
 class TestPartialInteraction:
     @pytest.fixture
-    def mock_partial_interaction(self, mock_app: traits.RESTAware) -> base_interactions.PartialInteraction:
+    def mock_partial_interaction(self, hikari_app: traits.RESTAware) -> base_interactions.PartialInteraction:
         return base_interactions.PartialInteraction(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(34123),
             application_id=snowflakes.Snowflake(651231),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
@@ -60,10 +55,10 @@ class TestPartialInteraction:
 class TestMessageResponseMixin:
     @pytest.fixture
     def mock_message_response_mixin(
-        self, mock_app: traits.RESTAware
+        self, hikari_app: traits.RESTAware
     ) -> base_interactions.MessageResponseMixin[typing.Any]:
         return base_interactions.MessageResponseMixin(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(34123),
             application_id=snowflakes.Snowflake(651231),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
@@ -80,7 +75,7 @@ class TestMessageResponseMixin:
         self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
         with mock.patch.object(
-            mock_message_response_mixin.app.rest, "fetch_interaction_response"
+            mock_message_response_mixin.app.rest, "fetch_interaction_response", mock.AsyncMock()
         ) as patched_fetch_interaction_response:
             result = await mock_message_response_mixin.fetch_initial_response()
 
@@ -99,7 +94,7 @@ class TestMessageResponseMixin:
         mock_attachments = mock.Mock(), mock.Mock()
 
         with mock.patch.object(
-            mock_message_response_mixin.app.rest, "create_interaction_response"
+            mock_message_response_mixin.app.rest, "create_interaction_response", mock.AsyncMock()
         ) as patched_create_interaction_response:
             await mock_message_response_mixin.create_initial_response(
                 base_interactions.ResponseType.MESSAGE_CREATE,
@@ -140,7 +135,7 @@ class TestMessageResponseMixin:
         self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
         with mock.patch.object(
-            mock_message_response_mixin.app.rest, "create_interaction_response"
+            mock_message_response_mixin.app.rest, "create_interaction_response", mock.AsyncMock()
         ) as patched_create_interaction_response:
             await mock_message_response_mixin.create_initial_response(
                 base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
@@ -176,7 +171,7 @@ class TestMessageResponseMixin:
         mock_components = mock.Mock(), mock.Mock()
 
         with mock.patch.object(
-            mock_message_response_mixin.app.rest, "edit_interaction_response"
+            mock_message_response_mixin.app.rest, "edit_interaction_response", mock.AsyncMock()
         ) as patched_edit_interaction_response:
             result = await mock_message_response_mixin.edit_initial_response(
                 "new content",
@@ -212,7 +207,7 @@ class TestMessageResponseMixin:
         self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
         with mock.patch.object(
-            mock_message_response_mixin.app.rest, "edit_interaction_response"
+            mock_message_response_mixin.app.rest, "edit_interaction_response", mock.AsyncMock()
         ) as patched_edit_interaction_response:
             result = await mock_message_response_mixin.edit_initial_response()
 
@@ -237,7 +232,7 @@ class TestMessageResponseMixin:
         self, mock_message_response_mixin: base_interactions.MessageResponseMixin[typing.Any]
     ):
         with mock.patch.object(
-            mock_message_response_mixin.app.rest, "delete_interaction_response"
+            mock_message_response_mixin.app.rest, "delete_interaction_response", mock.AsyncMock()
         ) as patched_delete_interaction_response:
             await mock_message_response_mixin.delete_initial_response()
             patched_delete_interaction_response.assert_awaited_once_with(651231, "399393939doodsodso")
@@ -245,9 +240,9 @@ class TestMessageResponseMixin:
 
 class TestModalResponseMixin:
     @pytest.fixture
-    def mock_modal_response_mixin(self, mock_app: traits.RESTAware) -> base_interactions.ModalResponseMixin:
+    def mock_modal_response_mixin(self, hikari_app: traits.RESTAware) -> base_interactions.ModalResponseMixin:
         return base_interactions.ModalResponseMixin(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(34123),
             application_id=snowflakes.Snowflake(651231),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
@@ -260,11 +255,9 @@ class TestModalResponseMixin:
         )
 
     @pytest.mark.asyncio
-    async def test_create_modal_response(
-        self, mock_modal_response_mixin: base_interactions.ModalResponseMixin, mock_app: traits.RESTAware
-    ):
+    async def test_create_modal_response(self, mock_modal_response_mixin: base_interactions.ModalResponseMixin):
         with mock.patch.object(
-            mock_modal_response_mixin.app.rest, "create_modal_response"
+            mock_modal_response_mixin.app.rest, "create_modal_response", mock.AsyncMock()
         ) as patched_create_modal_response:
             await mock_modal_response_mixin.create_modal_response("title", "custom_id", undefined.UNDEFINED, [])
 
@@ -278,10 +271,10 @@ class TestModalResponseMixin:
             )
 
     def test_build_response(
-        self, mock_modal_response_mixin: base_interactions.ModalResponseMixin, mock_app: traits.RESTAware
+        self, mock_modal_response_mixin: base_interactions.ModalResponseMixin, hikari_app: traits.RESTAware
     ):
-        mock_app.rest.interaction_modal_builder = mock.Mock()
+        hikari_app.rest.interaction_modal_builder = mock.Mock()
         builder = mock_modal_response_mixin.build_modal_response("title", "custom_id")
 
-        assert builder is mock_app.rest.interaction_modal_builder.return_value
-        mock_app.rest.interaction_modal_builder.assert_called_once_with(title="title", custom_id="custom_id")
+        assert builder is hikari_app.rest.interaction_modal_builder.return_value
+        hikari_app.rest.interaction_modal_builder.assert_called_once_with(title="title", custom_id="custom_id")

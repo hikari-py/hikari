@@ -35,36 +35,31 @@ from hikari import webhooks
 from tests.hikari import hikari_test_helpers
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
 class TestChannelFollow:
     @pytest.mark.asyncio
-    async def test_fetch_channel(self, mock_app: traits.RESTAware):
+    async def test_fetch_channel(self, hikari_app: traits.RESTAware):
         mock_channel = mock.Mock(spec=channels.GuildNewsChannel)
-        mock_app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
+        hikari_app.rest.fetch_channel = mock.AsyncMock(return_value=mock_channel)
         follow = channels.ChannelFollow(
-            channel_id=snowflakes.Snowflake(9459234123), app=mock_app, webhook_id=snowflakes.Snowflake(3123123)
+            channel_id=snowflakes.Snowflake(9459234123), app=hikari_app, webhook_id=snowflakes.Snowflake(3123123)
         )
 
         result = await follow.fetch_channel()
 
         assert result is mock_channel
-        mock_app.rest.fetch_channel.assert_awaited_once_with(9459234123)
+        hikari_app.rest.fetch_channel.assert_awaited_once_with(9459234123)
 
     @pytest.mark.asyncio
-    async def test_fetch_webhook(self, mock_app: traits.RESTAware):
-        mock_app.rest.fetch_webhook = mock.AsyncMock(return_value=mock.Mock(webhooks.ChannelFollowerWebhook))
+    async def test_fetch_webhook(self, hikari_app: traits.RESTAware):
+        hikari_app.rest.fetch_webhook = mock.AsyncMock(return_value=mock.Mock(webhooks.ChannelFollowerWebhook))
         follow = channels.ChannelFollow(
-            webhook_id=snowflakes.Snowflake(54123123), app=mock_app, channel_id=snowflakes.Snowflake(94949494)
+            webhook_id=snowflakes.Snowflake(54123123), app=hikari_app, channel_id=snowflakes.Snowflake(94949494)
         )
 
         result = await follow.fetch_webhook()
 
-        assert result is mock_app.rest.fetch_webhook.return_value
-        mock_app.rest.fetch_webhook.assert_awaited_once_with(54123123)
+        assert result is hikari_app.rest.fetch_webhook.return_value
+        hikari_app.rest.fetch_webhook.assert_awaited_once_with(54123123)
 
     def test_get_channel(self):
         mock_channel = mock.Mock(spec=channels.GuildNewsChannel)
@@ -104,9 +99,9 @@ class TestPermissionOverwrite:
 
 class TestPartialChannel:
     @pytest.fixture
-    def partial_channel(self, mock_app: traits.RESTAware) -> channels.PartialChannel:
+    def partial_channel(self, hikari_app: traits.RESTAware) -> channels.PartialChannel:
         return hikari_test_helpers.mock_class_namespace(channels.PartialChannel, rename_impl_=False)(
-            app=mock_app, id=snowflakes.Snowflake(1234567), name="foo", type=channels.ChannelType.GUILD_NEWS
+            app=hikari_app, id=snowflakes.Snowflake(1234567), name="foo", type=channels.ChannelType.GUILD_NEWS
         )
 
     def test_str_operator(self, partial_channel: channels.PartialChannel):
@@ -128,14 +123,14 @@ class TestPartialChannel:
 
 class TestDMChannel:
     @pytest.fixture
-    def dm_channel(self, mock_app: traits.RESTAware) -> channels.DMChannel:
+    def dm_channel(self, hikari_app: traits.RESTAware) -> channels.DMChannel:
         return channels.DMChannel(
             id=snowflakes.Snowflake(12345),
             name="steve",
             type=channels.ChannelType.DM,
             last_message_id=snowflakes.Snowflake(12345),
             recipient=mock.Mock(spec_set=users.UserImpl, __str__=mock.Mock(return_value="snoop#0420")),
-            app=mock_app,
+            app=hikari_app,
         )
 
     def test_str_operator(self, dm_channel: channels.DMChannel):
@@ -147,9 +142,9 @@ class TestDMChannel:
 
 class TestGroupDMChannel:
     @pytest.fixture
-    def group_dm_channel(self, mock_app: traits.RESTAware) -> channels.GroupDMChannel:
+    def group_dm_channel(self, hikari_app: traits.RESTAware) -> channels.GroupDMChannel:
         return channels.GroupDMChannel(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(136134),
             name="super cool group dm",
             type=channels.ChannelType.DM,
@@ -196,9 +191,9 @@ class TestGroupDMChannel:
 
 class TestTextChannel:
     @pytest.fixture
-    def text_channel(self, mock_app: traits.RESTAware) -> channels.TextableChannel:
+    def text_channel(self, hikari_app: traits.RESTAware) -> channels.TextableChannel:
         return hikari_test_helpers.mock_class_namespace(channels.TextableChannel)(
-            app=mock_app, id=snowflakes.Snowflake(12345679), name="foo1", type=channels.ChannelType.GUILD_TEXT
+            app=hikari_app, id=snowflakes.Snowflake(12345679), name="foo1", type=channels.ChannelType.GUILD_TEXT
         )
 
     @pytest.mark.asyncio
@@ -320,9 +315,9 @@ class TestTextChannel:
 
 class TestGuildChannel:
     @pytest.fixture
-    def guild_channel(self, mock_app: traits.RESTAware) -> channels.GuildChannel:
+    def guild_channel(self, hikari_app: traits.RESTAware) -> channels.GuildChannel:
         return channels.GuildChannel(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(69420),
             name="foo1",
             type=channels.ChannelType.GUILD_VOICE,
@@ -404,9 +399,9 @@ class TestGuildChannel:
 
 class TestPermissibleGuildChannel:
     @pytest.fixture
-    def permissible_guild_channel(self, mock_app: traits.RESTAware) -> channels.PermissibleGuildChannel:
+    def permissible_guild_channel(self, hikari_app: traits.RESTAware) -> channels.PermissibleGuildChannel:
         return hikari_test_helpers.mock_class_namespace(channels.PermissibleGuildChannel)(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(69420),
             name="foo1",
             type=channels.ChannelType.GUILD_VOICE,

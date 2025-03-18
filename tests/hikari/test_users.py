@@ -32,11 +32,6 @@ from hikari import users
 from hikari.internal import routes
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
 class TestPartialUser:
     class MockedPartialUser(users.PartialUser):
         def __init__(self, app: traits.RESTAware):
@@ -107,9 +102,9 @@ class TestPartialUser:
             return self._mention
 
     @pytest.fixture
-    def partial_user(self, mock_app: traits.RESTAware) -> users.PartialUser:
+    def partial_user(self, hikari_app: traits.RESTAware) -> users.PartialUser:
         # ABC, so must be stubbed.
-        return TestPartialUser.MockedPartialUser(mock_app)
+        return TestPartialUser.MockedPartialUser(hikari_app)
 
     def test_accent_colour_alias_property(self, partial_user: users.PartialUser):
         with mock.patch.object(partial_user, "_accent_color", mock.Mock):
@@ -343,9 +338,9 @@ class TestUser:
             return self._mention
 
     @pytest.fixture
-    def user(self, mock_app: traits.RESTAware) -> users.User:
+    def user(self, hikari_app: traits.RESTAware) -> users.User:
         # ABC, so must be stubbed.
-        return TestUser.MockedUser(mock_app)
+        return TestUser.MockedUser(hikari_app)
 
     def test_accent_colour_alias_property(self, user: users.User):
         assert user.accent_colour is user.accent_color

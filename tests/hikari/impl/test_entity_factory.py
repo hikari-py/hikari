@@ -395,13 +395,8 @@ def test__deserialize_max_age_returns_null():
 
 
 @pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock()
-
-
-@pytest.fixture
-def entity_factory_impl(mock_app: traits.RESTAware) -> entity_factory.EntityFactoryImpl:
-    return hikari_test_helpers.mock_class_namespace(entity_factory.EntityFactoryImpl, slots_=False)(mock_app)
+def entity_factory_impl(hikari_app: traits.RESTAware) -> entity_factory.EntityFactoryImpl:
+    return hikari_test_helpers.mock_class_namespace(entity_factory.EntityFactoryImpl, slots_=False)(hikari_app)
 
 
 class TestGatewayGuildDefinition:
@@ -490,7 +485,7 @@ class TestGatewayGuildDefinition:
 
             entity_factory_impl.deserialize_known_custom_emoji.assert_not_called()
 
-    def test_guild(self, entity_factory_impl: entity_factory.EntityFactoryImpl, mock_app: traits.RESTAware):
+    def test_guild(self, entity_factory_impl: entity_factory.EntityFactoryImpl, hikari_app: traits.RESTAware):
         guild_definition = entity_factory_impl.deserialize_gateway_guild(
             {
                 "afk_channel_id": "99998888777766",
@@ -534,7 +529,7 @@ class TestGatewayGuildDefinition:
         )
 
         guild = guild_definition.guild()
-        assert guild.app is mock_app
+        assert guild.app is hikari_app
         assert guild.id == 265828729970753537
         assert guild.name == "L33t guild"
         assert guild.icon_hash == "1a2b3c4d"
@@ -879,8 +874,8 @@ class TestGatewayGuildDefinition:
 
 
 class TestEntityFactoryImpl:
-    def test_app(self, entity_factory_impl: entity_factory.EntityFactoryImpl, mock_app: traits.RESTAware):
-        assert entity_factory_impl.app is mock_app
+    def test_app(self, entity_factory_impl: entity_factory.EntityFactoryImpl, hikari_app: traits.RESTAware):
+        assert entity_factory_impl.app is hikari_app
 
     ######################
     # APPLICATION MODELS #
@@ -964,7 +959,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_own_guild(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         own_guild_payload: typing.MutableMapping[str, typing.Any],
     ):
         own_guild = entity_factory_impl.deserialize_own_guild(own_guild_payload)
@@ -1062,14 +1057,14 @@ class TestEntityFactoryImpl:
     def test_deserialize_application(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         application_payload: typing.MutableMapping[str, typing.Any],
         owner_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         application = entity_factory_impl.deserialize_application(application_payload)
 
-        assert application.app is mock_app
+        assert application.app is hikari_app
         assert application.id == 209333111222
         assert application.name == "Dream Sweet in Sea Major"
         assert application.description == "I am an application"
@@ -1139,7 +1134,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_application_with_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         owner_payload: typing.MutableMapping[str, typing.Any],
     ):
         application = entity_factory_impl.deserialize_application(
@@ -1167,7 +1162,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_application_with_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         owner_payload: typing.MutableMapping[str, typing.Any],
     ):
         application = entity_factory_impl.deserialize_application(
@@ -1612,13 +1607,13 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
     ):
         entry = entity_factory_impl.deserialize_audit_log_entry(
             audit_log_entry_payload, guild_id=snowflakes.Snowflake(123321)
         )
 
-        assert entry.app is mock_app
+        assert entry.app is hikari_app
         assert entry.id == 694026906592477214
         assert entry.target_id == 115590097100865541
         assert entry.user_id == 560984860634644482
@@ -1638,14 +1633,14 @@ class TestEntityFactoryImpl:
         assert change.new_value is not None
         assert len(change.new_value) == 1
         role = change.new_value[568651298858074123]
-        assert role.app is mock_app
+        assert role.app is hikari_app
         assert role.id == 568651298858074123
         assert role.name == "Casual"
 
         assert change.old_value is not None
         assert len(change.old_value) == 1
         role = change.old_value[123123123312312]
-        assert role.app is mock_app
+        assert role.app is hikari_app
         assert role.id == 123123123312312
         assert role.name == "aRole"
 
@@ -1758,7 +1753,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_audit_log(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         audit_log_payload: typing.MutableMapping[str, typing.Any],
         audit_log_entry_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
@@ -1855,10 +1850,10 @@ class TestEntityFactoryImpl:
     ##################
 
     def test_deserialize_channel_follow(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, mock_app: traits.RESTAware
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, hikari_app: traits.RESTAware
     ):
         follow = entity_factory_impl.deserialize_channel_follow({"channel_id": "41231", "webhook_id": "939393"})
-        assert follow.app is mock_app
+        assert follow.app is hikari_app
         assert follow.channel_id == 41231
         assert follow.webhook_id == 939393
 
@@ -1895,11 +1890,11 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         partial_channel_payload: typing.MutableMapping[str, typing.Any],
     ):
         partial_channel = entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
-        assert partial_channel.app is mock_app
+        assert partial_channel.app is hikari_app
         assert partial_channel.id == 561884984214814750
         assert partial_channel.name == "general"
         assert partial_channel.type == channel_models.ChannelType.GUILD_TEXT
@@ -1917,12 +1912,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_dm_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         dm_channel_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         dm_channel = entity_factory_impl.deserialize_dm(dm_channel_payload)
-        assert dm_channel.app is mock_app
+        assert dm_channel.app is hikari_app
         assert dm_channel.id == 123
         assert dm_channel.name is None
         assert dm_channel.last_message_id == 456
@@ -1967,12 +1962,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_group_dm_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         group_dm_channel_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         group_dm = entity_factory_impl.deserialize_group_dm(group_dm_channel_payload)
-        assert group_dm.app is mock_app
+        assert group_dm.app is hikari_app
         assert group_dm.id == 123
         assert group_dm.name == "Secret Developer Group"
         assert group_dm.icon_hash == "123asdf123adsf"
@@ -2020,12 +2015,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_category(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_category_payload: typing.MutableMapping[str, typing.Any],
         permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_category = entity_factory_impl.deserialize_guild_category(guild_category_payload)
-        assert guild_category.app is mock_app
+        assert guild_category.app is hikari_app
         assert guild_category.id == 123
         assert guild_category.name == "Test"
         assert guild_category.type == channel_models.ChannelType.GUILD_CATEGORY
@@ -2079,12 +2074,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_text_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
         permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_text_channel = entity_factory_impl.deserialize_guild_text_channel(guild_text_channel_payload)
-        assert guild_text_channel.app is mock_app
+        assert guild_text_channel.app is hikari_app
         assert guild_text_channel.id == 123
         assert guild_text_channel.name == "general"
         assert guild_text_channel.type == channel_models.ChannelType.GUILD_TEXT
@@ -2152,12 +2147,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_news_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_news_channel_payload: typing.MutableMapping[str, typing.Any],
         permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         news_channel = entity_factory_impl.deserialize_guild_news_channel(guild_news_channel_payload)
-        assert news_channel.app is mock_app
+        assert news_channel.app is hikari_app
         assert news_channel.id == 7777
         assert news_channel.name == "Important Announcements"
         assert news_channel.type == channel_models.ChannelType.GUILD_NEWS
@@ -2222,7 +2217,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_voice_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_voice_channel_payload: typing.MutableMapping[str, typing.Any],
         permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
@@ -2307,7 +2302,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_stage_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_stage_channel_payload: typing.MutableMapping[str, typing.Any],
         permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
@@ -2408,12 +2403,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_forum_channel(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_forum_channel_payload: typing.MutableMapping[str, typing.Any],
         permission_overwrite_payload: typing.MutableMapping[str, typing.Any],
     ):
         forum_channel = entity_factory_impl.deserialize_guild_forum_channel(guild_forum_channel_payload)
-        assert forum_channel.app is mock_app
+        assert forum_channel.app is hikari_app
         assert forum_channel.id == 961367432532987974
         assert forum_channel.name == "testing_forum_channel"
         assert forum_channel.topic == "A fun place to discuss fun stuff!"
@@ -2609,14 +2604,14 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_news_thread(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_news_thread_payload: typing.MutableMapping[str, typing.Any],
         thread_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         thread = entity_factory_impl.deserialize_guild_news_thread(guild_news_thread_payload)
 
         assert thread.id == 946900871160164393
-        assert thread.app is mock_app
+        assert thread.app is hikari_app
         assert thread.guild_id == 574921006817476608
         assert thread.parent_id == 881729820747268137
         assert thread.owner_id == 115590097100865541
@@ -2699,14 +2694,14 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_public_thread(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_public_thread_payload: typing.MutableMapping[str, typing.Any],
         thread_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         thread = entity_factory_impl.deserialize_guild_public_thread(guild_public_thread_payload)
 
         assert thread.id == 947643783913308301
-        assert thread.app is mock_app
+        assert thread.app is hikari_app
         assert thread.guild_id == 574921006817476608
         assert thread.parent_id == 744183190998089820
         assert thread.owner_id == 115590097100865541
@@ -2792,14 +2787,14 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_private_thread(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_private_thread_payload: typing.MutableMapping[str, typing.Any],
         thread_member_payload: typing.MutableMapping[str, typing.Any],
     ):
         thread = entity_factory_impl.deserialize_guild_private_thread(guild_private_thread_payload)
 
         assert thread.id == 947690637610844210
-        assert thread.app is mock_app
+        assert thread.app is hikari_app
         assert thread.guild_id == 574921006817476608
         assert thread.parent_id == 744183190998089820
         assert thread.owner_id == 115590097100865541
@@ -2952,13 +2947,13 @@ class TestEntityFactoryImpl:
             (13, "deserialize_guild_stage_channel"),
         ],
     )
-    def test_deserialize_channel_when_guild(self, mock_app: traits.RESTAware, type_: int, fn: str):
+    def test_deserialize_channel_when_guild(self, hikari_app: traits.RESTAware, type_: int, fn: str):
         payload = {"type": type_}
 
         with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
             # We need to instantiate it after the mock so that the functions that are stored in the dicts
             # are the ones we mock
-            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=hikari_app)
 
             assert (
                 entity_factory_impl.deserialize_channel(payload, guild_id=snowflakes.Snowflake(123))
@@ -2968,13 +2963,13 @@ class TestEntityFactoryImpl:
         expected_fn.assert_called_once_with(payload, guild_id=123)
 
     @pytest.mark.parametrize(("type_", "fn"), [(1, "deserialize_dm"), (3, "deserialize_group_dm")])
-    def test_deserialize_channel_when_dm(self, mock_app: traits.RESTAware, type_: int, fn: str):
+    def test_deserialize_channel_when_dm(self, hikari_app: traits.RESTAware, type_: int, fn: str):
         payload = {"type": type_}
 
         with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
             # We need to instantiate it after the mock so that the functions that are stored in the dicts
             # are the ones we mock
-            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=hikari_app)
 
             assert (
                 entity_factory_impl.deserialize_channel(payload, guild_id=snowflakes.Snowflake(123123123))
@@ -3402,14 +3397,14 @@ class TestEntityFactoryImpl:
     def test_deserialize_known_custom_emoji(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         user_payload: typing.MutableMapping[str, typing.Any],
         known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
     ):
         emoji = entity_factory_impl.deserialize_known_custom_emoji(
             known_custom_emoji_payload, guild_id=snowflakes.Snowflake(1235123)
         )
-        assert emoji.app is mock_app
+        assert emoji.app is hikari_app
         assert emoji.id == 12345
         assert emoji.guild_id == 1235123
         assert emoji.name == "testing"
@@ -3489,17 +3484,17 @@ class TestEntityFactoryImpl:
     def test_deserialize_widget_embed(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_embed_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_embed = entity_factory_impl.deserialize_guild_widget(guild_embed_payload)
-        assert guild_embed.app is mock_app
+        assert guild_embed.app is hikari_app
         assert guild_embed.channel_id == 123123123
         assert guild_embed.is_enabled is True
         assert isinstance(guild_embed, guild_models.GuildWidget)
 
     def test_deserialize_guild_embed_with_null_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, mock_app: traits.RESTAware
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, hikari_app: traits.RESTAware
     ):
         assert entity_factory_impl.deserialize_guild_widget({"channel_id": None, "enabled": True}).channel_id is None
 
@@ -3533,7 +3528,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_welcome_screen(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_welcome_screen_payload: typing.MutableMapping[str, typing.Any],
     ):
         welcome_screen = entity_factory_impl.deserialize_welcome_screen(guild_welcome_screen_payload)
@@ -3558,7 +3553,7 @@ class TestEntityFactoryImpl:
         assert welcome_screen.channels[3].emoji_id == 49494949
 
     def test_serialize_welcome_channel_with_custom_emoji(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, mock_app: traits.RESTAware
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, hikari_app: traits.RESTAware
     ):
         channel = guild_models.WelcomeChannel(
             channel_id=snowflakes.Snowflake(431231),
@@ -3571,7 +3566,7 @@ class TestEntityFactoryImpl:
         assert result == {"channel_id": "431231", "description": "meow", "emoji_id": "564123"}
 
     def test_serialize_welcome_channel_with_unicode_emoji(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, mock_app: traits.RESTAware
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, hikari_app: traits.RESTAware
     ):
         channel = guild_models.WelcomeChannel(
             channel_id=snowflakes.Snowflake(4312311),
@@ -3584,7 +3579,7 @@ class TestEntityFactoryImpl:
         assert result == {"channel_id": "4312311", "description": "meow1", "emoji_name": "a"}
 
     def test_serialize_welcome_channel_with_no_emoji(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, mock_app: traits.RESTAware
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, hikari_app: traits.RESTAware
     ):
         channel = guild_models.WelcomeChannel(
             channel_id=snowflakes.Snowflake(4312312), description="meow2", emoji_id=None, emoji_name=None
@@ -3596,13 +3591,13 @@ class TestEntityFactoryImpl:
     def test_deserialize_member(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         member_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         member_payload = {**member_payload, "guild_id": "76543325"}
         member = entity_factory_impl.deserialize_member(member_payload)
-        assert member.app is mock_app
+        assert member.app is hikari_app
         assert member.guild_id == 76543325
         assert member.guild_avatar_hash == "estrogen"
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
@@ -3622,7 +3617,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_member_when_guild_id_already_in_role_array(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         member_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
@@ -3631,7 +3626,7 @@ class TestEntityFactoryImpl:
         member_payload = {**member_payload, "guild_id": "76543325"}
         member_payload["roles"] = [11111, 22222, 76543325, 33333, 44444]
         member = entity_factory_impl.deserialize_member(member_payload)
-        assert member.app is mock_app
+        assert member.app is hikari_app
         assert member.guild_id == 76543325
         assert member.user == entity_factory_impl.deserialize_user(user_payload)
         assert member.nickname == "foobarbaz"
@@ -3711,11 +3706,11 @@ class TestEntityFactoryImpl:
     def test_deserialize_role(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_role_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
-        assert guild_role.app is mock_app
+        assert guild_role.app is hikari_app
         assert guild_role.id == 41771983423143936
         assert guild_role.guild_id == 76534453
         assert guild_role.name == "WE DEM BOYZZ!!!!!!"
@@ -3946,12 +3941,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_preview(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         guild_preview_payload: typing.MutableMapping[str, typing.Any],
         known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild_preview = entity_factory_impl.deserialize_guild_preview(guild_preview_payload)
-        assert guild_preview.app is mock_app
+        assert guild_preview.app is hikari_app
         assert guild_preview.id == 152559372126519269
         assert guild_preview.name == "Isopropyl"
         assert guild_preview.icon_hash == "d4a983885dsaa7691ce8bcaaf945a"
@@ -4038,14 +4033,14 @@ class TestEntityFactoryImpl:
     def test_deserialize_rest_guild(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         rest_guild_payload: typing.MutableMapping[str, typing.Any],
         known_custom_emoji_payload: typing.MutableMapping[str, typing.Any],
         guild_role_payload: typing.MutableMapping[str, typing.Any],
         guild_sticker_payload: typing.MutableMapping[str, typing.Any],
     ):
         guild = entity_factory_impl.deserialize_rest_guild(rest_guild_payload)
-        assert guild.app is mock_app
+        assert guild.app is hikari_app
         assert guild.id == 265828729970753537
         assert guild.name == "L33t guild"
         assert guild.icon_hash == "1a2b3c4d"
@@ -4261,7 +4256,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_gateway_guild(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         gateway_guild_payload: typing.MutableMapping[str, typing.Any],
         guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
         guild_voice_channel_payload: typing.MutableMapping[str, typing.Any],
@@ -4276,7 +4271,7 @@ class TestEntityFactoryImpl:
             gateway_guild_payload, user_id=snowflakes.Snowflake(43123)
         )
         guild = guild_definition.guild()
-        assert guild.app is mock_app
+        assert guild.app is hikari_app
         assert guild.id == 265828729970753537
         assert guild.name == "L33t guild"
         assert guild.icon_hash == "1a2b3c4d"
@@ -4522,12 +4517,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_slash_command(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         slash_command_payload: typing.MutableMapping[str, typing.Any],
     ):
         command = entity_factory_impl.deserialize_slash_command(payload=slash_command_payload)
 
-        assert command.app is mock_app
+        assert command.app is hikari_app
         assert command.id == 1231231231
         assert command.application_id == 12354123
         assert command.guild_id == 49949494
@@ -4641,13 +4636,13 @@ class TestEntityFactoryImpl:
             (3, "deserialize_context_menu_command"),
         ],
     )
-    def test_deserialize_command(self, mock_app: traits.RESTAware, type_: int, fn: str):
+    def test_deserialize_command(self, hikari_app: traits.RESTAware, type_: int, fn: str):
         payload = {"type": type_}
 
         with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
             # We need to instantiate it after the mock so that the functions that are stored in the dicts
             # are the ones we mock
-            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=hikari_app)
 
             assert (
                 entity_factory_impl.deserialize_command(payload, guild_id=snowflakes.Snowflake(123))
@@ -4711,13 +4706,13 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_partial_interaction(
         self,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         partial_interaction_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_partial_interaction(partial_interaction_payload)
 
-        assert interaction.app is mock_app
+        assert interaction.app is hikari_app
         assert interaction.id == 795459528803745843
         assert interaction.token == "-- token redacted --"
         assert interaction.type == 1
@@ -4969,13 +4964,13 @@ class TestEntityFactoryImpl:
     def test_deserialize_command_interaction(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         command_interaction_payload: typing.MutableMapping[str, typing.Any],
         interaction_member_payload: typing.MutableMapping[str, typing.Any],
         interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_command_interaction(command_interaction_payload)
-        assert interaction.app is mock_app
+        assert interaction.app is hikari_app
         assert interaction.application_id == 76234234
         assert interaction.id == 3490190239012093
         assert interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
@@ -5177,7 +5172,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_autocomplete_interaction(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         member_payload: typing.MutableMapping[str, typing.Any],
         autocomplete_interaction_payload: typing.MutableMapping[str, typing.Any],
         interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
@@ -5186,7 +5181,7 @@ class TestEntityFactoryImpl:
         entity_factory_impl._deserialize_resolved_option_data = mock.Mock()
         interaction = entity_factory_impl.deserialize_autocomplete_interaction(autocomplete_interaction_payload)
 
-        assert interaction.app is mock_app
+        assert interaction.app is hikari_app
         assert interaction.application_id == 76234234
         assert interaction.id == 3490190239012093
         assert interaction.type is base_interactions.InteractionType.AUTOCOMPLETE
@@ -5265,13 +5260,13 @@ class TestEntityFactoryImpl:
             (4, "deserialize_autocomplete_interaction"),
         ],
     )
-    def test_deserialize_interaction(self, mock_app: traits.RESTAware, type_: int, fn: str):
+    def test_deserialize_interaction(self, hikari_app: traits.RESTAware, type_: int, fn: str):
         payload = {"type": type_}
 
         with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
             # We need to instantiate it after the mock so that the functions that are stored in the dicts
             # are the ones we mock
-            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=hikari_app)
 
             assert entity_factory_impl.deserialize_interaction(payload) is expected_fn.return_value
 
@@ -5495,13 +5490,13 @@ class TestEntityFactoryImpl:
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         component_interaction_payload: typing.MutableMapping[str, typing.Any],
         interaction_member_payload: typing.MutableMapping[str, typing.Any],
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         message_payload: typing.MutableMapping[str, typing.Any],
         interaction_resolved_data_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_component_interaction(component_interaction_payload)
 
-        assert interaction.app is mock_app
+        assert interaction.app is hikari_app
         assert interaction.id == 846462639134605312
         assert interaction.application_id == 290926444748734465
         assert interaction.type is base_interactions.InteractionType.MESSAGE_COMPONENT
@@ -5631,13 +5626,13 @@ class TestEntityFactoryImpl:
     def test_deserialize_modal_interaction(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         modal_interaction_payload: typing.MutableMapping[str, typing.Any],
         interaction_member_payload: typing.MutableMapping[str, typing.Any],
         message_payload: typing.MutableMapping[str, typing.Any],
     ):
         interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
-        assert interaction.app is mock_app
+        assert interaction.app is hikari_app
         assert interaction.id == 846462639134605312
         assert interaction.application_id == 290926444748734465
         assert interaction.type is base_interactions.InteractionType.MODAL_SUBMIT
@@ -5871,11 +5866,11 @@ class TestEntityFactoryImpl:
     def test_deserialize_vanity_url(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         vanity_url_payload: typing.MutableMapping[str, typing.Any],
     ):
         vanity_url = entity_factory_impl.deserialize_vanity_url(vanity_url_payload)
-        assert vanity_url.app is mock_app
+        assert vanity_url.app is hikari_app
         assert vanity_url.code == "iamacode"
         assert vanity_url.uses == 42
         assert isinstance(vanity_url, invite_models.VanityURL)
@@ -5921,7 +5916,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_invite(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         invite_payload: typing.MutableMapping[str, typing.Any],
         partial_channel_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
@@ -5930,7 +5925,7 @@ class TestEntityFactoryImpl:
         application_payload: typing.MutableMapping[str, typing.Any],
     ):
         invite = entity_factory_impl.deserialize_invite(invite_payload)
-        assert invite.app is mock_app
+        assert invite.app is hikari_app
         assert invite.code == "aCode"
         # InviteGuild
         assert invite.guild is not None
@@ -5962,7 +5957,7 @@ class TestEntityFactoryImpl:
         # InviteApplication
         application = invite.target_application
         assert application is not None
-        assert application.app is mock_app
+        assert application.app is hikari_app
         assert application.id == 773336526917861400
         assert application.name == "Betrayal.io"
         assert application.description == "Play inside Discord with your friends!"
@@ -6083,7 +6078,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_invite_with_metadata(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         invite_with_metadata_payload: typing.MutableMapping[str, typing.Any],
         partial_channel_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
@@ -6091,7 +6086,7 @@ class TestEntityFactoryImpl:
         guild_welcome_screen_payload: typing.MutableMapping[str, typing.Any],
     ):
         invite_with_metadata = entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload)
-        assert invite_with_metadata.app is mock_app
+        assert invite_with_metadata.app is hikari_app
         assert invite_with_metadata.code == "aCode"
         # InviteGuild
         assert invite_with_metadata.guild is not None
@@ -6130,7 +6125,7 @@ class TestEntityFactoryImpl:
         # InviteApplication
         application = invite_with_metadata.target_application
         assert application is not None
-        assert application.app is mock_app
+        assert application.app is hikari_app
         assert application.id == 773336526917861400
         assert application.name == "Betrayal.io"
         assert application.description == "Play inside Discord with your friends!"
@@ -6318,14 +6313,14 @@ class TestEntityFactoryImpl:
             (4, "_deserialize_text_input", "_modal_component_type_mapping"),
         ],
     )
-    def test__deserialize_components(self, mock_app: traits.RESTAware, type_: int, fn: str, mapping: str):
+    def test__deserialize_components(self, hikari_app: traits.RESTAware, type_: int, fn: str, mapping: str):
         component_payload = {"type": type_}
         payload = [{"type": 1, "components": [component_payload]}]
 
         with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
             # We need to instantiate it after the mock so that the functions that are stored in the dicts
             # are the ones we mock
-            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=hikari_app)
 
             components = entity_factory_impl._deserialize_components(payload, getattr(entity_factory_impl, mapping))
 
@@ -6639,7 +6634,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_partial_message(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         message_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
         member_payload: typing.MutableMapping[str, typing.Any],
@@ -6651,7 +6646,7 @@ class TestEntityFactoryImpl:
     ):
         partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
 
-        assert partial_message.app is mock_app
+        assert partial_message.app is hikari_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
         assert partial_message.guild_id == 678
@@ -6707,7 +6702,7 @@ class TestEntityFactoryImpl:
         # MessageReference
         assert partial_message.message_reference is not undefined.UNDEFINED
         assert partial_message.message_reference is not None
-        assert partial_message.message_reference.app is mock_app
+        assert partial_message.message_reference.app is hikari_app
         assert partial_message.message_reference.id == 306588351130107906
         assert partial_message.message_reference.channel_id == 278325129692446722
         assert partial_message.message_reference.guild_id == 278325129692446720
@@ -6780,11 +6775,11 @@ class TestEntityFactoryImpl:
         assert partial_message.interaction_metadata is None
 
     def test_deserialize_partial_message_with_unset_fields(
-        self, entity_factory_impl: entity_factory.EntityFactoryImpl, mock_app: traits.RESTAware
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, hikari_app: traits.RESTAware
     ):
         partial_message = entity_factory_impl.deserialize_partial_message({"id": 123, "channel_id": 456})
 
-        assert partial_message.app is mock_app
+        assert partial_message.app is hikari_app
         assert partial_message.id == 123
         assert partial_message.channel_id == 456
         assert partial_message.guild_id is None
@@ -6844,7 +6839,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_message(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         message_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
         member_payload: typing.MutableMapping[str, typing.Any],
@@ -6855,7 +6850,7 @@ class TestEntityFactoryImpl:
     ):
         message = entity_factory_impl.deserialize_message(message_payload)
 
-        assert message.app is mock_app
+        assert message.app is hikari_app
         assert message.id == 123
         assert message.channel_id == 456
         assert message.guild_id == 678
@@ -6921,7 +6916,7 @@ class TestEntityFactoryImpl:
 
         # MessageReference
         assert message.message_reference
-        assert message.message_reference.app is mock_app
+        assert message.message_reference.app is hikari_app
         assert message.message_reference.id == 306588351130107906
         assert message.message_reference.channel_id == 278325129692446722
         assert message.message_reference.guild_id == 278325129692446720
@@ -7006,7 +7001,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_message_with_null_and_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         message_payload: typing.Mapping[str, typing.Any] = {
@@ -7028,7 +7023,7 @@ class TestEntityFactoryImpl:
         }
 
         message = entity_factory_impl.deserialize_message(message_payload)
-        assert message.app is mock_app
+        assert message.app is hikari_app
         assert message.content is None
         assert message.guild_id is None
         assert message.member is None
@@ -7091,13 +7086,13 @@ class TestEntityFactoryImpl:
     def test_deserialize_member_presence(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         member_presence_payload: typing.MutableMapping[str, typing.Any],
         custom_emoji_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         presence = entity_factory_impl.deserialize_member_presence(member_presence_payload)
-        assert presence.app is mock_app
+        assert presence.app is hikari_app
         assert presence.user_id == 115590097100865541
         assert presence.guild_id == 44004040
         assert presence.visible_status == presence_models.Status.DO_NOT_DISTURB
@@ -7335,12 +7330,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_external_event(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: mock.Mock,
+        hikari_app: mock.Mock,
         scheduled_external_event_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         event = entity_factory_impl.deserialize_scheduled_external_event(scheduled_external_event_payload)
-        assert event.app is mock_app
+        assert event.app is hikari_app
         assert event.id == 9497609168686982223
         assert event.guild_id == 1525593721265219296
         assert event.name == "bleep"
@@ -7359,7 +7354,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_external_event_with_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: mock.Mock,
+        hikari_app: mock.Mock,
         scheduled_external_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         scheduled_external_event_payload["description"] = None
@@ -7373,7 +7368,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_external_event_with_undefined_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: mock.Mock,
+        hikari_app: mock.Mock,
         scheduled_external_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         del scheduled_external_event_payload["creator"]
@@ -7415,13 +7410,13 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_stage_event(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: mock.Mock,
+        hikari_app: mock.Mock,
         scheduled_stage_event_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         event = entity_factory_impl.deserialize_scheduled_stage_event(scheduled_stage_event_payload)
 
-        assert event.app is mock_app
+        assert event.app is hikari_app
         assert event.id == 9497014470822052443
         assert event.guild_id == 1525593721265192962
         assert event.channel_id == 9492384510463386001
@@ -7440,7 +7435,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_stage_event_with_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: mock.Mock,
+        hikari_app: mock.Mock,
         scheduled_stage_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         scheduled_stage_event_payload["description"] = None
@@ -7456,7 +7451,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_stage_event_with_undefined_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: mock.Mock,
+        hikari_app: mock.Mock,
         scheduled_stage_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         del scheduled_stage_event_payload["creator"]
@@ -7498,13 +7493,13 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_voice_event(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: mock.Mock,
+        hikari_app: mock.Mock,
         scheduled_voice_event_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         event = entity_factory_impl.deserialize_scheduled_voice_event(scheduled_voice_event_payload)
 
-        assert event.app is mock_app
+        assert event.app is hikari_app
         assert event.id == 949760834287063133
         assert event.guild_id == 152559372126519296
         assert event.channel_id == 152559372126519297
@@ -7523,7 +7518,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_voice_event_with_null_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: mock.Mock,
+        hikari_app: mock.Mock,
         scheduled_voice_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         scheduled_voice_event_payload["description"] = None
@@ -7539,7 +7534,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_scheduled_voice_event_with_undefined_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: mock.Mock,
+        hikari_app: mock.Mock,
         scheduled_voice_event_payload: typing.MutableMapping[str, typing.Any],
     ):
         del scheduled_voice_event_payload["creator"]
@@ -7671,13 +7666,13 @@ class TestEntityFactoryImpl:
     def test_deserialize_template(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         template_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
         guild_text_channel_payload: typing.MutableMapping[str, typing.Any],
     ):
         template = entity_factory_impl.deserialize_template(template_payload)
-        assert template.app is mock_app
+        assert template.app is hikari_app
         assert template.code == "4rDaewUKeYVj"
         assert template.name == "ttt"
         assert template.description == "eee"
@@ -7687,7 +7682,7 @@ class TestEntityFactoryImpl:
         assert template.updated_at == datetime.datetime(2020, 12, 15, 1, 57, 35, tzinfo=datetime.timezone.utc)
 
         # TemplateGuild
-        assert template.source_guild.app is mock_app
+        assert template.source_guild.app is hikari_app
         assert template.source_guild.id == 574921006817476608
         assert template.source_guild.icon_hash == "27b75989b5b42aba51346a6b69d8fcfe"
         assert template.source_guild.name == "hikari"
@@ -7705,7 +7700,7 @@ class TestEntityFactoryImpl:
         # TemplateRole
         assert len(template.source_guild.roles) == 1
         role = template.source_guild.roles[snowflakes.Snowflake(33)]
-        assert role.app is mock_app
+        assert role.app is hikari_app
         assert role.id == 33
         assert role.name == "@everyone"
         assert role.permissions == permission_models.Permissions(104189505)
@@ -7778,11 +7773,11 @@ class TestEntityFactoryImpl:
     def test_deserialize_user(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         user = entity_factory_impl.deserialize_user(user_payload)
-        assert user.app is mock_app
+        assert user.app is hikari_app
         assert user.id == 115590097100865541
         assert user.username == "nyaa"
         assert user.avatar_hash == "b3b24c6d7cbcdec129d5d537067061a8"
@@ -7797,7 +7792,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_user_with_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         user = entity_factory_impl.deserialize_user(
@@ -7838,11 +7833,11 @@ class TestEntityFactoryImpl:
     def test_deserialize_my_user(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         my_user_payload: typing.MutableMapping[str, typing.Any],
     ):
         my_user = entity_factory_impl.deserialize_my_user(my_user_payload)
-        assert my_user.app is mock_app
+        assert my_user.app is hikari_app
         assert my_user.id == 379953393319542784
         assert my_user.username == "qt pi"
         assert my_user.global_name == "blahaj"
@@ -7864,7 +7859,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_my_user_with_unset_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         my_user_payload: typing.MutableMapping[str, typing.Any],
     ):
         my_user = entity_factory_impl.deserialize_my_user(
@@ -7880,7 +7875,7 @@ class TestEntityFactoryImpl:
             }
         )
         assert my_user.global_name is None
-        assert my_user.app is mock_app
+        assert my_user.app is hikari_app
         assert my_user.banner_hash is None
         assert my_user.accent_color is None
         assert my_user.is_bot is False
@@ -7897,12 +7892,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_voice_state_with_guild_id_in_payload(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         voice_state_payload: typing.MutableMapping[str, typing.Any],
         member_payload: typing.MutableMapping[str, typing.Any],
     ):
         voice_state = entity_factory_impl.deserialize_voice_state(voice_state_payload)
-        assert voice_state.app is mock_app
+        assert voice_state.app is hikari_app
         assert voice_state.guild_id == 929292929292992
         assert voice_state.channel_id == 157733188964188161
         assert voice_state.user_id == 115590097100865541
@@ -8049,13 +8044,13 @@ class TestEntityFactoryImpl:
     def test_deserialize_incoming_webhook(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         incoming_webhook_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         webhook = entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload)
 
-        assert webhook.app is mock_app
+        assert webhook.app is hikari_app
         assert webhook.name == "test webhook"
         assert webhook.type is webhook_models.WebhookType.INCOMING
         assert webhook.channel_id == 199737254929760256
@@ -8095,13 +8090,13 @@ class TestEntityFactoryImpl:
     def test_deserialize_channel_follower_webhook(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         follower_webhook_payload: typing.MutableMapping[str, typing.Any],
         user_payload: typing.MutableMapping[str, typing.Any],
     ):
         webhook = entity_factory_impl.deserialize_channel_follower_webhook(follower_webhook_payload)
 
-        assert webhook.app is mock_app
+        assert webhook.app is hikari_app
         assert webhook.type is webhook_models.WebhookType.CHANNEL_FOLLOWER
         assert webhook.id == 752831914402115456
         assert webhook.name == "Guildy name"
@@ -8111,7 +8106,7 @@ class TestEntityFactoryImpl:
         assert webhook.application_id == 312123123
 
         assert webhook.source_guild is not None
-        assert webhook.source_guild.app is mock_app
+        assert webhook.source_guild.app is hikari_app
         assert webhook.source_guild.id == 56188498421476534
         assert webhook.source_guild.name == "Guildy name"
         assert webhook.source_guild.icon_hash == "bb71f469c158984e265093a81b3397fb"
@@ -8129,7 +8124,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_channel_follower_webhook_without_optional_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         follower_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         follower_webhook_payload["avatar"] = None
@@ -8149,7 +8144,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_channel_follower_webhook_doesnt_set_source_channel_type_if_set(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         follower_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         follower_webhook_payload["source_channel"]["type"] = channel_models.ChannelType.GUILD_VOICE
@@ -8162,12 +8157,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_application_webhook(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         application_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         webhook = entity_factory_impl.deserialize_application_webhook(application_webhook_payload)
 
-        assert webhook.app is mock_app
+        assert webhook.app is hikari_app
         assert webhook.type is webhook_models.WebhookType.APPLICATION
         assert webhook.id == 658822586720976555
         assert webhook.name == "Clyde"
@@ -8178,7 +8173,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_application_webhook_without_optional_fields(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         application_webhook_payload: typing.MutableMapping[str, typing.Any],
     ):
         application_webhook_payload["avatar"] = None
@@ -8195,13 +8190,13 @@ class TestEntityFactoryImpl:
             (3, "deserialize_application_webhook"),
         ],
     )
-    def test_deserialize_webhook(self, mock_app: traits.RESTAware, type_: int, fn: str):
+    def test_deserialize_webhook(self, hikari_app: traits.RESTAware, type_: int, fn: str):
         payload = {"type": type_}
 
         with mock.patch.object(entity_factory.EntityFactoryImpl, fn) as expected_fn:
             # We need to instantiate it after the mock so that the functions that are stored in the dicts
             # are the ones we mock
-            entity_factory_impl = entity_factory.EntityFactoryImpl(app=mock_app)
+            entity_factory_impl = entity_factory.EntityFactoryImpl(app=hikari_app)
 
             assert entity_factory_impl.deserialize_webhook(payload) is expected_fn.return_value
 
@@ -8306,13 +8301,13 @@ class TestEntityFactoryImpl:
 
     def test_deserialize_stage_instance(
         self,
-        mock_app: traits.RESTAware,
+        hikari_app: traits.RESTAware,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         stage_instance_payload: typing.MutableMapping[str, typing.Any],
     ):
         stage_instance = entity_factory_impl.deserialize_stage_instance(stage_instance_payload)
 
-        assert stage_instance.app is mock_app
+        assert stage_instance.app is hikari_app
         assert stage_instance.id == 840647391636226060
         assert stage_instance.channel_id == 733488538393510049
         assert stage_instance.guild_id == 197038439483310086

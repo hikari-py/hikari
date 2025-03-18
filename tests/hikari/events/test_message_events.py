@@ -35,11 +35,6 @@ from hikari.api import shard as shard_api
 from hikari.events import message_events
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
 class TestMessageCreateEvent:
     class MockMessageCreateEvent(message_events.MessageCreateEvent):
         def __init__(self, app: traits.RESTAware):
@@ -56,8 +51,8 @@ class TestMessageCreateEvent:
             return self._message
 
     @pytest.fixture
-    def message_create_event(self, mock_app: traits.RESTAware) -> message_events.MessageCreateEvent:
-        return TestMessageCreateEvent.MockMessageCreateEvent(mock_app)
+    def message_create_event(self, hikari_app: traits.RESTAware) -> message_events.MessageCreateEvent:
+        return TestMessageCreateEvent.MockMessageCreateEvent(hikari_app)
 
     def test_app_property(self, message_create_event: message_events.MessageCreateEvent):
         assert message_create_event.app is message_create_event.message.app
@@ -129,8 +124,8 @@ class TestMessageUpdateEvent:
             return self._message
 
     @pytest.fixture
-    def message_update_event(self, mock_app: traits.RESTAware) -> message_events.MessageUpdateEvent:
-        return TestMessageUpdateEvent.MockMessageUpdateEvent(mock_app)
+    def message_update_event(self, hikari_app: traits.RESTAware) -> message_events.MessageUpdateEvent:
+        return TestMessageUpdateEvent.MockMessageUpdateEvent(hikari_app)
 
     def test_app_property(self, message_update_event: message_events.MessageUpdateEvent):
         assert message_update_event.app is message_update_event.message.app

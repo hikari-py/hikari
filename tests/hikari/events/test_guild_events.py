@@ -32,11 +32,6 @@ from hikari.api import shard as shard_api
 from hikari.events import guild_events
 
 
-@pytest.fixture
-def mock_app() -> traits.RESTAware:
-    return mock.Mock(traits.RESTAware)
-
-
 class TestGuildEvent:
     class MockGuildEvent(guild_events.GuildEvent):
         def __init__(self, app: traits.RESTAware):
@@ -57,8 +52,8 @@ class TestGuildEvent:
             return self._guild_id
 
     @pytest.fixture
-    def guild_event(self, mock_app: traits.RESTAware) -> guild_events.GuildEvent:
-        return TestGuildEvent.MockGuildEvent(mock_app)
+    def guild_event(self, hikari_app: traits.RESTAware) -> guild_events.GuildEvent:
+        return TestGuildEvent.MockGuildEvent(hikari_app)
 
     def test_get_guild_when_available(self, guild_event: guild_events.GuildEvent):
         with (
@@ -183,8 +178,8 @@ class TestBanEvent:
             return self._user
 
     @pytest.fixture
-    def ban_event(self, mock_app: traits.RESTAware) -> guild_events.BanEvent:
-        return TestBanEvent.MockBanEvent(mock_app)
+    def ban_event(self, hikari_app: traits.RESTAware) -> guild_events.BanEvent:
+        return TestBanEvent.MockBanEvent(hikari_app)
 
     def test_app_property(self, ban_event: guild_events.BanEvent):
         assert ban_event.app is ban_event.user.app
