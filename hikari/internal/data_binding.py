@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,16 +24,16 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "Headers",
-    "Query",
-    "JSONObject",
     "JSONArray",
-    "JSONish",
-    "default_json_loads",
-    "default_json_dumps",
+    "JSONObject",
     "JSONObjectBuilder",
     "JSONPayload",
+    "JSONish",
+    "Query",
     "StringMapBuilder",
     "URLEncodedFormBuilder",
+    "default_json_dumps",
+    "default_json_loads",
 )
 
 import datetime

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -135,15 +134,15 @@ class _GatewayTransport:
     """
 
     __slots__ = (
-        "_zlib",
-        "_sent_close",
-        "_logger",
-        "_exit_stack",
-        "_log_filterer",
-        "_ws",
-        "_receive_and_check",
-        "_loads",
         "_dumps",
+        "_exit_stack",
+        "_loads",
+        "_log_filterer",
+        "_logger",
+        "_receive_and_check",
+        "_sent_close",
+        "_ws",
+        "_zlib",
     )
 
     def __init__(
@@ -431,8 +430,8 @@ class GatewayShardImpl(shard.GatewayShard):
     __slots__: typing.Sequence[str] = (
         "_activity",
         "_dumps",
-        "_event_manager",
         "_event_factory",
+        "_event_manager",
         "_gateway_url",
         "_handshake_event",
         "_heartbeat_latency",

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -215,8 +214,8 @@ class InteractionServer(interaction_server.InteractionServer):
         "_nacl",
         "_public_key",
         "_rest_client",
-        "_server",
         "_running_generator_listeners",
+        "_server",
     )
 
     def __init__(
@@ -570,7 +569,7 @@ class InteractionServer(interaction_server.InteractionServer):
                     )
                 )
 
-        elif path is None and socket is None or port is not None:
+        elif (path is None and socket is None) or port is not None:
             sites.append(
                 aiohttp.web.TCPSite(
                     self._server,

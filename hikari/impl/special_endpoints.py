@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -28,24 +27,24 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "AutocompleteChoiceBuilder",
+    "ChannelSelectMenuBuilder",
     "CommandBuilder",
-    "SlashCommandBuilder",
     "ContextMenuCommandBuilder",
-    "TypingIndicator",
     "GuildBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
+    "InteractionModalBuilder",
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
-    "SelectMenuBuilder",
-    "SelectOptionBuilder",
-    "ChannelSelectMenuBuilder",
-    "TextSelectMenuBuilder",
-    "TextInputBuilder",
-    "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "SelectMenuBuilder",
+    "SelectOptionBuilder",
+    "SlashCommandBuilder",
+    "TextInputBuilder",
+    "TextSelectMenuBuilder",
+    "TypingIndicator",
 )
 
 import asyncio
@@ -138,7 +137,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         produced by that API.
     """
 
-    __slots__: typing.Sequence[str] = ("_route", "_request_call", "_task", "_rest_close_event", "_task_name")
+    __slots__: typing.Sequence[str] = ("_request_call", "_rest_close_event", "_route", "_task", "_task_name")
 
     def __init__(
         self,
@@ -507,7 +506,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
 class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
     """Implementation of an iterator for message history."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_request_call", "_direction", "_first_id", "_route")
+    __slots__: typing.Sequence[str] = ("_direction", "_entity_factory", "_first_id", "_request_call", "_route")
 
     def __init__(
         self,
@@ -547,7 +546,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
 class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
     """Implementation of an iterator for message reactions."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_route", "_request_call")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_request_call", "_route")
 
     def __init__(
         self,
@@ -584,7 +583,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
 class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
     """Implementation of an iterator for retrieving guilds you are in."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_request_call", "_route", "_newest_first", "_first_id")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_newest_first", "_request_call", "_route")
 
     def __init__(
         self,
@@ -628,11 +627,11 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
 
     __slots__: typing.Sequence[str] = (
         "_entity_factory",
+        "_first_id",
         "_guild_id",
+        "_newest_first",
         "_request_call",
         "_route",
-        "_first_id",
-        "_newest_first",
     )
 
     def __init__(
@@ -676,7 +675,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
 class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
     """Implementation of an iterator for retrieving members in a guild."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_guild_id", "_request_call", "_route", "_first_id")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_guild_id", "_request_call", "_route")
 
     def __init__(
         self,
@@ -770,12 +769,12 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
     """Iterator implementation for an audit log."""
 
     __slots__: typing.Sequence[str] = (
-        "_entity_factory",
         "_action_type",
+        "_entity_factory",
+        "_first_id",
         "_guild_id",
         "_request_call",
         "_route",
-        "_first_id",
         "_user",
     )
 
@@ -914,7 +913,7 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
         self._name = name
         return self
 
-    def set_value(self, value: typing.Union[int, float, str], /) -> Self:
+    def set_value(self, value: typing.Union[float, str], /) -> Self:
         self._value = value
         return self
 

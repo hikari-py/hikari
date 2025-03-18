@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("deprecated", "Enum", "Flag")
+__all__: typing.Sequence[str] = ("Enum", "Flag", "deprecated")
 
 import functools
 import operator
@@ -39,7 +38,7 @@ _MAX_CACHED_MEMBERS: typing.Final[int] = 1 << 12
 
 
 class _DeprecatedAlias(typing.Generic[_T]):
-    __slots__ = ("_name", "_alias", "_removal_version")
+    __slots__ = ("_alias", "_name", "_removal_version")
 
     def __init__(self, name: str, alias: str, removal_version: str) -> None:
         self._name = name
@@ -65,7 +64,7 @@ class _DeprecatedAlias(typing.Generic[_T]):
 class deprecated:
     """Used to denote that an enum member is a deprecated alias of another."""
 
-    __slots__ = ("value", "removal_version")
+    __slots__ = ("removal_version", "value")
 
     def __init__(self, value: typing.Any, /, *, removal_version: str) -> None:
         self.value = value
@@ -497,7 +496,7 @@ class _FlagMeta(type):
         all_bits_member = cls.__new__(cls, all_bits)
         all_bits_member._name_ = None
         all_bits_member._value_ = all_bits
-        setattr(cls, "__everything__", all_bits_member)
+        cls.__everything__ = all_bits_member
 
         return cls
 

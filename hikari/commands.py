@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,16 +23,16 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "PartialCommand",
-    "ContextMenuCommand",
-    "SlashCommand",
     "CommandChoice",
     "CommandOption",
     "CommandPermission",
     "CommandPermissionType",
     "CommandType",
+    "ContextMenuCommand",
     "GuildCommandPermissions",
     "OptionType",
+    "PartialCommand",
+    "SlashCommand",
 )
 
 import typing

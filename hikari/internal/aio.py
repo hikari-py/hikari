@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("completed_future", "get_or_make_loop", "first_completed", "all_of", "destroy_loop")
+__all__: typing.Sequence[str] = ("all_of", "completed_future", "destroy_loop", "first_completed", "get_or_make_loop")
 
 import asyncio
 import typing

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -290,21 +289,21 @@ class GatewayBot(traits.GatewayBotAware):
 
     __slots__: typing.Sequence[str] = (
         "_cache",
-        "_closing_event",
         "_closed_event",
+        "_closing_event",
+        "_dumps",
         "_entity_factory",
-        "_event_manager",
         "_event_factory",
+        "_event_manager",
         "_executor",
         "_http_settings",
         "_intents",
+        "_loads",
         "_proxy_settings",
         "_rest",
         "_shards",
         "_token",
         "_voice",
-        "_loads",
-        "_dumps",
         "shards",
     )
 
@@ -1008,7 +1007,7 @@ class GatewayBot(traits.GatewayBotAware):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         limit: typing.Optional[int] = None,
     ) -> event_manager_.EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
@@ -1160,7 +1159,7 @@ class GatewayBot(traits.GatewayBotAware):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.

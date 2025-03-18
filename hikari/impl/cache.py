@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -69,18 +68,18 @@ class CacheImpl(cache.MutableCache):
         "_dm_channel_entries",
         "_emoji_entries",
         "_guild_channel_entries",
-        "_guild_thread_entries",
         "_guild_entries",
+        "_guild_thread_entries",
         "_intents",
         "_invite_entries",
         "_me",
+        "_message_entries",
+        "_referenced_messages",
         "_role_entries",
+        "_settings",
         "_sticker_entries",
         "_unknown_custom_emoji_entries",
         "_user_entries",
-        "_message_entries",
-        "_referenced_messages",
-        "_settings",
     )
 
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
@@ -141,7 +140,7 @@ class CacheImpl(cache.MutableCache):
 
     def clear(self) -> None:
         if self._settings.components == config_api.CacheComponents.NONE:
-            return None
+            return
 
         self._create_cache()
 
@@ -182,7 +181,7 @@ class CacheImpl(cache.MutableCache):
         /,
     ) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.DM_CHANNEL_IDS):
-            return None
+            return
 
         self._dm_channel_entries[snowflakes.Snowflake(user)] = snowflakes.Snowflake(channel)
 
@@ -281,7 +280,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_emoji(self, emoji: emojis.KnownCustomEmoji, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
-            return None
+            return
 
         if not emoji.guild_id:
             raise ValueError("Cannot cache an emoji without a guild ID.")
@@ -408,7 +407,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_sticker(self, sticker: stickers.GuildSticker, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
-            return None
+            return
 
         user: typing.Optional[cache_utility.RefCell[users.User]] = None
         if sticker.user:
@@ -535,7 +534,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_guild(self, guild: guilds.GatewayGuild, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILDS):
-            return None
+            return
 
         guild_record = self._get_or_create_guild_record(guild.id)
         guild_record.guild = copy.copy(guild)
@@ -545,7 +544,7 @@ class CacheImpl(cache.MutableCache):
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], is_available: bool, /
     ) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILDS):
-            return None
+            return
 
         guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         if guild_record and guild_record.guild:
@@ -811,7 +810,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_guild_channel(self, channel: channels_.PermissibleGuildChannel, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
-            return None
+            return
 
         self._guild_channel_entries[channel.id] = cache_utility.copy_guild_channel(channel)
         guild_record = self._get_or_create_guild_record(channel.guild_id)
@@ -988,7 +987,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_invite(self, invite: invites.InviteWithMetadata, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.INVITES):
-            return None
+            return
 
         inviter: typing.Optional[cache_utility.RefCell[users.User]] = None
         if invite.inviter:
@@ -1187,7 +1186,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_member(self, member: guilds.Member, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
-            return None
+            return
 
         self._set_member(member, is_reference=False)
 
@@ -1347,7 +1346,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_presence(self, presence: presences.MemberPresence, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.PRESENCES):
-            return None
+            return
 
         presence_data = cache_utility.MemberPresenceData.build_from_entity(presence)
         for activity, activity_data in zip(presence.activities, presence_data.activities):
@@ -1460,7 +1459,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_role(self, role: guilds.Role, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.ROLES):
-            return None
+            return
 
         self._role_entries[role.id] = role
         guild_record = self._get_or_create_guild_record(role.guild_id)
@@ -1676,7 +1675,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_voice_state(self, voice_state: voices.VoiceState, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.VOICE_STATES):
-            return None
+            return
 
         guild_record = self._get_or_create_guild_record(voice_state.guild_id)
 
@@ -1858,7 +1857,7 @@ class CacheImpl(cache.MutableCache):
 
     def set_message(self, message: messages.Message, /) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MESSAGES):
-            return None
+            return
 
         self._set_message(message, is_reference=False)
 

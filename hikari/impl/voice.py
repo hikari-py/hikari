@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -56,10 +55,10 @@ class VoiceComponentImpl(voice.VoiceComponent):
     __slots__: typing.Sequence[str] = (
         "_app",
         "_connections",
-        "connections",
         "_is_alive",
         "_is_closing",
         "_voice_listener",
+        "connections",
     )
 
     _connections: dict[snowflakes.Snowflake, voice.VoiceConnection]

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,14 +24,14 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "Embed",
+    "EmbedAuthor",
+    "EmbedField",
+    "EmbedFooter",
+    "EmbedImage",
+    "EmbedProvider",
     "EmbedResource",
     "EmbedResourceWithProxy",
     "EmbedVideo",
-    "EmbedImage",
-    "EmbedProvider",
-    "EmbedAuthor",
-    "EmbedFooter",
-    "EmbedField",
 )
 
 import textwrap
@@ -255,18 +254,18 @@ class Embed:
     """Represents an embed."""
 
     __slots__: typing.Sequence[str] = (
-        "_title",
-        "_description",
-        "_url",
+        "_author",
         "_color",
-        "_timestamp",
+        "_description",
+        "_fields",
         "_footer",
         "_image",
-        "_thumbnail",
-        "_video",
         "_provider",
-        "_author",
-        "_fields",
+        "_thumbnail",
+        "_timestamp",
+        "_title",
+        "_url",
+        "_video",
     )
 
     @classmethod
@@ -904,7 +903,7 @@ class Embed:
     def __repr__(self) -> str:
         return f"Embed(title={self.title}, color={self.color}, timestamp={self.timestamp})"
 
-    def __eq__(self, other: typing.Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, type(self)):
             for attrsib in self.__slots__:
                 if getattr(self, attrsib) != getattr(other, attrsib):

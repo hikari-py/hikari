@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,24 +23,24 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "BaseData",
+    "Cache3DMappingView",
     "CacheMappingView",
+    "DataT",
     "EmptyCacheView",
     "GuildRecord",
-    "BaseData",
     "InviteData",
-    "MemberData",
+    "KeyT",
     "KnownCustomEmojiData",
-    "RichActivityData",
+    "MemberData",
     "MemberPresenceData",
     "MessageData",
-    "VoiceStateData",
     "RefCell",
-    "unwrap_ref_cell",
-    "copy_guild_channel",
-    "Cache3DMappingView",
-    "DataT",
-    "KeyT",
+    "RichActivityData",
     "ValueT",
+    "VoiceStateData",
+    "copy_guild_channel",
+    "unwrap_ref_cell",
 )
 
 import abc
@@ -97,7 +96,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
         mapping. This is used to cover the case when items stores [`DataT`][] objects.
     """
 
-    __slots__: typing.Sequence[str] = ("_data", "_builder")
+    __slots__: typing.Sequence[str] = ("_builder", "_data")
 
     @typing.overload
     def __init__(self, items: typing.Mapping[KeyT, ValueT]) -> None: ...

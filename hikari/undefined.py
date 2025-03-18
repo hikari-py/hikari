@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -83,8 +82,8 @@ def __new__(cls: UndefinedType) -> typing.NoReturn:  # pragma: nocover
 UndefinedType.__new__ = __new__
 del __new__
 
-T = typing.TypeVar("T", covariant=True)
-UndefinedOr = typing.Union[T, UndefinedType]
+T_co = typing.TypeVar("T_co", covariant=True)
+UndefinedOr = typing.Union[T_co, UndefinedType]
 """Type hint to mark a type as being semantically optional.
 
 !!! warning "**THIS IS NOT THE SAME AS [`typing.Optional`][] BY DEFINITION!**"
@@ -118,7 +117,7 @@ UndefinedOr = typing.Union[T, UndefinedType]
         is made between a [`None`][] value, and one that has been omitted.
 """
 
-UndefinedNoneOr = typing.Union[UndefinedOr[T], None]
+UndefinedNoneOr = typing.Union[UndefinedOr[T_co], None]
 """Type hint for a value that may be [hikari.undefined.UNDEFINED], or [`None`][].
 
 `UndefinedNoneOr[T]` is simply an alias for
@@ -127,16 +126,16 @@ UndefinedNoneOr = typing.Union[UndefinedOr[T], None]
 """
 
 
-def all_undefined(*items: typing.Any) -> bool:
+def all_undefined(*items: object) -> bool:
     """Get if all of the provided items are [`hikari.undefined.UNDEFINED`][]."""
     return all(item is UNDEFINED for item in items)
 
 
-def any_undefined(*items: typing.Any) -> bool:
+def any_undefined(*items: object) -> bool:
     """Get if any of the provided items are [`hikari.undefined.UNDEFINED`][]."""
     return any(item is UNDEFINED for item in items)
 
 
-def count(*items: typing.Any) -> int:
+def count(*items: object) -> int:
     """Count the number of items that are provided that are [`hikari.undefined.UNDEFINED`][]."""
     return sum(item is UNDEFINED for item in items)

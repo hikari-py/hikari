@@ -1,0 +1,63 @@
+line-length = 120
+target-version = "py39"
+
+[format]
+docstring-code-format = true
+docstring-code-line-length = 80
+quote-style = "double"
+line-ending = "lf"
+skip-magic-trailing-comma = true
+
+[lint]
+# https://docs.astral.sh/ruff/rules/
+select = ["ALL"]
+ignore = [
+    "S101",   # Use of assert detected (we use it for typing and testing purposes)
+    "COM812", # Missing trailing comma (interferes with the formatter)
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "EM101",  # Exception must not use a string literal, assign to a variable first
+    "D105",   # Missing docstring in magic method
+]
+
+[lint.per-file-ignores]
+"**/__init__.py" = [
+    "F401", # Name imported but unused
+    "F403", # Unable to detect undefined names when using `import *`
+]
+"**/__init__.pyi" = [
+    "F403", # Unable to detect undefined names when using `import *`
+]
+"tests/**/*.py" = [
+    "D",       # Docstrings missing
+    "S105",    # Possible hardcoded password assigned to string
+    "S106",    # Possible hardcoded password assigned to argument
+    "PLR2004", # Do not use magic values
+    "SLF001",  # Private member accessed
+
+    # Rules bellow here are temporarily disabled and will be enabled in the future
+    # when extra work is done
+    "ALL",
+    # "ANN",     # Annotations missing
+    # "DTZ001",  # `datetime.datetime()` called without a `tzinfo` argument
+    # "DTZ901",  # Use of datetime.datetime.min/max wihtout timezone information
+    # "N802",    # Function name should be lowercase
+    # "UP026",   # `mock` is deprecated, use `unittest.mock` instead
+    # "SIM117",  # Use single `with` statement
+    # "ARG002",  # Unused method argument
+    # "FBT003",  # Boolean positional value in function call
+    # "A002",    # Function argument is shadowing a python builtin
+    # "PLR1711", # Useless return statement
+    # "RET501",  # Do not use `return None` if only possible return
+    # "B033",    # Sets should not contain duplicate items
+    # "N801",    # Class should use CapWords
+]
+
+[lint.isort]
+required-imports = ["from __future__ import annotations"]
+force-single-line = true
+
+[lint.pyupgrade]
+keep-runtime-typing = true # FIXME: Consider removing
+
+[lint.pydocstyle]
+convention = "numpy"

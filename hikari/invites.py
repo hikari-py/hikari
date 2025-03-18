@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("TargetType", "VanityURL", "InviteGuild", "InviteCode", "Invite", "InviteWithMetadata")
+__all__: typing.Sequence[str] = ("Invite", "InviteCode", "InviteGuild", "InviteWithMetadata", "TargetType", "VanityURL")
 
 import abc
 import typing

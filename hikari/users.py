@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("PartialUser", "User", "OwnUser", "UserFlag", "PremiumType")
+__all__: typing.Sequence[str] = ("OwnUser", "PartialUser", "PremiumType", "User", "UserFlag")
 
 import abc
 import typing
@@ -721,7 +720,7 @@ class PartialUserImpl(PartialUser):
     def __str__(self) -> str:
         if self.username is undefined.UNDEFINED or self.discriminator is undefined.UNDEFINED:
             return f"Partial user ID {self.id}"
-        elif self.discriminator == "0":  # migrated account
+        if self.discriminator == "0":  # migrated account
             return self.username
         return f"{self.username}#{self.discriminator}"
 

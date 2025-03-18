@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,12 +23,12 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "KeyT",
-    "ValueT",
-    "SnowflakeSet",
     "ExtendedMutableMapping",
     "FreezableDict",
+    "KeyT",
     "LimitedCapacityCacheMap",
+    "SnowflakeSet",
+    "ValueT",
     "get_index_or_slice",
 )
 

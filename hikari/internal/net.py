@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("generate_error_response", "create_client_session")
+__all__: typing.Sequence[str] = ("create_client_session", "generate_error_response")
 
 import http
 import typing
@@ -69,10 +68,9 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
 
     if 400 <= status < 500:
         return errors.ClientHTTPResponseError(real_url, status, response.headers, raw_body)
-    elif 500 <= status < 600:
+    if 500 <= status < 600:
         return errors.InternalServerError(real_url, status, response.headers, raw_body)
-    else:
-        return errors.HTTPResponseError(real_url, status, response.headers, raw_body)
+    return errors.HTTPResponseError(real_url, status, response.headers, raw_body)
 
 
 def create_tcp_connector(

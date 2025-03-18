@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("TypingEvent", "GuildTypingEvent", "DMTypingEvent")
+__all__: typing.Sequence[str] = ("DMTypingEvent", "GuildTypingEvent", "TypingEvent")
 
 import abc
 import typing

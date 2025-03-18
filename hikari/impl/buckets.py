@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -235,7 +234,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__: typing.Sequence[str] = ("_compiled_route", "_max_rate_limit", "_global_ratelimit", "_lock")
+    __slots__: typing.Sequence[str] = ("_compiled_route", "_global_ratelimit", "_lock", "_max_rate_limit")
 
     def __init__(
         self,
@@ -367,7 +366,7 @@ def _create_authentication_hash(authentication: typing.Optional[str]) -> str:
 
 
 def _create_unknown_hash(route: routes.CompiledRoute, authentication_hash: str) -> str:
-    return f"{UNKNOWN_HASH}{routes.HASH_SEPARATOR}{authentication_hash}{routes.HASH_SEPARATOR}{str(hash(route))}"
+    return f"{UNKNOWN_HASH}{routes.HASH_SEPARATOR}{authentication_hash}{routes.HASH_SEPARATOR}{hash(route)!s}"
 
 
 class RESTBucketManager:
@@ -385,11 +384,11 @@ class RESTBucketManager:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_routes_to_hashes",
-        "_real_hashes_to_buckets",
-        "_global_ratelimit",
         "_gc_task",
+        "_global_ratelimit",
         "_max_rate_limit",
+        "_real_hashes_to_buckets",
+        "_routes_to_hashes",
     )
 
     def __init__(self, max_rate_limit: float) -> None:

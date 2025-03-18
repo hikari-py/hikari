@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -419,8 +418,7 @@ class Color(int):
 
         if any("." in s for s in (r, g, b)):
             return cls.from_rgb_float(_to_rgb_float(r, "red"), _to_rgb_float(g, "green"), _to_rgb_float(b, "blue"))
-        else:
-            return cls.from_rgb(_to_rgb_int(r, "red"), _to_rgb_int(g, "green"), _to_rgb_int(b, "blue"))
+        return cls.from_rgb(_to_rgb_int(r, "red"), _to_rgb_int(g, "green"), _to_rgb_int(b, "blue"))
 
     @classmethod
     def of(cls, value: Colorish, /) -> Color:

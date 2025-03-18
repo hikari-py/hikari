@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,15 +23,15 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "SearchableSnowflakeish",
+    "SearchableSnowflakeishOr",
     "Snowflake",
+    "Snowflakeish",
+    "SnowflakeishIterable",
+    "SnowflakeishOr",
+    "SnowflakeishSequence",
     "Unique",
     "calculate_shard_id",
-    "Snowflakeish",
-    "SearchableSnowflakeish",
-    "SnowflakeishOr",
-    "SearchableSnowflakeishOr",
-    "SnowflakeishIterable",
-    "SnowflakeishSequence",
 )
 
 import abc
@@ -126,7 +125,7 @@ class Unique(abc.ABC):
     def __hash__(self) -> int:
         return hash(self.id)
 
-    def __eq__(self, other: typing.Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return type(self) is type(other) and self.id == other.id
 
 

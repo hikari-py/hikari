@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("filtered", "EventManagerBase", "EventStream")
+__all__: typing.Sequence[str] = ("EventManagerBase", "EventStream", "filtered")
 
 import asyncio
 import inspect
@@ -142,7 +141,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         event_manager: event_manager_.EventManager,
         event_type: type[base_events.EventT],
         *,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         limit: typing.Optional[int] = None,
     ) -> None:
         self._active = False
@@ -547,7 +546,7 @@ class EventManagerBase(event_manager_.EventManager):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         limit: typing.Optional[int] = None,
     ) -> event_manager_.EventStream[base_events.EventT]:
         self._check_event(event_type, 1)
@@ -557,7 +556,7 @@ class EventManagerBase(event_manager_.EventManager):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
         if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):

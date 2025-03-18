@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -94,7 +93,7 @@ async def _request_guild_members(
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_cache", "_entity_factory", "_auto_chunk_members")
+    __slots__: typing.Sequence[str] = ("_auto_chunk_members", "_cache", "_entity_factory")
 
     def __init__(
         self,
@@ -252,7 +251,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         await self.dispatch(event)
 
     # Internal granularity is preferred for GUILD_CREATE over decorator based filtering due to its large scope.
-    async def on_guild_create(  # noqa: C901, CFQ001 - Function too complex and too long
+    async def on_guild_create(  # noqa: C901  - Function too long
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#guild-create for more info."""

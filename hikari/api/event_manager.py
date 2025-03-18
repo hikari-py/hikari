@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -418,7 +417,7 @@ class EventManager(abc.ABC):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         limit: typing.Optional[int] = None,
     ) -> EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
@@ -485,7 +484,7 @@ class EventManager(abc.ABC):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         predicate: typing.Optional[PredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.

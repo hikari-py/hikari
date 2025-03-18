@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -433,14 +432,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_audit_log_entry_converters",
         "_audit_log_event_mapping",
         "_command_mapping",
-        "_message_component_type_mapping",
-        "_modal_component_type_mapping",
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
-        "_thread_channel_type_mapping",
-        "_interaction_type_mapping",
         "_interaction_metadata_mapping",
+        "_interaction_type_mapping",
+        "_message_component_type_mapping",
+        "_modal_component_type_mapping",
         "_scheduled_event_type_mapping",
+        "_thread_channel_type_mapping",
         "_webhook_type_mapping",
     )
 
@@ -3176,9 +3175,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         interaction_metadata_type = base_interactions.InteractionType(payload["type"])
         if deserializer := self._interaction_metadata_mapping.get(interaction_metadata_type):
             return deserializer(payload)
-        else:
-            _LOGGER.debug(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
-            raise errors.UnrecognisedEntityError(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
+        _LOGGER.debug(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
+        raise errors.UnrecognisedEntityError(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
 
     def deserialize_partial_message(  # noqa: C901 - Too complex
         self, payload: data_binding.JSONObject

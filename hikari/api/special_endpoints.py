@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -26,26 +25,26 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "AutocompleteChoiceBuilder",
     "ButtonBuilder",
+    "ChannelSelectMenuBuilder",
     "CommandBuilder",
-    "SlashCommandBuilder",
-    "ContextMenuCommandBuilder",
     "ComponentBuilder",
-    "TypingIndicator",
+    "ContextMenuCommandBuilder",
     "GuildBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
-    "InteractionResponseBuilder",
     "InteractionMessageBuilder",
+    "InteractionModalBuilder",
+    "InteractionResponseBuilder",
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
-    "SelectMenuBuilder",
-    "TextSelectMenuBuilder",
-    "ChannelSelectMenuBuilder",
-    "SelectOptionBuilder",
-    "TextInputBuilder",
-    "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "SelectMenuBuilder",
+    "SelectOptionBuilder",
+    "SlashCommandBuilder",
+    "TextInputBuilder",
+    "TextSelectMenuBuilder",
+    "TypingIndicator",
 )
 
 import abc
@@ -596,7 +595,7 @@ class AutocompleteChoiceBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_value(self, value: typing.Union[int, float, str], /) -> Self:
+    def set_value(self, value: typing.Union[float, str], /) -> Self:
         """Set this choice's value.
 
         Returns

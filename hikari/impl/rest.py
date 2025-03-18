@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -289,15 +288,15 @@ class RESTApp(traits.ExecutorAware):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_bucket_manager",
+        "_client_session",
+        "_dumps",
         "_executor",
         "_http_settings",
+        "_loads",
         "_max_retries",
         "_proxy_settings",
         "_url",
-        "_bucket_manager",
-        "_client_session",
-        "_loads",
-        "_dumps",
     )
 
     def __init__(
@@ -528,19 +527,19 @@ class RESTClientImpl(rest_api.RESTClient):
         "_bucket_manager",
         "_bucket_manager_owner",
         "_cache",
-        "_entity_factory",
-        "_executor",
-        "_http_settings",
-        "_max_retries",
-        "_proxy_settings",
-        "_dumps",
-        "_loads",
-        "_rest_url",
-        "_token",
-        "_token_type",
         "_client_session",
         "_client_session_owner",
         "_close_event",
+        "_dumps",
+        "_entity_factory",
+        "_executor",
+        "_http_settings",
+        "_loads",
+        "_max_retries",
+        "_proxy_settings",
+        "_rest_url",
+        "_token",
+        "_token_type",
     )
 
     def __init__(
@@ -737,10 +736,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         raise errors.ComponentStateConflictError("The REST client was closed mid-request")
 
-    # Ignore too long and too complex, respectively
     # We rather keep everything we can here inline.
     @typing.final
-    async def _perform_request(  # noqa: CFQ001, C901
+    async def _perform_request(  # noqa: C901
         self,
         compiled_route: routes.CompiledRoute,
         *,
@@ -1379,7 +1377,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    def _build_message_payload(  # noqa: C901- Function too complex
+    def _build_message_payload(  # noqa: C901 - Function too complex
         self,
         /,
         *,
@@ -2329,9 +2327,8 @@ class RESTClientImpl(rest_api.RESTClient):
         if (response := await self._request(route, json=body)) is not None:
             assert isinstance(response, dict)
             return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
-        else:
-            # User already is in the guild.
-            return None
+        # User already is in the guild.
+        return None
 
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_VOICE_REGIONS.compile()

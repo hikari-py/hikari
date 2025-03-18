@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,36 +23,36 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ChannelType",
     "ChannelFlag",
-    "VideoQualityMode",
     "ChannelFollow",
-    "PermissionOverwrite",
-    "PermissionOverwriteType",
-    "PartialChannel",
-    "PermissibleGuildChannel",
-    "TextableChannel",
-    "TextableGuildChannel",
-    "PrivateChannel",
+    "ChannelType",
     "DMChannel",
+    "ForumLayoutType",
+    "ForumSortOrderType",
+    "ForumTag",
     "GroupDMChannel",
     "GuildCategory",
     "GuildChannel",
-    "GuildTextChannel",
-    "GuildThreadChannel",
+    "GuildForumChannel",
     "GuildNewsChannel",
     "GuildNewsThread",
     "GuildPrivateThread",
     "GuildPublicThread",
-    "ForumSortOrderType",
-    "ForumLayoutType",
-    "ForumTag",
-    "GuildForumChannel",
-    "GuildVoiceChannel",
     "GuildStageChannel",
+    "GuildTextChannel",
+    "GuildThreadChannel",
+    "GuildVoiceChannel",
+    "PartialChannel",
+    "PermissibleGuildChannel",
+    "PermissionOverwrite",
+    "PermissionOverwriteType",
+    "PrivateChannel",
+    "TextableChannel",
+    "TextableGuildChannel",
+    "ThreadMember",
+    "VideoQualityMode",
     "WebhookChannelT",
     "WebhookChannelTypes",
-    "ThreadMember",
 )
 
 import typing

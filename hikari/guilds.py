@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,34 +23,34 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "Guild",
-    "RESTGuild",
     "GatewayGuild",
-    "GuildWidget",
-    "Role",
-    "GuildFeature",
-    "GuildSystemChannelFlag",
-    "GuildMessageNotificationsLevel",
+    "Guild",
+    "GuildBan",
     "GuildExplicitContentFilterLevel",
+    "GuildFeature",
     "GuildMFALevel",
-    "GuildVerificationLevel",
+    "GuildMemberFlags",
+    "GuildMessageNotificationsLevel",
+    "GuildNSFWLevel",
     "GuildPremiumTier",
     "GuildPreview",
-    "GuildBan",
-    "GuildNSFWLevel",
-    "GuildMemberFlags",
-    "Member",
+    "GuildSystemChannelFlag",
+    "GuildVerificationLevel",
+    "GuildWidget",
     "Integration",
     "IntegrationAccount",
-    "IntegrationType",
     "IntegrationApplication",
     "IntegrationExpireBehaviour",
+    "IntegrationType",
+    "Member",
     "PartialApplication",
     "PartialGuild",
     "PartialIntegration",
     "PartialRole",
-    "WelcomeScreen",
+    "RESTGuild",
+    "Role",
     "WelcomeChannel",
+    "WelcomeScreen",
 )
 
 import typing

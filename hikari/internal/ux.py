@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,12 +23,12 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "init_logging",
-    "print_banner",
-    "warn_if_not_optimized",
-    "supports_color",
     "HikariVersion",
     "check_for_updates",
+    "init_logging",
+    "print_banner",
+    "supports_color",
+    "warn_if_not_optimized",
 )
 
 import importlib.resources
@@ -385,14 +384,14 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
     return color_support
 
 
-_VERSION_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d+)\.(\d+)\.(\d+)(\.[a-z]+)?(\d+)?$", re.I)
+_VERSION_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d+)\.(\d+)\.(\d+)(\.[a-z]+)?(\d+)?$", re.IGNORECASE)
 
 
 # This is a modified version of packaging.version.Version to better suit our needs
 class HikariVersion:
     """Hikari strict version."""
 
-    __slots__: typing.Sequence[str] = ("version", "prerelease", "_cmp")
+    __slots__: typing.Sequence[str] = ("_cmp", "prerelease", "version")
 
     version: tuple[int, int, int]
     prerelease: typing.Optional[tuple[str, int]]
@@ -419,15 +418,15 @@ class HikariVersion:
         return vstring
 
     def __repr__(self) -> str:
-        return f"HikariVersion('{str(self)}')"
+        return f"HikariVersion('{self!s}')"
 
-    def __eq__(self, other: typing.Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 
         return self._cmp == other._cmp
 
-    def __ne__(self, other: typing.Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 

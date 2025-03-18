@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -20,25 +18,25 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Typehints for [`hikari.undefined`][]."""
 
 import enum as __enum
-from typing import Any as __Any
 from typing import Literal as __Literal
 from typing import TypeVar as __TypeVar
 from typing import Union as __Union
+
+import typing_extensions
 
 class UndefinedType(__enum.Enum):
     def __bool__(self) -> __Literal[False]: ...
     UNDEFINED = __enum.auto()
 
-UNDEFINED: __Literal[UndefinedType.UNDEFINED] = UndefinedType.UNDEFINED
+UNDEFINED: __Literal[UndefinedType.UNDEFINED] = ...
 
 __T = __TypeVar("__T", covariant=True)
 
-UndefinedOr = __Union[__T, UndefinedType]
-UndefinedNoneOr = __Union[UndefinedOr[__T], None]
+UndefinedOr: typing_extensions.TypeAlias = __Union[__T, UndefinedType]
+UndefinedNoneOr: typing_extensions.TypeAlias = __Union[UndefinedOr[__T], None]
 
-def all_undefined(*items: __Any) -> bool: ...
-def any_undefined(*items: __Any) -> bool: ...
-def count(*items: __Any) -> int: ...
+def all_undefined(*items: object) -> bool: ...
+def any_undefined(*items: object) -> bool: ...
+def count(*items: object) -> int: ...

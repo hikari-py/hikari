@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -29,9 +28,9 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "BaseRateLimiter",
     "BurstRateLimiter",
+    "ExponentialBackOff",
     "ManualRateLimiter",
     "WindowedBurstRateLimiter",
-    "ExponentialBackOff",
 )
 
 import abc
@@ -85,7 +84,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     complete logic for safely aborting any pending tasks when being shut down.
     """
 
-    __slots__: typing.Sequence[str] = ("name", "throttle_task", "queue")
+    __slots__: typing.Sequence[str] = ("name", "queue", "throttle_task")
 
     name: str
     """The name of the rate limiter."""
@@ -291,7 +290,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     that a unit has been placed into the bucket.
     """
 
-    __slots__: typing.Sequence[str] = ("reset_at", "remaining", "limit", "period")
+    __slots__: typing.Sequence[str] = ("limit", "period", "remaining", "reset_at")
 
     throttle_task: typing.Optional[asyncio.Task[typing.Any]]
     # <<inherited docstring from BurstRateLimiter>>.
@@ -458,7 +457,7 @@ class ExponentialBackOff:
         that's annotated as [`float`][].
     """
 
-    __slots__: typing.Sequence[str] = ("base", "increment", "maximum", "jitter_multiplier")
+    __slots__: typing.Sequence[str] = ("base", "increment", "jitter_multiplier", "maximum")
 
     base: typing.Final[float]
     """The base to use."""

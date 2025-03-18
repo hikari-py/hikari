@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -27,9 +26,9 @@ __all__: typing.Sequence[str] = (
     "ApplicationWebhook",
     "ChannelFollowerWebhook",
     "ExecutableWebhook",
+    "IncomingWebhook",
     "PartialWebhook",
     "WebhookType",
-    "IncomingWebhook",
 )
 
 import abc

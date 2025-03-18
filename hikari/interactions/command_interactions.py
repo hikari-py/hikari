@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,14 +23,14 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "AutocompleteInteraction",
-    "BaseCommandInteraction",
-    "CommandInteractionOption",
-    "AutocompleteInteractionOption",
-    "CommandInteraction",
     "COMMAND_RESPONSE_TYPES",
-    "CommandResponseTypesT",
+    "AutocompleteInteraction",
+    "AutocompleteInteractionOption",
+    "BaseCommandInteraction",
+    "CommandInteraction",
     "CommandInteractionMetadata",
+    "CommandInteractionOption",
+    "CommandResponseTypesT",
 )
 
 import typing
