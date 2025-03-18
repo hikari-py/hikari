@@ -30,7 +30,6 @@ __all__: typing.Sequence[str] = (
     "Attachment",
     "Reaction",
     "MessageActivity",
-    "MessageInteraction",
     "MessageReference",
     "PartialMessage",
     "Message",
@@ -389,24 +388,6 @@ class MessageApplication(guilds.PartialApplication):
         )
 
 
-@attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=True, unsafe_hash=True, weakref_slot=False)
-class MessageInteraction:
-    """Representation of information provided for a message from an interaction."""
-
-    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
-    """ID of the interaction this message was sent by."""
-
-    type: typing.Union[base_interactions.InteractionType, int] = attrs.field(eq=False, repr=True)
-    """The type of interaction this message was created by."""
-
-    name: str = attrs.field(eq=False, repr=True)
-    """Name of the application command the interaction is tied to."""
-
-    user: users_.User = attrs.field(eq=False, repr=True)
-    """Object of the user who invoked this interaction."""
-
-
 def _map_cache_maybe_discover(
     ids: typing.Iterable[snowflakes.Snowflake], cache_call: typing.Callable[[snowflakes.Snowflake], typing.Optional[_T]]
 ) -> dict[snowflakes.Snowflake, _T]:
@@ -598,9 +579,6 @@ class PartialMessage(snowflakes.Unique):
     `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
 
-    interaction: undefined.UndefinedNoneOr[MessageInteraction] = attrs.field(hash=False, eq=False, repr=False)
-    """Information about the interaction this message was created by."""
-
     application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.
 
@@ -612,6 +590,11 @@ class PartialMessage(snowflakes.Unique):
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""
+
+    interaction_metadata: typing.Optional[base_interactions.PartialInteractionMetadata] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
+    """Sent if the message is sent as a result of an interaction."""
 
     @property
     def channel_mention_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
@@ -1427,9 +1410,6 @@ class Message(PartialMessage):
 
     If `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
-
-    interaction: typing.Optional[MessageInteraction] = attrs.field(hash=False, eq=False, repr=False)
-    """Information about the interaction this message was created by."""
 
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.

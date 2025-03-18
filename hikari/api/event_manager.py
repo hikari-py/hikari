@@ -93,7 +93,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
         If called on an already closed streamer then this will do nothing.
 
         !!! note
-            [with streamer][] may be used as a short-cut for opening and
+            `with streamer` may be used as a short-cut for opening and
             closing a streamer.
         """
 
@@ -104,7 +104,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
         If called on an already started streamer then this will do nothing.
 
         !!! note
-            [with streamer][] may be used as a short-cut for opening and
+            `with streamer` may be used as a short-cut for opening and
             closing a stream.
         """
 
@@ -424,8 +424,8 @@ class EventManager(abc.ABC):
         """Return a stream iterator for the given event and sub-events.
 
         !!! warning
-            If you use [await stream.open()][] to start the stream then you must
-            also close it with [await stream.close()][] otherwise it may queue
+            If you use `await stream.open()` to start the stream then you must
+            also close it with `await stream.close()` otherwise it may queue
             events in memory indefinitely.
 
         Parameters

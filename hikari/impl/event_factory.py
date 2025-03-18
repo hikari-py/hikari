@@ -97,9 +97,9 @@ class EventFactoryImpl(event_factory.EventFactory):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildChannelCreateEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
-        assert isinstance(
-            channel, channel_models.PermissibleGuildChannel
-        ), "CHANNEL_CREATE events for threads and DMS are undocumented behaviour"
+        assert isinstance(channel, channel_models.PermissibleGuildChannel), (
+            "CHANNEL_CREATE events for threads and DMS are undocumented behaviour"
+        )
         return channel_events.GuildChannelCreateEvent(shard=shard, channel=channel)
 
     def deserialize_guild_channel_update_event(
@@ -110,18 +110,18 @@ class EventFactoryImpl(event_factory.EventFactory):
         old_channel: typing.Optional[channel_models.PermissibleGuildChannel] = None,
     ) -> channel_events.GuildChannelUpdateEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
-        assert isinstance(
-            channel, channel_models.PermissibleGuildChannel
-        ), "CHANNEL_UPDATE events for threads and DMS are undocumented behaviour"
+        assert isinstance(channel, channel_models.PermissibleGuildChannel), (
+            "CHANNEL_UPDATE events for threads and DMS are undocumented behaviour"
+        )
         return channel_events.GuildChannelUpdateEvent(shard=shard, channel=channel, old_channel=old_channel)
 
     def deserialize_guild_channel_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildChannelDeleteEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
-        assert isinstance(
-            channel, channel_models.PermissibleGuildChannel
-        ), "CHANNEL_DELETE events for threads and DMS are undocumented behaviour"
+        assert isinstance(channel, channel_models.PermissibleGuildChannel), (
+            "CHANNEL_DELETE events for threads and DMS are undocumented behaviour"
+        )
         return channel_events.GuildChannelDeleteEvent(shard=shard, channel=channel)
 
     def deserialize_channel_pins_update_event(

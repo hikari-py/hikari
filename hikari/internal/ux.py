@@ -422,28 +422,40 @@ class HikariVersion:
         return f"HikariVersion('{str(self)}')"
 
     def __eq__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s == o)
-
-    def __ne__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s != o)
-
-    def __lt__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s < o)
-
-    def __le__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s <= o)
-
-    def __gt__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s > o)
-
-    def __ge__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s >= o)
-
-    def _compare(self, other: typing.Any, method: typing.Callable[[CmpTuple, CmpTuple], bool]) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 
-        return method(self._cmp, other._cmp)
+        return self._cmp == other._cmp
+
+    def __ne__(self, other: typing.Any) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp != other._cmp
+
+    def __lt__(self, other: typing.Any) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp < other._cmp
+
+    def __le__(self, other: typing.Any) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp <= other._cmp
+
+    def __gt__(self, other: typing.Any) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp > other._cmp
+
+    def __ge__(self, other: typing.Any) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp >= other._cmp
 
 
 async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings) -> None:

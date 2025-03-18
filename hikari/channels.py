@@ -1193,9 +1193,9 @@ class PermissibleGuildChannel(GuildChannel):
             If an internal error occurs on Discord while handling the request.
         """
         if target_type is undefined.UNDEFINED:
-            assert not isinstance(
-                target, int
-            ), "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
+            assert not isinstance(target, int), (
+                "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
+            )
             return await self.app.rest.edit_permission_overwrite(self.id, target, allow=allow, deny=deny, reason=reason)
 
         return await self.app.rest.edit_permission_overwrite(

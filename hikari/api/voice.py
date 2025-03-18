@@ -168,7 +168,7 @@ class VoiceConnection(abc.ABC):
             The channel ID that the voice connection is actively connected to.
         endpoint
             The voice websocket endpoint to connect to. Will contain the
-            protocol at the start (i.e. [wss://][]), and end with the **correct**
+            protocol at the start (i.e. `wss://`), and end with the **correct**
             port (the port and protocol are sanitized since Discord still
             provide the wrong information four years later).
         guild_id

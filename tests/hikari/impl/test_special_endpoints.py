@@ -25,6 +25,7 @@ import typing
 import mock
 import pytest
 
+from hikari import applications
 from hikari import channels
 from hikari import commands
 from hikari import components
@@ -1023,11 +1024,6 @@ class TestCommandBuilder:
 
         assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
 
-    def test_is_dm_enabled(self, stub_command):
-        builder = stub_command("oksksksk").set_is_dm_enabled(True)
-
-        assert builder.is_dm_enabled is True
-
     def test_is_nsfw_property(self, stub_command):
         builder = stub_command("oksksksk").set_is_nsfw(True)
 
@@ -1068,8 +1064,9 @@ class TestSlashCommandBuilder:
             .add_option(mock_option)
             .set_id(3412312)
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types([applications.ApplicationIntegrationType.GUILD_INSTALL])
+            .set_context_types([applications.ApplicationContextType.GUILD])
         )
 
         result = builder.build(mock_entity_factory)
@@ -1079,13 +1076,14 @@ class TestSlashCommandBuilder:
             "name": "we are number",
             "description": "one",
             "type": 1,
-            "dm_permission": True,
             "nsfw": True,
             "default_member_permissions": 8,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
             "name_localizations": {locales.Locale.TR: "merhaba"},
             "description_localizations": {locales.Locale.TR: "bir"},
+            "contexts": [applications.ApplicationIntegrationType.GUILD_INSTALL.value],
+            "integration_types": [applications.ApplicationContextType.GUILD.value],
         }
 
     def test_build_without_optional_data(self):
@@ -1111,7 +1109,6 @@ class TestSlashCommandBuilder:
             .set_name_localizations({locales.Locale.TR: "sayı"})
             .set_description_localizations({locales.Locale.TR: "bir"})
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
@@ -1128,7 +1125,6 @@ class TestSlashCommandBuilder:
             name_localizations={locales.Locale.TR: "sayı"},
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
-            dm_enabled=True,
             nsfw=True,
         )
 
@@ -1137,7 +1133,6 @@ class TestSlashCommandBuilder:
         builder = (
             special_endpoints.SlashCommandBuilder("we are number", "one")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
@@ -1157,7 +1152,6 @@ class TestSlashCommandBuilder:
             name_localizations={locales.Locale.TR: "sayı"},
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
-            dm_enabled=True,
             nsfw=True,
         )
 
@@ -1169,8 +1163,9 @@ class TestContextMenuBuilder:
             .set_id(3412312)
             .set_name_localizations({locales.Locale.TR: "merhaba"})
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types([applications.ApplicationIntegrationType.GUILD_INSTALL])
+            .set_context_types([applications.ApplicationContextType.GUILD])
         )
 
         result = builder.build(mock.Mock())
@@ -1178,11 +1173,12 @@ class TestContextMenuBuilder:
         assert result == {
             "name": "we are number",
             "type": 2,
-            "dm_permission": True,
             "nsfw": True,
             "default_member_permissions": 8,
             "id": "3412312",
             "name_localizations": {locales.Locale.TR: "merhaba"},
+            "contexts": [applications.ApplicationIntegrationType.GUILD_INSTALL.value],
+            "integration_types": [applications.ApplicationContextType.GUILD.value],
         }
 
     def test_build_without_optional_data(self):
@@ -1198,7 +1194,6 @@ class TestContextMenuBuilder:
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"meow": "nyan"})
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
@@ -1213,7 +1208,6 @@ class TestContextMenuBuilder:
             guild=undefined.UNDEFINED,
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"meow": "nyan"},
-            dm_enabled=True,
             nsfw=True,
         )
 
@@ -1223,7 +1217,6 @@ class TestContextMenuBuilder:
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"en-ghibli": "meow"})
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
@@ -1238,7 +1231,6 @@ class TestContextMenuBuilder:
             guild=765234123,
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"en-ghibli": "meow"},
-            dm_enabled=True,
             nsfw=True,
         )
 
