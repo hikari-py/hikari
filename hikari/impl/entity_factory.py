@@ -3336,8 +3336,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
 
-        poll: undefined.UndefinedOr[poll_models.Poll] = undefined.UNDEFINED
-        if "polls" in payload:
+        poll: typing.Optional[poll_models.Poll] = None
+        if "poll" in payload:
             poll = self.deserialize_poll(payload["poll"])
 
         if "reactions" in payload:
@@ -3946,16 +3946,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_poll_media(self, payload: data_binding.JSONObject) -> poll_models.PollMedia:
         return poll_models.PollMedia(
-            text=payload["text"], emoji=self.deserialize_emoji(payload["emoji"]) if "emoji" in payload else None
+            text=payload.get("text", None),
+            emoji=self.deserialize_emoji(payload["emoji"]) if "emoji" in payload else None,
         )
 
     def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
-        question = self._deserialize_poll_media(payload["question"])
-        expiry = time.iso8601_datetime_string_to_datetime(payload["expiry"])
-        allow_multiselect = payload["allow_multiselect"]
-        layout_type = poll_models.PollLayoutType(payload["layout_type"])
-
-        answers: typing.MutableSequence[poll_models.PollAnswer] = []
+        answers: list[poll_models.PollAnswer] = []
         for answer_payload in payload["answers"]:
             answer = poll_models.PollAnswer(
                 answer_id=answer_payload["answer_id"],
@@ -3964,23 +3960,23 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
             answers.append(answer)
 
-        results: undefined.UndefinedOr[poll_models.PollResult] = undefined.UNDEFINED
-        if (result_payload := payload.get("result")) is not None:
+        results: typing.Optional[poll_models.PollResult] = None
+        if (result_payload := payload.get("results")) is not None:
             is_finalized = result_payload["is_finalized"]
 
             answer_counts = tuple(
-                poll_models.PollAnswerCount(
-                    answer_id=payload["answer_id"], count=payload["count"], me_voted=payload["me_voted"]
-                )
+                poll_models.PollAnswerCount(id=payload["id"], count=payload["count"], me_voted=payload["me_voted"])
                 for payload in result_payload["answer_counts"]
             )
             results = poll_models.PollResult(is_finalized=is_finalized, answer_counts=answer_counts)
 
         return poll_models.Poll(
-            question=question,
+            question=self._deserialize_poll_media(payload["question"]),
             answers=answers,
-            expiry=expiry,
-            allow_multiselect=allow_multiselect,
-            layout_type=layout_type,
+            expiry=time.iso8601_datetime_string_to_datetime(payload["expiry"])
+            if payload["expiry"] is not None
+            else None,
+            allow_multiselect=payload["allow_multiselect"],
+            layout_type=poll_models.PollLayoutType(payload["layout_type"]),
             results=results,
         )

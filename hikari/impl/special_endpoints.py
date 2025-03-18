@@ -2270,12 +2270,13 @@ class PollMediaBuilder(special_endpoints.PollMediaBuilder):
 
         payload.put("text", self._text)
 
-        if (
-            self._emoji is not undefined.UNDEFINED
-        ):  # FIXME: This is a little cursed, but its kinda what discord asks for so...
-            if isinstance(self._emoji, emojis.CustomEmoji):
-                payload.put("emoji", {"id": self._emoji.id})
-            else:
-                payload.put("emoji", {"name": self._emoji.name})
+        if self._emoji is not undefined.UNDEFINED:
+            emoji_id, emoji_name = _build_emoji(self._emoji)
+
+            if emoji_id is not undefined.UNDEFINED:
+                payload["emoji"] = {"id": emoji_id}
+
+            elif emoji_name is not undefined.UNDEFINED:
+                payload["emoji"] = {"name": emoji_name}
 
         return payload

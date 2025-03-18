@@ -30,7 +30,6 @@ import typing
 
 import attrs
 
-from hikari import undefined
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
 
@@ -63,11 +62,8 @@ class BasePollVoteEvent(shard_events.ShardEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     """ID of the message that the poll is in."""
 
-    guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field()
-    """ID of the guild that the poll is in.
-
-    This will be [hikari.undefined.UNDEFINED][] if the poll is in a DM channel.
-    """
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    """ID of the guild that the poll is in."""
 
     answer_id: int = attrs.field()
     """ID of the answer that the user voted for."""
@@ -86,7 +82,7 @@ class BasePollVoteEvent(shard_events.ShardEvent):
         if not isinstance(self.app, traits.CacheAware):
             return None
 
-        if isinstance(self.guild_id, undefined.UndefinedType):
+        if self.guild_id is None:
             return None
 
         return self.app.cache.get_available_guild(self.guild_id) or self.app.cache.get_unavailable_guild(self.guild_id)
@@ -113,7 +109,8 @@ class BasePollVoteEvent(shard_events.ShardEvent):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        if isinstance(self.guild_id, undefined.UndefinedType):
+
+        if self.guild_id is None:
             return None
 
         return await self.app.rest.fetch_guild(self.guild_id)

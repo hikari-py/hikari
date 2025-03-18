@@ -699,7 +699,7 @@ class MessageData(BaseData[messages.Message]):
     attachments: tuple[messages.Attachment, ...] = attrs.field()
     embeds: tuple[embeds_.Embed, ...] = attrs.field()
     reactions: tuple[messages.Reaction, ...] = attrs.field()
-    poll: undefined.UndefinedOr[polls_.Poll] = attrs.field()
+    poll: typing.Optional[polls_.Poll] = attrs.field()
     is_pinned: bool = attrs.field()
     webhook_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     type: typing.Union[messages.MessageType, int] = attrs.field()

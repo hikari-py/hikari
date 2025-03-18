@@ -994,9 +994,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             user_id=snowflakes.Snowflake(payload["user_id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             message_id=snowflakes.Snowflake(payload["message_id"]),
-            guild_id=(
-                snowflakes.Snowflake(payload["guild_id"]) if payload.get("guild_id", None) else undefined.UNDEFINED
-            ),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
             answer_id=payload["answer_id"],
         )
 
@@ -1009,8 +1007,6 @@ class EventFactoryImpl(event_factory.EventFactory):
             user_id=snowflakes.Snowflake(payload["user_id"]),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             message_id=snowflakes.Snowflake(payload["message_id"]),
-            guild_id=(
-                snowflakes.Snowflake(payload["guild_id"]) if payload.get("guild_id", None) else undefined.UNDEFINED
-            ),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
             answer_id=payload["answer_id"],
         )

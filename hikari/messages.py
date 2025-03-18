@@ -523,7 +523,7 @@ class PartialMessage(snowflakes.Unique):
     embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
 
-    poll: undefined.UndefinedOr[polls_.Poll] = attrs.field(hash=False, eq=False, repr=False)
+    poll: undefined.UndefinedNoneOr[polls_.Poll] = attrs.field(hash=False, eq=False, repr=False)
     """The message poll."""
 
     reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attrs.field(hash=False, eq=False, repr=False)
@@ -1364,6 +1364,9 @@ class Message(PartialMessage):
 
     embeds: typing.Sequence[embeds_.Embed] = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
+
+    poll: typing.Optional[polls_.Poll] = attrs.field(hash=False, eq=False, repr=False)
+    """The message poll."""
 
     reactions: typing.Sequence[Reaction] = attrs.field(hash=False, eq=False, repr=False)
     """The message reactions."""

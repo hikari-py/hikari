@@ -31,7 +31,6 @@ import typing
 import attrs
 
 from hikari import emojis
-from hikari import undefined
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
@@ -80,7 +79,7 @@ class PollResult:
 class PollAnswerCount:
     """Represents the count of a poll answer."""
 
-    answer_id: int = attrs.field(repr=True)
+    id: int = attrs.field(repr=True)
     """The ID of the answer."""
 
     count: int = attrs.field(repr=True)
@@ -98,7 +97,7 @@ class PollLayoutType(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
+@attrs.define(kw_only=True, repr=True, weakref_slot=False)
 class Poll:
     """Represents an existing poll."""
 
@@ -108,7 +107,7 @@ class Poll:
     answers: typing.Sequence[PollAnswer] = attrs.field(repr=True)
     """The answers attached to the poll."""
 
-    expiry: datetime.datetime = attrs.field(repr=True)
+    expiry: typing.Optional[datetime.datetime] = attrs.field(repr=True)
     """The expiry time for the poll."""
 
     allow_multiselect: bool = attrs.field(repr=True)
@@ -117,5 +116,5 @@ class Poll:
     layout_type: PollLayoutType = attrs.field(repr=True)
     """The type of layout the poll uses."""
 
-    results: undefined.UndefinedOr[PollResult] = attrs.field(repr=True)
+    results: typing.Optional[PollResult] = attrs.field(repr=True)
     """The results of the poll."""

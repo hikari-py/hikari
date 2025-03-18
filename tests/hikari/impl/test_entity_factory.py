@@ -42,6 +42,7 @@ from hikari import locales
 from hikari import messages as message_models
 from hikari import monetization as monetization_models
 from hikari import permissions as permission_models
+from hikari import polls as poll_models
 from hikari import presences as presence_models
 from hikari import scheduled_events as scheduled_event_models
 from hikari import sessions as gateway_models
@@ -5959,6 +5960,7 @@ class TestEntityFactoryImpl:
         partial_application_payload,
         custom_emoji_payload,
         embed_payload,
+        poll_payload,
         referenced_message,
         action_row_payload,
         attachment_payload,
@@ -6053,6 +6055,10 @@ class TestEntityFactoryImpl:
         assert partial_message.interaction_metadata.target_message_id == snowflakes.Snowflake(59332)
         assert isinstance(partial_message.interaction_metadata, command_interactions.CommandInteractionMetadata)
 
+        # Poll
+        assert partial_message.poll == entity_factory_impl.deserialize_poll(poll_payload)
+
+
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
         message_payload["edited_timestamp"] = None
@@ -6096,6 +6102,7 @@ class TestEntityFactoryImpl:
         assert partial_message.channel_mention_ids is undefined.UNDEFINED
         assert partial_message.attachments is undefined.UNDEFINED
         assert partial_message.embeds is undefined.UNDEFINED
+        assert partial_message.poll is undefined.UNDEFINED
         assert partial_message.reactions is undefined.UNDEFINED
         assert partial_message.is_pinned is undefined.UNDEFINED
         assert partial_message.webhook_id is undefined.UNDEFINED
@@ -6141,6 +6148,7 @@ class TestEntityFactoryImpl:
         embed_payload,
         referenced_message,
         action_row_payload,
+        poll_payload
     ):
         message = entity_factory_impl.deserialize_message(message_payload)
 
@@ -6180,6 +6188,8 @@ class TestEntityFactoryImpl:
 
         expected_embed = entity_factory_impl.deserialize_embed(embed_payload)
         assert message.embeds == [expected_embed]
+
+        assert message.poll == entity_factory_impl.deserialize_poll(poll_payload)
 
         # Reaction
         reaction = message.reactions[0]
@@ -6248,6 +6258,7 @@ class TestEntityFactoryImpl:
         del message_payload["message_reference"]["guild_id"]
         del message_payload["mention_channels"]
         del message_payload["thread"]
+        del message_payload["poll"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
 
@@ -6268,6 +6279,9 @@ class TestEntityFactoryImpl:
 
         # Thread
         assert message.thread is None
+
+        # Poll
+        message.poll is None
 
     def test_deserialize_message_with_null_sub_fields(self, entity_factory_impl, message_payload):
         message_payload["application"]["icon"] = None
@@ -6308,6 +6322,7 @@ class TestEntityFactoryImpl:
         assert message.channel_mention_ids == []
         assert message.attachments == []
         assert message.embeds == []
+        assert message.poll is None
         assert message.reactions == []
         assert message.webhook_id is None
         assert message.activity is None
@@ -7474,13 +7489,20 @@ class TestEntityFactoryImpl:
         return {
             "question": {"text": "fruit"},
             "answers": [
-                {"answer_id": 1, "poll_media": {"text": "apple", "emoji": {"name": "🍏"}}},
-                {"answer_id": 2, "poll_media": {"text": "banana", "emoji": {"name": "🍌"}}},
-                {"answer_id": 3, "poll_media": {"text": "carrot", "emoji": {"name": "🥕"}}},
+                {"answer_id": 1, "poll_media": {"text": "apple", "emoji": {"id": None, "name": "🍏"}}},
+                {"answer_id": 2, "poll_media": {"text": "banana"}},
+                {"answer_id": 3, "poll_media": {"emoji": {"id": 88472, "name": "platy"}}},
             ],
             "expiry": "2021-02-01T18:03:20.888000+00:00",
             "allow_multiselect": True,
             "layout_type": 1,
+            "results": {
+                "is_finalized": True,
+                "answer_counts": [
+                    {"id": 1, "count": 45, "me_voted": False},
+                    {"id": 2, "count": 28347, "me_voted": True},
+                ],
+            },
         }
 
     def test_deserialize_poll(self, entity_factory_impl, poll_payload):
@@ -7494,9 +7516,39 @@ class TestEntityFactoryImpl:
         assert poll.answers[0].poll_media.emoji == "🍏"
         assert poll.answers[1].answer_id == 2
         assert poll.answers[1].poll_media.text == "banana"
-        assert poll.answers[1].poll_media.emoji == "🍌"
+        assert poll.answers[1].poll_media.emoji is None
         assert poll.answers[2].answer_id == 3
-        assert poll.answers[2].poll_media.text == "carrot"
-        assert poll.answers[2].poll_media.emoji == "🥕"
+        assert poll.answers[2].poll_media.text is None
+        answer_2_emoji = poll.answers[2].poll_media.emoji
+        assert isinstance(answer_2_emoji, emoji_models.CustomEmoji)
+        assert answer_2_emoji.id == 88472
+        assert answer_2_emoji.name == "platy"
 
         assert poll.expiry == datetime.datetime(2021, 2, 1, 18, 3, 20, 888000, tzinfo=datetime.timezone.utc)
+        assert poll.allow_multiselect is True
+        assert poll.layout_type == poll_models.PollLayoutType.DEFAULT
+
+        assert poll.results is not None
+        assert poll.results.is_finalized is True
+        results_answer_counts = poll.results.answer_counts
+        assert len(results_answer_counts) == 2
+        assert results_answer_counts[0].id == 1
+        assert results_answer_counts[0].count == 45
+        assert results_answer_counts[0].me_voted is False
+        assert results_answer_counts[1].id == 2
+        assert results_answer_counts[1].count == 28347
+        assert results_answer_counts[1].me_voted is True
+
+    def test_deserialize_poll_with_unset_fields(self, entity_factory_impl, poll_payload):
+        poll_payload["expiry"] = None
+
+        poll = entity_factory_impl.deserialize_poll(poll_payload)
+
+        assert poll.expiry is None
+
+    def test_deserialize_poll_with_null_fields(self, entity_factory_impl, poll_payload):
+        del poll_payload["results"]
+
+        poll = entity_factory_impl.deserialize_poll(poll_payload)
+
+        assert poll.results is None
