@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -30,7 +29,7 @@ import nox
 NoxCallbackSigT = typing.Callable[[nox.Session], None]
 
 # Default sessions should be defined here
-nox.options.sessions = ["reformat-code", "codespell", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
+nox.options.sessions = ["reformat-code", "codespell", "pytest", "ruff", "slotscheck", "mypy", "verify-types"]
 nox.options.default_venv_backend = "uv"
 
 

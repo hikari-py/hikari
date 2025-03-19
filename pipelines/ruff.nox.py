@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -21,7 +20,6 @@
 # SOFTWARE.
 from __future__ import annotations
 
-from pipelines import config
 from pipelines import nox
 
 
@@ -30,4 +28,4 @@ def ruff(session: nox.Session) -> None:
     """Run code linting using ruff."""
     nox.sync(session, self=True, groups=["ruff"])
 
-    session.run("ruff", "check", config.MAIN_PACKAGE, config.TEST_PACKAGE, config.EXAMPLE_SCRIPTS)
+    session.run("ruff", "check", *session.posargs)

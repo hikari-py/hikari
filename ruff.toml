@@ -20,11 +20,11 @@ ignore = [
 ]
 
 [lint.per-file-ignores]
-"**/__init__.py" = [
+"hikari/**/__init__.py" = [
     "F401", # Name imported but unused
     "F403", # Unable to detect undefined names when using `import *`
 ]
-"**/__init__.pyi" = [
+"hikari/**/__init__.pyi" = [
     "F403", # Unable to detect undefined names when using `import *`
 ]
 "tests/**/*.py" = [
@@ -50,6 +50,15 @@ ignore = [
     # "RET501",  # Do not use `return None` if only possible return
     # "B033",    # Sets should not contain duplicate items
     # "N801",    # Class should use CapWords
+]
+"scripts/**/*.py" = [
+    "D",      # Docstrings rules
+    "INP001", # File is part of an implicit namespace
+    "T201",   # Print used
+    "S602",   # `subprocess` call with `shell=True`
+]
+"pipelines/**/*.py" = [
+    "INP001", # File is part of an implicit namespace
 ]
 
 [lint.isort]

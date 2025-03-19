@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -96,7 +95,7 @@ def remove_trailing_whitespaces(session: nox.Session, check_only: bool = False) 
 
 def remove_trailing_whitespaces_for_directory(
     root_path: pathlib.Path, session: nox.Session, check_only: bool
-) -> typing.Tuple[int, int]:
+) -> tuple[int, int]:
     total = 0
     count = 0
 

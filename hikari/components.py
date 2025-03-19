@@ -309,7 +309,18 @@ class TextInputComponent(PartialComponent):
     """Value provided for this text input."""
 
 
-SelectMenuTypesT = typing.Literal[ComponentType.TEXT_SELECT_MENU, 3, ComponentType.USER_SELECT_MENU, 5, ComponentType.ROLE_SELECT_MENU, 6, ComponentType.MENTIONABLE_SELECT_MENU, 7, ComponentType.CHANNEL_SELECT_MENU, 8]
+SelectMenuTypesT = typing.Literal[
+    ComponentType.TEXT_SELECT_MENU,
+    3,
+    ComponentType.USER_SELECT_MENU,
+    5,
+    ComponentType.ROLE_SELECT_MENU,
+    6,
+    ComponentType.MENTIONABLE_SELECT_MENU,
+    7,
+    ComponentType.CHANNEL_SELECT_MENU,
+    8,
+]
 """Type hints of the [`hikari.components.ComponentType`][] values which are valid for select menus.
 
 The following values are valid for this:
@@ -341,7 +352,9 @@ The following values are included in this:
 * [`hikari.components.ComponentType.CHANNEL_SELECT_MENU`][]
 """
 
-InteractiveButtonTypesT = typing.Literal[ButtonStyle.PRIMARY, 1, ButtonStyle.SECONDARY, 2, ButtonStyle.SUCCESS, 3, ButtonStyle.DANGER, 4]
+InteractiveButtonTypesT = typing.Literal[
+    ButtonStyle.PRIMARY, 1, ButtonStyle.SECONDARY, 2, ButtonStyle.SUCCESS, 3, ButtonStyle.DANGER, 4
+]
 """Type hints of the [`hikari.components.ButtonStyle`][] values which are valid for interactive buttons.
 
 The following values are valid for this:
