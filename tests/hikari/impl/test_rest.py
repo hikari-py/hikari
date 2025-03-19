@@ -3568,10 +3568,8 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"code": "Jx4cNGG"})
         rest_client._entity_factory.deserialize_invite = mock.Mock(return_value=return_invite)
 
-        assert await rest_client.fetch_invite(input_invite, with_counts=True, with_expiration=False) == return_invite
-        rest_client._request.assert_awaited_once_with(
-            expected_route, query={"with_counts": "true", "with_expiration": "false"}
-        )
+        assert await rest_client.fetch_invite(input_invite, with_counts=True) == return_invite
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_counts": "true"})
         rest_client._entity_factory.deserialize_invite.assert_called_once_with({"code": "Jx4cNGG"})
 
     async def test_delete_invite(self, rest_client):
