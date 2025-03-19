@@ -2261,11 +2261,7 @@ class PollMediaBuilder(special_endpoints.PollMediaBuilder):
     def emoji(self) -> undefined.UndefinedOr[emojis.Emoji]:
         return self._emoji
 
-    def build(
-        self,
-    ) -> typing.MutableMapping[
-        str, typing.Any
-    ]:  # FIXME: Should we complain if the answer does not have at least one of the items (text/emoji)
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
         payload = data_binding.JSONObjectBuilder()
 
         payload.put("text", self._text)

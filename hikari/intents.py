@@ -337,15 +337,15 @@ class Intents(enums.Flag):
     GUILD_MESSAGE_POLLS = 1 << 24
     """Subscribes to the events listed below.
 
-    * `MESSAGE_POLL_VOTE_ADD`
-    * `MESSAGE_POLL_VOTE_REMOVE`
+    * `MESSAGE_POLL_VOTE_ADD` (in guilds only)
+    * `MESSAGE_POLL_VOTE_REMOVE` (in guilds only)
     """
 
     DIRECT_MESSAGE_POLLS = 1 << 25
     """Subscribes to the events listed below.
 
-    * `MESSAGE_POLL_VOTE_ADD`
-    * `MESSAGE_POLL_VOTE_REMOVE`
+    * `MESSAGE_POLL_VOTE_ADD` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_POLL_VOTE_REMOVE` (in direct message channels (non-guild bound) only)
     """
 
     # Annoyingly, enums hide classmethods and staticmethods from __dir__ in

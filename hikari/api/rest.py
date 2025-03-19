@@ -1274,7 +1274,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -1360,8 +1359,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        poll
-            If provided, the poll to set on the message.
         mentions_everyone
             If provided, sanitation for `@everyone` mentions. If
             [`hikari.undefined.UNDEFINED`][], then the previous setting is
@@ -2150,7 +2147,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
-        poll FIXME: Can polls be added to webhooks?
+        poll
             If provided, the message poll.
         tts
             If provided, whether the message will be read out by a screen
@@ -2278,7 +2275,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -2365,8 +2361,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        poll FIXME: Should this be removed?
-            If provided, the poll to set on the message.
         mentions_everyone
             If provided, sanitation for `@everyone` mentions. If
             [`hikari.undefined.UNDEFINED`][], then the previous setting is
@@ -7633,7 +7627,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
-        poll: undefined.UndefinedNoneOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
