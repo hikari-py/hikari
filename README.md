@@ -327,7 +327,7 @@ In the repository, make a virtual environment (`python -m venv .venv`) and enter
 Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
 `source .venv/Scripts/activate`).
 
-The first thing you should run is `pip install nox` to install nox.
+The first thing you should run is `pip install nox uv` to install nox.
 This handles running predefined tasks and pipelines.
 
 Once this is complete, you can run `nox` without any arguments to ensure everything builds and is correct.
