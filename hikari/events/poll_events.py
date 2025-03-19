@@ -109,7 +109,6 @@ class BasePollVoteEvent(shard_events.ShardEvent):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-
         if self.guild_id is None:
             return None
 
