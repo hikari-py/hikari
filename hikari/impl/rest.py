@@ -2063,12 +2063,11 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_gateway_bot_info(response)
 
     async def fetch_invite(
-        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True, with_expiration: bool = True
+        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True
     ) -> invites.Invite:
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", with_counts)
-        query.put("with_expiration", with_expiration)
         response = await self._request(route, query=query)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
