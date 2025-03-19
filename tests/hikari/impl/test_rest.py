@@ -2675,7 +2675,6 @@ class TestRESTClientImplAsync:
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
-        poll_obj = object()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -2693,7 +2692,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -2709,7 +2707,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             flags=120,
             mentions_everyone=False,
             mentions_reply=undefined.UNDEFINED,
@@ -2730,7 +2727,6 @@ class TestRESTClientImplAsync:
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
-        poll_obj = object()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=123456789, message=987654321)
@@ -2747,7 +2743,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -2763,7 +2758,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             flags=120,
             mentions_everyone=False,
             mentions_reply=undefined.UNDEFINED,
@@ -3375,7 +3369,6 @@ class TestRESTClientImplAsync:
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
-        poll_obj = object()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -3394,7 +3387,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -3409,7 +3401,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -3442,7 +3433,6 @@ class TestRESTClientImplAsync:
             components=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
-            poll=undefined.UNDEFINED,
             mentions_everyone=undefined.UNDEFINED,
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
@@ -3463,7 +3453,6 @@ class TestRESTClientImplAsync:
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
-        poll_obj = object()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=432, token="hi, im a token", message=456)
@@ -3481,7 +3470,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -3496,7 +3484,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -3527,7 +3514,6 @@ class TestRESTClientImplAsync:
             components=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
-            poll=undefined.UNDEFINED,
             mentions_everyone=undefined.UNDEFINED,
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,
@@ -6121,7 +6107,6 @@ class TestRESTClientImplAsync:
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
-        poll_obj = object()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -6139,7 +6124,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -6154,7 +6138,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -6173,7 +6156,6 @@ class TestRESTClientImplAsync:
         component_obj2 = object()
         embed_obj = object()
         embed_obj2 = object()
-        poll_obj = object()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=432, token="some token")
@@ -6190,7 +6172,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -6205,7 +6186,6 @@ class TestRESTClientImplAsync:
             components=[component_obj2],
             embed=embed_obj,
             embeds=[embed_obj2],
-            poll=poll_obj,
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
@@ -6730,7 +6710,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, query={"after": "43587935", "limit": "6"})
 
     async def test_end_poll(self, rest_client: rest.RESTClientImpl):
-        expected_route = routes.POST_END_POLL.compile(
+        expected_route = routes.POST_EXPIRE_POLL.compile(
             channel=StubModel(45874392), message=StubModel(398475938475), answer=StubModel(4)
         )
         rest_client._request = mock.AsyncMock()
