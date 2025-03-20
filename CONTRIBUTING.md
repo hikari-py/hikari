@@ -36,7 +36,7 @@ match that of the versioning scheme. There are utilities under `hikari.internal.
 We use the `uv` package manager as a faster drop-in replacement for pip. While it's not required to use in order to
 contribute to hikari, it's highly recommended! From here on we will use `uv` instead of `pip`.
 
-If you still want to use `pip` as your package manager, you can take a look at equivalent `pip`command by clicking on
+If you still want to use `pip` as your package manager, you can see the equivalent `pip` command by clicking on
 the dropdowns below every command.
 
 Installing `uv` is explained [here](https://docs.astral.sh/uv/getting-started/installation/)
