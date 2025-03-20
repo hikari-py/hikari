@@ -48,7 +48,6 @@ __all__: typing.Sequence[str] = (
     "ModalActionRowBuilder",
     "PollBuilder",
     "PollAnswerBuilder",
-    "PollMediaBuilder",
 )
 
 import asyncio
@@ -2178,7 +2177,7 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
 class PollBuilder(special_endpoints.PollBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.PollBuilder`][]."""
 
-    _question: PollMediaBuilder = attrs.field(alias="question")
+    _question_text: str = attrs.field(alias="question_text")
 
     _answers: list[special_endpoints.PollAnswerBuilder] = attrs.field(alias="answers", factory=list)
 
@@ -2191,8 +2190,8 @@ class PollBuilder(special_endpoints.PollBuilder):
     )
 
     @property
-    def question(self) -> undefined.UndefinedOr[PollMediaBuilder]:
-        return self._question
+    def question_text(self) -> str:
+        return self._question_text
 
     @property
     def answers(self) -> typing.Sequence[special_endpoints.PollAnswerBuilder]:
@@ -2214,15 +2213,20 @@ class PollBuilder(special_endpoints.PollBuilder):
         self._answers.append(answer)
         return self
 
-    def add_poll_answer(self, poll_media: special_endpoints.PollMediaBuilder) -> Self:
-        answer = PollAnswerBuilder(poll_media=poll_media)
+    def add_poll_answer(
+        self,
+        *,
+        text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
+    ) -> Self:
+        answer = PollAnswerBuilder(text=text, emoji=emoji)
         self.add_answer(answer)
         return self
 
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         payload = data_binding.JSONObjectBuilder()
 
-        payload.put("question", self._question.build())
+        payload.put("question", {"text": self._question_text})
         payload.put("answers", [answer.build() for answer in self._answers])
         payload.put("duration", self._duration)
         payload.put("allow_multiselect", self._allow_multiselect)
@@ -2234,20 +2238,6 @@ class PollBuilder(special_endpoints.PollBuilder):
 @attrs.define(kw_only=True, weakref_slot=False)
 class PollAnswerBuilder(special_endpoints.PollAnswerBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.PollAnswerBuilder`][]."""
-
-    _poll_media: special_endpoints.PollMediaBuilder = attrs.field(alias="poll_media")
-
-    @property
-    def poll_media(self) -> undefined.UndefinedOr[special_endpoints.PollMediaBuilder]:
-        return self._poll_media
-
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        return {"poll_media": self._poll_media.build()}
-
-
-@attrs.define(kw_only=True, weakref_slot=False)
-class PollMediaBuilder(special_endpoints.PollMediaBuilder):
-    """Standard implementation of [`hikari.api.special_endpoints.PollMediaBuilder`][]."""
 
     _text: undefined.UndefinedOr[str] = attrs.field(alias="text", default=undefined.UNDEFINED)
 
@@ -2275,4 +2265,4 @@ class PollMediaBuilder(special_endpoints.PollMediaBuilder):
             elif emoji_name is not undefined.UNDEFINED:
                 payload["emoji"] = {"name": emoji_name}
 
-        return payload
+        return {"poll_media": payload}

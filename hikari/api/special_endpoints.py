@@ -48,7 +48,6 @@ __all__: typing.Sequence[str] = (
     "ModalActionRowBuilder",
     "PollBuilder",
     "PollAnswerBuilder",
-    "PollMediaBuilder",
 )
 
 import abc
@@ -2306,8 +2305,8 @@ class PollBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def question(self) -> undefined.UndefinedOr[PollMediaBuilder]:
-        """The question for the poll."""
+    def question_text(self) -> str:
+        """The question text for the poll."""
 
     @property
     @abc.abstractmethod
@@ -2345,13 +2344,20 @@ class PollBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def add_poll_answer(self, poll_media: PollMediaBuilder) -> Self:
+    def add_poll_answer(
+        self,
+        *,
+        text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
+    ) -> Self:
         """Add a poll answer to the poll.
 
         Parameters
         ----------
-        poll_media
-            The poll media to add to the poll answer.
+        text
+            The text for the answer.
+        emoji
+            The emoji for the answer.
 
         Returns
         -------
@@ -2372,27 +2378,6 @@ class PollBuilder(abc.ABC):
 
 class PollAnswerBuilder(abc.ABC):
     """Builder class for poll answers."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def poll_media(self) -> undefined.UndefinedOr[PollMediaBuilder]:
-        """The media for the answer object."""
-
-    @abc.abstractmethod
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        """Build a JSON object from this builder.
-
-        Returns
-        -------
-        typing.MutableMapping[str, typing.Any]
-            The built json object representation of this builder.
-        """
-
-
-class PollMediaBuilder(abc.ABC):
-    """Builder class for poll media objects."""
 
     __slots__: typing.Sequence[str] = ()
 
