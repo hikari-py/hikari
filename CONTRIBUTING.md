@@ -46,13 +46,13 @@ To aid with the generation of `CHANGELOG.md` as well as the releases changelog w
 You will need to install `towncrier` and `hikari` from source before making changelog additions.
 
 ```bash
-pip install --group towncrier -e .
+uv sync --group towncrier -e .
 ```
 <details>
     <summary>Equivilant pip command</summary>
     
 ```bash
-pip install --group towncrier -e .
+pip install towncrier
 ```
 </details>
 
