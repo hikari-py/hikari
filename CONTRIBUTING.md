@@ -60,7 +60,7 @@ and enter it (`source .venv/bin/activate` on
 Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
 `source .venv/Scripts/activate`).
 
-Then you should continue by installing [nox](#nox)
+Then you should continue by installing [nox](#nox).
 
 # Nox
 
