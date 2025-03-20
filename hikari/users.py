@@ -36,8 +36,11 @@ from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
+    import typing_extensions  # noqa: TC004
+
     from hikari import channels
     from hikari import colors
     from hikari import embeds as embeds_
@@ -600,10 +603,7 @@ class User(PartialUser, abc.ABC):
             return None
 
         if ext is None:
-            if self.avatar_hash.startswith("a_"):
-                ext = "gif"
-            else:
-                ext = "png"
+            ext = "gif" if self.avatar_hash.startswith("a_") else "png"
 
         return routes.CDN_USER_AVATAR.compile_to_file(
             urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext
@@ -641,10 +641,7 @@ class User(PartialUser, abc.ABC):
             return None
 
         if ext is None:
-            if self.banner_hash.startswith("a_"):
-                ext = "gif"
-            else:
-                ext = "png"
+            ext = "gif" if self.banner_hash.startswith("a_") else "png"
 
         return routes.CDN_USER_BANNER.compile_to_file(
             urls.CDN_URL, user_id=self.id, hash=self.banner_hash, size=size, file_format=ext
@@ -822,6 +819,7 @@ class OwnUser(UserImpl):
     async def fetch_dm_channel(self) -> typing.NoReturn:
         raise TypeError("Unable to fetch your own DM channel")
 
+    @typing_extensions.override
     async def send(
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,

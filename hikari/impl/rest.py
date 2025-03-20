@@ -1446,16 +1446,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
-            if component is not None:
-                serialized_components = [component.build()]
-            else:
-                serialized_components = []
+            serialized_components = [component.build()] if component is not None else []
 
         elif components is not undefined.UNDEFINED:
-            if components is not None:
-                serialized_components = [component.build() for component in components]
-            else:
-                serialized_components = []
+            serialized_components = [component.build() for component in components] if components is not None else []
 
         serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
         if embed is not undefined.UNDEFINED:

@@ -253,10 +253,7 @@ class HTTPResponseError(HTTPError):
         else:
             name_value = f"Unknown Status {self.status}"
 
-        if self.code:
-            code_str = f" ({self.code})"
-        else:
-            code_str = ""
+        code_str = f" ({self.code})" if self.code else ""
 
         if self.message:
             body = self.message

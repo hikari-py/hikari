@@ -83,3 +83,6 @@ keep-runtime-typing = true # FIXME: Consider removing
 
 [lint.pydocstyle]
 convention = "numpy"
+
+[lint.pylint]
+max-args = 20

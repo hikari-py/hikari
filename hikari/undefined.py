@@ -56,7 +56,7 @@ class UndefinedType:
         # This is meant to be a singleton
         return self
 
-    def __getstate__(self) -> typing.Any:
+    def __getstate__(self) -> bool:
         # Returning False tells pickle to not call [`__setstate__`][] on unpickling.
         return False
 
@@ -75,12 +75,12 @@ UNDEFINED = UndefinedType()
 """A sentinel singleton that denotes a missing or omitted value."""
 
 
-def __new__(cls: UndefinedType) -> typing.NoReturn:  # pragma: nocover
-    raise TypeError("Cannot initialize multiple instances of singleton UNDEFINED")
+def _forbidden_new(cls: UndefinedType) -> typing.NoReturn:  # noqa: ARG001 - Unused arguments
+    raise TypeError("Cannot initialize multiple instances of singleton UNDEFINED")  # pragma: nocover
 
 
-UndefinedType.__new__ = __new__
-del __new__
+UndefinedType.__new__ = _forbidden_new
+del _forbidden_new
 
 T_co = typing.TypeVar("T_co", covariant=True)
 UndefinedOr = typing.Union[T_co, UndefinedType]

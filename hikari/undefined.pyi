@@ -22,7 +22,6 @@
 import enum as __enum
 from typing import Literal as __Literal
 from typing import TypeVar as __TypeVar
-from typing import Union as __Union
 
 import typing_extensions
 
@@ -32,10 +31,10 @@ class UndefinedType(__enum.Enum):
 
 UNDEFINED: __Literal[UndefinedType.UNDEFINED] = ...
 
-__T = __TypeVar("__T", covariant=True)
+__T_co = __TypeVar("__T_co", covariant=True)
 
-UndefinedOr: typing_extensions.TypeAlias = __Union[__T, UndefinedType]
-UndefinedNoneOr: typing_extensions.TypeAlias = __Union[UndefinedOr[__T], None]
+UndefinedOr: typing_extensions.TypeAlias = __T_co | UndefinedType
+UndefinedNoneOr: typing_extensions.TypeAlias = UndefinedOr[__T_co] | None
 
 def all_undefined(*items: object) -> bool: ...
 def any_undefined(*items: object) -> bool: ...

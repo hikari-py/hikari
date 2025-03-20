@@ -57,7 +57,6 @@ def pytest_all_features(session: nox.Session) -> None:
 
     Coverage can be disabled with the `--skip-coverage` flag.
     """
-
     _pytest(session, extras_install=["speedups", "server"], python_flags=("-OO",))
 
 

@@ -126,7 +126,7 @@ def _remove_trailing_whitespaces_for_file(file: pathlib.Path, session: nox.Sessi
 
         file.write_bytes(b"".join(lines))
 
-        if GIT is not None and False:
+        if GIT is not None:
             result = subprocess.check_call(  # noqa: S603
                 [GIT, "add", file, "-vf"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=None
             )

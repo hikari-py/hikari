@@ -193,11 +193,7 @@ class InviteGuild(guilds.PartialGuild):
             return None
 
         if ext is None:
-            if self.banner_hash.startswith("a_"):
-                ext = "gif"
-
-            else:
-                ext = "png"
+            ext = "gif" if self.banner_hash.startswith("a_") else "png"
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
             urls.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext

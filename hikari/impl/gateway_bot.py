@@ -932,10 +932,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         if shard_count is None:
             shard_count = requirements.shard_count
-        if shard_ids is None:
-            shard_ids = tuple(range(shard_count))
-        else:
-            shard_ids = tuple(dict.fromkeys(shard_ids))
+        shard_ids = tuple(range(shard_count) if shard_ids is None else dict.fromkeys(shard_ids))
 
         if requirements.session_start_limit.remaining < len(shard_ids) and not ignore_session_start_limit:
             _LOGGER.critical(
