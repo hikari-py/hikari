@@ -75,7 +75,7 @@ uv sync --group nox
     <summary>Equivalent pip command</summary>
     
 ```bash
-pip install nox[uv]
+pip install 'nox[uv]'
 ```
 </details>
 
