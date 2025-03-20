@@ -318,16 +318,19 @@ Currently, this functionality does not yet exist.
 
 ## Developing hikari
 
-To familiarize yourself a bit with the project, we recommend reading our
+To familiarize yourself with the project, you should read our
 [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
 
 If you wish to contribute something, you should first start by cloning the repository.
 
-In the repository, make a virtual environment (`python -m venv .venv`) and enter it (`source .venv/bin/activate` on
-Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
+> [!NOTE]
+> We are using the package manager `uv` here. If you don't know how to use `uv`, we have a more detailed
+> section about that in the [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
+In the repository, make a virtual environment (`uv venv`) and enter it (`source .venv/bin/activate` on
+Linux or macOS, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
 `source .venv/Scripts/activate`).
 
-The first thing you should run is `pip install --group nox` to install nox.
+The first thing you should run is `uv sync --group nox` to install nox.
 This handles running predefined tasks and pipelines.
 
 Once this is complete, you can run `nox` without any arguments to ensure everything builds and is correct.
