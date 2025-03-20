@@ -318,7 +318,7 @@ Currently, this functionality does not yet exist.
 
 ## Developing hikari
 
-To familiarize yourself a bit with the project, we recommend reading our
+To familiarize yourself with the project, we recommend reading our
 [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
 
 If you wish to contribute something, you should first start by cloning the repository.
