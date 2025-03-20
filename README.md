@@ -323,12 +323,12 @@ To familiarize yourself with the project, you should read our
 
 If you wish to contribute something, you should first start by cloning the repository.
 
-In the repository, make a virtual environment (`uv venv`) and enter it (`source .venv/bin/activate` on
-Linux or macOS, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
-`source .venv/Scripts/activate`).
 > [!NOTE]
 > We are using the package manager `uv` here. If you don't know how to use `uv`, we have a more detailed
 > section about that in the [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
+In the repository, make a virtual environment (`uv venv`) and enter it (`source .venv/bin/activate` on
+Linux or macOS, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
+`source .venv/Scripts/activate`).
 
 The first thing you should run is `uv sync --group nox` to install nox.
 This handles running predefined tasks and pipelines.
