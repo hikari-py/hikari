@@ -36,7 +36,7 @@ match that of the versioning scheme. There are utilities under `hikari.internal.
 We use the `uv` package manager as a faster drop-in replacement for pip. While it's not required to use in order to
 contribute to hikari, it's highly recommended! From here on we will use `uv` instead of `pip`.
 
-If you still want to use `pip` as your package manager, you can take a look at equivelant `pip`command by clicking on
+If you still want to use `pip` as your package manager, you can take a look at equivalent `pip`command by clicking on
 the dropdowns.
 
 # Towncrier
@@ -49,7 +49,7 @@ You will need to install `towncrier` and `hikari` from source before making chan
 uv sync --group towncrier
 ```
 <details>
-    <summary>Equivilant pip command</summary>
+    <summary>Equivalent pip command</summary>
     
 ```bash
 pip install towncrier
@@ -100,7 +100,7 @@ You will need to install `nox` locally before running any pipelines.
 uv sync --group nox
 ```
 <details>
-    <summary>Equivilant pip command</summary>
+    <summary>Equivalent pip command</summary>
     
 ```bash
 pip install nox[uv]
