@@ -46,7 +46,7 @@ To aid with the generation of `CHANGELOG.md` as well as the releases changelog w
 You will need to install `towncrier` and `hikari` from source before making changelog additions.
 
 ```bash
-uv sync --group towncrier -e .
+uv sync --group towncrier
 ```
 <details>
     <summary>Equivilant pip command</summary>
@@ -97,8 +97,15 @@ We have nox to help out with running pipelines locally and provides some helpful
 You will need to install `nox` locally before running any pipelines.
 
 ```bash
-pip install --group nox
+uv sync --group nox
 ```
+<details>
+    <summary>Equivilant pip command</summary>
+    
+```bash
+pip install nox[uv]
+```
+</details>
 
 Nox is similar to tox, but uses a pure Python configuration instead of an INI based configuration. Nox and tox are
 both tools for generating virtual environments and running commands in those environments. Examples of usage include
