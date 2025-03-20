@@ -37,7 +37,9 @@ We use the `uv` package manager as a faster drop-in replacement for pip. While i
 contribute to hikari, it's highly recommended! From here on we will use `uv` instead of `pip`.
 
 If you still want to use `pip` as your package manager, you can take a look at equivalent `pip`command by clicking on
-the dropdowns.
+the dropdowns below every command.
+
+Installing `uv` is explained [here](https://docs.astral.sh/uv/getting-started/installation/)
 
 # Getting Started
 
