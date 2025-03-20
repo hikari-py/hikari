@@ -18,7 +18,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Wrapper around nox to give default job kwargs."""
 
 from __future__ import annotations
 
@@ -33,7 +32,9 @@ nox.options.sessions = ["reformat-code", "codespell", "pytest", "ruff", "slotsch
 nox.options.default_venv_backend = "uv"
 
 
-def session(**kwargs: typing.Any) -> typing.Callable[[NoxCallbackSigT], NoxCallbackSigT]:
+def session(**kwargs: typing.Any) -> typing.Callable[[NoxCallbackSigT], NoxCallbackSigT]:  # noqa: ANN401
+    """Session wrapper to give default job kwargs."""
+
     def decorator(func: NoxCallbackSigT) -> NoxCallbackSigT:
         name = func.__name__.replace("_", "-")
         reuse_venv = kwargs.pop("reuse_venv", True)
@@ -45,6 +46,7 @@ def session(**kwargs: typing.Any) -> typing.Callable[[NoxCallbackSigT], NoxCallb
 def sync(
     session: nox.Session, /, *, self: bool = False, extras: typing.Sequence[str] = (), groups: typing.Sequence[str] = ()
 ) -> None:
+    """Install session packages using `uv sync`."""
     if extras and not self:
         raise RuntimeError("When specifying extras, set `self=True`.")
 

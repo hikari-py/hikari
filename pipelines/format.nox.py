@@ -26,7 +26,6 @@ import pathlib
 import shutil
 import subprocess
 import time
-import typing
 
 from pipelines import config
 from pipelines import nox
@@ -48,24 +47,14 @@ def reformat_code(session: nox.Session) -> None:
     session.run("ruff", "check", "--select", "I", "--fix", *config.PYTHON_REFORMATTING_PATHS)
 
 
-@nox.session()
-def check_reformat_code(session: nox.Session) -> None:
-    """TEMPORARY: Check if code is properly formatted."""
-    nox.sync(session, groups=["ruff"])
-
-    # At the time of writing, sorting imports is not done when running formatting
-    # and needs to be done with ruff check
-    session.run("ruff", "format", "--check", *config.PYTHON_REFORMATTING_PATHS)
-    session.run("ruff", "check", "--select", "I", *config.PYTHON_REFORMATTING_PATHS)
-
-
 @nox.session(venv_backend="none")
 def check_trailing_whitespaces(session: nox.Session) -> None:
     """Check for trailing whitespaces in the project."""
     remove_trailing_whitespaces(session, check_only=True)
 
 
-def remove_trailing_whitespaces(session: nox.Session, check_only: bool = False) -> None:
+def remove_trailing_whitespaces(session: nox.Session, /, *, check_only: bool = False) -> None:
+    """Remove trailing whitespaces and ensure LR ends are being used."""
     session.log(f"Searching for stray trailing whitespaces in files ending in {config.REFORMATTING_FILE_EXTS}")
 
     count = 0
@@ -75,7 +64,9 @@ def remove_trailing_whitespaces(session: nox.Session, check_only: bool = False) 
     for raw_path in config.FULL_REFORMATTING_PATHS:
         path = pathlib.Path(raw_path)
 
-        dir_total, dir_count = remove_trailing_whitespaces_for_directory(pathlib.Path(path), session, check_only)
+        dir_total, dir_count = _remove_trailing_whitespaces_for_directory(
+            pathlib.Path(path), session, check_only=check_only
+        )
 
         total += dir_total
         count += dir_count
@@ -93,8 +84,8 @@ def remove_trailing_whitespaces(session: nox.Session, check_only: bool = False) 
     )
 
 
-def remove_trailing_whitespaces_for_directory(
-    root_path: pathlib.Path, session: nox.Session, check_only: bool
+def _remove_trailing_whitespaces_for_directory(
+    root_path: pathlib.Path, session: nox.Session, /, *, check_only: bool
 ) -> tuple[int, int]:
     total = 0
     count = 0
@@ -103,10 +94,10 @@ def remove_trailing_whitespaces_for_directory(
         if path.is_file():
             if path.name.casefold().endswith(config.REFORMATTING_FILE_EXTS):
                 total += 1
-                count += remove_trailing_whitespaces_for_file(str(path), session, check_only)
+                count += _remove_trailing_whitespaces_for_file(path, session, check_only=check_only)
             continue
 
-        dir_total, dir_count = remove_trailing_whitespaces_for_directory(path, session, check_only)
+        dir_total, dir_count = _remove_trailing_whitespaces_for_directory(path, session, check_only=check_only)
 
         total += dir_total
         count += dir_count
@@ -114,11 +105,10 @@ def remove_trailing_whitespaces_for_directory(
     return total, count
 
 
-def remove_trailing_whitespaces_for_file(file: str, session: nox.Session, check_only: bool) -> bool:
+def _remove_trailing_whitespaces_for_file(file: pathlib.Path, session: nox.Session, /, *, check_only: bool) -> bool:
     try:
-        with open(file, "rb") as fp:
-            lines = fp.readlines()
-            new_lines = lines[:]
+        lines = file.read_bytes().splitlines(keepends=True)
+        new_lines = lines.copy()
 
         for i in range(len(new_lines)):
             line = lines[i].rstrip(b"\n\r \t")
@@ -134,16 +124,15 @@ def remove_trailing_whitespaces_for_file(file: str, session: nox.Session, check_
 
         session.log(f"Removing trailing whitespaces present in {file}")
 
-        with open(file, "wb") as fp:
-            fp.writelines(new_lines)
+        file.write_bytes(b"".join(lines))
 
-        if GIT is not None:
-            result = subprocess.check_call(
+        if GIT is not None and False:
+            result = subprocess.check_call(  # noqa: S603
                 [GIT, "add", file, "-vf"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=None
             )
             assert result == 0, f"`git add {file} -v' exited with code {result}"
 
-        return True
-    except Exception as ex:
-        print("Failed to check", file, "because", type(ex).__name__, ex)
-        return True
+    except Exception as ex:  # noqa: BLE001
+        session.warn("Failed to check", file, "because", type(ex).__name__, ex)
+
+    return True

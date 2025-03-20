@@ -152,16 +152,10 @@ jobs:
         run: |
           nox -s verify-types
 
-      - name: Flake8
+      - name: Ruff
         if: always() && !cancelled()
         run: |
-          nox -s flake8
-
-      # Temporary until we use ruff for linting too
-      - name: Ruff format check
-        if: always() && !cancelled()
-        run: |
-          nox -s check-reformat-code
+          nox -s ruff
 
       - name: Slotscheck
         if: always() && !cancelled()

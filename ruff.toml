@@ -27,6 +27,18 @@ ignore = [
 "hikari/**/__init__.pyi" = [
     "F403", # Unable to detect undefined names when using `import *`
 ]
+"hikari/*.py" = [
+    # Disabling most of the docstring related checks as ruff doesn't
+    # support inherited docstrings at the time of writing
+    # see: https://github.com/astral-sh/ruff/issues/2413
+    "D102", # Missing docstring in public methd
+]
+"hikari/impl/**.py" = [
+    # Disabling most of the docstring related checks as ruff doesn't
+    # support inherited docstrings at the time of writing
+    # see: https://github.com/astral-sh/ruff/issues/2413
+    "D102", # Missing docstring in public method
+]
 "tests/**/*.py" = [
     "D",       # Docstrings missing
     "S105",    # Possible hardcoded password assigned to string
@@ -59,6 +71,7 @@ ignore = [
 ]
 "pipelines/**/*.py" = [
     "INP001", # File is part of an implicit namespace
+    "D100",   # Missing docstring in public module
 ]
 
 [lint.isort]
