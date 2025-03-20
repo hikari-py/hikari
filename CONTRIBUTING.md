@@ -49,7 +49,8 @@ You will need to install `towncrier` and `hikari` from source before making chan
 pip install --group towncrier -e .
 ```
 <details>
-    <summary>Equivilant `pip`command</summary>
+    <summary>Equivilant pip command</summary>
+    
     ```bash
     pip install --group towncrier -e .
     ```
