@@ -31,6 +31,14 @@ More specifically:
 The removal or renaming of anything facing the public facing API must go through a deprecation process, which should
 match that of the versioning scheme. There are utilities under `hikari.internal.deprecation` to aid with it.
 
+# UV Package Manager
+
+We use the `uv` package manager as a faster drop-in replacement for pip. While it's not required to use in order to
+contribute to hikari, it's highly recommended! From here on we will use `uv` instead of `pip`.
+
+If you still want to use `pip` as your package manager, you can take a look at equivelant `pip`command by clicking on
+the dropdowns.
+
 # Towncrier
 
 To aid with the generation of `CHANGELOG.md` as well as the releases changelog we use `towncrier`.
@@ -40,6 +48,10 @@ You will need to install `towncrier` and `hikari` from source before making chan
 ```bash
 pip install --group towncrier -e .
 ```
+<details>
+    <summary>Test</summary>
+    Test command
+</details>
 
 For every pull request made to this project, there should be a short explanation of the change under `changes/`
 with the following format: `{pull_request_number}.{type}.md`,
@@ -80,10 +92,6 @@ with a small description of the branch.
 We have nox to help out with running pipelines locally and provides some helpful functionality.
 
 You will need to install `nox` locally before running any pipelines.
-
-> [!TIP]
-> We use the `uv` package manager as a faster drop-in replacement for pip. While it's not required to use in order to
-> contribute to hikari, it's highly recommended! If you use it, replace `pip` commands below with `uv pip`.
 
 ```bash
 pip install --group nox
