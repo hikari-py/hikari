@@ -49,8 +49,10 @@ You will need to install `towncrier` and `hikari` from source before making chan
 pip install --group towncrier -e .
 ```
 <details>
-    <summary>Test</summary>
-    Test command
+    <summary>Equivilant `pip`command</summary>
+    ```bash
+    pip install --group towncrier -e .
+    ```
 </details>
 
 For every pull request made to this project, there should be a short explanation of the change under `changes/`
