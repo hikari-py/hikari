@@ -204,6 +204,34 @@ class TypingIndicator(special_endpoints.TypingIndicator):
             pass
 
 
+class ChannelRepositioner(special_endpoints.ChannelRepositioner):
+    __slots__: typing.Sequence[str] = ("_guild",)
+
+    _guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    
+
+    @typing.overload
+    def __init__(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]):
+        ...
+
+    def __init__(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
+    ):
+        self._guild = guild
+
+    def reposition(
+        self,
+        position: int,
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        *,
+        lock_permissions: bool,
+        parent: snowflakes.SnowflakeishOr[channels.GuildCategory],
+    ) -> Self:
+        return self
+
+
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)

@@ -108,6 +108,33 @@ class TypingIndicator(abc.ABC):
     ) -> None: ...
 
 
+class ChannelRepositioner(abc.ABC):
+    __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    @typing.overload
+    def __init__(self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]):
+        ...
+    
+    @abc.abstractmethod
+    def __init__(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
+    ): ...
+
+    @abc.abstractmethod
+    def reposition(
+        self,
+        position: int,
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        *,
+        lock_permissions: bool,
+        parent: snowflakes.SnowflakeishOr[channels.GuildCategory],
+    ) -> Self: ...
+
+
 class GuildBuilder(abc.ABC):
     """Result type of [`hikari.api.rest.RESTClient.guild_builder`][].
 
