@@ -56,9 +56,9 @@ python -m venv .venv
 ```
 </details>
 
-and enter it (`source .venv/bin/activate` on
-Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
-`source .venv/Scripts/activate`).
+and enter it:
+- On Linux/macOS: `source .venv/bin/activate`
+- On Windows: one of `.\.venv\Scripts\activate.ps1`, `.\.venv\Scripts\activate.bat`, or `.\.venv\Scripts\activate`
 
 Then you should continue by installing [nox](#nox).
 
