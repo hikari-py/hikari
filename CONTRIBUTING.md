@@ -51,9 +51,9 @@ pip install --group towncrier -e .
 <details>
     <summary>Equivilant pip command</summary>
     
-    ```bash
-    pip install --group towncrier -e .
-    ```
+```bash
+pip install --group towncrier -e .
+```
 </details>
 
 For every pull request made to this project, there should be a short explanation of the change under `changes/`
