@@ -324,7 +324,7 @@ To familiarize yourself with the project, you should read our
 If you wish to contribute something, you should first start by cloning the repository.
 
 In the repository, make a virtual environment (`uv venv`) and enter it (`source .venv/bin/activate` on
-Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
+Linux or macOS, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
 `source .venv/Scripts/activate`).
 > [!NOTE]
 > We are using the package manager `uv` here. If you don't know how to use `uv`, we have a more detailed
