@@ -34,6 +34,7 @@ __all__: typing.Sequence[str] = (
     "PermissibleGuildChannel",
     "TextableChannel",
     "TextableGuildChannel",
+    "ThreadMetadata",
     "PrivateChannel",
     "DMChannel",
     "GroupDMChannel",
@@ -1579,6 +1580,47 @@ class ThreadMember:
     """
 
 
+@attrs.define(kw_only=True, weakref_slot=False)
+class ThreadMetadata:
+    """Represents a thread's metadata."""
+
+    is_archived: bool = attrs.field(repr=True)
+    """Whether the thread is archived."""
+
+    is_invitable: bool = attrs.field(repr=True)
+    """Whether the thread is invitable by non moderators.
+
+    This only applies to private threads, otherwise always [`True`][].
+    """
+
+    auto_archive_duration: datetime.timedelta = attrs.field(repr=True)
+    """How long the thread will be left inactive before being automatically archived.
+
+    As of writing this may either 1 hour, 1 day, 3 days or 1 week.
+    """
+
+    archive_timestamp: datetime.datetime = attrs.field(repr=True)
+    """When the thread's archived state was last changed.
+
+    !!! note
+        If the thread has never been archived then this will be the thread's
+        creation date and this will be changed when a thread is unarchived.
+    """
+
+    is_locked: bool = attrs.field(repr=True)
+    """Whether the thread is locked.
+
+    When a thread is locked, only users with [`hikari.permissions.Permissions.MANAGE_THREADS`][] permission
+    can un-archive it.
+    """
+
+    created_at: typing.Optional[datetime.datetime] = attrs.field(repr=True)
+    """When the thread was created.
+
+    Will be [`None`][] for threads created before 2022-01-09.
+    """
+
+
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildThreadChannel(TextableGuildChannel):
     """Base class for all guild thread channels."""
@@ -1625,30 +1667,6 @@ class GuildThreadChannel(TextableGuildChannel):
         This stop counting at 50.
     """
 
-    is_archived: bool = attrs.field(eq=False, hash=False, repr=True)
-    """Whether the thread is archived."""
-
-    auto_archive_duration: datetime.timedelta = attrs.field(eq=False, hash=False, repr=True)
-    """How long the thread will be left inactive before being automatically archived.
-
-    As of writing this may either 1 hour, 1 day, 3 days or 1 week.
-    """
-
-    archive_timestamp: datetime.datetime = attrs.field(eq=False, hash=False, repr=True)
-    """When the thread's archived state was last changed.
-
-    !!! note
-        If the thread has never been archived then this will be the thread's
-        creation date and this will be changed when a thread is unarchived.
-    """
-
-    is_locked: bool = attrs.field(eq=False, hash=False, repr=True)
-    """Whether the thread is locked.
-
-    When a thread is locked, only users with [`hikari.permissions.Permissions.MANAGE_THREADS`][] permission
-    can un-archive it.
-    """
-
     member: typing.Optional[ThreadMember] = attrs.field(eq=False, hash=False, repr=True)
     """Thread member object for the current user, if they are in the thread.
 
@@ -1663,11 +1681,48 @@ class GuildThreadChannel(TextableGuildChannel):
     parent_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """Id of this thread's textable parent channel."""
 
-    thread_created_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=True)
-    """When the thread was created.
+    metadata: ThreadMetadata = attrs.field(eq=False, hash=False, repr=False)
+    """This threads metadata."""
 
-    Will be [`None`][] for threads created before 2020-01-09.
-    """
+    @property
+    def is_archived(self) -> bool:
+        """Whether the thread is archived."""
+        return self.metadata.is_archived
+
+    @property
+    def auto_archive_duration(self) -> datetime.timedelta:
+        """How long the thread will be left inactive before being automatically archived.
+
+        As of writing this may either 1 hour, 1 day, 3 days or 1 week.
+        """
+        return self.metadata.auto_archive_duration
+
+    @property
+    def archive_timestamp(self) -> datetime.datetime:
+        """When the thread's archived state was last changed.
+
+        !!! note
+            If the thread has never been archived then this will be the thread's
+            creation date and this will be changed when a thread is unarchived.
+        """
+        return self.metadata.archive_timestamp
+
+    @property
+    def is_locked(self) -> bool:
+        """Whether the thread is locked.
+
+        When a thread is locked, only users with [`hikari.permissions.Permissions.MANAGE_THREADS`][] permission
+        can un-archive it.
+        """
+        return self.metadata.is_locked
+
+    @property
+    def thread_created_at(self) -> typing.Optional[datetime.datetime]:
+        """When the thread was created.
+
+        Will be [`None`][] for threads created before 2022-01-09.
+        """
+        return self.metadata.created_at
 
 
 class GuildNewsThread(GuildThreadChannel):
@@ -1700,5 +1755,10 @@ class GuildPublicThread(GuildThreadChannel):
 class GuildPrivateThread(GuildThreadChannel):
     """Represents a guild private thread."""
 
-    is_invitable: bool = attrs.field(eq=False, hash=False, repr=True)
-    """Whether non-moderators can add other non-moderators to a private thread."""
+    @property
+    def is_invitable(self) -> bool:
+        """Whether the thread is invitable by non moderators.
+
+        This only applies to private threads.
+        """
+        return self.metadata.is_invitable
