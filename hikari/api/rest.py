@@ -1230,7 +1230,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel
             The channel to create the message in.
         attachment
-            If provided, the message attachment. This can be a resource,
+            The audio you want to send. This can be a resource,
             or string of a path on your computer or a URL.
 
             Attachments can be passed as many different things, to aid in
@@ -1241,9 +1241,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 sending the message. Subclasses of
                 [`hikari.files.WebResource`][] such as
                 [`hikari.files.URL`][],
-                [`hikari.messages.Attachment`][],
-                [`hikari.emojis.Emoji`][],
-                [`hikari.embeds.EmbedResource`][], etc will also be uploaded this way.
+                [`hikari.messages.Attachment`][], etc will also be uploaded this way.
                 This will use bit-inception, so only a small percentage of the
                 resource will remain in memory at any one time, thus aiding in
                 scalability.
