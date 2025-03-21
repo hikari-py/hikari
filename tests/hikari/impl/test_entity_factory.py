@@ -4379,7 +4379,9 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def command_interaction_payload(self, interaction_member_payload, interaction_resolved_data_payload, guild_text_channel_payload):
+    def command_interaction_payload(
+        self, interaction_member_payload, interaction_resolved_data_payload, guild_text_channel_payload
+    ):
         return {
             "id": "3490190239012093",
             "type": 2,
@@ -4497,7 +4499,9 @@ class TestEntityFactoryImpl:
         assert isinstance(interaction, command_interactions.CommandInteraction)
 
     @pytest.fixture
-    def context_menu_command_interaction_payload(self, interaction_member_payload, user_payload, guild_text_channel_payload):
+    def context_menu_command_interaction_payload(
+        self, interaction_member_payload, user_payload, guild_text_channel_payload
+    ):
         return {
             "id": "3490190239012093",
             "type": 4,
@@ -4573,7 +4577,9 @@ class TestEntityFactoryImpl:
         assert interaction.registered_guild_id is None
 
     @pytest.fixture
-    def autocomplete_interaction_payload(self, member_payload, user_payload, interaction_resolved_data_payload, guild_text_channel_payload):
+    def autocomplete_interaction_payload(
+        self, member_payload, user_payload, interaction_resolved_data_payload, guild_text_channel_payload
+    ):
         return {
             "id": "3490190239012093",
             "type": 4,
