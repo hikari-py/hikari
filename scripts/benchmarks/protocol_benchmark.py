@@ -125,29 +125,29 @@ for i in range(100_000):
     assert sum(i for i in range(10)) > 0
 
 py_protocol_isinstance_long_time = timeit.timeit(
-    "isinstance(isinstance_long, BasicPyProtocol)", number=1_000_000, globals=globals()
+    "assert isinstance(isinstance_long, BasicPyProtocol) is True", number=1_000_000, globals=globals()
 )
 hikari_protocol_isinstance_long_time = timeit.timeit(
-    "isinstance(isinstance_long, BasicHikariProtocol)", number=1_000_000, globals=globals()
+    "assert isinstance(isinstance_long, BasicHikariProtocol) is True", number=1_000_000, globals=globals()
 )
 py_protocol_isinstance_failfast_time = timeit.timeit(
-    "isinstance(isinstance_failfast, BasicPyProtocol)", number=1_000_000, globals=globals()
+    "assert isinstance(isinstance_failfast, BasicPyProtocol) is False", number=1_000_000, globals=globals()
 )
 hikari_protocol_isinstance_failfast_time = timeit.timeit(
-    "isinstance(isinstance_failfast, BasicHikariProtocol)", number=1_000_000, globals=globals()
+    "assert isinstance(isinstance_failfast, BasicHikariProtocol) is False", number=1_000_000, globals=globals()
 )
 
 py_protocol_issubclass_long_time = timeit.timeit(
-    "issubclass(Invalid, BasicPyProtocol)", number=1_000_000, globals=globals()
+    "assert issubclass(Valid, BasicPyProtocol) is True", number=1_000_000, globals=globals()
 )
 hikari_protocol_issubclass_long_time = timeit.timeit(
-    "issubclass(Invalid, BasicHikariProtocol)", number=1_000_000, globals=globals()
+    "assert issubclass(Valid, BasicHikariProtocol) is True", number=1_000_000, globals=globals()
 )
 py_protocol_issubclass_failfast_time = timeit.timeit(
-    "issubclass(Valid, BasicPyProtocol)", number=1_000_000, globals=globals()
+    "assert issubclass(Invalid, BasicPyProtocol) is False", number=1_000_000, globals=globals()
 )
 hikari_protocol_issubclass_failfast_time = timeit.timeit(
-    "issubclass(Valid, BasicHikariProtocol)", number=1_000_000, globals=globals()
+    "assert issubclass(Invalid, BasicHikariProtocol) is False", number=1_000_000, globals=globals()
 )
 
 print("isinstance(long, BasicPyProtocol)", py_protocol_isinstance_long_time, "µs")
