@@ -36,6 +36,9 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.interactions import base_interactions
+    from hikari.interactions import command_interactions
+    from hikari.interactions import component_interactions
+    from hikari.interactions import modal_interactions
 
 
 @attrs_extensions.with_copy
@@ -53,3 +56,31 @@ class InteractionCreateEvent(shard_events.ShardEvent):
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.interaction.app
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class CommandInteractionCreateEvent(InteractionCreateEvent):
+    interaction: command_interactions.CommandInteraction = attrs.field(repr=True)
+    """Interaction that this event is related to."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ComponentInteractionCreateEvent(InteractionCreateEvent):
+    interaction: component_interactions.ComponentInteraction = attrs.field(repr=True)
+    """Interaction that this event is related to."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutocompleteInteractionCreateEvent(InteractionCreateEvent):
+    interaction: command_interactions.AutocompleteInteraction = attrs.field(repr=True)
+    """Interaction that this event is related to."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ModalInteractionCreateEvent(InteractionCreateEvent):
+    interaction: modal_interactions.ModalInteraction = attrs.field(repr=True)
+    """Interaction that this event is related to."""
