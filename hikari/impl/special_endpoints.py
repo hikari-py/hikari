@@ -208,18 +208,6 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     __slots__: typing.Sequence[str] = ("_guild", "_request_call", "_channels")
 
-    @typing.overload
-    def __init__(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], request_call: _RequestCallSig): ...
-
-    @typing.overload
-    def __init__(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        request_call: _RequestCallSig,
-        *,
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
-    ): ...
-
     def __init__(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

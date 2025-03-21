@@ -127,20 +127,6 @@ class TypingIndicator(abc.ABC):
 class ChannelRepositioner(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
-    @typing.overload
-    @abc.abstractmethod
-    def __init__(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], request_call: _RequestCallSig): ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def __init__(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        request_call: _RequestCallSig,
-        *,
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
-    ): ...
-
     @abc.abstractmethod
     def __init__(
         self,
