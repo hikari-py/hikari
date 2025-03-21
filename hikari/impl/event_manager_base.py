@@ -103,9 +103,7 @@ def _generate_weak_listener(
         method = reference()
         if method is None:
             msg = "dead weak referenced subscriber method cannot be executed, try actually closing your event streamers"
-            raise TypeError(
-                msg
-            )
+            raise TypeError(msg)
 
         await method(event)
 

@@ -571,15 +571,15 @@ class RESTClientImpl(rest_api.RESTClient):
             raise ValueError(msg)
 
         if client_session_owner is False and client_session is None:
-            msg = "Cannot delegate ownership of unknown client session [client_session_owner=False, client_session=None]"
-            raise ValueError(
-                msg
+            msg = (
+                "Cannot delegate ownership of unknown client session [client_session_owner=False, client_session=None]"
             )
+            raise ValueError(msg)
         if bucket_manager_owner is False and bucket_manager is None:
-            msg = "Cannot delegate ownership of unknown bucket manager [bucket_manager_owner=False, bucket_manager=None]"
-            raise ValueError(
-                msg
+            msg = (
+                "Cannot delegate ownership of unknown bucket manager [bucket_manager_owner=False, bucket_manager=None]"
             )
+            raise ValueError(msg)
 
         self._cache = cache
         self._entity_factory = entity_factory
@@ -1249,9 +1249,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 target_type = target.type
             else:
                 msg = "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
-                raise TypeError(
-                    msg
-                )
+                raise TypeError(msg)
 
         target = target.id if isinstance(target, channels_.PermissionOverwrite) else target
         route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)

@@ -236,9 +236,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         except ModuleNotFoundError as exc:
             msg = "You must install the optional `hikari[server]` dependencies to use the default interaction server."
-            raise RuntimeError(
-                msg
-            ) from exc
+            raise RuntimeError(msg) from exc
 
         # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
         self._application_fetch_lock: typing.Optional[asyncio.Lock] = None

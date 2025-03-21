@@ -719,9 +719,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             # This is async only.
             cls = type(self)
             msg = f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async for' or `anext`?"
-            raise TypeError(
-                msg
-            ) from None
+            raise TypeError(msg) from None
 
 
 def _flatten(value: ValueT) -> ValueT:

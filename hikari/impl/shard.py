@@ -602,9 +602,7 @@ class GatewayShardImpl(shard.GatewayShard):
     def _check_if_connected(self) -> None:
         if not self.is_connected:
             msg = f"shard {self._shard_id} is not connected so it cannot be interacted with"
-            raise errors.ComponentStateConflictError(
-                msg
-            )
+            raise errors.ComponentStateConflictError(msg)
 
     async def request_guild_members(
         self,

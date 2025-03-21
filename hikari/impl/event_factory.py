@@ -57,6 +57,7 @@ from hikari.internal import time
 
 if typing.TYPE_CHECKING:
     import datetime
+
     from hikari import guilds as guild_models
     from hikari import invites as invite_models
     from hikari import messages as messages_models

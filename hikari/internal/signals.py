@@ -35,8 +35,9 @@ from hikari import errors
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
-    import types
     import asyncio
+    import types
+
     _SignalHandlerT = typing.Callable[[int, typing.Optional[types.FrameType]], None]
 
 _INTERRUPT_SIGNALS: tuple[str, ...] = ("SIGINT", "SIGTERM")

@@ -67,9 +67,7 @@ class _FastProtocolChecking(type(typing.Protocol)):
 
                 if _Protocol not in base.__bases__:
                     msg = f"FastProtocolChecking can only inherit from other fast checking protocols, got {base!r}"
-                    raise TypeError(
-                        msg
-                    )
+                    raise TypeError(msg)
 
                 attributes.update(base._attributes_)
 

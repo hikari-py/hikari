@@ -54,8 +54,8 @@ from hikari.internal import time
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
-    import datetime
     import concurrent.futures
+    import datetime
     import os
 
     from hikari import channels

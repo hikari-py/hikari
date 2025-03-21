@@ -350,9 +350,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
                 raise ValueError(msg)
             if not undefined.all_undefined(color, colour, hoist, mentionable, position):
                 msg = "Cannot pass 'color', 'colour', 'hoist', 'mentionable' nor 'position' to the '@everyone' role."
-                raise ValueError(
-                    msg
-                )
+                raise ValueError(msg)
 
         snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
@@ -2005,9 +2003,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
-            raise ValueError(
-                msg
-            )
+            raise ValueError(msg)
 
         self._stored_type = type_
 
@@ -2133,9 +2129,7 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
-            raise ValueError(
-                msg
-            )
+            raise ValueError(msg)
 
         self._stored_type = type_
 

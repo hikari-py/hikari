@@ -702,9 +702,7 @@ class Embed:
                     "Cannot specify footer text in embed to be None while setting a non-None icon. "
                     "Set some textual content in order to use a footer icon."
                 )
-                raise TypeError(
-                    msg
-                )
+                raise TypeError(msg)
 
             self._footer = None
         else:

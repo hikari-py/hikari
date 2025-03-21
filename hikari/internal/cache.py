@@ -65,6 +65,7 @@ from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
     import datetime
+
     from typing_extensions import Self
 
     from hikari import applications

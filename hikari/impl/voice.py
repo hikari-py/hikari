@@ -147,18 +147,14 @@ class VoiceComponentImpl(voice.VoiceComponent):
 
         if guild_id in self._connections:
             msg = "Already in a voice channel for that guild. Disconnect before attempting to connect again"
-            raise errors.VoiceError(
-                msg
-            )
+            raise errors.VoiceError(msg)
 
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         try:
             shard = self._app.shards[shard_id]
         except KeyError:
             msg = f"Cannot connect to shard {shard_id} as it is not present in this application"
-            raise errors.VoiceError(
-                msg
-            ) from None
+            raise errors.VoiceError(msg) from None
 
         user = self._app.cache.get_me()
         if not user:
