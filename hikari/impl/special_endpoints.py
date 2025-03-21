@@ -46,6 +46,7 @@ __all__: typing.Sequence[str] = (
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "ChannelRepositioner",
 )
 
 import asyncio
@@ -205,31 +206,70 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
 
 class ChannelRepositioner(special_endpoints.ChannelRepositioner):
-    __slots__: typing.Sequence[str] = ("_guild",)
-
-    _guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    
+    __slots__: typing.Sequence[str] = ("_guild", "_request_call", "_channels")
 
     @typing.overload
-    def __init__(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]):
-        ...
+    def __init__(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], request_call: _RequestCallSig): ...
+
+    @typing.overload
+    def __init__(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        request_call: _RequestCallSig,
+        *,
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
+    ): ...
 
     def __init__(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
+        request_call: _RequestCallSig,
+        *,
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]] = {},
     ):
         self._guild = guild
+        self._request_call = request_call
+        self._channels = [RepositionChannelHelper(channel=channel, position=pos) for pos, channel in positions.items()]
 
     def reposition(
         self,
         position: int,
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
-        lock_permissions: bool,
-        parent: snowflakes.SnowflakeishOr[channels.GuildCategory],
+        lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
+        self._channels.append(
+            RepositionChannelHelper(
+                channel=channel, position=position, lock_permissions=lock_permissions, parent=parent
+            )
+        )
         return self
+
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
+        route = routes.PATCH_GUILD_CHANNELS.compile(guild=self._guild)
+        body = []
+        for channel in self._channels:
+            channel_payload = data_binding.JSONObjectBuilder()
+            channel_payload.put_snowflake("id", channel.channel)
+            channel_payload.put("position", channel.position)
+            channel_payload.put("lock_permissions", channel.lock_permissions)
+            channel_payload.put_snowflake("parent_id", channel.parent)
+            body.append(channel_payload)
+        return self._request_call(route, json=body).__await__()
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class RepositionChannelHelper:
+    channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True)
+
+    position: int = attrs.field(repr=True)
+
+    lock_permissions: undefined.UndefinedOr[bool] = attrs.field(repr=True, default=undefined.UNDEFINED)
+
+    parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
+        repr=True, default=undefined.UNDEFINED
+    )
 
 
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
