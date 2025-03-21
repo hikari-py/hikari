@@ -26,7 +26,6 @@ import pytest
 from hikari import applications
 from hikari import monetization
 from hikari import snowflakes
-from hikari import traits
 from hikari.interactions import base_interactions
 from hikari.interactions import component_interactions
 

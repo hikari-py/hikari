@@ -36,7 +36,6 @@ import attrs
 
 from hikari import messages
 from hikari import snowflakes
-from hikari import traits
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 
