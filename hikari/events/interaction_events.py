@@ -61,6 +61,8 @@ class InteractionCreateEvent(shard_events.ShardEvent):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class CommandInteractionCreateEvent(InteractionCreateEvent):
+    """Event fired when a command interaction is created."""
+
     interaction: command_interactions.CommandInteraction = attrs.field(repr=True)
     """Interaction that this event is related to."""
 
@@ -68,6 +70,8 @@ class CommandInteractionCreateEvent(InteractionCreateEvent):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class ComponentInteractionCreateEvent(InteractionCreateEvent):
+    """Event fired when a component interaction is created."""
+
     interaction: component_interactions.ComponentInteraction = attrs.field(repr=True)
     """Interaction that this event is related to."""
 
@@ -75,6 +79,8 @@ class ComponentInteractionCreateEvent(InteractionCreateEvent):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class AutocompleteInteractionCreateEvent(InteractionCreateEvent):
+    """Event fired when an autocomplete interaction is created."""
+
     interaction: command_interactions.AutocompleteInteraction = attrs.field(repr=True)
     """Interaction that this event is related to."""
 
@@ -82,5 +88,7 @@ class AutocompleteInteractionCreateEvent(InteractionCreateEvent):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class ModalInteractionCreateEvent(InteractionCreateEvent):
+    """Event fired when a modal interaction is created."""
+
     interaction: modal_interactions.ModalInteraction = attrs.field(repr=True)
     """Interaction that this event is related to."""
