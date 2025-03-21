@@ -230,6 +230,7 @@ type = [
     { name = "Breaking Changes", directory = "breaking", showcontent = true },
     { name = "Deprecation", directory = "deprecation", showcontent = true },
     { name = "Features", directory = "feature", showcontent = true },
+    { name = "Optimizations", directory = "optimization", showcontent = true },
     { name = "Bugfixes", directory = "bugfix", showcontent = true },
     { name = "Documentation Improvements", directory = "documentation", showcontent = true },
 ]

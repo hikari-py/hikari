@@ -24,25 +24,28 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("FastProtocolChecking",)
 
+import abc
 import typing
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
-_Protocol: FastProtocolChecking = NotImplemented
+_Protocol: type[FastProtocolChecking] = NotImplemented
 _IGNORED_ATTRS = frozenset(typing.EXCLUDED_ATTRIBUTES) | {"__qualname__", "__slots__"}
+_abc_instancecheck = abc.ABCMeta.__instancecheck__
+_abc_subclasscheck = abc.ABCMeta.__subclasscheck__
 
 
 def _check_if_ignored(name: str) -> bool:
     return name.startswith("_abc_") or name in _IGNORED_ATTRS
 
 
-# This metaclass needs to subclass the same type as [`typing.Protocol`][] to be
+# This metaclass needs to subclass the same type as `typing.Protocol` to be
 # able to overwrite it
 class _FastProtocolChecking(type(typing.Protocol)):
     _attributes_: tuple[str, ...]
 
-    def __new__(cls, cls_name: str, bases: tuple[type[typing.Any], ...], namespace: dict[str, typing.Any]) -> Self:
+    def __new__(cls, cls_name: str, bases: tuple[type, ...], namespace: dict[str, typing.Any]) -> Self:
         global _Protocol
 
         if _Protocol is NotImplemented:
@@ -57,9 +60,7 @@ class _FastProtocolChecking(type(typing.Protocol)):
         if _Protocol in bases:
             in_bases = True
             attributes = {attr for attr in namespace if not _check_if_ignored(attr)}
-            attributes.update(
-                annot for annot in namespace.get("__annotations__", {}).keys() if not _check_if_ignored(annot)
-            )
+            attributes.update(annot for annot in namespace.get("__annotations__", {}) if not _check_if_ignored(annot))
 
             for base in bases:
                 if base in (typing.Protocol, _Protocol):
@@ -76,19 +77,25 @@ class _FastProtocolChecking(type(typing.Protocol)):
         else:
             in_bases = False
 
-        cls = super().__new__(cls, cls_name, bases, namespace)
+        obj = super().__new__(cls, cls_name, bases, namespace)
 
-        if in_bases and not cls._is_protocol:
+        if in_bases and not obj._is_protocol:
             msg = "FastProtocolChecking can only be used with protocols"
             raise TypeError(msg)
 
-        return cls
+        return obj
 
-    def __instancecheck__(self, other: typing.Any) -> bool:
-        if not self._is_protocol:
+    def __subclasscheck__(cls, other):
+        return _abc_subclasscheck(cls, other)
+
+    def __instancecheck__(cls, other: object) -> bool:
+        if not cls._is_protocol:
             return super().__instancecheck__(other)
 
-        for i in self._attributes_:
+        if _abc_instancecheck(cls, other):
+            return True
+
+        for i in cls._attributes_:
             if not hasattr(other, i):
                 return False
 
