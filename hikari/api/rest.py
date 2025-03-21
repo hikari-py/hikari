@@ -1263,7 +1263,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 behaviour).
         waveform
             TODO
-        duration_secs
+        duration
             TODO
         component
             If provided, builder object of the component to include in this message.

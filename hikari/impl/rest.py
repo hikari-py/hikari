@@ -1614,6 +1614,7 @@ class RESTClientImpl(rest_api.RESTClient):
             flags = messages_.MessageFlag(flags)
         if not flags.any(messages_.MessageFlag.IS_VOICE_MESSAGE):
             flags = flags | messages_.MessageFlag.IS_VOICE_MESSAGE
+        print(flags)
         body, form_builder = self._build_message_payload(
             attachment=attachment,
             component=component,
@@ -1624,6 +1625,7 @@ class RESTClientImpl(rest_api.RESTClient):
             waveform=waveform,
             duration=duration
         )
+        print(body)
 
         if reply:
             message_reference = data_binding.JSONObjectBuilder()
