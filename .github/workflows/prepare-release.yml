@@ -46,7 +46,7 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
           AUTHOR: ${{ github.event.sender.login }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
           title="Prepare for release of ${VERSION}"
           body="Release preparation triggered by ${AUTHOR}.
