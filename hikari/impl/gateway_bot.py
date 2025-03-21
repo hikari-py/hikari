@@ -25,7 +25,6 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("GatewayBot",)
 
 import asyncio
-import datetime
 import logging
 import math
 import sys
@@ -55,6 +54,7 @@ from hikari.internal import time
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
+    import datetime
     import concurrent.futures
     import os
 

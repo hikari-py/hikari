@@ -226,7 +226,8 @@ class Template:
         hikari.errors.ForbiddenError
             If you are not part of the guild.
         hikari.errors.NotFoundError
-            If the guild is not found or you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
+            If the guild is not found or you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+            permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -244,7 +245,8 @@ class Template:
         hikari.errors.ForbiddenError
             If you are not part of the guild.
         hikari.errors.NotFoundError
-            If the guild is not found or you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
+            If the guild is not found or you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+            permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -265,7 +267,8 @@ class Template:
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are not part of the guild or are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
+            If you are not part of the guild or are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+            permission.
         hikari.errors.NotFoundError
             If the guild or template is not found.
         hikari.errors.UnauthorizedError
@@ -299,7 +302,8 @@ class Template:
         Raises
         ------
         hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value or if you call this as a bot that’s in more than 10 guilds.
+            If any of the fields that are passed have an invalid value or if you call this as a bot that's
+            in more than 10 guilds.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError

@@ -45,7 +45,6 @@ __all__: typing.Sequence[str] = (
 
 import abc
 import copy
-import datetime
 import typing
 
 import attrs
@@ -65,6 +64,7 @@ from hikari.internal import attrs_extensions
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
+    import datetime
     from typing_extensions import Self
 
     from hikari import applications

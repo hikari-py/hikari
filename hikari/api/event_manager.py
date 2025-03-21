@@ -25,13 +25,13 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("EventManager", "EventStream")
 
 import abc
-import asyncio
 import typing
 
 from hikari import iterators
 from hikari.events import base_events
 
 if typing.TYPE_CHECKING:
+    import asyncio
     import types
 
     from typing_extensions import Self

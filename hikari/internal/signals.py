@@ -24,19 +24,19 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("handle_interrupts",)
 
-import asyncio
 import contextlib
 import logging
 import signal
 import threading
 import traceback
-import types
 import typing
 
 from hikari import errors
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
+    import types
+    import asyncio
     _SignalHandlerT = typing.Callable[[int, typing.Optional[types.FrameType]], None]
 
 _INTERRUPT_SIGNALS: tuple[str, ...] = ("SIGINT", "SIGTERM")

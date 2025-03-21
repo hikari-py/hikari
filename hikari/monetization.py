@@ -24,13 +24,15 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("SKU", "Entitlement", "EntitlementOwnerType", "EntitlementType", "SKUFlags", "SKUType")
 
-import datetime
 import typing
 
 import attrs
 
 from hikari import snowflakes
 from hikari.internal import enums
+
+if typing.TYPE_CHECKING:
+    import datetime
 
 
 @typing.final
