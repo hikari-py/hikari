@@ -1410,6 +1410,8 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
+        waveform: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        duration: undefined.UndefinedOr[float] = undefined.UNDEFINED,
         edit: bool = False,
     ) -> tuple[data_binding.JSONObjectBuilder, typing.Optional[data_binding.URLEncodedFormBuilder]]:
         if not undefined.any_undefined(attachment, attachments):
@@ -1423,6 +1425,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if not undefined.any_undefined(sticker, stickers):
             raise ValueError("You may only specify one of 'sticker' or 'stickers', not both")
+        
+        #TODO check for double thingy
+        
 
         if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntactic sugar, common mistake to accidentally send an embed
@@ -1498,6 +1503,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
             for f in final_attachments:
                 if edit and isinstance(f, messages_.Attachment):
+                    attachment_payload = {
+                        "id": f.id, "filename": f.filename
+                    }
                     attachments_payload.append({"id": f.id, "filename": f.filename})
                     continue
 
@@ -1560,6 +1568,51 @@ class RESTClientImpl(rest_api.RESTClient):
             mentions_reply=mentions_reply,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
+            flags=flags,
+        )
+
+        if reply:
+            message_reference = data_binding.JSONObjectBuilder()
+            message_reference.put("message_id", str(int(reply)))
+            message_reference.put("fail_if_not_exists", reply_must_exist)
+
+            body.put("message_reference", message_reference)
+
+        if form_builder is not None:
+            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form_builder)
+        else:
+            response = await self._request(route, json=body)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
+
+    async def create_voice_message(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        attachment: files.Resourceish,
+        waveform: str,
+        duration_secs: float,
+        *,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
+        if flags is undefined.UNDEFINED:
+            flags = messages_.MessageFlag.IS_VOICE_MESSAGE
+        elif not flags.any(messages_.MessageFlag.IS_VOICE_MESSAGE):
+            flags = flags | messages_.MessageFlag.IS_VOICE_MESSAGE
+        body, form_builder = self._build_message_payload(
+            attachment=attachment,
+            component=component,
+            components=components,
+            embed=embed,
+            mentions_reply=mentions_reply,
             flags=flags,
         )
 

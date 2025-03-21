@@ -1211,6 +1211,122 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def create_voice_message(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        attachment: files.Resourceish,
+        waveform: str,
+        duration_secs: float,
+        *,
+        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
+        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
+        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
+        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        """Create a voice message in the given channel.
+
+        Parameters
+        ----------
+        channel
+            The channel to create the message in.
+        attachment
+            If provided, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a [`pathlib.PurePath`][] or [`str`][] to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                [`hikari.files.WebResource`][] such as
+                [`hikari.files.URL`][],
+                [`hikari.messages.Attachment`][],
+                [`hikari.emojis.Emoji`][],
+                [`hikari.embeds.EmbedResource`][], etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a [`hikari.files.Bytes`][] is passed, or a [`str`][]
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a [`hikari.files.File`][], [`pathlib.PurePath`][] or
+                [`str`][] that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of [`concurrent.futures.Executor`][] that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
+        waveform
+            TODO
+        duration_secs
+            TODO
+        component
+            If provided, builder object of the component to include in this message.
+        components
+            If provided, a sequence of the component builder objects to include
+            in this message.
+        embed
+            If provided, the message embed.
+        reply
+            If provided, the message to reply to.
+        reply_must_exist
+            If provided, whether to error if the message being replied to does
+            not exist instead of sending as a normal (non-reply) message.
+
+            This will not do anything if not being used with `reply`.
+        mentions_reply
+            If provided, whether to mention the author of the message
+            that is being replied to.
+
+            This will not do anything if not being used with `reply`.
+        flags
+            If provided, optional flags to set on the message. If
+            [`hikari.undefined.UNDEFINED`][], then nothing is changed.
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS] and
+            [hikari.messages.MessageFlag.SUPPRESS_EMBEDS].
+
+        Returns
+        -------
+        hikari.messages.Message
+            The created message.
+
+        Raises
+        ------
+        ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions` or if both `attachment` and
+            `attachments`, `component` and `components` or `embed` and `embeds`
+            are specified.
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; if `reply` is not found or not in the
+            same channel as `channel`; too many components.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the [hikari.permissions.Permissions.SEND_MESSAGES]
+            in the channel or the person you are trying to message has the DM's
+            disabled.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def crosspost_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildNewsChannel],
