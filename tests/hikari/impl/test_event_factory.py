@@ -49,10 +49,10 @@ from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
 from hikari.impl import event_factory as event_factory_
+from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
 from hikari.interactions import modal_interactions
-from hikari.interactions import base_interactions
 
 
 class TestEventFactoryImpl:
@@ -749,7 +749,12 @@ class TestEventFactoryImpl:
         ],
     )
     def test_deserialize_interaction_create_event(
-        self, event_factory, mock_app, mock_shard, interaction_type: typing.Optional[base_interactions.PartialInteraction], expected: interaction_events.InteractionCreateEvent
+        self,
+        event_factory,
+        mock_app,
+        mock_shard,
+        interaction_type: typing.Optional[base_interactions.PartialInteraction],
+        expected: interaction_events.InteractionCreateEvent,
     ):
         payload = {"id": "1561232344"}
         if interaction_type:
