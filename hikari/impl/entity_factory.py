@@ -3946,8 +3946,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_poll_media(self, payload: data_binding.JSONObject) -> poll_models.PollMedia:
         return poll_models.PollMedia(
-            text=payload.get("text"),
-            emoji=self.deserialize_emoji(payload["emoji"]) if "emoji" in payload else None,
+            text=payload.get("text"), emoji=self.deserialize_emoji(payload["emoji"]) if "emoji" in payload else None
         )
 
     def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
@@ -3959,6 +3958,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             )
 
             answers.append(answer)
+
+        expiry: typing.Optional[datetime.datetime] = None
+        if expiry_payload := payload["expiry"]:
+            expiry = time.iso8601_datetime_string_to_datetime(expiry_payload)
 
         results: typing.Optional[poll_models.PollResult] = None
         if (result_payload := payload.get("results")) is not None:
@@ -3973,9 +3976,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return poll_models.Poll(
             question=self._deserialize_poll_media(payload["question"]),
             answers=answers,
-            expiry=time.iso8601_datetime_string_to_datetime(payload["expiry"])
-            if payload["expiry"] is not None
-            else None,
+            expiry=expiry,
             allow_multiselect=payload["allow_multiselect"],
             layout_type=poll_models.PollLayoutType(payload["layout_type"]),
             results=results,

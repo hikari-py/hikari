@@ -2329,28 +2329,13 @@ class PollBuilder(abc.ABC):
         """The layout type for the poll."""
 
     @abc.abstractmethod
-    def add_answer(self, answer: PollAnswerBuilder) -> Self:
-        """Add an answer to the poll.
-
-        Parameters
-        ----------
-        answer
-            The answer to add to the poll.
-
-        Returns
-        -------
-        PollAnswerBuilder
-            The builder object to enable chained calls.
-        """
-
-    @abc.abstractmethod
-    def add_poll_answer(
+    def add_answer(
         self,
         *,
         text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
     ) -> Self:
-        """Add a poll answer to the poll.
+        """Add a answer to the poll.
 
         Parameters
         ----------

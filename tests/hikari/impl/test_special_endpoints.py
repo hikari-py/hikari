@@ -1871,18 +1871,7 @@ class TestPollBuilder:
 
         assert poll_builder.answers == []
 
-        answer = special_endpoints.PollAnswerBuilder(text="Beanos", emoji=emojis.UnicodeEmoji("👌"))
-
-        poll_builder.add_answer(answer)
-
-        assert poll_builder.answers == [answer]
-
-    def test_add_poll_answer(self):
-        poll_builder = special_endpoints.PollBuilder(question_text="A cool question", allow_multiselect=False)
-
-        assert poll_builder.answers == []
-
-        poll_builder.add_poll_answer(text="Beanos", emoji=emojis.UnicodeEmoji("👌"))
+        poll_builder.add_answer(text="Beanos", emoji=emojis.UnicodeEmoji("👌"))
 
         assert len(poll_builder.answers) == 1
 

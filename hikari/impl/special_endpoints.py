@@ -2205,18 +2205,14 @@ class PollBuilder(special_endpoints.PollBuilder):
     def layout_type(self) -> undefined.UndefinedOr[polls.PollLayoutType]:
         return self._layout_type
 
-    def add_answer(self, answer: special_endpoints.PollAnswerBuilder) -> Self:
-        self._answers.append(answer)
-        return self
-
-    def add_poll_answer(
+    def add_answer(
         self,
         *,
         text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
     ) -> Self:
         answer = PollAnswerBuilder(text=text, emoji=emoji)
-        self.add_answer(answer)
+        self._answers.append(answer)
         return self
 
     def build(self) -> typing.MutableMapping[str, typing.Any]:
