@@ -4631,7 +4631,6 @@ class RESTClientImpl(rest_api.RESTClient):
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> typing.Sequence[users.User]:
         query = data_binding.StringMapBuilder()
-
         query.put("after", after)
         query.put("limit", limit)
 
