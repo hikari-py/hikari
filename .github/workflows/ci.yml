@@ -54,7 +54,7 @@ jobs:
           python scripts/ci/normalize_coverage.py
 
       - name: Upload coverage
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: .coverage.${{ matrix.os }}.${{ matrix.python-version }}
           path: .coverage
@@ -76,7 +76,7 @@ jobs:
           python-version: "3.10"
 
       - name: Download coverage
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           path: coverages/
           # Not specifying any name will lead to the download of all available artifacts
@@ -210,7 +210,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: docs
           path: public/docs

@@ -2486,7 +2486,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_invite(
-        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True, with_expiration: bool = True
+        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True
     ) -> invites.Invite:
         """Fetch an existing invite.
 
@@ -2497,8 +2497,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the code of an existing invite.
         with_counts
             Whether the invite should contain the approximate member counts.
-        with_expiration
-            Whether the invite should contain the expiration date.
 
         Returns
         -------

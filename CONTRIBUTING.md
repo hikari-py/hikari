@@ -31,6 +31,81 @@ More specifically:
 The removal or renaming of anything facing the public facing API must go through a deprecation process, which should
 match that of the versioning scheme. There are utilities under `hikari.internal.deprecation` to aid with it.
 
+# UV Package Manager
+
+We use the `uv` package manager as a faster drop-in replacement for `pip`. While it's not required to use in order to
+contribute to hikari, it's highly recommended! From here on we will use `uv` instead of `pip`.
+
+Installing `uv` is explained [here](https://docs.astral.sh/uv/getting-started/installation/)
+
+If you still want to use `pip` as your package manager, you can see the equivalent `pip` command by clicking on
+the dropdowns below every command.
+
+# Getting Started
+
+First of all you should start by cloning the repository.
+In the repository, make a virtual environment 
+```bash
+uv venv
+```
+<details>
+    <summary>Equivalent pip command</summary>
+    
+```bash
+python -m venv .venv
+```
+</details>
+
+and enter it:
+- On Linux/macOS: `source .venv/bin/activate`
+- On Windows: one of `.\.venv\Scripts\activate.ps1`, `.\.venv\Scripts\activate.bat`, or `.\.venv\Scripts\activate`
+
+Then you should continue by installing [nox](#nox).
+
+# Nox
+
+We have nox to help out with running pipelines locally and provides some helpful functionality.
+
+You will need to install `nox` locally before running any pipelines.
+
+```bash
+uv sync --group nox
+```
+<details>
+    <summary>Equivalent pip command</summary>
+    
+```bash
+pip install 'nox[uv]'
+```
+</details>
+
+Nox is similar to tox, but uses a pure Python configuration instead of an INI based configuration. Nox and tox are
+both tools for generating virtual environments and running commands in those environments. Examples of usage include
+installing, configuring, and running flake8, running pytest, etc.
+
+You can check all the available nox commands by running `nox -l`.
+
+Before committing we recommend you to run `nox` to run all important pipelines and make sure the pipelines won't fail.
+
+You may run a single pipeline with `nox -s name` or multiple pipelines with `nox -s name1 name3 name9`.
+
+# Pipelines
+
+We have several jobs to ensure that the code is at its best that in can be.
+
+This includes:
+
+- `test`
+    - Run tests and installation of the package on different OS's and python versions.
+- `linting`
+    - Linting (`flake8`), type checking (`mypy`), audit (`pip-audit`) and spelling (`codespell`).
+- `twemoji`
+    - Force test all discord emojis.
+- `pages`
+    - Generate webpage + documentation.
+
+All jobs will need to succeed before anything gets merged.
+
 # Towncrier
 
 To aid with the generation of `CHANGELOG.md` as well as the releases changelog we use `towncrier`.
@@ -38,8 +113,15 @@ To aid with the generation of `CHANGELOG.md` as well as the releases changelog w
 You will need to install `towncrier` and `hikari` from source before making changelog additions.
 
 ```bash
-pip install --group towncrier -e .
+uv sync --group towncrier
 ```
+<details>
+    <summary>Equivalent pip command</summary>
+    
+```bash
+pip install towncrier
+```
+</details>
 
 For every pull request made to this project, there should be a short explanation of the change under `changes/`
 with the following format: `{pull_request_number}.{type}.md`,
@@ -74,44 +156,3 @@ To push branches directly to the remote, you will have to name them like this:
 
 `issue-number` is optional (only use if issue exists) and can be left out. `small-info-on-branch` should be replaced
 with a small description of the branch.
-
-# Nox
-
-We have nox to help out with running pipelines locally and provides some helpful functionality.
-
-You will need to install `nox` locally before running any pipelines.
-
-> [!TIP]
-> We use the `uv` package manager as a faster drop-in replacement for pip. While it's not required to use in order to
-> contribute to hikari, it's highly recommended! If you use it, replace `pip` commands below with `uv pip`.
-
-```bash
-pip install --group nox
-```
-
-Nox is similar to tox, but uses a pure Python configuration instead of an INI based configuration. Nox and tox are
-both tools for generating virtual environments and running commands in those environments. Examples of usage include
-installing, configuring, and running flake8, running pytest, etc.
-
-You can check all the available nox commands by running `nox -l`.
-
-Before committing we recommend you to run `nox` to run all important pipelines and make sure the pipelines won't fail.
-
-You may run a single pipeline with `nox -s name` or multiple pipelines with `nox -s name1 name3 name9`.
-
-# Pipelines
-
-We have several jobs to ensure that the code is at its best that in can be.
-
-This includes:
-
-- `test`
-    - Run tests and installation of the package on different OS's and python versions.
-- `linting`
-    - Linting (`flake8`), type checking (`mypy`), audit (`pip-audit`) and spelling (`codespell`).
-- `twemoji`
-    - Force test all discord emojis.
-- `pages`
-    - Generate webpage + documentation.
-
-All jobs will need to succeed before anything gets merged.
