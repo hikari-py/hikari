@@ -1218,9 +1218,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         waveform: str,
         duration: float,
         *,
-        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1265,13 +1262,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             TODO
         duration
             TODO
-        component
-            If provided, builder object of the component to include in this message.
-        components
-            If provided, a sequence of the component builder objects to include
-            in this message.
-        embed
-            If provided, the message embed.
         reply
             If provided, the message to reply to.
         reply_must_exist

@@ -1600,9 +1600,6 @@ class RESTClientImpl(rest_api.RESTClient):
         waveform: str,
         duration: float,
         *,
-        component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
-        components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-        embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1616,14 +1613,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if not flags.any(messages_.MessageFlag.IS_VOICE_MESSAGE):
             flags = flags | messages_.MessageFlag.IS_VOICE_MESSAGE
         body, form_builder = self._build_message_payload(
-            attachment=attachment,
-            component=component,
-            components=components,
-            embed=embed,
-            mentions_reply=mentions_reply,
-            flags=flags,
-            waveform=waveform,
-            duration=duration
+            attachment=attachment, mentions_reply=mentions_reply, flags=flags, waveform=waveform, duration=duration
         )
 
         if reply:
