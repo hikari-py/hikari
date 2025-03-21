@@ -37,6 +37,7 @@ import ssl as ssl_
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari.api import config
 from hikari.internal import attrs_extensions
@@ -87,6 +88,7 @@ class BasicAuthHeader:
         token_part = base64.b64encode(raw_token).decode(self.charset)
         return f"{_BASICAUTH_TOKEN_PREFIX} {token_part}"
 
+    @override
     def __str__(self) -> str:
         return self.header
 

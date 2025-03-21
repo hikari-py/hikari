@@ -35,6 +35,8 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
+from typing_extensions import override
+
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
@@ -68,6 +70,7 @@ class UndefinedType:
         # Returning a string makes pickle fetch from the module namespace.
         return "UNDEFINED"
 
+    @override
     def __str__(self) -> str:
         return "UNDEFINED"
 

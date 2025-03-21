@@ -29,6 +29,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import intents
 from hikari.events import base_events
@@ -72,16 +73,19 @@ class RoleCreateEvent(RoleEvent):
     """Role that was created."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.role.app
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.guild_id
 
     @property
+    @override
     def role_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.id
@@ -106,16 +110,19 @@ class RoleUpdateEvent(RoleEvent):
     """Role that was updated."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.role.app
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.guild_id
 
     @property
+    @override
     def role_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.id

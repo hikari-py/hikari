@@ -38,6 +38,8 @@ __all__: typing.Sequence[str] = (
 import abc
 import typing
 
+from typing_extensions import override
+
 from hikari.internal import time
 
 if typing.TYPE_CHECKING:
@@ -123,9 +125,11 @@ class Unique(abc.ABC):
     def __int__(self) -> int:
         return int(self.id)
 
+    @override
     def __hash__(self) -> int:
         return hash(self.id)
 
+    @override
     def __eq__(self, other: typing.Any) -> bool:
         return type(self) is type(other) and self.id == other.id
 
