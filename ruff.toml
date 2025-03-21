@@ -34,7 +34,7 @@ ignore = [
     # Disabling most of the docstring related checks as ruff doesn't
     # support inherited docstrings at the time of writing
     # see: https://github.com/astral-sh/ruff/issues/2413
-    "D102", # Missing docstring in public methd
+    "D102", # Missing docstring in public method
 ]
 "hikari/impl/**.py" = [
     # Disabling most of the docstring related checks as ruff doesn't
@@ -49,12 +49,12 @@ ignore = [
     "PLR2004", # Do not use magic values
     "SLF001",  # Private member accessed
 
-    # Rules bellow here are temporarily disabled and will be enabled in the future
+    # Rules below here are temporarily disabled and will be enabled in the future
     # when extra work is done
     "ALL",
     # "ANN",     # Annotations missing
     # "DTZ001",  # `datetime.datetime()` called without a `tzinfo` argument
-    # "DTZ901",  # Use of datetime.datetime.min/max wihtout timezone information
+    # "DTZ901",  # Use of datetime.datetime.min/max without timezone information
     # "N802",    # Function name should be lowercase
     # "UP026",   # `mock` is deprecated, use `unittest.mock` instead
     # "SIM117",  # Use single `with` statement
