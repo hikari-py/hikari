@@ -78,30 +78,6 @@ class TestPartialInteraction:
         assert mock_partial_interaction.webhook_id is mock_partial_interaction.application_id
 
     @pytest.mark.asyncio
-    async def test_fetch_channel(self, mock_partial_interaction, mock_app):
-        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableGuildChannel)
-        assert await mock_partial_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
-
-        mock_app.rest.fetch_channel.assert_awaited_once_with(3123123)
-
-    def test_get_channel(self, mock_partial_interaction, mock_app):
-        mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.TextableGuildChannel)
-
-        assert mock_partial_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
-
-    def test_get_channel_when_not_cached(self, mock_partial_interaction, mock_app):
-        mock_app.cache.get_guild_channel.return_value = None
-
-        assert mock_partial_interaction.get_channel() is None
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
-
-    def test_get_channel_without_cache(self, mock_partial_interaction):
-        mock_partial_interaction.app = mock.Mock(traits.RESTAware)
-
-        assert mock_partial_interaction.get_channel() is None
-
-    @pytest.mark.asyncio
     async def test_fetch_guild(self, mock_partial_interaction, mock_app):
         mock_partial_interaction.guild_id = 43123123
 

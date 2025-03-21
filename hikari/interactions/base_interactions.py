@@ -282,57 +282,6 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
         # <<inherited docstring from ExecutableWebhook>>.
         return self.application_id
 
-    async def fetch_channel(self) -> channels.TextableChannel:
-        """Fetch the guild channel this interaction was triggered in.
-
-        Returns
-        -------
-        hikari.channels.TextableChannel
-            The requested partial channel derived object of the channel this
-            interaction was triggered in.
-
-        Raises
-        ------
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][]
-            permission in the channel.
-        hikari.errors.NotFoundError
-            If the channel is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.TextableChannel)
-        return channel
-
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
-        """Get the guild channel this interaction was triggered in from the cache.
-
-        !!! note
-            This will always return [`None`][] for interactions triggered
-            in a DM channel.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.TextableGuildChannel]
-            The object of the guild channel that was found in the cache or
-            [`None`][].
-        """
-        if isinstance(self.app, traits.CacheAware):
-            channel = self.app.cache.get_guild_channel(self.channel_id)
-            assert channel is None or isinstance(channel, channels.TextableGuildChannel)
-            return channel
-
-        return None
-
     async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
         """Fetch the guild this interaction happened in.
 
