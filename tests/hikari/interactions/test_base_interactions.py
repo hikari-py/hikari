@@ -24,7 +24,6 @@ import mock
 import pytest
 
 from hikari import applications
-from hikari import channels
 from hikari import monetization
 from hikari import snowflakes
 from hikari import traits
