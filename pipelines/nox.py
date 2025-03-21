@@ -48,7 +48,8 @@ def sync(
 ) -> None:
     """Install session packages using `uv sync`."""
     if extras and not self:
-        raise RuntimeError("When specifying extras, set `self=True`.")
+        msg = "When specifying extras, set `self=True`."
+        raise RuntimeError(msg)
 
     args: list[str] = []
     for extra in extras:

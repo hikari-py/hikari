@@ -181,7 +181,8 @@ def init_logging(
         try:
             logging.config.fileConfig(flavor)
         except Exception as ex:
-            raise RuntimeError("A problem occurred while trying to setup logging through file configuration") from ex
+            msg = "A problem occurred while trying to setup logging through file configuration"
+            raise RuntimeError(msg) from ex
         return
 
     # Config through dict
@@ -189,7 +190,8 @@ def init_logging(
         try:
             logging.config.dictConfig(flavor)
         except Exception as ex:
-            raise RuntimeError("A problem occurred while trying to setup logging through dict configuration") from ex
+            msg = "A problem occurred while trying to setup logging through dict configuration"
+            raise RuntimeError(msg) from ex
 
         if not flavor.get("incremental"):
             # Non-incremental setup, return
@@ -226,7 +228,8 @@ def init_logging(
             )
 
     except Exception as ex:
-        raise RuntimeError("A problem occurred while trying to setup default logging configuration") from ex
+        msg = "A problem occurred while trying to setup default logging configuration"
+        raise RuntimeError(msg) from ex
 
 
 _UNCONDITIONAL_ANSI_FLAGS: typing.Final[frozenset[str]] = frozenset(("PYCHARM_HOSTED", "WT_SESSION"))
@@ -305,7 +308,8 @@ def print_banner(
     if extra_args:
         for key in extra_args:
             if key in args:
-                raise ValueError(f"Cannot overwrite $-substitution `{key}`. Please use a different key.")
+                msg = f"Cannot overwrite $-substitution `{key}`. Please use a different key."
+                raise ValueError(msg)
         args.update(extra_args)
 
     if supports_color(allow_color, force_color):
@@ -399,7 +403,8 @@ class HikariVersion:
     def __init__(self, vstring: str) -> None:
         match = _VERSION_REGEX.match(vstring)
         if not match:
-            raise ValueError(f"Invalid version: '{vstring}'")
+            msg = f"Invalid version: '{vstring}'"
+            raise ValueError(msg)
 
         (major, minor, patch, prerelease, prerelease_num) = match.group(1, 2, 3, 4, 5)
 
@@ -464,22 +469,24 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
         return
 
     try:
-        async with net.create_client_session(
-            connector=net.create_tcp_connector(dns_cache=False, limit=1, http_settings=http_settings),
-            connector_owner=True,
-            http_settings=http_settings,
-            raise_for_status=True,
-            trust_env=proxy_settings.trust_env,
-        ) as cs:
-            async with cs.get(
+        async with (
+            net.create_client_session(
+                connector=net.create_tcp_connector(dns_cache=False, limit=1, http_settings=http_settings),
+                connector_owner=True,
+                http_settings=http_settings,
+                raise_for_status=True,
+                trust_env=proxy_settings.trust_env,
+            ) as cs,
+            cs.get(
                 "https://pypi.org/pypi/hikari/json",
                 allow_redirects=http_settings.max_redirects is not None,
                 max_redirects=http_settings.max_redirects if http_settings.max_redirects is not None else 10,
                 proxy=proxy_settings.url,
                 proxy_headers=proxy_settings.all_headers,
-            ) as resp:
-                data = data_binding.default_json_loads(await resp.read())
-                assert isinstance(data, dict)
+            ) as resp,
+        ):
+            data = data_binding.default_json_loads(await resp.read())
+            assert isinstance(data, dict)
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None

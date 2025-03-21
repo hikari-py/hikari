@@ -76,7 +76,8 @@ UNDEFINED = UndefinedType()
 
 
 def _forbidden_new(cls: UndefinedType) -> typing.NoReturn:  # noqa: ARG001 - Unused arguments
-    raise TypeError("Cannot initialize multiple instances of singleton UNDEFINED")  # pragma: nocover
+    msg = "Cannot initialize multiple instances of singleton UNDEFINED"
+    raise TypeError(msg)  # pragma: nocover
 
 
 UndefinedType.__new__ = _forbidden_new

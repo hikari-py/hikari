@@ -356,7 +356,8 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             If the hash of the bucket is already known.
         """
         if not self.is_unknown:
-            raise RuntimeError("Cannot resolve known bucket")
+            msg = "Cannot resolve known bucket"
+            raise RuntimeError(msg)
 
         self.name: str = real_bucket_hash
 
@@ -426,7 +427,8 @@ class RESTBucketManager:
             as the rate limit has reset.
         """
         if self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot start an active bucket manager")
+            msg = "Cannot start an active bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         # Assert is in running loop
         asyncio.get_running_loop()
@@ -436,7 +438,8 @@ class RESTBucketManager:
     async def close(self) -> None:
         """Close the garbage collector and kill any tasks waiting on ratelimits."""
         if not self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
+            msg = "Cannot interact with an inactive bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         for bucket in self._real_hashes_to_buckets.values():
             bucket.close()
@@ -522,7 +525,8 @@ class RESTBucketManager:
             The context manager to use during the duration of the request.
         """
         if not self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
+            msg = "Cannot interact with an inactive bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         authentication_hash = _create_authentication_hash(authentication)
 
@@ -567,7 +571,8 @@ class RESTBucketManager:
             The `X-RateLimit-Reset-After` header cast to a [`float`][].
         """
         if not self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
+            msg = "Cannot interact with an inactive bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         self._routes_to_hashes[compiled_route.route] = bucket_header
         authentication_hash = _create_authentication_hash(authentication)

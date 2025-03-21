@@ -194,7 +194,8 @@ class ComponentInteraction(
             Interaction message response builder object.
         """
         if type_ not in _IMMEDIATE_TYPES:
-            raise ValueError("Invalid type passed for an immediate response")
+            msg = "Invalid type passed for an immediate response"
+            raise ValueError(msg)
 
         return self.app.rest.interaction_message_builder(type_)
 
@@ -227,7 +228,8 @@ class ComponentInteraction(
             Deferred interaction message response builder object.
         """
         if type_ not in _DEFERRED_TYPES:
-            raise ValueError("Invalid type passed for a deferred response")
+            msg = "Invalid type passed for a deferred response"
+            raise ValueError(msg)
 
         return self.app.rest.interaction_deferred_builder(type_)
 

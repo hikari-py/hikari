@@ -817,7 +817,8 @@ class OwnUser(UserImpl):
         return await self.app.rest.fetch_my_user()
 
     async def fetch_dm_channel(self) -> typing.NoReturn:
-        raise TypeError("Unable to fetch your own DM channel")
+        msg = "Unable to fetch your own DM channel"
+        raise TypeError(msg)
 
     @typing_extensions.override
     async def send(
@@ -844,4 +845,5 @@ class OwnUser(UserImpl):
         ] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = undefined.UNDEFINED,
     ) -> typing.NoReturn:
-        raise TypeError("Unable to send a DM to yourself")
+        msg = "Unable to send a DM to yourself"
+        raise TypeError(msg)

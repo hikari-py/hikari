@@ -14,10 +14,12 @@ select = ["ALL"]
 ignore = [
     "S101",    # Use of assert detected (we use it for typing and testing purposes)
     "COM812",  # Missing trailing comma (interferes with the formatter)
-    "TRY003",  # Avoid specifying long messages outside the exception class
-    "EM101",   # Exception must not use a string literal, assign to a variable first
+    "TRY003",  # Avoid specifying long messages outside the exception class (has false positives)
     "D105",    # Missing docstring in magic method
     "SLOT000", # Subclasses of X should define `__slots__` (too many false positives, we use slotscheck instead)
+    "TD002",   # Missing issue link for todo
+    "TD003",   # Line contains todo
+    "FIX002",  # Line contains todo
 ]
 
 [lint.per-file-ignores]

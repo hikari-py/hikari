@@ -47,7 +47,8 @@ def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
         If the deprecated item is past its removal version.
     """
     if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
-        raise DeprecationWarning(f"{what} is passed its removal version ({removal_version})")
+        msg = f"{what} is passed its removal version ({removal_version})"
+        raise DeprecationWarning(msg)
 
 
 def warn_deprecated(

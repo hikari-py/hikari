@@ -156,7 +156,8 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     async def __aenter__(self) -> None:
         if self._task is not None:
-            raise TypeError("Cannot enter a typing indicator context more than once")
+            msg = "Cannot enter a typing indicator context more than once"
+            raise TypeError(msg)
         self._task = asyncio.create_task(self._keep_typing(), name=self._task_name)
 
     async def __aexit__(
@@ -175,7 +176,8 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         def __enter__(self) -> typing.NoReturn:
             # This is async only.
             cls = type(self)
-            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+            msg = f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?"
+            raise TypeError(msg) from None
 
         def __exit__(
             self,
@@ -339,14 +341,17 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         if not undefined.any_undefined(color, colour):
-            raise TypeError("Cannot specify 'color' and 'colour' together.")
+            msg = "Cannot specify 'color' and 'colour' together."
+            raise TypeError(msg)
 
         if len(self._roles) == 0:
             if name != "@everyone":
-                raise ValueError("First role must always be the '@everyone' role")
+                msg = "First role must always be the '@everyone' role"
+                raise ValueError(msg)
             if not undefined.all_undefined(color, colour, hoist, mentionable, position):
+                msg = "Cannot pass 'color', 'colour', 'hoist', 'mentionable' nor 'position' to the '@everyone' role."
                 raise ValueError(
-                    "Cannot pass 'color', 'colour', 'hoist', 'mentionable' nor 'position' to the '@everyone' role."
+                    msg
                 )
 
         snowflake_id = self._new_snowflake()
@@ -1822,7 +1827,8 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     @property
     def parent(self) -> _ParentT:
         if self._parent is None:
-            raise RuntimeError("This menu has no parent")
+            msg = "This menu has no parent"
+            raise RuntimeError(msg)
 
         return self._parent
 
@@ -1998,8 +2004,9 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
     def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
+            msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
             raise ValueError(
-                f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
+                msg
             )
 
         self._stored_type = type_
@@ -2125,8 +2132,9 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
 
     def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
+            msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
             raise ValueError(
-                f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
+                msg
             )
 
         self._stored_type = type_

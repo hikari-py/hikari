@@ -318,7 +318,8 @@ class Embed:
         timestamp: typing.Optional[datetime.datetime] = None,
     ) -> None:
         if color is not None and colour is not None:
-            raise TypeError("Please provide one of color or colour to Embed(). Do not pass both.")
+            msg = "Please provide one of color or colour to Embed(). Do not pass both."
+            raise TypeError(msg)
 
         if colour is not None:
             color = colour
@@ -697,9 +698,12 @@ class Embed:
         """
         if text is None:
             if icon is not None:
-                raise TypeError(
+                msg = (
                     "Cannot specify footer text in embed to be None while setting a non-None icon. "
                     "Set some textual content in order to use a footer icon."
+                )
+                raise TypeError(
+                    msg
                 )
 
             self._footer = None

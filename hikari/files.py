@@ -324,7 +324,8 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
         mimetype = guess_mimetype_from_data(data)
 
         if mimetype is None:
-            raise TypeError("Cannot infer mimetype from input data, specify it manually.")
+            msg = "Cannot infer mimetype from input data, specify it manually."
+            raise TypeError(msg)
 
     b64 = base64.b64encode(data).decode()
     return f"data:{mimetype};base64,{b64}"
@@ -381,7 +382,8 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
         def __enter__(self) -> typing.NoReturn:
             # This is async only.
             cls = type(self)
-            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+            msg = f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?"
+            raise TypeError(msg) from None
 
         def __exit__(self, exc_type: type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
             return None
@@ -410,7 +412,8 @@ def _to_write_path(path: Pathish, default_filename: str, force: bool) -> pathlib
         path = path.joinpath(default_filename)
 
     if not force and path.exists():
-        raise FileExistsError(f"file {path!r} already exists; use [force=True][] to overwrite")
+        msg = f"file {path!r} already exists; use [force=True][] to overwrite"
+        raise FileExistsError(msg)
 
     return path.expanduser()
 
@@ -832,7 +835,8 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
 
     async def __aenter__(self) -> ThreadedFileReader:
         if self.file:
-            raise RuntimeError("File is already open")
+            msg = "File is already open"
+            raise RuntimeError(msg)
 
         loop = asyncio.get_running_loop()
         file = await loop.run_in_executor(self.executor, _open_read_path, self.path)
@@ -846,7 +850,8 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
         if not self.file:
-            raise RuntimeError("File isn't open")
+            msg = "File isn't open"
+            raise RuntimeError(msg)
 
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(self.executor, self.file.close)
@@ -942,7 +947,8 @@ class File(Resource[ThreadedFileReader]):
             # so this is safe enough to do:
             return _ThreadedFileReaderContextManagerImpl(executor, self.filename, self.path)
 
-        raise TypeError("The executor must be a ThreadPoolExecutor or None")
+        msg = "The executor must be a ThreadPoolExecutor or None"
+        raise TypeError(msg)
 
     async def save(
         self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
@@ -1028,7 +1034,8 @@ class IteratorReader(AsyncReader):
             return bytes(data, "utf-8")
 
         if not isinstance(data, bytes):
-            raise TypeError(f"Expected bytes but received {type(data).__name__}")
+            msg = f"Expected bytes but received {type(data).__name__}"
+            raise TypeError(msg)
         return data
 
 
@@ -1154,7 +1161,8 @@ class Bytes(Resource[IteratorReader]):
             If the parsed argument is not a data URI.
         """
         if not data_uri.startswith("data:"):
-            raise ValueError("Invalid data URI passed")
+            msg = "Invalid data URI passed"
+            raise ValueError(msg)
 
         # This will not block for a data URI; if it was a URL, it would block, so
         # we guard against this with the check above.
@@ -1163,7 +1171,8 @@ class Bytes(Resource[IteratorReader]):
                 mimetype, _ = mimetypes.guess_type(data_uri)
                 data = response.read()
         except Exception as ex:
-            raise ValueError("Failed to decode data URI") from ex
+            msg = "Failed to decode data URI"
+            raise ValueError(msg) from ex
 
         if filename is None:
             filename = generate_filename_from_details(mimetype=mimetype, data=data)

@@ -92,13 +92,15 @@ class _EnumNamespace(dict[str, typing.Any]):
 
     def __setitem__(self, name: str, value: typing.Any) -> None:
         if name == "" or name == "mro":
-            raise TypeError(f"Invalid enum member name: {name!r}")
+            msg = f"Invalid enum member name: {name!r}"
+            raise TypeError(msg)
 
         if isinstance(value, deprecated):
             real_value = value.value
 
             if (alias := self.values_to_names.get(real_value)) is None:
-                raise ValueError("[`deprecated`][] must be used on an existing value")
+                msg = "[`deprecated`][] must be used on an existing value"
+                raise ValueError(msg)
 
             member = _DeprecatedAlias(name, alias, value.removal_version)
             super().__setitem__(name, member)
@@ -116,7 +118,8 @@ class _EnumNamespace(dict[str, typing.Any]):
             return
 
         elif not isinstance(value, self.base):
-            raise TypeError(f"Expected member {name} to be of type {self.base.__name__} but was {type(value).__name__}")
+            msg = f"Expected member {name} to be of type {self.base.__name__} but was {type(value).__name__}"
+            raise TypeError(msg)
 
         name = sys.intern(name)
 
@@ -127,10 +130,12 @@ class _EnumNamespace(dict[str, typing.Any]):
                 # This will fail if unhashable.
                 hash(value)
             except TypeError:
-                raise TypeError(f"Cannot have unhashable values in this enum type ({name}: {value!r})") from None
+                msg = f"Cannot have unhashable values in this enum type ({name}: {value!r})"
+                raise TypeError(msg) from None
 
         if name in self.names_to_values:
-            raise TypeError(f"Cannot define {name!r} name multiple times")
+            msg = f"Cannot define {name!r} name multiple times"
+            raise TypeError(msg)
 
         self.names_to_values[name] = value
         self.values_to_names.setdefault(value, name)
@@ -227,7 +232,8 @@ class _EnumMeta(type):
     ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
         if _Enum is NotImplemented:
             if name != "Enum":
-                raise TypeError("First instance of _EnumMeta must be Enum")
+                msg = "First instance of _EnumMeta must be Enum"
+                raise TypeError(msg)
             return _EnumNamespace(object)
 
         try:
@@ -235,11 +241,13 @@ class _EnumMeta(type):
             base, enum_type = bases
 
             if isinstance(base, _EnumMeta):
-                raise TypeError("First base to an enum must be the type to combine with, not _EnumMeta")
+                msg = "First base to an enum must be the type to combine with, not _EnumMeta"
+                raise TypeError(msg)
 
             return _EnumNamespace(base)
         except ValueError:
-            raise TypeError("Expected exactly two base classes for an enum") from None
+            msg = "Expected exactly two base classes for an enum"
+            raise TypeError(msg) from None
 
     def __repr__(cls) -> str:
         return f"<enum {cls.__name__}>"
@@ -418,13 +426,15 @@ class _FlagMeta(type):
     ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
         if _Flag is NotImplemented:
             if name != "Flag":
-                raise TypeError("First instance of _FlagMeta must be Flag")
+                msg = "First instance of _FlagMeta must be Flag"
+                raise TypeError(msg)
             return _EnumNamespace(object)
 
         # Fails if Flag is not defined.
         if len(bases) == 1 and bases[0] == Flag:
             return _EnumNamespace(int)
-        raise TypeError("Cannot define another Flag base type")
+        msg = "Cannot define another Flag base type"
+        raise TypeError(msg)
 
     @staticmethod
     def __new__(

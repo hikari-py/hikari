@@ -208,7 +208,8 @@ class CDNRoute:
     @valid_formats.validator
     def _(self, _: attrs.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
         if not values:
-            raise ValueError(f"{self.path_template} must have at least one valid format set")
+            msg = f"{self.path_template} must have at least one valid format set"
+            raise ValueError(msg)
 
     is_sizable: bool = attrs.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
     """Whether a `size` param can be specified."""
@@ -255,7 +256,8 @@ class CDNRoute:
             )
 
         if "hash" in kwargs and not kwargs["hash"].startswith("a_") and file_format == GIF:
-            raise TypeError("This asset is not animated, so cannot be retrieved as a GIF")
+            msg = "This asset is not animated, so cannot be retrieved as a GIF"
+            raise TypeError(msg)
 
         # Make URL-safe first.
         kwargs = {k: urllib.parse.quote(str(v)) for k, v in kwargs.items()}
@@ -263,17 +265,20 @@ class CDNRoute:
 
         if size is not None:
             if not self.is_sizable:
-                raise TypeError("This asset cannot be resized.")
+                msg = "This asset cannot be resized."
+                raise TypeError(msg)
 
             if size < 0:
-                raise ValueError("size must be positive")
+                msg = "size must be positive"
+                raise ValueError(msg)
 
             size_power = math.log2(size)
             if size_power.is_integer() and 2 <= size_power <= 16:
                 url += "?"
                 url += urllib.parse.urlencode({"size": str(size)})
             else:
-                raise ValueError("size must be an integer power of 2 between 16 and 4096 inclusive")
+                msg = "size must be an integer power of 2 between 16 and 4096 inclusive"
+                raise ValueError(msg)
 
         return url
 

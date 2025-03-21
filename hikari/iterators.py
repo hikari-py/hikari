@@ -110,7 +110,8 @@ class All(typing.Generic[ValueT]):
 
     def __or__(self, other: typing.Any) -> All[ValueT]:
         if not isinstance(other, All):
-            raise TypeError(f"unsupported operand type(s) for |: {type(self).__name__!r} and {type(other).__name__!r}")
+            msg = f"unsupported operand type(s) for |: {type(self).__name__!r} and {type(other).__name__!r}"
+            raise TypeError(msg)
 
         return All((self, other))
 
@@ -509,7 +510,8 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         try:
             return await self.__anext__()
         except StopAsyncIteration:
-            raise LookupError("No elements were found") from None
+            msg = "No elements were found"
+            raise LookupError(msg) from None
 
     async def last(self) -> ValueT:
         """Return the last element of this iterator only.
@@ -665,7 +667,8 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         **attrs: typing.Any,
     ) -> All[ValueT]:
         if not predicates and not attrs:
-            raise TypeError(f"You should provide at least one predicate to {alg_name}()")
+            msg = f"You should provide at least one predicate to {alg_name}()"
+            raise TypeError(msg)
 
         conditions: list[typing.Callable[[ValueT], bool]] = []
 
@@ -687,7 +690,8 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return All(conditions)
 
     def _complete(self) -> typing.NoReturn:
-        raise StopAsyncIteration("No more items exist in this iterator. It has been exhausted.") from None
+        msg = "No more items exist in this iterator. It has been exhausted."
+        raise StopAsyncIteration(msg) from None
 
     def __aiter__(self) -> LazyIterator[ValueT]:
         # We are our own async iterator.
@@ -696,7 +700,8 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     def __iter__(self) -> LazyIterator[ValueT]:
         # This iterator is async only.
         cls = type(self)
-        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is an async-only iterator, did you mean 'async for'?")
+        msg = f"{cls.__module__}.{cls.__qualname__} is an async-only iterator, did you mean 'async for'?"
+        raise TypeError(msg)
 
     async def _fetch_all(self) -> typing.Sequence[ValueT]:
         return [item async for item in self]
@@ -713,8 +718,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         def __next__(self) -> typing.NoReturn:
             # This is async only.
             cls = type(self)
+            msg = f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async for' or `anext`?"
             raise TypeError(
-                f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async for' or `anext`?"
+                msg
             ) from None
 
 
@@ -787,7 +793,8 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
             self._buffer = await self._next_chunk()
             if self._buffer is not None:
                 return next(self._buffer)
-        self._complete()
+
+        self._complete()  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
 
 
 class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
@@ -844,7 +851,8 @@ class _LimitedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
 
     def __init__(self, iterator: LazyIterator[ValueT], limit: int) -> None:
         if limit <= 0:
-            raise ValueError("limit must be positive and non-zero")
+            msg = "limit must be positive and non-zero"
+            raise ValueError(msg)
         self._iterator = iterator
         self._count = 0
         self._limit = limit
@@ -863,7 +871,8 @@ class _DropCountLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
 
     def __init__(self, iterator: LazyIterator[ValueT], number: int) -> None:
         if number <= 0:
-            raise ValueError("number must be positive and non-zero")
+            msg = "number must be positive and non-zero"
+            raise ValueError(msg)
         self._iterator = iterator
         self._count = 0
         self._number = number
@@ -873,8 +882,7 @@ class _DropCountLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
             self._count += 1
             await self._iterator.__anext__()
 
-        next_item = await self._iterator.__anext__()
-        return next_item
+        return await self._iterator.__anext__()
 
 
 class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
@@ -889,7 +897,7 @@ class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
             if self._predicate(item):
                 return item
 
-        self._complete()
+        self._complete()  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
 
 
 class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[ValueT]]):
@@ -911,7 +919,7 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         if chunk:
             return chunk
 
-        self._complete()
+        self._complete()  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
 
 
 class _ReversedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
@@ -958,7 +966,7 @@ class _TakeWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         if self._condition(item):
             return item
 
-        self._complete()
+        self._complete()  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
 
 
 class _DropWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
@@ -1027,12 +1035,12 @@ class _AwaitingLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         if not self._buffer:
             coroutines: list[typing.Awaitable[ValueT]] = []
 
-            while len(coroutines) < self._window_size:
-                try:
+            try:
+                while len(coroutines) < self._window_size:
                     next_coroutine = await self._iterator.__anext__()
                     coroutines.append(next_coroutine)
-                except StopAsyncIteration:
-                    break
+            except StopAsyncIteration:
+                pass
 
             if not coroutines:
                 raise StopAsyncIteration

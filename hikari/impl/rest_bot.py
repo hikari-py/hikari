@@ -432,7 +432,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     async def close(self) -> None:
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot close an inactive bot")
+            msg = "Cannot close an inactive bot"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._is_closing:
             await self.join()
@@ -457,7 +458,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     async def join(self) -> None:
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot wait for an inactive bot to join")
+            msg = "Cannot wait for an inactive bot to join"
+            raise errors.ComponentStateConflictError(msg)
 
         await self._close_event.wait()
 
@@ -548,7 +550,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self.is_alive:
-            raise errors.ComponentStateConflictError("Cannot start a bot that's already active")
+            msg = "Cannot start a bot that's already active"
+            raise errors.ComponentStateConflictError(msg)
 
         loop = aio.get_or_make_loop()
         if asyncio_debug:
@@ -651,7 +654,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self.is_alive:
-            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
+            msg = "Cannot start an already active interaction server"
+            raise errors.ComponentStateConflictError(msg)
 
         self._is_closing = False
         self._close_event = asyncio.Event()

@@ -484,16 +484,20 @@ class ExponentialBackOff:
             self.maximum = float(maximum)
             self.jitter_multiplier = float(jitter_multiplier)
         except OverflowError:
-            raise ValueError("int too large to be represented as a float") from None
+            msg = "int too large to be represented as a float"
+            raise ValueError(msg) from None
 
         if not math.isfinite(self.base):
-            raise ValueError("base must be a finite number") from None
+            msg = "base must be a finite number"
+            raise ValueError(msg) from None
 
         if not math.isfinite(self.maximum):
-            raise ValueError("maximum must be a finite number") from None
+            msg = "maximum must be a finite number"
+            raise ValueError(msg) from None
 
         if not math.isfinite(self.jitter_multiplier):
-            raise ValueError("jitter_multiplier must be a finite number") from None
+            msg = "jitter_multiplier must be a finite number"
+            raise ValueError(msg) from None
 
         self.increment = initial_increment
 

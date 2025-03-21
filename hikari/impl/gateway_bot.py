@@ -446,14 +446,16 @@ class GatewayBot(traits.GatewayBotAware):
 
     def _check_if_alive(self) -> None:
         if not self._closed_event:
-            raise errors.ComponentStateConflictError("bot is not running so it cannot be interacted with")
+            msg = "bot is not running so it cannot be interacted with"
+            raise errors.ComponentStateConflictError(msg)
 
     def get_me(self) -> typing.Optional[users_.OwnUser]:
         return self._cache.get_me()
 
     async def close(self) -> None:
         if not self._closed_event or not self._closing_event:
-            raise errors.ComponentStateConflictError("Cannot close an inactive bot")
+            msg = "Cannot close an inactive bot"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._closing_event.is_set():
             await self.join()
@@ -596,7 +598,8 @@ class GatewayBot(traits.GatewayBotAware):
 
     async def join(self) -> None:
         if not self._closed_event:
-            raise errors.ComponentStateConflictError("Cannot wait for an inactive bot to join")
+            msg = "Cannot wait for an inactive bot to join"
+            raise errors.ComponentStateConflictError(msg)
 
         await aio.first_completed(self._closed_event.wait(), *(s.join() for s in self._shards.values()))
 
@@ -787,10 +790,12 @@ class GatewayBot(traits.GatewayBotAware):
             If `shard_ids` is passed without `shard_count`.
         """
         if self._closed_event:
-            raise errors.ComponentStateConflictError("bot is already running")
+            msg = "bot is already running"
+            raise errors.ComponentStateConflictError(msg)
 
         if shard_ids is not None and shard_count is None:
-            raise TypeError("'shard_ids' must be passed with 'shard_count'")
+            msg = "'shard_ids' must be passed with 'shard_count'"
+            raise TypeError(msg)
 
         loop = aio.get_or_make_loop()
 
@@ -908,10 +913,12 @@ class GatewayBot(traits.GatewayBotAware):
             If bot is already running.
         """
         if self._closed_event:
-            raise errors.ComponentStateConflictError("bot is already running")
+            msg = "bot is already running"
+            raise errors.ComponentStateConflictError(msg)
 
         if shard_ids is not None and shard_count is None:
-            raise TypeError("'shard_ids' must be passed with 'shard_count'")
+            msg = "'shard_ids' must be passed with 'shard_count'"
+            raise TypeError(msg)
 
         _validate_activity(activity)
 
@@ -945,7 +952,8 @@ class GatewayBot(traits.GatewayBotAware):
                 "s" if requirements.session_start_limit.remaining != 1 else "",
                 requirements.session_start_limit.reset_at,
             )
-            raise RuntimeError("Attempted to start more sessions than were allowed in the given time-window")
+            msg = "Attempted to start more sessions than were allowed in the given time-window"
+            raise RuntimeError(msg)
 
         _LOGGER.info(
             "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",
@@ -973,7 +981,8 @@ class GatewayBot(traits.GatewayBotAware):
                         return
 
                     _LOGGER.critical("one or more shards closed while starting; shutting down")
-                    raise RuntimeError("One or more shards closed while starting")
+                    msg = "One or more shards closed while starting"
+                    raise RuntimeError(msg)
                 except asyncio.TimeoutError:
                     # new window starts.
                     pass
@@ -1209,7 +1218,8 @@ class GatewayBot(traits.GatewayBotAware):
         if shard := self._shards.get(snowflakes.calculate_shard_id(self.shard_count, guild)):
             return shard
 
-        raise RuntimeError(f"Guild {guild} isn't covered by any of the shards in this client")
+        msg = f"Guild {guild} isn't covered by any of the shards in this client"
+        raise RuntimeError(msg)
 
     async def update_presence(
         self,
@@ -1296,7 +1306,8 @@ class GatewayBot(traits.GatewayBotAware):
                 self._shards[shard_id] = new_shard
                 return
 
-            raise RuntimeError(f"shard {shard_id} shut down immediately when starting")
+            msg = f"shard {shard_id} shut down immediately when starting"
+            raise RuntimeError(msg)
 
         except Exception:
             if new_shard.is_alive:

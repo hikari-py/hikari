@@ -90,7 +90,8 @@ def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pra
     import cProfile
 
     if inspect.iscoroutinefunction(call):
-        raise TypeError("cannot profile async calls")
+        msg = "cannot profile async calls"
+        raise TypeError(msg)
 
     @functools.wraps(call)
     def wrapped(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:

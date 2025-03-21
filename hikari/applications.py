@@ -922,4 +922,5 @@ def get_token_id(token: str) -> snowflakes.Snowflake:
         return snowflakes.Snowflake(base64.b64decode(segment))
 
     except (TypeError, ValueError, IndexError) as exc:
-        raise ValueError("Unexpected token format") from exc
+        msg = "Unexpected token format"
+        raise ValueError(msg) from exc

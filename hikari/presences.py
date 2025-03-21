@@ -147,7 +147,8 @@ class ActivityAssets:
             return files.URL(url=_DYNAMIC_URLS[resource].format(identifier))
 
         except KeyError:
-            raise RuntimeError("Unknown asset type") from None
+            msg = "Unknown asset type"
+            raise RuntimeError(msg) from None
 
         except ValueError:
             assert self._application_id is not None

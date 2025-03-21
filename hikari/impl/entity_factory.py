@@ -271,7 +271,8 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.PermissibleGuildChannel]:
         if self._channels is undefined.UNDEFINED:
             if "channels" not in self._payload:
-                raise LookupError("'channels' not in payload")
+                msg = "'channels' not in payload"
+                raise LookupError(msg)
 
             self._channels = {}
 
@@ -351,7 +352,8 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     def members(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Member]:
         if self._members is undefined.UNDEFINED:
             if "members" not in self._payload:
-                raise LookupError("'members' not in payload")
+                msg = "'members' not in payload"
+                raise LookupError(msg)
 
             self._members = {
                 snowflakes.Snowflake(m["user"]["id"]): self._entity_factory.deserialize_member(m, guild_id=self.id)
@@ -363,7 +365,8 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     def presences(self) -> typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]:
         if self._presences is undefined.UNDEFINED:
             if "presences" not in self._payload:
-                raise LookupError("'presences' not in payload")
+                msg = "'presences' not in payload"
+                raise LookupError(msg)
 
             self._presences = {
                 snowflakes.Snowflake(p["user"]["id"]): self._entity_factory.deserialize_member_presence(
@@ -386,7 +389,8 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     def threads(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildThreadChannel]:
         if self._threads is undefined.UNDEFINED:
             if "threads" not in self._payload:
-                raise LookupError("'threads' not in payload")
+                msg = "'threads' not in payload"
+                raise LookupError(msg)
 
             self._threads = {}
 
@@ -406,7 +410,8 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
     def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
         if self._voice_states is undefined.UNDEFINED:
             if "voice_states" not in self._payload:
-                raise LookupError("'voice_states' not in payload")
+                msg = "'voice_states' not in payload"
+                raise LookupError(msg)
 
             members = self.members()
             self._voice_states = {}
@@ -895,7 +900,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 options = option_converter(raw_option)
 
             else:
-                raise errors.UnrecognisedEntityError(f"Unknown audit log action type found {action_type!r}")
+                msg = f"Unknown audit log action type found {action_type!r}"
+                raise errors.UnrecognisedEntityError(msg)
 
         return audit_log_models.AuditLogEntry(
             app=self._app,
@@ -1340,7 +1346,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return deserialize(payload, guild_id=guild_id, member=member, user_id=user_id)
 
         _LOGGER.debug(f"Unrecognised thread channel type {channel_type}")
-        raise errors.UnrecognisedEntityError(f"Unrecognised thread channel type {channel_type}")
+        msg = f"Unrecognised thread channel type {channel_type}"
+        raise errors.UnrecognisedEntityError(msg)
 
     def deserialize_guild_news_thread(
         self,
@@ -1527,7 +1534,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return dm_channel_model(payload)
 
         _LOGGER.debug(f"Unrecognised channel type {channel_type}")
-        raise errors.UnrecognisedEntityError(f"Unrecognised channel type {channel_type}")
+        msg = f"Unrecognised channel type {channel_type}"
+        raise errors.UnrecognisedEntityError(msg)
 
     ################
     # EMBED MODELS #
@@ -1705,10 +1713,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 value = str(field.value) if field.value is not None else None
 
                 if name is None:
-                    raise TypeError(f"in embed.fields[{i}].name - cannot have `None`")
+                    msg = f"in embed.fields[{i}].name - cannot have `None`"
+                    raise TypeError(msg)
 
                 if value is None:
-                    raise TypeError(f"in embed.fields[{i}].value - cannot have `None`")
+                    msg = f"in embed.fields[{i}].value - cannot have `None`"
+                    raise TypeError(msg)
 
                 # Name and value always have to be specified; we can always
                 # send a default `inline` value also just to keep this simpler.
@@ -2404,7 +2414,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return deserialize(payload, guild_id=guild_id)
 
         _LOGGER.debug("Unknown command type %s", command_type)
-        raise errors.UnrecognisedEntityError(f"Unrecognised command type {command_type}")
+        msg = f"Unrecognised command type {command_type}"
+        raise errors.UnrecognisedEntityError(msg)
 
     def deserialize_guild_command_permissions(
         self, payload: data_binding.JSONObject
@@ -2768,7 +2779,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return deserialize(payload)
 
         _LOGGER.debug("Unknown interaction type %s", interaction_type)
-        raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction_type}")
+        msg = f"Unrecognised interaction type {interaction_type}"
+        raise errors.UnrecognisedEntityError(msg)
 
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
         payload: typing.MutableMapping[str, typing.Any] = {
@@ -3176,7 +3188,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if deserializer := self._interaction_metadata_mapping.get(interaction_metadata_type):
             return deserializer(payload)
         _LOGGER.debug(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
-        raise errors.UnrecognisedEntityError(f"Unrecognised interaction metadata type: {interaction_metadata_type}")
+        msg = f"Unrecognised interaction metadata type: {interaction_metadata_type}"
+        raise errors.UnrecognisedEntityError(msg)
 
     def deserialize_partial_message(  # noqa: C901 - Too complex
         self, payload: data_binding.JSONObject
@@ -3616,7 +3629,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return converter(payload)
 
         _LOGGER.debug(f"Unrecognised scheduled event type {event_type}")
-        raise errors.UnrecognisedEntityError(f"Unrecognised scheduled event type {event_type}")
+        msg = f"Unrecognised scheduled event type {event_type}"
+        raise errors.UnrecognisedEntityError(msg)
 
     def deserialize_scheduled_event_user(
         self,
@@ -3895,7 +3909,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             return converter(payload)
 
         _LOGGER.debug(f"Unrecognised webhook type {webhook_type}")
-        raise errors.UnrecognisedEntityError(f"Unrecognised webhook type {webhook_type}")
+        msg = f"Unrecognised webhook type {webhook_type}"
+        raise errors.UnrecognisedEntityError(msg)
 
     ##################
     #  MONETIZATION  #
