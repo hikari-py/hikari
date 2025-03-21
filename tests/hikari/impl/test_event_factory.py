@@ -50,9 +50,6 @@ from hikari.events import user_events
 from hikari.events import voice_events
 from hikari.impl import event_factory as event_factory_
 from hikari.interactions import base_interactions
-from hikari.interactions import command_interactions
-from hikari.interactions import component_interactions
-from hikari.interactions import modal_interactions
 
 
 class TestEventFactoryImpl:
@@ -742,10 +739,10 @@ class TestEventFactoryImpl:
         ("interaction_type", "expected"),
         [
             (None, interaction_events.InteractionCreateEvent),
-            (command_interactions.CommandInteraction, interaction_events.CommandInteractionCreateEvent),
-            (component_interactions.ComponentInteraction, interaction_events.ComponentInteractionCreateEvent),
-            (command_interactions.AutocompleteInteraction, interaction_events.AutocompleteInteractionCreateEvent),
-            (modal_interactions.ModalInteraction, interaction_events.ModalInteractionCreateEvent),
+            (base_interactions.InteractionType.APPLICATION_COMMAND, interaction_events.CommandInteractionCreateEvent),
+            (base_interactions.InteractionType.MESSAGE_COMPONENT, interaction_events.ComponentInteractionCreateEvent),
+            (base_interactions.InteractionType.AUTOCOMPLETE, interaction_events.AutocompleteInteractionCreateEvent),
+            (base_interactions.InteractionType.MODAL_SUBMIT, interaction_events.ModalInteractionCreateEvent),
         ],
     )
     def test_deserialize_interaction_create_event(
@@ -753,12 +750,12 @@ class TestEventFactoryImpl:
         event_factory,
         mock_app,
         mock_shard,
-        interaction_type: typing.Optional[base_interactions.PartialInteraction],
+        interaction_type: typing.Optional[base_interactions.InteractionType],
         expected: interaction_events.InteractionCreateEvent,
     ):
         payload = {"id": "1561232344"}
         if interaction_type:
-            mock_app.entity_factory.deserialize_interaction.return_value = mock.Mock(interaction_type)
+            mock_app.entity_factory.deserialize_interaction.return_value = mock.Mock(type=interaction_type)
         result = event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
         mock_app.entity_factory.deserialize_interaction.assert_called_once_with(payload)

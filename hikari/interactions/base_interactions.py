@@ -212,7 +212,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     application_id: snowflakes.Snowflake = attrs.field(eq=False, repr=False)
     """ID of the application this interaction belongs to."""
 
-    type: typing.Union[InteractionType, int] = attrs.field(eq=False, repr=True)
+    type: InteractionType = attrs.field(eq=False, repr=True)
     """The type of interaction this is."""
 
     token: str = attrs.field(eq=False, repr=False)
