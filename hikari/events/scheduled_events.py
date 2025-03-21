@@ -35,6 +35,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import intents
 from hikari.events import base_events
@@ -73,11 +74,13 @@ class ScheduledEventCreateEvent(ScheduledEventEvent):
     """The scheduled event that was created."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.event.app
 
     @property
+    @override
     def event_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id
@@ -96,11 +99,13 @@ class ScheduledEventDeleteEvent(ScheduledEventEvent):
     """The scheduled event that was deleted."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.event.app
 
     @property
+    @override
     def event_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id
@@ -119,11 +124,13 @@ class ScheduledEventUpdateEvent(ScheduledEventEvent):
     """The scheduled event that was updated."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.event.app
 
     @property
+    @override
     def event_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id

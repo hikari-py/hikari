@@ -40,6 +40,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import channels
 from hikari import intents
@@ -82,6 +83,7 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.message.app
@@ -97,6 +99,7 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         return self.author.id
 
     @property
+    @override
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MessageEvent>>
         return self.message.channel_id
@@ -138,6 +141,7 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         """Message that was sent in the event."""
 
     @property
+    @override
     def message_id(self) -> snowflakes.Snowflake:
         """ID of the message that this event concerns."""
         return self.message.id
@@ -160,6 +164,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
     # <<inherited docstring from ShardEvent>>
 
     @property
+    @override
     def author(self) -> users.User:
         """User object of the user that sent the message."""
         return self.message.author
@@ -256,6 +261,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.message.app
@@ -280,6 +286,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         return author.id if author is not undefined.UNDEFINED else undefined.UNDEFINED
 
     @property
+    @override
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MessageEvent>>.
         return self.message.channel_id
@@ -355,6 +362,7 @@ class MessageUpdateEvent(MessageEvent, abc.ABC):
         """Partial message that was sent in the event."""
 
     @property
+    @override
     def message_id(self) -> snowflakes.Snowflake:
         """ID of the message that this event concerns."""
         return self.message.id
@@ -489,6 +497,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @override
     def message_id(self) -> snowflakes.Snowflake:
         """ID of the message that was deleted."""
 

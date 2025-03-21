@@ -27,6 +27,7 @@ __all__: typing.Sequence[str] = ("OwnUserUpdateEvent",)
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
@@ -55,6 +56,7 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     """This application user."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.user.app

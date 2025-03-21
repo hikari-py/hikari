@@ -33,6 +33,7 @@ __all__: typing.Sequence[str] = (
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
@@ -58,6 +59,7 @@ class InteractionCreateEvent(shard_events.ShardEvent):
     """Interaction that this event is related to."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.interaction.app

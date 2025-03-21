@@ -36,6 +36,7 @@ dependencies = [
     "attrs~=25.1",
     "colorlog~=6.9",
     "multidict~=6.1",
+    "typing_extensions~=4.4",
 ]
 scripts = { "hikari" = "hikari.cli:main" }
 
@@ -216,6 +217,7 @@ type = [
 # general settings
 strict = true
 check_untyped_defs = true
+enable_error_code = "explicit-override"
 incremental = true
 namespace_packages = true
 no_implicit_optional = true

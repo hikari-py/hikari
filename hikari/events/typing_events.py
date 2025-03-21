@@ -28,6 +28,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import channels
 from hikari import intents
@@ -148,15 +149,18 @@ class GuildTypingEvent(TypingEvent):
     """Object of the member who triggered this typing event."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.member.app
 
     @property
+    @override
     def user_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from TypingEvent>>.
         return self.member.id
 
+    @override
     async def fetch_channel(self) -> channels.TextableGuildChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 
@@ -255,6 +259,7 @@ class DMTypingEvent(TypingEvent):
     timestamp: datetime.datetime = attrs.field(repr=False)
     # <<inherited docstring from TypingEvent>>.
 
+    @override
     async def fetch_channel(self) -> channels.DMChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 

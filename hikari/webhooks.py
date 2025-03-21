@@ -35,6 +35,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import channels as channels_
 from hikari import snowflakes
@@ -493,6 +494,7 @@ class PartialWebhook(snowflakes.Unique):
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this webhook."""
 
+    @override
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
 
@@ -595,6 +597,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     """
 
     @property
+    @override
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.id

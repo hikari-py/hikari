@@ -28,6 +28,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import intents
 from hikari import traits
@@ -49,6 +50,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.user.app
@@ -98,11 +100,13 @@ class MemberCreateEvent(MemberEvent):
     """Member object for the member that joined the guild."""
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MemberEvent>>.
         return self.member.guild_id
 
     @property
+    @override
     def user(self) -> users.User:
         # <<inherited docstring from MemberEvent>>.
         return self.member.user
@@ -130,11 +134,13 @@ class MemberUpdateEvent(MemberEvent):
     """Member object for the member that was updated."""
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MemberEvent>>.
         return self.member.guild_id
 
     @property
+    @override
     def user(self) -> users.User:
         # <<inherited docstring from MemberEvent>>.
         return self.member.user

@@ -27,6 +27,7 @@ __all__: typing.Sequence[str] = ("VoiceRegion", "VoiceState")
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari.internal import attrs_extensions
 
@@ -128,5 +129,6 @@ class VoiceRegion:
     is_custom: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this region is custom (e.g. used for events)."""
 
+    @override
     def __str__(self) -> str:
         return self.id

@@ -28,6 +28,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import intents
 from hikari.events import base_events
@@ -77,11 +78,13 @@ class VoiceStateUpdateEvent(VoiceEvent):
     """Voice state that this update contained."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.state.app
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from VoiceEvent>>
         return self.state.guild_id

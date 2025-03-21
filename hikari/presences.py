@@ -39,6 +39,7 @@ __all__: typing.Sequence[str] = (
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import files
 from hikari import snowflakes
@@ -318,6 +319,7 @@ class Activity:
     type: typing.Union[ActivityType, int] = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""
 
+    @override
     def __str__(self) -> str:
         return self.name
 

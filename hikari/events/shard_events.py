@@ -37,6 +37,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari.events import base_events
 from hikari.internal import attrs_extensions
@@ -153,6 +154,7 @@ class ShardReadyEvent(ShardStateEvent):
     """Flags of the application this ready event is for."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.my_user.app
@@ -221,13 +223,16 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     @typing.overload
     def __getitem__(self, index_or_slice: slice, /) -> typing.Sequence[guilds.Member]: ...
 
+    @override
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /
     ) -> typing.Union[guilds.Member, typing.Sequence[guilds.Member]]:
         return collections.get_index_or_slice(self.members, index_or_slice)
 
+    @override
     def __iter__(self) -> typing.Iterator[guilds.Member]:
         return iter(self.members.values())
 
+    @override
     def __len__(self) -> int:
         return len(self.members)

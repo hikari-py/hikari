@@ -41,6 +41,7 @@ __all__: typing.Sequence[str] = (
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import channels
 from hikari import snowflakes
@@ -629,13 +630,16 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     @typing.overload
     def __getitem__(self, slice_: slice, /) -> typing.Sequence[AuditLogEntry]: ...
 
+    @override
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /
     ) -> typing.Union[AuditLogEntry, typing.Sequence[AuditLogEntry]]:
         return collections.get_index_or_slice(self.entries, index_or_slice)
 
+    @override
     def __iter__(self) -> typing.Iterator[AuditLogEntry]:
         return iter(self.entries.values())
 
+    @override
     def __len__(self) -> int:
         return len(self.entries)

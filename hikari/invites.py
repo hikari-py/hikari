@@ -28,6 +28,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import guilds
 from hikari import urls
@@ -67,6 +68,7 @@ class InviteCode(abc.ABC):
     def code(self) -> str:
         """Code for this invite."""
 
+    @override
     def __str__(self) -> str:
         return f"https://discord.gg/{self.code}"
 

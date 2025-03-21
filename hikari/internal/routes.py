@@ -30,6 +30,7 @@ import typing
 import urllib.parse
 
 import attrs
+from typing_extensions import override
 
 from hikari import files
 from hikari.internal import attrs_extensions
@@ -108,6 +109,7 @@ class CompiledRoute:
         """
         return f"{initial_bucket_hash}{HASH_SEPARATOR}{authentication_hash}{HASH_SEPARATOR}{self.major_param_hash}"
 
+    @override
     def __str__(self) -> str:
         return f"{self.method} {self.compiled_path}"
 
@@ -183,6 +185,7 @@ class Route:
             major_param_hash=MAJOR_PARAM_COMBOS[self.major_params](data) if self.major_params else "-",
         )
 
+    @override
     def __str__(self) -> str:
         return self.method + " " + self.path_template
 

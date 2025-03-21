@@ -44,6 +44,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import emojis
 from hikari import intents
@@ -264,16 +265,19 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     # <<inherited docstring from ReactionAddEvent>>.
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.member.app
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildReactionEvent>>.
         return self.member.guild_id
 
     @property
+    @override
     def user_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ReactionAddEvent>>.
         return self.member.user.id

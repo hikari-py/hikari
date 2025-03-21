@@ -35,6 +35,7 @@ import warnings
 import weakref
 
 import attrs
+from typing_extensions import override
 
 from hikari import errors
 from hikari import iterators
@@ -156,10 +157,12 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         # The registered wrapping function for the weak ref to this class's _listener method.
         self._timeout = timeout
 
+    @override
     def __enter__(self) -> Self:
         self.open()
         return self
 
+    @override
     def __exit__(
         self,
         exc_type: typing.Optional[type[BaseException]],
@@ -168,6 +171,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
     ) -> None:
         self.close()
 
+    @override
     async def __anext__(self) -> base_events.EventT:
         if not self._active:
             msg = "stream must be started with before entering it"
@@ -186,6 +190,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
         return self._queue.pop(0)
 
+    @override
     def __await__(self) -> typing.Generator[None, None, typing.Sequence[base_events.EventT]]:
         return self._await_all().__await__()
 
@@ -212,6 +217,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         if self._event:
             self._event.set()
 
+    @override
     def close(self) -> None:
         if self._active and self._registered_listener is not None:
             try:
@@ -223,6 +229,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
         self._active = False
 
+    @override
     def filter(
         self,
         *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
@@ -235,6 +242,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         self._filters |= filter_
         return self
 
+    @override
     def open(self) -> None:
         if not self._active:
             # For the sake of protecting highly intelligent people who forget to close this, we register the event
@@ -410,6 +418,7 @@ class EventManagerBase(event_manager_.EventManager):
                     stacklevel=nested + 3,
                 )
 
+    @override
     def consume_raw_event(
         self, event_name: str, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
@@ -427,6 +436,7 @@ class EventManagerBase(event_manager_.EventManager):
     # using ABCs that are not concrete in generic types passed to functions.
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
+    @override
     def subscribe(
         self, event_type: type[typing.Any], callback: event_manager_.CallbackT[typing.Any], *, _nested: int = 0
     ) -> None:
@@ -457,6 +467,7 @@ class EventManagerBase(event_manager_.EventManager):
             self._listeners[event_type] = [callback]
             self._increment_listener_group_count(event_type, 1)
 
+    @override
     def get_listeners(
         self, event_type: type[base_events.EventT], /, *, polymorphic: bool = True
     ) -> typing.Collection[event_manager_.CallbackT[base_events.EventT]]:
@@ -477,6 +488,7 @@ class EventManagerBase(event_manager_.EventManager):
     # using ABCs that are not concrete in generic types passed to functions.
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
+    @override
     def unsubscribe(self, event_type: type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
         if listeners := self._listeners.get(event_type):
             _LOGGER.debug(
@@ -491,6 +503,7 @@ class EventManagerBase(event_manager_.EventManager):
                 del self._listeners[event_type]
                 self._increment_listener_group_count(event_type, -1)
 
+    @override
     def listen(
         self, *event_types: type[base_events.EventT]
     ) -> typing.Callable[[event_manager_.CallbackT[base_events.EventT]], event_manager_.CallbackT[base_events.EventT]]:
@@ -528,6 +541,7 @@ class EventManagerBase(event_manager_.EventManager):
 
         return decorator
 
+    @override
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
         tasks: list[typing.Coroutine[None, typing.Any, None]] = []
 
@@ -561,6 +575,7 @@ class EventManagerBase(event_manager_.EventManager):
 
         return aio.completed_future()
 
+    @override
     def stream(
         self,
         event_type: type[base_events.EventT],
@@ -571,6 +586,7 @@ class EventManagerBase(event_manager_.EventManager):
         self._check_event(event_type, 1)
         return EventStream(self, event_type, timeout=timeout, limit=limit)
 
+    @override
     async def wait_for(
         self,
         event_type: type[base_events.EventT],

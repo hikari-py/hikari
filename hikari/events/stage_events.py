@@ -26,6 +26,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import intents
 from hikari.events import base_events
@@ -45,6 +46,7 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.stage_instance.app

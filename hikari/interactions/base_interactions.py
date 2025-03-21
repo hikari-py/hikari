@@ -41,6 +41,7 @@ __all__: typing.Sequence[str] = (
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import channels
 from hikari import guilds
@@ -277,6 +278,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
         return self.channel.id
 
     @property
+    @override
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.application_id

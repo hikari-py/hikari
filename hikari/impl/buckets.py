@@ -197,6 +197,8 @@ import asyncio
 import logging
 import typing
 
+from typing_extensions import override
+
 from hikari import errors
 from hikari.impl import rate_limits
 from hikari.internal import routes
@@ -269,6 +271,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Release the lock on the bucket."""
         self._lock.release()
 
+    @override
     async def acquire(self) -> None:
         """Acquire time and the lock on this bucket.
 
