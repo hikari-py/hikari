@@ -1608,10 +1608,8 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
         if flags is undefined.UNDEFINED:
             flags = messages_.MessageFlag.IS_VOICE_MESSAGE
-        elif isinstance(flags, int):
-            flags = messages_.MessageFlag(flags)
-        if not flags.any(messages_.MessageFlag.IS_VOICE_MESSAGE):
-            flags = flags | messages_.MessageFlag.IS_VOICE_MESSAGE
+        else:
+            flags = messages_.MessageFlag(flags) | messages_.MessageFlag.IS_VOICE_MESSAGE
         body, form_builder = self._build_message_payload(
             attachment=attachment, mentions_reply=mentions_reply, flags=flags, waveform=waveform, duration=duration
         )
