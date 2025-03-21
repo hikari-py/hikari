@@ -58,11 +58,12 @@ class TestModalInteraction:
             guild_locale="en-US",
             app_permissions=543123,
             components=special_endpoints.ModalActionRowBuilder(
+                id=9817398,
                 components=[
                     components.TextInputComponent(
-                        type=components.ComponentType.TEXT_INPUT, custom_id="le id", value="le value"
+                        type=components.ComponentType.TEXT_INPUT, id=9817398, custom_id="le id", value="le value"
                     )
-                ]
+                ],
             ),
             entitlements=[
                 monetization.Entitlement(
