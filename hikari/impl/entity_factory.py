@@ -3946,7 +3946,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_poll_media(self, payload: data_binding.JSONObject) -> poll_models.PollMedia:
         return poll_models.PollMedia(
-            text=payload.get("text", None),
+            text=payload.get("text"),
             emoji=self.deserialize_emoji(payload["emoji"]) if "emoji" in payload else None,
         )
 
