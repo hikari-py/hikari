@@ -49,7 +49,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           title="Prepare for release of ${VERSION}"
-          body="Release preparation triggered by ${AUTHOR}.
+          body="Release preparation triggered by @${AUTHOR}.
 
           Once the pull request is merged, you can trigger a PyPI release by creating a GitHub release for \`${VERSION}\` in the repository."
 
