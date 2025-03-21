@@ -50,7 +50,7 @@ jobs:
           title="Prepare for release of ${VERSION}"
           body="Release preparation triggered by ${AUTHOR}.
 
-          Once the pull request is merged, you can trigger a PyPI release by creating a GitHub release for `${VERSION}` in the repository."
+          Once the pull request is merged, you can trigger a PyPI release by creating a GitHub release for \`${VERSION}\` in the repository."
 
           gh pr create \
             --title "${title}" \
