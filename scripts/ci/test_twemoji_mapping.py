@@ -77,7 +77,7 @@ for i, emoji in enumerate(mapping, start=1):
     name = emoji["primaryName"]
     emoji_surrogates = emoji["surrogates"]
     hikari_emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
-    line_repr = f"{i}/{total} {name} {' '.join(map(hex, map(ord, emoji_surrogates)))} {emoji.url}"
+    line_repr = f"{i}/{total} {name} {' '.join(map(hex, map(ord, emoji_surrogates)))} {hikari_emoji.url}"
 
     if (assets_path / hikari_emoji.filename).exists():
         print(f"[  OK  ] {line_repr}")
