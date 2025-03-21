@@ -1519,6 +1519,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 resource = files.ensure_resource(f)
                 attachment_payload.update({"id": attachment_id, "filename": resource.filename})
+                attachments_payload.append(attachment_payload)
                 form_builder.add_resource(f"files[{attachment_id}]", resource)
                 attachment_id += 1
 
@@ -1614,7 +1615,6 @@ class RESTClientImpl(rest_api.RESTClient):
             flags = messages_.MessageFlag(flags)
         if not flags.any(messages_.MessageFlag.IS_VOICE_MESSAGE):
             flags = flags | messages_.MessageFlag.IS_VOICE_MESSAGE
-        print(flags)
         body, form_builder = self._build_message_payload(
             attachment=attachment,
             component=component,
@@ -1625,7 +1625,6 @@ class RESTClientImpl(rest_api.RESTClient):
             waveform=waveform,
             duration=duration
         )
-        print(body)
 
         if reply:
             message_reference = data_binding.JSONObjectBuilder()
