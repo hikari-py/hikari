@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,9 +18,12 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import mock
 import pytest
 
+from hikari import applications
 from hikari import commands
 from hikari import snowflakes
 from hikari import traits
@@ -29,13 +31,13 @@ from hikari import undefined
 from tests.hikari import hikari_test_helpers
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
 
 
 class TestPartialCommand:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_command(self, mock_app):
         return hikari_test_helpers.mock_class_namespace(commands.PartialCommand)(
             app=mock_app,
@@ -44,21 +46,22 @@ class TestPartialCommand:
             application_id=snowflakes.Snowflake(65234123),
             name="Name",
             default_member_permissions=None,
-            is_dm_enabled=False,
             is_nsfw=True,
             guild_id=snowflakes.Snowflake(31231235),
             version=snowflakes.Snowflake(43123123),
             name_localizations={},
+            integration_types=[applications.ApplicationIntegrationType.GUILD_INSTALL],
+            context_types=[applications.ApplicationContextType.GUILD],
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_self(self, mock_command, mock_app):
         result = await mock_command.fetch_self()
 
         assert result is mock_app.rest.fetch_application_command.return_value
         mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_self_when_guild_id_is_none(self, mock_command, mock_app):
         mock_command.guild_id = None
 
@@ -67,7 +70,7 @@ class TestPartialCommand:
         assert result is mock_app.rest.fetch_application_command.return_value
         mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_edit_without_optional_args(self, mock_command, mock_app):
         result = await mock_command.edit()
 
@@ -81,7 +84,7 @@ class TestPartialCommand:
             options=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_edit_with_optional_args(self, mock_command, mock_app):
         mock_option = object()
         result = await mock_command.edit(name="new name", description="very descrypt", options=[mock_option])
@@ -91,7 +94,7 @@ class TestPartialCommand:
             65234123, 34123123, 31231235, name="new name", description="very descrypt", options=[mock_option]
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_edit_when_guild_id_is_none(self, mock_command, mock_app):
         mock_command.guild_id = None
 
@@ -107,13 +110,13 @@ class TestPartialCommand:
             options=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_delete(self, mock_command, mock_app):
         await mock_command.delete()
 
         mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_delete_when_guild_id_is_none(self, mock_command, mock_app):
         mock_command.guild_id = None
 
@@ -121,7 +124,7 @@ class TestPartialCommand:
 
         mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild_permissions(self, mock_command, mock_app):
         result = await mock_command.fetch_guild_permissions(123321)
 
@@ -130,7 +133,7 @@ class TestPartialCommand:
             application=mock_command.application_id, guild=123321, command=mock_command.id
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_set_guild_permissions(self, mock_command, mock_app):
         mock_permissions = object()
 

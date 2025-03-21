@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Application and entities that are used to describe guild scheduled events on Discord."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -67,7 +67,7 @@ class ScheduledEventType(int, enums.Enum):
     """A scheduled stage instance."""
 
     VOICE = 2
-    """A scheculed voice chat event."""
+    """A scheduled voice chat event."""
 
     EXTERNAL = 3
     """A scheduled event which takes part outside of Discord."""
@@ -80,7 +80,7 @@ class ScheduledEventStatus(int, enums.Enum):
     """Indicates that the scheduled event hasn't occurred yet."""
 
     ACTIVE = 2
-    """Indicates an eventis on-going."""
+    """Indicates an event is on-going."""
 
     COMPLETED = 3
     """Indicates an event has finished."""
@@ -89,11 +89,11 @@ class ScheduledEventStatus(int, enums.Enum):
     """Indicates an event has been canceled."""
 
     CANCELLED = CANCELED
-    """Alias of `ScheduledEventStatus.CANCELED`."""
+    """Alias of [`hikari.scheduled_events.ScheduledEventStatus.CANCELED`][]."""
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ScheduledEvent(snowflakes.Unique):
     """Base class for scheduled events."""
 
@@ -144,7 +144,7 @@ class ScheduledEvent(snowflakes.Unique):
     user_count: typing.Optional[int] = attrs.field(hash=False, repr=False)
     """The number of users that have subscribed to the event.
 
-    This will be `None` on gateway events when creating and
+    This will be [`None`][] on gateway events when creating and
     editing a scheduled event.
     """
 
@@ -161,17 +161,17 @@ class ScheduledEvent(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : str
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        ext
+            The extension to use for this URL.
+            supports `png`, `jpeg`, `jpg` and `webp`.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no cover image is set.
+            The URL, or [`None`][] if no cover image is set.
 
         Raises
         ------
@@ -187,14 +187,14 @@ class ScheduledEvent(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ScheduledExternalEvent(ScheduledEvent):
     """A scheduled event that takes place outside of Discord."""
 
     location: str = attrs.field(hash=False, repr=False)
     """The location of the scheduled event.
 
-    .. note::
+    !!! note
         There is no strict format for this field, and it will likely be a user
         friendly string.
     """
@@ -204,7 +204,7 @@ class ScheduledExternalEvent(ScheduledEvent):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ScheduledStageEvent(ScheduledEvent):
     """A scheduled event that takes place in a stage channel."""
 
@@ -213,7 +213,7 @@ class ScheduledStageEvent(ScheduledEvent):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ScheduledVoiceEvent(ScheduledEvent):
     """A scheduled event that takes place in a voice channel."""
 

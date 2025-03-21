@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 
 import mock
@@ -50,11 +51,11 @@ class StubModel(snowflakes.Unique):
 
 
 class TestCacheImpl:
-    @pytest.fixture()
+    @pytest.fixture
     def app_impl(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def cache_impl(self, app_impl):
         return hikari_test_helpers.mock_class_namespace(cache_impl_.CacheImpl, slots_=False)(
             app=app_impl, settings=config.CacheSettings()
@@ -1242,40 +1243,31 @@ class TestCacheImpl:
         assert 452234123 not in cache_impl._guild_entries
 
     @pytest.mark.skip(reason="TODO")
-    def test_update_guild(self, cache_impl):
-        ...
+    def test_update_guild(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_guild_channels(self, cache_impl):
-        ...
+    def test_clear_guild_channels(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_guild_channels_for_guild(self, cache_impl):
-        ...
+    def test_clear_guild_channels_for_guild(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_delete_guild_channel(self, cache_impl):
-        ...
+    def test_delete_guild_channel(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_guild_channel(self, cache_impl):
-        ...
+    def test_get_guild_channel(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_guild_channels_view(self, cache_impl):
-        ...
+    def test_get_guild_channels_view(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_guild_channels_view_for_guild(self, cache_impl):
-        ...
+    def test_get_guild_channels_view_for_guild(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_set_guild_channel(self, cache_impl):
-        ...
+    def test_set_guild_channel(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_update_guild_channel(self, cache_impl):
-        ...
+    def test_update_guild_channel(self, cache_impl): ...
 
     def test__build_invite(self, cache_impl):
         mock_inviter = mock.MagicMock(users.User)
@@ -1878,6 +1870,7 @@ class TestCacheImpl:
             raw_communication_disabled_until=datetime.datetime(
                 2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
             ),
+            guild_flags=guilds.GuildMemberFlags(1),
         )
 
         member = cache_impl._build_member(cache_utilities.RefCell(member_data))
@@ -1896,6 +1889,7 @@ class TestCacheImpl:
         assert member.raw_communication_disabled_until == datetime.datetime(
             2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
         )
+        assert member.guild_flags == guilds.GuildMemberFlags.DID_REJOIN
 
     def test_clear_members(self, cache_impl):
         mock_user_1 = cache_utilities.RefCell(mock.Mock(id=snowflakes.Snowflake(2123123)))
@@ -2015,8 +2009,7 @@ class TestCacheImpl:
         assert guild_record_2.members is None
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_members_for_guild(self, cache_impl):
-        ...
+    def test_clear_members_for_guild(self, cache_impl): ...
 
     def test_delete_member_for_unknown_guild_record(self, cache_impl):
         result = cache_impl.delete_member(StubModel(42123), StubModel(67876))
@@ -2229,6 +2222,7 @@ class TestCacheImpl:
             raw_communication_disabled_until=datetime.datetime(
                 2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
             ),
+            guild_flags=guilds.GuildMemberFlags(1),
         )
         cache_impl._set_user = mock.Mock(return_value=mock_user_ref)
         cache_impl._increment_ref_count = mock.Mock()
@@ -2261,6 +2255,7 @@ class TestCacheImpl:
         assert member_entry.object.raw_communication_disabled_until == datetime.datetime(
             2021, 10, 18, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc
         )
+        assert member_entry.object.guild_flags == guilds.GuildMemberFlags.DID_REJOIN
 
     def test_set_member_doesnt_increment_user_ref_count_for_pre_cached_member(self, cache_impl):
         mock_user = mock.Mock(users.User, id=snowflakes.Snowflake(645234123))
@@ -2300,68 +2295,52 @@ class TestCacheImpl:
         cache_impl.set_member.assert_called_once_with(mock_member)
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_presences(self, cache_impl):
-        ...
+    def test_clear_presences(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_presences_for_guild(self, cache_impl):
-        ...
+    def test_clear_presences_for_guild(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_delete_presence(self, cache_impl):
-        ...
+    def test_delete_presence(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_presence(self, cache_impl):
-        ...
+    def test_get_presence(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_presences_view(self, cache_impl):
-        ...
+    def test_get_presences_view(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_presences_view_for_guild(self, cache_impl):
-        ...
+    def test_get_presences_view_for_guild(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_set_presence(self, cache_impl):
-        ...
+    def test_set_presence(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_update_presence(self, cache_impl):
-        ...
+    def test_update_presence(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_roles(self, cache_impl):
-        ...
+    def test_clear_roles(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_roles_for_guild(self, cache_impl):
-        ...
+    def test_clear_roles_for_guild(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_delete_role(self, cache_impl):
-        ...
+    def test_delete_role(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_role(self, cache_impl):
-        ...
+    def test_get_role(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_roles_view(self, cache_impl):
-        ...
+    def test_get_roles_view(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_roles_view_for_guild(self, cache_impl):
-        ...
+    def test_get_roles_view_for_guild(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_set_role(self, cache_impl):
-        ...
+    def test_set_role(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_update_role(self, cache_impl):
-        ...
+    def test_update_role(self, cache_impl): ...
 
     def test__garbage_collect_user_for_known_unreferenced_user(self, cache_impl):
         mock_user = cache_utilities.RefCell(mock.Mock(id=snowflakes.Snowflake(21231234)), ref_count=1)
@@ -2477,6 +2456,7 @@ class TestCacheImpl:
         voice_state_data = cache_utilities.VoiceStateData(
             channel_id=snowflakes.Snowflake(4651234123),
             guild_id=snowflakes.Snowflake(54123123),
+            user_id=snowflakes.Snowflake(7512312),
             is_guild_deafened=True,
             is_guild_muted=False,
             is_self_deafened=True,
@@ -2509,12 +2489,10 @@ class TestCacheImpl:
         )
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_voice_states(self, cache_impl):
-        ...
+    def test_clear_voice_states(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_clear_voice_states_for_channel(self, cache_impl):
-        ...
+    def test_clear_voice_states_for_channel(self, cache_impl): ...
 
     def test_clear_voice_states_for_guild(self, cache_impl):
         mock_member_data_1 = object()
@@ -2703,16 +2681,13 @@ class TestCacheImpl:
         assert result is None
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_voice_state_view(self, cache_impl):
-        ...
+    def test_get_voice_state_view(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_voice_states_view_for_channel(self, cache_impl):
-        ...
+    def test_get_voice_states_view_for_channel(self, cache_impl): ...
 
     @pytest.mark.skip(reason="TODO")
-    def test_get_voice_states_view_for_guild(self, cache_impl):
-        ...
+    def test_get_voice_states_view_for_guild(self, cache_impl): ...
 
     def test_set_voice_state(self, cache_impl):
         mock_member = object()
@@ -2795,7 +2770,8 @@ class TestCacheImpl:
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
         )
-        mock_interaction = mock.Mock()
+        mock_thread = mock.Mock()
+        mock_interaction_metadata = mock.Mock()
 
         message_data = cache_utilities.MessageData(
             id=snowflakes.Snowflake(32123123),
@@ -2824,9 +2800,10 @@ class TestCacheImpl:
             nonce="aNonce",
             referenced_message=cache_utilities.RefCell(mock_referenced_message_data),
             stickers=(mock_sticker,),
-            interaction=mock_interaction,
             application_id=snowflakes.Snowflake(123123123123),
             components=(mock_component,),
+            thread=mock_thread,
+            interaction_metadata=mock_interaction_metadata,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2880,8 +2857,9 @@ class TestCacheImpl:
         assert result.nonce == "aNonce"
         assert result.referenced_message is mock_referenced_message
         assert result.application_id == 123123123123
-        assert result.interaction is mock_interaction.build_entity.return_value
         assert result.components == (mock_component,)
+        assert result.thread == mock_thread
+        assert result.interaction_metadata == mock_interaction_metadata
 
     def test__build_message_with_null_fields(self, cache_impl):
         message_data = cache_utilities.MessageData(
@@ -2911,9 +2889,10 @@ class TestCacheImpl:
             nonce=None,
             referenced_message=None,
             stickers=(),
-            interaction=None,
             application_id=None,
             components=(),
+            thread=None,
+            interaction_metadata=None,
         )
 
         result = cache_impl._build_message(cache_utilities.RefCell(message_data))
@@ -2937,7 +2916,7 @@ class TestCacheImpl:
         assert result.nonce is None
         assert result.referenced_message is None
         assert result.application_id is None
-        assert result.interaction is None
+        assert result.interaction_metadata is None
 
     @pytest.mark.skip(reason="TODO")
     def test_clear_messages(self, cache_impl):

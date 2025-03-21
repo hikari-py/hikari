@@ -1,3 +1,0 @@
-twine==4.0.2
-
--r build.txt

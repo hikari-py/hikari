@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import builtins
 import operator
 import warnings
@@ -202,7 +203,7 @@ class TestEnum:
 
         returned = Enum(9)
         assert returned == Enum.foo
-        assert type(returned) == Enum
+        assert type(returned) is Enum
 
     def test_call_when_not_member(self):
         class Enum(int, enums.Enum):
@@ -212,7 +213,7 @@ class TestEnum:
 
         returned = Enum(69)
         assert returned == 69
-        assert type(returned) != Enum
+        assert type(returned) is not Enum
 
     def test_getitem(self):
         class Enum(int, enums.Enum):
@@ -222,7 +223,7 @@ class TestEnum:
 
         returned = Enum["foo"]
         assert returned == Enum.foo
-        assert type(returned) == Enum
+        assert type(returned) is Enum
 
     def test_contains(self):
         class Enum(int, enums.Enum):
@@ -1252,7 +1253,7 @@ class TestIntFlag:
 
         returned = TestFlag["FOO"]
         assert returned == TestFlag.FOO
-        assert type(returned) == TestFlag
+        assert type(returned) is TestFlag
 
     def test_repr(self):
         class TestFlag(enums.Flag):

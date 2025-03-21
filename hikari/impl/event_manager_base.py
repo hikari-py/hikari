@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -60,13 +59,11 @@ if typing.TYPE_CHECKING:
     _ConsumerT = typing.Callable[
         [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
     ]
-    _ListenerMapT = typing.Dict[
-        typing.Type[base_events.EventT], typing.List[event_manager_.CallbackT[base_events.EventT]]
-    ]
-    _WaiterT = typing.Tuple[
+    _ListenerMapT = dict[type[base_events.EventT], list[event_manager_.CallbackT[base_events.EventT]]]
+    _WaiterT = tuple[
         typing.Optional[event_manager_.PredicateT[base_events.EventT]], "asyncio.Future[base_events.EventT]"
     ]
-    _WaiterMapT = typing.Dict[typing.Type[base_events.EventT], typing.Set[_WaiterT[base_events.EventT]]]
+    _WaiterMapT = dict[type[base_events.EventT], set[_WaiterT[base_events.EventT]]]
 
     _EventManagerBaseT = typing.TypeVar("_EventManagerBaseT", bound="EventManagerBase")
     _UnboundMethodT = typing.Callable[
@@ -116,10 +113,10 @@ def _generate_weak_listener(
 
 
 class EventStream(event_manager_.EventStream[base_events.EventT]):
-    """An implementation of an event `EventStream` class.
+    """An implementation of an event [`hikari.api.event_manager.EventStream`][] class.
 
-    .. note::
-        While calling `EventStream.filter` on an active "opened" event stream
+    !!! note
+        While calling [`hikari.impl.event_manager_base.EventStream.filter`][] on an active "opened" event stream
         will return a wrapping lazy iterator, calling it on an inactive "closed"
         event stream will return the event stream and add the given predicates
         to the streamer.
@@ -143,7 +140,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
     def __init__(
         self,
         event_manager: event_manager_.EventManager,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         *,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
@@ -154,7 +151,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         self._event_type = event_type
         self._filters: iterators.All[base_events.EventT] = iterators.All(())
         self._limit = limit
-        self._queue: typing.List[base_events.EventT] = []
+        self._queue: list[base_events.EventT] = []
         self._registered_listener: typing.Optional[
             typing.Callable[[base_events.EventT], typing.Coroutine[typing.Any, typing.Any, None]]
         ] = None
@@ -167,7 +164,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
     def __exit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc_val: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -229,7 +226,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
     def filter(
         self,
-        *predicates: typing.Union[typing.Tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
+        *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
         **attrs: typing.Any,
     ) -> Self:
         filter_ = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
@@ -261,7 +258,7 @@ def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> No
 
 
 def filtered(
-    event_types: typing.Union[typing.Type[base_events.Event], typing.Sequence[typing.Type[base_events.Event]]],
+    event_types: typing.Union[type[base_events.Event], typing.Sequence[type[base_events.Event]]],
     cache_components: config.CacheComponents = config.CacheComponents.NONE,
     /,
 ) -> typing.Callable[[_UnboundMethodT[_EventManagerBaseT]], _UnboundMethodT[_EventManagerBaseT]]:
@@ -272,12 +269,8 @@ def filtered(
     event_types
         Types of the events this raw consumer method may dispatch.
         This may either be a singular type of a sequence of types.
-
-    Other Parameters
-    ----------------
-    cache_components : hikari.api.config.CacheComponents
+    cache_components
         Bitfield of the cache components this event may make altering calls to.
-        This defaults to `hikari.api.config.CacheComponents.NONE`.
     """
     if isinstance(event_types, typing.Sequence):
         # dict.fromkeys is used to remove any duplicate entries here
@@ -338,7 +331,7 @@ class EventManagerBase(event_manager_.EventManager):
         *,
         cache_components: config.CacheComponents = config.CacheComponents.NONE,
     ) -> None:
-        self._consumers: typing.Dict[str, _Consumer] = {}
+        self._consumers: dict[str, _Consumer] = {}
         self._event_factory = event_factory
         self._intents = intents
         self._listeners: _ListenerMapT[base_events.Event] = {}
@@ -356,29 +349,31 @@ class EventManagerBase(event_manager_.EventManager):
                     self._consumers[event_name] = _Consumer(member, -1, cache_components != cache_components.NONE)
 
     def _increment_listener_group_count(
-        self, event_type: typing.Type[base_events.Event], count: typing.Literal[-1, 1]
+        self, event_type: type[base_events.Event], count: typing.Literal[-1, 1]
     ) -> None:
         event_bitmask = event_type.bitmask()
         for consumer in self._consumers.values():
             if (consumer.events_bitmask & event_bitmask) == event_bitmask:
                 consumer.listener_group_count += count
 
-    def _increment_waiter_group_count(
-        self, event_type: typing.Type[base_events.Event], count: typing.Literal[-1, 1]
-    ) -> None:
+    def _increment_waiter_group_count(self, event_type: type[base_events.Event], count: typing.Literal[-1, 1]) -> None:
         event_bitmask = event_type.bitmask()
         for consumer in self._consumers.values():
             if (consumer.events_bitmask & event_bitmask) == event_bitmask:
                 consumer.waiter_group_count += count
 
-    def _enabled_for_event(self, event_type: typing.Type[base_events.Event], /) -> bool:
+    def _enabled_for_event(self, event_type: type[base_events.Event], /) -> bool:
         for cls in event_type.dispatches():
             if cls in self._listeners or cls in self._waiters:
                 return True
 
         return False
 
-    def _check_event(self, event_type: typing.Type[typing.Any], nested: int) -> None:
+    def _check_event(self, event_type: type[typing.Any], nested: int) -> None:
+        # Extract the underlying type from generics
+        if (origin_type := typing.get_origin(event_type)) is not None:
+            event_type = origin_type
+
         try:
             is_event = issubclass(event_type, base_events.Event)
         except TypeError:
@@ -419,12 +414,14 @@ class EventManagerBase(event_manager_.EventManager):
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
     def subscribe(
-        self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any], *, _nested: int = 0
+        self, event_type: type[typing.Any], callback: event_manager_.CallbackT[typing.Any], *, _nested: int = 0
     ) -> None:
-        if not inspect.iscoroutinefunction(callback):
+        if not (
+            inspect.iscoroutinefunction(callback) or inspect.iscoroutinefunction(getattr(callback, "__call__", None))
+        ):
             raise TypeError("Cannot subscribe a non-coroutine function callback")
 
-        # `_nested` is used to show the correct source code snippet if an intent
+        # [`_nested`][] is used to show the correct source code snippet if an intent
         # warning is triggered.
         self._check_event(event_type, _nested)
 
@@ -443,10 +440,10 @@ class EventManagerBase(event_manager_.EventManager):
             self._increment_listener_group_count(event_type, 1)
 
     def get_listeners(
-        self, event_type: typing.Type[base_events.EventT], /, *, polymorphic: bool = True
+        self, event_type: type[base_events.EventT], /, *, polymorphic: bool = True
     ) -> typing.Collection[event_manager_.CallbackT[base_events.EventT]]:
         if polymorphic:
-            listeners: typing.List[event_manager_.CallbackT[base_events.EventT]] = []
+            listeners: list[event_manager_.CallbackT[base_events.EventT]] = []
             for event in event_type.dispatches():
                 if subscribed_listeners := self._listeners.get(event):
                     listeners.extend(subscribed_listeners)
@@ -462,7 +459,7 @@ class EventManagerBase(event_manager_.EventManager):
     # using ABCs that are not concrete in generic types passed to functions.
     # For the sake of UX, I will check this at runtime instead and let the
     # user use a static type checker.
-    def unsubscribe(self, event_type: typing.Type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
+    def unsubscribe(self, event_type: type[typing.Any], callback: event_manager_.CallbackT[typing.Any]) -> None:
         if listeners := self._listeners.get(event_type):
             _LOGGER.debug(
                 "unsubscribing callback %s%s from event-type %s.%s",
@@ -477,7 +474,7 @@ class EventManagerBase(event_manager_.EventManager):
                 self._increment_listener_group_count(event_type, -1)
 
     def listen(
-        self, *event_types: typing.Type[base_events.EventT]
+        self, *event_types: type[base_events.EventT]
     ) -> typing.Callable[[event_manager_.CallbackT[base_events.EventT]], event_manager_.CallbackT[base_events.EventT]]:
         def decorator(
             callback: event_manager_.CallbackT[base_events.EventT],
@@ -513,7 +510,7 @@ class EventManagerBase(event_manager_.EventManager):
         return decorator
 
     def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
-        tasks: typing.List[typing.Coroutine[None, typing.Any, None]] = []
+        tasks: list[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in event.dispatches():
             if listeners := self._listeners.get(cls):
@@ -541,11 +538,14 @@ class EventManagerBase(event_manager_.EventManager):
                 del self._waiters[cls]
                 self._increment_waiter_group_count(cls, -1)
 
-        return asyncio.gather(*tasks) if tasks else aio.completed_future()
+        if tasks:
+            return asyncio.gather(*tasks)
+
+        return aio.completed_future()
 
     def stream(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
         limit: typing.Optional[int] = None,
@@ -555,7 +555,7 @@ class EventManagerBase(event_manager_.EventManager):
 
     async def wait_for(
         self,
-        event_type: typing.Type[base_events.EventT],
+        event_type: type[base_events.EventT],
         /,
         timeout: typing.Union[float, int, None],
         predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
@@ -609,6 +609,7 @@ class EventManagerBase(event_manager_.EventManager):
             asyncio.get_running_loop().call_exception_handler(
                 {
                     "message": "Exception occurred in raw event dispatch conduit",
+                    "payload": payload,
                     "exception": ex,
                     "task": asyncio.current_task(),
                 }
@@ -620,8 +621,9 @@ class EventManagerBase(event_manager_.EventManager):
         try:
             await callback(event)
         except Exception as ex:
-            # Skip the first frame in logs, we don't care for it.
-            trio = type(ex), ex, ex.__traceback__.tb_next if ex.__traceback__ is not None else None
+            # Skip the first frame in logs if it exists, as it means it wasn't our fault
+            trio: typing.Union[tuple[type[Exception], Exception, typing.Optional[types.TracebackType]], Exception]
+            trio = (type(ex), ex, ex.__traceback__.tb_next) if ex.__traceback__ else ex
 
             if base_events.is_no_recursive_throw_event(event):
                 _LOGGER.error(

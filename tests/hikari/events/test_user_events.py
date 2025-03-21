@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
 
 import mock
 import pytest
@@ -27,7 +27,7 @@ from hikari.events import user_events
 
 
 class TestOwnUserUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return user_events.OwnUserUpdateEvent(shard=None, old_user=None, user=mock.Mock())
 

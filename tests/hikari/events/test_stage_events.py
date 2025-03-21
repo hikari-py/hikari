@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,13 +18,41 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Dependency scanning."""
+from __future__ import annotations
 
-from pipelines import nox
+import mock
+import pytest
+
+from hikari import stage_instances
+from hikari.events import stage_events
 
 
-@nox.session()
-def safety(session: nox.Session) -> None:
-    """Perform dependency scanning."""
-    session.install("-r", "requirements.txt", *nox.dev_requirements("safety"))
-    session.run("safety", "check", "--full-report")
+class TestStageInstanceCreateEvent:
+    @pytest.fixture
+    def event(self):
+        return stage_events.StageInstanceCreateEvent(shard=object(), stage_instance=mock.Mock())
+
+    def test_app_property(self, event):
+        assert event.app is event.stage_instance.app
+
+
+class TestStageInstanceUpdateEvent:
+    @pytest.fixture
+    def event(self):
+        return stage_events.StageInstanceUpdateEvent(
+            shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
+        )
+
+    def test_app_property(self, event):
+        assert event.app is event.stage_instance.app
+
+
+class TestStageInstanceDeleteEvent:
+    @pytest.fixture
+    def event(self):
+        return stage_events.StageInstanceDeleteEvent(
+            shard=object(), stage_instance=mock.Mock(stage_instances.StageInstance)
+        )
+
+    def test_app_property(self, event):
+        assert event.app is event.stage_instance.app

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Enum of Discord accepted locales."""
+
 from __future__ import annotations
 
 __all__ = ["Locale"]
@@ -77,10 +77,10 @@ class Locale(str, enums.Enum):
     """Polish."""
 
     PT_BR = "pt-BR"
-    """Portuguese, Bralizian."""
+    """Portuguese, Brazilian."""
 
     RO = "ro"
-    """Romian."""
+    """Romanian."""
 
     FI = "fi"
     """Finnish."""

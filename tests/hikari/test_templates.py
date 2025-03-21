@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import mock
 import pytest
 
@@ -26,7 +27,7 @@ from hikari import templates
 
 
 class TestTemplate:
-    @pytest.fixture()
+    @pytest.fixture
     def obj(self):
         return templates.Template(
             app=mock.Mock(),
@@ -41,7 +42,7 @@ class TestTemplate:
             is_unsynced=True,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_self(self, obj):
         obj.app.rest.fetch_template = mock.AsyncMock()
 
@@ -49,7 +50,7 @@ class TestTemplate:
 
         obj.app.rest.fetch_template.assert_awaited_once_with("abc123")
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_edit(self, obj):
         obj.app.rest.edit_template = mock.AsyncMock()
 
@@ -60,7 +61,7 @@ class TestTemplate:
             obj.source_guild, obj, name="Test Template 2", description="Electric Boogaloo"
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_delete(self, obj):
         obj.app.rest.delete_template = mock.AsyncMock()
 
@@ -68,7 +69,7 @@ class TestTemplate:
 
         obj.app.rest.delete_template.assert_awaited_once_with(obj.source_guild, obj)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_sync(self, obj):
         obj.app.rest.sync_guild_template = mock.AsyncMock()
 
@@ -76,7 +77,7 @@ class TestTemplate:
 
         obj.app.rest.sync_guild_template.assert_awaited_once_with(123, "abc123")
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_guild(self, obj):
         obj.app.rest.create_guild_from_template = mock.AsyncMock()
 

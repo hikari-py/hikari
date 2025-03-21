@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -68,7 +67,7 @@ class ActivityType(int, enums.Enum):
     STREAMING = 1
     """Shows up as `Streaming` and links to a Twitch or YouTube stream/video.
 
-    .. warning::
+    !!! warning
         You **MUST** provide a valid Twitch or YouTube stream URL to the
         activity you create in order for this to be valid. If you fail to
         do this, then the activity **WILL NOT** update.
@@ -81,13 +80,10 @@ class ActivityType(int, enums.Enum):
     """Shows up as `Watching <name>`."""
 
     CUSTOM = 4
-    """A custom status.
+    """Shows up as `<emoji> <name>`.
 
-    To set an emoji with the status, place a unicode emoji or Discord emoji
-    (`:smiley:`) as the first part of the status activity name.
-
-    .. warning::
-        Bots **DO NOT** support setting custom statuses.
+    !!! warning
+        As of the time of writing, emoji cannot be used by bot accounts.
     """
 
     COMPETING = 5
@@ -95,7 +91,7 @@ class ActivityType(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ActivityTimestamps:
     """The datetimes for the start and/or end of an activity session."""
 
@@ -107,7 +103,7 @@ class ActivityTimestamps:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ActivityParty:
     """Used to represent activity groups of users."""
 
@@ -125,7 +121,7 @@ _DYNAMIC_URLS = {"mp": urls.MEDIA_PROXY_URL + "/{}"}
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
@@ -164,8 +160,8 @@ class ActivityAssets:
     def large_image_url(self) -> typing.Optional[files.URL]:
         """Large image asset URL.
 
-        .. note::
-            This will be `None` if no large image asset exists or if the
+        !!! note
+            This will be [`None`][] if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -177,23 +173,23 @@ class ActivityAssets:
     def make_large_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the large image asset URL for this application.
 
-        .. note::
+        !!! note
             `ext` and `size` are ignored for images hosted outside of Discord
             or on Discord's media proxy.
 
         Parameters
         ----------
-        ext : str
-            The extension to use for this URL, defaults to `png`.
+        ext
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon exists.
+            The URL, or [`None`][] if no icon exists.
 
         Raises
         ------
@@ -201,7 +197,7 @@ class ActivityAssets:
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         RuntimeError
-            If `ActivityAssets.large_image` points towards an unknown asset type.
+            If [`hikari.presences.ActivityAssets.large_image`][] points towards an unknown asset type.
         """
         return self._make_asset_url(self.large_image, ext, size)
 
@@ -209,8 +205,8 @@ class ActivityAssets:
     def small_image_url(self) -> typing.Optional[files.URL]:
         """Small image asset URL.
 
-        .. note::
-            This will be `None` if no large image asset exists or if the
+        !!! note
+            This will be [`None`][] if no large image asset exists or if the
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         try:
@@ -224,17 +220,17 @@ class ActivityAssets:
 
         Parameters
         ----------
-        ext : str
-            The extension to use for this URL, defaults to `png`.
+        ext
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon exists.
+            The URL, or [`None`][] if no icon exists.
 
         Raises
         ------
@@ -242,13 +238,13 @@ class ActivityAssets:
             If the size is not an integer power of 2 between 16 and 4096
             (inclusive).
         RuntimeError
-            If `ActivityAssets.small_image` points towards an unknown asset type.
+            If [`hikari.presences.ActivityAssets.small_image`][] points towards an unknown asset type.
         """
         return self._make_asset_url(self.small_image, ext, size)
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ActivitySecret:
     """The secrets used for interacting with an activity party."""
 
@@ -299,15 +295,25 @@ class ActivityFlag(enums.Flag):
 
 # TODO: add strict type checking to gateway for this type in an invariant way.
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class Activity:
     """Represents a regular activity that can be associated with a presence."""
 
     name: str = attrs.field()
     """The activity name."""
 
+    state: typing.Optional[str] = attrs.field(default=None)
+    """The activities state, if set.
+
+    This field can be use to set a custom status or provide more information
+    on the activity.
+    """
+
     url: typing.Optional[str] = attrs.field(default=None, repr=False)
-    """The activity URL. Only valid for `STREAMING` activities."""
+    """The activity URL, if set.
+
+    Only valid for [`hikari.presences.ActivityType.STREAMING`][] activities.
+    """
 
     type: typing.Union[ActivityType, int] = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""
@@ -316,7 +322,7 @@ class Activity:
         return self.name
 
 
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class RichActivity(Activity):
     """Represents a rich activity that can be associated with a presence."""
 
@@ -331,9 +337,6 @@ class RichActivity(Activity):
 
     details: typing.Optional[str] = attrs.field(repr=False)
     """The text that describes what the activity's target is doing, if set."""
-
-    state: typing.Optional[str] = attrs.field(repr=False)
-    """The current status of this activity's target, if set."""
 
     emoji: typing.Optional[emojis_.Emoji] = attrs.field(repr=False)
     """The emoji of this activity, if it is a custom status and set."""
@@ -375,7 +378,7 @@ class Status(str, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class ClientStatus:
     """The client statuses for this member."""
 
@@ -390,7 +393,7 @@ class ClientStatus:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class MemberPresence:
     """Used to represent a guild member's presence."""
 

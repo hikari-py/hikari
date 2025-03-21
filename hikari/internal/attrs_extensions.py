@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -20,7 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Utility for extending and optimising the usage of `attr` models."""
+"""Utility for extending and optimising the usage of [`attr`][] models."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -37,7 +37,7 @@ import typing
 
 import attrs
 
-ModelT = typing.TypeVar("ModelT")
+ModelT = typing.TypeVar("ModelT", bound=attrs.AttrsInstance)
 SKIP_DEEP_COPY: typing.Final[str] = "skip_deep_copy"
 
 _DEEP_COPIERS: typing.MutableMapping[
@@ -60,15 +60,13 @@ def invalidate_deep_copy_cache() -> None:
 
 
 def get_fields_definition(
-    cls: type,
-) -> typing.Tuple[
-    typing.Sequence[typing.Tuple[attrs.Attribute[typing.Any], str]], typing.Sequence[attrs.Attribute[typing.Any]]
-]:
+    cls: type[attrs.AttrsInstance],
+) -> tuple[typing.Sequence[tuple[attrs.Attribute[typing.Any], str]], typing.Sequence[attrs.Attribute[typing.Any]]]:
     """Get a sequence of init key-words to their relative attribute.
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls
         The attrs class to get the fields definition for.
 
     Returns
@@ -76,8 +74,8 @@ def get_fields_definition(
     typing.Sequence[typing.Tuple[str, str]]
         A sequence of tuples of string attribute names to string key-word names.
     """
-    init_results: typing.List[typing.Tuple[attrs.Attribute[typing.Any], str]] = []
-    non_init_results: typing.List[attrs.Attribute[typing.Any]] = []
+    init_results: list[tuple[attrs.Attribute[typing.Any], str]] = []
+    non_init_results: list[attrs.Attribute[typing.Any]] = []
 
     for field in attrs.fields(cls):
         if field.init:
@@ -90,12 +88,12 @@ def get_fields_definition(
 
 
 # TODO: can we get if the init wasn't generated for the class?
-def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT], ModelT]:
-    """Generate a function for shallow copying an attrs model with `init` enabled.
+def generate_shallow_copier(cls: type[ModelT]) -> typing.Callable[[ModelT], ModelT]:
+    """Generate a function for shallow copying an attrs model with [`init`][] enabled.
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls
         The attrs class to generate a shallow copying function for.
 
     Returns
@@ -107,8 +105,8 @@ def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT
     from hikari.internal import ux
 
     kwargs, setters = get_fields_definition(cls)
-    kwargs = ",".join(f"{kwarg}=m.{attrsibute.name}" for attrsibute, kwarg in kwargs)
-    setters = ";".join(f"r.{attrsibute.name}=m.{attrsibute.name}" for attrsibute in setters) + ";" if setters else ""
+    kwargs = ",".join(f"{kwarg}=m.{attribute.name}" for attribute, kwarg in kwargs)
+    setters = ";".join(f"r.{attribute.name}=m.{attribute.name}" for attribute in setters) + ";" if setters else ""
     code = f"def copy(m):r=cls({kwargs});{setters}return r"
     globals_ = {"cls": cls}
     _LOGGER.log(ux.TRACE, "generating shallow copy function for %r: %r", cls, code)
@@ -116,12 +114,12 @@ def generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT
     return globals_["copy"]
 
 
-def get_or_generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[[ModelT], ModelT]:
+def get_or_generate_shallow_copier(cls: type[ModelT]) -> typing.Callable[[ModelT], ModelT]:
     """Get a cached shallow copying function for a an attrs class or generate it.
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls
         The class to get or generate and cache a shallow copying function for.
 
     Returns
@@ -138,11 +136,11 @@ def get_or_generate_shallow_copier(cls: typing.Type[ModelT]) -> typing.Callable[
 
 
 def copy_attrs(model: ModelT) -> ModelT:
-    """Shallow copy an attrs model with `init` enabled.
+    """Shallow copy an attrs model with [`init`][] enabled.
 
     Parameters
     ----------
-    model : ModelT
+    model
         The attrs model to shallow copy.
 
     Returns
@@ -154,7 +152,7 @@ def copy_attrs(model: ModelT) -> ModelT:
 
 
 def _normalize_kwargs_and_setters(
-    kwargs: typing.Sequence[typing.Tuple[attrs.Attribute[typing.Any], str]],
+    kwargs: typing.Sequence[tuple[attrs.Attribute[typing.Any], str]],
     setters: typing.Sequence[attrs.Attribute[typing.Any]],
 ) -> typing.Iterable[attrs.Attribute[typing.Any]]:
     for attrsibute, _ in kwargs:
@@ -163,14 +161,12 @@ def _normalize_kwargs_and_setters(
     yield from setters
 
 
-def generate_deep_copier(
-    cls: typing.Type[ModelT],
-) -> typing.Callable[[ModelT, typing.MutableMapping[int, typing.Any]], None]:
-    """Generate a function for deep copying an attrs model with `init` enabled.
+def generate_deep_copier(cls: type[ModelT]) -> typing.Callable[[ModelT, typing.MutableMapping[int, typing.Any]], None]:
+    """Generate a function for deep copying an attrs model with [`init`][] enabled.
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls
         The attrs class to generate a deep copying function for.
 
     Returns
@@ -198,13 +194,13 @@ def generate_deep_copier(
 
 
 def get_or_generate_deep_copier(
-    cls: typing.Type[ModelT],
+    cls: type[ModelT],
 ) -> typing.Callable[[ModelT, typing.MutableMapping[int, typing.Any]], None]:
     """Get a cached shallow copying function for a an attrs class or generate it.
 
     Parameters
     ----------
-    cls : typing.Type[ModelT]
+    cls
         The class to get or generate and cache a shallow copying function for.
 
     Returns
@@ -221,17 +217,17 @@ def get_or_generate_deep_copier(
 
 
 def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[int, typing.Any]] = None) -> ModelT:
-    """Deep copy an attrs model with `init` enabled.
+    """Deep copy an attrs model with [`init`][] enabled.
 
-    .. note::
+    !!! note
         This won't deep copy attributes where "skip_deep_copy" is set to
-        `True` in their metadata.
+        [`True`][] in their metadata.
 
     Parameters
     ----------
-    model : ModelT
+    model
         The attrs model to deep copy.
-    memo : typing.Optional[typing.MutableMapping[int, typing.Any]]
+    memo
         A memo dictionary of objects already copied during the current copying
         pass, see <https://docs.python.org/3/library/copy.html> for more details.
 
@@ -249,10 +245,10 @@ def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[i
     return new_object
 
 
-def with_copy(cls: typing.Type[ModelT]) -> typing.Type[ModelT]:
+def with_copy(cls: type[ModelT]) -> type[ModelT]:
     """Add a custom implementation for copying attrs models to a class.
 
-    .. note::
+    !!! note
         This will only work if the class has an attrs generated init.
     """
     cls.__copy__ = copy_attrs  # type: ignore[attr-defined]

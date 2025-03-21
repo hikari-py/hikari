@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Events fired when the account user is updated."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("OwnUserUpdateEvent",)
@@ -49,7 +49,7 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     old_user: typing.Optional[users.OwnUser] = attrs.field()
     """The old application user.
 
-    This will be `None` if the user missing from the cache.
+    This will be [`None`][] if the user missing from the cache.
     """
 
     user: users.OwnUser = attrs.field()

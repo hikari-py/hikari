@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 
 import mock
@@ -39,6 +40,8 @@ class TestAttachment:
         attachment = messages.Attachment(
             id=123,
             filename="super_cool_file.cool",
+            title="other title",
+            description="description!",
             media_type="image/png",
             height=222,
             width=555,
@@ -46,6 +49,8 @@ class TestAttachment:
             size=543,
             url="htttt",
             is_ephemeral=False,
+            duration=1,
+            waveform="122111",
         )
         assert str(attachment) == "super_cool_file.cool"
 
@@ -57,7 +62,7 @@ class TestReaction:
 
 
 class TestMessageApplication:
-    @pytest.fixture()
+    @pytest.fixture
     def message_application(self):
         return messages.MessageApplication(
             id=123, name="test app", description="", icon_hash="123abc", cover_image_hash="abc123"
@@ -83,7 +88,7 @@ class TestMessageApplication:
         )
 
 
-@pytest.fixture()
+@pytest.fixture
 def message():
     return messages.Message(
         app=None,
@@ -113,9 +118,10 @@ def message():
         nonce=None,
         referenced_message=None,
         stickers=[],
-        interaction=None,
         application_id=123123,
         components=[],
+        thread=None,
+        interaction_metadata=None,
     )
 
 
@@ -132,7 +138,30 @@ class TestMessage:
         assert message.make_link(None) == "https://discord.com/channels/@me/456/789"
 
 
-@pytest.mark.asyncio()
+@pytest.fixture
+def message_reference():
+    return messages.MessageReference(
+        app=None, guild_id=snowflakes.Snowflake(123), channel_id=snowflakes.Snowflake(456), id=snowflakes.Snowflake(789)
+    )
+
+
+class TestMessageReference:
+    def test_make_link_when_guild_is_not_none(self, message_reference):
+        assert message_reference.message_link == "https://discord.com/channels/123/456/789"
+        assert message_reference.channel_link == "https://discord.com/channels/123/456"
+
+    def test_make_link_when_guild_is_none(self, message_reference):
+        message_reference.guild_id = None
+        assert message_reference.message_link == "https://discord.com/channels/@me/456/789"
+        assert message_reference.channel_link == "https://discord.com/channels/@me/456"
+
+    def test_make_link_when_id_is_none(self, message_reference):
+        message_reference.id = None
+        assert message_reference.message_link is None
+        assert message_reference.channel_link == "https://discord.com/channels/123/456"
+
+
+@pytest.mark.asyncio
 class TestAsyncMessage:
     async def test_fetch_channel(self, message):
         message.app = mock.AsyncMock()

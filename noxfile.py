@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,15 +18,14 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import os
+from __future__ import annotations
+
+import pathlib
 import runpy
 import sys
 
-CI_PATH = "pipelines"
+sys.path.append(".")
 
-sys.path.append(os.getcwd())
-
-
-for f in os.listdir(CI_PATH):
-    if f.endswith(".nox.py"):
-        runpy.run_path(os.path.join(CI_PATH, f))
+ci_path = pathlib.Path("pipelines")
+for f in ci_path.glob("*.nox.py"):
+    runpy.run_path(str(f))

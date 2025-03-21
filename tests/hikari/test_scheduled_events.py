@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import mock
 import pytest
 
@@ -30,7 +31,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestScheduledEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self) -> scheduled_events.ScheduledEvent:
         return hikari_test_helpers.mock_class_namespace(scheduled_events.ScheduledEvent, init_=False, slots_=False)()
 

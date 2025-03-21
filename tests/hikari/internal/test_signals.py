@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import contextlib
 import signal
 
@@ -70,7 +71,9 @@ class TestHandleInterrupt:
                 register_signal_handler.reset_mock()
 
         assert register_signal_handler.call_count == 2
-        register_signal_handler.assert_has_calls([mock.call(2, signal.SIG_DFL), mock.call(15, signal.SIG_DFL)])
+        register_signal_handler.assert_has_calls(
+            [mock.call(2, signal.default_int_handler), mock.call(15, signal.SIG_DFL)]
+        )
 
     def test_when_disabled(self):
         with mock.patch.object(signal, "signal") as register_signal_handler:

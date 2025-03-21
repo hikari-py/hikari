@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -34,9 +33,9 @@ Python lambdas are clunky, and using a nested function is nasty boilerplate.
 
 For applying `"bar.baz"` to `foo`, we assume `bar` is an attribute or property
 of `foo`, and `baz` is an attribute or property of `foo.bar`. We may instead
-want to invoke a method that takes no parameters (looking at `str.islower`, as
+want to invoke a method that takes no parameters (looking at [`str.islower`][], as
 an example. To do this, we append `()` onto the attribute name. For example,
-applying `author.username.islower()` to a `hikari.messages.Message`
+applying `author.username.islower()` to a [`hikari.messages.Message`][]
 object.
 
 All expressions may start with a ``.``. You can negate the whole expression
@@ -44,12 +43,14 @@ by instead starting them with `!.`.
 
 You may also want to negate a condition. To do this, prepend `!` to the
 attribute name. For example, to check if a message was not made by a bot,
-you could run `author.!is_bot` on a `Message` object. Likewise, to check if
-the input was not a number, you could run `content.!isdigit()`.
+you could run `author.!is_bot` on a [`hikari.messages.Message`][] object.
+Likewise, to check if the input was not a number, you could run
+`content.!isdigit()`.
 
 This expression language is highly experimental and may change without
 prior notice for the time being.
 """
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("AttrGetter",)
@@ -65,7 +66,7 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
     """An attribute getter that can resolve nested attributes and methods.
 
     This follows the SPEL definition for how to define expressions. Expressions
-    may be preceded with an optional ``.`` to aid in readability.
+    may be preceded with an optional `.` to aid in readability.
     """
 
     __slots__: typing.Sequence[str] = ("pipeline", "invert_all")
@@ -80,7 +81,7 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
         elif attr_name.startswith("."):
             attr_name = attr_name[1:]
 
-        self.pipeline: typing.List[typing.Callable[[typing.Any], typing.Any]] = []
+        self.pipeline: list[typing.Callable[[typing.Any], typing.Any]] = []
 
         for operation in attr_name.split("."):
             self.pipeline.append(self._transform(operation))

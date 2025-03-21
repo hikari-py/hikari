@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Base types and functions for events in Hikari."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -60,7 +60,7 @@ class Event(abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
-    __dispatches: typing.ClassVar[typing.Tuple[typing.Type[Event], ...]]
+    __dispatches: typing.ClassVar[tuple[type[Event], ...]]
     __bitmask: typing.ClassVar[int]
 
     def __init_subclass__(cls) -> None:
@@ -89,7 +89,7 @@ class Event(abc.ABC):
         """App instance for this application."""
 
     @classmethod
-    def dispatches(cls) -> typing.Sequence[typing.Type[Event]]:
+    def dispatches(cls) -> typing.Sequence[type[Event]]:
         """Sequence of the event classes this event is dispatched as."""
         return cls.__dispatches
 
@@ -99,12 +99,12 @@ class Event(abc.ABC):
         return cls.__bitmask
 
 
-def get_required_intents_for(event_type: typing.Type[Event]) -> typing.Collection[intents.Intents]:
+def get_required_intents_for(event_type: type[Event]) -> typing.Collection[intents.Intents]:
     """Retrieve the intents that are required to listen to an event type.
 
     Parameters
     ----------
-    event_type : typing.Type[Event]
+    event_type
         The event type to get required intents for.
 
     Returns
@@ -123,10 +123,10 @@ def requires_intents(first: intents.Intents, *rest: intents.Intents) -> typing.C
 
     Parameters
     ----------
-    first : hikari.intents.Intents
+    first
         First combination of intents that are acceptable in order to receive
         the decorated event type.
-    *rest : hikari.intents.Intents
+    *rest
         Zero or more additional combinations of intents to require for this
         event to be subscribed to.
     """
@@ -160,7 +160,7 @@ def no_recursive_throw() -> typing.Callable[[_T], _T]:
         doc = inspect.getdoc(cls) or ""
         doc += (
             "\n"
-            ".. warning::\n"
+            "!!! warning\n"
             "    Any exceptions raised by handlers for this event will be dumped to the\n"
             "    application logger and silently discarded, preventing recursive loops\n"
             "    produced by faulty exception event handling. Thus, it is imperative\n"
@@ -173,8 +173,8 @@ def no_recursive_throw() -> typing.Callable[[_T], _T]:
     return decorator
 
 
-def is_no_recursive_throw_event(obj: typing.Union[_T, typing.Type[_T]]) -> bool:
-    """Return True if this event is marked as `___norecursivethrow___`."""
+def is_no_recursive_throw_event(obj: typing.Union[_T, type[_T]]) -> bool:
+    """Whether the event is marked as `___norecursivethrow___`."""
     result = getattr(obj, NO_RECURSIVE_THROW_attrs, False)
     assert isinstance(result, bool)
     return result
@@ -188,13 +188,13 @@ FailedCallbackT = typing.Callable[[EventT], typing.Coroutine[typing.Any, typing.
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class ExceptionEvent(Event, typing.Generic[EventT]):
-    """Event that is raised when another event handler raises an `Exception`.
+    """Event that is raised when another event handler raises an [`Exception`][].
 
-    .. note::
-        Only exceptions that derive from `Exception` will be caught.
+    !!! note
+        Only exceptions that derive from [`Exception`][] will be caught.
         Other exceptions outside this range will propagate past this callback.
         This prevents event handlers interfering with critical exceptions
-        such as `KeyboardError` which would have potentially undesired
+        such as [`KeyboardInterrupt`][] which would have potentially undesired
         side-effects on the application runtime.
     """
 
@@ -216,7 +216,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
     def shard(self) -> typing.Optional[gateway_shard.GatewayShard]:
         """Shard that received the event, if there was one associated.
 
-        This may be `None` if no specific shard was the cause of this
+        This may be [`None`][] if no specific shard was the cause of this
         exception (e.g. when starting up or shutting down).
         """
         shard = getattr(self.failed_event, "shard", None)
@@ -225,10 +225,10 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
         return None
 
     @property
-    def exc_info(self) -> typing.Tuple[typing.Type[Exception], Exception, typing.Optional[types.TracebackType]]:
-        """Exception triplet that follows the same format as `sys.exc_info`.
+    def exc_info(self) -> tuple[type[Exception], Exception, typing.Optional[types.TracebackType]]:
+        """Exception triplet that follows the same format as [`sys.exc_info`][].
 
-        The `sys.exc_info` tiplet consists of the exception type, the exception
+        The [`sys.exc_info`][] triplet consists of the exception type, the exception
         instance, and the traceback of the exception.
         """
         return type(self.exception), self.exception, self.exception.__traceback__

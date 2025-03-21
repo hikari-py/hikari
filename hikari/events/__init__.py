@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -33,10 +32,12 @@ from hikari.events.interaction_events import *
 from hikari.events.lifetime_events import *
 from hikari.events.member_events import *
 from hikari.events.message_events import *
+from hikari.events.monetization_events import *
 from hikari.events.reaction_events import *
 from hikari.events.role_events import *
 from hikari.events.scheduled_events import *
 from hikari.events.shard_events import *
+from hikari.events.stage_events import *
 from hikari.events.typing_events import *
 from hikari.events.user_events import *
 from hikari.events.voice_events import *

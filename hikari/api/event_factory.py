@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -48,10 +47,12 @@ if typing.TYPE_CHECKING:
     from hikari.events import lifetime_events
     from hikari.events import member_events
     from hikari.events import message_events
+    from hikari.events import monetization_events
     from hikari.events import reaction_events
     from hikari.events import role_events
     from hikari.events import scheduled_events
     from hikari.events import shard_events
+    from hikari.events import stage_events
     from hikari.events import typing_events
     from hikari.events import user_events
     from hikari.events import voice_events
@@ -75,9 +76,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -98,9 +99,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -121,15 +122,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_channel : typing.Optional[hikari.channels.PermissibleGuildChannel]
-            The guild channel object or `None`.
+        old_channel
+            The guild channel object or [`None`][].
 
         Returns
         -------
@@ -145,9 +143,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -164,9 +162,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -183,9 +181,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -202,9 +200,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -221,9 +219,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -240,9 +238,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -259,9 +257,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -278,9 +276,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -297,9 +295,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -316,9 +314,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -339,15 +337,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_invite : typing.Optional[hikari.invites.InviteWithMetadata]
-            The invite object or `None`.
+        old_invite
+            The invite object or [`None`][].
 
         Returns
         -------
@@ -367,9 +362,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -390,9 +385,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -409,9 +404,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -432,15 +427,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_guild : typing.Optional[hikari.guilds.GatewayGuild]
-            The guild object or `None`.
+        old_guild
+            The guild object or [`None`][].
 
         Returns
         -------
@@ -460,15 +452,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_guild : typing.Optional[hikari.guilds.GatewayGuild]
-            The guild object or `None`.
+        old_guild
+            The guild object or [`None`][].
 
         Returns
         -------
@@ -484,9 +473,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -503,9 +492,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -522,9 +511,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -545,15 +534,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_emojis : typing.Optional[typing.Sequence[hikari.emojis.KnownCustomEmoji]]
-            The sequence of emojis or `None`.
+        old_emojis
+            The sequence of emojis or [`None`][].
 
         Returns
         -------
@@ -573,15 +559,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_stickers : typing.Optional[typing.Sequence[hikari.stickers.GuildSticker]]
-            The sequence of stickers or `None`.
+        old_stickers
+            The sequence of stickers or [`None`][].
 
         Returns
         -------
@@ -597,9 +580,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -616,9 +599,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -635,9 +618,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -658,15 +641,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_presence : typing.Optional[hikari.presences.MemberPresence]
-            The presence object or `None`.
+        old_presence
+            The presence object or [`None`][].
 
         Returns
         -------
@@ -682,9 +662,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -705,9 +685,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -728,9 +708,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -751,15 +731,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_member : typing.Optional[hikari.guilds.Member]
-            The member object or `None`.
+        old_member
+            The member object or [`None`][].
 
         Returns
         -------
@@ -779,15 +756,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_member : typing.Optional[hikari.guilds.Member]
-            The member object or `None`.
+        old_member
+            The member object or [`None`][].
 
         Returns
         -------
@@ -807,9 +781,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -830,15 +804,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_role : typing.Optional[hikari.guilds.Role]
-            The role object or `None`.
+        old_role
+            The role object or [`None`][].
 
         Returns
         -------
@@ -858,15 +829,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_role : typing.Optional[hikari.guilds.Role]
-            The role object or `None`.
+        old_role
+            The role object or [`None`][].
 
         Returns
         -------
@@ -886,9 +854,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -905,9 +873,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -924,9 +892,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -943,9 +911,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -962,9 +930,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -1029,9 +997,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -1052,15 +1020,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_message : typing.Optional[hikari.messages.PartialMessage]
-            The message object or `None`.
+        old_message
+            The message object or [`None`][].
 
         Returns
         -------
@@ -1080,14 +1045,11 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_message : typing.Optional[hikari.messages.Message]
+        old_message
             The old message object.
 
         Returns
@@ -1108,14 +1070,11 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_messages : typing.Optional[typing.Mapping[hikari.snowflakes.Snowflake, hikari.messages.Message]]
+        old_messages
             A mapping of the old message objects.
 
         Returns
@@ -1136,9 +1095,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -1155,9 +1114,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -1174,9 +1133,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -1193,9 +1152,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -1216,11 +1175,11 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-        name : str
+        name
             Name of the event.
 
         Returns
@@ -1237,9 +1196,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -1254,7 +1213,7 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
 
         Returns
@@ -1269,7 +1228,7 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
 
         Returns
@@ -1284,7 +1243,7 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
 
         Returns
@@ -1301,9 +1260,9 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
@@ -1328,15 +1287,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_user : typing.Optional[hikari.users.OwnUser]
-            The OwnUser object or `None`.
+        old_user
+            The OwnUser object or [`None`][].
 
         Returns
         -------
@@ -1360,15 +1316,12 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
-
-        Other Parameters
-        ----------------
-        old_state : typing.Optional[hikari.voices.VoiceState]
-            The VoiceState object or `None`.
+        old_state
+            The VoiceState object or [`None`][].
 
         Returns
         -------
@@ -1384,13 +1337,135 @@ class EventFactory(abc.ABC):
 
         Parameters
         ----------
-        shard : hikari.api.shard.GatewayShard
+        shard
             The shard that emitted this event.
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The dict payload to parse.
 
         Returns
         -------
         hikari.events.voice_events.VoiceServerUpdateEvent
             The parsed voice server update event object.
+        """
+
+    ##################
+    #  MONETIZATION  #
+    ##################
+
+    @abc.abstractmethod
+    def deserialize_entitlement_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.EntitlementCreateEvent:
+        """Parse a raw payload from Discord into a entitlement create event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.entitlement_events.EntitlementCreateEvent
+            The parsed entitlement create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_entitlement_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.EntitlementDeleteEvent:
+        """Parse a raw payload from Discord into a entitlement delete event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.entitlement_events.EntitlementDeleteEvent
+            The parsed entitlement delete event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_entitlement_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.EntitlementUpdateEvent:
+        """Parse a raw payload from Discord into a entitlement update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.entitlement_events.EntitlementUpdateEvent
+            The parsed entitlement update event object.
+        """
+
+    #########################
+    # STAGE INSTANCE EVENTS #
+    #########################
+
+    @abc.abstractmethod
+    def deserialize_stage_instance_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceCreateEvent:
+        """Parse a raw payload from Discord into a stage instance create event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.stage_events.StageInstanceCreateEvent
+            The parsed stage instance create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_stage_instance_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceUpdateEvent:
+        """Parse a raw payload from Discord into a stage instance update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.stage_events.StageInstanceUpdateEvent
+            The parsed stage instance update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_stage_instance_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> stage_events.StageInstanceDeleteEvent:
+        """Parse a raw payload from Discord into a stage instance delete event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.stage_events.StageInstanceDeleteEvent
+            The parsed stage instance delete event object.
         """

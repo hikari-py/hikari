@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import inspect
 import sys
 import typing
@@ -29,11 +30,10 @@ import pytest
 from hikari.internal import reflect
 
 
-@pytest.mark.skipif(sys.version_info >= (3, 10), reason="This strategy is specific to 3.10 > versions")
+@pytest.mark.skipif(sys.version_info >= (3, 10), reason="This strategy is specific to 3.10 < versions")
 class TestResolveSignatureOldStrategy:
     def test_handles_normal_references(self):
-        def foo(bar: str, bat: int) -> str:
-            ...
+        def foo(bar: str, bat: int) -> str: ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation is str
@@ -41,8 +41,7 @@ class TestResolveSignatureOldStrategy:
         assert signature.return_annotation is str
 
     def test_handles_normal_no_annotations(self):
-        def foo(bar, bat):
-            ...
+        def foo(bar, bat): ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation is reflect.EMPTY
@@ -50,8 +49,7 @@ class TestResolveSignatureOldStrategy:
         assert signature.return_annotation is reflect.EMPTY
 
     def test_handles_forward_annotated_parameters(self):
-        def foo(bar: "str", bat: "int") -> str:
-            ...
+        def foo(bar: "str", bat: "int") -> str: ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation is str
@@ -59,8 +57,7 @@ class TestResolveSignatureOldStrategy:
         assert signature.return_annotation is str
 
     def test_handles_forward_annotated_return(self):
-        def foo(bar: str, bat: int) -> "str":
-            ...
+        def foo(bar: str, bat: int) -> "str": ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation is str
@@ -68,8 +65,7 @@ class TestResolveSignatureOldStrategy:
         assert signature.return_annotation is str
 
     def test_handles_forward_annotations(self):
-        def foo(bar: "str", bat: "int") -> "str":
-            ...
+        def foo(bar: "str", bat: "int") -> "str": ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation is str
@@ -77,8 +73,7 @@ class TestResolveSignatureOldStrategy:
         assert signature.return_annotation is str
 
     def test_handles_mixed_annotations(self):
-        def foo(bar: str, bat: "int"):
-            ...
+        def foo(bar: str, bat: "int"): ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation is str
@@ -86,24 +81,21 @@ class TestResolveSignatureOldStrategy:
         assert signature.return_annotation is reflect.EMPTY
 
     def test_handles_None(self):
-        def foo(bar: None) -> None:
-            ...
+        def foo(bar: None) -> None: ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation is None
         assert signature.return_annotation is None
 
     def test_handles_NoneType(self):
-        def foo(bar: type(None)) -> type(None):
-            ...
+        def foo(bar: type(None)) -> type(None): ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation is None
         assert signature.return_annotation is None
 
     def test_handles_only_return_annotated(self):
-        def foo(bar, bat) -> str:
-            ...
+        def foo(bar, bat) -> str: ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation is reflect.EMPTY
@@ -111,14 +103,13 @@ class TestResolveSignatureOldStrategy:
         assert signature.return_annotation is str
 
     def test_handles_nested_annotations(self):
-        def foo(bar: typing.Optional[typing.Iterator[int]]):
-            ...
+        def foo(bar: typing.Optional[typing.Iterator[int]]): ...
 
         signature = reflect.resolve_signature(foo)
         assert signature.parameters["bar"].annotation == typing.Optional[typing.Iterator[int]]
 
 
-@pytest.mark.skipif(sys.version_info < (3, 10), reason="This strategy is specific to 3.10 <= versions")
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="This strategy is specific to 3.10 >= versions")
 def test_resolve_signature():
     foo = object()
 

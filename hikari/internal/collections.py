@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Custom data structures used within Hikari's core implementation."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -68,12 +68,12 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
     def copy(self) -> Self:
         """Return a copy of this mapped collection.
 
-        Unlike simply doing `dict(mapping)`, this may rely on internal detail
+        Unlike simply doing [dict(mapping)][], this may rely on internal detail
         around how the data is being stored to allow for a more efficient copy.
-        This may look like calling `dict.copy` and wrapping the result in a
+        This may look like calling [`dict.copy`][] and wrapping the result in a
         mapped collection.
 
-        .. note::
+        !!! note
             Any removal policy on this mapped collection will be copied over.
 
         Returns
@@ -86,12 +86,12 @@ class ExtendedMutableMapping(typing.MutableMapping[KeyT, ValueT], abc.ABC):
     def freeze(self) -> typing.MutableMapping[KeyT, ValueT]:
         """Return a frozen mapping view of the items in this mapped collection.
 
-        Unlike simply doing `dict(mapping)`, this may rely on internal detail
+        Unlike simply doing [dict(mapping)][], this may rely on internal detail
         around how the data is being stored to allow for a more efficient copy.
-        This may look like calling `dict.copy`.
+        This may look like calling [`dict.copy`][].
 
-        .. note::
-            Unlike `ExtendedMutableMapping.copy`, this should return a pure
+        !!! note
+            Unlike [`ExtendedMutableMapping.copy`][], this should return a pure
             mapping with no removal policy at all.
 
         Returns
@@ -106,7 +106,7 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
 
     __slots__: typing.Sequence[str] = ("_data",)
 
-    def __init__(self, source: typing.Optional[typing.Dict[KeyT, ValueT]] = None, /) -> None:
+    def __init__(self, source: typing.Optional[dict[KeyT, ValueT]] = None, /) -> None:
         self._data = source or {}
 
     def clear(self) -> None:
@@ -116,7 +116,7 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
         return FreezableDict(self._data.copy())
 
     # TODO: name this something different if it is not physically frozen.
-    def freeze(self) -> typing.Dict[KeyT, ValueT]:
+    def freeze(self) -> dict[KeyT, ValueT]:
         return self._data.copy()
 
     def __delitem__(self, key: KeyT) -> None:
@@ -143,15 +143,15 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
     Parameters
     ----------
-    source : typing.Optional[typing.Dict[KeyT, ValueT]]
+    source
         A source dictionary of keys to values to create this from.
-    limit : int
+    limit
         The limit for how many objects should be stored by this mapping before
         it starts removing the oldest entries.
-    on_expire : typing.Optional[typing.Callable[[ValueT], None]]
+    on_expire
         A function to call each time an item is garbage collected from this
         map. This should take one positional argument of the same type stored
-        in this mapping as the value and should return `None`.
+        in this mapping as the value and should return [`None`][].
 
         This will always be called after the entry has been removed.
     """
@@ -160,13 +160,13 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
     def __init__(
         self,
-        source: typing.Optional[typing.Dict[KeyT, ValueT]] = None,
+        source: typing.Optional[dict[KeyT, ValueT]] = None,
         /,
         *,
         limit: int,
         on_expire: typing.Optional[typing.Callable[[ValueT], None]] = None,
     ) -> None:
-        self._data: typing.Dict[KeyT, ValueT] = source or {}
+        self._data: dict[KeyT, ValueT] = source or {}
         self._limit = limit
         self._on_expire = on_expire
         self._garbage_collect()
@@ -177,7 +177,7 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
     def copy(self) -> LimitedCapacityCacheMap[KeyT, ValueT]:
         return LimitedCapacityCacheMap(self._data.copy(), limit=self._limit, on_expire=self._on_expire)
 
-    def freeze(self) -> typing.Dict[KeyT, ValueT]:
+    def freeze(self) -> dict[KeyT, ValueT]:
         return self._data.copy()
 
     def _garbage_collect(self) -> None:
@@ -206,7 +206,7 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
 # TODO: can this be immutable?
 class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
-    r"""Set of `hikari.snowflakes.Snowflake` objects.
+    r"""Set of [`hikari.snowflakes.Snowflake`][] objects.
 
     This internally uses a sorted bisect-array of 64 bit integers to represent
     the information. This reduces the space needed to store these objects
@@ -224,18 +224,18 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
     will be $$ \mathcal{O} \left( \log n \right) $$
 
     Insertions and removals will take $$ \mathcal{O} \left( \log n \right) $$
-    operations in the worst case, due to `bisect` using a binary insertion sort
+    operations in the worst case, due to [`bisect`][] using a binary insertion sort
     algorithm internally. Average case will be
     $$ \mathcal{O} \left( \log n \right) $$ and best case will be
     $$ \Omega \left\( k \right) $$
 
-    .. warning::
+    !!! warning
         This is not thread-safe and must not be iterated across whilst being
         concurrently modified.
 
-    Other Parameters
-    ----------------
-    *ids : int
+    Parameters
+    ----------
+    *ids
         The IDs to fill this table with.
     """
 
@@ -264,7 +264,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         for sf in sfs:
             # Yes, this is repeated code, but we want insertions to be as fast
             # as possible for caching purposes, so reduce the number of function
-            # calls as much as possible and reimplement the logic for `add`
+            # calls as much as possible and reimplement the logic for [`add`][]
             # here.
             index = bisect.bisect_left(self._ids, sf)
             if index == len(self._ids):
@@ -320,9 +320,9 @@ def get_index_or_slice(
 
     Parameters
     ----------
-    mapping : typing.Mapping[KeyT, ValueT]
+    mapping
         The mapping of entries to treat as a sequence.
-    index_or_slice : typing.Sequence[KeyT, ValueT]
+    index_or_slice
         The index to get an entry to get or slice of multiple entries to get.
 
     Returns
@@ -334,7 +334,7 @@ def get_index_or_slice(
     Raises
     ------
     IndexError
-        If `index_or_slice` is an int and is outside the range of the mapping's
+        If [`index_or_slice`][] is an int and is outside the range of the mapping's
         contents.
     """
     if isinstance(index_or_slice, slice):

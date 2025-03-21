@@ -27,24 +27,28 @@ env | grep -oP "^[^=]+" | sort
 if [ -z ${VERSION+x} ]; then echo '$VERSION environment variable is missing' && exit 1; fi
 if [ -z "${VERSION}" ]; then echo '$VERSION environment variable is empty' && exit 1; fi
 
-echo "===== INSTALLING DEPENDENCIES ====="
-pip install -r dev-requirements/towncrier.txt -e .
-
-echo "===== UPDATING INFORMATION ====="
-echo "-- Checkout branch --"
-git checkout -b "task/prepare-release-${VERSION}"
-
+echo "===== UPDATING RELEASE INFORMATION ====="
 echo "-- Bumping repository version to ${VERSION} --"
 sed "/^__version__.*/, \${s||__version__: typing.Final[str] = \"${VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__version__' not found in about!" && exit 1)
 sed "/^__docs__.*/, \${s||__docs__: typing.Final[str] = \"https://docs.hikari-py.dev/en/${VERSION}\"|g; b}; \$q1" -i hikari/_about.py || (echo "Variable '__docs__' not found in about!" && exit 1)
 
+echo "===== UPDATING CHANGELOG ====="
+echo "-- Installing dependencies --"
+# Installing our own package is necessary to have towncrier detect the version
+uv sync --frozen --group towncrier
+
 echo "-- Running towncrier --"
 towncrier --yes
+
+echo "===== COMMITTING CHANGES ====="
+echo "-- Checkout branch task/prepare-release-${VERSION} --"
+git checkout -b "task/prepare-release-${VERSION}"
 
 echo "-- Committing changes --"
 git commit -am "Prepare for release of version ${VERSION}"
 
 if [ "${CI}" ]; then
+    echo "-- Pushing changes --"
     git push origin "task/prepare-release-${VERSION}"
 else
     echo "Changes committed to 'task/prepare-release-${VERSION}'. You can now push the changes and create a pull request"

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
 
 import http
 
@@ -41,7 +41,7 @@ from hikari.internal import net
         (http.HTTPStatus.PERMANENT_REDIRECT, "HTTPResponseError"),
     ],
 )
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_generate_error_response(status_, expected_error):
     class StubResponse:
         real_url = "https://some.url"
@@ -94,7 +94,7 @@ async def test_generate_error_response(status_, expected_error):
         (694, "HTTPResponseError"),
     ],
 )
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_generate_error_response_with_non_conforming_status_code(status_, expected_error):
     class StubResponse:
         real_url = "https://some.url"
@@ -120,7 +120,7 @@ async def test_generate_error_response_with_non_conforming_status_code(status_, 
         (http.HTTPStatus.NOT_FOUND, "NotFoundError"),
     ],
 )
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_generate_error_when_error_without_json(status_, expected_error):
     class StubResponse:
         real_url = "https://some.url"
@@ -137,7 +137,7 @@ async def test_generate_error_when_error_without_json(status_, expected_error):
     assert returned is error()
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_generate_bad_request_error_without_json_response():
     class StubResponse:
         real_url = "https://some.url"
@@ -163,7 +163,7 @@ async def test_generate_bad_request_error_without_json_response():
         ('{"message": "raw message", "code": 123}', None),
     ],
 )
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_generate_bad_request_error_with_json_response(data, expected_errors):
     class StubResponse:
         real_url = "https://some.url"

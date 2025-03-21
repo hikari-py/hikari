@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import mock
 import pytest
 
@@ -28,7 +29,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestCompiledRoute:
-    @pytest.fixture()
+    @pytest.fixture
     def compiled_route(self):
         return routes.CompiledRoute(
             major_param_hash="abc123", route=mock.Mock(method="GET"), compiled_path="/some/endpoint"

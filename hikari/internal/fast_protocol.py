@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -20,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""A utility for faster `typing.Protocol` instance checks."""
+"""A utility for faster [`typing.Protocol`][] instance checks."""
 
 from __future__ import annotations
 
@@ -32,21 +31,19 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
 _Protocol: FastProtocolChecking = NotImplemented
-_IGNORED_ATTRS = typing.EXCLUDED_ATTRIBUTES + ["__qualname__", "__slots__"]
+_IGNORED_ATTRS = frozenset(typing.EXCLUDED_ATTRIBUTES) | {"__qualname__", "__slots__"}
 
 
 def _check_if_ignored(name: str) -> bool:
     return name.startswith("_abc_") or name in _IGNORED_ATTRS
 
 
-# This metaclass needs to subclass the same type as `typing.Protocol` to be
+# This metaclass needs to subclass the same type as [`typing.Protocol`][] to be
 # able to overwrite it
 class _FastProtocolChecking(type(typing.Protocol)):
-    _attributes_: typing.Tuple[str, ...]
+    _attributes_: tuple[str, ...]
 
-    def __new__(
-        cls, cls_name: str, bases: typing.Tuple[typing.Type[typing.Any], ...], namespace: typing.Dict[str, typing.Any]
-    ) -> Self:
+    def __new__(cls, cls_name: str, bases: tuple[type[typing.Any], ...], namespace: dict[str, typing.Any]) -> Self:
         global _Protocol
 
         if _Protocol is NotImplemented:
@@ -102,14 +99,14 @@ class _FastProtocolChecking(type(typing.Protocol)):
 class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
     """An extension to make protocols with faster instance checks.
 
-    .. note::
+    !!! note
         All protocols that subclass this class must be decorated with
-        `@typing.runtime_checkable` to keep mypy happy.
+        [@typing.runtime_checkable][] to keep mypy happy.
     """
 
     __slots__: typing.Sequence[str] = ()
 
-    __subclasshook__: typing.Callable[[typing.Type[typing.Any]], bool]
+    __subclasshook__: typing.Callable[[type[typing.Any]], bool]
 
     def __init_subclass__(cls, *args: typing.Any, **kwargs: typing.Any) -> None:
         # typing sets their own subclasshook if its not there. We want to
@@ -122,7 +119,7 @@ class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
         if not should_overwrite:
             return
 
-        def _subclass_hook(other: typing.Type[typing.Any]) -> bool:
+        def _subclass_hook(other: type[typing.Any]) -> bool:
             for i in cls._attributes_:
                 if i not in other.__dict__:
                     return NotImplemented

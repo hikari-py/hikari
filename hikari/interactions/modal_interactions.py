@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -24,7 +23,12 @@
 
 from __future__ import annotations
 
-__all__: typing.List[str] = ["ModalResponseTypesT", "ModalInteraction", "ModalInteraction"]
+__all__: typing.Sequence[str] = (
+    "ModalResponseTypesT",
+    "ModalInteraction",
+    "ModalInteraction",
+    "ModalInteractionMetadata",
+)
 
 import typing
 
@@ -41,6 +45,8 @@ from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import components as components_
+    from hikari import locales
+    from hikari import monetization
     from hikari import users as _users
     from hikari.api import special_endpoints
 
@@ -58,16 +64,18 @@ ModalResponseTypesT = typing.Literal[
 
 The following types are valid for this:
 
-* `hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`/`4`
-* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`/`5`
-* `hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`/`7`
-* `hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`/`6`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]/`4`
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]/`7`
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]/`6`
 """
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
-class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypesT]):
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ModalInteraction(
+    base_interactions.MessageResponseMixin[ModalResponseTypesT], base_interactions.PremiumResponseMixin
+):
     """Represents a modal interaction on Discord."""
 
     channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -79,31 +87,32 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this modal interaction event was triggered in.
 
-    This will be `None` for modal interactions triggered in DMs.
+    This will be [`None`][] for modal interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
+    guild_locale: typing.Union[str, locales.Locale, None] = attrs.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this modal interaction was triggered in.
 
-    This will be `None` for modal interactions triggered in DMs.
+    This will be [`None`][] for modal interactions triggered in DMs.
 
-    .. note::
-        This value can usually only be changed if `COMMUNITY` is in `hikari.guilds.Guild.features`
-        for the guild and will otherwise default to `en-US`.
+    !!! note
+        This value can usually only be changed if [`hikari.guilds.GuildFeature.COMMUNITY`][]
+        is in [`hikari.guilds.Guild.features`][] for the guild and will otherwise
+        default to [`hikari.locales.Locale.EN_US`][].
     """
 
     message: typing.Optional[messages.Message] = attrs.field(eq=False, repr=False)
     """The message whose component triggered the modal.
 
-    This will be None if the modal was a response to a command.
+    This will be [`None`][] if the modal was a response to a command.
     """
 
     member: typing.Optional[base_interactions.InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
     """The member who triggered this modal interaction.
 
-    This will be `None` for modal interactions triggered in DMs.
+    This will be [`None`][] for modal interactions triggered in DMs.
 
-    .. note::
+    !!! note
         This member object comes with the extra field `permissions` which
         contains the member's permissions in the current channel.
     """
@@ -120,6 +129,9 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     components: typing.Sequence[components_.ModalActionRowComponent] = attrs.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
 
+    entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
+    """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
+
     async def fetch_channel(self) -> channels.TextableChannel:
         """Fetch the guild channel this interaction was triggered in.
 
@@ -134,7 +146,8 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][]
+            permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -153,15 +166,15 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
         """Get the guild channel this interaction was triggered in from the cache.
 
-        .. note::
-            This will always return `None` for interactions triggered
+        !!! note
+            This will always return [`None`][] for interactions triggered
             in a DM channel.
 
         Returns
         -------
         typing.Optional[hikari.channels.TextableGuildChannel]
             The object of the guild channel that was found in the cache or
-            `None`.
+            [`None`][].
         """
         if isinstance(self.app, traits.CacheAware):
             channel = self.app.cache.get_guild_channel(self.channel_id)
@@ -176,7 +189,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         Returns
         -------
         typing.Optional[hikari.guilds.RESTGuild]
-            Object of the guild this interaction happened in or `None`
+            Object of the guild this interaction happened in or [`None`][]
             if this occurred within a DM channel.
 
         Raises
@@ -204,7 +217,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else `None`.
+            The object of the guild if found, else [`None`][].
         """
         if self.guild_id and isinstance(self.app, traits.CacheAware):
             return self.app.cache.get_guild(self.guild_id)
@@ -214,22 +227,23 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
-            `ModalInteraction.create_initial_response` should be used to set
-            the interaction response message.
+            [`hikari.interactions.modal_interactions.ModalInteraction.create_initial_response`][]
+            should be used to set the interaction response message.
 
         Examples
         --------
-        .. code-block:: python
-
-            async def handle_modal_interaction(interaction: ModalInteraction) -> InteractionMessageBuilder:
-                return (
-                    interaction
-                    .build_response()
-                    .add_embed(Embed(description="Hi there"))
-                    .set_content("Konnichiwa")
-                )
+        ```py
+        async def handle_modal_interaction(
+            interaction: ModalInteraction,
+        ) -> InteractionMessageBuilder:
+            return (
+                interaction.build_response()
+                .add_embed(Embed(description="Hi there"))
+                .set_content("Konnichiwa")
+            )
+        ```
 
         Returns
         -------
@@ -241,13 +255,13 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     def build_deferred_response(self) -> special_endpoints.InteractionDeferredBuilder:
         """Get a deferred message response builder for use in the REST server flow.
 
-        .. note::
+        !!! note
             For interactions received over the gateway
-            `ModalInteraction.create_initial_response` should be used to set
-            the interaction response message.
+            [`hikari.interactions.modal_interactions.ModalInteraction.create_initial_response`][]
+            should be used to set the interaction response message.
 
-        .. note::
-            Unlike `hikari.api.special_endpoints.InteractionMessageBuilder`,
+        !!! note
+            Unlike [`hikari.api.special_endpoints.InteractionMessageBuilder`][],
             the result of this call can be returned as is without any modifications
             being made to it.
 
@@ -257,3 +271,16 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
             Deferred interaction message response builder object.
         """
         return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
+
+
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ModalInteractionMetadata(base_interactions.PartialInteractionMetadata):
+    """The interaction metadata for a modal initiated message."""
+
+    original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    """The ID of the original response message, present only on follow-up messages."""
+
+    triggering_interaction_metadata: typing.Union[base_interactions.PartialInteractionMetadata] = attrs.field(
+        eq=False, hash=False, repr=True
+    )
+    """The metadata for the interaction that was used to open the modal."""

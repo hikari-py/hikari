@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import sys
@@ -55,20 +56,6 @@ def test_validate_activity_when_no_activity(activity):
     warn.assert_not_called()
 
 
-def test_validate_activity_when_type_is_custom():
-    activity = presences.Activity(name="test", type=presences.ActivityType.CUSTOM)
-
-    with mock.patch.object(warnings, "warn") as warn:
-        bot_impl._validate_activity(activity)
-
-    warn.assert_called_once_with(
-        "The CUSTOM activity type is not supported by bots at the time of writing, and may therefore not have "
-        "any effect if used.",
-        category=errors.HikariWarning,
-        stacklevel=3,
-    )
-
-
 def test_validate_activity_when_type_is_streaming_but_no_url():
     activity = presences.Activity(name="test", url=None, type=presences.ActivityType.STREAMING)
 
@@ -84,7 +71,7 @@ def test_validate_activity_when_type_is_streaming_but_no_url():
 
 
 def test_validate_activity_when_no_warning():
-    activity = presences.Activity(name="test", type=presences.ActivityType.PLAYING)
+    activity = presences.Activity(name="test", state="Hello!", type=presences.ActivityType.CUSTOM)
 
     with mock.patch.object(warnings, "warn") as warn:
         bot_impl._validate_activity(activity)
@@ -93,47 +80,47 @@ def test_validate_activity_when_no_warning():
 
 
 class TestGatewayBot:
-    @pytest.fixture()
+    @pytest.fixture
     def cache(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def entity_factory(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def event_factory(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def event_manager(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def rest(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def voice(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def executor(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def intents(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def proxy_settings(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def http_settings(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def bot(
         self,
         cache,
@@ -358,14 +345,14 @@ class TestGatewayBot:
         with pytest.raises(errors.ComponentStateConflictError):
             bot._check_if_alive()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close_when_already_closed(self, bot):
         bot._closed_event = mock.Mock()
 
         with pytest.raises(errors.ComponentStateConflictError):
             await bot.close()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close_when_already_closing(self, bot):
         bot._closed_event = mock.Mock()
         bot._closing_event = mock.Mock(is_set=mock.Mock(return_value=True))
@@ -376,7 +363,7 @@ class TestGatewayBot:
         join.assert_awaited_once_with()
         bot._closed_event.set.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close(self, bot, event_manager, event_factory, rest, voice, cache):
         def null_call(arg):
             return arg
@@ -477,7 +464,7 @@ class TestGatewayBot:
 
         event_manager.get_listeners.assert_called_once_with(event, polymorphic=False)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_join(self, bot, event_manager):
         bot._closed_event = mock.AsyncMock()
 
@@ -485,7 +472,7 @@ class TestGatewayBot:
 
         bot._closed_event.wait.assert_awaited_once_with()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_join_when_not_running(self, bot, event_manager):
         bot._closed_event = None
 
@@ -634,19 +621,19 @@ class TestGatewayBot:
         handle_interrupts.assert_called_once_with(enabled=False, loop=loop, propagate_interrupts=False)
         handle_interrupts.return_value.assert_used_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_when_shard_ids_specified_without_shard_count(self, bot):
         with pytest.raises(TypeError, match=r"'shard_ids' must be passed with 'shard_count'"):
             await bot.start(shard_ids=(1,))
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_when_already_running(self, bot):
         bot._closed_event = object()
 
         with pytest.raises(errors.ComponentStateConflictError):
             await bot.start()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start(self, bot, rest, voice, event_manager, event_factory, http_settings, proxy_settings):
         class MockSessionStartLimit:
             remaining = 10
@@ -743,7 +730,7 @@ class TestGatewayBot:
             ]
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_when_request_close_mid_startup(self, bot, rest, voice, event_manager, event_factory):
         class MockSessionStartLimit:
             remaining = 10
@@ -778,7 +765,7 @@ class TestGatewayBot:
             event.return_value.wait.return_value, shard1.join.return_value, timeout=5
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_when_shard_closed_mid_startup(self, bot, rest, voice, event_manager, event_factory):
         class MockSessionStartLimit:
             remaining = 10
@@ -839,7 +826,7 @@ class TestGatewayBot:
 
         bot._event_manager.unsubscribe.assert_called_once_with(event_type, callback)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_wait_for(self, bot):
         event_type = object()
         predicate = object()
@@ -872,7 +859,7 @@ class TestGatewayBot:
 
         calculate_shard_id.assert_called_once_with(96, 702763150025556029)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_update_presence(self, bot):
         status = object()
         activity = object()
@@ -900,7 +887,7 @@ class TestGatewayBot:
         shard1.update_presence.assert_called_once_with(status=status, activity=activity, idle_since=idle_since, afk=afk)
         shard2.update_presence.assert_called_once_with(status=status, activity=activity, idle_since=idle_since, afk=afk)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_update_voice_state(self, bot):
         shard = mock.Mock()
         shard.update_voice_state = mock.AsyncMock()
@@ -915,7 +902,7 @@ class TestGatewayBot:
             guild=115590097100865541, channel=123, self_mute=True, self_deaf=False
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_request_guild_members(self, bot):
         shard = mock.Mock(shard_count=3)
         shard.request_guild_members = mock.AsyncMock()
@@ -932,7 +919,7 @@ class TestGatewayBot:
             guild=115590097100865541, include_presences=True, query="indeed", limit=42, users=[123], nonce="NONCE"
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_one_shard(self, bot):
         activity = object()
         status = object()
@@ -972,7 +959,7 @@ class TestGatewayBot:
         shard_obj.start.assert_awaited_once_with()
         assert bot._shards == {1: shard_obj}
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_one_shard_when_not_alive(self, bot):
         activity = object()
         status = object()
@@ -996,7 +983,7 @@ class TestGatewayBot:
         shard_obj.close.assert_not_called()
 
     @pytest.mark.parametrize("is_alive", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_one_shard_when_exception(self, bot, is_alive):
         activity = object()
         status = object()

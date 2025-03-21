@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import contextlib
 import copy as stdlib_copy
 
@@ -126,8 +127,7 @@ def test_generate_shallow_copier_with_only_non_init_attrs():
 
 def test_generate_shallow_copier_with_no_attributes():
     @attrs.define()
-    class StubModel:
-        ...
+    class StubModel: ...
 
     old_model = StubModel()
 
@@ -142,8 +142,7 @@ def test_get_or_generate_shallow_copier_for_cached_copier():
     mock_copier = object()
 
     @attrs.define()
-    class StubModel:
-        ...
+    class StubModel: ...
 
     attrs_extensions._SHALLOW_COPIERS = {
         type("b", (), {}): object(),
@@ -158,8 +157,7 @@ def test_get_or_generate_shallow_copier_for_uncached_copier():
     mock_copier = object()
 
     @attrs.define()
-    class StubModel:
-        ...
+    class StubModel: ...
 
     with mock.patch.object(attrs_extensions, "generate_shallow_copier", return_value=mock_copier):
         assert attrs_extensions.get_or_generate_shallow_copier(StubModel) is mock_copier
@@ -174,8 +172,7 @@ def test_copy_attrs():
     mock_copier = mock.Mock(return_value=mock_result)
 
     @attrs.define()
-    class StubModel:
-        ...
+    class StubModel: ...
 
     model = StubModel()
 
@@ -286,8 +283,7 @@ def test_generate_deep_copier_with_only_non_init_attributes():
 
 def test_generate_deep_copier_with_no_attributes():
     @attrs.define
-    class StubBaseClass:
-        ...
+    class StubBaseClass: ...
 
     model = StubBaseClass()
     memo = {123: object()}
@@ -299,8 +295,7 @@ def test_generate_deep_copier_with_no_attributes():
 
 
 def test_get_or_generate_deep_copier_for_cached_function():
-    class StubClass:
-        ...
+    class StubClass: ...
 
     mock_copier = object()
     attrs_extensions._DEEP_COPIERS = {}
@@ -314,8 +309,7 @@ def test_get_or_generate_deep_copier_for_cached_function():
 
 
 def test_get_or_generate_deep_copier_for_uncached_function():
-    class StubClass:
-        ...
+    class StubClass: ...
 
     mock_copier = object()
     attrs_extensions._DEEP_COPIERS = {StubClass: mock_copier}
@@ -327,8 +321,7 @@ def test_get_or_generate_deep_copier_for_uncached_function():
 
 
 def test_deep_copy_attrs_without_memo():
-    class StubClass:
-        ...
+    class StubClass: ...
 
     mock_object = StubClass()
     mock_result = object()
@@ -348,8 +341,7 @@ def test_deep_copy_attrs_without_memo():
 
 
 def test_deep_copy_attrs_with_memo():
-    class StubClass:
-        ...
+    class StubClass: ...
 
     mock_object = StubClass()
     mock_result = object()
@@ -376,8 +368,7 @@ class TestCopyDecorator:
 
         @attrs.define()
         @attrs_extensions.with_copy
-        class StubClass:
-            ...
+        class StubClass: ...
 
         model = StubClass()
 
@@ -400,8 +391,7 @@ class TestCopyDecorator:
 
         @attrs.define()
         @attrs_extensions.with_copy
-        class StubClass:
-            ...
+        class StubClass: ...
 
         model = StubClass()
         stack = contextlib.ExitStack()
@@ -421,11 +411,9 @@ class TestCopyDecorator:
     def test_copy_decorator_inheritance(self):
         @attrs_extensions.with_copy
         @attrs.define()
-        class ParentClass:
-            ...
+        class ParentClass: ...
 
-        class Foo(ParentClass):
-            ...
+        class Foo(ParentClass): ...
 
         assert Foo.__copy__ == attrs_extensions.copy_attrs
         assert Foo.__deepcopy__ == attrs_extensions.deep_copy_attrs

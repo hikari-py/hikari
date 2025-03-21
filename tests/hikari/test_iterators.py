@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import pytest
 
 from hikari import iterators
@@ -26,7 +27,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestLazyIterator:
-    @pytest.fixture()
+    @pytest.fixture
     def lazy_iterator(self):
         return hikari_test_helpers.mock_class_namespace(iterators.LazyIterator)()
 
@@ -34,7 +35,7 @@ class TestLazyIterator:
         with pytest.raises(TypeError, match="is async-only, did you mean 'async for' or `anext`?"):
             next(lazy_iterator)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_flatten(self):
         iterator = iterators.FlatLazyIterator([[123, 321, 4352, 123], [], [12343123, 4234432], [543123123]])
 

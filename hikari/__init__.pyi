@@ -23,7 +23,9 @@ from hikari._about import __maintainer__ as __maintainer__
 from hikari._about import __url__ as __url__
 from hikari._about import __version__ as __version__
 from hikari.applications import Application as Application
+from hikari.applications import ApplicationContextType as ApplicationContextType
 from hikari.applications import ApplicationFlags as ApplicationFlags
+from hikari.applications import ApplicationIntegrationType as ApplicationIntegrationType
 from hikari.applications import ApplicationRoleConnectionMetadataRecord as ApplicationRoleConnectionMetadataRecord
 from hikari.applications import (
     ApplicationRoleConnectionMetadataRecordType as ApplicationRoleConnectionMetadataRecordType,
@@ -59,6 +61,7 @@ from hikari.events.interaction_events import *
 from hikari.events.lifetime_events import *
 from hikari.events.member_events import *
 from hikari.events.message_events import *
+from hikari.events.monetization_events import *
 from hikari.events.reaction_events import *
 from hikari.events.role_events import *
 from hikari.events.scheduled_events import *
@@ -87,6 +90,7 @@ from hikari.invites import *
 from hikari.iterators import *
 from hikari.locales import *
 from hikari.messages import *
+from hikari.monetization import *
 from hikari.permissions import *
 from hikari.presences import *
 from hikari.scheduled_events import *
@@ -98,6 +102,7 @@ from hikari.snowflakes import Snowflakeish as Snowflakeish
 from hikari.snowflakes import SnowflakeishOr as SnowflakeishOr
 from hikari.snowflakes import SnowflakeishSequence as SnowflakeishSequence
 from hikari.snowflakes import Unique as Unique
+from hikari.stage_instances import *
 from hikari.stickers import *
 from hikari.templates import *
 from hikari.traits import *

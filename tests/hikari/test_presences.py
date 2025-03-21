@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
 
 import mock
 import pytest
@@ -31,7 +31,7 @@ from hikari.impl import gateway_bot
 from hikari.internal import routes
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock(spec_set=gateway_bot.GatewayBot)
 
@@ -165,7 +165,7 @@ class TestActivity:
 
 
 class TestMemberPresence:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, mock_app):
         return presences.MemberPresence(
             app=mock_app,
@@ -176,14 +176,14 @@ class TestMemberPresence:
             client_status=mock.Mock(presences.ClientStatus),
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_user(self, model):
         model.app.rest.fetch_user = mock.AsyncMock()
 
         assert await model.fetch_user() is model.app.rest.fetch_user.return_value
         model.app.rest.fetch_user.assert_awaited_once_with(432)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_member(self, model):
         model.app.rest.fetch_member = mock.AsyncMock()
 

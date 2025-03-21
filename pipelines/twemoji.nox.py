@@ -19,6 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
 
 from pipelines import nox
 
@@ -26,5 +27,5 @@ from pipelines import nox
 @nox.session()
 def twemoji_test(session: nox.Session):
     """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
-    session.install("-e", ".")
+    nox.sync(session, self=True)
     session.run("python", "scripts/ci/test_twemoji_mapping.py", session.create_tmp())

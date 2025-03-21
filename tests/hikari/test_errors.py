@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
 
 import http
 import inspect
@@ -37,7 +37,7 @@ class TestShardCloseCode:
 
 
 class TestComponentStateConflictError:
-    @pytest.fixture()
+    @pytest.fixture
     def error(self):
         return errors.ComponentStateConflictError("some reason")
 
@@ -46,7 +46,7 @@ class TestComponentStateConflictError:
 
 
 class TestUnrecognisedEntityError:
-    @pytest.fixture()
+    @pytest.fixture
     def error(self):
         return errors.UnrecognisedEntityError("some reason")
 
@@ -55,7 +55,7 @@ class TestUnrecognisedEntityError:
 
 
 class TestGatewayError:
-    @pytest.fixture()
+    @pytest.fixture
     def error(self):
         return errors.GatewayError("some reason")
 
@@ -64,7 +64,7 @@ class TestGatewayError:
 
 
 class TestGatewayServerClosedConnectionError:
-    @pytest.fixture()
+    @pytest.fixture
     def error(self):
         return errors.GatewayServerClosedConnectionError("some reason", 123)
 
@@ -73,7 +73,7 @@ class TestGatewayServerClosedConnectionError:
 
 
 class TestHTTPResponseError:
-    @pytest.fixture()
+    @pytest.fixture
     def error(self):
         return errors.HTTPResponseError(
             "https://some.url", http.HTTPStatus.BAD_REQUEST, {}, "raw body", "message", 12345
@@ -100,7 +100,7 @@ class TestHTTPResponseError:
 
 
 class TestBadRequestError:
-    @pytest.fixture()
+    @pytest.fixture
     def error(self):
         return errors.BadRequestError(
             "https://some.url",
@@ -199,7 +199,7 @@ class TestBadRequestError:
 
 
 class TestRateLimitTooLongError:
-    @pytest.fixture()
+    @pytest.fixture
     def error(self):
         return errors.RateLimitTooLongError(
             route="some route", is_global=False, retry_after=0, max_retry_after=60, reset_at=0, limit=0, period=0
@@ -216,7 +216,7 @@ class TestRateLimitTooLongError:
 
 
 class TestBulkDeleteError:
-    @pytest.fixture()
+    @pytest.fixture
     def error(self):
         return errors.BulkDeleteError(range(10))
 
@@ -225,7 +225,7 @@ class TestBulkDeleteError:
 
 
 class TestMissingIntentError:
-    @pytest.fixture()
+    @pytest.fixture
     def error(self):
         return errors.MissingIntentError(intents.Intents.GUILD_MEMBERS | intents.Intents.GUILD_EMOJIS)
 

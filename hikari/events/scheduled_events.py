@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Events fired for guild scheduled event related changes."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -51,7 +51,7 @@ if typing.TYPE_CHECKING:
 
 @base_events.requires_intents(intents.Intents.GUILD_SCHEDULED_EVENTS)
 class ScheduledEventEvent(shard_events.ShardEvent, abc.ABC):
-    """Event bassed for any scheduled event related events."""
+    """Event base for any scheduled event related events."""
 
     __slots__: typing.Sequence[str] = ()
 

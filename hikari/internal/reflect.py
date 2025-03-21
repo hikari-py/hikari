@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -35,26 +34,26 @@ if typing.TYPE_CHECKING:
     _T = typing.TypeVar("_T")
 
 EMPTY: typing.Final[typing.Any] = inspect.Parameter.empty
-"""A singleton that empty annotations will be set to in `resolve_signature`."""
+"""A singleton that empty annotations will be set to in [`resolve_signature`][]."""
 
 
 def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signature:
-    """Get the `inspect.Signature` of `func` with resolved forward annotations.
+    """Get the [`inspect.Signature`][] of `func` with resolved forward annotations.
 
-    .. warning::
-        This will use `eval` to resolve string type-hints and forward
+    !!! warning
+        This will use [`eval`][] to resolve string type-hints and forward
         references. This has a slight performance overhead, so attempt to cache
         this info as much as possible.
 
     Parameters
     ----------
-    func : typing.Callable[..., typing.Any]
+    func
         The function to get the resolved annotations from.
 
     Returns
     -------
     inspect.Signature
-        A `inspect.Signature` object with all forward reference annotations
+        A [`inspect.Signature`][] object with all forward reference annotations
         resolved.
     """
     if sys.version_info >= (3, 10):
@@ -62,7 +61,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
     signature = inspect.signature(func)
     resolved_typehints = typing.get_type_hints(func)
-    params: typing.List[inspect.Parameter] = []
+    params: list[inspect.Parameter] = []
 
     none_type = type(None)
     for name, param in signature.parameters.items():
@@ -84,7 +83,7 @@ def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pra
 
     Profile results are dumped to stdout.
 
-    .. warning::
+    !!! warning
         This is NOT part of the public API. It should be considered to be
         internal detail and will likely be removed without prior warning in
         the future. You have been warned!

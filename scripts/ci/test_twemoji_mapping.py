@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,6 +22,9 @@
 by Discord emojis are actually legitimate URLs, since Discord
 does not map these on a 1-to-1 basis.
 """
+
+from __future__ import annotations
+
 import json
 import pathlib
 import subprocess
@@ -36,7 +38,7 @@ sys.path.append("..")
 from hikari import emojis
 
 TWEMOJI_REPO_BASE_URL = "https://github.com/discord/twemoji.git"
-DISCORD_EMOJI_MAPPING_URL = "https://emzi0767.gl-pages.emzi0767.dev/discord-emoji/discordEmojiMap-canary.min.json"
+DISCORD_EMOJI_MAPPING_URL = "https://emzi0767.mzgit.io/discord-emoji/discordEmojiMap-canary.min.json"
 
 try:
     tempdir = pathlib.Path(sys.argv[1])
@@ -47,6 +49,10 @@ except IndexError:
 
 start = time.perf_counter()
 
+print("Fetching emoji mapping")
+with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL) as request:
+    mapping = json.loads(request.read())["emojiDefinitions"]
+
 has_items = next(tempdir.iterdir(), False)
 if has_items:
     print("Updating twemoji collection")
@@ -54,10 +60,6 @@ if has_items:
 else:
     print("Cloning twemoji collection")
     subprocess.check_call(f"git clone {TWEMOJI_REPO_BASE_URL} {tempdir} --depth=1", shell=True)
-
-print("Fetching emoji mapping")
-with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL) as request:
-    mapping = json.loads(request.read())["emojiDefinitions"]
 
 assets_path = tempdir / "assets" / "72x72"
 

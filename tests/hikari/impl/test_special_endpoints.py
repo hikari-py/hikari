@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,12 +18,14 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
 
 import typing
 
 import mock
 import pytest
 
+from hikari import applications
 from hikari import channels
 from hikari import commands
 from hikari import components
@@ -43,7 +44,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestTypingIndicator:
-    @pytest.fixture()
+    @pytest.fixture
     def typing_indicator(self):
         return hikari_test_helpers.mock_class_namespace(special_endpoints.TypingIndicator, init_=False)
 
@@ -60,7 +61,7 @@ class TestTypingIndicator:
 
 
 class TestOwnGuildIterator:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter(self):
         mock_payload_1 = {"id": "123321123123"}
         mock_payload_2 = {"id": "123321123666"}
@@ -100,13 +101,13 @@ class TestOwnGuildIterator:
         )
         mock_request.assert_has_awaits(
             [
-                mock.call(compiled_route=expected_route, query={"after": "123321"}),
-                mock.call(compiled_route=expected_route, query={"after": "123321124123"}),
-                mock.call(compiled_route=expected_route, query={"after": "12332112432234"}),
+                mock.call(compiled_route=expected_route, query={"after": "123321", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"after": "123321124123", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"after": "12332112432234", "with_counts": "true"}),
             ]
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_newest_first(self):
         mock_payload_1 = {"id": "1213321123123"}
         mock_payload_2 = {"id": "1213321123666"}
@@ -148,14 +149,14 @@ class TestOwnGuildIterator:
         )
         mock_request.assert_has_awaits(
             [
-                mock.call(compiled_route=expected_route, query={"before": "55555555555555555"}),
-                mock.call(compiled_route=expected_route, query={"before": "1213321124123"}),
-                mock.call(compiled_route=expected_route, query={"before": "1213321123123"}),
+                mock.call(compiled_route=expected_route, query={"before": "55555555555555555", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"before": "1213321124123", "with_counts": "true"}),
+                mock.call(compiled_route=expected_route, query={"before": "1213321123123", "with_counts": "true"}),
             ]
         )
 
     @pytest.mark.parametrize("newest_first", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_empty_chunk(self, newest_first: bool):
         expected_route = routes.GET_MY_GUILDS.compile()
         mock_entity_factory = mock.Mock()
@@ -168,12 +169,13 @@ class TestOwnGuildIterator:
 
         assert result == []
         mock_entity_factory.deserialize_own_guild.assert_not_called()
-        query = {"before" if newest_first else "after": "123321"}
+        order_key = "before" if newest_first else "after"
+        query = {order_key: "123321", "with_counts": "true"}
         mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 
 class TestGuildBanIterator:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter(self):
         expected_route = routes.GET_GUILD_BANS.compile(guild=10000)
         mock_entity_factory = mock.Mock()
@@ -221,7 +223,7 @@ class TestGuildBanIterator:
             ]
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_newest_first(self):
         expected_route = routes.GET_GUILD_BANS.compile(guild=10000)
         mock_entity_factory = mock.Mock()
@@ -274,7 +276,7 @@ class TestGuildBanIterator:
         )
 
     @pytest.mark.parametrize("newest_first", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_empty_chunk(self, newest_first: bool):
         expected_route = routes.GET_GUILD_BANS.compile(guild=10000)
         mock_entity_factory = mock.Mock()
@@ -296,7 +298,7 @@ class TestGuildBanIterator:
 
 
 class TestScheduledEventUserIterator:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter(self):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=54123, scheduled_event=564123)
         mock_entity_factory = mock.Mock()
@@ -353,7 +355,7 @@ class TestScheduledEventUserIterator:
             ]
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_newest_first(self):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=54123, scheduled_event=564123)
         mock_entity_factory = mock.Mock()
@@ -413,7 +415,7 @@ class TestScheduledEventUserIterator:
         )
 
     @pytest.mark.parametrize("newest_first", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_empty_chunk(self, newest_first: bool):
         expected_route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=543123, scheduled_event=541234)
         mock_entity_factory = mock.Mock()
@@ -435,10 +437,10 @@ class TestScheduledEventUserIterator:
         mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestGuildThreadIterator:
     @pytest.mark.parametrize("before_is_timestamp", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_empty_chunk(self, before_is_timestamp: bool):
         mock_deserialize = mock.Mock()
         mock_entity_factory = mock.Mock()
@@ -459,7 +461,7 @@ class TestGuildThreadIterator:
         mock_entity_factory.deserialize_thread_member.assert_not_called()
         mock_deserialize.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiter_when_before_is_timestamp(self):
         mock_payload_1 = {"id": "9494949", "thread_metadata": {"archive_timestamp": "2022-02-28T11:33:09.220087+00:00"}}
         mock_payload_2 = {"id": "6576234", "thread_metadata": {"archive_timestamp": "2022-02-21T11:33:09.220087+00:00"}}
@@ -926,10 +928,7 @@ class TestInteractionMessageBuilder:
         result, attachments = builder.build(mock_entity_factory)
 
         mock_entity_factory.serialize_embed.assert_not_called()
-        assert result == {
-            "type": base_interactions.ResponseType.MESSAGE_UPDATE,
-            "data": {"components": [], "embeds": []},
-        }
+        assert result == {"type": base_interactions.ResponseType.MESSAGE_UPDATE, "data": {}}
         assert attachments == []
 
     def test_build_handles_attachments(self):
@@ -1005,8 +1004,8 @@ class TestInteractionModalBuilder:
 
 
 class TestCommandBuilder:
-    @pytest.fixture()
-    def stub_command(self) -> typing.Type[special_endpoints.CommandBuilder]:
+    @pytest.fixture
+    def stub_command(self) -> type[special_endpoints.CommandBuilder]:
         return hikari_test_helpers.mock_class_namespace(special_endpoints.CommandBuilder)
 
     def test_name_property(self, stub_command):
@@ -1023,11 +1022,6 @@ class TestCommandBuilder:
         builder = stub_command("oksksksk").set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
 
         assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
-
-    def test_is_dm_enabled(self, stub_command):
-        builder = stub_command("oksksksk").set_is_dm_enabled(True)
-
-        assert builder.is_dm_enabled is True
 
     def test_is_nsfw_property(self, stub_command):
         builder = stub_command("oksksksk").set_is_nsfw(True)
@@ -1069,8 +1063,9 @@ class TestSlashCommandBuilder:
             .add_option(mock_option)
             .set_id(3412312)
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types([applications.ApplicationIntegrationType.GUILD_INSTALL])
+            .set_context_types([applications.ApplicationContextType.GUILD])
         )
 
         result = builder.build(mock_entity_factory)
@@ -1080,13 +1075,14 @@ class TestSlashCommandBuilder:
             "name": "we are number",
             "description": "one",
             "type": 1,
-            "dm_permission": True,
             "nsfw": True,
             "default_member_permissions": 8,
             "options": [mock_entity_factory.serialize_command_option.return_value],
             "id": "3412312",
             "name_localizations": {locales.Locale.TR: "merhaba"},
             "description_localizations": {locales.Locale.TR: "bir"},
+            "contexts": [applications.ApplicationIntegrationType.GUILD_INSTALL.value],
+            "integration_types": [applications.ApplicationContextType.GUILD.value],
         }
 
     def test_build_without_optional_data(self):
@@ -1103,7 +1099,7 @@ class TestSlashCommandBuilder:
             "description_localizations": {},
         }
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create(self):
         builder = (
             special_endpoints.SlashCommandBuilder("we are number", "one")
@@ -1112,7 +1108,6 @@ class TestSlashCommandBuilder:
             .set_name_localizations({locales.Locale.TR: "sayı"})
             .set_description_localizations({locales.Locale.TR: "bir"})
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
@@ -1129,16 +1124,14 @@ class TestSlashCommandBuilder:
             name_localizations={locales.Locale.TR: "sayı"},
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
-            dm_enabled=True,
             nsfw=True,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_with_guild(self):
         builder = (
             special_endpoints.SlashCommandBuilder("we are number", "one")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
@@ -1158,7 +1151,6 @@ class TestSlashCommandBuilder:
             name_localizations={locales.Locale.TR: "sayı"},
             description_localizations={locales.Locale.TR: "bir"},
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
-            dm_enabled=True,
             nsfw=True,
         )
 
@@ -1170,8 +1162,9 @@ class TestContextMenuBuilder:
             .set_id(3412312)
             .set_name_localizations({locales.Locale.TR: "merhaba"})
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
+            .set_integration_types([applications.ApplicationIntegrationType.GUILD_INSTALL])
+            .set_context_types([applications.ApplicationContextType.GUILD])
         )
 
         result = builder.build(mock.Mock())
@@ -1179,11 +1172,12 @@ class TestContextMenuBuilder:
         assert result == {
             "name": "we are number",
             "type": 2,
-            "dm_permission": True,
             "nsfw": True,
             "default_member_permissions": 8,
             "id": "3412312",
             "name_localizations": {locales.Locale.TR: "merhaba"},
+            "contexts": [applications.ApplicationIntegrationType.GUILD_INSTALL.value],
+            "integration_types": [applications.ApplicationContextType.GUILD.value],
         }
 
     def test_build_without_optional_data(self):
@@ -1193,13 +1187,12 @@ class TestContextMenuBuilder:
 
         assert result == {"type": 3, "name": "nameeeee", "name_localizations": {}}
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create(self):
         builder = (
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"meow": "nyan"})
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
@@ -1214,17 +1207,15 @@ class TestContextMenuBuilder:
             guild=undefined.UNDEFINED,
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"meow": "nyan"},
-            dm_enabled=True,
             nsfw=True,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_with_guild(self):
         builder = (
             special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"en-ghibli": "meow"})
-            .set_is_dm_enabled(True)
             .set_is_nsfw(True)
         )
         mock_rest = mock.AsyncMock()
@@ -1239,7 +1230,6 @@ class TestContextMenuBuilder:
             guild=765234123,
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
             name_localizations={"en-ghibli": "meow"},
-            dm_enabled=True,
             nsfw=True,
         )
 
@@ -1265,7 +1255,7 @@ def test__build_emoji_when_undefined():
 
 
 class Test_ButtonBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def button(self):
         return special_endpoints._ButtonBuilder(
             style=components.ButtonStyle.DANGER,
@@ -1381,7 +1371,7 @@ class TestInteractiveButtonBuilder:
 
 
 class TestSelectOptionBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def option(self):
         return special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
 
@@ -1466,7 +1456,7 @@ class TestSelectOptionBuilder:
 
 
 class TestSelectMenuBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def menu(self):
         return special_endpoints.SelectMenuBuilder(custom_id="o2o2o2", type=5)
 
@@ -1528,7 +1518,7 @@ class TestSelectMenuBuilder:
 
 
 class TestTextSelectMenuBuilder:
-    @pytest.fixture()
+    @pytest.fixture
     def menu(self):
         return special_endpoints.TextSelectMenuBuilder(custom_id="o2o2o2")
 
@@ -1644,7 +1634,7 @@ class TestChannelSelectMenuBuilder:
 
 
 class TestTextInput:
-    @pytest.fixture()
+    @pytest.fixture
     def text_input(self):
         return special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
 

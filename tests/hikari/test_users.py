@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import mock
 import pytest
 
@@ -32,7 +33,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestPartialUser:
-    @pytest.fixture()
+    @pytest.fixture
     def obj(self):
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.PartialUser, slots_=False)()
@@ -42,7 +43,7 @@ class TestPartialUser:
 
         assert obj.accent_colour is obj.accent_color
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_self(self, obj):
         obj.id = 123
         obj.app = mock.AsyncMock()
@@ -50,7 +51,7 @@ class TestPartialUser:
         assert await obj.fetch_self() is obj.app.rest.fetch_user.return_value
         obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send_uses_cached_id(self, obj):
         obj.id = 4123123
         embed = object()
@@ -108,7 +109,7 @@ class TestPartialUser:
             flags=34123342,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send_when_not_cached(self, obj):
         obj.id = 522234
         obj.app = mock.Mock(spec=traits.CacheAware, rest=mock.AsyncMock())
@@ -140,7 +141,7 @@ class TestPartialUser:
             flags=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_send_when_not_cache_aware(self, obj):
         obj.id = 522234
         obj.app = mock.Mock(spec=traits.RESTAware, rest=mock.AsyncMock())
@@ -170,7 +171,7 @@ class TestPartialUser:
             flags=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_dm_channel(self, obj):
         obj.id = 123
         obj.app = mock.Mock()
@@ -182,7 +183,7 @@ class TestPartialUser:
 
 
 class TestUser:
-    @pytest.fixture()
+    @pytest.fixture
     def obj(self):
         # ABC, so must be stubbed.
         return hikari_test_helpers.mock_class_namespace(users.User, slots_=False)()
@@ -254,7 +255,19 @@ class TestUser:
         ) as route:
             assert obj.default_avatar_url == "file"
 
-        route.compile_to_file.assert_called_once_with(urls.CDN_URL, discriminator=4, file_format="png")
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, style=4, file_format="png")
+
+    def test_default_avatar_for_migrated_users(self, obj):
+        obj.id = 377812572784820226
+        obj.avatar_hash = "18dnf8dfbakfdh"
+        obj.discriminator = "0"
+
+        with mock.patch.object(
+            routes, "CDN_DEFAULT_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.default_avatar_url == "file"
+
+        route.compile_to_file.assert_called_once_with(urls.CDN_URL, style=0, file_format="png")
 
     def test_banner_url_property(self, obj):
         with mock.patch.object(users.User, "make_banner_url") as make_banner_url:
@@ -306,13 +319,14 @@ class TestUser:
 
 
 class TestPartialUserImpl:
-    @pytest.fixture()
+    @pytest.fixture
     def obj(self):
         return users.PartialUserImpl(
             id=snowflakes.Snowflake(123),
             app=mock.Mock(),
             discriminator="8637",
             username="thomm.o",
+            global_name=None,
             avatar_hash=None,
             banner_hash=None,
             accent_color=None,
@@ -331,7 +345,15 @@ class TestPartialUserImpl:
     def test_mention_property(self, obj):
         assert obj.mention == "<@123>"
 
-    @pytest.mark.asyncio()
+    def test_display_name_property_when_global_name(self, obj):
+        obj.global_name = "Thommo"
+        assert obj.display_name == obj.global_name
+
+    def test_display_name_property_when_no_global_name(self, obj):
+        obj.global_name = None
+        assert obj.display_name == obj.username
+
+    @pytest.mark.asyncio
     async def test_fetch_self(self, obj):
         user = object()
         obj.app.rest.fetch_user = mock.AsyncMock(return_value=user)
@@ -339,15 +361,16 @@ class TestPartialUserImpl:
         obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestOwnUser:
-    @pytest.fixture()
+    @pytest.fixture
     def obj(self):
         return users.OwnUser(
             id=snowflakes.Snowflake(12345),
             app=mock.Mock(),
             discriminator="1234",
             username="foobar",
+            global_name=None,
             avatar_hash="69420",
             banner_hash="42069",
             accent_color=123456,

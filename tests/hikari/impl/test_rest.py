@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import datetime
@@ -26,6 +27,7 @@ import http
 import re
 import typing
 
+import aiohttp
 import mock
 import pytest
 
@@ -46,6 +48,7 @@ from hikari import messages as message_models
 from hikari import permissions
 from hikari import scheduled_events
 from hikari import snowflakes
+from hikari import stage_instances
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -69,7 +72,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestRestProvider:
-    @pytest.fixture()
+    @pytest.fixture
     def rest_client(self):
         class StubRestClient:
             http_settings = object()
@@ -77,15 +80,15 @@ class TestRestProvider:
 
         return StubRestClient()
 
-    @pytest.fixture()
+    @pytest.fixture
     def executor(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def entity_factory(self):
         return mock.Mock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def rest_provider(self, rest_client, executor, entity_factory):
         return rest._RESTProvider(lambda: entity_factory, executor, lambda: rest_client)
 
@@ -111,7 +114,7 @@ class TestRestProvider:
 
 
 class TestClientCredentialsStrategy:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_token(self):
         return mock.Mock(
             applications.PartialOAuth2Token,
@@ -136,7 +139,7 @@ class TestClientCredentialsStrategy:
 
         assert token.token_type is applications.TokenType.BEARER
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_on_new_instance(self, mock_token):
         mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_token))
 
@@ -148,7 +151,7 @@ class TestClientCredentialsStrategy:
             client=54123123, client_secret="123123123", scopes=("applications.commands.update", "identify")
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_handles_out_of_date_token(self, mock_token):
         mock_old_token = mock.Mock(
             applications.PartialOAuth2Token,
@@ -171,7 +174,7 @@ class TestClientCredentialsStrategy:
         assert new_token != token
         assert new_token == "Bearer okokok.fofofo.ddd"
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_handles_token_being_set_before_lock_is_acquired(self, mock_token):
         lock = asyncio.Lock()
         mock_rest = mock.Mock(authorize_client_credentials_token=mock.AsyncMock(side_effect=[mock_token]))
@@ -191,7 +194,7 @@ class TestClientCredentialsStrategy:
         )
         assert results == ["Bearer okokok.fofofo.ddd", "Bearer okokok.fofofo.ddd", "Bearer okokok.fofofo.ddd"]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_after_invalidation(self, mock_token):
         mock_old_token = mock.Mock(
             applications.PartialOAuth2Token,
@@ -214,7 +217,7 @@ class TestClientCredentialsStrategy:
         assert new_token != token
         assert new_token == "Bearer okokok.fofofo.ddd"
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_uses_newly_cached_token_after_acquiring_lock(self):
         class MockLock:
             def __init__(self, strategy):
@@ -239,7 +242,7 @@ class TestClientCredentialsStrategy:
 
         mock_rest.authorize_client_credentials_token.assert_not_called()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_acquire_caches_client_http_response_error(self):
         mock_rest = mock.AsyncMock()
         error = errors.ClientHTTPResponseError(
@@ -295,7 +298,7 @@ class TestClientCredentialsStrategy:
 
 
 class TestRESTApp:
-    @pytest.fixture()
+    @pytest.fixture
     def rest_app(self):
         return hikari_test_helpers.mock_class_namespace(rest.RESTApp, slots_=False)(
             executor=None,
@@ -398,12 +401,12 @@ def rest_client_class():
     return hikari_test_helpers.mock_class_namespace(rest.RESTClientImpl, slots_=False)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_cache():
     return mock.Mock()
 
 
-@pytest.fixture()
+@pytest.fixture
 def rest_client(rest_client_class, mock_cache):
     obj = rest_client_class(
         cache=mock_cache,
@@ -426,20 +429,25 @@ def rest_client(rest_client_class, mock_cache):
     return obj
 
 
-@pytest.fixture()
+@pytest.fixture
 def file_resource():
     class Stream:
         def __init__(self, data):
+            self.open = False
             self.data = data
 
         async def data_uri(self):
+            if not self.open:
+                raise RuntimeError("Tried to read off a closed stream")
+
             return self.data
 
         async def __aenter__(self):
+            self.open = True
             return self
 
         async def __aexit__(self, exc_type, exc, exc_tb) -> None:
-            pass
+            self.open = False
 
     class FileResource(files.Resource):
         filename = None
@@ -454,7 +462,7 @@ def file_resource():
     return FileResource
 
 
-@pytest.fixture()
+@pytest.fixture
 def file_resource_patch(file_resource):
     resource = file_resource("some data")
     with mock.patch.object(files, "ensure_resource", return_value=resource):
@@ -662,7 +670,7 @@ class TestRESTClientImpl:
 
     @pytest.mark.parametrize("client_session_owner", [True, False])
     @pytest.mark.parametrize("bucket_manager_owner", [True, False])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close(self, rest_client, client_session_owner, bucket_manager_owner):
         rest_client._close_event = mock_close_event = mock.Mock()
         rest_client._client_session.close = client_close = mock.AsyncMock()
@@ -689,7 +697,7 @@ class TestRESTClientImpl:
 
     @pytest.mark.parametrize("client_session_owner", [True, False])
     @pytest.mark.parametrize("bucket_manager_owner", [True, False])
-    @pytest.mark.asyncio()  # Function needs to be executed in a running loop
+    @pytest.mark.asyncio  # Function needs to be executed in a running loop
     async def test_start(self, rest_client, client_session_owner, bucket_manager_owner):
         rest_client._client_session = None
         rest_client._close_event = None
@@ -1160,7 +1168,7 @@ class TestRESTClientImpl:
             undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
         )
 
-    @pytest.mark.parametrize("args", [("embeds", "components"), ("embed", "component")])
+    @pytest.mark.parametrize("args", [("embeds", "components", "attachments"), ("embed", "component", "attachment")])
     def test__build_message_payload_with_None_args(self, rest_client, args):
         kwargs = {}
         for arg in args:
@@ -1171,7 +1179,7 @@ class TestRESTClientImpl:
         ) as generate_allowed_mentions:
             body, form = rest_client._build_message_payload(**kwargs)
 
-        assert body == {"embeds": [], "components": [], "allowed_mentions": {"allowed_mentions": 1}}
+        assert body == {"embeds": [], "components": [], "attachments": [], "allowed_mentions": {"allowed_mentions": 1}}
         assert form is None
 
         generate_allowed_mentions.assert_called_once_with(
@@ -1620,12 +1628,11 @@ class TestRESTClientImpl:
         assert iterator is iterator_cls.return_value
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestRESTClientImplAsync:
-    @pytest.fixture()
+    @pytest.fixture
     def exit_exception(self):
-        class ExitException(Exception):
-            ...
+        class ExitException(Exception): ...
 
         return ExitException
 
@@ -1907,6 +1914,33 @@ class TestRESTClientImplAsync:
         exponential_backoff.assert_called_once_with(maximum=16)
         asyncio_sleep.assert_has_awaits([mock.call(1), mock.call(2), mock.call(3)])
         generate_error_response.assert_called_once_with(rest_client._client_session.request.return_value)
+
+    @hikari_test_helpers.timeout()
+    @pytest.mark.parametrize("exception", [asyncio.TimeoutError, aiohttp.ClientConnectionError])
+    async def test_perform_request_when_connection_error_will_retry_until_exhausted(self, rest_client, exception):
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exception))
+        rest_client._max_retries = 3
+        rest_client._parse_ratelimits = mock.AsyncMock()
+        rest_client._client_session = mock_session
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(pytest.raises(errors.HTTPError))
+        exponential_backoff = stack.enter_context(
+            mock.patch.object(
+                rate_limits,
+                "ExponentialBackOff",
+                return_value=mock.Mock(__next__=mock.Mock(side_effect=[1, 2, 3, 4, 5])),
+            )
+        )
+        asyncio_sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
+
+        with stack:
+            await rest_client._perform_request(route)
+
+        assert exponential_backoff.return_value.__next__.call_count == 3
+        exponential_backoff.assert_called_once_with(maximum=16)
+        asyncio_sleep.assert_has_awaits([mock.call(1), mock.call(2), mock.call(3)])
 
     @pytest.mark.parametrize("enabled", [True, False])
     @hikari_test_helpers.timeout()
@@ -2198,11 +2232,21 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_CHANNEL.compile(channel=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "NNNNN"})
 
+        result = await rest_client.delete_channel(StubModel(123), reason="some reason :)")
+
+        assert result is rest_client._entity_factory.deserialize_channel.return_value
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(expected_route, reason="some reason :)")
+
+    async def test_delete_channel_without_optionals(self, rest_client):
+        expected_route = routes.DELETE_CHANNEL.compile(channel=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "NNNNN"})
+
         result = await rest_client.delete_channel(StubModel(123))
 
         assert result is rest_client._entity_factory.deserialize_channel.return_value
         rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, reason=undefined.UNDEFINED)
 
     async def test_edit_my_voice_state_when_requesting_to_speak(self, rest_client):
         rest_client._request = mock.AsyncMock()
@@ -2234,6 +2278,86 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route, json={"channel_id": "999", "suppress": True, "request_to_speak_timestamp": None}
         )
+
+    async def test_fetch_my_voice_state(self, rest_client):
+        expected_route = routes.GET_MY_GUILD_VOICE_STATE.compile(guild=5454)
+
+        expected_json = {
+            "guild_id": "5454",
+            "channel_id": "3940568093485",
+            "user_id": "237890809345627",
+            "member": {
+                "nick": "foobarbaz",
+                "roles": ["11111", "22222", "33333", "44444"],
+                "joined_at": "2015-04-26T06:26:56.936000+00:00",
+                "premium_since": "2019-05-17T06:26:56.936000+00:00",
+                "avatar": "estrogen",
+                "deaf": False,
+                "mute": True,
+                "pending": False,
+                "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
+            },
+            "session_id": "39405894b9058guhfguh43t9g",
+            "deaf": False,
+            "mute": True,
+            "self_deaf": False,
+            "self_mute": True,
+            "self_stream": False,
+            "self_video": True,
+            "suppress": False,
+            "request_to_speak_timestamp": "2021-04-17T10:11:19.970105+00:00",
+        }
+
+        rest_client._request = mock.AsyncMock(return_value=expected_json)
+
+        with mock.patch.object(
+            rest_client._entity_factory, "deserialize_voice_state", return_value=mock.Mock()
+        ) as patched_deserialize_voice_state:
+            await rest_client.fetch_my_voice_state(StubModel(5454))
+
+            patched_deserialize_voice_state.assert_called_once_with(expected_json)
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_voice_state(self, rest_client):
+        expected_route = routes.GET_GUILD_VOICE_STATE.compile(guild=5454, user=1234567890)
+
+        expected_json = {
+            "guild_id": "5454",
+            "channel_id": "3940568093485",
+            "user_id": "1234567890",
+            "member": {
+                "nick": "foobarbaz",
+                "roles": ["11111", "22222", "33333", "44444"],
+                "joined_at": "2015-04-26T06:26:56.936000+00:00",
+                "premium_since": "2019-05-17T06:26:56.936000+00:00",
+                "avatar": "estrogen",
+                "deaf": False,
+                "mute": True,
+                "pending": False,
+                "communication_disabled_until": "2021-10-18T06:26:56.936000+00:00",
+            },
+            "session_id": "39405894b9058guhfguh43t9g",
+            "deaf": False,
+            "mute": True,
+            "self_deaf": False,
+            "self_mute": True,
+            "self_stream": False,
+            "self_video": True,
+            "suppress": False,
+            "request_to_speak_timestamp": "2021-04-17T10:11:19.970105+00:00",
+        }
+
+        rest_client._request = mock.AsyncMock(return_value=expected_json)
+
+        with mock.patch.object(
+            rest_client._entity_factory, "deserialize_voice_state", return_value=mock.Mock()
+        ) as patched_deserialize_voice_state:
+            await rest_client.fetch_voice_state(StubModel(5454), StubModel(1234567890))
+
+            patched_deserialize_voice_state.assert_called_once_with(expected_json)
+
+        rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_edit_my_voice_state_when_providing_datetime_for_request_to_speak(self, rest_client):
         rest_client._request = mock.AsyncMock()
@@ -2658,8 +2782,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=123, message=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_message(StubModel(123), StubModel(456))
-        rest_client._request.assert_awaited_once_with(expected_route)
+        await rest_client.delete_message(StubModel(123), StubModel(456), reason="broke laws")
+        rest_client._request.assert_awaited_once_with(expected_route, reason="broke laws")
 
     async def test_delete_messages(self, rest_client):
         messages = [StubModel(i) for i in range(200)]
@@ -2669,10 +2793,13 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(StubModel(123), *messages)
+        await rest_client.delete_messages(StubModel(123), *messages, reason="broke laws")
 
         rest_client._request.assert_has_awaits(
-            [mock.call(expected_route, json=expected_json1), mock.call(expected_route, json=expected_json2)]
+            [
+                mock.call(expected_route, json=expected_json1, reason="broke laws"),
+                mock.call(expected_route, json=expected_json2, reason="broke laws"),
+            ]
         )
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_message_not_found(
@@ -2688,12 +2815,12 @@ class TestRESTClientImplAsync:
             side_effect=errors.NotFoundError(url="", headers={}, raw_body="", code=10008)
         )
 
-        await rest_client.delete_messages(channel, *messages)
+        await rest_client.delete_messages(channel, *messages, reason="broke laws")
 
         rest_client._request.assert_awaited_once_with(
-            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message)
+        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
 
     async def test_delete_messages_when_one_message_left_in_chunk_and_delete_message_raises_channel_not_found(
         self, rest_client
@@ -2708,14 +2835,14 @@ class TestRESTClientImplAsync:
         rest_client.delete_message = mock.AsyncMock(side_effect=mock_not_found)
 
         with pytest.raises(errors.BulkDeleteError) as exc_info:
-            await rest_client.delete_messages(channel, *messages)
+            await rest_client.delete_messages(channel, *messages, reason="broke laws")
 
         assert exc_info.value.__cause__ is mock_not_found
 
         rest_client._request.assert_awaited_once_with(
-            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json
+            routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json, reason="broke laws"
         )
-        rest_client.delete_message.assert_awaited_once_with(channel, message)
+        rest_client.delete_message.assert_awaited_once_with(channel, message, reason="broke laws")
 
     async def test_delete_messages_when_one_message_left_in_chunk(self, rest_client):
         channel = StubModel(123)
@@ -2725,12 +2852,16 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(channel, *messages)
+        await rest_client.delete_messages(channel, *messages, reason="broke laws")
 
         rest_client._request.assert_has_awaits(
             [
-                mock.call(routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel), json=expected_json),
-                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)),
+                mock.call(
+                    routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
+                    json=expected_json,
+                    reason="broke laws",
+                ),
+                mock.call(routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message), reason="broke laws"),
             ]
         )
 
@@ -2749,17 +2880,19 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(channel, messages, StubModel(444), StubModel(6523))
+        await rest_client.delete_messages(channel, messages, StubModel(444), StubModel(6523), reason="broke laws")
 
         rest_client._request.assert_has_awaits(
             [
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": [str(i) for i in range(100)]},
+                    reason="broke laws",
                 ),
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": ["100", "444", "6523"]},
+                    reason="broke laws",
                 ),
             ]
         )
@@ -2770,17 +2903,19 @@ class TestRESTClientImplAsync:
 
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_messages(channel, iterator)
+        await rest_client.delete_messages(channel, iterator, reason="broke laws")
 
         rest_client._request.assert_has_awaits(
             [
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": [str(i) for i in range(100)]},
+                    reason="broke laws",
                 ),
                 mock.call(
                     routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel),
                     json={"messages": ["100", "101", "102"]},
+                    reason="broke laws",
                 ),
             ]
         )
@@ -3421,10 +3556,8 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"code": "Jx4cNGG"})
         rest_client._entity_factory.deserialize_invite = mock.Mock(return_value=return_invite)
 
-        assert await rest_client.fetch_invite(input_invite, with_counts=True, with_expiration=False) == return_invite
-        rest_client._request.assert_awaited_once_with(
-            expected_route, query={"with_counts": "true", "with_expiration": "false"}
-        )
+        assert await rest_client.fetch_invite(input_invite, with_counts=True) == return_invite
+        rest_client._request.assert_awaited_once_with(expected_route, query={"with_counts": "true"})
         rest_client._entity_factory.deserialize_invite.assert_called_once_with({"code": "Jx4cNGG"})
 
     async def test_delete_invite(self, rest_client):
@@ -3483,6 +3616,30 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_my_user = mock.Mock(return_value=user)
 
         assert await rest_client.edit_my_user(username="new username", avatar="someavatar.png") is user
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})
+
+    async def test_edit_my_user_when_banner_is_None(self, rest_client):
+        user = StubModel(123)
+        expected_route = routes.PATCH_MY_USER.compile()
+        expected_json = {"username": "new username", "banner": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_my_user = mock.Mock(return_value=user)
+
+        assert await rest_client.edit_my_user(username="new username", banner=None) is user
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})
+
+    async def test_edit_my_user_when_banner_is_file(self, rest_client, file_resource_patch):
+        user = StubModel(123)
+        expected_route = routes.PATCH_MY_USER.compile()
+        expected_json = {"username": "new username", "banner": "some data"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_my_user = mock.Mock(return_value=user)
+
+        assert await rest_client.edit_my_user(username="new username", banner="somebanner.png") is user
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_my_user.assert_called_once_with({"id": "123"})
@@ -3813,6 +3970,66 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
 
+    async def test_fetch_application_emoji(self, rest_client):
+        emoji = StubModel(456)
+        expected_route = routes.GET_APPLICATION_EMOJI.compile(emoji=456, application=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+        rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(return_value=emoji)
+
+        assert await rest_client.fetch_application_emoji(StubModel(123), StubModel(456)) is emoji
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_known_custom_emoji.assert_called_once_with({"id": "456"})
+
+    async def test_fetch_application_emojis(self, rest_client):
+        emoji1 = StubModel(456)
+        emoji2 = StubModel(789)
+        expected_route = routes.GET_APPLICATION_EMOJIS.compile(application=123)
+        rest_client._request = mock.AsyncMock(return_value={"items": [{"id": "456"}, {"id": "789"}]})
+        rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(side_effect=[emoji1, emoji2])
+
+        assert await rest_client.fetch_application_emojis(StubModel(123)) == [emoji1, emoji2]
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_known_custom_emoji.call_count == 2
+        rest_client._entity_factory.deserialize_known_custom_emoji.assert_has_calls(
+            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        )
+
+    async def test_create_application_emoji(self, rest_client, file_resource_patch):
+        emoji = StubModel(234)
+        expected_route = routes.POST_APPLICATION_EMOJIS.compile(application=123)
+        expected_json = {"name": "rooYay", "image": "some data"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "234"})
+        rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(return_value=emoji)
+
+        returned = await rest_client.create_application_emoji(StubModel(123), "rooYay", "rooYay.png")
+        assert returned is emoji
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_known_custom_emoji.assert_called_once_with({"id": "234"})
+
+    async def test_edit_application_emoji(self, rest_client):
+        emoji = StubModel(234)
+        expected_route = routes.PATCH_APPLICATION_EMOJI.compile(application=123, emoji=456)
+        expected_json = {"name": "rooYay2"}
+        rest_client._request = mock.AsyncMock(return_value={"id": "234"})
+        rest_client._entity_factory.deserialize_known_custom_emoji = mock.Mock(return_value=emoji)
+
+        returned = await rest_client.edit_application_emoji(StubModel(123), StubModel(456), name="rooYay2")
+        assert returned is emoji
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_known_custom_emoji.assert_called_once_with({"id": "234"})
+
+    async def test_delete_application_emoji(self, rest_client):
+        expected_route = routes.DELETE_APPLICATION_EMOJI.compile(application=123, emoji=456)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_application_emoji(StubModel(123), StubModel(456))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_fetch_sticker_packs(self, rest_client):
         pack1 = object()
         pack2 = object()
@@ -3976,6 +4193,7 @@ class TestRESTClientImplAsync:
             "icon": "icon data",
             "splash": "splash data",
             "banner": "banner data",
+            "features": ["COMMUNITY", "RAID_ALERTS_DISABLED"],
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "123"})
 
@@ -3996,6 +4214,7 @@ class TestRESTClientImplAsync:
                 rules_channel=StubModel(987),
                 public_updates_channel=(654),
                 preferred_locale="en-UK",
+                features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
                 reason="hikari best",
             )
             assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
@@ -4020,6 +4239,7 @@ class TestRESTClientImplAsync:
             "icon": None,
             "splash": None,
             "banner": None,
+            "features": ["COMMUNITY", "RAID_ALERTS_DISABLED"],
         }
         rest_client._request = mock.AsyncMock(return_value={"ok": "NO"})
 
@@ -4039,6 +4259,7 @@ class TestRESTClientImplAsync:
             rules_channel=StubModel(987),
             public_updates_channel=(654),
             preferred_locale="en-UK",
+            features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
             reason="hikari best",
         )
         assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
@@ -4721,8 +4942,7 @@ class TestRESTClientImplAsync:
             [mock.call(mock_payload_1), mock.call(mock_payload_2), mock.call(mock_payload_3)]
         )
 
-    async def test_fetch_active_threads(self, rest_client: rest.RESTClientImpl):
-        ...
+    async def test_fetch_active_threads(self, rest_client: rest.RESTClientImpl): ...
 
     async def test_reposition_channels(self, rest_client):
         expected_route = routes.PATCH_GUILD_CHANNELS.compile(guild=123)
@@ -4928,6 +5148,17 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_member_ban.assert_called_once_with({"id": "789"})
+
+    async def test_fetch_role(self, rest_client):
+        role = StubModel(456)
+        expected_route = routes.GET_GUILD_ROLE.compile(guild=123, role=456)
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+        rest_client._entity_factory.deserialize_role = mock.Mock(return_value=role)
+
+        assert await rest_client.fetch_role(StubModel(123), StubModel(456)) is role
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
 
     async def test_fetch_roles(self, rest_client):
         role1 = StubModel(456)
@@ -5456,7 +5687,6 @@ class TestRESTClientImplAsync:
             guild=StubModel(653452134),
             options=[mock_option],
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
         )
 
@@ -5470,7 +5700,6 @@ class TestRESTClientImplAsync:
                 "description": "not ok anymore",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
                 "default_member_permissions": 8,
-                "dm_permission": False,
                 "nsfw": True,
             },
         )
@@ -5523,7 +5752,6 @@ class TestRESTClientImplAsync:
             name_localizations={locales.Locale.TR: "hhh"},
             description_localizations={locales.Locale.TR: "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
         )
 
@@ -5541,7 +5769,6 @@ class TestRESTClientImplAsync:
             name_localizations={"tr": "hhh"},
             description_localizations={"tr": "jello"},
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
         )
 
@@ -5556,7 +5783,6 @@ class TestRESTClientImplAsync:
             "okokok",
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
             name_localizations={locales.Locale.TR: "hhh"},
         )
@@ -5571,7 +5797,6 @@ class TestRESTClientImplAsync:
             name="okokok",
             guild=mock_guild,
             default_member_permissions=permissions.Permissions.ADMINISTRATOR,
-            dm_enabled=False,
             nsfw=True,
             name_localizations={"tr": "hhh"},
         )
@@ -5638,7 +5863,6 @@ class TestRESTClientImplAsync:
             description="cancelled",
             options=[mock_option],
             default_member_permissions=permissions.Permissions.BAN_MEMBERS,
-            dm_enabled=True,
         )
 
         assert result is rest_client._entity_factory.deserialize_command.return_value
@@ -5652,7 +5876,6 @@ class TestRESTClientImplAsync:
                 "description": "cancelled",
                 "options": [rest_client._entity_factory.serialize_command_option.return_value],
                 "default_member_permissions": 4,
-                "dm_permission": True,
             },
         )
         rest_client._entity_factory.serialize_command_option.assert_called_once_with(mock_option)
@@ -6372,3 +6595,72 @@ class TestRESTClientImplAsync:
         await rest_client.delete_scheduled_event(StubModel(54531123), StubModel(123321123321))
 
         rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_stage_instance(self, rest_client):
+        expected_route = routes.GET_STAGE_INSTANCE.compile(channel=123)
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "123",
+            "topic": "ur mom",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_stage_instance(channel=StubModel(123))
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
+
+    async def test_create_stage_instance(self, rest_client):
+        expected_route = routes.POST_STAGE_INSTANCE.compile()
+        expected_json = {"channel_id": "7334", "topic": "ur mom", "guild_scheduled_event_id": "3361203239"}
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "7334",
+            "topic": "ur mom",
+            "privacy_level": 2,
+            "guild_scheduled_event_id": "3361203239",
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.create_stage_instance(
+            channel=StubModel(7334), topic="ur mom", scheduled_event_id=StubModel(3361203239)
+        )
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
+
+    async def test_edit_stage_instance(self, rest_client):
+        expected_route = routes.PATCH_STAGE_INSTANCE.compile(channel=7334)
+        expected_json = {"topic": "ur mom", "privacy_level": 2}
+        mock_payload = {
+            "id": "8406",
+            "guild_id": "19703",
+            "channel_id": "7334",
+            "topic": "ur mom",
+            "privacy_level": 2,
+            "discoverable_disabled": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.edit_stage_instance(
+            channel=StubModel(7334), topic="ur mom", privacy_level=stage_instances.StageInstancePrivacyLevel.GUILD_ONLY
+        )
+
+        assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
+        rest_client._request.assert_called_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
+
+    async def test_delete_stage_instance(self, rest_client):
+        expected_route = routes.DELETE_STAGE_INSTANCE.compile(channel=7334)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.delete_stage_instance(channel=StubModel(7334))
+
+        rest_client._request.assert_called_once_with(expected_route)

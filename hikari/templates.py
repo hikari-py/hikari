@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -46,9 +45,9 @@ if typing.TYPE_CHECKING:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class TemplateRole(guilds.PartialRole):
-    """The partial role object attached to `Template`."""
+    """The partial role object attached to [`hikari.templates.Template`][]."""
 
     permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=False)
     """The guild wide permissions this role gives to the members it's attached to.
@@ -65,7 +64,7 @@ class TemplateRole(guilds.PartialRole):
     is_hoisted: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
 
-    members will be hoisted under their highest role where this is set to `True`.
+    members will be hoisted under their highest role where this is set to [`True`][].
     """
 
     is_mentionable: bool = attrs.field(eq=False, hash=False, repr=False)
@@ -73,9 +72,9 @@ class TemplateRole(guilds.PartialRole):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class TemplateGuild(guilds.PartialGuild):
-    """The partial guild object attached to `Template`."""
+    """The partial guild object attached to [`hikari.templates.Template`][]."""
 
     description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description, if set."""
@@ -96,7 +95,7 @@ class TemplateGuild(guilds.PartialGuild):
     preferred_locale: str = attrs.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
-    This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`
+    This can only be change if [`hikari.guilds.GuildFeature.COMMUNITY`][] is in [`hikari.guilds.Guild.features`][]
     for this guild and will otherwise default to `en-US`.
     """
 
@@ -104,14 +103,14 @@ class TemplateGuild(guilds.PartialGuild):
     """Timeout for activity before a member is classed as AFK.
 
     How long a voice user has to be AFK for before they are classed as being
-    AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
+    AFK and are moved to the AFK channel ([`hikari.guilds.Guild.afk_channel_id`][]).
     """
 
     roles: typing.Mapping[snowflakes.Snowflake, TemplateRole] = attrs.field(eq=False, hash=False, repr=False)
     """The roles in the guild.
 
-    .. note::
-        `hikari.guilds.Role.id` will be a unique placeholder on all the role
+    !!! note
+        [`hikari.guilds.Role.id`][] will be a unique placeholder on all the role
         objects found attached this template guild.
     """
 
@@ -120,19 +119,19 @@ class TemplateGuild(guilds.PartialGuild):
     )
     """The channels for the guild.
 
-    .. note::
-        `hikari.channels.GuildChannel.id` will be a unique placeholder on all
+    !!! note
+        [`hikari.channels.GuildChannel.id`][] will be a unique placeholder on all
         the channel objects found attached this template guild.
     """
 
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
-    If `None`, then no AFK channel is set up for this guild.
+    If [`None`][], then no AFK channel is set up for this guild.
     """
 
     system_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
-    """The ID of the system channel or `None` if it is not enabled.
+    """The ID of the system channel or [`None`][] if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """
@@ -145,7 +144,7 @@ class TemplateGuild(guilds.PartialGuild):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Template:
     """Represents a template used for creating guilds."""
 
@@ -213,9 +212,9 @@ class Template:
 
         Parameters
         ----------
-        name : hikari.undefined.UndefinedOr[str]
+        name
             The name to set for this template.
-        description : hikari.undefined.UndefinedNoneOr[str]
+        description
             The description to set for the template.
 
         Returns
@@ -228,7 +227,7 @@ class Template:
         hikari.errors.ForbiddenError
             If you are not part of the guild.
         hikari.errors.NotFoundError
-            If the guild is not found or you are missing the `MANAGE_GUILD` permission.
+            If the guild is not found or you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -246,7 +245,7 @@ class Template:
         hikari.errors.ForbiddenError
             If you are not part of the guild.
         hikari.errors.NotFoundError
-            If the guild is not found or you are missing the `MANAGE_GUILD` permission.
+            If the guild is not found or you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -267,7 +266,7 @@ class Template:
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are not part of the guild or are missing the `MANAGE_GUILD` permission.
+            If you are not part of the guild or are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
         hikari.errors.NotFoundError
             If the guild or template is not found.
         hikari.errors.UnauthorizedError
@@ -282,17 +281,14 @@ class Template:
     async def create_guild(self, name: str, *, icon: undefined.UndefinedOr[str]) -> guilds.RESTGuild:
         """Make a guild from a template.
 
-        .. note::
+        !!! note
             This endpoint can only be used by bots in less than 10 guilds.
 
         Parameters
         ----------
-        name : str
+        name
             The new guilds name.
-
-        Other Parameters
-        ----------------
-        icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        icon
             If provided, the guild icon to set.
             Must be a 1024x1024 image or can be an animated gif when the guild has the ANIMATED_ICON feature.
 

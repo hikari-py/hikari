@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -59,9 +58,9 @@ class CacheImpl(cache.MutableCache):
 
     Parameters
     ----------
-    app : hikari.traits.RESTAware
+    app
         The object of the REST aware app this is bound to.
-    settings : hikari.impl.config.CacheSettings
+    settings
         The cache settings to use.
     """
 
@@ -284,6 +283,9 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
             return None
 
+        if not emoji.guild_id:
+            raise ValueError("Cannot cache an emoji without a guild ID.")
+
         user: typing.Optional[cache_utility.RefCell[users.User]] = None
         if emoji.user:
             user = self._set_user(emoji.user)
@@ -301,9 +303,12 @@ class CacheImpl(cache.MutableCache):
 
     def update_emoji(
         self, emoji: emojis.KnownCustomEmoji, /
-    ) -> typing.Tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
+    ) -> tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
             return None, None
+
+        if not emoji.guild_id:
+            raise ValueError("Emoji must have a guild ID to be cached.")
 
         cached_emoji = self.get_emoji(emoji.id)
         self.set_emoji(emoji)
@@ -548,7 +553,7 @@ class CacheImpl(cache.MutableCache):
 
     def update_guild(
         self, guild: guilds.GatewayGuild, /
-    ) -> typing.Tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
+    ) -> tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILDS):
             return None, None
 
@@ -609,7 +614,7 @@ class CacheImpl(cache.MutableCache):
         if not guild_record or not guild_record.threads:
             return cache_utility.EmptyCacheView()
 
-        threads: typing.Dict[snowflakes.Snowflake, channels_.GuildThreadChannel] = {}
+        threads: dict[snowflakes.Snowflake, channels_.GuildThreadChannel] = {}
         for thread in map(self._guild_thread_entries.__getitem__, tuple(guild_record.threads)):
             if thread.parent_id == channel_id:
                 del self._guild_thread_entries[thread.id]
@@ -697,7 +702,7 @@ class CacheImpl(cache.MutableCache):
 
     def update_thread(
         self, thread: channels_.GuildThreadChannel, /
-    ) -> typing.Tuple[typing.Optional[channels_.GuildThreadChannel], typing.Optional[channels_.GuildThreadChannel]]:
+    ) -> tuple[typing.Optional[channels_.GuildThreadChannel], typing.Optional[channels_.GuildThreadChannel]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_THREADS):
             return None, None
 
@@ -770,7 +775,8 @@ class CacheImpl(cache.MutableCache):
             return cache_utility.EmptyCacheView()
 
         return cache_utility.CacheMappingView(
-            self._guild_channel_entries.freeze(), builder=cache_utility.copy_guild_channel  # type: ignore[type-var]
+            self._guild_channel_entries.freeze(),
+            builder=cache_utility.copy_guild_channel,  # type: ignore[type-var]
         )
 
     def get_guild_channels_view_for_guild(
@@ -785,9 +791,7 @@ class CacheImpl(cache.MutableCache):
 
         cached_channels = {sf: self._guild_channel_entries[sf] for sf in guild_record.channels}
 
-        def sorter(
-            args: typing.Tuple[snowflakes.Snowflake, channels_.PermissibleGuildChannel]
-        ) -> typing.Tuple[int, int, int]:
+        def sorter(args: tuple[snowflakes.Snowflake, channels_.PermissibleGuildChannel]) -> tuple[int, int, int]:
             channel = args[1]
             if isinstance(channel, channels_.GuildCategory):
                 return channel.position, -1, 0
@@ -801,7 +805,8 @@ class CacheImpl(cache.MutableCache):
 
         cached_channels = dict(sorted(cached_channels.items(), key=sorter))
         return cache_utility.CacheMappingView(
-            cached_channels, builder=cache_utility.copy_guild_channel  # type: ignore[type-var]
+            cached_channels,
+            builder=cache_utility.copy_guild_channel,  # type: ignore[type-var]
         )
 
     def set_guild_channel(self, channel: channels_.PermissibleGuildChannel, /) -> None:
@@ -818,9 +823,7 @@ class CacheImpl(cache.MutableCache):
 
     def update_guild_channel(
         self, channel: channels_.PermissibleGuildChannel, /
-    ) -> typing.Tuple[
-        typing.Optional[channels_.PermissibleGuildChannel], typing.Optional[channels_.PermissibleGuildChannel]
-    ]:
+    ) -> tuple[typing.Optional[channels_.PermissibleGuildChannel], typing.Optional[channels_.PermissibleGuildChannel]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return None, None
 
@@ -1012,7 +1015,7 @@ class CacheImpl(cache.MutableCache):
 
     def update_invite(
         self, invite: invites.InviteWithMetadata, /
-    ) -> typing.Tuple[typing.Optional[invites.InviteWithMetadata], typing.Optional[invites.InviteWithMetadata]]:
+    ) -> tuple[typing.Optional[invites.InviteWithMetadata], typing.Optional[invites.InviteWithMetadata]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.INVITES):
             return None, None
 
@@ -1035,7 +1038,7 @@ class CacheImpl(cache.MutableCache):
 
     def update_me(
         self, user: users.OwnUser, /
-    ) -> typing.Tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
+    ) -> tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.ME):
             return None, None
 
@@ -1216,7 +1219,7 @@ class CacheImpl(cache.MutableCache):
 
     def update_member(
         self, member: guilds.Member, /
-    ) -> typing.Tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
+    ) -> tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return None, None
 
@@ -1371,7 +1374,7 @@ class CacheImpl(cache.MutableCache):
 
     def update_presence(
         self, presence: presences.MemberPresence, /
-    ) -> typing.Tuple[typing.Optional[presences.MemberPresence], typing.Optional[presences.MemberPresence]]:
+    ) -> tuple[typing.Optional[presences.MemberPresence], typing.Optional[presences.MemberPresence]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.PRESENCES):
             return None, None
 
@@ -1467,9 +1470,7 @@ class CacheImpl(cache.MutableCache):
 
         guild_record.roles.add(role.id)
 
-    def update_role(
-        self, role: guilds.Role, /
-    ) -> typing.Tuple[typing.Optional[guilds.Role], typing.Optional[guilds.Role]]:
+    def update_role(self, role: guilds.Role, /) -> tuple[typing.Optional[guilds.Role], typing.Optional[guilds.Role]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.ROLES):
             return None, None
 
@@ -1549,7 +1550,8 @@ class CacheImpl(cache.MutableCache):
         for user_id, voice_state in guild_record.voice_states.items():
             if voice_state.channel_id == channel_id:
                 cached_voice_states[user_id] = voice_state
-                self._garbage_collect_member(guild_record, voice_state.member, decrement=1)
+                if voice_state.member:
+                    self._garbage_collect_member(guild_record, voice_state.member, decrement=1)
 
         if not guild_record.voice_states:
             guild_record.voice_states = None
@@ -1573,7 +1575,8 @@ class CacheImpl(cache.MutableCache):
         guild_record.voice_states = None
 
         for voice_state in cached_voice_states.values():
-            self._garbage_collect_member(guild_record, voice_state.member, decrement=1)
+            if voice_state.member:
+                self._garbage_collect_member(guild_record, voice_state.member, decrement=1)
 
         self._remove_guild_record_if_empty(guild_id, guild_record)
         return cache_utility.CacheMappingView(cached_voice_states, builder=self._build_voice_state)
@@ -1600,7 +1603,9 @@ class CacheImpl(cache.MutableCache):
         if not guild_record.voice_states:
             guild_record.voice_states = None
 
-        self._garbage_collect_member(guild_record, voice_state_data.member, decrement=1)
+        if voice_state_data.member:
+            self._garbage_collect_member(guild_record, voice_state_data.member, decrement=1)
+
         self._remove_guild_record_if_empty(guild_id, guild_record)
         return self._build_voice_state(voice_state_data)
 
@@ -1678,17 +1683,22 @@ class CacheImpl(cache.MutableCache):
         if guild_record.voice_states is None:  # TODO: test when this is not None
             guild_record.voice_states = collections.FreezableDict()
 
-        member = self._set_member(voice_state.member)
-        voice_state_data = cache_utility.VoiceStateData.build_from_entity(voice_state, member=member)
+        # If the member is missing for some reason, try our best to find
+        # it and store it along side the voice state
+        if voice_state.member:
+            member = self._set_member(voice_state.member)
+            if voice_state.user_id not in guild_record.voice_states:
+                self._increment_ref_count(member)
+        else:
+            member = None
 
-        if voice_state.user_id not in guild_record.voice_states:
-            self._increment_ref_count(member)
+        voice_state_data = cache_utility.VoiceStateData.build_from_entity(voice_state, member=member)
 
         guild_record.voice_states[voice_state.user_id] = voice_state_data
 
     def update_voice_state(
         self, voice_state: voices.VoiceState, /
-    ) -> typing.Tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
+    ) -> tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.VOICE_STATES):
             return None, None
 
@@ -1803,10 +1813,6 @@ class CacheImpl(cache.MutableCache):
         if message.user_mentions is not undefined.UNDEFINED:
             user_mentions = {user_id: self._set_user(user) for user_id, user in message.user_mentions.items()}
 
-        interaction_user: typing.Optional[cache_utility.RefCell[users.User]] = None
-        if message.interaction:
-            interaction_user = self._set_user(message.interaction.user)
-
         referenced_message: typing.Optional[cache_utility.RefCell[cache_utility.MessageData]] = None
         if message.referenced_message:
             reference_id = message.referenced_message.id
@@ -1828,16 +1834,8 @@ class CacheImpl(cache.MutableCache):
                 for user in user_mentions.values():
                     self._increment_ref_count(user)
 
-            if interaction_user:
-                self._increment_ref_count(interaction_user)
-
         message_data = cache_utility.MessageData.build_from_entity(
-            message,
-            author=author,
-            member=member,
-            user_mentions=user_mentions,
-            referenced_message=referenced_message,
-            interaction_user=interaction_user,
+            message, author=author, member=member, user_mentions=user_mentions, referenced_message=referenced_message
         )
 
         # Ensure any previously set message ref cell is in the right place before updating the cache.
@@ -1866,7 +1864,7 @@ class CacheImpl(cache.MutableCache):
 
     def update_message(
         self, message: typing.Union[messages.PartialMessage, messages.Message], /
-    ) -> typing.Tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
+    ) -> tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MESSAGES):
             return None, None
 

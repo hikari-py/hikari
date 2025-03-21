@@ -19,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 from pipelines import config
 from pipelines import nox
 
@@ -28,7 +30,7 @@ IGNORED_WORDS = ["ro", "falsy", "ws"]
 @nox.session()
 def codespell(session: nox.Session) -> None:
     """Run codespell to check for spelling mistakes."""
-    session.install(*nox.dev_requirements("codespell"))
+    nox.sync(session, groups=["codespell"])
     session.run(
         "codespell",
         "--builtin",

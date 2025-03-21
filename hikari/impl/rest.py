@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -59,9 +58,11 @@ from hikari import guilds
 from hikari import iterators
 from hikari import locales
 from hikari import messages as messages_
+from hikari import monetization
 from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import snowflakes
+from hikari import stage_instances
 from hikari import traits
 from hikari import undefined
 from hikari import urls
@@ -112,7 +113,7 @@ _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
 _X_RATELIMIT_SCOPE_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Scope")
-_RETRY_ERROR_CODES: typing.Final[typing.FrozenSet[int]] = frozenset((500, 502, 503, 504))
+_RETRY_ERROR_CODES: typing.Final[frozenset[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
 
 
@@ -121,15 +122,12 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     Parameters
     ----------
-    client : typing.Optional[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialApplication]]
+    client
         Object or ID of the application this client credentials strategy should
         authorize as.
-    client_secret : typing.Optional[str]
+    client_secret
         Client secret to use when authorizing.
-
-    Other Parameters
-    ----------------
-    scopes : typing.Sequence[str]
+    scopes
         The scopes to authorize for.
     """
 
@@ -252,40 +250,42 @@ class RESTApp(traits.ExecutorAware):
     """The base for a HTTP-only Discord application.
 
     This comprises of a shared TCP connector connection pool, and can have
-    `RESTClientImpl` instances for specific credentials acquired
+    [`hikari.impl.rest.RESTClientImpl`][] instances for specific credentials acquired
     from it.
 
     Parameters
     ----------
-    executor : typing.Optional[concurrent.futures.Executor]
-        The executor to use for blocking file IO operations. If `None`
-        is passed, then the default `concurrent.futures.ThreadPoolExecutor` for
-        the `asyncio.AbstractEventLoop` will be used instead.
-    http_settings : typing.Optional[hikari.impl.config.HTTPSettings]
+    executor
+        The executor to use for blocking file IO operations. If [`None`][]
+        is passed, then the default [`concurrent.futures.ThreadPoolExecutor`][] for
+        the [`asyncio.AbstractEventLoop`][] will be used instead.
+    http_settings
         HTTP settings to use. Sane defaults are used if this is
-        `None`.
-    dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
-    loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
-    max_rate_limit : float
+        [`None`][].
+    dumps
+        The JSON encoder this application should use.
+    loads
+        The JSON decoder this application should use.
+    max_rate_limit
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
-        `hikari.errors.RateLimitTooLongError` will be raised instead of waiting.
+        [`hikari.errors.RateLimitTooLongError`][] will be raised instead of waiting.
 
         This is provided since some endpoints may respond with non-sensible
         rate limits.
 
         Defaults to five minutes if unspecified.
-    max_retries : typing.Optional[int]
+    max_retries
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `None`.
-    proxy_settings : typing.Optional[hikari.impl.config.ProxySettings]
-        Proxy settings to use. If `None` then no proxy configuration
+        it fails with a `5xx` status.
+
+        Defaults to 3 if set to [`None`][].
+    proxy_settings
+        Proxy settings to use. If [`None`][] then no proxy configuration
         will be used.
-    url : typing.Optional[str]
+    url
         The base URL for the API. You can generally leave this as being
-        `None` and the correct default API base URL will be generated.
+        [`None`][] and the correct default API base URL will be generated.
     """
 
     __slots__: typing.Sequence[str] = (
@@ -355,14 +355,12 @@ class RESTApp(traits.ExecutorAware):
         await self._bucket_manager.close()
 
     @typing.overload
-    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl:
-        ...
+    def acquire(self, token: typing.Optional[rest_api.TokenStrategy] = None) -> RESTClientImpl: ...
 
     @typing.overload
     def acquire(
         self, token: str, token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BEARER
-    ) -> RESTClientImpl:
-        ...
+    ) -> RESTClientImpl: ...
 
     def acquire(
         self,
@@ -371,37 +369,37 @@ class RESTApp(traits.ExecutorAware):
     ) -> RESTClientImpl:
         """Acquire an instance of this REST client.
 
-        .. note::
+        !!! note
             The returned REST client should be started before it can be used,
-            either by calling `RESTClientImpl.start` or by using it as an
+            either by calling [`hikari.impl.rest.RESTClientImpl.start`][] or by using it as an
             asynchronous context manager.
 
         Examples
         --------
-        .. code-block:: python
+        ```py
+        rest_app = RESTApp()
+        await rest_app.start()
 
-            rest_app = RESTApp()
-            await rest_app.start()
+        # Using the returned client as a context manager to implicitly start
+        # and stop it.
+        async with rest_app.acquire("A token", "Bot") as client:
+            user = await client.fetch_my_user()
 
-            # Using the returned client as a context manager to implicitly start
-            # and stop it.
-            async with rest_app.acquire("A token", "Bot") as client:
-                user = await client.fetch_my_user()
-
-            await rest_app.close()
+        await rest_app.close()
+        ```
 
         Parameters
         ----------
-        token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
+        token
             The bot or bearer token. If no token is to be used,
             this can be undefined.
-        token_type : typing.Union[str, hikari.applications.TokenType, None]
-            The type of token in use. This should only be passed when `str`
+        token_type
+            The type of token in use. This should only be passed when [`str`][]
             is passed for `token`, can be `"Bot"` or `"Bearer"` and will be
             defaulted to `"Bearer"` in this situation.
 
-            This should be left as `None` when either
-            `hikari.api.rest.TokenStrategy` or `None` is passed for
+            This should be left as [`None`][] when either
+            [`hikari.api.rest.TokenStrategy`][] or [`None`][] is passed for
             `token`.
 
         Returns
@@ -489,29 +487,32 @@ class RESTClientImpl(rest_api.RESTClient):
 
     Parameters
     ----------
-    entity_factory : hikari.api.entity_factory.EntityFactory
+    entity_factory
         The entity factory to use.
-    executor : typing.Optional[concurrent.futures.Executor]
-        The executor to use for blocking IO. Defaults to the `asyncio` thread
-        pool if set to `None`.
-    max_retries : typing.Optional[int]
+    executor
+        The executor to use for blocking IO.
+
+        Defaults to the [`asyncio`][] thread pool if set to [`None`][].
+    max_retries
         Maximum number of times a request will be retried if
-        it fails with a `5xx` status. Defaults to 3 if set to `None`.
-    dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this application should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
-    loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this application should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
-    token : typing.Union[str, None, hikari.api.rest.TokenStrategy]
+        it fails with a `5xx` status.
+
+        Defaults to 3 if set to [`None`][].
+    dumps
+        The JSON encoder this application should use.
+    loads
+        The JSON decoder this application should use.
+    token
         The bot or bearer token. If no token is to be used,
         this can be undefined.
-    token_type : typing.Union[str, hikari.applications.TokenType, None]
-        The type of token in use. This must be passed when a `str` is
+    token_type
+        The type of token in use. This must be passed when a [`str`][] is
         passed for `token` but and can be `"Bot"` or `"Bearer"`.
 
-        This should be left as `None` when either
-        `hikari.api.rest.TokenStrategy` or `None` is passed for
+        This should be left as [`None`][] when either
+        [`hikari.api.rest.TokenStrategy`][] or [`None`][] is passed for
         `token`.
-    rest_url : str
+    rest_url
         The HTTP API base URL. This can contain format-string specifiers to
         interpolate information such as API version in use.
 
@@ -519,7 +520,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ------
     ValueError
         If `token_type` is provided when a token strategy is passed for `token`, if
-        `token_type` is left as `None` when a string is passed for `token` or if a
+        `token_type` is left as [`None`][] when a string is passed for `token` or if a
         value greater than 5 is provided for `max_retries`.
     """
 
@@ -648,7 +649,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def start(self) -> None:
         """Start the HTTP client.
 
-        .. note::
+        !!! note
             This must be called within an active event loop.
 
         Raises
@@ -682,7 +683,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     async def __aexit__(
         self,
-        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_type: typing.Optional[type[BaseException]],
         exc_val: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
@@ -698,7 +699,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         def __exit__(
             self,
-            exc_type: typing.Optional[typing.Type[BaseException]],
+            exc_type: typing.Optional[type[BaseException]],
             exc_val: typing.Optional[BaseException],
             exc_tb: typing.Optional[types.TracebackType],
         ) -> None:
@@ -731,13 +732,15 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await aio.first_completed(request_task, self._close_event.wait())
 
-        if not self._close_event.is_set():
+        if not request_task.cancelled():
             return request_task.result()
 
         raise errors.ComponentStateConflictError("The REST client was closed mid-request")
 
+    # Ignore too long and too complex, respectively
+    # We rather keep everything we can here inline.
     @typing.final
-    async def _perform_request(
+    async def _perform_request(  # noqa: CFQ001, C901
         self,
         compiled_route: routes.CompiledRoute,
         *,
@@ -779,13 +782,14 @@ class RESTClientImpl(rest_api.RESTClient):
         url = compiled_route.create_url(self._rest_url)
 
         stack = contextlib.AsyncExitStack()
-        # This is initiated the first time we hit a 5xx error to save a little memory when nothing goes wrong
+        # This is initiated the first time we time out or hit a 5xx error to
+        # save a little memory when nothing goes wrong
         backoff: typing.Optional[rate_limits.ExponentialBackOff] = None
         retry_count = 0
         trace_logging_enabled = _LOGGER.isEnabledFor(ux.TRACE)
 
         while True:
-            async with stack:
+            try:
                 if form_builder:
                     data = await form_builder.build(stack, executor=self._executor)
 
@@ -831,6 +835,28 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 # Ensure we are not rate limited, and update rate limiting headers where appropriate.
                 time_before_retry = await self._parse_ratelimits(compiled_route, auth, response)
+
+            except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as ex:
+                if retry_count >= self._max_retries:
+                    raise errors.HTTPError(message=str(ex)) from ex
+
+                if backoff is None:
+                    backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
+
+                sleep_time = next(backoff)
+                _LOGGER.warning(
+                    "Connection error (%s), backing off for %.2fs and retrying. Retries remaining: %s",
+                    type(ex).__name__,
+                    sleep_time,
+                    self._max_retries - retry_count,
+                )
+                retry_count += 1
+
+                await asyncio.sleep(sleep_time)
+                continue
+
+            finally:
+                await stack.aclose()
 
             if time_before_retry is not None:
                 await asyncio.sleep(time_before_retry)
@@ -962,6 +988,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = self._loads(await response.read())
         assert isinstance(body, dict)
+        if "retry_after" not in body:
+            # This is most probably a Cloudflare ban, so just output the entire
+            # body to the console and abort the request.
+            raise errors.HTTPResponseError(
+                str(response.real_url), http.HTTPStatus.TOO_MANY_REQUESTS, response.headers, str(body), str(body)
+            )
+
         body_retry_after = float(body["retry_after"])
 
         if body.get("global", False) is True:
@@ -1116,12 +1149,32 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_channel_follow(response)
 
     async def delete_channel(
-        self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.PartialChannel:
         route = routes.DELETE_CHANNEL.compile(channel=channel)
-        response = await self._request(route)
+        response = await self._request(route, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
+
+    async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
+        route = routes.GET_MY_GUILD_VOICE_STATE.compile(guild=guild)
+
+        response = await self._request(route)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_voice_state(response)
+
+    async def fetch_voice_state(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
+    ) -> voices.VoiceState:
+        route = routes.GET_GUILD_VOICE_STATE.compile(guild=guild, user=user)
+
+        response = await self._request(route)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_voice_state(response)
 
     async def edit_my_voice_state(
         self,
@@ -1358,7 +1411,7 @@ class RESTClientImpl(rest_api.RESTClient):
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
         edit: bool = False,
-    ) -> typing.Tuple[data_binding.JSONObjectBuilder, typing.Optional[data_binding.URLEncodedFormBuilder]]:
+    ) -> tuple[data_binding.JSONObjectBuilder, typing.Optional[data_binding.URLEncodedFormBuilder]]:
         if not undefined.any_undefined(attachment, attachments):
             raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
 
@@ -1387,13 +1440,13 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment = content
             content = undefined.UNDEFINED
 
-        final_attachments: typing.List[typing.Union[files.Resourceish, messages_.Attachment]] = []
+        final_attachments: list[typing.Union[files.Resourceish, messages_.Attachment]] = []
         if attachment:
             final_attachments.append(attachment)
         elif attachments:
             final_attachments.extend(attachments)
 
-        serialized_components: undefined.UndefinedOr[typing.List[data_binding.JSONObject]] = undefined.UNDEFINED
+        serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
             if component is not None:
                 serialized_components = [component.build()]
@@ -1459,7 +1512,7 @@ class RESTClientImpl(rest_api.RESTClient):
             body.put("attachments", attachments_payload)
 
         elif attachment is None or attachments is None:
-            body.put("attachments", None)
+            body.put("attachments", [])
 
         return body, form_builder
 
@@ -1596,9 +1649,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     async def delete_messages(
         self,
@@ -1610,10 +1665,11 @@ class RESTClientImpl(rest_api.RESTClient):
         ],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.POST_DELETE_CHANNEL_MESSAGES_BULK.compile(channel=channel)
 
-        deleted: typing.List[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
+        deleted: list[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = []
 
         iterator: iterators.LazyIterator[snowflakes.SnowflakeishOr[messages_.PartialMessage]]
         if isinstance(messages, typing.AsyncIterable):
@@ -1644,7 +1700,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 if len(chunk) == 1:
                     message = chunk[0]
                     try:
-                        await self.delete_message(channel, message)
+                        await self.delete_message(channel, message, reason=reason)
                     except errors.NotFoundError as ex:
                         # If the message is not found then this error should be suppressed
                         # to keep consistency with how the bulk delete endpoint functions.
@@ -1656,7 +1712,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 else:
                     body = data_binding.JSONObjectBuilder()
                     body.put_snowflake_array("messages", chunk)
-                    await self._request(route, json=body)
+                    await self._request(route, json=body, reason=reason)
                     deleted += chunk
 
             except Exception as ex:
@@ -2007,12 +2063,11 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_gateway_bot_info(response)
 
     async def fetch_invite(
-        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True, with_expiration: bool = True
+        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True
     ) -> invites.Invite:
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", with_counts)
-        query.put("with_expiration", with_expiration)
         response = await self._request(route, query=query)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
@@ -2034,6 +2089,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
     ) -> users.OwnUser:
         route = routes.PATCH_MY_USER.compile()
         body = data_binding.JSONObjectBuilder()
@@ -2045,6 +2101,13 @@ class RESTClientImpl(rest_api.RESTClient):
             avatar_resource = files.ensure_resource(avatar)
             async with avatar_resource.stream(executor=self._executor) as stream:
                 body.put("avatar", await stream.data_uri())
+
+        if banner is None:
+            body.put("banner", None)
+        elif banner is not undefined.UNDEFINED:
+            banner_resource = files.ensure_resource(banner)
+            async with banner_resource.stream(executor=self._executor) as stream:
+                body.put("banner", await stream.data_uri())
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -2380,6 +2443,62 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
         await self._request(route, reason=reason)
 
+    async def fetch_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+    ) -> emojis.KnownCustomEmoji:
+        route = routes.GET_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_known_custom_emoji(response)
+
+    async def fetch_application_emojis(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[emojis.KnownCustomEmoji]:
+        route = routes.GET_APPLICATION_EMOJIS.compile(application=application)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return [
+            self._entity_factory.deserialize_known_custom_emoji(emoji_payload) for emoji_payload in response["items"]
+        ]
+
+    async def create_application_emoji(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
+    ) -> emojis.KnownCustomEmoji:
+        route = routes.POST_APPLICATION_EMOJIS.compile(application=application)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+        image_resource = files.ensure_resource(image)
+        async with image_resource.stream(executor=self._executor) as stream:
+            body.put("image", await stream.data_uri())
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_known_custom_emoji(response)
+
+    async def edit_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+        name: str,
+    ) -> emojis.KnownCustomEmoji:
+        route = routes.PATCH_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
+        body = data_binding.JSONObjectBuilder()
+        body.put("name", name)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_known_custom_emoji(response)
+
+    async def delete_application_emoji(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji],
+    ) -> None:
+        route = routes.DELETE_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
+        await self._request(route)
+
     async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers_.StickerPack]:
         route = routes.GET_STICKER_PACKS.compile()
         response = await self._request(route, auth=None)
@@ -2521,6 +2640,7 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[typing.Sequence[typing.Union[str, guilds.GuildFeature]]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         route = routes.PATCH_GUILD.compile(guild=guild)
@@ -2531,42 +2651,48 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("explicit_content_filter", explicit_content_filter_level)
         body.put("afk_timeout", afk_timeout, conversion=time.timespan_to_int)
         body.put("preferred_locale", preferred_locale, conversion=str)
+        body.put_array("features", features, conversion=str)
         body.put_snowflake("afk_channel_id", afk_channel)
         body.put_snowflake("owner_id", owner)
         body.put_snowflake("system_channel_id", system_channel)
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
 
-        tasks: typing.List[asyncio.Task[str]] = []
+        stack = contextlib.AsyncExitStack()
+        tasks: list[asyncio.Task[str]] = []
 
-        if icon is None:
-            body.put("icon", None)
-        elif icon is not undefined.UNDEFINED:
-            icon_resource = files.ensure_resource(icon)
-            async with icon_resource.stream(executor=self._executor) as stream:
+        async with stack:
+            if icon is None:
+                body.put("icon", None)
+            elif icon is not undefined.UNDEFINED:
+                icon_resource = files.ensure_resource(icon)
+                stream = await stack.enter_async_context(icon_resource.stream(executor=self._executor))
+
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("icon", future.result()))
                 tasks.append(task)
 
-        if splash is None:
-            body.put("splash", None)
-        elif splash is not undefined.UNDEFINED:
-            splash_resource = files.ensure_resource(splash)
-            async with splash_resource.stream(executor=self._executor) as stream:
+            if splash is None:
+                body.put("splash", None)
+            elif splash is not undefined.UNDEFINED:
+                splash_resource = files.ensure_resource(splash)
+                stream = await stack.enter_async_context(splash_resource.stream(executor=self._executor))
+
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("splash", future.result()))
                 tasks.append(task)
 
-        if banner is None:
-            body.put("banner", None)
-        elif banner is not undefined.UNDEFINED:
-            banner_resource = files.ensure_resource(banner)
-            async with banner_resource.stream(executor=self._executor) as stream:
+            if banner is None:
+                body.put("banner", None)
+            elif banner is not undefined.UNDEFINED:
+                banner_resource = files.ensure_resource(banner)
+                stream = await stack.enter_async_context(banner_resource.stream(executor=self._executor))
+
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("banner", future.result()))
                 tasks.append(task)
 
-        await asyncio.gather(*tasks)
+            await asyncio.gather(*tasks)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -3320,6 +3446,15 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory, self._request, guild, newest_first, str(start_at)
         )
 
+    async def fetch_role(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+    ) -> guilds.Role:
+        route = routes.GET_GUILD_ROLE.compile(guild=guild, role=role)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        guild_id = snowflakes.Snowflake(guild)
+        return self._entity_factory.deserialize_role(response, guild_id=guild_id)
+
     async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
         response = await self._request(route)
@@ -3669,8 +3804,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def _deserialize_command_list(
         self, command_payloads: data_binding.JSONArray, guild_id: typing.Optional[snowflakes.Snowflake]
-    ) -> typing.List[commands.PartialCommand]:
-        command_objs: typing.List[commands.PartialCommand] = []
+    ) -> list[commands.PartialCommand]:
+        command_objs: list[commands.PartialCommand] = []
         for payload in command_payloads:
             try:
                 command_objs.append(self._entity_factory.deserialize_command(payload, guild_id=guild_id))
@@ -3717,7 +3852,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
@@ -3738,7 +3872,6 @@ class RESTClientImpl(rest_api.RESTClient):
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
-        body.put("dm_permission", dm_enabled)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -3761,7 +3894,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
@@ -3774,7 +3906,6 @@ class RESTClientImpl(rest_api.RESTClient):
             name_localizations=name_localizations,
             description_localizations=description_localizations,
             default_member_permissions=default_member_permissions,
-            dm_enabled=dm_enabled,
             nsfw=nsfw,
         )
         return self._entity_factory.deserialize_slash_command(
@@ -3794,7 +3925,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
@@ -3804,7 +3934,6 @@ class RESTClientImpl(rest_api.RESTClient):
             guild=guild,
             name_localizations=name_localizations,
             default_member_permissions=default_member_permissions,
-            dm_enabled=dm_enabled,
             nsfw=nsfw,
         )
         return self._entity_factory.deserialize_context_menu_command(
@@ -3840,7 +3969,6 @@ class RESTClientImpl(rest_api.RESTClient):
         default_member_permissions: typing.Union[
             undefined.UndefinedType, int, permissions_.Permissions
         ] = undefined.UNDEFINED,
-        dm_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
@@ -3859,7 +3987,6 @@ class RESTClientImpl(rest_api.RESTClient):
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
         # but we consider it to be the same as None for developer sanity reasons
         body.put("default_member_permissions", None if default_member_permissions == 0 else default_member_permissions)
-        body.put("dm_permission", dm_enabled)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
@@ -3940,6 +4067,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def interaction_modal_builder(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
         return special_endpoints_impl.InteractionModalBuilder(title=title, custom_id=custom_id)
+
+    def interaction_premium_required_builder(self) -> special_endpoints.InteractionPremiumRequiredBuilder:
+        return special_endpoints_impl.InteractionPremiumRequiredBuilder()
 
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
@@ -4110,6 +4240,17 @@ class RESTClientImpl(rest_api.RESTClient):
 
     def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
         return special_endpoints_impl.ModalActionRowBuilder()
+
+    async def create_premium_required_response(
+        self, interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction], token: str
+    ) -> None:
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.PREMIUM_REQUIRED)
+        body.put("data", {})
+
+        await self._request(route, json=body, auth=None)
 
     async def fetch_scheduled_event(
         self,
@@ -4347,3 +4488,123 @@ class RESTClientImpl(rest_api.RESTClient):
         return special_endpoints_impl.ScheduledEventUserIterator(
             self._entity_factory, self._request, newest_first, str(start_at), guild, event
         )
+
+    async def fetch_skus(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
+    ) -> typing.Sequence[monetization.SKU]:
+        route = routes.GET_APPLICATION_SKUS.compile(application=application)
+        response = await self._request(route)
+        assert isinstance(response, list)
+
+        return [self._entity_factory.deserialize_sku(payload) for payload in response]
+
+    async def fetch_entitlements(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+    ) -> typing.Sequence[monetization.Entitlement]:
+        query = data_binding.StringMapBuilder()
+
+        query.put("user_id", user)
+        query.put("guild_id", guild)
+        query.put("limit", limit)
+        query.put("exclude_ended", exclude_ended)
+        query.put("before", before)
+        query.put("after", after)
+
+        route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=application)
+        response = await self._request(route, query=query)
+        assert isinstance(response, list)
+
+        return [self._entity_factory.deserialize_entitlement(payload) for payload in response]
+
+    async def create_test_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        /,
+        *,
+        sku: snowflakes.SnowflakeishOr[monetization.SKU],
+        owner_id: typing.Union[guilds.PartialGuild, users.PartialUser, snowflakes.Snowflakeish],
+        owner_type: typing.Union[int, monetization.EntitlementOwnerType],
+    ) -> monetization.Entitlement:
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("sku_id", sku)
+        body.put_snowflake("owner_id", owner_id)
+        body.put("owner_type", owner_type)
+
+        route = routes.POST_APPLICATION_TEST_ENTITLEMENT.compile(application=application)
+        response = await self._request(route, json=body)
+
+        assert isinstance(response, dict)
+
+        return self._entity_factory.deserialize_entitlement(response)
+
+    async def delete_test_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> None:
+        route = routes.DELETE_APPLICATION_TEST_ENTITLEMENT.compile(application=application, entitlement=entitlement)
+        await self._request(route)
+
+    async def fetch_stage_instance(
+        self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
+    ) -> stage_instances.StageInstance:
+        route = routes.GET_STAGE_INSTANCE.compile(channel=channel)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def create_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: str,
+        privacy_level: undefined.UndefinedOr[
+            typing.Union[int, stage_instances.StageInstancePrivacyLevel]
+        ] = undefined.UNDEFINED,
+        send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        scheduled_event_id: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+        ] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        route = routes.POST_STAGE_INSTANCE.compile()
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake("channel_id", channel)
+        body.put("topic", topic)
+        body.put("privacy_level", privacy_level)
+        body.put("send_start_notification", send_start_notification)
+        body.put_snowflake("guild_scheduled_event_id", scheduled_event_id)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def edit_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        *,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[
+            typing.Union[int, stage_instances.StageInstancePrivacyLevel]
+        ] = undefined.UNDEFINED,
+    ) -> stage_instances.StageInstance:
+        route = routes.PATCH_STAGE_INSTANCE.compile(channel=channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put("topic", topic)
+        body.put("privacy_level", privacy_level)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_stage_instance(response)
+
+    async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
+        route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
+        await self._request(route)

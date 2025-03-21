@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,22 +18,25 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
 
 import mock
 import pytest
 
+from hikari import applications
+from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from hikari.interactions import base_interactions
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_app():
     return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
 
 
 class TestPartialInteraction:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_partial_interaction(self, mock_app):
         return base_interactions.PartialInteraction(
             app=mock_app,
@@ -43,6 +45,10 @@ class TestPartialInteraction:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            authorizing_integration_owners={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
+            },
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
     def test_webhook_id_property(self, mock_partial_interaction):
@@ -50,7 +56,7 @@ class TestPartialInteraction:
 
 
 class TestMessageResponseMixin:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_message_response_mixin(self, mock_app):
         return base_interactions.MessageResponseMixin(
             app=mock_app,
@@ -59,16 +65,20 @@ class TestMessageResponseMixin:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            authorizing_integration_owners={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
+            },
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_initial_response(self, mock_message_response_mixin, mock_app):
         result = await mock_message_response_mixin.fetch_initial_response()
 
         assert result is mock_app.rest.fetch_interaction_response.return_value
         mock_app.rest.fetch_interaction_response.assert_awaited_once_with(651231, "399393939doodsodso")
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_initial_response_with_optional_args(self, mock_message_response_mixin, mock_app):
         mock_embed_1 = object()
         mock_embed_2 = object()
@@ -110,7 +120,7 @@ class TestMessageResponseMixin:
             role_mentions=[6324523],
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_initial_response_without_optional_args(self, mock_message_response_mixin, mock_app):
         await mock_message_response_mixin.create_initial_response(
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
@@ -134,7 +144,7 @@ class TestMessageResponseMixin:
             role_mentions=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_edit_initial_response_with_optional_args(self, mock_message_response_mixin, mock_app):
         mock_embed_1 = object()
         mock_embed_2 = object()
@@ -171,7 +181,7 @@ class TestMessageResponseMixin:
             role_mentions=[562134],
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_edit_initial_response_without_optional_args(self, mock_message_response_mixin, mock_app):
         result = await mock_message_response_mixin.edit_initial_response()
 
@@ -191,7 +201,7 @@ class TestMessageResponseMixin:
             role_mentions=undefined.UNDEFINED,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_delete_initial_response(self, mock_message_response_mixin, mock_app):
         await mock_message_response_mixin.delete_initial_response()
 
@@ -199,7 +209,7 @@ class TestMessageResponseMixin:
 
 
 class TestModalResponseMixin:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_modal_response_mixin(self, mock_app):
         return base_interactions.ModalResponseMixin(
             app=mock_app,
@@ -208,9 +218,13 @@ class TestModalResponseMixin:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            authorizing_integration_owners={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
+            },
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_create_modal_response(self, mock_modal_response_mixin, mock_app):
         await mock_modal_response_mixin.create_modal_response("title", "custom_id", None, [])
 

@@ -19,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import os as _os
 
 # Packaging
@@ -29,12 +31,17 @@ EXAMPLE_SCRIPTS = "examples"
 # Directories
 ARTIFACT_DIRECTORY = "public"
 DOCUMENTATION_DIRECTORY = "docs"
-DEV_REQUIREMENTS_DIRECTORY = "dev-requirements"
 
 # Linting and test configs
 FLAKE8_REPORT = _os.path.join(ARTIFACT_DIRECTORY, "flake8")
 PYPROJECT_TOML = "pyproject.toml"
 COVERAGE_HTML_PATH = _os.path.join(ARTIFACT_DIRECTORY, "coverage", "html")
+
+if "READTHEDOCS_OUTPUT" in _os.environ:
+    DOCUMENTATION_OUTPUT_PATH = _os.environ["READTHEDOCS_OUTPUT"] + "/html"
+else:
+    DOCUMENTATION_OUTPUT_PATH = _os.path.join(ARTIFACT_DIRECTORY, "docs")
+
 
 # Reformatting paths
 REFORMATTING_FILE_EXTS = (
@@ -74,15 +81,7 @@ REFORMATTING_FILE_EXTS = (
     ".pl",
 )
 
-PYTHON_REFORMATTING_PATHS = (
-    MAIN_PACKAGE,
-    TEST_PACKAGE,
-    EXAMPLE_SCRIPTS,
-    "scripts",
-    "pipelines",
-    "setup.py",
-    "noxfile.py",
-)
+PYTHON_REFORMATTING_PATHS = (MAIN_PACKAGE, TEST_PACKAGE, EXAMPLE_SCRIPTS, "scripts", "pipelines", "noxfile.py")
 
 FULL_REFORMATTING_PATHS = (
     *PYTHON_REFORMATTING_PATHS,

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -41,7 +40,7 @@ if typing.TYPE_CHECKING:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class VoiceState:
     """Represents a user's voice connection status."""
 
@@ -53,7 +52,7 @@ class VoiceState:
     channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
 
-    This will be `None` if they are leaving voice.
+    This will be [`None`][] if they are leaving voice.
     """
 
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -87,8 +86,13 @@ class VoiceState:
     user_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the user this voice state is for."""
 
-    member: guilds.Member = attrs.field(eq=False, hash=False, repr=False)
-    """The guild member this voice state is for."""
+    member: typing.Optional[guilds.Member] = attrs.field(eq=False, hash=False, repr=False)
+    """The guild member this voice state is for.
+
+    This can be [`None`][] in cases where the Discord backend fails to
+    resolve the member object from the user ID. This can sometimes happen
+    when a user is kicked from the server.
+    """
 
     session_id: str = attrs.field(hash=True, repr=True)
     """The string ID of this voice state's session."""
@@ -96,19 +100,19 @@ class VoiceState:
     requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=True)
     """When the user requested to speak in a stage channel.
 
-    Will be `None` if they have not requested to speak.
+    Will be [`None`][] if they have not requested to speak.
     """
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class VoiceRegion:
     """Represents a voice region server."""
 
     id: str = attrs.field(hash=True, repr=True)
     """The string ID of this region.
 
-    .. note::
+    !!! note
         Unlike most parts of this API, this ID will always be a string type.
         This is intentional.
     """

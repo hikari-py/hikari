@@ -1,3 +1,223 @@
+## 2.1.1 (2025-02-26)
+
+### Features
+
+- Allow specifying a reason for message deletions ([#2066](https://github.com/hikari-py/hikari/issues/2066))
+- Allow setting `name` and `value` of an `EmbedField` to an empty string. ([#2105](https://github.com/hikari-py/hikari/issues/2105))
+
+### Bugfixes
+
+- Fixed Entitlement `starts_at` and `ends_at` erroring when set to `None`. ([#2149](https://github.com/hikari-py/hikari/issues/2149))
+- Properly handle and error on Cloudflare bans ([#2168](https://github.com/hikari-py/hikari/issues/2168))
+
+### Documentation Improvements
+
+- Added missing documentation for `GatewayShard` and for trait `ShardAware`, adding missing errors which can be thrown. ([#2100](https://github.com/hikari-py/hikari/issues/2100))
+
+---
+## 2.1.0 (2024-09-25)
+
+### Breaking Changes
+
+- `VoiceState.member` can now be `None` in cases where Discord doesn't send the relevant information ([#2038](https://github.com/hikari-py/hikari/issues/2038))
+
+### Features
+
+- Add the optional audit log `reason` argument to `hikari.api.rest.RESTClient.delete_channel` and
+  `hikari.impl.rest.RESTClientImpl.delete_channel`, the same way it already exists for e.g.
+  `edit_channel` ([#2058](https://github.com/hikari-py/hikari/issues/2058))
+
+### Bugfixes
+
+- Fix issue when deserializing voice states with missing member data ([#2038](https://github.com/hikari-py/hikari/issues/2038))
+- Fix `fetch_application_emojis` endpoint deserialization ([#2050](https://github.com/hikari-py/hikari/issues/2050))
+- Fix uploading files when using aiohttp 3.10.6 and onwards ([#2059](https://github.com/hikari-py/hikari/issues/2059))
+
+---
+## 2.0.0 (2024-08-28)
+
+### Breaking Changes
+
+- Drop Python 3.8 support. ([#2008](https://github.com/hikari-py/hikari/issues/2008))
+
+### Features
+
+- Implement stage instances ([#1725](https://github.com/hikari-py/hikari/issues/1725))
+- Add Python 3.13 support ([#1793](https://github.com/hikari-py/hikari/issues/1793))
+- Add `title` and `description` fields to `Attachment`. ([#1945](https://github.com/hikari-py/hikari/issues/1945))
+- Add `display_name` to `PartialUser` ([#1951](https://github.com/hikari-py/hikari/issues/1951))
+- Remove `Optional` type hint from `CommandInteraction.options` - it will now always be an empty sequence when not provided. ([#1965](https://github.com/hikari-py/hikari/issues/1965))
+- Application-bound emojis API support. ([#1990](https://github.com/hikari-py/hikari/issues/1990))
+- Add `Member.guild_flag` and matching `GuildMemberFlags` enum. ([#2004](https://github.com/hikari-py/hikari/issues/2004))
+- Add `Message.thread` field. ([#2012](https://github.com/hikari-py/hikari/issues/2012))
+- Add new voice endpoints (`fetch_my_voice_state` and `fetch_voice_state`) ([#2016](https://github.com/hikari-py/hikari/issues/2016))
+- Add `fetch_role` method to `RESTClient` ([#2020](https://github.com/hikari-py/hikari/issues/2020))
+
+### Bugfixes
+
+- Fix incorrect cleanup when failing to create request with a web reader ([#1946](https://github.com/hikari-py/hikari/issues/1946))
+- Fix serializing JSON dicts with enum values as keys.
+  See [#1955](https://github.com/hikari-py/hikari/issues/1955) ([#1957](https://github.com/hikari-py/hikari/issues/1957))
+- Use Discord Media Proxy instead of CDN for animated stickers urls ([#1982](https://github.com/hikari-py/hikari/issues/1982))
+- Use correct URL route for scheduled event covers. ([#1983](https://github.com/hikari-py/hikari/issues/1983))
+- Perform proper comparison when checking `CustomEmoji` against `KnownCustomEmoji`. ([#1986](https://github.com/hikari-py/hikari/issues/1986))
+- Add `NITRO_BASIC` attribute to `PremiumType` ([#1988](https://github.com/hikari-py/hikari/issues/1988))
+- Fix incorrectly deserialized field `type` in `ChannelOverwriteEntryInfo` ([#1993](https://github.com/hikari-py/hikari/issues/1993))
+- Add missing `AuditLogChangeKey.COMMUNICATION_DISABLED_UNTIL` and matching key deserialization ([#1996](https://github.com/hikari-py/hikari/issues/1996))
+
+---
+## 2.0.0.dev126 (2024-06-20)
+
+### Features
+
+- Add `registered_guild_id` field to `BaseCommandInteraction` ([#1930](https://github.com/hikari-py/hikari/issues/1930))
+- Add `clear_fields()` method to `Embed` ([#1933](https://github.com/hikari-py/hikari/issues/1933))
+- Add payload to deserialization error to make it easier to diagnose ([#1943](https://github.com/hikari-py/hikari/issues/1943))
+
+### Bugfixes
+
+- Fix incorrect form uploads with transport sensitive content ([#1909](https://github.com/hikari-py/hikari/issues/1909))
+
+### Documentation Improvements
+
+- Greatly optimize loading time ([#1901](https://github.com/hikari-py/hikari/issues/1901))
+- Remove extra indentation level from codeblocks ([#1902](https://github.com/hikari-py/hikari/issues/1902))
+
+---
+## 2.0.0.dev125 (2024-04-28)
+
+### Features
+
+- Add monetization support. ([#1803](https://github.com/hikari-py/hikari/issues/1803))
+- Add missing link properties
+  - Add `message_link` property to `MessageReference`
+  - Add `channel_link` property to `MessageReference` ([#1877](https://github.com/hikari-py/hikari/issues/1877))
+- Add missing `video_quality_mode` field to `GuildStageChannel` ([#1891](https://github.com/hikari-py/hikari/issues/1891))
+- Optimize gateway transport
+  - Merge cold path for zlib compression into main path to avoid additional call
+  - Handle data in `bytes`, rather than in `str` to make good use of speedups (similar to `RESTClient`) ([#1898](https://github.com/hikari-py/hikari/issues/1898))
+
+### Bugfixes
+
+- Fix warning raised in aiohttp 3.9.4 when using `FormData` (most commonly, when uploading attachments) ([#1881](https://github.com/hikari-py/hikari/issues/1881))
+- Properly handle websocket transport errors and recover
+  - Additionally, errors will now include additional information ([#1897](https://github.com/hikari-py/hikari/issues/1897))
+
+---
+## 2.0.0.dev124 (2024-04-07)
+
+### Features
+
+- Improve `Emoji.parse` typing to make it more explicit ([#1870](https://github.com/hikari-py/hikari/issues/1870))
+- Add ability to edit own user banner ([#1871](https://github.com/hikari-py/hikari/issues/1871))
+
+### Bugfixes
+
+- Fix incorrectly formatted error strings ([#1866](https://github.com/hikari-py/hikari/issues/1866))
+- Properly handle initial opcode as being RECONNECT (7) ([#1867](https://github.com/hikari-py/hikari/issues/1867))
+
+### Documentation Improvements
+
+- Replace mentions of `PRIVATE_MESSAGES` with `DM_MESSAGES` ([#1874](https://github.com/hikari-py/hikari/issues/1874))
+
+---
+## 2.0.0.dev123 (2024-03-31)
+
+### Breaking Changes
+
+- Remove previously deprecated `Permissions.MANAGE_EMOJIS_AND_STICKERS` ([#1762](https://github.com/hikari-py/hikari/issues/1762))
+
+### Features
+
+- Allow subscribing to generic events ([#1814](https://github.com/hikari-py/hikari/issues/1814))
+- Allow changing guild features (community, etc.) ([#1828](https://github.com/hikari-py/hikari/issues/1828))
+- Improve embed parameters typing ([#1841](https://github.com/hikari-py/hikari/issues/1841))
+
+### Bugfixes
+
+- Fix `CommandInteractionOption.value` typehint not including `float` ([#1805](https://github.com/hikari-py/hikari/issues/1805))
+- `Member.joined_at` is now nullable due to breaking API change
+   - This will be received on guest members with temporary membership ([#1812](https://github.com/hikari-py/hikari/issues/1812))
+- Shard rate-limiters are now reset per websocket connection, avoiding a rare issue where a persistent network issue could allow the shard to be rate-limited ([#1813](https://github.com/hikari-py/hikari/issues/1813))
+
+### Documentation Improvements
+
+- Switch documentation to mkdocs ([#1810](https://github.com/hikari-py/hikari/issues/1810))
+
+---
+## 2.0.0.dev122 (2023-11-18)
+
+### Deprecation
+
+- Deprecate `Permissions.MANAGE_EMOJIS_AND_STICKERS` in favour of `Permissions.MANAGE_GUILD_EXPREASSIONS` ([#1758](https://github.com/hikari-py/hikari/issues/1758))
+
+### Features
+
+- Add Python 3.12 support. ([#1357](https://github.com/hikari-py/hikari/issues/1357))
+- Allow class listeners ([#1661](https://github.com/hikari-py/hikari/issues/1661))
+- Add missing `clear_x` methods to `InteractionMessageBuilder`
+  - This brings the functionality more in-line with other message edit APIs ([#1740](https://github.com/hikari-py/hikari/issues/1740))
+- Add missing permissions ([#1758](https://github.com/hikari-py/hikari/issues/1758))
+
+### Bugfixes
+
+- Fix optional connection "revoked" field KeyError when fetching connections. ([#1720](https://github.com/hikari-py/hikari/issues/1720))
+- Ensure shard connect and disconnect always get sent in pairs and properly waited for ([#1744](https://github.com/hikari-py/hikari/issues/1744))
+- Improve handing of force exiting a bot (double interrupt)
+  - Improve exception message
+  - Reset signal handlers to original ones after no longer capturing signals ([#1745](https://github.com/hikari-py/hikari/issues/1745))
+
+---
+## 2.0.0.dev121 (2023-09-10)
+
+### Features
+
+- Add `approximate_member_count` and `approximate_presence_count` to `OwnGuild`. ([#1659](https://github.com/hikari-py/hikari/issues/1659))
+- Add `CacheSettings.only_my_member` to only cache the bot member. ([#1679](https://github.com/hikari-py/hikari/issues/1679))
+- Bots can now utilize `Activity.state`
+  - When used with `type` set to `ActivityType.CUSTOM`, it will show as the text for the custom status.
+    Syntactic sugar also exists to support simply using `name` instead of `state`.
+  - Can be used with other activity types to provide additional information on the activity. ([#1683](https://github.com/hikari-py/hikari/issues/1683))
+- Add missing Audit Log event types to `AuditLogEventType` ([#1705](https://github.com/hikari-py/hikari/issues/1705))
+- Add `approximate_guild_count` field to own `Application` ([#1712](https://github.com/hikari-py/hikari/issues/1712))
+
+### Bugfixes
+
+- Handle connection reset error on shards. ([#1645](https://github.com/hikari-py/hikari/issues/1645))
+- Retry REST requests on connection errors ([#1648](https://github.com/hikari-py/hikari/issues/1648))
+- Add support for text in stage channels ([#1653](https://github.com/hikari-py/hikari/issues/1653))
+- Fix incorrect calculation for the default avatar of migrated users ([#1673](https://github.com/hikari-py/hikari/issues/1673))
+- Fix attachments not being removed in message edits when `attachment` or `attachments` is `None` ([#1702](https://github.com/hikari-py/hikari/issues/1702))
+
+---
+
+
+## 2.0.0.dev120 (2023-06-08)
+
+### Breaking Changes
+
+- Remove previously deprecated `hikari.impl.bot` module ([#1612](https://github.com/hikari-py/hikari/issues/1612))
+
+### Deprecation
+
+- Deprecate `User.discriminator` ([#1631](https://github.com/hikari-py/hikari/issues/1631))
+
+### Features
+
+- Implement voice messages ([#1609](https://github.com/hikari-py/hikari/issues/1609))
+- Implement username changes:
+  - Add `global_name`
+  - `User.__str__()` respects `global_name` now
+  - `User.default_avatar_url` returns correct URL for migrated accounts ([#1631](https://github.com/hikari-py/hikari/issues/1631))
+
+### Bugfixes
+
+- Fix a bug in `RESTClient.edit_guild` which load to closed stream errors ([#1627](https://github.com/hikari-py/hikari/issues/1627))
+- Properly handle DM channels in resolved interaction channels. ([#1628](https://github.com/hikari-py/hikari/issues/1628))
+
+---
+
+
 ## 2.0.0.dev119 (2023-05-08)
 
 ### Breaking Changes

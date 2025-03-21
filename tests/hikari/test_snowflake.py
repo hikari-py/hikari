@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 import operator
 
@@ -29,12 +30,12 @@ from hikari import snowflakes
 from hikari.impl import gateway_bot
 
 
-@pytest.fixture()
+@pytest.fixture
 def raw_id():
     return 537_340_989_808_050_216
 
 
-@pytest.fixture()
+@pytest.fixture
 def neko_snowflake(raw_id):
     return snowflakes.Snowflake(raw_id)
 
@@ -95,7 +96,7 @@ class TestSnowflake:
 
 
 class TestUnique:
-    @pytest.fixture()
+    @pytest.fixture
     def neko_unique(self, neko_snowflake):
         class NekoUnique(snowflakes.Unique):
             id = neko_snowflake

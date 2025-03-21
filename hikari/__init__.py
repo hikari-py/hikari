@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -22,9 +21,9 @@
 # SOFTWARE.
 """A sane Python framework for writing modern Discord bots.
 
-To get started, you will want to initialize an instance of `hikari.impl.bot.GatewayBot`
-for writing a gateway based bot, `hikari.impl.rest_bot.RESTBot` for a REST based bot,
-or `hikari.impl.rest.RESTApp` if you only need to use the REST API.
+To get started, you will want to initialize an instance of [`hikari.impl.gateway_bot.GatewayBot`][]
+for writing a gateway based bot, [`hikari.impl.rest_bot.RESTBot`][] for a REST based bot,
+or [`hikari.impl.rest.RESTApp`][] if you only need to use the REST API.
 """
 
 from __future__ import annotations
@@ -51,7 +50,9 @@ from hikari._about import __maintainer__
 from hikari._about import __url__
 from hikari._about import __version__
 from hikari.applications import Application
+from hikari.applications import ApplicationContextType
 from hikari.applications import ApplicationFlags
+from hikari.applications import ApplicationIntegrationType
 from hikari.applications import ApplicationRoleConnectionMetadataRecord
 from hikari.applications import ApplicationRoleConnectionMetadataRecordType
 from hikari.applications import AuthorizationApplication
@@ -85,6 +86,7 @@ from hikari.events.interaction_events import *
 from hikari.events.lifetime_events import *
 from hikari.events.member_events import *
 from hikari.events.message_events import *
+from hikari.events.monetization_events import *
 from hikari.events.reaction_events import *
 from hikari.events.role_events import *
 from hikari.events.scheduled_events import *
@@ -113,6 +115,7 @@ from hikari.invites import *
 from hikari.iterators import *
 from hikari.locales import *
 from hikari.messages import *
+from hikari.monetization import *
 from hikari.permissions import *
 from hikari.presences import *
 from hikari.scheduled_events import *
@@ -124,6 +127,7 @@ from hikari.snowflakes import Snowflakeish
 from hikari.snowflakes import SnowflakeishOr
 from hikari.snowflakes import SnowflakeishSequence
 from hikari.snowflakes import Unique
+from hikari.stage_instances import *
 from hikari.stickers import *
 from hikari.templates import *
 from hikari.traits import *

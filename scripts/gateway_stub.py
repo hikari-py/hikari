@@ -19,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import logging
 import time
 
@@ -36,6 +38,7 @@ heartbeat_interval = 5_000
 
 me_user_id = "1234567890"
 me_username = "nekokatt"
+me_global_name = None
 me_discriminator = "6945"
 me_avatar = None
 me_bot = True
@@ -71,6 +74,7 @@ def v8_get_my_user(_):
     body = {
         "id": me_user_id,
         "username": me_username,
+        "global_name": me_global_name,
         "discriminator": me_discriminator,
         "avatar": me_avatar,
         "bot": me_bot,

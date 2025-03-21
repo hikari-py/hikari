@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Events fired when users begin typing in channels."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("TypingEvent", "GuildTypingEvent", "DMTypingEvent")
@@ -167,9 +167,9 @@ class GuildTypingEvent(TypingEvent):
             The channel.
         """
         channel = await super().fetch_channel()
-        assert isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"expected TextableGuildChannel from API, got {channel}"
+        assert isinstance(channel, channels.TextableGuildChannel), (
+            f"expected TextableGuildChannel from API, got {channel}"
+        )
         return channel
 
     async def fetch_guild(self) -> guilds.Guild:
@@ -214,20 +214,20 @@ class GuildTypingEvent(TypingEvent):
             return None
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"expected TextableGuildChannel from cache, got {channel}"
+        assert channel is None or isinstance(channel, channels.TextableGuildChannel), (
+            f"expected TextableGuildChannel from cache, got {channel}"
+        )
         return channel
 
     def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
         """Get the cached object of the guild this typing event occurred in.
 
-        If the guild is not found then this will return `None`.
+        If the guild is not found then this will return [`None`][].
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the gateway guild if found else `None`.
+            The object of the gateway guild if found else [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -269,7 +269,7 @@ class DMTypingEvent(TypingEvent):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError

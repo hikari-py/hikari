@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -20,7 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Implementation of parts of Python's `enum` protocol to be more performant."""
+"""Implementation of parts of Python's [`enum`][] protocol to be more performant."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("deprecated", "Enum", "Flag")
@@ -72,14 +72,14 @@ class deprecated:
         self.removal_version = removal_version
 
 
-class _EnumNamespace(typing.Dict[str, typing.Any]):
+class _EnumNamespace(dict[str, typing.Any]):
     __slots__: typing.Sequence[str] = ("base", "names_to_values", "values_to_names")
 
-    def __init__(self, base: typing.Type[typing.Any]) -> None:
+    def __init__(self, base: type[typing.Any]) -> None:
         super().__init__()
         self.base = base
-        self.names_to_values: typing.Dict[str, typing.Any] = {}
-        self.values_to_names: typing.Dict[typing.Any, str] = {}
+        self.names_to_values: dict[str, typing.Any] = {}
+        self.values_to_names: dict[typing.Any, str] = {}
         self["__doc__"] = "An enumeration."
 
     def __getitem__(self, name: str) -> typing.Any:
@@ -99,7 +99,7 @@ class _EnumNamespace(typing.Dict[str, typing.Any]):
             real_value = value.value
 
             if (alias := self.values_to_names.get(real_value)) is None:
-                raise ValueError("`deprecated` must be used on an existing value")
+                raise ValueError("[`deprecated`][] must be used on an existing value")
 
             member = _DeprecatedAlias(name, alias, value.removal_version)
             super().__setitem__(name, member)
@@ -164,8 +164,8 @@ class _EnumMeta(type):
     def __new__(
         mcs,
         name: str,
-        bases: typing.Tuple[typing.Type[typing.Any], ...],
-        namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
+        bases: tuple[type[typing.Any], ...],
+        namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
     ) -> Self:
         global _Enum
 
@@ -203,27 +203,29 @@ class _EnumMeta(type):
 
         for name, value in namespace.names_to_values.items():
             member = new_namespace.get(name)
-            if not isinstance(member, _DeprecatedAlias):
-                # Patching the member init call is around 100ns faster per call than
-                # using the default type.__call__ which would make us do the lookup
-                # in cls.__new__. Reason for this is that python will also always
-                # invoke cls.__init__ if we do this, so we end up with two function
-                # calls.
-                member = cls.__new__(cls, value)
-                member._name_ = name
-                member._value_ = value
-                setattr(cls, name, member)
+            if isinstance(member, _DeprecatedAlias):
+                continue
+
+            # Patching the member init call is around 100ns faster per call than
+            # using the default type.__call__ which would make us do the lookup
+            # in cls.__new__. Reason for this is that python will also always
+            # invoke cls.__init__ if we do this, so we end up with two function
+            # calls.
+            member = cls.__new__(cls, value)
+            member._name_ = name
+            member._value_ = value
+            setattr(cls, name, member)
 
             name_to_member[name] = member
-            value_to_member.setdefault(value, member)
+            value_to_member[value] = member
             member_names.append(name)
 
         return cls
 
     @classmethod
     def __prepare__(
-        mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()
-    ) -> typing.Union[typing.Dict[str, typing.Any], _EnumNamespace]:
+        mcs, name: str, bases: tuple[type[typing.Any], ...] = ()
+    ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
         if _Enum is NotImplemented:
             if name != "Enum":
                 raise TypeError("First instance of _EnumMeta must be Enum")
@@ -247,17 +249,17 @@ class _EnumMeta(type):
 
 
 class Enum(metaclass=_EnumMeta):
-    """Clone of Python's `enum.Enum` implementation.
+    """Clone of Python's [`enum.Enum`][] implementation.
 
     This is designed to be faster and more efficient than Python's
     implementation, while retaining the majority of the external interface
-    that Python's `enum.Enum` provides.
+    that Python's [`enum.Enum`][] provides.
 
-    An `Enum` is a simple class containing a discrete set of constant values
-    that can be used in place of this type. This acts as a type-safe way
-    of representing a set number of "things".
+    An [`hikari.internal.enums.Enum`][] is a simple class containing a discrete set
+    of constant values that can be used in place of this type. This acts as a
+    type-safe way of representing a set number of "things".
 
-    .. warning::
+    !!! warning
         Some semantics such as subtype checking and instance checking may
         differ. It is recommended to compare these values using the
         `==` operator rather than the `is` operator for safety reasons.
@@ -267,69 +269,69 @@ class Enum(metaclass=_EnumMeta):
     * `__enumtype__` :
         Always `Enum`.
     * `__members__` :
-        An immutable `typing.Mapping` that maps each member name to the member
+        An immutable [`typing.Mapping`][] that maps each member name to the member
         value.
-    * ` __objtype__` :
+    * `__objtype__` :
         Always the first type that the enum is derived from. For example:
 
-    .. code-block:: python
-
-        >>> class UserType(str, Enum):
-        ...     USER = "user"
-        ...     PARTIAL = "partial"
-        ...     MEMBER = "member"
-        >>> print(UserType.__objtype__)
-        <class 'str'>
+    ```py
+    >>> class UserType(str, Enum):
+    ...     USER = "user"
+    ...     PARTIAL = "partial"
+    ...     MEMBER = "member"
+    >>> print(UserType.__objtype__)
+    <class 'str'>
+    ```
 
     Operators on the class
     ----------------------
     * `EnumType["FOO"]` :
-        Return the member that has the name `FOO`, raising a `KeyError`
+        Return the member that has the name `FOO`, raising a [`KeyError`][]
         if it is not present.
     * `EnumType.FOO` :
         Return the member that has the name `FOO`, raising a
-        `AttributeError` if it is not present.
+        [`AttributeError`][] if it is not present.
     * `EnumType(x)` :
         Attempt to cast `x` to the enum type by finding an existing member that
         has the same __value__. If this fails, you should expect a
-        `ValueError` to be raised.
+        [`ValueError`][] to be raised.
 
     Operators on each enum member
     -----------------------------
-    * `e1 == e2` : `bool`
+    * `e1 == e2` : [`bool`][]
         Compare equality.
-    * `e1 != e2` : `bool`
+    * `e1 != e2` : [`bool`][]
         Compare inequality.
-    * `repr(e)` : `str`
+    * `repr(e)` : [`str`][]
         Get the machine readable representation of the enum member `e`.
-    * `str(e)` : `str`
-        Get the `str` name of the enum member `e`.
+    * `str(e)` : [`str`][]
+        Get the [`str`][] name of the enum member `e`.
 
     Special properties on each enum member
     --------------------------------------
-    * `name` : `str`
+    * `name` : [`str`][]
         The name of the member.
     * `value` :
         The value of the member. The type depends on the implementation type
         of the enum you are using.
 
     All other methods and operators on enum members are inherited from the
-    member's __value__. For example, an enum extending `int` would
-    be able to be used as an `int` type outside these overridden definitions.
+    member's __value__. For example, an enum extending [`int`][] would
+    be able to be used as an [`int`][] type outside these overridden definitions.
     """
 
     _name_to_member_map_: typing.ClassVar[typing.Mapping[str, Enum]]
     _value_to_member_map_: typing.ClassVar[typing.Mapping[int, Enum]]
     _member_names_: typing.ClassVar[typing.Sequence[str]]
     __members__: typing.ClassVar[typing.Mapping[str, Enum]]
-    __objtype__: typing.ClassVar[typing.Type[typing.Any]]
-    __enumtype__: typing.ClassVar[typing.Type[Enum]]
+    __objtype__: typing.ClassVar[type[typing.Any]]
+    __enumtype__: typing.ClassVar[type[Enum]]
     _name_: str
     _value_: typing.Any
 
     @property
     def name(self) -> str:
-        """Return the name of the enum member as a `str`."""
+        """Return the name of the enum member as a [`str`][]."""
         return self._name_
 
     @property
@@ -348,14 +350,14 @@ class Enum(metaclass=_EnumMeta):
 _Flag = NotImplemented
 
 
-def _name_resolver(members: typing.Dict[int, _Flag], value: int) -> typing.Generator[str, typing.Any, None]:
+def _name_resolver(members: dict[int, _Flag], value: int) -> typing.Generator[str, typing.Any, None]:
     bit = 1
     has_yielded = False
     remaining = value
     while bit <= value:
         if member := members.get(bit):
             # Use ._value_ to prevent overhead of making new members each time.
-            # Also lets my testing logic for the cache size be more accurate.
+            # Also let's my testing logic for the cache size be more accurate.
             if member._value_ & remaining == member._value_:
                 remaining ^= member._value_
                 yield member.name
@@ -413,8 +415,8 @@ class _FlagMeta(type):
 
     @classmethod
     def __prepare__(
-        mcs, name: str, bases: typing.Tuple[typing.Type[typing.Any], ...] = ()
-    ) -> typing.Union[typing.Dict[str, typing.Any], _EnumNamespace]:
+        mcs, name: str, bases: tuple[type[typing.Any], ...] = ()
+    ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
         if _Flag is NotImplemented:
             if name != "Flag":
                 raise TypeError("First instance of _FlagMeta must be Flag")
@@ -429,8 +431,8 @@ class _FlagMeta(type):
     def __new__(
         mcs,
         name: str,
-        bases: typing.Tuple[typing.Type[typing.Any], ...],
-        namespace: typing.Union[typing.Dict[str, typing.Any], _EnumNamespace],
+        bases: tuple[type[typing.Any], ...],
+        namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
     ) -> Self:
         global _Flag
 
@@ -471,23 +473,25 @@ class _FlagMeta(type):
 
         for name, value in namespace.names_to_values.items():
             member = new_namespace.get(name)
-            if not isinstance(member, _DeprecatedAlias):
-                # Patching the member init call is around 100ns faster per call than
-                # using the default type.__call__ which would make us do the lookup
-                # in cls.__new__. Reason for this is that python will also always
-                # invoke cls.__init__ if we do this, so we end up with two function
-                # calls.
-                member = cls.__new__(cls, value)
-                member._name_ = name
-                member._value_ = value
-                setattr(cls, name, member)
+            if isinstance(member, _DeprecatedAlias):
+                continue
 
-                if not (value & value - 1):
-                    powers_of_2_map[value] = member
+            # Patching the member init call is around 100ns faster per call than
+            # using the default type.__call__ which would make us do the lookup
+            # in cls.__new__. Reason for this is that python will also always
+            # invoke cls.__init__ if we do this, so we end up with two function
+            # calls.
+            member = cls.__new__(cls, value)
+            member._name_ = name
+            member._value_ = value
+            setattr(cls, name, member)
 
             name_to_member[name] = member
-            value_to_member.setdefault(value, member)
+            value_to_member[value] = member
             member_names.append(name)
+
+            if not (value & value - 1):
+                powers_of_2_map[value] = member
 
         all_bits = functools.reduce(operator.or_, value_to_member.keys())
         all_bits_member = cls.__new__(cls, all_bits)
@@ -504,22 +508,22 @@ class _FlagMeta(type):
 
 
 class Flag(metaclass=_FlagMeta):
-    """Clone of Python's `enum.Flag` implementation.
+    """Clone of Python's [`enum.Flag`][] implementation.
 
     This is designed to be faster and more efficient than Python's
     implementation, while retaining the majority of the external interface
-    that Python's `enum.Flag` provides.
+    that Python's [`enum.Flag`][] provides.
 
-    In simple terms, an `Flag` is a set of wrapped constant `int`
+    In simple terms, a flag is a set of wrapped constant [`int`][]
     values that can be combined in any combination to make a special value.
     This is a more efficient way of combining things like permissions together
     into a single integral value, and works by setting the individual `1` and `0`
     on the binary representation of the integer.
 
     This implementation has extra features, in that it will actively behave
-    like a `set` as well.
+    like a [`set`][] as well.
 
-    .. warning::
+    !!! warning
         It is important to keep in mind that some semantics such as subtype
         checking and instance checking may differ. It is recommended to compare
         these values using the `==` operator rather than the `is` operator for
@@ -532,29 +536,29 @@ class Flag(metaclass=_FlagMeta):
         Failing to observe this __will__ result in unexpected behaviour
         occurring in your application!
 
-        Also important to note is that despite wrapping `int` values,
-        conceptually this does not behave as if it were a subclass of `int`.
+        Also important to note is that despite wrapping [`int`][] values,
+        conceptually this does not behave as if it were a subclass of [`int`][].
 
     Special Members on the class
     ----------------------------
     * `__enumtype__` :
-        Always `Flag`.
+        Always [`Flag`][].
     * `__everything__` :
         A special member with all documented bits set.
     * `__members__` :
-        An immutable `typing.Mapping` that maps each member name to the member
+        An immutable [`typing.Mapping`][] that maps each member name to the member
         value.
-    * ` __objtype__` :
-        Always `int`.
+    * `__objtype__` :
+        Always [`int`][].
 
     Operators on the class
     ----------------------
     * `FlagType["FOO"]` :
-        Return the member that has the name `FOO`, raising a `KeyError`
+        Return the member that has the name `FOO`, raising a [`KeyError`][]
         if it is not present.
     * `FlagType.FOO` :
         Return the member that has the name `FOO`, raising a
-        `AttributeError` if it is not present.
+        [`AttributeError`][] if it is not present.
     * `FlagType(x)` :
         Attempt to cast `x` to the enum type by finding an existing member that
         has the same __value__. If this fails, then a special __composite__
@@ -565,18 +569,18 @@ class Flag(metaclass=_FlagMeta):
     -----------------------------
     * `e1 & e2` :
         Bitwise `AND` operation. Will return a member that contains all flags
-        that are common between both oprands on the values. This also works with
-        one of the oprands being an `int`eger. You may instead use
+        that are common between both operands on the values. This also works with
+        one of the operands being an [`int`][]eger. You may instead use
         the `intersection` method.
     * `e1 | e2` :
         Bitwise `OR` operation. Will return a member that contains all flags
-        that appear on at least one of the oprands. This also works with
-        one of the oprands being an `int`eger. You may instead use
+        that appear on at least one of the operands. This also works with
+        one of the operands being an [`int`][]eger. You may instead use
         the `union` method.
     * `e1 ^ e2` :
         Bitwise `XOR` operation. Will return a member that contains all flags
-        that only appear on at least one and at most one of the oprands.
-        This also works with one of the oprands being an `int`eger.
+        that only appear on at least one and at most one of the operands.
+        This also works with one of the operands being an [`int`][].
         You may instead use the `symmetric_difference` method.
     * `~e` :
         Return the inverse of this value. This is equivalent to disabling all
@@ -587,11 +591,11 @@ class Flag(metaclass=_FlagMeta):
         Bitwise set difference operation. Returns all flags set on `e1` that are
         not set on `e2` as well. You may instead use the `difference`
         method.
-    * `bool(e)` : `bool`
-        Return `True` if `e` has a non-zero value, otherwise
-        `False`.
-    * `E.A in e`: `bool`
-        `True` if `E.A` is in `e`. This is functionally equivalent
+    * `bool(e)` : [`bool`][]
+        Return [`True`][] if `e` has a non-zero value, otherwise
+        [`False`][].
+    * `E.A in e`: [`bool`][]
+        [`True`][] if `E.A` is in `e`. This is functionally equivalent
         to `E.A & e == E.A`.
     * `iter(e)` :
         Explode the value into a iterator of each __documented__ flag that can
@@ -601,38 +605,38 @@ class Flag(metaclass=_FlagMeta):
         powers of two (this means if converted to twos-compliment binary,
         exactly one bit must be a `1`). In simple terms, this means that you
         should not expect combination flags to be returned.
-    * `e1 == e2` : `bool`
+    * `e1 == e2` : [`bool`][]
         Compare equality.
-    * `e1 != e2` : `bool`
+    * `e1 != e2` : [`bool`][]
         Compare inequality.
-    * `e1 < e2` : `bool`
+    * `e1 < e2` : [`bool`][]
         Compare by ordering.
-    * `int(e)` : `int`
+    * `int(e)` : [`int`][]
         Get the integer value of this flag
-    * `repr(e)` : `str`
+    * `repr(e)` : [`str`][]
         Get the machine readable representation of the flag member `e`.
-    * `str(e)` : `str`
-        Get the `str` name of the flag member `e`.
+    * `str(e)` : [`str`][]
+        Get the [`str`][] name of the flag member `e`.
 
     Special properties on each flag member
     --------------------------------------
-    * `e.name` : `str`
+    * `e.name` : [`str`][]
         The name of the member. For composite members, this will be generated.
-    * `e.value` : `int`
+    * `e.value` : [`int`][]
         The value of the member.
 
     Special members on each flag member
     -----------------------------------
-    * `e.all(E.A, E.B, E.C, ...)` : `bool`
-        Returns `True` if __all__ of `E.A`, `E.B`, `E.C`, et cetera
+    * `e.all(E.A, E.B, E.C, ...)` : [`bool`][]
+        Returns [`True`][] if __all__ of `E.A`, `E.B`, `E.C`, et cetera
         make up the value of `e`.
-    * `e.any(E.A, E.B, E.C, ...)` : `bool`
-        Returns `True` if __any__ of `E.A`, `E.B`, `E.C`, et cetera
+    * `e.any(E.A, E.B, E.C, ...)` : [`bool`][]
+        Returns [`True`][] if __any__ of `E.A`, `E.B`, `E.C`, et cetera
         make up the value of `e`.
-    * `e.none(E.A, E.B, E.C, ...)` : `bool`
-        Returns `True` if __none__ of `E.A`, `E.B`, `E.C`, et cetera
+    * `e.none(E.A, E.B, E.C, ...)` : [`bool`][]
+        Returns [`True`][] if __none__ of `E.A`, `E.B`, `E.C`, et cetera
         make up the value of `e`.
-    * `e.split()` : `typing.Sequence`
+    * `e.split()` : [`typing.Sequence`][]
         Explode the value into a sequence of each __documented__ flag that can
         be combined to make up the value `e`. Returns a sorted sequence of each
         power-of-two flag that makes up the value `e`. This is equivalent to
@@ -641,7 +645,7 @@ class Flag(metaclass=_FlagMeta):
     All other methods and operators on `Flag` members are inherited from the
     member's __value__.
 
-    .. note::
+    !!! note
         Due to limitations around how this is re-implemented, this class is not
         considered a subclass of `Enum` at runtime, even if MyPy believes this
         is possible
@@ -653,21 +657,21 @@ class Flag(metaclass=_FlagMeta):
     _temp_members_: typing.ClassVar[typing.Mapping[int, Flag]]
     _member_names_: typing.ClassVar[typing.Sequence[str]]
     __members__: typing.ClassVar[typing.Mapping[str, Flag]]
-    __objtype__: typing.ClassVar[typing.Type[int]]
-    __enumtype__: typing.ClassVar[typing.Type[Flag]]
+    __objtype__: typing.ClassVar[type[int]]
+    __enumtype__: typing.ClassVar[type[Flag]]
     _name_: typing.Optional[str]
     _value_: int
 
     @property
     def name(self) -> str:
-        """Return the name of the flag combination as a `str`."""
+        """Return the name of the flag combination as a [`str`][]."""
         if self._name_ is None:
             self._name_ = "|".join(_name_resolver(self._value_to_member_map_, self._value_))
         return self._name_
 
     @property
     def value(self) -> int:
-        """Return the `int` value of the flag."""
+        """Return the [`int`][] value of the flag."""
         return self._value_
 
     def all(self, *flags: Self) -> bool:
@@ -676,8 +680,8 @@ class Flag(metaclass=_FlagMeta):
         Returns
         -------
         bool
-            `True` if any of the given flags are part of this value.
-            Otherwise, return `False`.
+            [`True`][] if any of the given flags are part of this value.
+            Otherwise, return [`False`][].
         """
         return all((flag & self) == flag for flag in flags)
 
@@ -687,8 +691,8 @@ class Flag(metaclass=_FlagMeta):
         Returns
         -------
         bool
-            `True` if any of the given flags are part of this value.
-            Otherwise, return `False`.
+            [`True`][] if any of the given flags are part of this value.
+            Otherwise, return [`False`][].
         """
         return any((flag & self) == flag for flag in flags)
 
@@ -716,8 +720,8 @@ class Flag(metaclass=_FlagMeta):
         """Return whether two sets have a intersection or not.
 
         If the two sets have an intersection, then this returns
-        `False`. If no common flag values exist between them, then
-        this returns `True`.
+        [`False`][]. If no common flag values exist between them, then
+        this returns [`True`][].
         """
         return not (self & other)
 
@@ -735,14 +739,14 @@ class Flag(metaclass=_FlagMeta):
     def none(self, *flags: Self) -> bool:
         """Check if none of the given flags are part of this value.
 
-        .. note::
-            This is essentially the opposite of `Flag.any`.
+        !!! note
+            This is essentially the opposite of [`hikari.internal.enums.Flag.any`][].
 
         Returns
         -------
         bool
-            `True` if none of the given flags are part of this value.
-            Otherwise, return `False`.
+            [`True`][] if none of the given flags are part of this value.
+            Otherwise, return [`False`][].
         """
         return not self.any(*flags)
 
@@ -751,7 +755,7 @@ class Flag(metaclass=_FlagMeta):
 
         Any unrecognised bits will be omitted for brevity.
 
-        The result will be a name-sorted `typing.Sequence` of each member
+        The result will be a name-sorted [`typing.Sequence`][] of each member
         """
         return sorted(
             (member for member in self.__class__._powers_of_2_to_member_map_.values() if member.value & self),

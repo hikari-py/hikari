@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
 
 import mock
 import pytest
@@ -28,7 +28,7 @@ from hikari.events import role_events
 
 
 class TestRoleCreateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return role_events.RoleCreateEvent(shard=object(), role=mock.Mock(guilds.Role))
 
@@ -45,7 +45,7 @@ class TestRoleCreateEvent:
 
 
 class TestRoleUpdateEvent:
-    @pytest.fixture()
+    @pytest.fixture
     def event(self):
         return role_events.RoleUpdateEvent(shard=object(), role=mock.Mock(guilds.Role), old_role=mock.Mock(guilds.Role))
 

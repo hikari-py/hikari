@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -79,13 +78,13 @@ class StickerFormatType(int, enums.Enum):
     """A GIF sticker."""
 
 
-_STICKER_EXTENSIONS: typing.Dict[typing.Union[StickerFormatType, int], str] = {
+_STICKER_EXTENSIONS: dict[typing.Union[StickerFormatType, int], str] = {
     StickerFormatType.LOTTIE: "json",
     StickerFormatType.GIF: "gif",
 }
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class StickerPack(snowflakes.Unique):
     """Represents a sticker pack on Discord."""
 
@@ -120,12 +119,12 @@ class StickerPack(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : str
-            The extension to use for this URL, defaults to `png`.
+        ext
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -146,7 +145,7 @@ class StickerPack(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialSticker(snowflakes.Unique):
     """Represents the partial stickers found attached to messages on Discord."""
 
@@ -163,16 +162,21 @@ class PartialSticker(snowflakes.Unique):
     def image_url(self) -> files.URL:
         """URL for the image.
 
-        The extension will be based on `format_type`. If `format_type` is `StickerFormatType.LOTTIE`,
-        then the extension will be `.json`, if it's `StickerFormatType.GIF` it will be `.gif`. Otherwise, it will be `.png`.
+        The extension will be based on `format_type`. If `format_type` is [`hikari.stickers.StickerFormatType.LOTTIE`][],
+        then the extension will be `.json`, if it's [`hikari.stickers.StickerFormatType.GIF`][] it will be `.gif`.
+        Otherwise, it will be `.png`.
         """
         ext = _STICKER_EXTENSIONS.get(self.format_type, "png")
 
-        return routes.CDN_STICKER.compile_to_file(urls.CDN_URL, sticker_id=self.id, file_format=ext)
+        # GIF Stickers have a different name under the CDN, so we need to use the Media Proxy instead
+        # see: https://github.com/discord/discord-api-docs/issues/6675
+        base_url = urls.MEDIA_PROXY_URL if ext == "gif" else urls.CDN_URL
+
+        return routes.CDN_STICKER.compile_to_file(base_url, sticker_id=self.id, file_format=ext)
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class StandardSticker(PartialSticker):
     """Represents a standard Discord sticker that belongs to a pack."""
 
@@ -193,7 +197,7 @@ class StandardSticker(PartialSticker):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildSticker(PartialSticker):
     """Represents a Discord sticker that belongs to a guild."""
 
@@ -215,5 +219,5 @@ class GuildSticker(PartialSticker):
     user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The user that uploaded this sticker.
 
-    This will only available if you have the `MANAGE_EMOJIS_AND_STICKERS` permission.
+    This will only be available if you have the [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][] permission.
     """

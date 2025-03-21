@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Standard implementation of a REST based interactions server."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("InteractionServer",)
@@ -61,7 +61,9 @@ if typing.TYPE_CHECKING:
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
+        special_endpoints.InteractionDeferredBuilder,
+        special_endpoints.InteractionMessageBuilder,
+        special_endpoints.InteractionPremiumRequiredBuilder,
     ]
     _ModalOrMessageResponseBuilderT = typing.Union[_MessageResponseBuilderT, special_endpoints.InteractionModalBuilder]
 
@@ -152,10 +154,13 @@ class _FilePayload(aiohttp.Payload):
         /,
         *,
         executor: typing.Optional[concurrent.futures.Executor] = None,
-        headers: typing.Optional[typing.Dict[str, str]] = None,
+        headers: typing.Optional[dict[str, str]] = None,
     ) -> None:
         super().__init__(value=value, headers=headers, content_type=content_type)
         self._executor = executor
+
+    def decode(self, encoding: str = "utf-8", errors: str = "strict") -> str:
+        raise RuntimeError("Impossible to decode a _FilePayload. If you see this, please file a bug report with hikari")
 
     async def write(self, writer: aiohttp.abc.AbstractStreamWriter) -> None:
         async with self._value.stream(executor=self._executor) as data:
@@ -180,24 +185,21 @@ async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.An
 
 
 class InteractionServer(interaction_server.InteractionServer):
-    """Standard implementation of `hikari.api.interaction_server.InteractionServer`.
+    """Standard implementation of [`hikari.api.interaction_server.InteractionServer`][].
 
     Parameters
     ----------
-    entity_factory : hikari.api.entity_factory.EntityFactory
+    entity_factory
         The entity factory instance this server should use.
-
-    Other Parameters
-    ----------------
-    dumps : hikari.internal.data_binding.JSONEncoder
-        The JSON encoder this server should use. Defaults to `hikari.internal.data_binding.default_json_dumps`.
-    loads : hikari.internal.data_binding.JSONDecoder
-        The JSON decoder this server should use. Defaults to `hikari.internal.data_binding.default_json_loads`.
-    public_key : bytes
+    dumps
+        The JSON encoder this server should use.
+    loads
+        The JSON decoder this server should use.
+    public_key
         The public key this server should use for verifying request payloads from
-        Discord. If left as `None` then the client will try to work this
+        Discord. If left as [`None`][] then the client will try to work this
         out using `rest_client`.
-    rest_client : hikari.api.rest.RESTClient
+    rest_client
         The client this should use for making REST requests.
     """
 
@@ -245,13 +247,13 @@ class InteractionServer(interaction_server.InteractionServer):
         self._entity_factory = entity_factory
         self._executor = executor
         self._is_closing = False
-        self._listeners: typing.Dict[typing.Type[base_interactions.PartialInteraction], typing.Any] = {}
+        self._listeners: dict[type[base_interactions.PartialInteraction], typing.Any] = {}
         self._loads = loads
         self._nacl = nacl
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
-        self._running_generator_listeners: typing.List[asyncio.Task[None]] = []
+        self._running_generator_listeners: list[asyncio.Task[None]] = []
 
     @property
     def is_alive(self) -> bool:
@@ -280,12 +282,12 @@ class InteractionServer(interaction_server.InteractionServer):
         """Handle an AIOHTTP interaction request.
 
         This method handles aiohttp specific detail before calling
-        `InteractionServer.on_interaction` with the data extracted from the
+        [`hikari.impl.interaction_server.InteractionServer.on_interaction`][] with the data extracted from the
         request if it can and handles building an aiohttp response.
 
         Parameters
         ----------
-        request : aiohttp.web.Request
+        request
             The received request.
 
         Returns
@@ -399,18 +401,18 @@ class InteractionServer(interaction_server.InteractionServer):
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
         """Handle an interaction received from Discord as a REST server.
 
-        .. note::
+        !!! note
             If this server instance is alive then this will be called internally
             by the server but if the instance isn't alive then this may still be
             called externally to trigger interaction dispatch.
 
         Parameters
         ----------
-        body : bytes
+        body
             The interaction payload.
-        signature : bytes
+        signature
             Value of the `"X-Signature-Ed25519"` header used to verify the body.
-        timestamp : bytes
+        timestamp
             Value of the `"X-Signature-Timestamp"` header used to verify the body.
 
         Returns
@@ -454,7 +456,11 @@ class InteractionServer(interaction_server.InteractionServer):
 
         except Exception as exc:
             asyncio.get_running_loop().call_exception_handler(
-                {"message": "Exception occurred during interaction deserialization", "exception": exc}
+                {
+                    "message": "Exception occurred during interaction deserialization",
+                    "payload": payload,
+                    "exception": exc,
+                }
             )
             return _Response(_INTERNAL_SERVER_ERROR_STATUS, b"Exception occurred during interaction deserialization")
 
@@ -502,33 +508,33 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
-        .. note::
+        !!! note
             For more information on the other parameters such as defaults see
             AIOHTTP's documentation.
 
-        Other Parameters
-        ----------------
-        backlog : int
+        Parameters
+        ----------
+        backlog
             The number of unaccepted connections that the system will allow before
             refusing new connections.
-        host : typing.Optional[typing.Union[str, aiohttp.web.HostSequence]]
+        host
             TCP/IP host or a sequence of hosts for the HTTP server.
-        port : typing.Optional[int]
+        port
             TCP/IP port for the HTTP server.
-        path : typing.Optional[str]
+        path
             File system path for HTTP server unix domain socket.
-        reuse_address : typing.Optional[bool]
+        reuse_address
             Tells the kernel to reuse a local socket in TIME_WAIT state, without
             waiting for its natural timeout to expire.
-        reuse_port : typing.Optional[bool]
+        reuse_port
             Tells the kernel to allow this endpoint to be bound to the same port
             as other existing endpoints are also bound to.
-        socket : typing.Optional[socket.socket]
+        socket
             A pre-existing socket object to accept connections on.
-        shutdown_timeout : float
-            A delay to wait for graceful server shutdown before forcefully
-            disconnecting all open client sockets. This defaults to 60 seconds.
-        ssl_context : typing.Optional[ssl.SSLContext]
+        shutdown_timeout
+            A delay to wait, in seconds, for graceful server shutdown
+            before forcefully disconnecting all open client sockets.
+        ssl_context
             SSL context for HTTPS servers.
         """
         if self._server:
@@ -544,7 +550,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._server = aiohttp.web_runner.AppRunner(aio_app, access_log=_LOGGER)
         await self._server.setup()
 
-        sites: typing.List[aiohttp.web.BaseSite] = []
+        sites: list[aiohttp.web.BaseSite] = []
 
         if host is not None:
             if isinstance(host, str):
@@ -595,79 +601,39 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.info("Starting site on %s", site.name)
             await site.start()
 
-    @typing.overload
     def get_listener(
-        self, interaction_type: typing.Type[command_interactions.CommandInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
-    ]:
-        ...
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: typing.Type[component_interactions.ComponentInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
-    ]:
-        ...
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: typing.Type[command_interactions.AutocompleteInteraction], /
-    ) -> typing.Optional[
-        interaction_server.ListenerT[
-            command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
-        ]
-    ]:
-        ...
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: typing.Type[modal_interactions.ModalInteraction], /
-    ) -> typing.Optional[interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]]:
-        ...
-
-    @typing.overload
-    def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], /
-    ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
-        ...
-
-    def get_listener(
-        self, interaction_type: typing.Type[_InteractionT_co], /
+        self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
         return self._listeners.get(interaction_type)
 
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[command_interactions.CommandInteraction],
+        interaction_type: type[command_interactions.CommandInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
         ],
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[component_interactions.ComponentInteraction],
+        interaction_type: type[component_interactions.ComponentInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
         ],
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[command_interactions.AutocompleteInteraction],
+        interaction_type: type[command_interactions.AutocompleteInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[
                 command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
@@ -676,25 +642,23 @@ class InteractionServer(interaction_server.InteractionServer):
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @typing.overload
     def set_listener(
         self,
-        interaction_type: typing.Type[modal_interactions.ModalInteraction],
+        interaction_type: type[modal_interactions.ModalInteraction],
         listener: typing.Optional[
             interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
         ],
         /,
         *,
         replace: bool = False,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def set_listener(
         self,
-        interaction_type: typing.Type[_InteractionT_co],
+        interaction_type: type[_InteractionT_co],
         listener: typing.Optional[
             interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
         ],

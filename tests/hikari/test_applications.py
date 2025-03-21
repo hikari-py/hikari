@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 
 import mock
@@ -34,7 +35,7 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestTeamMember:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self):
         return applications.TeamMember(membership_state=4, permissions=["*"], team_id=34123, user=mock.Mock(users.User))
 
@@ -88,7 +89,7 @@ class TestTeamMember:
 
 
 class TestTeam:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self):
         return hikari_test_helpers.mock_class_namespace(
             applications.Team, slots_=False, init_=False, id=123, icon_hash="ahashicon"
@@ -127,7 +128,7 @@ class TestTeam:
 
 
 class TestApplication:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self):
         return hikari_test_helpers.mock_class_namespace(
             applications.Application,
@@ -165,7 +166,7 @@ class TestApplication:
             urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild(self, model):
         model.guild_id = 1234
         model.fetch_guild = mock.AsyncMock()
@@ -179,7 +180,7 @@ class TestApplication:
         with pytest.raises(UnauthorizedError):
             await model.fetch_guild()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_fetch_guild_preview(self, model):
         model.fetch_guild_preview = mock.AsyncMock()
 

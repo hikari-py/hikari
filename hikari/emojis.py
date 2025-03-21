@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -53,9 +52,9 @@ class Emoji(files.WebResource, abc.ABC):
     """Base class for all emojis.
 
     Any emoji implementation supports being used as a
-    `hikari.files.Resource` when uploading an attachment to the API.
+    [`hikari.files.Resource`][] when uploading an attachment to the API.
     This is achieved in the same way as using a
-    `hikari.files.WebResource` would achieve this.
+    [`hikari.files.WebResource`][] would achieve this.
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -81,19 +80,19 @@ class Emoji(files.WebResource, abc.ABC):
         """Mention string to use to mention the emoji with."""
 
     @classmethod
-    def parse(cls, string: str, /) -> Emoji:
+    def parse(cls, string: str, /) -> typing.Union[UnicodeEmoji, CustomEmoji]:
         """Parse a given string into an emoji object.
 
         Parameters
         ----------
-        string : str
+        string
             The emoji object to parse.
 
         Returns
         -------
-        Emoji
-            The parsed emoji object. This will be a `CustomEmoji` if a custom
-            emoji mention, or a `UnicodeEmoji` otherwise.
+        typing.Union[UnicodeEmoji, CustomEmoji]
+            The parsed emoji object. This will be a [`hikari.emojis.CustomEmoji`][] if a custom
+            emoji mention, or a [`hikari.emojis.UnicodeEmoji`][] otherwise.
 
         Raises
         ------
@@ -108,7 +107,7 @@ class Emoji(files.WebResource, abc.ABC):
 class UnicodeEmoji(str, Emoji):
     """Represents a unicode emoji.
 
-    .. warning::
+    !!! warning
         A word of warning if you try to upload this emoji as a file attachment.
 
         While this emoji type can be used to upload the Twemoji representations
@@ -116,7 +115,7 @@ class UnicodeEmoji(str, Emoji):
         Discord's implementation and official Twemoji bindings is very flaky.
         Responsible implementations relying on this behaviour will be
         implemented to expect this behaviour in the form of
-        `hikari.errors.NotFoundError` exceptions being raised when a mismatch may
+        [`hikari.errors.NotFoundError`][] exceptions being raised when a mismatch may
         occur. It is also likely that this will change in the future without
         notice, so you will likely be relying on flaky behaviour.
 
@@ -178,11 +177,11 @@ class UnicodeEmoji(str, Emoji):
 
         Examples
         --------
-        .. code-block:: python
-
-            >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
-            >>> emoji.url
-            'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
+        ```py
+        >>> emoji = hikari.UnicodeEmoji("\N{OK HAND SIGN}")
+        >>> emoji.url
+        'https://raw.githubusercontent.com/discord/twemoji/master/assets/72x72/1f44c.png'
+        ```
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
@@ -221,7 +220,7 @@ class UnicodeEmoji(str, Emoji):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji object to parse.
 
         Returns
@@ -238,21 +237,21 @@ class UnicodeEmoji(str, Emoji):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class CustomEmoji(snowflakes.Unique, Emoji):
     """Represents a custom emoji.
 
     This is a custom emoji that is from a guild you might not be part of.
 
     All CustomEmoji objects and their derivatives act as valid
-    `hikari.files.Resource` objects. This means you can use them as a
+    [`hikari.files.Resource`][] objects. This means you can use them as a
     file when sending a message.
 
         >>> emojis = await bot.rest.fetch_guild_emojis(12345)
         >>> picks = random.choices(emojis, 5)
         >>> await event.respond(files=picks)
 
-    .. warning::
+    !!! warning
         Discord will not provide information on whether these emojis are
         animated or not when a reaction is removed and an event is fired. This
         is problematic if you need to try and determine the emoji that was
@@ -274,6 +273,12 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
     def __str__(self) -> str:
         return self.mention
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, CustomEmoji):
+            return self.id == other.id
+
+        return False
 
     @property
     def filename(self) -> str:
@@ -302,7 +307,7 @@ class CustomEmoji(snowflakes.Unique, Emoji):
 
         Parameters
         ----------
-        string : str
+        string
             The emoji mention to parse.
 
         Returns
@@ -325,12 +330,15 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         raise ValueError("Expected an emoji mention")
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class KnownCustomEmoji(CustomEmoji):
-    """Represents an emoji that is known from a guild the bot is in.
+    """Represents a known emoji.
 
-    This is a specialization of `CustomEmoji` that is from a guild that you
-    _are_ part of. As a result, it contains a lot more information with it.
+    The Emoji could be either known because the bot is part of the emoji's guild or
+    because the emoji is an application emoji.
+
+    This is a specialization of [`hikari.emojis.CustomEmoji`][] that is _known_ as mentioned before.
+    As a result, it contains a lot more information with it.
     """
 
     app: traits.RESTAware = attrs.field(
@@ -338,8 +346,11 @@ class KnownCustomEmoji(CustomEmoji):
     )
     """Client application that models may use for procedures."""
 
-    guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=False)
-    """The ID of the guild this emoji belongs to."""
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the guild this emoji belongs to, if applicable.
+
+    This will be [`None`][] if the emoji is an application emoji.
+    """
 
     role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The IDs of the roles that are whitelisted to use this emoji.
@@ -350,8 +361,8 @@ class KnownCustomEmoji(CustomEmoji):
     user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
-    .. note::
-        This will be `None` if you are missing the `MANAGE_EMOJIS_AND_STICKERS`
+    !!! note
+        This will be [`None`][] if you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
         permission in the server the emoji is from.
     """
 
@@ -364,5 +375,5 @@ class KnownCustomEmoji(CustomEmoji):
     is_available: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this emoji can currently be used.
 
-    May be `False` due to a loss of Sever Boosts on the emoji's guild.
+    May be [`False`][] due to a loss of Sever Boosts on the emoji's guild.
     """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -44,7 +43,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     raw_body = await response.read()
 
     # Little hack to stop mypy from complaining when using `*args`
-    args: typing.List[typing.Any] = [real_url, response.headers, raw_body]
+    args: list[typing.Any] = [real_url, response.headers, raw_body]
     try:
         json_body = data_binding.default_json_loads(await response.read())
         assert isinstance(json_body, dict)
@@ -83,17 +82,17 @@ def create_tcp_connector(
 
     Parameters
     ----------
-    http_settings : config.HTTPSettings
+    http_settings
         HTTP settings to use for the connector.
 
     Optional Parameters
     -------------------
-    dns_cache : typing.Union[None, bool, int]
-        If `True`, DNS caching is used with a default TTL of 10 seconds.
-        If `False`, DNS caching is disabled. If an `int` is
+    dns_cache
+        If [`True`][], DNS caching is used with a default TTL of 10 seconds.
+        If [`False`][], DNS caching is disabled. If an [`int`][] is
         given, then DNS caching is enabled with an explicit TTL set. If
-        `None`, the cache will be enabled and never invalidate.
-    limit : int
+        [`None`][], the cache will be enabled and never invalidate.
+    limit
         Number of connections to allow in the pool at any given time.
 
     Returns
@@ -120,10 +119,10 @@ def create_client_session(
 ) -> aiohttp.ClientSession:
     """Generate a client session using the given settings.
 
-    .. warning::
+    !!! warning
         You must invoke this from within a running event loop.
 
-    .. note::
+    !!! note
         If you pass an explicit connector, then the connection
         that is created will not own the connector. You will be
         expected to manually close it __after__ the returned
@@ -131,19 +130,18 @@ def create_client_session(
 
     Parameters
     ----------
-    connector : aiohttp.BaseConnector
+    connector
         The connector to use.
-    connector_owner : bool
-        If `True`, then the client session will close the
+    connector_owner
+        If [`True`][], then the client session will close the
         connector on shutdown. Otherwise, you must do it manually.
-    http_settings : hikari.impl.config.HTTPSettings
+    http_settings
         HTTP settings to use.
-    raise_for_status : bool
-        `True` to default to throwing exceptions if a request
-        fails, or `False` to default to not.
-    trust_env : bool
-        `True` to trust anything in environment variables
-        and the `netrc` file, `False` to ignore it.
+    raise_for_status
+        Whether to raise an exception when a request fails
+    trust_env
+        Whether to trust anything in environment variables
+        and the `netrc` file.
 
     Returns
     -------

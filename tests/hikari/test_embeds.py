@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import mock
 import pytest
 
@@ -26,7 +27,7 @@ from hikari import embeds
 
 
 class TestEmbedResource:
-    @pytest.fixture()
+    @pytest.fixture
     def resource(self):
         return embeds.EmbedResource(resource=mock.Mock())
 
@@ -45,7 +46,7 @@ class TestEmbedResource:
 
 
 class TestEmbedResourceWithProxy:
-    @pytest.fixture()
+    @pytest.fixture
     def resource_with_proxy(self):
         return embeds.EmbedResourceWithProxy(resource=mock.Mock(), proxy_resource=mock.Mock())
 
@@ -108,3 +109,9 @@ class TestEmbed:
         embed.add_field(name="field name 1", value="field value 2")
         embed.add_field(name="field name 3", value="field value 4")
         assert embed.total_length() == 88
+
+    def test_adding_field_with_none_values(self):
+        embed = embeds.Embed().add_field(name=None, value=None)
+        assert embed.total_length() == 0
+        assert embed.fields[0].name == ""
+        assert embed.fields[0].value == ""

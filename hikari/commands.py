@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Models and enums used for application commands on Discord."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
@@ -48,6 +48,7 @@ from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
+    from hikari import applications
     from hikari import channels
     from hikari import guilds
     from hikari import locales
@@ -111,7 +112,7 @@ class OptionType(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class CommandChoice:
     """Represents the choices set for an application command's argument."""
 
@@ -128,7 +129,7 @@ class CommandChoice:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class CommandOption:
     """Represents an application command's argument."""
 
@@ -138,7 +139,7 @@ class CommandOption:
     name: str = attrs.field(repr=True)
     r"""The command option's name.
 
-    .. note::
+    !!! note
         This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
@@ -146,7 +147,7 @@ class CommandOption:
     description: str = attrs.field(repr=False)
     """The command option's description.
 
-    .. note::
+    !!! note
         This will be inclusively between 1-100 characters in length.
     """
 
@@ -156,7 +157,7 @@ class CommandOption:
     choices: typing.Optional[typing.Sequence[CommandChoice]] = attrs.field(default=None, repr=False)
     """A sequence of up to (and including) 25 choices for this command.
 
-    This will be `None` if the input values for this option aren't
+    This will be [`None`][] if the input values for this option aren't
     limited to specific values or if it's a subcommand or subcommand-group type
     option.
     """
@@ -169,7 +170,7 @@ class CommandOption:
     )
     """The channel types that this option will accept.
 
-    If `None`, then all channel types will be accepted.
+    If [`None`][], then all channel types will be accepted.
     """
 
     autocomplete: bool = attrs.field(default=False, repr=False)
@@ -178,15 +179,15 @@ class CommandOption:
     min_value: typing.Union[int, float, None] = attrs.field(default=None, repr=False)
     """The minimum value permitted (inclusive).
 
-    This will be `int` if the type of the option is `hikari.commands.OptionType.INTEGER`
-    and `float` if the type is `hikari.commands.OptionType.FLOAT`.
+    This will be [`int`][] if the type of the option is [`hikari.commands.OptionType.INTEGER`][]
+    and [`float`][] if the type is [`hikari.commands.OptionType.FLOAT`][].
     """
 
     max_value: typing.Union[int, float, None] = attrs.field(default=None, repr=False)
     """The maximum value permitted (inclusive).
 
-    This will be `int` if the type of the option is `hikari.commands.OptionType.INTEGER`
-    and `float` if the type is `hikari.commands.OptionType.FLOAT`.
+    This will be [`int`][] if the type of the option is [`hikari.commands.OptionType.INTEGER`][]
+    and [`float`][] if the type is [`hikari.commands.OptionType.FLOAT`][].
     """
 
     name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
@@ -202,18 +203,20 @@ class CommandOption:
     min_length: typing.Optional[int] = attrs.field(default=None, repr=False)
     """The minimum length permitted (inclusive).
 
-    This is only valid for `hikari.commands.OptionType.STRING`, otherwise it will be `None`.
+    This is only valid for [`hikari.commands.OptionType.STRING`][],
+    otherwise it will be [`None`][].
     """
 
     max_length: typing.Optional[int] = attrs.field(default=None, repr=False)
     """The maximum length permitted (inclusive).
 
-    This is only valid for `hikari.commands.OptionType.STRING`, otherwise it will be `None`.
+    This is only valid for [`hikari.commands.OptionType.STRING`][],
+    otherwise it will be [`None`][].
     """
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialCommand(snowflakes.Unique):
     """Represents any application command on Discord."""
 
@@ -232,7 +235,7 @@ class PartialCommand(snowflakes.Unique):
     name: str = attrs.field(eq=False, hash=False, repr=True)
     r"""The command's name.
 
-    .. note::
+    !!! note
         This will match the regex `^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$` in Unicode mode and will be
         lowercase.
     """
@@ -243,16 +246,13 @@ class PartialCommand(snowflakes.Unique):
     This excludes administrators of the guild and overwrites.
     """
 
-    is_dm_enabled: bool = attrs.field(eq=False, hash=False, repr=True)
-    """Whether this command is enabled in DMs with the bot."""
-
     is_nsfw: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this command is age-restricted."""
 
     guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """ID of the guild this command is in.
 
-    This will be `None` if this is a global command.
+    This will be [`None`][] if this is a global command.
     """
 
     version: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -262,6 +262,14 @@ class PartialCommand(snowflakes.Unique):
         eq=False, hash=False, repr=False
     )
     """A mapping of name localizations for this command."""
+
+    integration_types: typing.Sequence[applications.ApplicationIntegrationType] = attrs.field(
+        eq=False, hash=False, repr=False
+    )
+    """The integration types allowed for this command."""
+
+    context_types: typing.Sequence[applications.ApplicationContextType] = attrs.field(eq=False, hash=False, repr=False)
+    """The context types allowed for this command."""
 
     async def fetch_self(self) -> PartialCommand:
         """Fetch an up-to-date version of this command object.
@@ -299,17 +307,17 @@ class PartialCommand(snowflakes.Unique):
     ) -> PartialCommand:
         """Edit this command.
 
-        Other Parameters
-        ----------------
-        name : hikari.undefined.UndefinedOr[str]
-            The name to set for the command. Leave as `hikari.undefined.UNDEFINED`
+        Parameters
+        ----------
+        name
+            The name to set for the command. Leave as [`hikari.undefined.UNDEFINED`][]
             to not change.
-        description : hikari.undefined.UndefinedOr[str]
-            The description to set for the command. Leave as `hikari.undefined.UNDEFINED`
+        description
+            The description to set for the command. Leave as [`hikari.undefined.UNDEFINED`][]
             to not change.
-        options : hikari.undefined.UndefinedOr[typing.Sequence[CommandOption]]
+        options
             A sequence of up to 10 options to set for this command. Leave this as
-            `hikari.undefined.UNDEFINED` to not change.
+            [`hikari.undefined.UNDEFINED`][] to not change.
 
         Returns
         -------
@@ -370,7 +378,7 @@ class PartialCommand(snowflakes.Unique):
 
         Parameters
         ----------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+        guild
             Object or ID of the guild to fetch the command permissions for.
 
         Returns
@@ -401,14 +409,14 @@ class PartialCommand(snowflakes.Unique):
     ) -> GuildCommandPermissions:
         """Set permissions for this command in a specific guild.
 
-        .. note::
+        !!! note
             This overwrites any previously set permissions.
 
         Parameters
         ----------
-        guild : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]]
+        guild
             Object or ID of the guild to set the command permissions in.
-        permissions : typing.Sequence[CommandPermission]
+        permissions
             Sequence of up to 10 of the permission objects to set.
 
         Returns
@@ -436,7 +444,7 @@ class PartialCommand(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class SlashCommand(PartialCommand):
     """Represents a slash command on Discord."""
 
@@ -445,7 +453,7 @@ class SlashCommand(PartialCommand):
 
     None if this command is not a slash command.
 
-    .. note::
+    !!! note
         This will be inclusively between 1-100 characters in length.
     """
 
@@ -459,7 +467,7 @@ class SlashCommand(PartialCommand):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ContextMenuCommand(PartialCommand):
     """Represents a context menu command on Discord."""
 

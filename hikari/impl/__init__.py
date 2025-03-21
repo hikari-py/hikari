@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -22,7 +21,7 @@
 # SOFTWARE.
 """Basic implementations of application components.
 
-These components implement the interfaces in `hikari.api` to provide the
+These components implement the interfaces in [`hikari.api`][] to provide the
 baseline functionality. For most applications that do not have bespoke
 performance or structural requirements, you will want to use these
 implementations.

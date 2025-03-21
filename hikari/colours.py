@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -20,7 +19,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Alias for the `hikari.colors` module."""
+"""Alias for the [`hikari.colors`][] module."""
 
 from __future__ import annotations
 
@@ -31,7 +30,7 @@ import typing
 from hikari import colors
 
 Colour = colors.Color
-"""An alias for `hikari.colors.Color`."""
+"""An alias for [`hikari.colors.Color`][]."""
 
 Colourish = colors.Colorish
-"""An alias for `hikari.colors.Colorish`."""
+"""An alias for [`hikari.colors.Colorish`][]."""

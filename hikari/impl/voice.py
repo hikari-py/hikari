@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -63,7 +62,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         "_voice_listener",
     )
 
-    _connections: typing.Dict[snowflakes.Snowflake, voice.VoiceConnection]
+    _connections: dict[snowflakes.Snowflake, voice.VoiceConnection]
     connections: typing.Mapping[snowflakes.Snowflake, voice.VoiceConnection]
 
     def __init__(self, app: traits.GatewayBotAware) -> None:
@@ -133,7 +132,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel],
-        voice_connection_type: typing.Type[_VoiceConnectionT],
+        voice_connection_type: type[_VoiceConnectionT],
         *,
         deaf: bool = False,
         mute: bool = False,
@@ -190,7 +189,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         except asyncio.TimeoutError as e:
             raise errors.VoiceError(f"Could not connect to voice channel {channel} in guild {guild}.") from e
 
-        # We will never receive the first endpoint as `None`
+        # We will never receive the first endpoint as [`None`][]
         assert server_event.endpoint is not None
 
         _LOGGER.debug(

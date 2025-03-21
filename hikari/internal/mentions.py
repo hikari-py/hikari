@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Utility functions used for managing mentions on Discord."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("generate_allowed_mentions",)
@@ -46,28 +46,28 @@ def generate_allowed_mentions(
 
     Parameters
     ----------
-    mentions_everyone : hikari.undefined.UndefinedOr[bool]
+    mentions_everyone
         Whether @everyone and @here mentions are enabled. If
-        `hikari.undefined.UNDEFINED` or `False` then this will be disabled.
-    mentions_reply : hikari.undefined.UndefinedOr[bool]
-        Whether the reply mention should be enabled. If `hikari.undefined.UNDEFINED`
-        or `False` then this will be disabled.
-    user_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.users.PartialUser], bool]]
+        [`hikari.undefined.UNDEFINED`][] or [`False`][] then this will be disabled.
+    mentions_reply
+        Whether the reply mention should be enabled. If [`hikari.undefined.UNDEFINED`][]
+        or [`False`][] then this will be disabled.
+    user_mentions
         Either a sequence of objects/IDs of the users to enabled mentions for,
-        `True` to allow all mentions or `False`/`hikari.undefined.UNDEFINED`
+        [`True`][] to allow all mentions or [`False`][]/[`hikari.undefined.UNDEFINED`][]
         to disable all user mentions.
-    role_mentions : hikari.undefined.UndefinedOr[typing.Union[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole], bool]]
+    role_mentions
         Either a sequence of objects/IDs of the roles to enabled mentions for,
-        `True` to allow all mentions or `False`/`hikari.undefined.UNDEFINED`
+        [`True`][] to allow all mentions or [`False`][]/[`hikari.undefined.UNDEFINED`][]
         to disable all user mentions.
 
     Returns
     -------
     hikari.internal.data_binding.JSONObject
         The allowed mentions JSON Object.
-    """  # noqa: E501 - Line too long
-    parsed_mentions: typing.List[str] = []
-    allowed_mentions: typing.Dict[str, typing.Any] = {"parse": parsed_mentions}
+    """
+    parsed_mentions: list[str] = []
+    allowed_mentions: dict[str, typing.Any] = {"parse": parsed_mentions}
 
     if mentions_everyone is True:
         parsed_mentions.append("everyone")

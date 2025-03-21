@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import re
@@ -31,6 +32,7 @@ import aiohttp.web_runner
 import mock
 import multidict
 
+from hikari import applications
 from hikari import files
 
 try:
@@ -74,7 +76,7 @@ class MockWriter(aiohttp.abc.AbstractStreamWriter):
         pass
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestConsumeGeneratorListener:
     async def test_normal_behaviour(self):
         async def mock_generator_listener():
@@ -143,7 +145,7 @@ class TestConsumeGeneratorListener:
         assert args[0]["exception"] is exception
 
 
-@pytest.fixture()
+@pytest.fixture
 def valid_edd25519():
     body = (
         b'{"application_id":"658822586720976907","channel_id":"938391701561679903","data":{"id":"870616445036421159","'
@@ -164,7 +166,7 @@ def valid_edd25519():
     return (body, signature, timestamp)
 
 
-@pytest.fixture()
+@pytest.fixture
 def valid_payload():
     return {
         "application_id": "658822586720976907",
@@ -204,7 +206,7 @@ def valid_payload():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def invalid_ed25519():
     body = (
         b'{"application_id":"658822586720976907","id":"838085779104202754","token":"aW50ZXJhY3Rpb246ODM4MDg1Nzc5MTA0MjA'
@@ -221,7 +223,7 @@ def invalid_ed25519():
     return (body, signature, timestamp)
 
 
-@pytest.fixture()
+@pytest.fixture
 def public_key():
     return b"\x12-\xdfX\xa8\x95\xd7\xe1\xb7o\xf5\xd0q\xb0\xaa\xc9\xb7v^*\xb5\x15\xe1\x1b\x7f\xca\xf9d\xdbT\x90\xc6"
 
@@ -239,15 +241,15 @@ def test_interaction_server_init_when_no_pynacl():
 
 @pytest.mark.skipif(not nacl_present, reason="PyNacl not present")
 class TestInteractionServer:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_entity_factory(self):
         return mock.Mock(entity_factory_impl.EntityFactoryImpl)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_rest_client(self):
         return mock.Mock(rest_impl.RESTClientImpl)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_interaction_server(
         self, mock_entity_factory: interaction_server_impl.InteractionServer, mock_rest_client: rest_impl.RESTClientImpl
     ):
@@ -310,7 +312,7 @@ class TestInteractionServer:
 
         assert mock_interaction_server.is_alive is True
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test___fetch_public_key_when_lock_is_None_gets_new_lock_and_doesnt_overwrite_existing_ones(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -335,7 +337,7 @@ class TestInteractionServer:
         lock_class.return_value.__aenter__.assert_has_awaits([mock.call() for _ in range(5)])
         lock_class.return_value.__aexit__.assert_has_awaits([mock.call(None, None, None) for _ in range(5)])
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__fetch_public_key_with_bearer_token(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -357,7 +359,7 @@ class TestInteractionServer:
         mock_interaction_server._application_fetch_lock.__aenter__.assert_awaited_once()
         mock_interaction_server._application_fetch_lock.__aexit__.assert_awaited_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__fetch_public_key_fetch_with_bot_token(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -377,7 +379,7 @@ class TestInteractionServer:
         mock_interaction_server._application_fetch_lock.__aenter__.assert_awaited_once()
         mock_interaction_server._application_fetch_lock.__aexit__.assert_awaited_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test__fetch_public_key_when_public_key_already_set(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -391,7 +393,7 @@ class TestInteractionServer:
         mock_lock.__aenter__.assert_awaited_once()
         mock_lock.__aexit__.assert_awaited_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiohttp_hook(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_interaction_server.on_interaction = mock.AsyncMock(
             return_value=mock.Mock(
@@ -420,7 +422,7 @@ class TestInteractionServer:
         assert result.headers == {"header1": "ok", "Content-Type": "ooga/booga"}
         assert result.status == 200
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiohttp_hook_when_no_other_headers(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -446,7 +448,7 @@ class TestInteractionServer:
         assert result.headers == {"Content-Type": "ooga/booga"}
         assert result.status == 200
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiohttp_hook_when_files(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_interaction_server.on_interaction = mock.AsyncMock(
             return_value=mock.Mock(
@@ -481,10 +483,10 @@ class TestInteractionServer:
         await result.body.write(mock_writer)
 
         boundary = result.body.boundary.encode()
-        assert mock_writer.payload == (
+        assert mock_writer.payload == bytearray(
             b"--" + boundary + b"""\r\nContent-Type: ooga/booga\r\nContent-Disposition: form-data; name="payload_json"""
-            b""""\r\nContent-Length: 5\r\n\r\nabody\r\n--""" + boundary + b"""\r\nContent-Type: text/plain\r\nConten"""
-            b"""t-Disposition: form-data; name="files[0]"; filename="meow.txt"\r\n\r\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
+            b""""\r\n\r\nabody\r\n--""" + boundary + b"""\r\nContent-Type: text/plain\r\nContent-Disposition: """
+            b"""form-data; name="files[0]"; filename="meow.txt"\r\n\r\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
             b"""xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
             b"""xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
             b"""xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
@@ -493,7 +495,7 @@ class TestInteractionServer:
             b"""yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\r\n--""" + boundary + b"""--\r\n"""
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiohttp_hook_for_unsupported_media_type(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -506,7 +508,7 @@ class TestInteractionServer:
         assert result.content_type == "text/plain"
         assert result.status == 415
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiohttp_hook_with_missing_ed25519_header(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -519,7 +521,7 @@ class TestInteractionServer:
         assert result.content_type == "text/plain"
         assert result.status == 400
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiohttp_hook_with_missing_timestamp_header(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -532,7 +534,7 @@ class TestInteractionServer:
         assert result.content_type == "text/plain"
         assert result.status == 400
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiohttp_hook_with_invalid_ed25519_header(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -549,7 +551,7 @@ class TestInteractionServer:
         assert result.content_type == "text/plain"
         assert result.status == 400
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiohttp_hook_when_payload_too_large(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -567,7 +569,7 @@ class TestInteractionServer:
         assert result.content_type == "text/plain"
         assert result.status == 413
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_aiohttp_hook_when_no_body(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         request = mock.Mock(
             aiohttp.web.Request,
@@ -583,7 +585,7 @@ class TestInteractionServer:
         assert result.content_type == "text/plain"
         assert result.status == 400
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_runner = mock.AsyncMock()
         mock_event = mock.Mock()
@@ -613,7 +615,7 @@ class TestInteractionServer:
             generator_listener_1, generator_listener_2, generator_listener_3, generator_listener_4
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close_when_closing(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_runner = mock.AsyncMock()
         mock_event = mock.Mock()
@@ -632,12 +634,12 @@ class TestInteractionServer:
         mock_interaction_server.join.assert_awaited_once()
         assert mock_interaction_server._running_generator_listeners == [mock_listener]
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_close_when_not_running(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_interaction_server.close()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_join(self, mock_interaction_server):
         mock_event = mock.AsyncMock()
         mock_interaction_server._server = object()
@@ -647,12 +649,12 @@ class TestInteractionServer:
 
         mock_event.wait.assert_awaited_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_join_when_not_running(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_interaction_server.join()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -665,7 +667,14 @@ class TestInteractionServer:
         mock_file_1 = mock.Mock()
         mock_file_2 = mock.Mock()
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         mock_listener = mock.AsyncMock(return_value=mock_builder)
@@ -683,7 +692,7 @@ class TestInteractionServer:
         assert result.payload == b'{"ok":"No boomer"}'
         assert result.status_code == 200
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_with_generator_listener(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -706,7 +715,14 @@ class TestInteractionServer:
         mock_file_1 = mock.Mock()
         mock_file_2 = mock.Mock()
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         g_called = False
@@ -733,7 +749,7 @@ class TestInteractionServer:
         assert g_complete is True
         assert len(mock_interaction_server._running_generator_listeners) == 0
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_calls__fetch_public_key(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -754,7 +770,7 @@ class TestInteractionServer:
         assert result.payload == b"Invalid request signature"
         assert result.status_code == 400
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_when_public_key_mismatch(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -773,7 +789,7 @@ class TestInteractionServer:
         assert result.status_code == 400
 
     @pytest.mark.parametrize("body", [b"not a json", b"\x80abc"])
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_when_bad_body(
         self, mock_interaction_server: interaction_server_impl.InteractionServer, body: bytes
     ):
@@ -788,7 +804,7 @@ class TestInteractionServer:
         assert result.payload == b"Invalid JSON body"
         assert result.status_code == 400
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_when_missing_type_key(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -803,7 +819,7 @@ class TestInteractionServer:
         assert result.payload == b"Missing required 'type' field in payload"
         assert result.status_code == 400
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_on_ping(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_interaction_server._public_key = mock.Mock()
 
@@ -816,7 +832,7 @@ class TestInteractionServer:
         assert result.payload == b'{"type":1}'
         assert result.status_code == 200
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_on_deserialize_unrecognised_entity_error(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -834,7 +850,7 @@ class TestInteractionServer:
         assert result.payload == b"Interaction type not implemented"
         assert result.status_code == 501
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_on_failed_deserialize(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -848,7 +864,11 @@ class TestInteractionServer:
             result = await mock_interaction_server.on_interaction(b'{"type": 2}', b"signature", b"timestamp")
 
             get_running_loop.return_value.call_exception_handler.assert_called_once_with(
-                {"message": "Exception occurred during interaction deserialization", "exception": mock_exception}
+                {
+                    "message": "Exception occurred during interaction deserialization",
+                    "payload": {"type": 2},
+                    "exception": mock_exception,
+                }
             )
 
         assert result.content_type == "text/plain"
@@ -858,7 +878,7 @@ class TestInteractionServer:
         assert result.payload == b"Exception occurred during interaction deserialization"
         assert result.status_code == 500
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_on_dispatch_error(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -867,7 +887,14 @@ class TestInteractionServer:
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.Mock(side_effect=mock_exception)
@@ -887,7 +914,7 @@ class TestInteractionServer:
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_when_response_builder_error(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -896,7 +923,14 @@ class TestInteractionServer:
         mock_interaction_server._public_key = mock.Mock()
         mock_exception = TypeError("OK")
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
         mock_interaction_server.set_listener(
@@ -917,7 +951,7 @@ class TestInteractionServer:
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_when_json_encode_fails(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -927,7 +961,14 @@ class TestInteractionServer:
         mock_exception = TypeError("OK")
         mock_interaction_server._dumps = mock.Mock(side_effect=mock_exception)
         mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
-            app=None, id=123, application_id=541324, type=2, token="ok", version=1
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No"}, [])))
         mock_interaction_server.set_listener(
@@ -948,7 +989,7 @@ class TestInteractionServer:
         assert result.payload == b"Exception occurred during interaction dispatch"
         assert result.status_code == 500
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_on_interaction_when_no_registered_listener(
         self,
         mock_interaction_server: interaction_server_impl.InteractionServer,
@@ -965,7 +1006,7 @@ class TestInteractionServer:
         assert result.payload == b"Handler not set for this interaction type"
         assert result.status_code == 501
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_context = object()
         mock_socket = object()
@@ -1032,7 +1073,7 @@ class TestInteractionServer:
             assert mock_interaction_server._close_event is asyncio.Event.return_value
             assert mock_interaction_server._is_closing is False
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_with_default_behaviour(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -1067,7 +1108,7 @@ class TestInteractionServer:
             )
             aiohttp.web.TCPSite.return_value.start.assert_awaited_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_with_default_behaviour_and_not_main_thread(
         self, mock_interaction_server: interaction_server_impl.InteractionServer
     ):
@@ -1103,7 +1144,7 @@ class TestInteractionServer:
             )
             aiohttp.web.TCPSite.return_value.start.assert_awaited_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_with_multiple_hosts(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_context = object()
         mock_interaction_server._fetch_public_key = mock.AsyncMock()
@@ -1151,7 +1192,7 @@ class TestInteractionServer:
             )
             aiohttp.web.TCPSite.return_value.start.assert_has_awaits([mock.call(), mock.call()])
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_when_no_tcp_sites(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_socket = object()
         mock_context = object()
@@ -1187,7 +1228,7 @@ class TestInteractionServer:
             )
             aiohttp.web.SockSite.return_value.start.assert_awaited_once()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_start_when_already_running(self, mock_interaction_server: interaction_server_impl.InteractionServer):
         mock_interaction_server._server = object()
 

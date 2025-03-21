@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -41,6 +40,7 @@ __all__: typing.Sequence[str] = (
     "InternalServerError",
     "ShardCloseCode",
     "GatewayConnectionError",
+    "GatewayTransportError",
     "GatewayServerClosedConnectionError",
     "GatewayError",
     "MissingIntentWarning",
@@ -66,7 +66,7 @@ if typing.TYPE_CHECKING:
     from hikari.internal import routes
 
 
-# The standard exceptions are all unsloted so slotting here would be a waste of time.
+# The standard exceptions are all unslotted so slotting here would be a waste of time.
 @attrs_extensions.with_copy
 @attrs.define(auto_exc=True, repr=False, init=False, slots=False)
 class HikariError(RuntimeError):
@@ -74,12 +74,12 @@ class HikariError(RuntimeError):
 
     Any exceptions should derive from this.
 
-    .. note::
+    !!! note
         You should never initialize this exception directly.
     """
 
 
-# The standard warnings are all unsloted so slotting here would be a waste of time.
+# The standard warnings are all unslotted so slotting here would be a waste of time.
 @attrs_extensions.with_copy
 @attrs.define(auto_exc=True, repr=False, init=False, slots=False)
 class HikariWarning(RuntimeWarning):
@@ -87,7 +87,7 @@ class HikariWarning(RuntimeWarning):
 
     Any warnings should derive from this.
 
-    .. note::
+    !!! note
         You should never initialize this warning directly.
     """
 
@@ -101,6 +101,9 @@ class HikariInterrupt(KeyboardInterrupt, HikariError):
 
     signame: str = attrs.field()
     """The signal name that was raised."""
+
+    def __str__(self) -> str:
+        return f"Signal {self.signum} ({self.signame}) received"
 
 
 @attrs.define(auto_exc=True, repr=False, slots=False)
@@ -169,8 +172,16 @@ class ShardCloseCode(int, enums.Enum):
 
     @property
     def is_standard(self) -> bool:
-        """Return `True` if this is a standard code."""
+        """Return [`True`][] if this is a standard code."""
         return (self.value // 1000) == 1
+
+
+@attrs.define(auto_exc=True, repr=False, slots=False)
+class GatewayTransportError(GatewayError):
+    """An exception thrown if an issue occurs at the transport layer."""
+
+    def __str__(self) -> str:
+        return f"Gateway transport error: {self.reason}"
 
 
 @attrs.define(auto_exc=True, repr=False, slots=False)
@@ -189,10 +200,10 @@ class GatewayServerClosedConnectionError(GatewayError):
     """Return the close code that was received, if there is one."""
 
     can_reconnect: bool = attrs.field(default=False)
-    """Return `True` if we can recover from this closure.
+    """Return [`True`][] if we can recover from this closure.
 
-    If `True`, it will try to reconnect after this is raised rather
-    than it being propagated to the caller. If `False`, this will
+    If [`True`][], it will try to reconnect after this is raised rather
+    than it being propagated to the caller. If [`False`][], this will
     be raised, thus stopping the application unless handled explicitly by the
     user.
     """
@@ -219,7 +230,7 @@ class HTTPResponseError(HTTPError):
     status: typing.Union[http.HTTPStatus, int] = attrs.field()
     """The HTTP status code for the response.
 
-    This will be `int` if it's outside the range of status codes in the HTTP
+    This will be [`int`][] if it's outside the range of status codes in the HTTP
     specification (e.g. one of Cloudflare's non-standard status codes).
     """
 
@@ -357,8 +368,8 @@ class NotFoundError(ClientHTTPResponseError):
 class RateLimitTooLongError(HTTPError):
     """Internal error raised if the wait for a rate limit is too long.
 
-    This is similar to `asyncio.TimeoutError` in the way that it is used,
-    but this will be raised pre-emptively and immediately if the period
+    This is similar to [`asyncio.TimeoutError`][] in the way that it is used,
+    but this will be raised preemptively and immediately if the period
     of time needed to wait is greater than a user-defined limit.
 
     This will almost always be route-specific. If you receive this, it is

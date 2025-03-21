@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -20,6 +19,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """A little helpful script to increment the package version after every release."""
+
+from __future__ import annotations
+
 import os
 import sys
 
@@ -35,7 +37,9 @@ if version.prerelease is not None:
     version.prerelease = (prerelease_str, prerelease_num + 1)
 
 else:
-    # Or add it if missing
+    # Or add it if missing and bump patch version
+    major, minor, patch = version.version
+    version.version = (major, minor, patch + 1)
     version.prerelease = (".dev", 0)
 
 print(version)

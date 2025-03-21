@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -40,6 +39,7 @@ __all__: typing.Sequence[str] = (
     "GuildPreview",
     "GuildBan",
     "GuildNSFWLevel",
+    "GuildMemberFlags",
     "Member",
     "Integration",
     "IntegrationAccount",
@@ -183,6 +183,12 @@ class GuildFeature(str, enums.Enum):
     ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE = "ROLE_SUBSCRIPTIONS_AVAILABLE_FOR_PURCHASE"
     """Guild has role subscriptions available for purchase."""
 
+    INVITES_DISABLED = "INVITES_DISABLED"
+    """Guild has paused invites, preventing new users from joining."""
+
+    RAID_ALERTS_DISABLED = "RAID_ALERTS_DISABLED"
+    """Guild has disabled alerts for join raids in the configured safety alerts channel."""
+
 
 @typing.final
 class GuildMessageNotificationsLevel(int, enums.Enum):
@@ -281,7 +287,7 @@ class GuildNSFWLevel(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class GuildWidget:
     """Represents a guild widget."""
 
@@ -299,7 +305,7 @@ class GuildWidget:
     async def fetch_channel(self) -> typing.Optional[channels_.GuildChannel]:
         """Fetch the widget channel.
 
-        This will be `None` if not set.
+        This will be [`None`][] if not set.
 
         Returns
         -------
@@ -307,14 +313,14 @@ class GuildWidget:
             The requested channel.
 
             You can check the type of the channel by
-            using `isinstance`.
+            using [`isinstance`][].
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -332,8 +338,28 @@ class GuildWidget:
         return widget_channel
 
 
+@typing.final
+class GuildMemberFlags(enums.Flag):
+    """Represents the flags that a member can have."""
+
+    NONE = 0
+    """No flags."""
+
+    DID_REJOIN = 1 << 0
+    """Member has left and rejoined the guild."""
+
+    COMPLETED_ONBOARDING = 1 << 1
+    """Member has completed onboarding."""
+
+    BYPASSES_VERIFICATION = 1 << 2
+    """Member is exempt from guild verification requirements."""
+
+    STARTED_ONBOARDING = 1 << 3
+    """Member has started onboarding."""
+
+
 @attrs_extensions.with_copy
-@attrs.define(eq=False, hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(eq=False, kw_only=True, weakref_slot=False)
 class Member(users.User):
     """Used to represent a guild bound member."""
 
@@ -341,47 +367,51 @@ class Member(users.User):
     """The ID of the guild this member belongs to."""
 
     is_deaf: undefined.UndefinedOr[bool] = attrs.field(repr=False)
-    """`True` if this member is deafened in the current voice channel.
+    """[`True`][] if this member is deafened in the current voice channel.
 
-    This will be `hikari.undefined.UNDEFINED` if it's state is
+    This will be [`hikari.undefined.UNDEFINED`][] if it's state is
     unknown.
     """
 
     is_mute: undefined.UndefinedOr[bool] = attrs.field(repr=False)
-    """`True` if this member is muted in the current voice channel.
+    """[`True`][] if this member is muted in the current voice channel.
 
-    This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
+    This will be [`hikari.undefined.UNDEFINED`][] if it's state is unknown.
     """
 
     is_pending: undefined.UndefinedOr[bool] = attrs.field(repr=False)
     """Whether the user has passed the guild's membership screening requirements.
 
-    This will be `hikari.undefined.UNDEFINED` if it's state is unknown.
+    This will be [`hikari.undefined.UNDEFINED`][] if it's state is unknown.
     """
 
-    joined_at: datetime.datetime = attrs.field(repr=True)
-    """The datetime of when this member joined the guild they belong to."""
+    joined_at: typing.Optional[datetime.datetime] = attrs.field(repr=True)
+    """The datetime of when this member joined the guild they belong to.
+
+    This will be [`None`][] for guest members that have been temporarily
+    invited.
+    """
 
     nickname: typing.Optional[str] = attrs.field(repr=True)
     """This member's nickname.
 
-    This will be `None` if not set.
+    This will be [`None`][] if not set.
     """
 
     premium_since: typing.Optional[datetime.datetime] = attrs.field(repr=False)
     """The datetime of when this member started "boosting" this guild.
 
-    Will be `None` if the member is not a premium user.
+    Will be [`None`][] if the member is not a premium user.
     """
 
     raw_communication_disabled_until: typing.Optional[datetime.datetime] = attrs.field(repr=False)
     """The datetime when this member's timeout will expire.
 
-     Will be `None` if the member is not timed out.
+     Will be [`None`][] if the member is not timed out.
 
-     .. note::
+     !!! note
         The datetime might be in the past, so it is recommended to use
-        `communication_disabled_until` method to check if the member is timed
+        [`hikari.guilds.Member.communication_disabled_until`][] method to check if the member is timed
         out at the time of the call.
      """
 
@@ -398,11 +428,14 @@ class Member(users.User):
     """This member's corresponding user object."""
 
     guild_avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
-    """Hash of the member's guild avatar guild if set, else `None`.
+    """Hash of the member's guild avatar guild if set, else [`None`][].
 
-    .. note::
-        This takes precedence over `Member.avatar_hash`.
+    !!! note
+        This takes precedence over [`hikari.guilds.Member.avatar_hash`][].
     """
+
+    guild_flags: typing.Union[GuildMemberFlags, int] = attrs.field(eq=False, hash=False, repr=False)
+    """The flags this member has in the guild."""
 
     @property
     def app(self) -> traits.RESTAware:
@@ -421,8 +454,8 @@ class Member(users.User):
     def guild_avatar_url(self) -> typing.Optional[files.URL]:
         """Guild Avatar URL for the user, if they have one set.
 
-        May be `None` if no guild avatar is set. In this case, you
-        should use `avatar_hash` or `default_avatar_url` instead.
+        May be [`None`][] if no guild avatar is set. In this case, you
+        should use [`hikari.guilds.Member.avatar_hash`][] or [`hikari.guilds.Member.default_avatar_url`][] instead.
         """
         return self.make_guild_avatar_url()
 
@@ -455,14 +488,16 @@ class Member(users.User):
         """Return the member's display name.
 
         If the member has a nickname, this will return that nickname.
-        Otherwise, it will return the username instead.
+        If the user has a global name, this will return that global name.
+        If the user has neither, the username will be returned instead.
 
         See Also
         --------
-        Nickname: `Member.nickname`.
-        Username: `Member.username`.
+        Nickname: [`Member.nickname`][].
+        Username: [`Member.username`][].
+        Globalname: [`Member.global_name`][].
         """
-        return self.nickname if isinstance(self.nickname, str) else self.username
+        return self.nickname or self.global_name or self.username
 
     @property
     def flags(self) -> users.UserFlag:
@@ -488,9 +523,9 @@ class Member(users.User):
         """Return when the timeout for this member ends.
 
         Unlike `raw_communication_disabled_until`, this will always be
-        `None` if the member is not currently timed out.
+        [`None`][] if the member is not currently timed out.
 
-        .. note::
+        !!! note
             The output of this function can depend based on when
             the function is called.
         """
@@ -507,7 +542,7 @@ class Member(users.User):
         Returns
         -------
         typing.Optional[hikari.guilds.Guild]
-            The linked guild object or `None` if it's not cached.
+            The linked guild object or [`None`][] if it's not cached.
         """
         if not isinstance(self.user.app, traits.CacheAware):
             return None
@@ -519,12 +554,12 @@ class Member(users.User):
 
         Presence info includes user status and activities.
 
-        This requires the `GUILD_PRESENCES` intent to be enabled.
+        This requires the [`hikari.intents.Intents.GUILD_PRESENCES`][] intent to be enabled.
 
         Returns
         -------
         typing.Optional[hikari.presences.MemberPresence]
-            The member presence, or `None` if not known.
+            The member presence, or [`None`][] if not known.
         """
         if not isinstance(self.user.app, traits.CacheAware):
             return None
@@ -541,7 +576,7 @@ class Member(users.User):
         typing.Sequence[hikari.guilds.Role]
             The roles the users has.
         """
-        roles: typing.List[Role] = []
+        roles: list[Role] = []
 
         if not isinstance(self.user.app, traits.CacheAware):
             return roles
@@ -558,7 +593,7 @@ class Member(users.User):
         Returns
         -------
         typing.Optional[hikari.guilds.Role]
-            `None` if the cache is missing the roles information or
+            [`None`][] if the cache is missing the roles information or
             the highest role the user has.
         """
         roles = sorted(self.get_roles(), key=lambda r: r.position, reverse=True)
@@ -572,6 +607,10 @@ class Member(users.User):
     def username(self) -> str:
         return self.user.username
 
+    @property
+    def global_name(self) -> typing.Optional[str]:
+        return self.user.global_name
+
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         return self.user.make_avatar_url(ext=ext, size=size)
 
@@ -580,29 +619,28 @@ class Member(users.User):
     ) -> typing.Optional[files.URL]:
         """Generate the guild specific avatar url for this member, if set.
 
-        If no guild avatar is set, this returns `None`. You can then
-        use the `make_avatar_url` to get their global custom avatar or
-        `default_avatar_url` if they have no custom avatar set.
+        If no guild avatar is set, this returns [`None`][].
 
         Parameters
         ----------
-        ext : typing.Optional[str]
-            The ext to use for this URL, defaults to `png` or `gif`.
+        ext
+            The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated). Will be ignored for default avatars which can only be
-            `png`.
+            animated).
 
-            If `None`, then the correct default extension is
+            Will be ignored for default avatars which can only be `png`.
+
+            If [`None`][], then the correct default extension is
             determined based on whether the icon is animated or not.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
             Will be ignored for default avatars.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the avatar, or `None` if not present.
+            The URL to the avatar, or [`None`][] if not present.
 
         Raises
         ------
@@ -683,13 +721,13 @@ class Member(users.User):
     ) -> None:
         """Ban this member from this guild.
 
-        Other Parameters
-        ----------------
-        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+        Parameters
+        ----------
+        delete_message_seconds
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
-            a `datetime.timedelta` object.
-        reason : hikari.undefined.UndefinedOr[str]
+            a [`datetime.timedelta`][] object.
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -698,7 +736,7 @@ class Member(users.User):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `BAN_MEMBERS` permission.
+            If you are missing the [`hikari.permissions.Permissions.BAN_MEMBERS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -716,9 +754,9 @@ class Member(users.User):
     async def unban(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
         """Unban this member from the guild.
 
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        Parameters
+        ----------
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -727,7 +765,7 @@ class Member(users.User):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `BAN_MEMBERS` permission.
+            If you are missing the [`hikari.permissions.Permissions.BAN_MEMBERS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -743,9 +781,9 @@ class Member(users.User):
     async def kick(self, *, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED) -> None:
         """Kick this member from this guild.
 
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        Parameters
+        ----------
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -754,7 +792,7 @@ class Member(users.User):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `KICK_MEMBERS` permission.
+            If you are missing the [`hikari.permissions.Permissions.KICK_MEMBERS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -774,20 +812,17 @@ class Member(users.User):
 
         Parameters
         ----------
-        role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
+        role
             The role to add. This may be the object or the
             ID of an existing role.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_ROLES` permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_ROLES`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -807,20 +842,17 @@ class Member(users.User):
 
         Parameters
         ----------
-        role : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialRole]
+        role
             The role to remove. This may be the object or the
             ID of an existing role.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_ROLES` permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_ROLES`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -848,44 +880,44 @@ class Member(users.User):
     ) -> Member:
         """Edit the member.
 
-        Other Parameters
-        ----------------
-        nickname : hikari.undefined.UndefinedNoneOr[str]
-            If provided, the new nick for the member. If `None`,
+        Parameters
+        ----------
+        nickname
+            If provided, the new nick for the member. If [`None`][],
             will remove the members nick.
 
-            Requires the `MANAGE_NICKNAMES` permission.
-        roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
+            Requires the [`hikari.permissions.Permissions.MANAGE_NICKNAMES`][] permission.
+        roles
             If provided, the new roles for the member.
 
-            Requires the `MANAGE_ROLES` permission.
-        mute : hikari.undefined.UndefinedOr[bool]
+            Requires the [`hikari.permissions.Permissions.MANAGE_ROLES`][] permission.
+        mute
             If provided, the new server mute state for the member.
 
-            Requires the `MUTE_MEMBERS` permission.
-        deaf : hikari.undefined.UndefinedOr[bool]
+            Requires the [`hikari.permissions.Permissions.MUTE_MEMBERS`][] permission.
+        deaf
             If provided, the new server deaf state for the member.
 
-            Requires the `DEAFEN_MEMBERS` permission.
-        voice_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]]
-            If provided, `None` or the object or the ID of
+            Requires the [`hikari.permissions.Permissions.DEAFEN_MEMBERS`][] permission.
+        voice_channel
+            If provided, [`None`][] or the object or the ID of
             an existing voice channel to move the member to.
-            If `None`, will disconnect the member from voice.
+            If [`None`][], will disconnect the member from voice.
 
-            Requires the `MOVE_MEMBERS` permission and the `CONNECT`
-            permission in the original voice channel and the target
-            voice channel.
+            Requires the [`hikari.permissions.Permissions.MOVE_MEMBERS`][] permission
+            and the [`hikari.permissions.Permissions.CONNECT`][] permission in the
+            original voice channel and the target voice channel.
 
-            .. note::
+            !!! note
                 If the member is not in a voice channel, this will
                 take no effect.
-        communication_disabled_until : hikari.undefined.UndefinedNoneOr[datetime.datetime]
+        communication_disabled_until
             If provided, the datetime when the timeout (disable communication)
-            of the member expires, up to 28 days in the future, or `None`
+            of the member expires, up to 28 days in the future, or [`None`][]
             to remove the timeout from the member.
 
-            Requires the `MODERATE_MEMBERS` permission.
-        reason : hikari.undefined.UndefinedOr[str]
+            Requires the [`hikari.permissions.Permissions.MODERATE_MEMBERS`][] permission.
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -933,7 +965,7 @@ class Member(users.User):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialRole(snowflakes.Unique):
     """Represents a partial guild bound role object."""
 
@@ -957,7 +989,7 @@ class PartialRole(snowflakes.Unique):
         return self.name
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Role(PartialRole):
     """Represents a guild bound role object."""
 
@@ -973,14 +1005,14 @@ class Role(PartialRole):
     is_hoisted: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this role is hoisting the members it's attached to in the member list.
 
-    Members will be hoisted under their highest role where this is set to `True`.
+    Members will be hoisted under their highest role where this is set to [`True`][].
     """
 
     icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
-    """Hash of the role's icon if set, else `None`."""
+    """Hash of the role's icon if set, else [`None`][]."""
 
     unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attrs.field(eq=False, hash=False, repr=False)
-    """Role's icon as an unicode emoji if set, else `None`."""
+    """Role's icon as an unicode emoji if set, else [`None`][]."""
 
     is_managed: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this role is managed by an integration."""
@@ -1004,13 +1036,13 @@ class Role(PartialRole):
     bot_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the bot this role belongs to.
 
-    If `None`, this is not a bot role.
+    If [`None`][], this is not a bot role.
     """
 
     integration_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the integration this role belongs to.
 
-    If `None`, this is not a integration role.
+    If [`None`][], this is not a integration role.
     """
 
     is_premium_subscriber_role: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -1019,7 +1051,7 @@ class Role(PartialRole):
     subscription_listing_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of this role's subscription SKU and listing.
 
-    If `None`, this is not a purchasable role.
+    If [`None`][], this is not a purchasable role.
     """
 
     is_available_for_purchase: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -1043,7 +1075,7 @@ class Role(PartialRole):
         """Return a raw mention string for the role.
 
         When this role represents @everyone mentions will only work if
-        `mentions_everyone` is `True`.
+        `mentions_everyone` is [`True`][].
         """
         if self.guild_id == self.id:
             return "@everyone"
@@ -1053,21 +1085,21 @@ class Role(PartialRole):
     def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
         """Generate the icon URL for this role, if set.
 
-        If no role icon is set, this returns `None`.
+        If no role icon is set, this returns [`None`][].
 
         Parameters
         ----------
-        ext : str
-            The extension to use for this URL, defaults to `png`.
+        ext
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the icon, or `None` if not present.
+            The URL to the icon, or [`None`][] if not present.
 
         Raises
         ------
@@ -1111,7 +1143,7 @@ class IntegrationExpireBehaviour(int, enums.Enum):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class IntegrationAccount:
     """An account that's linked to an integration."""
 
@@ -1127,7 +1159,7 @@ class IntegrationAccount:
 
 # This is here rather than in applications.py to avoid circular imports
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialApplication(snowflakes.Unique):
     """A partial representation of a Discord application."""
 
@@ -1156,17 +1188,17 @@ class PartialApplication(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : str
-            The extension to use for this URL, defaults to `png`.
+        ext
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or `None` if no icon exists.
+            The URL, or [`None`][] if no icon exists.
 
         Raises
         ------
@@ -1183,7 +1215,7 @@ class PartialApplication(snowflakes.Unique):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class IntegrationApplication(PartialApplication):
     """An application that's linked to an integration."""
 
@@ -1192,7 +1224,7 @@ class IntegrationApplication(PartialApplication):
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialIntegration(snowflakes.Unique):
     """A partial representation of an integration, found in audit logs."""
 
@@ -1212,7 +1244,7 @@ class PartialIntegration(snowflakes.Unique):
         return self.name
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Integration(PartialIntegration):
     """Represents a guild integration object."""
 
@@ -1225,15 +1257,15 @@ class Integration(PartialIntegration):
     This will not be enacted until after `GuildIntegration.expire_grace_period`
     passes.
 
-    .. note::
-        This will always be `None` for Discord integrations.
+    !!! note
+        This will always be [`None`][] for Discord integrations.
     """
 
     expire_grace_period: typing.Optional[datetime.timedelta] = attrs.field(eq=False, hash=False, repr=False)
     """How many days users with expired subscriptions are given until the expire behavior is enacted out on them.
 
-    .. note::
-        This will always be `None` for Discord integrations.
+    !!! note
+        This will always be [`None`][] for Discord integrations.
     """
 
     is_enabled: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -1263,13 +1295,13 @@ class Integration(PartialIntegration):
     application: typing.Optional[IntegrationApplication] = attrs.field(eq=False, hash=False, repr=False)
     """The bot/OAuth2 application associated with this integration.
 
-    .. note::
+    !!! note
         This is only available for Discord integrations.
     """
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, weakref_slot=False)
+@attrs.define(weakref_slot=False)
 class WelcomeChannel:
     """Used to represent channels on guild welcome screens."""
 
@@ -1284,7 +1316,7 @@ class WelcomeChannel:
     )
     """The emoji shown in the welcome screen channel if set to a unicode emoji.
 
-    .. warning::
+    !!! warning
         While it may also be present for custom emojis, this is neither guaranteed
         to be provided nor accurate.
     """
@@ -1294,7 +1326,7 @@ class WelcomeChannel:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class WelcomeScreen:
     """Used to represent guild welcome screens on Discord."""
 
@@ -1306,19 +1338,19 @@ class WelcomeScreen:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class GuildBan:
     """Used to represent guild bans."""
 
     reason: typing.Optional[str] = attrs.field(repr=True)
-    """The reason for this ban, will be `None` if no reason was given."""
+    """The reason for this ban, will be [`None`][] if no reason was given."""
 
     user: users.User = attrs.field(repr=True)
     """The object of the user this ban targets."""
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class PartialGuild(snowflakes.Unique):
     """Base object for any partial guild objects."""
 
@@ -1341,14 +1373,14 @@ class PartialGuild(snowflakes.Unique):
 
     @property
     def icon_url(self) -> typing.Optional[files.URL]:
-        """Icon URL for the guild, if set; otherwise `None`."""
+        """Icon URL for the guild, if set; otherwise [`None`][]."""
         return self.make_icon_url()
 
     @property
     def shard_id(self) -> typing.Optional[int]:
         """Return the ID of the shard this guild is served by.
 
-        This may return `None` if the application does not have a gateway
+        This may return [`None`][] if the application does not have a gateway
         connection.
         """
         if not isinstance(self.app, traits.ShardAware):
@@ -1363,21 +1395,21 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        ext : typing.Optional[str]
-            The extension to use for this URL, defaults to `png` or `gif`.
+        ext
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `None`, then the correct default extension is
+            If [`None`][], then the correct default extension is
             determined based on whether the icon is animated or not.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the resource, or `None` if no icon is set.
+            The URL to the resource, or [`None`][] if no icon is set.
 
         Raises
         ------
@@ -1408,16 +1440,13 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+        user
             The user to ban from the guild.
-
-        Other Parameters
-        ----------------
-        delete_message_seconds : hikari.undefined.UndefinedNoneOr[hikari.internal.time.Intervalish]
+        delete_message_seconds
             If provided, the number of seconds to delete messages for.
             This can be represented as either an int/float between 0 and 604800 (7 days), or
-            a `datetime.timedelta` object.
-        reason : hikari.undefined.UndefinedOr[str]
+            a [`datetime.timedelta`][] object.
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1426,7 +1455,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `BAN_MEMBERS` permission.
+            If you are missing the [`hikari.permissions.Permissions.BAN_MEMBERS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -1449,12 +1478,9 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+        user
             The user to unban from the guild.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1463,7 +1489,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `BAN_MEMBERS` permission.
+            If you are missing the [`hikari.permissions.Permissions.BAN_MEMBERS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -1486,12 +1512,9 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        user : hikari.snowflakes.Snowflakeish[hikari.users.PartialUser]
+        user
             The user to kick from the guild.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1500,7 +1523,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `KICK_MEMBERS` permission.
+            If you are missing the [`hikari.permissions.Permissions.KICK_MEMBERS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -1538,48 +1561,51 @@ class PartialGuild(snowflakes.Unique):
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[typing.Sequence[GuildFeature]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
         """Edit the guild.
 
         Parameters
         ----------
-        name : hikari.undefined.UndefinedOr[str]
+        name
             If provided, the new name for the guild.
-        verification_level : hikari.undefined.UndefinedOr[hikari.guilds.GuildVerificationLevel]
+        verification_level
             If provided, the new verification level.
-        default_message_notifications : hikari.undefined.UndefinedOr[hikari.guilds.GuildMessageNotificationsLevel]
+        default_message_notifications
             If provided, the new default message notifications level.
-        explicit_content_filter_level : hikari.undefined.UndefinedOr[hikari.guilds.GuildExplicitContentFilterLevel]
+        explicit_content_filter_level
             If provided, the new explicit content filter level.
-        afk_channel : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildVoiceChannel]]
+        afk_channel
             If provided, the new afk channel. Requires `afk_timeout` to
             be set to work.
-        afk_timeout : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        afk_timeout
             If provided, the new afk timeout.
-        icon : hikari.undefined.UndefinedOr[hikari.files.Resourceish]
+        icon
             If provided, the new guild icon. Must be a 1024x1024 image or can be
-            an animated gif when the guild has the `ANIMATED_ICON` feature.
-        owner : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]]]
+            an animated gif when the guild has the [`hikari.guilds.GuildFeature.ANIMATED_ICON`][] feature.
+        owner
             If provided, the new guild owner.
 
-            .. warning::
+            !!! warning
                 You need to be the owner of the server to use this.
-        splash : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
+        splash
             If provided, the new guild splash. Must be a 16:9 image and the
-            guild must have the `INVITE_SPLASH` feature.
-        banner : hikari.undefined.UndefinedNoneOr[hikari.files.Resourceish]
+            guild must have the [`hikari.guilds.GuildFeature.INVITE_SPLASH`][] feature.
+        banner
             If provided, the new guild banner. Must be a 16:9 image and the
-            guild must have the `BANNER` feature.
-        system_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
+            guild must have the [`hikari.guilds.GuildFeature.BANNER`][] feature.
+        system_channel
             If provided, the new system channel.
-        rules_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
+        rules_channel
             If provided, the new rules channel.
-        public_updates_channel : hikari.undefined.UndefinedNoneOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildTextChannel]]
+        public_updates_channel
             If provided, the new public updates channel.
-        preferred_locale : hikari.undefined.UndefinedNoneOr[str]
+        preferred_locale
             If provided, the new preferred locale.
-        reason : hikari.undefined.UndefinedOr[str]
+        features
+            If provided, the guild features to be enabled. Features not provided will be disabled.
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1594,8 +1620,8 @@ class PartialGuild(snowflakes.Unique):
             If any of the fields that are passed have an invalid value. Or
             you are missing the
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_GUILD` permission or if you tried to
-            pass ownership without being the server owner.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission
+            or if you tried to pass ownership without being the server owner.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -1605,7 +1631,7 @@ class PartialGuild(snowflakes.Unique):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.edit_guild(
             self.id,
             name=name,
@@ -1622,6 +1648,7 @@ class PartialGuild(snowflakes.Unique):
             rules_channel=rules_channel,
             public_updates_channel=public_updates_channel,
             preferred_locale=preferred_locale,
+            features=features,
             reason=reason,
         )
 
@@ -1652,8 +1679,8 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
-            The emoji to fetch. This can be a `hikari.emojis.CustomEmoji`
+        emoji
+            The emoji to fetch. This can be a [`hikari.emojis.CustomEmoji`][]
             or the ID of an existing emoji.
 
         Returns
@@ -1704,7 +1731,7 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        sticker : snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
+        sticker
             The sticker to fetch. This can be a sticker object or the
             ID of an existing sticker.
 
@@ -1740,25 +1767,22 @@ class PartialGuild(snowflakes.Unique):
     ) -> stickers.GuildSticker:
         """Create a sticker in a guild.
 
-        .. note::
+        !!! note
             Lottie support is only available for verified and partnered
             servers.
 
         Parameters
         ----------
-        name : str
+        name
             The name for the sticker.
-        tag : str
+        tag
             The tag for the sticker.
-        image : hikari.files.Resourceish
+        image
             The 320x320 image for the sticker. Maximum upload size is 500kb.
             This can be a still PNG, an animated PNG, a Lottie, or a GIF.
-
-        Other Parameters
-        ----------------
-        description : hikari.undefined.UndefinedOr[str]
+        description
             If provided, the description of the sticker.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1773,7 +1797,8 @@ class PartialGuild(snowflakes.Unique):
             If any of the fields that are passed have an invalid value or
             if there are no more spaces for the sticker in the guild.
         hikari.errors.ForbiddenError
-            If you are missing `MANAGE_EMOJIS_AND_STICKERS` in the server.
+            If you are missing [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+            in the server.
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.UnauthorizedError
@@ -1799,19 +1824,16 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
+        sticker
             The sticker to edit. This can be a sticker object or the ID of an
             existing sticker.
-
-        Other Parameters
-        ----------------
-        name : hikari.undefined.UndefinedOr[str]
+        name
             If provided, the new name for the sticker.
-        description : hikari.undefined.UndefinedOr[str]
+        description
             If provided, the new description for the sticker.
-        tag : hikari.undefined.UndefinedOr[str]
+        tag
             If provided, the new sticker tag.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1825,7 +1847,8 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing `MANAGE_EMOJIS_AND_STICKERS` in the server.
+            If you are missing [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+            in the server.
         hikari.errors.NotFoundError
             If the guild or the sticker are not found.
         hikari.errors.UnauthorizedError
@@ -1850,20 +1873,18 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.PartialSticker]
+        sticker
             The sticker to delete. This can be a sticker object or the ID
             of an existing sticker.
-
-        Other Parameters
-        ----------------
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing `MANAGE_EMOJIS_AND_STICKERS` in the server.
+            If you are missing [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+            in the server.
         hikari.errors.NotFoundError
             If the guild or the sticker are not found.
         hikari.errors.UnauthorizedError
@@ -1890,16 +1911,13 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the category.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1913,7 +1931,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -1946,28 +1964,25 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[str]
+        topic
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[bool]
+        nsfw
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        rate_limit_per_user
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -1981,7 +1996,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -2022,28 +2037,25 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        topic : hikari.undefined.UndefinedOr[str]
+        topic
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[bool]
+        nsfw
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        rate_limit_per_user
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2057,7 +2069,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -2108,45 +2120,42 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the category.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the category.
-        topic : hikari.undefined.UndefinedOr[str]
+        topic
             If provided, the channels topic. Maximum 1024 characters.
-        nsfw : hikari.undefined.UndefinedOr[bool]
+        nsfw
             If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        rate_limit_per_user
             If provided, the amount of seconds a user has to wait
             before being able to send another message in the channel.
             Maximum 21600 seconds.
-        default_auto_archive_duration : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+        default_auto_archive_duration
             If provided, the auto archive duration Discord's end user client
             should default to when creating threads in this channel.
 
             This should be either 60, 1440, 4320 or 10080 minutes and, as of
             writing, ignores the parent channel's set default_auto_archive_duration
-            when passed as `hikari.undefined.UNDEFINED`.
-        default_thread_rate_limit_per_user : hikari.undefined.UndefinedOr[hikari.internal.time.Intervalish]
+            when passed as [`hikari.undefined.UNDEFINED`][].
+        default_thread_rate_limit_per_user
             If provided, the ratelimit that should be set in threads created
             from the forum.
-        default_forum_layout : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumLayoutType, int]]
+        default_forum_layout
             If provided, the default forum layout to show in the client.
-        default_sort_order : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.ForumSortOrderType, int]]
+        default_sort_order
             If provided, the default sort order to show in the client.
-        available_tags : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.ForumTag]]
+        available_tags
             If provided, the available tags to select from when creating a thread.
-        default_reaction_emoji : typing.Union[str, hikari.emojis.Emoji, hikari.undefined.UndefinedType, hikari.snowflakes.Snowflake]
+        default_reaction_emoji
             If provided, the new default reaction emoji for threads created in a forum channel.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2160,7 +2169,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -2170,7 +2179,7 @@ class PartialGuild(snowflakes.Unique):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
         return await self.app.rest.create_guild_forum_channel(
             self.id,
             name,
@@ -2208,34 +2217,31 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channels name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[int]
+        user_limit
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[int]
+        bitrate
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        video_quality_mode : hikari.undefined.UndefinedOr[typing.Union[hikari.channels.VideoQualityMode, int]]
+        video_quality_mode
             If provided, the new video quality mode for the channel.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
+        region
             If provided, the voice region to for this channel. Passing
-            `None` here will set it to "auto" mode where the used
+            [`None`][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2249,7 +2255,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -2291,32 +2297,29 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        name : str
+        name
             The channel's name. Must be between 2 and 1000 characters.
-
-        Other Parameters
-        ----------------
-        position : hikari.undefined.UndefinedOr[int]
+        position
             If provided, the position of the channel (relative to the
             category, if any).
-        user_limit : hikari.undefined.UndefinedOr[int]
+        user_limit
             If provided, the maximum users in the channel at once.
             Must be between 0 and 99 with 0 meaning no limit.
-        bitrate : hikari.undefined.UndefinedOr[int]
+        bitrate
             If provided, the bitrate for the channel. Must be
             between 8000 and 96000 or 8000 and 128000 for VIP
             servers.
-        permission_overwrites : hikari.undefined.UndefinedOr[typing.Sequence[hikari.channels.PermissionOverwrite]]
+        permission_overwrites
             If provided, the permission overwrites for the channel.
-        region : hikari.undefined.UndefinedOr[typing.Union[hikari.voices.VoiceRegion, str]]
+        region
             If provided, the voice region to for this channel. Passing
-            `None` here will set it to "auto" mode where the used
+            [`None`][] here will set it to "auto" mode where the used
             region will be decided based on the first person who connects to it
             when it's empty.
-        category : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildCategory]]
+        category
             The category to create the channel under. This may be the
             object or the ID of an existing category.
-        reason : hikari.undefined.UndefinedOr[str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -2330,7 +2333,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -2358,16 +2361,16 @@ class PartialGuild(snowflakes.Unique):
     ) -> channels_.GuildChannel:
         """Delete a channel in the guild.
 
-        .. note::
+        !!! note
             This method can also be used for deleting guild categories as well.
 
-        .. note::
+        !!! note
             For Public servers, the set 'Rules' or 'Guidelines' channels and the
             'Public Server Updates' channel cannot be deleted.
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.GuildChannel]
+        channel
             The channel or category to delete. This may be the object or the ID of an
             existing channel.
 
@@ -2381,7 +2384,7 @@ class PartialGuild(snowflakes.Unique):
         hikari.errors.UnauthorizedError, or close a DM.
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `MANAGE_CHANNEL` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -2442,9 +2445,9 @@ class PartialGuild(snowflakes.Unique):
         return await self.app.rest.fetch_roles(self.id)
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GuildPreview(PartialGuild):
-    """A preview of a guild with the `GuildFeature.DISCOVERABLE` feature."""
+    """A preview of a guild with the [`hikari.guilds.GuildFeature.DISCOVERABLE`][] feature."""
 
     features: typing.Sequence[typing.Union[str, GuildFeature]] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
@@ -2484,12 +2487,12 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        ext : str
-            The extension to use for this URL, defaults to `png`.
+        ext
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -2513,17 +2516,17 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        ext : str
-            The extension to use for this URL, defaults to `png`.
+        ext
+            The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or `None` if not set.
+            The URL to the splash, or [`None`][] if not set.
 
         Raises
         ------
@@ -2538,7 +2541,7 @@ class GuildPreview(PartialGuild):
         )
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Guild(PartialGuild):
     """A representation of a guild on Discord."""
 
@@ -2548,27 +2551,27 @@ class Guild(PartialGuild):
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this guild.
 
-    This will always be `None` for guilds that weren't created by a bot.
+    This will always be [`None`][] for guilds that weren't created by a bot.
     """
 
     afk_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
-    If `None`, then no AFK channel is set up for this guild.
+    If [`None`][], then no AFK channel is set up for this guild.
     """
 
     afk_timeout: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
     """Timeout for activity before a member is classed as AFK.
 
     How long a voice user has to be AFK for before they are classed as being
-    AFK and are moved to the AFK channel (`Guild.afk_channel_id`).
+    AFK and are moved to the AFK channel ([`hikari.guilds.Guild.afk_channel_id`][]).
     """
 
     banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The hash for the guild's banner.
 
-    This is only present if the guild has `GuildFeature.BANNER` in
-    `Guild.features` for this guild. For all other purposes, it is `None`.
+    This is only present if the guild has [`hikari.guilds.GuildFeature.BANNER`][] in
+    [`hikari.guilds.Guild.features`][] for this guild. For all other purposes, it is [`None`][].
     """
 
     default_message_notifications: typing.Union[GuildMessageNotificationsLevel, int] = attrs.field(
@@ -2579,8 +2582,8 @@ class Guild(PartialGuild):
     description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description.
 
-    This is only present if certain `GuildFeature`'s are set in
-    `Guild.features` for this guild. Otherwise, this will always be `None`.
+    This is only present if certain [`hikari.guilds.GuildFeature`][]'s are set in
+    [`hikari.guilds.Guild.features`][] for this guild. Otherwise, this will always be [`None`][].
     """
 
     discovery_splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
@@ -2594,13 +2597,13 @@ class Guild(PartialGuild):
     is_widget_enabled: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
     """Describes whether the guild widget is enabled or not.
 
-    If this information is not present, this will be `None`.
+    If this information is not present, this will be [`None`][].
     """
 
     max_video_channel_users: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of users allowed in a video channel together.
 
-    This information may not be present, in which case, it will be `None`.
+    This information may not be present, in which case, it will be [`None`][].
     """
 
     mfa_level: typing.Union[GuildMFALevel, int] = attrs.field(eq=False, hash=False, repr=False)
@@ -2612,14 +2615,14 @@ class Guild(PartialGuild):
     preferred_locale: typing.Union[str, locales.Locale] = attrs.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
-    This can only be change if `GuildFeature.COMMUNITY` is in `Guild.features`
+    This can only be change if [`hikari.guilds.GuildFeature.COMMUNITY`][] is in [`hikari.guilds.Guild.features`][]
     for this guild and will otherwise default to `en-US`.
     """
 
     premium_subscription_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The number of nitro boosts that the server currently has.
 
-    This information may not be present, in which case, it will be `None`.
+    This information may not be present, in which case, it will be [`None`][].
     """
 
     premium_tier: typing.Union[GuildPremiumTier, int] = attrs.field(eq=False, hash=False, repr=False)
@@ -2628,14 +2631,14 @@ class Guild(PartialGuild):
     public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The channel ID of the channel where admins and moderators receive notices from Discord.
 
-    This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
-    this guild. For all other purposes, it should be considered to be `None`.
+    This is only present if [`hikari.guilds.GuildFeature.COMMUNITY`][] is in [`hikari.guilds.Guild.features`][] for
+    this guild. For all other purposes, it should be considered to be [`None`][].
     """
 
     rules_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the channel where rules and guidelines will be displayed.
 
-    If the `GuildFeature.COMMUNITY` feature is not defined, then this is `None`.
+    If the [`hikari.guilds.GuildFeature.COMMUNITY`][] feature is not defined, then this is [`None`][].
     """
 
     splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
@@ -2648,7 +2651,7 @@ class Guild(PartialGuild):
     """
 
     system_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
-    """The ID of the system channel or `None` if it is not enabled.
+    """The ID of the system channel or [`None`][] if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """
@@ -2656,8 +2659,8 @@ class Guild(PartialGuild):
     vanity_url_code: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The vanity URL code for the guild's vanity URL.
 
-    This is only present if `GuildFeature.VANITY_URL` is in `Guild.features` for
-    this guild. If not, this will always be `None`.
+    This is only present if [`hikari.guilds.GuildFeature.VANITY_URL`][] is in [`hikari.guilds.Guild.features`][] for
+    this guild. If not, this will always be [`None`][].
     """
 
     verification_level: typing.Union[GuildVerificationLevel, int] = attrs.field(eq=False, hash=False, repr=False)
@@ -2667,7 +2670,7 @@ class Guild(PartialGuild):
     """The channel ID that the widget's generated invite will send the user to.
 
     If this information is unavailable or this is not enabled for the guild then
-    this will be `None`.
+    this will be [`None`][].
     """
 
     nsfw_level: GuildNSFWLevel = attrs.field(eq=False, hash=False, repr=False)
@@ -2787,21 +2790,21 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        ext : typing.Optional[str]
-            The ext to use for this URL, defaults to `png` or `gif`.
+        ext
+            The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            If `None`, then the correct default extension is
+            If [`None`][], then the correct default extension is
             determined based on whether the banner is animated or not.
-        size : int
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the banner, or `None` if no banner is set.
+            The URL of the banner, or [`None`][] if no banner is set.
 
         Raises
         ------
@@ -2827,12 +2830,12 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
@@ -2856,17 +2859,17 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        ext : str
+        ext
             The extension to use for this URL, defaults to `png`.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size : int
+        size
             The size to set for the URL, defaults to `4096`.
-            Can be any power of two between 16 and 4096.
+            Can be any power of two between `16` and `4096`.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or `None` if not set.
+            The URL to the splash, or [`None`][] if not set.
 
         Raises
         ------
@@ -2887,13 +2890,13 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        channel : hikari.snowflakes.SnowflakeishOr[hikari.channels.PartialChannel]
+        channel
             The object or ID of the guild channel to get from the cache.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
-            The object of the guild channel found in cache or `None`.
+            The object of the guild channel found in cache or [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -2909,13 +2912,13 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             The object or ID of the user to get the cached member for.
 
         Returns
         -------
         typing.Optional[Member]
-            The cached member object if found, else `None`.
+            The cached member object if found, else [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -2928,7 +2931,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[Member]
-            The cached member for this guild, or `None` if not known.
+            The cached member for this guild, or [`None`][] if not known.
         """
         if not isinstance(self.app, traits.ShardAware):
             return None
@@ -2946,13 +2949,13 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             The object or ID of the user to get the cached presence for.
 
         Returns
         -------
         typing.Optional[hikari.presences.MemberPresence]
-            The cached presence object if found, else `None`.
+            The cached presence object if found, else [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -2966,13 +2969,13 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        user : hikari.snowflakes.SnowflakeishOr[hikari.users.PartialUser]
+        user
             The object or ID of the user to get the cached voice state for.
 
         Returns
         -------
         typing.Optional[hikari.voices.VoiceState]
-            The cached voice state object if found, else `None`.
+            The cached voice state object if found, else [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -2986,14 +2989,14 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        emoji : hikari.snowflakes.SnowflakeishOr[hikari.emojis.CustomEmoji]
+        emoji
             The object or ID of the emoji to get from the cache.
 
         Returns
         -------
         typing.Optional[hikari.emojis.KnownCustomEmoji]
             The object of the custom emoji if found in cache, else
-            `None`.
+            [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3011,14 +3014,14 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        sticker : hikari.snowflakes.SnowflakeishOr[hikari.stickers.GuildSticker]
+        sticker
             The object or ID of the sticker to get from the cache.
 
         Returns
         -------
         typing.Optional[hikari.stickers.GuildSticker]
             The object of the sticker if found in cache, else
-            `None`.
+            [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3034,13 +3037,13 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        role : hikari.snowflakes.SnowflakeishOr[PartialRole]
+        role
             The object or ID of the role to get for this guild from the cache.
 
         Returns
         -------
         typing.Optional[Role]
-            The object of the role found in cache, else `None`.
+            The object of the role found in cache, else [`None`][].
         """
         if not isinstance(self.app, traits.CacheAware):
             return None
@@ -3076,19 +3079,19 @@ class Guild(PartialGuild):
     async def fetch_widget_channel(self) -> typing.Optional[channels_.GuildChannel]:
         """Fetch the widget channel.
 
-        This will be `None` if not set.
+        This will be [`None`][] if not set.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildChannel]
-            The channel the widget is linked to or else `None`.
+            The channel the widget is linked to or else [`None`][].
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -3110,14 +3113,14 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildVoiceChannel]
-            The AFK channel or `None` if not enabled.
+            The AFK channel or [`None`][] if not enabled.
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -3139,7 +3142,7 @@ class Guild(PartialGuild):
         Returns
         -------
         typing.Optional[hikari.channels.GuildTextChannel]
-            The system channel for this guild or `None` if not
+            The system channel for this guild or [`None`][] if not
             enabled.
 
         Raises
@@ -3147,7 +3150,7 @@ class Guild(PartialGuild):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -3166,19 +3169,19 @@ class Guild(PartialGuild):
     async def fetch_rules_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
         """Fetch the channel where guilds display rules and guidelines.
 
-        If the `GuildFeature.COMMUNITY` feature is not defined, then this is `None`.
+        If the [`hikari.guilds.GuildFeature.COMMUNITY`][] feature is not defined, then this is [`None`][].
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildTextChannel]
-            The channel where the rules of the guild are specified or else `None`.
+            The channel where the rules of the guild are specified or else [`None`][].
 
         Raises
         ------
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -3197,8 +3200,8 @@ class Guild(PartialGuild):
     async def fetch_public_updates_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
         """Fetch channel ID of the channel where admins and moderators receive notices from Discord.
 
-        This is only present if `GuildFeature.COMMUNITY` is in `Guild.features` for
-        this guild. For all other purposes, it should be considered to be `None`.
+        This is only present if [`hikari.guilds.GuildFeature.COMMUNITY`][] is in [`hikari.guilds.Guild.features`][] for
+        this guild. For all other purposes, it should be considered to be [`None`][].
 
         Returns
         -------
@@ -3210,7 +3213,7 @@ class Guild(PartialGuild):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the `READ_MESSAGES` permission in the channel.
+            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] permission in the channel.
         hikari.errors.NotFoundError
             If the channel is not found.
         hikari.errors.RateLimitTooLongError
@@ -3227,7 +3230,7 @@ class Guild(PartialGuild):
         return updates_channel
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class RESTGuild(Guild):
     """Guild specialization that is sent via the REST API only."""
 
@@ -3247,26 +3250,26 @@ class RESTGuild(Guild):
     approximate_active_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild that are not offline.
 
-    This will be `None` when creating a guild.
+    This will be [`None`][] when creating a guild.
     """
 
     approximate_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
-    This will be `None` when creating a guild.
+    This will be [`None`][] when creating a guild.
     """
 
     max_presences: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of presences for the guild.
 
-    If `None`, then there is no limit.
+    If [`None`][], then there is no limit.
     """
 
     max_members: int = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of members allowed in this guild."""
 
 
-@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class GatewayGuild(Guild):
     """Guild specialization that is sent via the gateway only."""
 
@@ -3275,7 +3278,7 @@ class GatewayGuild(Guild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    [`None`][].
 
     The implications of a large guild are that presence information will not be
     sent about members who are offline or invisible.
@@ -3286,7 +3289,7 @@ class GatewayGuild(Guild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    [`None`][].
     """
 
     member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
@@ -3294,5 +3297,5 @@ class GatewayGuild(Guild):
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
     event. If the guild is received from any other place, this will always be
-    `None`.
+    [`None`][].
     """

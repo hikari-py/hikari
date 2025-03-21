@@ -19,6 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import typing
 
 from pipelines import config
@@ -38,7 +40,7 @@ def flake8_html(session: nox.Session) -> None:
 
 
 def _flake8(session: nox.Session, extra_args: typing.Sequence[str] = ()) -> None:
-    session.install("-r", "requirements.txt", *nox.dev_requirements("flake8"))
+    nox.sync(session, self=True, groups=["flake8"])
     session.run(
         "flake8",
         "--statistics",

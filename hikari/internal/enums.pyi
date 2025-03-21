@@ -20,7 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Typehints for `hikari.internal.enums`."""
+"""Typehints for [`hikari.internal.enums`][]."""
 
 # Enums use a lot of internal voodoo that will not type check nicely, so we
 # skip that module with MyPy and just accept that "here be dragons".
@@ -44,7 +44,8 @@ from typing_extensions import Self as __Self
 
 Enum = __enum.Enum
 
-class Flag(__enum.IntFlag):
+# MyPy started complaining of Flags with no additional flags, so just ignore it here
+class Flag(__enum.IntFlag):  # type: ignore[misc]
     def all(self, *flags: __Self) -> bool: ...
     def any(self, *flags: __Self) -> bool: ...
     def difference(self, other: __Union[int, __Self]) -> __Self: ...

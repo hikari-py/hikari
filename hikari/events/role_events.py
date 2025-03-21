@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -21,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 """Events pertaining to manipulation of roles within guilds."""
+
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("RoleEvent", "RoleCreateEvent", "RoleUpdateEvent", "RoleDeleteEvent")
@@ -99,7 +99,7 @@ class RoleUpdateEvent(RoleEvent):
     old_role: typing.Optional[guilds.Role] = attrs.field()
     """The old role object.
 
-    This will be `None` if the role missing from the cache.
+    This will be [`None`][] if the role missing from the cache.
     """
 
     role: guilds.Role = attrs.field()
@@ -142,5 +142,5 @@ class RoleDeleteEvent(RoleEvent):
     old_role: typing.Optional[guilds.Role] = attrs.field()
     """The old role object.
 
-    This will be `None` if the role was missing from the cache.
+    This will be [`None`][] if the role was missing from the cache.
     """

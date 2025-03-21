@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import datetime
 
 import mock
@@ -37,10 +38,12 @@ from hikari.events import interaction_events
 from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
+from hikari.events import monetization_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
@@ -48,15 +51,15 @@ from hikari.impl import event_factory as event_factory_
 
 
 class TestEventFactoryImpl:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_app(self):
         return mock.Mock(traits.RESTAware)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_shard(self):
         return mock.Mock(shard.GatewayShard)
 
-    @pytest.fixture()
+    @pytest.fixture
     def event_factory(self, mock_app):
         return event_factory_.EventFactoryImpl(mock_app)
 
@@ -651,6 +654,7 @@ class TestEventFactoryImpl:
             "user": {
                 "id": "1231312",
                 "username": "OK",
+                "global_name": "blahaj",
                 "avatar": "NOK",
                 "banner": "12122hssjamanmdd",
                 "accent_color": 12342,
@@ -674,6 +678,7 @@ class TestEventFactoryImpl:
         assert isinstance(event.user, user_models.PartialUser)
         assert event.user.id == 1231312
         assert event.user.username == "OK"
+        assert event.user.global_name == "blahaj"
         assert event.user.discriminator == "1231"
         assert event.user.avatar_hash == "NOK"
         assert event.user.banner_hash == "12122hssjamanmdd"
@@ -701,6 +706,7 @@ class TestEventFactoryImpl:
         assert isinstance(event.user, user_models.PartialUser)
         assert event.user.id == 1231312
         assert event.user.username is undefined.UNDEFINED
+        assert event.user.global_name is undefined.UNDEFINED
         assert event.user.discriminator is undefined.UNDEFINED
         assert event.user.avatar_hash is undefined.UNDEFINED
         assert event.user.banner_hash is undefined.UNDEFINED
@@ -1455,3 +1461,113 @@ class TestEventFactoryImpl:
         assert event.token == "okokok"
         assert event.guild_id == 3122312
         assert event.raw_endpoint == "httppppppp"
+
+    ##################
+    #  MONETIZATION  #
+    ##################
+
+    def test_deserialize_entitlement_create_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "id": "696969696969696",
+            "sku_id": "420420420420420",
+            "application_id": "123123123123123",
+            "type": 8,
+            "deleted": False,
+            "starts_at": "2022-09-14T17:00:18.704163+00:00",
+            "ends_at": "2022-10-14T17:00:18.704163+00:00",
+            "guild_id": "1015034326372454400",
+            "user_id": "115590097100865541",
+            "subscription_id": "1019653835926409216",
+        }
+
+        event = event_factory.deserialize_entitlement_create_event(mock_shard, payload)
+
+        assert isinstance(event, monetization_events.EntitlementCreateEvent)
+
+    def test_deserialize_entitlement_update_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "id": "696969696969696",
+            "sku_id": "420420420420420",
+            "application_id": "123123123123123",
+            "type": 8,
+            "deleted": False,
+            "starts_at": "2022-09-14T17:00:18.704163+00:00",
+            "ends_at": "2022-10-14T17:00:18.704163+00:00",
+            "guild_id": "1015034326372454400",
+            "user_id": "115590097100865541",
+            "subscription_id": "1019653835926409216",
+        }
+
+        event = event_factory.deserialize_entitlement_update_event(mock_shard, payload)
+
+        assert isinstance(event, monetization_events.EntitlementUpdateEvent)
+
+    def test_deserialize_entitlement_delete_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "id": "696969696969696",
+            "sku_id": "420420420420420",
+            "application_id": "123123123123123",
+            "type": 8,
+            "deleted": False,
+            "starts_at": "2022-09-14T17:00:18.704163+00:00",
+            "ends_at": "2022-10-14T17:00:18.704163+00:00",
+            "guild_id": "1015034326372454400",
+            "user_id": "115590097100865541",
+            "subscription_id": "1019653835926409216",
+        }
+
+        event = event_factory.deserialize_entitlement_delete_event(mock_shard, payload)
+
+        assert isinstance(event, monetization_events.EntitlementDeleteEvent)
+
+    #########################
+    # STAGE INSTANCE EVENTS #
+    #########################
+
+    def test_deserialize_stage_instance_create_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 123",
+            "privacy_level": 1,
+            "discoverable_disabled": False,
+        }
+        event = event_factory.deserialize_stage_instance_create_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceCreateEvent)
+
+        assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
+        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+
+    def test_deserialize_stage_instance_update_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 124",
+            "privacy_level": 2,
+            "discoverable_disabled": True,
+        }
+        event = event_factory.deserialize_stage_instance_update_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceUpdateEvent)
+
+        assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
+        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+
+    def test_deserialize_stage_instance_delete_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "id": "840647391636226060",
+            "guild_id": "197038439483310086",
+            "channel_id": "733488538393510049",
+            "topic": "Testing Testing, 124",
+            "privacy_level": 2,
+            "discoverable_disabled": True,
+        }
+        event = event_factory.deserialize_stage_instance_delete_event(mock_shard, mock_payload)
+        assert isinstance(event, stage_events.StageInstanceDeleteEvent)
+
+        assert event.shard is mock_shard
+        assert event.app is event.stage_instance.app
+        assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value

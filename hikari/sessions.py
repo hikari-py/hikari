@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -38,7 +37,7 @@ if typing.TYPE_CHECKING:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class SessionStartLimit:
     """Used to represent information about the current session start limits."""
 
@@ -49,9 +48,9 @@ class SessionStartLimit:
     """The remaining number of session starts this bot has."""
 
     reset_after: datetime.timedelta = attrs.field(repr=True)
-    """When `SessionStartLimit.remaining` will reset for the current bot.
+    """When [`hikari.sessions.SessionStartLimit.remaining`][] will reset for the current bot.
 
-    After it resets it will be set to `SessionStartLimit.total`.
+    After it resets it will be set to [`hikari.sessions.SessionStartLimit.total`][].
     """
 
     # This is not documented at the time of writing, but is a confirmed API
@@ -79,7 +78,7 @@ class SessionStartLimit:
 
 
 @attrs_extensions.with_copy
-@attrs.define(hash=False, kw_only=True, weakref_slot=False)
+@attrs.define(kw_only=True, weakref_slot=False)
 class GatewayBotInfo:
     """Used to represent gateway information for the connected bot."""
 

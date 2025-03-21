@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,6 +18,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
 import asyncio
 
 import mock.mock
@@ -63,145 +64,32 @@ class TestCoroutineFunctionStubUsedInTests:
 
 
 class TestCompletedFuture:
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_awaitable(self, args):
         await aio.completed_future(*args)
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
     async def test_is_completed(self, args):
         future = aio.completed_future(*args)
         assert future.done()
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_default_result_is_none(self):
         assert aio.completed_future().result() is None
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_non_default_result(self):
         assert aio.completed_future(...).result() is ...
 
 
-class TestIsAsyncIterator:
-    def test_on_inst(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return None
-
-        assert aio.is_async_iterator(AsyncIterator())
-
-    def test_on_class(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return ...
-
-        assert aio.is_async_iterator(AsyncIterator)
-
-    @pytest.mark.asyncio()
-    async def test_on_genexp(self):
-        async def genexp():
-            yield ...
-            yield ...
-
-        exp = genexp()
-        try:
-            assert not aio.is_async_iterator(exp)
-        finally:
-            await exp.aclose()
-
-    def test_on_iterator(self):
-        class Iter:
-            def __next__(self):
-                return ...
-
-        assert not aio.is_async_iterator(Iter())
-
-    def test_on_iterator_class(self):
-        class Iter:
-            def __next__(self):
-                return ...
-
-        assert not aio.is_async_iterator(Iter)
-
-    def test_on_async_iterable(self):
-        class AsyncIter:
-            def __aiter__(self):
-                yield ...
-
-        assert not aio.is_async_iterator(AsyncIter())
-
-    def test_on_async_iterable_class(self):
-        class AsyncIter:
-            def __aiter__(self):
-                yield ...
-
-        assert not aio.is_async_iterator(AsyncIter)
-
-
-class TestIsAsyncIterable:
-    def test_on_instance(self):
-        class AsyncIter:
-            async def __aiter__(self):
-                yield ...
-
-        assert aio.is_async_iterable(AsyncIter())
-
-    def test_on_class(self):
-        class AsyncIter:
-            async def __aiter__(self):
-                yield ...
-
-        assert aio.is_async_iterable(AsyncIter)
-
-    def test_on_delegate(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                ...
-
-        class AsyncIterable:
-            def __aiter__(self):
-                return AsyncIterator()
-
-        assert aio.is_async_iterable(AsyncIterable())
-
-    def test_on_delegate_class(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                ...
-
-        class AsyncIterable:
-            def __aiter__(self):
-                return AsyncIterator()
-
-        assert aio.is_async_iterable(AsyncIterable)
-
-    def test_on_inst(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return None
-
-        assert aio.is_async_iterator(AsyncIterator())
-
-    def test_on_AsyncIterator(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return ...
-
-        assert not aio.is_async_iterable(AsyncIterator())
-
-    def test_on_AsyncIterator_class(self):
-        class AsyncIterator:
-            async def __anext__(self):
-                return ...
-
-        assert not aio.is_async_iterable(AsyncIterator)
-
-
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestFirstCompleted:
     @hikari_test_helpers.timeout()
-    async def test_first_future_completes(self, event_loop):
+    async def test_first_future_completes(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -213,7 +101,9 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
     @hikari_test_helpers.timeout()
-    async def test_second_future_completes(self, event_loop):
+    async def test_second_future_completes(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -225,7 +115,9 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
     @hikari_test_helpers.timeout()
-    async def test_timeout_propagates(self, event_loop):
+    async def test_timeout_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -238,7 +130,9 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
     @hikari_test_helpers.timeout()
-    async def test_cancelled_propagates(self, event_loop):
+    async def test_cancelled_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -254,7 +148,9 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
     @hikari_test_helpers.timeout()
-    async def test_single_cancelled_propagates(self, event_loop):
+    async def test_single_cancelled_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -270,7 +166,9 @@ class TestFirstCompleted:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_result_propagates(self, event_loop):
+    async def test_result_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -286,7 +184,9 @@ class TestFirstCompleted:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_exception_propagates(self, event_loop):
+    async def test_exception_propagates(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -302,12 +202,14 @@ class TestFirstCompleted:
         assert f3.cancelled()
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_waits_for_all(self, event_loop):
+    async def test_waits_for_all(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -341,7 +243,9 @@ class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_cancels_all_if_one_errors(self, event_loop):
+    async def test_cancels_all_if_one_errors(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -360,7 +264,9 @@ class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_cancels_all_if_timeout(self, event_loop):
+    async def test_cancels_all_if_timeout(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -374,7 +280,9 @@ class TestAllOf:
     # If the CI runners are slow, this may be flaky.
     @hikari_test_helpers.retry(3)
     @hikari_test_helpers.timeout()
-    async def test_cancels_all_if_cancelled(self, event_loop):
+    async def test_cancels_all_if_cancelled(self):
+        event_loop = asyncio.get_running_loop()
+
         f1 = event_loop.create_future()
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
@@ -393,6 +301,9 @@ def test_get_or_make_loop():
     asyncio.set_event_loop(mock_loop)
 
     assert aio.get_or_make_loop() is mock_loop
+
+    # Make sure to "cleanup" event loop or pytest_asyncio will error
+    mock_loop.is_closed = mock.Mock(return_value=True)
 
 
 def test_get_or_make_loop_handles_runtime_error():

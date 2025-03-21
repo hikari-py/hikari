@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
@@ -38,7 +37,10 @@ import typing
 from hikari import errors
 from hikari.internal import ux
 
-_INTERRUPT_SIGNALS: typing.Tuple[str, ...] = ("SIGINT", "SIGTERM")
+if typing.TYPE_CHECKING:
+    _SignalHandlerT = typing.Callable[[int, typing.Optional[types.FrameType]], None]
+
+_INTERRUPT_SIGNALS: tuple[str, ...] = ("SIGINT", "SIGTERM")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.signals")
 
 
@@ -49,9 +51,7 @@ def _raise_interrupt(signum: int) -> typing.NoReturn:
     raise errors.HikariInterrupt(signum, signame)
 
 
-def _interrupt_handler(
-    loop: asyncio.AbstractEventLoop,
-) -> typing.Callable[[int, typing.Optional[types.FrameType]], None]:
+def _interrupt_handler(loop: asyncio.AbstractEventLoop) -> _SignalHandlerT:
     loop_thread_id = threading.get_native_id()
 
     def handler(signum: int, frame: typing.Optional[types.FrameType]) -> None:
@@ -83,14 +83,14 @@ def handle_interrupts(
 
     Parameters
     ----------
-    enabled : typing.Optional[bool]
+    enabled
         Whether to enable the signal interrupts.
 
-        If set to `None`, then it will be enabled or not based on whether the running
+        If set to [`None`][], then it will be enabled or not based on whether the running
         thread is the main one or not.
-    loop : asyncio.AbstractEventLoop
+    loop
         The event loop the interrupt will be raised in.
-    propagate_interrupts : bool
+    propagate_interrupts
         Whether to propagate interrupts.
     """
     if enabled is None:
@@ -102,13 +102,16 @@ def handle_interrupts(
         return
 
     interrupt_handler = _interrupt_handler(loop)
+    original_handlers: dict[int, typing.Union[int, _SignalHandlerT, None]] = {}
 
     for sig in _INTERRUPT_SIGNALS:
         try:
             signum = getattr(signal, sig)
-            signal.signal(signum, interrupt_handler)
         except AttributeError:
             _LOGGER.log(ux.TRACE, "signal %s is not implemented on your platform; skipping", sig)
+        else:
+            original_handlers[signum] = signal.getsignal(signum)
+            signal.signal(signum, interrupt_handler)
 
     try:
         yield
@@ -118,10 +121,5 @@ def handle_interrupts(
             raise
 
     finally:
-        for sig in _INTERRUPT_SIGNALS:
-            try:
-                signum = getattr(signal, sig)
-                signal.signal(signum, signal.SIG_DFL)
-            except AttributeError:
-                # Signal not implemented. We already logged this earlier.
-                pass
+        for signum, handler in original_handlers.items():
+            signal.signal(signum, handler)
