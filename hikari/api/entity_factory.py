@@ -1350,21 +1350,6 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_partial_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
-        """Parse a raw payload from Discord into a partial interaction object.
-
-        Parameters
-        ----------
-        payload
-            The JSON payload to deserialize.
-
-        Returns
-        -------
-        hikari.interactions.base_interactions.PartialInteraction
-            The deserialized partial interaction object.
-        """
-
-    @abc.abstractmethod
     def deserialize_command_interaction(
         self, payload: data_binding.JSONObject
     ) -> command_interactions.CommandInteraction:
@@ -1419,8 +1404,7 @@ class EntityFactory(abc.ABC):
 
         !!! note
             This isn't required to implement logic for deserializing
-            PING interactions and if you want to unmarshal those
-            [`hikari.api.entity_factory.EntityFactory.deserialize_partial_interaction`][] should be compatible.
+            PING interactions.
 
         Parameters
         ----------

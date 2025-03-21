@@ -24,6 +24,7 @@ import mock
 import pytest
 
 from hikari import applications
+from hikari import monetization
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
@@ -45,14 +46,73 @@ class TestPartialInteraction:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            guild_id=snowflakes.Snowflake(5412231),
+            channel=mock.Mock(id=3123123),
+            member=object(),
+            user=object(),
+            locale="es-ES",
+            guild_locale="en-US",
+            app_permissions=123321,
             authorizing_integration_owners={
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
+            entitlements=[
+                monetization.Entitlement(
+                    id=snowflakes.Snowflake(123123),
+                    sku_id=snowflakes.Snowflake(123123),
+                    application_id=snowflakes.Snowflake(123123),
+                    guild_id=snowflakes.Snowflake(123123),
+                    user_id=snowflakes.Snowflake(123123),
+                    type=monetization.EntitlementType.APPLICATION_SUBSCRIPTION,
+                    starts_at=None,
+                    ends_at=None,
+                    is_deleted=False,
+                    subscription_id=None,
+                )
+            ],
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
     def test_webhook_id_property(self, mock_partial_interaction):
         assert mock_partial_interaction.webhook_id is mock_partial_interaction.application_id
+
+    @pytest.mark.asyncio
+    async def test_fetch_guild(self, mock_partial_interaction, mock_app):
+        mock_partial_interaction.guild_id = 43123123
+
+        assert await mock_partial_interaction.fetch_guild() is mock_app.rest.fetch_guild.return_value
+
+        mock_app.rest.fetch_guild.assert_awaited_once_with(43123123)
+
+    @pytest.mark.asyncio
+    async def test_fetch_guild_for_dm_interaction(self, mock_partial_interaction, mock_app):
+        mock_partial_interaction.guild_id = None
+
+        assert await mock_partial_interaction.fetch_guild() is None
+
+        mock_app.rest.fetch_guild.assert_not_called()
+
+    def test_get_guild(self, mock_partial_interaction, mock_app):
+        mock_partial_interaction.guild_id = 874356
+
+        assert mock_partial_interaction.get_guild() is mock_app.cache.get_guild.return_value
+
+        mock_app.cache.get_guild.assert_called_once_with(874356)
+
+    def test_get_guild_for_dm_interaction(self, mock_partial_interaction, mock_app):
+        mock_partial_interaction.guild_id = None
+
+        assert mock_partial_interaction.get_guild() is None
+
+        mock_app.cache.get_guild.assert_not_called()
+
+    def test_get_guild_when_cacheless(self, mock_partial_interaction, mock_app):
+        mock_partial_interaction.guild_id = 321123
+        mock_partial_interaction.app = mock.Mock(traits.RESTAware)
+
+        assert mock_partial_interaction.get_guild() is None
+
+        mock_app.cache.get_guild.assert_not_called()
 
 
 class TestMessageResponseMixin:
@@ -65,10 +125,31 @@ class TestMessageResponseMixin:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            guild_id=snowflakes.Snowflake(5412231),
+            channel=mock.Mock(id=3123123),
+            member=object(),
+            user=object(),
+            locale="es-ES",
+            guild_locale="en-US",
+            app_permissions=123321,
             authorizing_integration_owners={
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
-            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            entitlements=[
+                monetization.Entitlement(
+                    id=snowflakes.Snowflake(123123),
+                    sku_id=snowflakes.Snowflake(123123),
+                    application_id=snowflakes.Snowflake(123123),
+                    guild_id=snowflakes.Snowflake(123123),
+                    user_id=snowflakes.Snowflake(123123),
+                    type=monetization.EntitlementType.APPLICATION_SUBSCRIPTION,
+                    starts_at=None,
+                    ends_at=None,
+                    is_deleted=False,
+                    subscription_id=None,
+                )
+            ],
         )
 
     @pytest.mark.asyncio
@@ -218,10 +299,31 @@ class TestModalResponseMixin:
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             token="399393939doodsodso",
             version=3122312,
+            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            guild_id=snowflakes.Snowflake(5412231),
+            channel=mock.Mock(id=3123123),
+            member=object(),
+            user=object(),
+            locale="es-ES",
+            guild_locale="en-US",
+            app_permissions=123321,
             authorizing_integration_owners={
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
-            context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            entitlements=[
+                monetization.Entitlement(
+                    id=snowflakes.Snowflake(123123),
+                    sku_id=snowflakes.Snowflake(123123),
+                    application_id=snowflakes.Snowflake(123123),
+                    guild_id=snowflakes.Snowflake(123123),
+                    user_id=snowflakes.Snowflake(123123),
+                    type=monetization.EntitlementType.APPLICATION_SUBSCRIPTION,
+                    starts_at=None,
+                    ends_at=None,
+                    is_deleted=False,
+                    subscription_id=None,
+                )
+            ],
         )
 
     @pytest.mark.asyncio
