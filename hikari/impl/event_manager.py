@@ -829,7 +829,6 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     @event_manager_base.filtered(
         (
-            interaction_events.InteractionCreateEvent,
             interaction_events.ComponentInteractionCreateEvent,
             interaction_events.ModalInteractionCreateEvent,
             interaction_events.AutocompleteInteractionCreateEvent,
