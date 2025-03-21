@@ -2178,13 +2178,9 @@ class PollBuilder(special_endpoints.PollBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.PollBuilder`][]."""
 
     _question_text: str = attrs.field(alias="question_text")
-
     _answers: list[special_endpoints.PollAnswerBuilder] = attrs.field(alias="answers", factory=list)
-
     _duration: undefined.UndefinedOr[int] = attrs.field(alias="duration", default=undefined.UNDEFINED)
-
     _allow_multiselect: bool = attrs.field(alias="allow_multiselect")
-
     _layout_type: undefined.UndefinedOr[polls.PollLayoutType] = attrs.field(
         alias="layout_type", default=undefined.UNDEFINED
     )
