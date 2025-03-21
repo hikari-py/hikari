@@ -2236,7 +2236,6 @@ class PollAnswerBuilder(special_endpoints.PollAnswerBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.PollAnswerBuilder`][]."""
 
     _text: undefined.UndefinedOr[str] = attrs.field(alias="text", default=undefined.UNDEFINED)
-
     _emoji: undefined.UndefinedOr[emojis.Emoji] = attrs.field(alias="emoji", default=undefined.UNDEFINED)
 
     @property
