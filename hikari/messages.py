@@ -38,6 +38,7 @@ __all__: typing.Sequence[str] = (
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import components as component_models
 from hikari import files
@@ -252,6 +253,7 @@ class Attachment(snowflakes.Unique, files.WebResource):
     waveform: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=False)
     """A base64 encoded representation of the sampled waveform for the voice message."""
 
+    @override
     def __str__(self) -> str:
         return self.filename
 
@@ -270,6 +272,7 @@ class Reaction:
     is_me: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
 
+    @override
     def __str__(self) -> str:
         return str(self.emoji)
 

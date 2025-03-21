@@ -40,6 +40,7 @@ import typing
 import warnings
 
 import attrs
+from typing_extensions import override
 
 from hikari import colors
 from hikari import errors
@@ -65,15 +66,18 @@ class EmbedResource(files.Resource[files.AsyncReader]):
 
     @property
     @typing.final
+    @override
     def url(self) -> str:
         """URL of this embed resource."""
         return self.resource.url
 
     @property
+    @override
     def filename(self) -> str:
         """File name of this embed resource."""
         return self.resource.filename
 
+    @override
     def stream(
         self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
     ) -> files.AsyncReaderContextManager[files.AsyncReader]:
@@ -901,9 +905,11 @@ class Embed:
         self._fields = None
         return self
 
+    @override
     def __repr__(self) -> str:
         return f"Embed(title={self.title}, color={self.color}, timestamp={self.timestamp})"
 
+    @override
     def __eq__(self, other: typing.Any) -> bool:
         if isinstance(other, type(self)):
             for attrsib in self.__slots__:

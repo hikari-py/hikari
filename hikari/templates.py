@@ -28,6 +28,7 @@ __all__: typing.Sequence[str] = ("Template", "TemplateGuild", "TemplateRole")
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import guilds
 from hikari import undefined
@@ -310,5 +311,6 @@ class Template:
         """
         return await self.app.rest.create_guild_from_template(self, name, icon=icon)
 
+    @override
     def __str__(self) -> str:
         return f"https://discord.new/{self.code}"

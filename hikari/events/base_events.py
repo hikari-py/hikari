@@ -38,6 +38,7 @@ import inspect
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import intents
 from hikari import traits
@@ -63,6 +64,7 @@ class Event(abc.ABC):
     __dispatches: typing.ClassVar[tuple[type[Event], ...]]
     __bitmask: typing.ClassVar[int]
 
+    @override
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
         # hasattr doesn't work with private variables in this case so we use a try except.
@@ -208,6 +210,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
     """Event callback that threw an exception."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.failed_event.app
