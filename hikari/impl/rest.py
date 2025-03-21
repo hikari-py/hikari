@@ -4630,11 +4630,11 @@ class RESTClientImpl(rest_api.RESTClient):
         after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> typing.Sequence[users.User]:
+        route = routes.GET_POLL_ANSWER.compile(channel=channel, message=message, answer=answer_id)
+        
         query = data_binding.StringMapBuilder()
         query.put("after", after)
         query.put("limit", limit)
-
-        route = routes.GET_POLL_ANSWER.compile(channel=channel, message=message, answer=answer_id)
 
         response = await self._request(route, query=query)
 
