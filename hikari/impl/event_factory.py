@@ -53,6 +53,9 @@ from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
+from hikari.interactions import command_interactions
+from hikari.interactions import component_interactions
+from hikari.interactions import modal_interactions
 from hikari.internal import collections
 from hikari.internal import data_binding
 from hikari.internal import time
@@ -493,8 +496,17 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_interaction_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> interaction_events.InteractionCreateEvent:
+        interaction = self._app.entity_factory.deserialize_interaction(payload)
+        if isinstance(interaction, command_interactions.CommandInteraction):
+            return interaction_events.CommandInteractionCreateEvent(shard=shard, interaction=interaction)
+        if isinstance(interaction, command_interactions.AutocompleteInteraction):
+            return interaction_events.AutocompleteInteractionCreateEvent(shard=shard, interaction=interaction)
+        if isinstance(interaction, component_interactions.ComponentInteraction):
+            return interaction_events.ComponentInteractionCreateEvent(shard=shard, interaction=interaction)
+        if isinstance(interaction, modal_interactions.ModalInteraction):
+            return interaction_events.ModalInteractionCreateEvent(shard=shard, interaction=interaction)
         return interaction_events.InteractionCreateEvent(
-            shard=shard, interaction=self._app.entity_factory.deserialize_interaction(payload)
+            shard=shard, interaction=interaction
         )
 
     #################
