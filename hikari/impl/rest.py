@@ -1484,7 +1484,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("flags", flags)
         body.put("embeds", serialized_embeds)
         body.put("components", serialized_components)
-
         body.put("poll", poll, conversion=lambda p: p.build())
 
         body.put_snowflake_array("sticker_ids", (sticker,) if sticker else stickers)
