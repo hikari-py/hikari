@@ -1233,6 +1233,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The audio you want to send. This can be a resource,
             or string of a path on your computer or a URL.
 
+            Its important that it is an audio resource. The content type
+            must start with `audio/`
+
             Attachments can be passed as many different things, to aid in
             convenience.
 
