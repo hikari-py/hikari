@@ -505,9 +505,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             return interaction_events.ComponentInteractionCreateEvent(shard=shard, interaction=interaction)
         if isinstance(interaction, modal_interactions.ModalInteraction):
             return interaction_events.ModalInteractionCreateEvent(shard=shard, interaction=interaction)
-        return interaction_events.InteractionCreateEvent(
-            shard=shard, interaction=interaction
-        )
+        return interaction_events.InteractionCreateEvent(shard=shard, interaction=interaction)
 
     #################
     # MEMBER EVENTS #
