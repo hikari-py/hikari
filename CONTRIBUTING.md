@@ -131,7 +131,9 @@ Possible types are:
 - `feature`: Signifying a new feature.
 - `bugfix`: Signifying a bugfix.
 - `documentation`: Signifying a documentation improvement.
-- `removal`: Signifying a deprecation or removal of public API.
+- `optimization`: Signifying a performance optimization.
+- `deprecation`: Signifying a deprecation of an object in the public API.
+- `breaking`: Signifying a breaking change in the public API.
 
 For changes that do not fall under any of the above cases, please specify the lack of the changelog in the pull request
 description so that a maintainer can skip the job that checks for newly added fragments.
