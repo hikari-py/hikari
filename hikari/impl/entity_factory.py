@@ -2504,8 +2504,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> base_interactions.InteractionChannel:
         channel_id = snowflakes.Snowflake(payload["id"])
 
-        # Even tho (at the time of writing) it is documented that these partial channels will always contain
-        # this field, they are explicitly avoided for DM channels.
         thread_metadata = (
             self._deserialize_thread_metadata(payload["thread_metadata"]) if "thread_metadata" in payload else None
         )
@@ -2515,6 +2513,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=channel_id,
             type=channel_models.ChannelType(payload["type"]),
             name=payload.get("name"),
+            # Even tho (at the time of writing) it is documented that these partial channels will always contain
+            # this field, they are explicitly avoided for DM channels.
             permissions=permission_models.Permissions(int(payload.get("permissions", 0))),
             parent_id=snowflakes.Snowflake(payload["parent_id"]) if payload.get("parent_id") else None,
             thread_metadata=thread_metadata,
