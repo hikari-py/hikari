@@ -1597,7 +1597,7 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         attachment: files.Resourceish,
         waveform: str,
-        duration_secs: float,
+        duration: float,
         *,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
@@ -1621,6 +1621,8 @@ class RESTClientImpl(rest_api.RESTClient):
             embed=embed,
             mentions_reply=mentions_reply,
             flags=flags,
+            waveform=waveform,
+            duration=duration
         )
 
         if reply:
