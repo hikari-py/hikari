@@ -46,6 +46,7 @@ __all__: typing.Sequence[str] = (
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "ChannelRepositioner",
 )
 
 import abc
@@ -76,7 +77,22 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
+    from hikari.internal import data_binding
+    from hikari.internal import routes
     from hikari.internal import time
+
+    class _RequestCallSig(typing.Protocol):
+        async def __call__(
+            self,
+            compiled_route: routes.CompiledRoute,
+            *,
+            query: typing.Optional[data_binding.StringMapBuilder] = None,
+            form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
+            json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
+            reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+            auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
+
 
 _ParentT = typing.TypeVar("_ParentT")
 
@@ -111,17 +127,27 @@ class TypingIndicator(abc.ABC):
 class ChannelRepositioner(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
-    @abc.abstractmethod
     @typing.overload
-    def __init__(self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]):
-        ...
-    
+    @abc.abstractmethod
+    def __init__(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], request_call: _RequestCallSig): ...
+
+    @typing.overload
     @abc.abstractmethod
     def __init__(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        request_call: _RequestCallSig,
+        *,
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]],
+    ): ...
+
+    @abc.abstractmethod
+    def __init__(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        request_call: _RequestCallSig,
+        *,
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]] = {},
     ): ...
 
     @abc.abstractmethod
@@ -133,6 +159,9 @@ class ChannelRepositioner(abc.ABC):
         lock_permissions: bool,
         parent: snowflakes.SnowflakeishOr[channels.GuildCategory],
     ) -> Self: ...
+
+    @abc.abstractmethod
+    def __await__(self) -> None: ...
 
 
 class GuildBuilder(abc.ABC):
