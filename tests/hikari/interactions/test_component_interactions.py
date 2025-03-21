@@ -24,7 +24,6 @@ import mock
 import pytest
 
 from hikari import applications
-from hikari import channels
 from hikari import monetization
 from hikari import snowflakes
 from hikari import traits
@@ -44,8 +43,8 @@ class TestComponentInteraction:
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.MESSAGE_COMPONENT,
-            channel_id=snowflakes.Snowflake(3123123),
             guild_id=snowflakes.Snowflake(5412231),
+            channel=object(),
             member=object(),
             user=object(),
             token="httptptptptptptptp",
@@ -100,68 +99,3 @@ class TestComponentInteraction:
     def test_build_deferred_response_with_invalid_type(self, mock_component_interaction):
         with pytest.raises(ValueError, match="Invalid type passed for a deferred response"):
             mock_component_interaction.build_deferred_response(33333)
-
-    @pytest.mark.asyncio
-    async def test_fetch_channel(self, mock_component_interaction, mock_app):
-        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableChannel)
-
-        assert await mock_component_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
-
-        mock_app.rest.fetch_channel.assert_awaited_once_with(3123123)
-
-    def test_get_channel(self, mock_component_interaction, mock_app):
-        mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.GuildTextChannel)
-
-        assert mock_component_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
-
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
-
-    def test_get_channel_when_not_cached(self, mock_component_interaction, mock_app):
-        mock_app.cache.get_guild_channel.return_value = None
-
-        assert mock_component_interaction.get_channel() is None
-
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
-
-    def test_get_channel_without_cache(self, mock_component_interaction):
-        mock_component_interaction.app = mock.Mock(traits.RESTAware)
-
-        assert mock_component_interaction.get_channel() is None
-
-    @pytest.mark.asyncio
-    async def test_fetch_guild(self, mock_component_interaction, mock_app):
-        mock_component_interaction.guild_id = 43123123
-
-        assert await mock_component_interaction.fetch_guild() is mock_app.rest.fetch_guild.return_value
-
-        mock_app.rest.fetch_guild.assert_awaited_once_with(43123123)
-
-    @pytest.mark.asyncio
-    async def test_fetch_guild_for_dm_interaction(self, mock_component_interaction, mock_app):
-        mock_component_interaction.guild_id = None
-
-        assert await mock_component_interaction.fetch_guild() is None
-
-        mock_app.rest.fetch_guild.assert_not_called()
-
-    def test_get_guild(self, mock_component_interaction, mock_app):
-        mock_component_interaction.guild_id = 874356
-
-        assert mock_component_interaction.get_guild() is mock_app.cache.get_guild.return_value
-
-        mock_app.cache.get_guild.assert_called_once_with(874356)
-
-    def test_get_guild_for_dm_interaction(self, mock_component_interaction, mock_app):
-        mock_component_interaction.guild_id = None
-
-        assert mock_component_interaction.get_guild() is None
-
-        mock_app.cache.get_guild.assert_not_called()
-
-    def test_get_guild_when_cacheless(self, mock_component_interaction, mock_app):
-        mock_component_interaction.guild_id = 321123
-        mock_component_interaction.app = mock.Mock(traits.RESTAware)
-
-        assert mock_component_interaction.get_guild() is None
-
-        mock_app.cache.get_guild.assert_not_called()

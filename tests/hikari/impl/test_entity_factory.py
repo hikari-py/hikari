@@ -4213,24 +4213,6 @@ class TestEntityFactoryImpl:
             "context": 2,
         }
 
-    def test_deserialize_partial_interaction(self, mock_app, entity_factory_impl, partial_interaction_payload):
-        interaction = entity_factory_impl.deserialize_partial_interaction(partial_interaction_payload)
-
-        assert interaction.app is mock_app
-        assert interaction.id == 795459528803745843
-        assert interaction.token == "-- token redacted --"
-        assert interaction.type == 1
-        assert interaction.version == 1
-        assert interaction.application_id == 1
-        assert interaction.authorizing_integration_owners[
-            application_models.ApplicationIntegrationType.GUILD_INSTALL
-        ] == snowflakes.Snowflake(123)
-        assert interaction.authorizing_integration_owners[
-            application_models.ApplicationIntegrationType.USER_INSTALL
-        ] == snowflakes.Snowflake(456)
-        assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
-        assert type(interaction) is base_interactions.PartialInteraction
-
     @pytest.fixture
     def interaction_member_payload(self, user_payload):
         return {
@@ -4445,7 +4427,7 @@ class TestEntityFactoryImpl:
         assert interaction.type is base_interactions.InteractionType.APPLICATION_COMMAND
         assert interaction.token == "moe cat girls"
         assert interaction.version == 69420
-        assert interaction.channel == entity_factory_impl.deserialize_partial_channel(guild_text_channel_payload)
+        assert interaction.channel == entity_factory_impl._deserialize_interaction_channel(guild_text_channel_payload)
         assert interaction.guild_id == 43123123
         assert interaction.locale == "es-ES"
         assert interaction.locale is locales.Locale.ES_ES
@@ -4577,9 +4559,7 @@ class TestEntityFactoryImpl:
         assert interaction.registered_guild_id is None
 
     @pytest.fixture
-    def autocomplete_interaction_payload(
-        self, member_payload, user_payload, interaction_resolved_data_payload, guild_text_channel_payload
-    ):
+    def autocomplete_interaction_payload(self, member_payload, user_payload, guild_text_channel_payload):
         return {
             "id": "3490190239012093",
             "type": 4,
@@ -4601,6 +4581,7 @@ class TestEntityFactoryImpl:
                 ],
                 "guild_id": 12345678,
             },
+            "app_permissions": "5431234",
             "channel": guild_text_channel_payload,
             "user": user_payload,
             "token": "moe cat girls",
@@ -4632,7 +4613,6 @@ class TestEntityFactoryImpl:
         mock_app,
         member_payload,
         autocomplete_interaction_payload,
-        interaction_resolved_data_payload,
         guild_text_channel_payload,
     ):
         entity_factory_impl._deserialize_interaction_member = mock.Mock()
@@ -4645,7 +4625,7 @@ class TestEntityFactoryImpl:
         assert interaction.type is base_interactions.InteractionType.AUTOCOMPLETE
         assert interaction.token == "moe cat girls"
         assert interaction.version == 69420
-        assert interaction.channel == entity_factory_impl.deserialize_partial_channel(guild_text_channel_payload)
+        assert interaction.channel == entity_factory_impl._deserialize_interaction_channel(guild_text_channel_payload)
         assert interaction.guild_id == 43123123
         assert interaction.member is entity_factory_impl._deserialize_interaction_member.return_value
         entity_factory_impl._deserialize_interaction_member.assert_called_once_with(member_payload, guild_id=43123123)
@@ -4879,7 +4859,7 @@ class TestEntityFactoryImpl:
 
     @pytest.fixture
     def component_interaction_payload(
-        self, interaction_member_payload, message_payload, interaction_resolved_data_payload
+        self, interaction_member_payload, message_payload, interaction_resolved_data_payload, guild_text_channel_payload
     ):
         return {
             "version": 1,
@@ -4900,6 +4880,7 @@ class TestEntityFactoryImpl:
             "locale": "es-ES",
             "guild_locale": "en-US",
             "app_permissions": "5431234",
+            "channel": guild_text_channel_payload,
             "entitlements": [
                 {
                     "id": "696969696969696",
@@ -4926,6 +4907,7 @@ class TestEntityFactoryImpl:
         mock_app,
         message_payload,
         interaction_resolved_data_payload,
+        guild_text_channel_payload,
     ):
         interaction = entity_factory_impl.deserialize_component_interaction(component_interaction_payload)
 
@@ -4935,7 +4917,7 @@ class TestEntityFactoryImpl:
         assert interaction.type is base_interactions.InteractionType.MESSAGE_COMPONENT
         assert interaction.token == "unique_interaction_token"
         assert interaction.version == 1
-        assert interaction.channel_id == 345626669114982999
+        assert interaction.channel == entity_factory_impl._deserialize_interaction_channel(guild_text_channel_payload)
         assert interaction.component_type is component_models.ComponentType.BUTTON
         assert interaction.custom_id == "click_one"
         assert interaction.guild_id == 290926798626357999
@@ -4967,7 +4949,7 @@ class TestEntityFactoryImpl:
         assert interaction.entitlements[0].id == 696969696969696
 
     def test_deserialize_component_interaction_with_undefined_fields(
-        self, entity_factory_impl, user_payload, message_payload
+        self, entity_factory_impl, user_payload, message_payload, guild_text_channel_payload
     ):
         interaction = entity_factory_impl.deserialize_component_interaction(
             {
@@ -4976,6 +4958,7 @@ class TestEntityFactoryImpl:
                 "token": "unique_interaction_token",
                 "message": message_payload,
                 "user": user_payload,
+                "channel": guild_text_channel_payload,
                 "id": "846462639134605312",
                 "data": {"custom_id": "click_one", "component_type": 2},
                 "channel_id": "345626669114982999",
@@ -5009,7 +4992,7 @@ class TestEntityFactoryImpl:
         assert isinstance(interaction, component_interactions.ComponentInteraction)
 
     @pytest.fixture
-    def modal_interaction_payload(self, interaction_member_payload, message_payload):
+    def modal_interaction_payload(self, interaction_member_payload, message_payload, guild_text_channel_payload):
         return {
             "version": 1,
             "type": 5,
@@ -5025,7 +5008,7 @@ class TestEntityFactoryImpl:
                     {"type": 1, "components": [{"value": "Longer Text", "type": 4, "custom_id": "about"}]},
                 ],
             },
-            "channel_id": "345626669114982999",
+            "channel": guild_text_channel_payload,
             "application_id": "290926444748734465",
             "locale": "en-US",
             "guild_locale": "es-ES",
@@ -5049,7 +5032,13 @@ class TestEntityFactoryImpl:
         }
 
     def test_deserialize_modal_interaction(
-        self, entity_factory_impl, mock_app, modal_interaction_payload, interaction_member_payload, message_payload
+        self,
+        entity_factory_impl,
+        mock_app,
+        modal_interaction_payload,
+        interaction_member_payload,
+        message_payload,
+        guild_text_channel_payload,
     ):
         interaction = entity_factory_impl.deserialize_modal_interaction(modal_interaction_payload)
         assert interaction.app is mock_app
@@ -5058,7 +5047,7 @@ class TestEntityFactoryImpl:
         assert interaction.type is base_interactions.InteractionType.MODAL_SUBMIT
         assert interaction.token == "unique_interaction_token"
         assert interaction.version == 1
-        assert interaction.channel_id == 345626669114982999
+        assert interaction.channel == entity_factory_impl._deserialize_interaction_channel(guild_text_channel_payload)
         assert interaction.guild_id == 290926798626357999
         assert interaction.message == entity_factory_impl.deserialize_message(message_payload)
         assert interaction.member == entity_factory_impl._deserialize_interaction_member(

@@ -24,7 +24,6 @@ import mock
 import pytest
 
 from hikari import applications
-from hikari import channels
 from hikari import components
 from hikari import monetization
 from hikari import snowflakes
@@ -46,7 +45,7 @@ class TestModalInteraction:
             app=mock_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
-            channel_id=snowflakes.Snowflake(3123123),
+            channel=object(),
             guild_id=snowflakes.Snowflake(5412231),
             member=object(),
             user=object(),
@@ -98,26 +97,6 @@ class TestModalInteraction:
 
         assert response is mock_app.rest.interaction_deferred_builder.return_value
         mock_app.rest.interaction_deferred_builder.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_fetch_channel(self, mock_modal_interaction, mock_app):
-        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableChannel)
-
-        assert await mock_modal_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
-
-        mock_app.rest.fetch_channel.assert_awaited_once_with(3123123)
-
-    def test_get_channel(self, mock_modal_interaction, mock_app):
-        mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.GuildTextChannel)
-
-        assert mock_modal_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
-
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
-
-    def test_get_channel_without_cache(self, mock_modal_interaction):
-        mock_modal_interaction.app = mock.Mock(traits.RESTAware)
-
-        assert mock_modal_interaction.get_channel() is None
 
     @pytest.mark.asyncio
     async def test_fetch_guild(self, mock_modal_interaction, mock_app):

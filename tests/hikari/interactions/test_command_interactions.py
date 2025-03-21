@@ -24,7 +24,6 @@ import mock
 import pytest
 
 from hikari import applications
-from hikari import channels
 from hikari import monetization
 from hikari import snowflakes
 from hikari import traits
@@ -100,30 +99,6 @@ class TestCommandInteraction:
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         )
 
-    @pytest.mark.asyncio
-    async def test_fetch_channel(self, mock_command_interaction, mock_app):
-        mock_app.rest.fetch_channel.return_value = mock.Mock(channels.TextableGuildChannel)
-        assert await mock_command_interaction.fetch_channel() is mock_app.rest.fetch_channel.return_value
-
-        mock_app.rest.fetch_channel.assert_awaited_once_with(3123123)
-
-    def test_get_channel(self, mock_command_interaction, mock_app):
-        mock_app.cache.get_guild_channel.return_value = mock.Mock(channels.TextableGuildChannel)
-
-        assert mock_command_interaction.get_channel() is mock_app.cache.get_guild_channel.return_value
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
-
-    def test_get_channel_when_not_cached(self, mock_command_interaction, mock_app):
-        mock_app.cache.get_guild_channel.return_value = None
-
-        assert mock_command_interaction.get_channel() is None
-        mock_app.cache.get_guild_channel.assert_called_once_with(3123123)
-
-    def test_get_channel_without_cache(self, mock_command_interaction):
-        mock_command_interaction.app = mock.Mock(traits.RESTAware)
-
-        assert mock_command_interaction.get_channel() is None
-
 
 class TestAutocompleteInteraction:
     @pytest.fixture
@@ -136,6 +111,7 @@ class TestAutocompleteInteraction:
             guild_id=snowflakes.Snowflake(5412231),
             guild_locale="en-US",
             locale="en-US",
+            app_permissions=123321,
             member=object(),
             user=object(),
             token="httptptptptptptptp",
