@@ -53,6 +53,7 @@ import abc
 import typing
 
 import attrs
+from typing_extensions import override
 
 from hikari import channels
 from hikari import intents
@@ -181,6 +182,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
 
         return self.app.cache.get_guild_channel(self.channel_id)
 
+    @override
     async def fetch_channel(self) -> channels.GuildChannel:
         """Perform an API call to fetch the details about this channel.
 
@@ -219,6 +221,7 @@ class DMChannelEvent(ChannelEvent, abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
+    @override
     async def fetch_channel(self) -> channels.PrivateChannel:
         """Perform an API call to fetch the details about this channel.
 
@@ -265,16 +268,19 @@ class GuildChannelCreateEvent(GuildChannelEvent):
     """Guild channel that this event represents."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.channel.app
 
     @property
+    @override
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
@@ -299,16 +305,19 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     """Guild channel that this event represents."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.channel.app
 
     @property
+    @override
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
@@ -327,22 +336,26 @@ class GuildChannelDeleteEvent(GuildChannelEvent):
     """Guild channel that this event represents."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.channel.app
 
     @property
+    @override
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.channel.id
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         return self.channel.guild_id
 
     if typing.TYPE_CHECKING:
         # Channel will never be found.
+        @override
         async def fetch_channel(self) -> typing.NoReturn: ...
 
 
@@ -362,6 +375,7 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
         """
 
     @abc.abstractmethod
+    @override
     async def fetch_channel(self) -> channels.TextableChannel:
         """Perform an API call to fetch the details about this channel.
 
@@ -405,6 +419,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
+    @override
     def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
         """Get the cached channel that this event relates to, if known.
 
@@ -420,6 +435,7 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
         assert channel is None or isinstance(channel, channels.PermissibleGuildChannel)
         return channel
 
+    @override
     async def fetch_channel(self) -> channels.TextableGuildChannel:
         """Perform an API call to fetch the details about this channel.
 
@@ -467,6 +483,7 @@ class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
     last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
+    @override
     async def fetch_channel(self) -> channels.DMChannel:
         """Perform an API call to fetch the details about this channel.
 
@@ -539,16 +556,19 @@ class InviteCreateEvent(InviteEvent):
     """Invite that was created."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.invite.app
 
     @property
+    @override
     def channel_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ChannelEvent>>.
         return self.invite.channel_id
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildChannelEvent>>.
         # This will never be None for guild channel invites.
@@ -556,6 +576,7 @@ class InviteCreateEvent(InviteEvent):
         return self.invite.guild_id
 
     @property
+    @override
     def code(self) -> str:
         # <<inherited docstring from InviteEvent>>.
         return self.invite.code
@@ -590,6 +611,7 @@ class InviteDeleteEvent(InviteEvent):
 
     if typing.TYPE_CHECKING:
         # Invite will never be found.
+        @override
         async def fetch_invite(self) -> typing.NoReturn: ...
 
 
@@ -728,16 +750,19 @@ class GuildThreadAccessEvent(GuildThreadEvent):
     """The thread that you've been given access to."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.thread.app
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildThreadAccessEvent>>.
         return self.thread.guild_id
 
     @property
+    @override
     def thread_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildThreadAccessEvent>>.
         return self.thread.id
@@ -760,16 +785,19 @@ class GuildThreadCreateEvent(GuildThreadEvent):
     """The thread that was created."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.thread.app
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildThreadEvent>>.
         return self.thread.guild_id
 
     @property
+    @override
     def thread_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildThreadEvent>>.
         return self.thread.id
@@ -788,16 +816,19 @@ class GuildThreadUpdateEvent(GuildThreadEvent):
     """The thread that was updated."""
 
     @property
+    @override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.thread.app
 
     @property
+    @override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildThreadEvent>>.
         return self.thread.guild_id
 
     @property
+    @override
     def thread_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildThreadEvent>>.
         return self.thread.id

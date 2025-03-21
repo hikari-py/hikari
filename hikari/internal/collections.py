@@ -40,6 +40,8 @@ import itertools
 import sys
 import typing
 
+from typing_extensions import override
+
 from hikari import snowflakes
 
 if typing.TYPE_CHECKING:
@@ -109,28 +111,36 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
     def __init__(self, source: typing.Optional[dict[KeyT, ValueT]] = None, /) -> None:
         self._data = source or {}
 
+    @override
     def clear(self) -> None:
         self._data.clear()
 
+    @override
     def copy(self) -> FreezableDict[KeyT, ValueT]:
         return FreezableDict(self._data.copy())
 
     # TODO: name this something different if it is not physically frozen.
+    @override
     def freeze(self) -> dict[KeyT, ValueT]:
         return self._data.copy()
 
+    @override
     def __delitem__(self, key: KeyT) -> None:
         del self._data[key]
 
+    @override
     def __getitem__(self, key: KeyT) -> ValueT:
         return self._data[key]
 
+    @override
     def __iter__(self) -> typing.Iterator[KeyT]:
         return iter(self._data)
 
+    @override
     def __len__(self) -> int:
         return len(self._data)
 
+    @override
     def __setitem__(self, key: KeyT, value: ValueT) -> None:
         self._data[key] = value
 
@@ -171,12 +181,15 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
         self._on_expire = on_expire
         self._garbage_collect()
 
+    @override
     def clear(self) -> None:
         self._data.clear()
 
+    @override
     def copy(self) -> LimitedCapacityCacheMap[KeyT, ValueT]:
         return LimitedCapacityCacheMap(self._data.copy(), limit=self._limit, on_expire=self._on_expire)
 
+    @override
     def freeze(self) -> dict[KeyT, ValueT]:
         return self._data.copy()
 
@@ -187,18 +200,23 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
             if self._on_expire:
                 self._on_expire(value)
 
+    @override
     def __delitem__(self, key: KeyT) -> None:
         del self._data[key]
 
+    @override
     def __getitem__(self, key: KeyT) -> ValueT:
         return self._data[key]
 
+    @override
     def __iter__(self) -> typing.Iterator[KeyT]:
         return iter(self._data)
 
+    @override
     def __len__(self) -> int:
         return len(self._data)
 
+    @override
     def __setitem__(self, key: KeyT, value: ValueT) -> None:
         self._data[key] = value
         self._garbage_collect()
@@ -247,6 +265,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         if ids:
             self.add_all(ids)
 
+    @override
     def add(self, value: int, /) -> None:
         """Add a snowflake to this set."""
         # Always append the first item, as we cannot compare with nothing.
@@ -272,11 +291,13 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
             elif self._ids[index] != sf:
                 self._ids.insert(index, sf)
 
+    @override
     def clear(self) -> None:
         """Clear all items from this collection."""
         # Arrays lack a "clear" method.
         self._ids = array.array(_LONG_LONG_UNSIGNED)
 
+    @override
     def discard(self, value: int, /) -> None:
         """Remove a snowflake from this set if it's present."""
         if not self._ids:
@@ -287,6 +308,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         if index < len(self) and self._ids[index] == value:
             del self._ids[index]
 
+    @override
     def __contains__(self, value: typing.Any) -> bool:
         if not isinstance(value, int):
             return False
@@ -297,18 +319,23 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
             return self._ids[index] == value
         return False
 
+    @override
     def __iter__(self) -> typing.Iterator[snowflakes.Snowflake]:
         return map(snowflakes.Snowflake, self._ids)
 
+    @override
     def __len__(self) -> int:
         return len(self._ids)
 
+    @override
     def __repr__(self) -> str:
         return type(self).__name__ + "(" + ", ".join(map(repr, self._ids)) + ")"
 
+    @override
     def __sizeof__(self) -> int:
         return super().__sizeof__() + sys.getsizeof(self._ids)
 
+    @override
     def __str__(self) -> str:
         return "{" + ", ".join(map(repr, self._ids)) + "}"
 

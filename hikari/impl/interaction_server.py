@@ -33,6 +33,7 @@ import typing
 import aiohttp
 import aiohttp.web
 import aiohttp.web_runner
+from typing_extensions import override
 
 from hikari import applications
 from hikari import errors
@@ -159,9 +160,11 @@ class _FilePayload(aiohttp.Payload):
         super().__init__(value=value, headers=headers, content_type=content_type)
         self._executor = executor
 
+    @override
     def decode(self, encoding: str = "utf-8", errors: str = "strict") -> str:
         raise RuntimeError("Impossible to decode a _FilePayload. If you see this, please file a bug report with hikari")
 
+    @override
     async def write(self, writer: aiohttp.abc.AbstractStreamWriter) -> None:
         async with self._value.stream(executor=self._executor) as data:
             async for chunk in data:
@@ -398,6 +401,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         await self._close_event.wait()
 
+    @override
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
         """Handle an interaction received from Discord as a REST server.
 
@@ -601,6 +605,7 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.info("Starting site on %s", site.name)
             await site.start()
 
+    @override
     def get_listener(
         self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
@@ -656,6 +661,7 @@ class InteractionServer(interaction_server.InteractionServer):
         replace: bool = False,
     ) -> None: ...
 
+    @override
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],

@@ -45,6 +45,7 @@ import typing
 import warnings
 
 import colorlog.escape_codes
+from typing_extensions import override
 
 from hikari import _about as about
 from hikari.internal import data_binding
@@ -410,6 +411,7 @@ class HikariVersion:
         prerelease_num = int(prerelease_num) if prerelease else float("inf")
         self._cmp = self.version + (prerelease_num,)
 
+    @override
     def __str__(self) -> str:
         vstring = ".".join(map(str, self.version))
 
@@ -418,15 +420,18 @@ class HikariVersion:
 
         return vstring
 
+    @override
     def __repr__(self) -> str:
         return f"HikariVersion('{str(self)}')"
 
+    @override
     def __eq__(self, other: typing.Any) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 
         return self._cmp == other._cmp
 
+    @override
     def __ne__(self, other: typing.Any) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented

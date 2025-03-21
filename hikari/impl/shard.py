@@ -35,6 +35,7 @@ import urllib.parse
 import zlib
 
 import aiohttp
+from typing_extensions import override
 
 from hikari import _about as about
 from hikari import errors
@@ -527,29 +528,36 @@ class GatewayShardImpl(shard.GatewayShard):
         self._ws: typing.Optional[_GatewayTransport] = None
 
     @property
+    @override
     def heartbeat_latency(self) -> float:
         return self._heartbeat_latency
 
     @property
+    @override
     def id(self) -> int:
         return self._shard_id
 
     @property
+    @override
     def intents(self) -> intents_.Intents:
         return self._intents
 
     @property
+    @override
     def is_alive(self) -> bool:
         return self._keep_alive_task is not None
 
     @property
+    @override
     def is_connected(self) -> bool:
         return self._ws is not None and self._handshake_event is not None and self._handshake_event.is_set()
 
     @property
+    @override
     def shard_count(self) -> int:
         return self._shard_count
 
+    @override
     async def close(self) -> None:
         if not self._keep_alive_task:
             raise errors.ComponentStateConflictError("Cannot close an inactive shard")
@@ -573,11 +581,13 @@ class GatewayShardImpl(shard.GatewayShard):
         self._is_closing = False
         self._logger.info("shard shutdown successfully")
 
+    @override
     def get_user_id(self) -> snowflakes.Snowflake:
         self._check_if_connected()
         assert self._user_id is not None, "user_id was not known, this is probably a bug"
         return self._user_id
 
+    @override
     async def join(self) -> None:
         if not self._keep_alive_task:
             raise errors.ComponentStateConflictError("Cannot join an inactive shard")
@@ -599,6 +609,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 f"shard {self._shard_id} is not connected so it cannot be interacted with"
             )
 
+    @override
     async def request_guild_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -638,6 +649,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
 
+    @override
     async def start(self) -> None:
         if self._keep_alive_task or self._handshake_event:
             raise errors.ComponentStateConflictError("Cannot run more than one instance of one shard concurrently")
@@ -656,6 +668,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         self._keep_alive_task = keep_alive_task
 
+    @override
     async def update_presence(
         self,
         *,
@@ -670,6 +683,7 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         await self._send_json({_OP: _PRESENCE_UPDATE, _D: presence_payload})
 
+    @override
     async def update_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
