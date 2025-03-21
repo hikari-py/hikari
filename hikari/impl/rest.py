@@ -1379,7 +1379,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    def _build_message_payload(  # noqa: C901- Function too complex
+    def _build_message_payload(  # noqa: C901 - Function too complex
         self,
         /,
         *,
@@ -1425,9 +1425,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if not undefined.any_undefined(sticker, stickers):
             raise ValueError("You may only specify one of 'sticker' or 'stickers', not both")
-        
-        #TODO check for double thingy
-        
+
+        if not undefined.all_undefined(waveform, duration) and undefined.any_undefined(waveform, duration):
+            raise ValueError("You may only specify both of 'waveform' and 'duration', not only one")
 
         if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntactic sugar, common mistake to accidentally send an embed
@@ -1450,6 +1450,9 @@ class RESTClientImpl(rest_api.RESTClient):
             final_attachments.append(attachment)
         elif attachments:
             final_attachments.extend(attachments)
+
+        if len(final_attachments) != 1 and not undefined.any_undefined(waveform, duration):
+            raise ValueError("You can only have one attachment when you specify waveform and duration!")
 
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
@@ -1502,18 +1505,20 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment_id = 0
 
             for f in final_attachments:
+                attachment_payload: dict[str, typing.Any] = {}
+                if not undefined.any_undefined(waveform, duration):
+                    attachment_payload["duration_secs"] = duration
+                    attachment_payload["waveform"] = waveform
                 if edit and isinstance(f, messages_.Attachment):
-                    attachment_payload = {
-                        "id": f.id, "filename": f.filename
-                    }
-                    attachments_payload.append({"id": f.id, "filename": f.filename})
+                    attachment_payload.update({"id": f.id, "filename": f.filename})
+                    attachments_payload.append(attachment_payload)
                     continue
 
                 if not form_builder:
                     form_builder = data_binding.URLEncodedFormBuilder()
 
                 resource = files.ensure_resource(f)
-                attachments_payload.append({"id": attachment_id, "filename": resource.filename})
+                attachment_payload.update({"id": attachment_id, "filename": resource.filename})
                 form_builder.add_resource(f"files[{attachment_id}]", resource)
                 attachment_id += 1
 
@@ -1605,7 +1610,9 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
         if flags is undefined.UNDEFINED:
             flags = messages_.MessageFlag.IS_VOICE_MESSAGE
-        elif not flags.any(messages_.MessageFlag.IS_VOICE_MESSAGE):
+        elif isinstance(flags, int):
+            flags = messages_.MessageFlag(flags)
+        if not flags.any(messages_.MessageFlag.IS_VOICE_MESSAGE):
             flags = flags | messages_.MessageFlag.IS_VOICE_MESSAGE
         body, form_builder = self._build_message_payload(
             attachment=attachment,
