@@ -1,4 +1,9 @@
+comment: false
+
 coverage:
+  round: down
+  precision: 2
+
   status:
     project:
       default:
