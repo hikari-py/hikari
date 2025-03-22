@@ -33,6 +33,7 @@ from hikari import applications as application_models
 from hikari import channels as channel_models
 from hikari import colors
 from hikari import emojis as emojis_models
+from hikari import errors
 from hikari import snowflakes
 from hikari import undefined
 from hikari import users as user_models
@@ -67,6 +68,15 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
+
+_interaction_events_map: dict[
+    base_interactions.InteractionType, typing.Type[interaction_events.InteractionCreateEvent]
+] = {
+    base_interactions.InteractionType.APPLICATION_COMMAND: interaction_events.CommandInteractionCreateEvent,
+    base_interactions.InteractionType.AUTOCOMPLETE: interaction_events.AutocompleteInteractionCreateEvent,
+    base_interactions.InteractionType.MESSAGE_COMPONENT: interaction_events.ComponentInteractionCreateEvent,
+    base_interactions.InteractionType.MODAL_SUBMIT: interaction_events.ModalInteractionCreateEvent,
+}
 
 
 class EventFactoryImpl(event_factory.EventFactory):
@@ -507,7 +517,7 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         if event := self._interaction_events_map.get(interaction.type):
             return event(shard=shard, interaction=interaction)
-        return interaction_events.InteractionCreateEvent(shard=shard, interaction=interaction)
+        raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction.type}")
 
     #################
     # MEMBER EVENTS #
