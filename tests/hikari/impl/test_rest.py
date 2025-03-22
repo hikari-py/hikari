@@ -2650,6 +2650,33 @@ class TestRESTClientImplAsync:
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
+    async def test_create_voice_message(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+
+        returned = await rest_client.create_voice_message(
+            StubModel(123456789),
+            attachment=object(),
+            waveform="AAA",
+            duration=3,
+            reply=StubModel(987654321),
+            mentions_reply=True,
+            reply_must_exist=False,
+            flags=54123,
+        )
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
+
+        rest_client._request.assert_awaited_once()
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_create_voice_message_no_flags(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+        returned = await rest_client.create_voice_message(
+            StubModel(123456789), attachment=object(), waveform="AAA", duration=3
+        )
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
+
+        rest_client._request.assert_awaited_once()
+
     async def test_crosspost_message(self, rest_client):
         expected_route = routes.POST_CHANNEL_CROSSPOST.compile(channel=444432, message=12353234)
         mock_message = object()

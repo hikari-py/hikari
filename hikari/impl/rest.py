@@ -1379,7 +1379,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    def _build_message_payload(  # noqa: C901- Function too complex
+    def _build_message_payload(  # noqa: C901 - Function too complex
         self,
         /,
         *,
@@ -1565,7 +1565,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if reply:
             message_reference = data_binding.JSONObjectBuilder()
-            message_reference.put("message_id", str(int(reply)))
+            message_reference.put_snowflake("message_id", reply)
             message_reference.put("fail_if_not_exists", reply_must_exist)
 
             body.put("message_reference", message_reference)
@@ -1575,6 +1575,61 @@ class RESTClientImpl(rest_api.RESTClient):
             response = await self._request(route, form_builder=form_builder)
         else:
             response = await self._request(route, json=body)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
+
+    async def create_voice_message(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
+        if flags is undefined.UNDEFINED:
+            flags = messages_.MessageFlag.IS_VOICE_MESSAGE
+        else:
+            flags = messages_.MessageFlag(flags) | messages_.MessageFlag.IS_VOICE_MESSAGE
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("flags", flags)
+        if mentions_reply is not undefined.UNDEFINED:
+            body.put(
+                "allowed_mentions",
+                mentions.generate_allowed_mentions(
+                    undefined.UNDEFINED, mentions_reply, undefined.UNDEFINED, undefined.UNDEFINED
+                ),
+            )
+
+        if reply:
+            message_reference = data_binding.JSONObjectBuilder()
+            message_reference.put_snowflake("message_id", reply)
+            message_reference.put("fail_if_not_exists", reply_must_exist)
+
+            body.put("message_reference", message_reference)
+
+        form_builder = data_binding.URLEncodedFormBuilder()
+        attachment_id = 0
+
+        resource = files.ensure_resource(attachment)
+        attachment_payload: dict[str, typing.Any] = {
+            "duration_secs": duration,
+            "waveform": waveform,
+            "id": attachment_id,
+            "filename": resource.filename,
+        }
+        form_builder.add_resource(f"files[{attachment_id}]", resource)
+
+        body.put("attachments", [attachment_payload])
+
+        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+        response = await self._request(route, form_builder=form_builder)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
