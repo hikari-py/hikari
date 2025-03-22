@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,7 +24,6 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("EventFactoryImpl",)
 
-import datetime
 import types
 import typing
 
@@ -58,6 +56,8 @@ from hikari.internal import data_binding
 from hikari.internal import time
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import guilds as guild_models
     from hikari import invites as invite_models
     from hikari import messages as messages_models

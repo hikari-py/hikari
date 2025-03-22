@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -51,7 +50,7 @@ def purge(session: nox.Session) -> None:
         for trash in trash_list:
             try:
                 func(trash)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001, PERF203
                 session.warn(f"[ FAIL ] Failed to remove {trash!r}: {exc!s}")
             else:
                 session.log(f"[  OK  ] Removed {trash!r}")

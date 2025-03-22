@@ -22,10 +22,10 @@
 
 from __future__ import annotations
 
-import os
+import pathlib
 import sys
 
-sys.path.append(os.getcwd())
+sys.path.append(str(pathlib.Path.cwd()))
 
 from hikari.internal import ux
 

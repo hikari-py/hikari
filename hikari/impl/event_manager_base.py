@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("filtered", "EventManagerBase", "EventStream")
+__all__: typing.Sequence[str] = ("EventManagerBase", "EventStream", "filtered")
 
 import asyncio
 import inspect
@@ -103,9 +102,8 @@ def _generate_weak_listener(
     async def call_weak_method(event: base_events.Event) -> None:
         method = reference()
         if method is None:
-            raise TypeError(
-                "dead weak referenced subscriber method cannot be executed, try actually closing your event streamers"
-            )
+            msg = "dead weak referenced subscriber method cannot be executed, try actually closing your event streamers"
+            raise TypeError(msg)
 
         await method(event)
 
@@ -142,7 +140,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         event_manager: event_manager_.EventManager,
         event_type: type[base_events.EventT],
         *,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         limit: typing.Optional[int] = None,
     ) -> None:
         self._active = False
@@ -172,7 +170,8 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
     async def __anext__(self) -> base_events.EventT:
         if not self._active:
-            raise TypeError("stream must be started with before entering it")
+            msg = "stream must be started with before entering it"
+            raise TypeError(msg)
 
         while not self._queue:
             if not self._event:
@@ -251,10 +250,12 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
 def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> None:
     if next(parameters, None) is None:
-        raise TypeError("Event listener must have one positional argument for the event object.")
+        msg = "Event listener must have one positional argument for the event object."
+        raise TypeError(msg)
 
     if any(param.default is inspect.Parameter.empty for param in parameters):
-        raise TypeError("Only the first argument for a listener can be required, the event argument.")
+        msg = "Only the first argument for a listener can be required, the event argument."
+        raise TypeError(msg)
 
 
 def filtered(
@@ -380,7 +381,8 @@ class EventManagerBase(event_manager_.EventManager):
             is_event = False
 
         if not is_event:
-            raise TypeError("'event_type' is a non-Event type")
+            msg = "'event_type' is a non-Event type"
+            raise TypeError(msg)
 
         # Collection of combined bitfield combinations of intents that
         # could be enabled to receive this event.
@@ -419,7 +421,8 @@ class EventManagerBase(event_manager_.EventManager):
         if not (
             inspect.iscoroutinefunction(callback) or inspect.iscoroutinefunction(getattr(callback, "__call__", None))
         ):
-            raise TypeError("Cannot subscribe a non-coroutine function callback")
+            msg = "Cannot subscribe a non-coroutine function callback"
+            raise TypeError(msg)
 
         # [`_nested`][] is used to show the correct source code snippet if an intent
         # warning is triggered.
@@ -493,7 +496,8 @@ class EventManagerBase(event_manager_.EventManager):
                 annotation = event_param.annotation
 
                 if annotation is event_param.empty:
-                    raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
+                    msg = "Must provide the event type in the @listen decorator or as a type hint!"
+                    raise TypeError(msg)
 
                 if typing.get_origin(annotation) in _UNIONS:
                     # Resolve the types inside the union
@@ -547,7 +551,7 @@ class EventManagerBase(event_manager_.EventManager):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         limit: typing.Optional[int] = None,
     ) -> event_manager_.EventStream[base_events.EventT]:
         self._check_event(event_type, 1)
@@ -557,11 +561,12 @@ class EventManagerBase(event_manager_.EventManager):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
         if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
-            raise TypeError("Cannot wait for a non-Event type")
+            msg = "Cannot wait for a non-Event type"
+            raise TypeError(msg)
 
         self._check_event(event_type, 1)
 

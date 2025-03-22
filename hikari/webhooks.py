@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -27,9 +26,9 @@ __all__: typing.Sequence[str] = (
     "ApplicationWebhook",
     "ChannelFollowerWebhook",
     "ExecutableWebhook",
+    "IncomingWebhook",
     "PartialWebhook",
     "WebhookType",
-    "IncomingWebhook",
 )
 
 import abc
@@ -213,7 +212,8 @@ class ExecutableWebhook(abc.ABC):
             or `embed` and `embeds` are specified.
         """
         if not self.token:
-            raise ValueError("Cannot send a message using a webhook where we don't know the token")
+            msg = "Cannot send a message using a webhook where we don't know the token"
+            raise ValueError(msg)
 
         return await self.app.rest.execute_webhook(
             webhook=self.webhook_id,
@@ -263,7 +263,8 @@ class ExecutableWebhook(abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
         if self.token is None:
-            raise ValueError("Cannot fetch a message using a webhook where we don't know the token")
+            msg = "Cannot fetch a message using a webhook where we don't know the token"
+            raise ValueError(msg)
 
         return await self.app.rest.fetch_webhook_message(self.webhook_id, token=self.token, message=message)
 
@@ -414,7 +415,8 @@ class ExecutableWebhook(abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
         if self.token is None:
-            raise ValueError("Cannot edit a message using a webhook where we don't know the token")
+            msg = "Cannot edit a message using a webhook where we don't know the token"
+            raise ValueError(msg)
 
         return await self.app.rest.edit_webhook_message(
             self.webhook_id,
@@ -456,7 +458,8 @@ class ExecutableWebhook(abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
         if self.token is None:
-            raise ValueError("Cannot delete a message using a webhook where we don't know the token")
+            msg = "Cannot delete a message using a webhook where we don't know the token"
+            raise ValueError(msg)
 
         await self.app.rest.delete_webhook_message(self.webhook_id, token=self.token, message=message)
 
@@ -617,7 +620,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
         if use_token:
             if self.token is None:
-                raise ValueError("This webhook's token is unknown, so cannot be used")
+                msg = "This webhook's token is unknown, so cannot be used"
+                raise ValueError(msg)
             token = self.token
 
         elif use_token is undefined.UNDEFINED and self.token:
@@ -684,7 +688,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
         if use_token:
             if self.token is None:
-                raise ValueError("This webhook's token is unknown, so cannot be used")
+                msg = "This webhook's token is unknown, so cannot be used"
+                raise ValueError(msg)
             token = self.token
 
         elif use_token is undefined.UNDEFINED and self.token:
@@ -759,7 +764,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
         if use_token:
             if self.token is None:
-                raise ValueError("This webhook's token is unknown, so cannot be used")
+                msg = "This webhook's token is unknown, so cannot be used"
+                raise ValueError(msg)
             token = self.token
 
         elif use_token is undefined.UNDEFINED and self.token:

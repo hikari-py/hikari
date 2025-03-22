@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,21 +23,21 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ReactionEvent",
-    "GuildReactionEvent",
-    "DMReactionEvent",
-    "ReactionAddEvent",
-    "ReactionDeleteEvent",
-    "ReactionDeleteEmojiEvent",
-    "ReactionDeleteAllEvent",
-    "GuildReactionAddEvent",
-    "GuildReactionDeleteEvent",
-    "GuildReactionDeleteEmojiEvent",
-    "GuildReactionDeleteAllEvent",
     "DMReactionAddEvent",
-    "DMReactionDeleteEvent",
-    "DMReactionDeleteEmojiEvent",
     "DMReactionDeleteAllEvent",
+    "DMReactionDeleteEmojiEvent",
+    "DMReactionDeleteEvent",
+    "DMReactionEvent",
+    "GuildReactionAddEvent",
+    "GuildReactionDeleteAllEvent",
+    "GuildReactionDeleteEmojiEvent",
+    "GuildReactionDeleteEvent",
+    "GuildReactionEvent",
+    "ReactionAddEvent",
+    "ReactionDeleteAllEvent",
+    "ReactionDeleteEmojiEvent",
+    "ReactionDeleteEvent",
+    "ReactionEvent",
 )
 
 import abc

@@ -141,21 +141,6 @@ towncrier = ["towncrier==24.8.0"]
 [tool.uv]
 required-version = "~=0.6"
 
-[tool.ruff]
-line-length = 120
-target-version = "py39"
-
-[tool.ruff.format]
-docstring-code-format = true
-docstring-code-line-length = 80
-quote-style = "double"
-line-ending = "lf"
-skip-magic-trailing-comma = true
-
-[tool.ruff.lint.isort]
-required-imports = ["from __future__ import annotations"]
-force-single-line = true
-
 [tool.coverage.run]
 relative_files = true
 parallel = true

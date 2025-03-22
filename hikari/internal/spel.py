@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -69,7 +68,7 @@ class AttrGetter(typing.Generic[InputValueT, ReturnValueT]):
     may be preceded with an optional `.` to aid in readability.
     """
 
-    __slots__: typing.Sequence[str] = ("pipeline", "invert_all")
+    __slots__: typing.Sequence[str] = ("invert_all", "pipeline")
 
     def __init__(self, attr_name: str) -> None:
         self.invert_all: bool = False

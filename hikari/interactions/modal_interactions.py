@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,23 +23,23 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ModalResponseTypesT",
     "ModalInteraction",
     "ModalInteraction",
     "ModalInteractionMetadata",
+    "ModalResponseTypesT",
 )
 
 import typing
 
 import attrs
 
-from hikari import messages
-from hikari import snowflakes
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import components as components_
+    from hikari import messages
+    from hikari import snowflakes
     from hikari.api import special_endpoints
 
 ModalResponseTypesT = typing.Literal[

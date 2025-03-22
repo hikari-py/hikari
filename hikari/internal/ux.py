@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,12 +23,12 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "init_logging",
-    "print_banner",
-    "warn_if_not_optimized",
-    "supports_color",
     "HikariVersion",
     "check_for_updates",
+    "init_logging",
+    "print_banner",
+    "supports_color",
+    "warn_if_not_optimized",
 )
 
 import importlib.resources
@@ -182,7 +181,8 @@ def init_logging(
         try:
             logging.config.fileConfig(flavor)
         except Exception as ex:
-            raise RuntimeError("A problem occurred while trying to setup logging through file configuration") from ex
+            msg = "A problem occurred while trying to setup logging through file configuration"
+            raise RuntimeError(msg) from ex
         return
 
     # Config through dict
@@ -190,7 +190,8 @@ def init_logging(
         try:
             logging.config.dictConfig(flavor)
         except Exception as ex:
-            raise RuntimeError("A problem occurred while trying to setup logging through dict configuration") from ex
+            msg = "A problem occurred while trying to setup logging through dict configuration"
+            raise RuntimeError(msg) from ex
 
         if not flavor.get("incremental"):
             # Non-incremental setup, return
@@ -227,7 +228,8 @@ def init_logging(
             )
 
     except Exception as ex:
-        raise RuntimeError("A problem occurred while trying to setup default logging configuration") from ex
+        msg = "A problem occurred while trying to setup default logging configuration"
+        raise RuntimeError(msg) from ex
 
 
 _UNCONDITIONAL_ANSI_FLAGS: typing.Final[frozenset[str]] = frozenset(("PYCHARM_HOSTED", "WT_SESSION"))
@@ -306,7 +308,8 @@ def print_banner(
     if extra_args:
         for key in extra_args:
             if key in args:
-                raise ValueError(f"Cannot overwrite $-substitution `{key}`. Please use a different key.")
+                msg = f"Cannot overwrite $-substitution `{key}`. Please use a different key."
+                raise ValueError(msg)
         args.update(extra_args)
 
     if supports_color(allow_color, force_color):
@@ -385,14 +388,14 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
     return color_support
 
 
-_VERSION_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d+)\.(\d+)\.(\d+)(\.[a-z]+)?(\d+)?$", re.I)
+_VERSION_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d+)\.(\d+)\.(\d+)(\.[a-z]+)?(\d+)?$", re.IGNORECASE)
 
 
 # This is a modified version of packaging.version.Version to better suit our needs
 class HikariVersion:
     """Hikari strict version."""
 
-    __slots__: typing.Sequence[str] = ("version", "prerelease", "_cmp")
+    __slots__: typing.Sequence[str] = ("_cmp", "prerelease", "version")
 
     version: tuple[int, int, int]
     prerelease: typing.Optional[tuple[str, int]]
@@ -400,7 +403,8 @@ class HikariVersion:
     def __init__(self, vstring: str) -> None:
         match = _VERSION_REGEX.match(vstring)
         if not match:
-            raise ValueError(f"Invalid version: '{vstring}'")
+            msg = f"Invalid version: '{vstring}'"
+            raise ValueError(msg)
 
         (major, minor, patch, prerelease, prerelease_num) = match.group(1, 2, 3, 4, 5)
 
@@ -419,15 +423,15 @@ class HikariVersion:
         return vstring
 
     def __repr__(self) -> str:
-        return f"HikariVersion('{str(self)}')"
+        return f"HikariVersion('{self!s}')"
 
-    def __eq__(self, other: typing.Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 
         return self._cmp == other._cmp
 
-    def __ne__(self, other: typing.Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 
@@ -465,22 +469,24 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
         return
 
     try:
-        async with net.create_client_session(
-            connector=net.create_tcp_connector(dns_cache=False, limit=1, http_settings=http_settings),
-            connector_owner=True,
-            http_settings=http_settings,
-            raise_for_status=True,
-            trust_env=proxy_settings.trust_env,
-        ) as cs:
-            async with cs.get(
+        async with (
+            net.create_client_session(
+                connector=net.create_tcp_connector(dns_cache=False, limit=1, http_settings=http_settings),
+                connector_owner=True,
+                http_settings=http_settings,
+                raise_for_status=True,
+                trust_env=proxy_settings.trust_env,
+            ) as cs,
+            cs.get(
                 "https://pypi.org/pypi/hikari/json",
                 allow_redirects=http_settings.max_redirects is not None,
                 max_redirects=http_settings.max_redirects if http_settings.max_redirects is not None else 10,
                 proxy=proxy_settings.url,
                 proxy_headers=proxy_settings.all_headers,
-            ) as resp:
-                data = data_binding.default_json_loads(await resp.read())
-                assert isinstance(data, dict)
+            ) as resp,
+        ):
+            data = data_binding.default_json_loads(await resp.read())
+            assert isinstance(data, dict)
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None

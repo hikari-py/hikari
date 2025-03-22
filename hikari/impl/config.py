@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,11 +24,11 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "BasicAuthHeader",
-    "ProxySettings",
-    "HTTPTimeoutSettings",
-    "HTTPSettings",
     "CacheComponents",
     "CacheSettings",
+    "HTTPSettings",
+    "HTTPTimeoutSettings",
+    "ProxySettings",
 )
 
 import base64
@@ -192,7 +191,8 @@ class HTTPTimeoutSettings:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, (float, int)) or value <= 0):
-            raise ValueError(f"HTTPTimeoutSettings.{attrsib.name} must be None, or a POSITIVE float/int")
+            msg = f"HTTPTimeoutSettings.{attrsib.name} must be None, or a POSITIVE float/int"
+            raise ValueError(msg)
 
 
 @attrs_extensions.with_copy
@@ -243,7 +243,8 @@ class HTTPSettings(config.HTTPSettings):
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, int) or value <= 0):
-            raise ValueError("http_settings.max_redirects must be None or a POSITIVE integer")
+            msg = "http_settings.max_redirects must be None or a POSITIVE integer"
+            raise ValueError(msg)
 
     ssl: ssl_.SSLContext = attrs.field(
         factory=lambda: _ssl_factory(True),

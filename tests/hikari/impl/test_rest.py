@@ -1717,7 +1717,7 @@ class TestRESTClientImplAsync:
             status = http.HTTPStatus.UNAUTHORIZED
             content_type = rest._APPLICATION_JSON
             reason = "cause why not"
-            headers = {"HEADER": "value", "HEADER": "value"}
+            headers = {"HEADER": "value"}
 
             async def read(self):
                 return '{"something": null}'
@@ -1744,7 +1744,7 @@ class TestRESTClientImplAsync:
             status = http.HTTPStatus.UNAUTHORIZED
             content_type = rest._APPLICATION_JSON
             reason = "cause why not"
-            headers = {"HEADER": "value", "HEADER": "value"}
+            headers = {"HEADER": "value"}
             real_url = "okokokok"
 
             async def read(self):
@@ -1839,7 +1839,7 @@ class TestRESTClientImplAsync:
             status = http.HTTPStatus.OK
             content_type = rest._APPLICATION_JSON
             reason = "cause why not"
-            headers = {"HEADER": "value", "HEADER": "value"}
+            headers = {"HEADER": "value"}
 
             async def read(self):
                 return '{"something": null}'

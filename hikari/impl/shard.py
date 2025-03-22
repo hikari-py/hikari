@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -135,15 +134,15 @@ class _GatewayTransport:
     """
 
     __slots__ = (
-        "_zlib",
-        "_sent_close",
-        "_logger",
-        "_exit_stack",
-        "_log_filterer",
-        "_ws",
-        "_receive_and_check",
-        "_loads",
         "_dumps",
+        "_exit_stack",
+        "_loads",
+        "_log_filterer",
+        "_logger",
+        "_receive_and_check",
+        "_sent_close",
+        "_ws",
+        "_zlib",
     )
 
     def __init__(
@@ -209,10 +208,12 @@ class _GatewayTransport:
 
     def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
-            raise errors.GatewayTransportError("Unexpected message type received TEXT, expected BINARY")
+            msg = "Unexpected message type received TEXT, expected BINARY"
+            raise errors.GatewayTransportError(msg)
 
         if message.type == aiohttp.WSMsgType.BINARY:
-            raise errors.GatewayTransportError("Unexpected message type received BINARY, expected TEXT")
+            msg = "Unexpected message type received BINARY, expected TEXT"
+            raise errors.GatewayTransportError(msg)
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)
@@ -225,7 +226,8 @@ class _GatewayTransport:
             # May be caused by the server shutting us down.
             # May be caused by Windows injecting an EOF if something disconnects, as some
             # network drivers appear to do this.
-            raise errors.GatewayConnectionError("Socket has closed")
+            msg = "Socket has closed"
+            raise errors.GatewayConnectionError(msg)
 
         # Assume exception for now.
         reason = f"{message.data!r} [extra={message.extra!r}, type={message.type}]"
@@ -431,8 +433,8 @@ class GatewayShardImpl(shard.GatewayShard):
     __slots__: typing.Sequence[str] = (
         "_activity",
         "_dumps",
-        "_event_manager",
         "_event_factory",
+        "_event_manager",
         "_gateway_url",
         "_handshake_event",
         "_heartbeat_latency",
@@ -485,10 +487,12 @@ class GatewayShardImpl(shard.GatewayShard):
         url: str,
     ) -> None:
         if data_format != shard.GatewayDataFormat.JSON:
-            raise NotImplementedError(f"Unsupported gateway data format: {data_format}")
+            msg = f"Unsupported gateway data format: {data_format}"
+            raise NotImplementedError(msg)
 
         if compression and compression != shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
-            raise NotImplementedError(f"Unsupported compression format {compression}")
+            msg = f"Unsupported compression format {compression}"
+            raise NotImplementedError(msg)
 
         self._activity = initial_activity
         self._event_manager = event_manager
@@ -552,7 +556,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def close(self) -> None:
         if not self._keep_alive_task:
-            raise errors.ComponentStateConflictError("Cannot close an inactive shard")
+            msg = "Cannot close an inactive shard"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._is_closing:
             await self.join()
@@ -580,7 +585,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def join(self) -> None:
         if not self._keep_alive_task:
-            raise errors.ComponentStateConflictError("Cannot join an inactive shard")
+            msg = "Cannot join an inactive shard"
+            raise errors.ComponentStateConflictError(msg)
 
         await asyncio.wait_for(asyncio.shield(self._keep_alive_task), timeout=None)
 
@@ -595,9 +601,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
     def _check_if_connected(self) -> None:
         if not self.is_connected:
-            raise errors.ComponentStateConflictError(
-                f"shard {self._shard_id} is not connected so it cannot be interacted with"
-            )
+            msg = f"shard {self._shard_id} is not connected so it cannot be interacted with"
+            raise errors.ComponentStateConflictError(msg)
 
     async def request_guild_members(
         self,
@@ -617,16 +622,20 @@ class GatewayShardImpl(shard.GatewayShard):
             raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
 
         if users is not undefined.UNDEFINED and (query or limit):
-            raise ValueError("Cannot specify limit/query with users")
+            msg = "Cannot specify limit/query with users"
+            raise ValueError(msg)
 
         if not 0 <= limit <= 100:
-            raise ValueError("'limit' must be between 0 and 100, both inclusive")
+            msg = "'limit' must be between 0 and 100, both inclusive"
+            raise ValueError(msg)
 
         if users is not undefined.UNDEFINED and len(users) > 100:
-            raise ValueError("'users' is limited to 100 users")
+            msg = "'users' is limited to 100 users"
+            raise ValueError(msg)
 
         if nonce is not undefined.UNDEFINED and len(bytes(nonce, "utf-8")) > 32:
-            raise ValueError("'nonce' can be no longer than 32 byte characters long.")
+            msg = "'nonce' can be no longer than 32 byte characters long."
+            raise ValueError(msg)
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
@@ -640,7 +649,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def start(self) -> None:
         if self._keep_alive_task or self._handshake_event:
-            raise errors.ComponentStateConflictError("Cannot run more than one instance of one shard concurrently")
+            msg = "Cannot run more than one instance of one shard concurrently"
+            raise errors.ComponentStateConflictError(msg)
 
         self._handshake_event = asyncio.Event()
         keep_alive_task = asyncio.create_task(self._keep_alive(), name=f"keep alive (shard {self._shard_id})")
@@ -652,7 +662,8 @@ class GatewayShardImpl(shard.GatewayShard):
             # This occurs if the run task finished before the handshake completion event,
             # which implies the shard died before it could become ready/resume...
             keep_alive_task.result()
-            raise RuntimeError(f"shard {self._shard_id} was closed before it could start successfully")
+            msg = f"shard {self._shard_id} was closed before it could start successfully"
+            raise RuntimeError(msg)
 
         self._keep_alive_task = keep_alive_task
 
@@ -788,7 +799,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _connect(self) -> tuple[asyncio.Task[None], ...]:
         if self._ws is not None:
-            raise errors.ComponentStateConflictError("Attempting to connect an already connected shard")
+            msg = "Attempting to connect an already connected shard"
+            raise errors.ComponentStateConflictError(msg)
 
         assert self._handshake_event is not None
 
@@ -838,7 +850,8 @@ class GatewayShardImpl(shard.GatewayShard):
                 initial_op,
             )
             await self._ws.send_close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
-            raise errors.GatewayError(f"Expected opcode {_HELLO} (HELLO), but received {initial_op}")
+            msg = f"Expected opcode {_HELLO} (HELLO), but received {initial_op}"
+            raise errors.GatewayError(msg)
 
         # Spawn lifetime tasks
         heartbeat_interval = float(hello_payload[_D]["heartbeat_interval"]) / 1_000.0

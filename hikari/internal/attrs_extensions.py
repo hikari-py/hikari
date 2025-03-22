@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,11 +23,11 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "with_copy",
     "copy_attrs",
     "deep_copy_attrs",
     "invalidate_deep_copy_cache",
     "invalidate_shallow_copy_cache",
+    "with_copy",
 )
 
 import copy as std_copy
@@ -79,7 +78,7 @@ def get_fields_definition(
 
     for field in attrs.fields(cls):
         if field.init:
-            key_word = field.name[1:] if field.name.startswith("_") else field.name
+            key_word = field.name.removeprefix("_")
             init_results.append((field, key_word))
         else:
             non_init_results.append(field)

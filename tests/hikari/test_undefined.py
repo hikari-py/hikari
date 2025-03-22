@@ -21,7 +21,7 @@
 from __future__ import annotations
 
 import copy
-import pickle  # noqa: S403 Consider possible security implications associated with pickle module.
+import pickle
 
 import pytest
 

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,11 +24,11 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "Event",
-    "ExceptionEvent",
     "EventT",
+    "ExceptionEvent",
+    "get_required_intents_for",
     "is_no_recursive_throw_event",
     "no_recursive_throw",
-    "get_required_intents_for",
     "requires_intents",
 )
 
@@ -39,13 +38,14 @@ import typing
 
 import attrs
 
-from hikari import intents
-from hikari import traits
 from hikari.api import shard as gateway_shard
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     import types
+
+    from hikari import intents
+    from hikari import traits
 
     _T = typing.TypeVar("_T")
 

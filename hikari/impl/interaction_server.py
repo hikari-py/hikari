@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -38,7 +37,6 @@ from hikari import applications
 from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
-from hikari.interactions import base_interactions
 from hikari.internal import data_binding
 
 if typing.TYPE_CHECKING:
@@ -55,6 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari import files as files_
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
+    from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
     from hikari.interactions import modal_interactions
@@ -160,7 +159,8 @@ class _FilePayload(aiohttp.Payload):
         self._executor = executor
 
     def decode(self, encoding: str = "utf-8", errors: str = "strict") -> str:
-        raise RuntimeError("Impossible to decode a _FilePayload. If you see this, please file a bug report with hikari")
+        msg = "Impossible to decode a _FilePayload. If you see this, please file a bug report with hikari"
+        raise RuntimeError(msg)
 
     async def write(self, writer: aiohttp.abc.AbstractStreamWriter) -> None:
         async with self._value.stream(executor=self._executor) as data:
@@ -215,8 +215,8 @@ class InteractionServer(interaction_server.InteractionServer):
         "_nacl",
         "_public_key",
         "_rest_client",
-        "_server",
         "_running_generator_listeners",
+        "_server",
     )
 
     def __init__(
@@ -235,9 +235,8 @@ class InteractionServer(interaction_server.InteractionServer):
             import nacl.signing
 
         except ModuleNotFoundError as exc:
-            raise RuntimeError(
-                "You must install the optional `hikari[server]` dependencies to use the default interaction server."
-            ) from exc
+            msg = "You must install the optional `hikari[server]` dependencies to use the default interaction server."
+            raise RuntimeError(msg) from exc
 
         # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
         self._application_fetch_lock: typing.Optional[asyncio.Lock] = None
@@ -370,7 +369,8 @@ class InteractionServer(interaction_server.InteractionServer):
     async def close(self) -> None:
         """Gracefully close the server and any open connections."""
         if not self._server or not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
+            msg = "Cannot close an inactive interaction server"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._is_closing:
             await self.join()
@@ -394,7 +394,8 @@ class InteractionServer(interaction_server.InteractionServer):
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot wait for an inactive interaction server to join")
+            msg = "Cannot wait for an inactive interaction server to join"
+            raise errors.ComponentStateConflictError(msg)
 
         await self._close_event.wait()
 
@@ -538,7 +539,8 @@ class InteractionServer(interaction_server.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self._server:
-            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
+            msg = "Cannot start an already active interaction server"
+            raise errors.ComponentStateConflictError(msg)
 
         self._close_event = asyncio.Event()
         self._is_closing = False
@@ -570,7 +572,7 @@ class InteractionServer(interaction_server.InteractionServer):
                     )
                 )
 
-        elif path is None and socket is None or port is not None:
+        elif (path is None and socket is None) or port is not None:
             sites.append(
                 aiohttp.web.TCPSite(
                     self._server,
@@ -668,7 +670,8 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         if listener:
             if not replace and interaction_type in self._listeners:
-                raise TypeError(f"Listener already set for {interaction_type.__name__}")
+                msg = f"Listener already set for {interaction_type.__name__}"
+                raise TypeError(msg)
 
             self._listeners[interaction_type] = listener
 

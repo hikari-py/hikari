@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji")
+__all__: typing.Sequence[str] = ("CustomEmoji", "Emoji", "KnownCustomEmoji", "UnicodeEmoji")
 
 import abc
 import re
@@ -327,7 +326,8 @@ class CustomEmoji(snowflakes.Unique, Emoji):
                 is_animated=emoji_match.group("flags").lower() == "a",
             )
 
-        raise ValueError("Expected an emoji mention")
+        msg = "Expected an emoji mention"
+        raise ValueError(msg)
 
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)

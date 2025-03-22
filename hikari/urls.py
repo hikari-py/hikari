@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("BASE_URL", "VERSION", "REST_API_URL", "OAUTH2_API_URL", "CDN_URL")
+__all__: typing.Sequence[str] = ("BASE_URL", "CDN_URL", "OAUTH2_API_URL", "REST_API_URL", "VERSION")
 
 import typing
 

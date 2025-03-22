@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -91,7 +90,8 @@ def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pra
     import cProfile
 
     if inspect.iscoroutinefunction(call):
-        raise TypeError("cannot profile async calls")
+        msg = "cannot profile async calls"
+        raise TypeError(msg)
 
     @functools.wraps(call)
     def wrapped(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:

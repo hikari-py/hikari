@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -27,7 +26,7 @@ be used to initialize other resources, fetch information, and perform checks.
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("StartingEvent", "StartedEvent", "StoppingEvent", "StoppedEvent")
+__all__: typing.Sequence[str] = ("StartedEvent", "StartingEvent", "StoppedEvent", "StoppingEvent")
 
 import typing
 

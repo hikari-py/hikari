@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,17 +23,17 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "MessageEvent",
-    "MessageCreateEvent",
-    "MessageUpdateEvent",
-    "MessageDeleteEvent",
-    "GuildMessageCreateEvent",
-    "GuildMessageUpdateEvent",
-    "GuildMessageDeleteEvent",
-    "GuildBulkMessageDeleteEvent",
     "DMMessageCreateEvent",
-    "DMMessageUpdateEvent",
     "DMMessageDeleteEvent",
+    "DMMessageUpdateEvent",
+    "GuildBulkMessageDeleteEvent",
+    "GuildMessageCreateEvent",
+    "GuildMessageDeleteEvent",
+    "GuildMessageUpdateEvent",
+    "MessageCreateEvent",
+    "MessageDeleteEvent",
+    "MessageEvent",
+    "MessageUpdateEvent",
 )
 
 import abc

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -33,10 +31,8 @@
 __all__ = ["Enum", "Flag"]
 
 import enum as __enum
-from typing import Any as __Any
-from typing import Generic as __Generic
-from typing import Iterator as __Iterator
-from typing import Sequence as __Sequence
+from collections.abc import Iterator as __Iterator
+from collections.abc import Sequence as __Sequence
 from typing import TypeVar as __TypeVar
 from typing import Union as __Union
 

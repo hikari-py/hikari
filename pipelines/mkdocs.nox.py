@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -38,7 +37,7 @@ def _setup_environ(session: nox.Session) -> None:
 
 
 @nox.session()
-def mkdocs(session: nox.Session):
+def mkdocs(session: nox.Session) -> None:
     """Generate docs using mkdocs."""
     _setup_environ(session)
 
@@ -48,7 +47,7 @@ def mkdocs(session: nox.Session):
 
 
 @nox.session()
-def mkdocs_serve(session: nox.Session):
+def mkdocs_serve(session: nox.Session) -> None:
     """Start an HTTP server that serves the generated docs in real time."""
     _setup_environ(session)
 

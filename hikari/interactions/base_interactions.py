@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,17 +24,17 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "DEFERRED_RESPONSE_TYPES",
+    "MESSAGE_RESPONSE_TYPES",
     "DeferredResponseTypesT",
-    "InteractionMember",
     "InteractionChannel",
-    "ResolvedOptionData",
+    "InteractionMember",
     "InteractionType",
     "MessageResponseMixin",
-    "MESSAGE_RESPONSE_TYPES",
     "MessageResponseTypesT",
+    "ModalResponseMixin",
     "PartialInteraction",
     "PartialInteractionMetadata",
-    "ModalResponseMixin",
+    "ResolvedOptionData",
     "ResponseType",
 )
 
