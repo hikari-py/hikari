@@ -28,6 +28,7 @@ import pytest
 
 from hikari import channels as channel_models
 from hikari import emojis as emoji_models
+from hikari import errors
 from hikari import traits
 from hikari import undefined
 from hikari import users as user_models
@@ -738,7 +739,6 @@ class TestEventFactoryImpl:
     @pytest.mark.parametrize(
         ("interaction_type", "expected"),
         [
-            (None, interaction_events.InteractionCreateEvent),
             (base_interactions.InteractionType.APPLICATION_COMMAND, interaction_events.CommandInteractionCreateEvent),
             (base_interactions.InteractionType.MESSAGE_COMPONENT, interaction_events.ComponentInteractionCreateEvent),
             (base_interactions.InteractionType.AUTOCOMPLETE, interaction_events.AutocompleteInteractionCreateEvent),
@@ -762,6 +762,11 @@ class TestEventFactoryImpl:
         assert result.shard is mock_shard
         assert result.interaction is mock_app.entity_factory.deserialize_interaction.return_value
         assert isinstance(result, expected)
+
+    def test_deserialize_interaction_create_event_error(self, event_factory, mock_app, mock_shard):
+        payload = {"id": "1561232344"}
+        with pytest.raises(errors.UnrecognisedEntityError):
+            event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
     #################
     # MEMBER EVENTS #
