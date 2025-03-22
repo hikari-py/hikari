@@ -21,7 +21,7 @@ ignore = [
     "TD003",   # Line contains todo
     "FIX002",  # Line contains todo
     "PLR2004", # Usage of "magic value" (consider removing in the future)
-    "SIM110",  # Use `any`/`all` (they are usually bad for perfomance)
+    "SIM110",  # Use `any`/`all` (they are usually bad for performance)
 ]
 
 [lint.per-file-ignores]
