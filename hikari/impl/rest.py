@@ -1410,8 +1410,6 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
         ] = undefined.UNDEFINED,
-        waveform: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        duration: undefined.UndefinedOr[float] = undefined.UNDEFINED,
         edit: bool = False,
     ) -> tuple[data_binding.JSONObjectBuilder, typing.Optional[data_binding.URLEncodedFormBuilder]]:
         if not undefined.any_undefined(attachment, attachments):
@@ -1425,9 +1423,6 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if not undefined.any_undefined(sticker, stickers):
             raise ValueError("You may only specify one of 'sticker' or 'stickers', not both")
-
-        if not undefined.all_undefined(waveform, duration) and undefined.any_undefined(waveform, duration):
-            raise ValueError("You may only specify both of 'waveform' and 'duration', not only one")
 
         if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntactic sugar, common mistake to accidentally send an embed
@@ -1450,9 +1445,6 @@ class RESTClientImpl(rest_api.RESTClient):
             final_attachments.append(attachment)
         elif attachments:
             final_attachments.extend(attachments)
-
-        if len(final_attachments) != 1 and not undefined.any_undefined(waveform, duration):
-            raise ValueError("You can only have one attachment when you specify waveform and duration!")
 
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
@@ -1505,21 +1497,15 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment_id = 0
 
             for f in final_attachments:
-                attachment_payload: dict[str, typing.Any] = {}
-                if not undefined.any_undefined(waveform, duration):
-                    attachment_payload["duration_secs"] = duration
-                    attachment_payload["waveform"] = waveform
                 if edit and isinstance(f, messages_.Attachment):
-                    attachment_payload.update({"id": f.id, "filename": f.filename})
-                    attachments_payload.append(attachment_payload)
+                    attachments_payload.append({"id": f.id, "filename": f.filename})
                     continue
 
                 if not form_builder:
                     form_builder = data_binding.URLEncodedFormBuilder()
 
                 resource = files.ensure_resource(f)
-                attachment_payload.update({"id": attachment_id, "filename": resource.filename})
-                attachments_payload.append(attachment_payload)
+                attachments_payload.append({"id": attachment_id, "filename": resource.filename})
                 form_builder.add_resource(f"files[{attachment_id}]", resource)
                 attachment_id += 1
 
@@ -1579,7 +1565,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if reply:
             message_reference = data_binding.JSONObjectBuilder()
-            message_reference.put("message_id", str(int(reply)))
+            message_reference.put_snowflake("message_id", reply)
             message_reference.put("fail_if_not_exists", reply_must_exist)
 
             body.put("message_reference", message_reference)
@@ -1610,22 +1596,40 @@ class RESTClientImpl(rest_api.RESTClient):
             flags = messages_.MessageFlag.IS_VOICE_MESSAGE
         else:
             flags = messages_.MessageFlag(flags) | messages_.MessageFlag.IS_VOICE_MESSAGE
-        body, form_builder = self._build_message_payload(
-            attachment=attachment, mentions_reply=mentions_reply, flags=flags, waveform=waveform, duration=duration
-        )
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("flags", flags)
+        if mentions_reply is not undefined.UNDEFINED:
+            body.put(
+                "allowed_mentions",
+                mentions.generate_allowed_mentions(
+                    undefined.UNDEFINED, mentions_reply, undefined.UNDEFINED, undefined.UNDEFINED
+                ),
+            )
 
         if reply:
             message_reference = data_binding.JSONObjectBuilder()
-            message_reference.put("message_id", str(int(reply)))
+            message_reference.put_snowflake("message_id", reply)
             message_reference.put("fail_if_not_exists", reply_must_exist)
 
             body.put("message_reference", message_reference)
 
-        if form_builder is not None:
-            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder)
-        else:
-            response = await self._request(route, json=body)
+        form_builder = data_binding.URLEncodedFormBuilder()
+        attachment_id = 0
+
+        resource = files.ensure_resource(attachment)
+        attachment_payload: dict[str, typing.Any] = {
+            "duration_secs": duration,
+            "waveform": waveform,
+            "id": attachment_id,
+            "filename": resource.filename,
+        }
+        form_builder.add_resource(f"files[{attachment_id}]", resource)
+
+        body.put("attachments", [attachment_payload])
+
+        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+        response = await self._request(route, form_builder=form_builder)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)

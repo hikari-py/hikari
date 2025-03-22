@@ -1262,11 +1262,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         waveform
             The waveform of the entire message, with 1 byte
             per datapoint encoded in base64.
-            
+
             Official clients sample the recording at most once per 100
             milliseconds, but will downsample so that no more than 256
             datapoints are in the waveform.
-            
+
             !!! note
                 Discord states that this is implementation detail and might
                 change without notice. You have been warned!
