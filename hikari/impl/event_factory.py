@@ -33,6 +33,7 @@ from hikari import applications as application_models
 from hikari import channels as channel_models
 from hikari import colors
 from hikari import emojis as emojis_models
+from hikari import errors
 from hikari import snowflakes
 from hikari import undefined
 from hikari import users as user_models
@@ -53,6 +54,7 @@ from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
+from hikari.interactions import base_interactions
 from hikari.internal import collections
 from hikari.internal import data_binding
 from hikari.internal import time
@@ -66,6 +68,15 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
+
+_interaction_events_map: dict[
+    base_interactions.InteractionType, typing.Type[interaction_events.InteractionCreateEvent]
+] = {
+    base_interactions.InteractionType.APPLICATION_COMMAND: interaction_events.CommandInteractionCreateEvent,
+    base_interactions.InteractionType.AUTOCOMPLETE: interaction_events.AutocompleteInteractionCreateEvent,
+    base_interactions.InteractionType.MESSAGE_COMPONENT: interaction_events.ComponentInteractionCreateEvent,
+    base_interactions.InteractionType.MODAL_SUBMIT: interaction_events.ModalInteractionCreateEvent,
+}
 
 
 class EventFactoryImpl(event_factory.EventFactory):
@@ -490,12 +501,23 @@ class EventFactoryImpl(event_factory.EventFactory):
     # INTERACTION EVENTS #
     ######################
 
+    _interaction_events_map: dict[
+        base_interactions.InteractionType, typing.Type[interaction_events.InteractionCreateEvent]
+    ] = {
+        base_interactions.InteractionType.APPLICATION_COMMAND: interaction_events.CommandInteractionCreateEvent,
+        base_interactions.InteractionType.AUTOCOMPLETE: interaction_events.AutocompleteInteractionCreateEvent,
+        base_interactions.InteractionType.MESSAGE_COMPONENT: interaction_events.ComponentInteractionCreateEvent,
+        base_interactions.InteractionType.MODAL_SUBMIT: interaction_events.ModalInteractionCreateEvent,
+    }
+
     def deserialize_interaction_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> interaction_events.InteractionCreateEvent:
-        return interaction_events.InteractionCreateEvent(
-            shard=shard, interaction=self._app.entity_factory.deserialize_interaction(payload)
-        )
+        interaction = self._app.entity_factory.deserialize_interaction(payload)
+
+        if event := self._interaction_events_map.get(interaction.type):
+            return event(shard=shard, interaction=interaction)
+        raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction.type}")
 
     #################
     # MEMBER EVENTS #
