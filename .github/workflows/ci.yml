@@ -155,7 +155,7 @@ jobs:
       - name: Ruff
         if: always() && !cancelled()
         run: |
-          nox -s ruff
+          nox -s ruff -- --output-format=github
 
       - name: Slotscheck
         if: always() && !cancelled()
