@@ -147,8 +147,8 @@ class AttrComparator(typing.Generic[ValueT]):
         expected_value: AnotherValueT,
         cast: typing.Optional[typing.Callable[[ValueT], AnotherValueT]] = None,
     ) -> None:
-        self.expected_value = expected_value
-        self.cast = cast
+        self.expected_value: typing.Any = expected_value
+        self.cast: typing.Optional[typing.Callable[[ValueT], typing.Any]] = cast
         self.attr_getter: spel.AttrGetter[ValueT, typing.Any] = spel.AttrGetter(attr_name)
 
     def __call__(self, item: ValueT) -> bool:
