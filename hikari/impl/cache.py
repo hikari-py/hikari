@@ -35,7 +35,6 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari.api import cache
 from hikari.api import config as config_api
-from hikari.impl import config as config_impl
 from hikari.internal import cache as cache_utility
 from hikari.internal import collections
 
@@ -47,6 +46,7 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users
     from hikari import voices
+    from hikari.impl import config as config_impl
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.cache")
 

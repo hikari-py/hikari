@@ -38,13 +38,14 @@ import typing
 
 import attrs
 
-from hikari import intents
-from hikari import traits
 from hikari.api import shard as gateway_shard
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     import types
+
+    from hikari import intents
+    from hikari import traits
 
     _T = typing.TypeVar("_T")
 

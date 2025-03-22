@@ -31,11 +31,11 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
-from hikari.stage_instances import StageInstance
 
 if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari.api import shard as gateway_shard
+    from hikari.stage_instances import StageInstance
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)

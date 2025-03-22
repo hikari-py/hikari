@@ -33,13 +33,13 @@ import typing
 
 import attrs
 
-from hikari import messages
-from hikari import snowflakes
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import components as components_
+    from hikari import messages
+    from hikari import snowflakes
     from hikari.api import special_endpoints
 
 ModalResponseTypesT = typing.Literal[

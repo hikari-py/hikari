@@ -46,9 +46,11 @@ import typing
 
 import attrs
 
-from hikari import channels
-from hikari import emojis
 from hikari.internal import enums
+
+if typing.TYPE_CHECKING:
+    from hikari import channels
+    from hikari import emojis
 
 
 @typing.final

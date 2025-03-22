@@ -37,7 +37,7 @@ STUBGEN_GENERATE = [
 @nox.session(requires=["generate-stubs"])
 def mypy(session: nox.Session) -> None:
     """Perform static type analysis on Python source code using mypy."""
-    nox.sync(session, self=True, extras=["speedups", "server"], groups=["mypy", "ruff"])
+    nox.sync(session, self=True, extras=["speedups", "server"], groups=["mypy"])
 
     session.run("mypy", "-p", config.MAIN_PACKAGE, "--config", config.PYPROJECT_TOML)
     session.run("mypy", "-p", config.EXAMPLE_SCRIPTS, "--config", config.PYPROJECT_TOML)

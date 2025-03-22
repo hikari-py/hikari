@@ -37,7 +37,6 @@ from hikari import applications
 from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
-from hikari.interactions import base_interactions
 from hikari.internal import data_binding
 
 if typing.TYPE_CHECKING:
@@ -54,6 +53,7 @@ if typing.TYPE_CHECKING:
     from hikari import files as files_
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
+    from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
     from hikari.interactions import modal_interactions

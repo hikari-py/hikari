@@ -32,7 +32,6 @@ import attrs
 from hikari import channels
 from hikari import intents
 from hikari import traits
-from hikari.api import special_endpoints
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
@@ -44,6 +43,7 @@ if typing.TYPE_CHECKING:
     from hikari import snowflakes
     from hikari import users
     from hikari.api import shard as gateway_shard
+    from hikari.api import special_endpoints
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING, intents.Intents.DM_MESSAGE_TYPING)
