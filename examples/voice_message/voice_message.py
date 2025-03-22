@@ -68,10 +68,7 @@ async def on_message(event: hikari.MessageCreateEvent) -> None:
     if event.content == "!audio":
         waveform, duration = calculate_waveform("./sample.wav")
         await event.app.rest.create_voice_message(
-            channel=event.channel_id,
-            attachment=hikari.File("./sample.wav"),
-            waveform=waveform,
-            duration=duration
+            channel=event.channel_id, attachment=hikari.File("./sample.wav"), waveform=waveform, duration=duration
         )
 
 
