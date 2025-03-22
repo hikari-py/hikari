@@ -37,6 +37,7 @@ from hikari import presences as presences_
 from hikari import snowflakes
 from hikari.api import config
 from hikari.events import application_events
+from hikari.events import auto_mod_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import interaction_events
@@ -906,3 +907,31 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         await self.dispatch(self._event_factory.deserialize_stage_instance_delete_event(shard, payload))
+
+    @event_manager_base.filtered(auto_mod_events.AutoModRuleCreateEvent)
+    async def on_auto_moderation_rule_create(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#auto-moderation-rule-create for more info."""
+        await self.dispatch(self._event_factory.deserialize_auto_mod_rule_create_event(shard, payload))
+
+    @event_manager_base.filtered(auto_mod_events.AutoModRuleUpdateEvent)
+    async def on_auto_moderation_rule_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#auto-moderation-rule-update for more info."""
+        await self.dispatch(self._event_factory.deserialize_auto_mod_rule_update_event(shard, payload))
+
+    @event_manager_base.filtered(auto_mod_events.AutoModRuleDeleteEvent)
+    async def on_auto_moderation_rule_delete(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#auto-moderation-rule-delete for more info."""
+        await self.dispatch(self._event_factory.deserialize_auto_mod_rule_delete_event(shard, payload))
+
+    @event_manager_base.filtered(auto_mod_events.AutoModActionExecutionEvent)
+    async def on_auto_moderation_action_execution(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/topics/gateway#auto-moderation-action-execution for more info."""
+        await self.dispatch(self._event_factory.deserialize_auto_mod_action_execution_event(shard, payload))
