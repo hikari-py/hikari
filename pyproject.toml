@@ -280,7 +280,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = 'rillrate.*'
+module = ['numpy.*', 'pydub.*']
 ignore_missing_imports = true
 
 [tool.slotscheck]
