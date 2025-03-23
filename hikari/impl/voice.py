@@ -29,13 +29,12 @@ import logging
 import types
 import typing
 
-from typing_extensions import override
-
 from hikari import errors
 from hikari import snowflakes
 from hikari.api import voice
 from hikari.events import voice_events
 from hikari.internal import ux
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from hikari import channels

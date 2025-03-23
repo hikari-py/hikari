@@ -35,7 +35,6 @@ import warnings
 import weakref
 
 import attrs
-from typing_extensions import override
 
 from hikari import errors
 from hikari import iterators
@@ -47,6 +46,7 @@ from hikari.internal import aio
 from hikari.internal import fast_protocol
 from hikari.internal import reflect
 from hikari.internal import ux
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self

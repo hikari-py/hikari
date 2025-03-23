@@ -53,11 +53,11 @@ import json
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import enums
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from hikari import intents as intents_

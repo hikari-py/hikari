@@ -27,10 +27,9 @@ __all__: typing.Sequence[str] = ("EventManager", "EventStream")
 import abc
 import typing
 
-from typing_extensions import override
-
 from hikari import iterators
 from hikari.events import base_events
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import asyncio

@@ -37,10 +37,10 @@ import inspect
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari.api import shard as gateway_shard
 from hikari.internal import attrs_extensions
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import types

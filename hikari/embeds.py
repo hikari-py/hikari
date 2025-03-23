@@ -39,13 +39,13 @@ import typing
 import warnings
 
 import attrs
-from typing_extensions import override
 
 from hikari import colors
 from hikari import errors
 from hikari import files
 from hikari import undefined
 from hikari.internal import attrs_extensions
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

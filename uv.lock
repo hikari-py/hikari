@@ -962,7 +962,6 @@ dependencies = [
     { name = "attrs" },
     { name = "colorlog" },
     { name = "multidict" },
-    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -1036,7 +1035,6 @@ requires-dist = [
     { name = "multidict", specifier = "~=6.1" },
     { name = "orjson", marker = "extra == 'speedups'", specifier = "~=3.10" },
     { name = "pynacl", marker = "extra == 'server'", specifier = "~=1.5" },
-    { name = "typing-extensions", specifier = "~=4.4" },
 ]
 provides-extras = ["server", "speedups"]
 

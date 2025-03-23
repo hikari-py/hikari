@@ -48,7 +48,6 @@ import copy
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari import embeds as embeds_
 from hikari import emojis
@@ -63,6 +62,7 @@ from hikari import voices
 from hikari.api import cache
 from hikari.internal import attrs_extensions
 from hikari.internal import collections
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import datetime

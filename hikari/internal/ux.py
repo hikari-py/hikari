@@ -44,11 +44,11 @@ import typing
 import warnings
 
 import colorlog.escape_codes
-from typing_extensions import override
 
 from hikari import _about as about
 from hikari.internal import data_binding
 from hikari.internal import net
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from hikari.impl import config

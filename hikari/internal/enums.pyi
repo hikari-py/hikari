@@ -35,7 +35,8 @@ from collections.abc import Sequence as __Sequence
 from typing import TypeVar as __TypeVar
 
 from typing_extensions import Self as __Self
-from typing_extensions import override as __override
+
+from hikari.internal.override import override as __override
 
 Enum = __enum.Enum
 

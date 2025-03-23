@@ -32,8 +32,6 @@ import types
 import typing
 import warnings
 
-from typing_extensions import override
-
 from hikari import applications
 from hikari import errors
 from hikari import intents as intents_
@@ -54,6 +52,7 @@ from hikari.internal import data_binding
 from hikari.internal import signals
 from hikari.internal import time
 from hikari.internal import ux
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

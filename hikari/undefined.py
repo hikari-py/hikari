@@ -34,7 +34,7 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-from typing_extensions import override
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self

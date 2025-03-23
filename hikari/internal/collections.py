@@ -39,9 +39,8 @@ import itertools
 import sys
 import typing
 
-from typing_extensions import override
-
 from hikari import snowflakes
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self

@@ -53,7 +53,6 @@ import base64
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari import guilds
 from hikari import locales
@@ -63,6 +62,7 @@ from hikari import users
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import datetime

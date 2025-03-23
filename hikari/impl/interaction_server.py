@@ -32,13 +32,13 @@ import typing
 import aiohttp
 import aiohttp.web
 import aiohttp.web_runner
-from typing_extensions import override
 
 from hikari import applications
 from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
 from hikari.internal import data_binding
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

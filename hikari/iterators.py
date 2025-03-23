@@ -33,9 +33,8 @@ import abc
 import asyncio
 import typing
 
-from typing_extensions import override
-
 from hikari.internal import spel
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from _typeshed import SupportsRichComparison

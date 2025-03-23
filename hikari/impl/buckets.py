@@ -197,13 +197,12 @@ import asyncio
 import logging
 import typing
 
-from typing_extensions import override
-
 from hikari import errors
 from hikari.impl import rate_limits
 from hikari.internal import routes
 from hikari.internal import time
 from hikari.internal import ux
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import types

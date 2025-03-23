@@ -29,7 +29,6 @@ import logging
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari import applications as application_models
 from hikari import audit_logs as audit_log_models
@@ -68,6 +67,7 @@ from hikari.interactions import modal_interactions
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import time
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     ValueT = typing.TypeVar("ValueT")

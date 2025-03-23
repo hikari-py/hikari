@@ -40,9 +40,8 @@ import math
 import random
 import typing
 
-from typing_extensions import override
-
 from hikari.internal import time
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import types

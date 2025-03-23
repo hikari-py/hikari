@@ -39,7 +39,6 @@ __all__: typing.Sequence[str] = (
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari import files
 from hikari import snowflakes
@@ -47,6 +46,7 @@ from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import datetime

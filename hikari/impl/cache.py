@@ -28,8 +28,6 @@ import copy
 import logging
 import typing
 
-from typing_extensions import override
-
 from hikari import channels as channels_
 from hikari import emojis
 from hikari import messages
@@ -39,6 +37,7 @@ from hikari.api import cache
 from hikari.api import config as config_api
 from hikari.internal import cache as cache_utility
 from hikari.internal import collections
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from hikari import guilds

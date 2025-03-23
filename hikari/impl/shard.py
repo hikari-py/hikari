@@ -34,7 +34,6 @@ import urllib.parse
 import zlib
 
 import aiohttp
-from typing_extensions import override
 
 from hikari import _about as about
 from hikari import errors
@@ -50,6 +49,7 @@ from hikari.internal import data_binding
 from hikari.internal import net
 from hikari.internal import time
 from hikari.internal import ux
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import datetime

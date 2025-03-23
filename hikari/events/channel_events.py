@@ -52,7 +52,6 @@ import abc
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari import channels
 from hikari import intents
@@ -60,6 +59,7 @@ from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import datetime

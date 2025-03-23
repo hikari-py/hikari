@@ -37,9 +37,8 @@ __all__: typing.Sequence[str] = (
 import abc
 import typing
 
-from typing_extensions import override
-
 from hikari.internal import time
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import datetime
