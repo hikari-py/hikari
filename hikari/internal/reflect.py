@@ -94,9 +94,9 @@ def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pra
         raise TypeError(msg)
 
     @functools.wraps(call)
-    def wrapped(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
+    def wrapped(*args: object, **kwargs: object) -> _T:
         print("Profiling", call.__module__ + "." + call.__qualname__)  # noqa: T201 print disallowed.
         cProfile.runctx("result = call(*args, **kwargs)", globals=globals(), locals=locals(), filename=None, sort=1)
-        return locals()["result"]
+        return typing.cast("_T", locals()["result"])
 
     return wrapped

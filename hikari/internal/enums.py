@@ -61,27 +61,27 @@ class _DeprecatedAlias(typing.Generic[_T]):
         return owner_enum[self._alias]
 
 
-class deprecated:
+class deprecated:  # noqa: N801 - Class should use CapWords
     """Used to denote that an enum member is a deprecated alias of another."""
 
     __slots__ = ("removal_version", "value")
 
-    def __init__(self, value: typing.Any, /, *, removal_version: str) -> None:
+    def __init__(self, value: object, /, *, removal_version: str) -> None:
         self.value = value
         self.removal_version = removal_version
 
 
-class _EnumNamespace(dict[str, typing.Any]):
+class _EnumNamespace(dict[str, _T]):
     __slots__: typing.Sequence[str] = ("base", "names_to_values", "values_to_names")
 
     def __init__(self, base: type[typing.Any]) -> None:
         super().__init__()
         self.base = base
-        self.names_to_values: dict[str, typing.Any] = {}
-        self.values_to_names: dict[typing.Any, str] = {}
+        self.names_to_values: dict[str, _T] = {}
+        self.values_to_names: dict[_T, str] = {}
         self["__doc__"] = "An enumeration."
 
-    def __getitem__(self, name: str) -> typing.Any:
+    def __getitem__(self, name: str) -> typing.Union[_T, object]:
         try:
             return super().__getitem__(name)
         except KeyError:
@@ -90,7 +90,7 @@ class _EnumNamespace(dict[str, typing.Any]):
             except KeyError:
                 raise KeyError(name) from None
 
-    def __setitem__(self, name: str, value: typing.Any) -> None:
+    def __setitem__(self, name: str, value: _T) -> None:
         if name == "" or name == "mro":
             msg = f"Invalid enum member name: {name!r}"
             raise TypeError(msg)
@@ -149,20 +149,20 @@ _Enum = NotImplemented
 
 
 class _EnumMeta(type):
-    def __call__(cls, value: typing.Any) -> typing.Any:
+    def __call__(cls, value: object) -> Enum:
         """Cast a value to the enum, returning the raw value that was passed if value not found."""
         return cls._value_to_member_map_.get(value, value)
 
-    def __getitem__(cls, name: str) -> typing.Any:
+    def __getitem__(cls, name: str) -> Enum:
         if member := getattr(cls, name, None):
             return member
 
         raise KeyError(name)
 
-    def __contains__(cls, item: typing.Any) -> bool:
+    def __contains__(cls, item: object) -> bool:
         return item in cls._value_to_member_map_
 
-    def __iter__(cls) -> typing.Iterator[typing.Any]:
+    def __iter__(cls) -> typing.Iterator[Enum]:
         yield from cls._name_to_member_map_.values()
 
     def __new__(
@@ -378,7 +378,7 @@ def _name_resolver(members: dict[int, _Flag], value: int) -> typing.Generator[st
 
 
 class _FlagMeta(type):
-    def __call__(cls, value: int = 0) -> typing.Any:
+    def __call__(cls, value: int = 0) -> Flag:
         """Cast a value to the flag enum, returning the raw value that was passed if values not found."""
         # We want to handle value invariantly to avoid issues brought in by different behaviours from sub-classed ints
         # and floats. This also ensures that .__int__ only returns an invariant int.
@@ -411,7 +411,7 @@ class _FlagMeta(type):
 
                 return pseudomember
 
-    def __getitem__(cls, name: str) -> typing.Any:
+    def __getitem__(cls, name: str) -> Flag:
         if member := getattr(cls, name, None):
             return member
 

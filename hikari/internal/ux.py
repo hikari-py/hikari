@@ -437,25 +437,25 @@ class HikariVersion:
 
         return self._cmp != other._cmp
 
-    def __lt__(self, other: typing.Any) -> bool:
+    def __lt__(self, other: object) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 
         return self._cmp < other._cmp
 
-    def __le__(self, other: typing.Any) -> bool:
+    def __le__(self, other: object) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 
         return self._cmp <= other._cmp
 
-    def __gt__(self, other: typing.Any) -> bool:
+    def __gt__(self, other: object) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 
         return self._cmp > other._cmp
 
-    def __ge__(self, other: typing.Any) -> bool:
+    def __ge__(self, other: object) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 

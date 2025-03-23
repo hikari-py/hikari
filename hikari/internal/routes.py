@@ -158,7 +158,7 @@ class Route:
                 self.major_params = major_param_combo
                 break
 
-    def compile(self, **kwargs: typing.Any) -> CompiledRoute:
+    def compile(self, **kwargs: object) -> CompiledRoute:
         """Generate a formatted [`CompiledRoute`][] for this route.
 
         This takes into account any URL parameters that have been passed.
@@ -175,7 +175,7 @@ class Route:
         """
         data = data_binding.StringMapBuilder()
         for k, v in kwargs.items():
-            data.put(k, v)
+            data.put(k, str(v))
 
         return CompiledRoute(
             route=self,
@@ -214,9 +214,7 @@ class CDNRoute:
     is_sizable: bool = attrs.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
     """Whether a `size` param can be specified."""
 
-    def compile(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
-    ) -> str:
+    def compile(self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: object) -> str:
         """Generate a full CDN url from this endpoint.
 
         Parameters
@@ -255,7 +253,7 @@ class CDNRoute:
                 + ", ".join(self.valid_formats)
             )
 
-        if "hash" in kwargs and not kwargs["hash"].startswith("a_") and file_format == GIF:
+        if "hash" in kwargs and not str(kwargs["hash"]).startswith("a_") and file_format == GIF:
             msg = "This asset is not animated, so cannot be retrieved as a GIF"
             raise TypeError(msg)
 
@@ -283,7 +281,7 @@ class CDNRoute:
         return url
 
     def compile_to_file(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
+        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: object
     ) -> files.URL:
         """Perform the same as `compile`, but return the URL as a [`hikari.files.URL`][]."""
         return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))

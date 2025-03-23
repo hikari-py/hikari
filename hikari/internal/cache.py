@@ -118,7 +118,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     def _copy(value: ValueT) -> ValueT:
         return copy.copy(value)
 
-    def __contains__(self, key: typing.Any) -> bool:
+    def __contains__(self, key: object) -> bool:
         return key in self._data
 
     def __getitem__(self, key: KeyT) -> ValueT:
@@ -150,10 +150,10 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
 
     __slots__: typing.Sequence[str] = ()
 
-    def __contains__(self, _: typing.Any) -> typing.Literal[False]:
+    def __contains__(self, _: object) -> typing.Literal[False]:
         return False
 
-    def __getitem__(self, key: typing.Any) -> typing.NoReturn:
+    def __getitem__(self, key: object) -> typing.NoReturn:
         raise KeyError(key)
 
     def __iter__(self) -> typing.Iterator[typing.Any]:

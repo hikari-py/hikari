@@ -115,7 +115,7 @@ class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
 
     __subclasshook__: typing.Callable[[type[typing.Any]], bool]
 
-    def __init_subclass__(cls, *args: typing.Any, **kwargs: typing.Any) -> None:
+    def __init_subclass__(cls, *args: object, **kwargs: object) -> None:
         # typing sets their own subclasshook if its not there. We want to
         # overwrite that one, but not any that was already defined, so we check
         # this before typing does anything to it.

@@ -286,7 +286,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         if index < len(self) and self._ids[index] == value:
             del self._ids[index]
 
-    def __contains__(self, value: typing.Any) -> bool:
+    def __contains__(self, value: object) -> bool:
         if not isinstance(value, int):
             return False
 

@@ -451,15 +451,13 @@ class RESTApp(traits.ExecutorAware):
         return rest_client
 
 
-def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> str:
+def _stringify_http_message(headers: data_binding.Headers, body: bytes) -> str:
     string = "\n".join(
         f"    {name}: {value}" if name != _AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
         for name, value in headers.items()
     )
-
-    if body is not None:
-        string += "\n\n    "
-        string += body.decode("ascii") if isinstance(body, bytes) else str(body)
+    string += "\n\n    "
+    string += body.decode("ascii")
 
     return string
 
@@ -818,7 +816,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         uuid,
                         compiled_route.method,
                         url,
-                        _stringify_http_message(headers, json),
+                        _stringify_http_message(headers, self._dumps(json)) if json else b"[No json body]",
                     )
                     start = time.monotonic()
 

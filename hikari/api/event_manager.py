@@ -111,7 +111,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     def filter(
         self,
         *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
-        **attrs: typing.Any,
+        **attrs: object,
     ) -> Self:
         """Filter the items by one or more conditions.
 

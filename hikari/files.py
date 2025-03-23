@@ -1029,7 +1029,7 @@ class IteratorReader(AsyncReader):
             self._assert_bytes(self.data)  # type: ignore[unreachable]
 
     @staticmethod
-    def _assert_bytes(data: typing.Any) -> bytes:
+    def _assert_bytes(data: object) -> bytes:
         if isinstance(data, str):
             return bytes(data, "utf-8")
 

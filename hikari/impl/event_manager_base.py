@@ -226,7 +226,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
     def filter(
         self,
         *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
-        **attrs: typing.Any,
+        **attrs: object,
     ) -> Self:
         filter_ = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
         if self._active:

@@ -127,7 +127,7 @@ except ModuleNotFoundError:
 class JSONPayload(aiohttp.BytesPayload):
     """A JSON payload to use in an aiohttp request."""
 
-    def __init__(self, value: typing.Any, dumps: JSONEncoder = default_json_dumps) -> None:
+    def __init__(self, value: typing.Union[JSONArray, JSONObject], dumps: JSONEncoder = default_json_dumps) -> None:
         super().__init__(dumps(value), content_type=_JSON_CONTENT_TYPE, encoding=_UTF_8)
 
 

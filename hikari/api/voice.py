@@ -87,7 +87,7 @@ class VoiceComponent(abc.ABC):
         deaf: bool = False,
         mute: bool = False,
         timeout: typing.Optional[int] = 5,
-        **kwargs: typing.Any,
+        **kwargs: object,
     ) -> _VoiceConnectionT:
         """Connect to a given voice channel.
 
@@ -156,7 +156,7 @@ class VoiceConnection(abc.ABC):
         shard_id: int,
         token: str,
         user_id: snowflakes.Snowflake,
-        **kwargs: typing.Any,
+        **kwargs: object,
     ) -> Self:
         """Initialize and connect the voice connection.
 

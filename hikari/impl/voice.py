@@ -140,7 +140,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         deaf: bool = False,
         mute: bool = False,
         timeout: typing.Optional[int] = 5,
-        **kwargs: typing.Any,
+        **kwargs: object,
     ) -> _VoiceConnectionT:
         self._check_if_alive()
         guild_id = snowflakes.Snowflake(guild)
