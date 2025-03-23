@@ -36,7 +36,6 @@ dependencies = [
     "attrs~=25.1",
     "colorlog~=6.9",
     "multidict~=6.1",
-    "typing_extensions~=4.4",
 ]
 scripts = { "hikari" = "hikari.cli:main" }
 

@@ -29,8 +29,6 @@ import datetime
 import types
 import typing
 
-from typing_extensions import override
-
 from hikari import applications as application_models
 from hikari import channels as channel_models
 from hikari import colors
@@ -59,6 +57,7 @@ from hikari.interactions import base_interactions
 from hikari.internal import collections
 from hikari.internal import data_binding
 from hikari.internal import time
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from hikari import guilds as guild_models

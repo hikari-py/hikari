@@ -31,11 +31,11 @@ import typing
 import urllib.parse
 
 import attrs
-from typing_extensions import override
 
 from hikari import files
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal.override import override
 
 HASH_SEPARATOR: typing.Final[str] = ";"
 PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")

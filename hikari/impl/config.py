@@ -37,11 +37,11 @@ import ssl as ssl_
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari.api import config
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal.override import override
 
 _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"

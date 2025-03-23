@@ -30,8 +30,6 @@ import logging
 import sys
 import typing
 
-from typing_extensions import override
-
 from hikari import applications
 from hikari import errors
 from hikari import traits
@@ -43,6 +41,7 @@ from hikari.impl import rest as rest_impl
 from hikari.internal import aio
 from hikari.internal import signals
 from hikari.internal import ux
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

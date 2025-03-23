@@ -42,7 +42,6 @@ __all__: typing.Sequence[str] = (
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari import channels
 from hikari import guilds
@@ -52,6 +51,7 @@ from hikari import undefined
 from hikari import webhooks
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     from hikari import applications

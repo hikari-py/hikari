@@ -29,10 +29,9 @@ import abc
 import asyncio
 import typing
 
-from typing_extensions import override
-
 from hikari import iterators
 from hikari.events import base_events
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import types

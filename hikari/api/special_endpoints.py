@@ -51,10 +51,9 @@ __all__: typing.Sequence[str] = (
 import abc
 import typing
 
-from typing_extensions import override
-
 from hikari import components as components_
 from hikari import undefined
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import types

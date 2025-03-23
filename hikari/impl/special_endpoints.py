@@ -52,7 +52,6 @@ import asyncio
 import typing
 
 import attrs
-from typing_extensions import override
 
 from hikari import channels
 from hikari import commands
@@ -72,6 +71,7 @@ from hikari.internal import data_binding
 from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
+from hikari.internal.override import override
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

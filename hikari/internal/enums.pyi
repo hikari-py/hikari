@@ -41,7 +41,8 @@ from typing import TypeVar as __TypeVar
 from typing import Union as __Union
 
 from typing_extensions import Self as __Self
-from typing_extensions import override as __override
+
+from hikari.internal.override import override as __override
 
 Enum = __enum.Enum
 
