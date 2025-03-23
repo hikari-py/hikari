@@ -7712,6 +7712,113 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def create_interaction_voice_message_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        response_type: typing.Union[int, base_interactions.ResponseType],
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> None:
+        """Create the initial response for a interaction.
+
+        !!! warning
+            Calling this with an interaction which already has an initial
+            response will result in this raising a [`hikari.errors.NotFoundError`][].
+            This includes if the REST interaction server has already responded
+            to the request.
+
+        Parameters
+        ----------
+        interaction
+            Object or ID of the interaction this response is for.
+        token
+            The interaction's token.
+        response_type
+            The type of interaction response this is.
+        content
+            If provided, the message contents. If
+            [`hikari.undefined.UNDEFINED`][], then nothing will be sent
+            in the content. Any other value here will be cast to a
+            [`str`][].
+
+            If this is a [`hikari.embeds.Embed`][] and no `embed` nor
+            no `embeds` kwarg is provided, then this will instead
+            update the embed. This allows for simpler syntax when
+            sending an embed alone.
+        attachment
+            If provided, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+        attachments
+            If provided, the message attachments. These can be resources, or
+            strings consisting of paths on your computer or URLs.
+        component
+            If provided, builder object of the component to include in this message.
+        components
+            If provided, a sequence of the component builder objects to include
+            in this message.
+        embed
+            If provided, the message embed.
+        embeds
+            If provided, the message embeds.
+        flags
+            If provided, the message flags this response should have.
+
+            As of writing the only message flags which can be set here are
+            [`hikari.messages.MessageFlag.EPHEMERAL`][],
+            [`hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`][]
+            and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
+        tts
+            If provided, whether the message will be read out by a screen
+            reader using Discord's TTS (text-to-speech) system.
+        mentions_everyone
+            If provided, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions
+            If provided, and [`True`][], all user mentions will be detected.
+            If provided, and [`False`][], all user mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
+            specific users.
+        role_mentions
+            If provided, and [`True`][], all role mentions will be detected.
+            If provided, and [`False`][], all role mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
+            specific roles.
+
+        Raises
+        ------
+        ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions`.
+        TypeError
+            If both `embed` and `embeds` are specified.
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no embeds; messages with more than 2000 characters
+            in them, embeds that exceed one of the many embed limits
+            invalid image URLs in embeds.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction is not found or if the interaction's initial
+            response has already been created.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def edit_interaction_response(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],

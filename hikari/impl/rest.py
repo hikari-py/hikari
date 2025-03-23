@@ -4185,6 +4185,47 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             await self._request(route, json=body, auth=None)
 
+    async def create_interaction_voice_message_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        response_type: typing.Union[int, base_interactions.ResponseType],
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+        if flags is undefined.UNDEFINED:
+            flags = messages_.MessageFlag.IS_VOICE_MESSAGE
+        else:
+            flags = messages_.MessageFlag(flags) | messages_.MessageFlag.IS_VOICE_MESSAGE
+
+        data = data_binding.JSONObjectBuilder()
+        data.put("flags", flags)
+
+        form_builder = data_binding.URLEncodedFormBuilder()
+        attachment_id = 0
+
+        resource = files.ensure_resource(attachment)
+        attachment_payload: dict[str, typing.Any] = {
+            "duration_secs": duration,
+            "waveform": waveform,
+            "id": attachment_id,
+            "filename": resource.filename,
+        }
+        form_builder.add_resource(f"files[{attachment_id}]", resource)
+
+        data.put("attachments", [attachment_payload])
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", response_type)
+        body.put("data", data)
+
+        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+        await self._request(route, form_builder=form_builder, auth=None)
+
     async def edit_interaction_response(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
