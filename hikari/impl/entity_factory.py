@@ -1699,11 +1699,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 value = str(field.value) if field.value is not None else None
 
                 if name is None:
-                    msg = f"in embed.fields[{i}].name - cannot have `None`"
+                    msg = f"in embed.fields[{i}].name - cannot have `None`"  # type: ignore[unreachable]
                     raise TypeError(msg)
 
                 if value is None:
-                    msg = f"in embed.fields[{i}].value - cannot have `None`"
+                    msg = f"in embed.fields[{i}].value - cannot have `None`"  # type: ignore[unreachable]
                     raise TypeError(msg)
 
                 # Name and value always have to be specified; we can always

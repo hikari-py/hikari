@@ -32,18 +32,6 @@ ignore = [
 "hikari/**/__init__.pyi" = [
     "F403", # Unable to detect undefined names when using `import *`
 ]
-"hikari/*.py" = [
-    # Disabling most of the docstring related checks as ruff doesn't
-    # support inherited docstrings at the time of writing
-    # see: https://github.com/astral-sh/ruff/issues/2413
-    "D102", # Missing docstring in public method
-]
-"hikari/impl/**.py" = [
-    # Disabling most of the docstring related checks as ruff doesn't
-    # support inherited docstrings at the time of writing
-    # see: https://github.com/astral-sh/ruff/issues/2413
-    "D102", # Missing docstring in public method
-]
 "tests/**/*.py" = [
     "D",       # Docstrings missing
     "S105",    # Possible hardcoded password assigned to string
@@ -63,10 +51,8 @@ ignore = [
     # "ARG002",  # Unused method argument
     # "FBT003",  # Boolean positional value in function call
     # "A002",    # Function argument is shadowing a python builtin
-    # "PLR1711", # Useless return statement
     # "RET501",  # Do not use `return None` if only possible return
-    # "B033",    # Sets should not contain duplicate items
-    # "N801",    # Class should use CapWords
+    # "B033",    # Sets should not contain duplicate items (ignore only where needed)
 ]
 "scripts/**/*.py" = [
     "D",      # Docstrings rules
@@ -78,6 +64,19 @@ ignore = [
     "INP001", # File is part of an implicit namespace
     "D100",   # Missing docstring in public module
 ]
+
+# Disabling most of the docstring related checks as ruff doesn't
+# support inherited docstrings at the time of writing
+# see: https://github.com/astral-sh/ruff/issues/2413
+#
+# D102 - Missing docstring in public method
+"hikari/*.py" = ["D102"]
+"hikari/impl/**.py" = ["D102"]
+
+# Our typing shim just provides backported runtime functionality
+# for typing_extensions, so types will be provided by that package
+# at typecheck time
+"hikari/internal/typing_extensions.py" = ["ANN"]
 
 [lint.isort]
 required-imports = ["from __future__ import annotations"]

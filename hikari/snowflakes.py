@@ -126,7 +126,7 @@ class Unique(abc.ABC):
         return hash(self.id)
 
     def __eq__(self, other: object) -> bool:
-        return type(self) is type(other) and self.id == other.id
+        return isinstance(other, type(self)) and self.id == other.id
 
 
 def calculate_shard_id(
