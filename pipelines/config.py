@@ -72,7 +72,6 @@ REFORMATTING_FILE_EXTS = (
     ".json",
     ".gitignore",
     ".dockerignore",
-    ".flake8",
     ".txt",
     ".sh",
     ".bat",
