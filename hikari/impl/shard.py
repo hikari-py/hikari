@@ -367,8 +367,7 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
         name = activity.name
         state = activity.state
 
-    payload = {"name": name, "state": state, "type": int(activity.type), "url": activity.url}
-    return payload
+    return {"name": name, "state": state, "type": int(activity.type), "url": activity.url}
 
 
 class GatewayShardImpl(shard.GatewayShard):
@@ -931,8 +930,8 @@ class GatewayShardImpl(shard.GatewayShard):
             except errors.GatewayConnectionError as ex:
                 self._logger.warning("failed to communicate with server, reason was: %r. Will retry shortly", ex.reason)
 
-            except errors.GatewayTransportError as ex:
-                self._logger.error("encountered transport error. Will try to reconnect shorty", exc_info=ex)
+            except errors.GatewayTransportError:
+                self._logger.exception("encountered transport error. Will try to reconnect shorty")
 
             except errors.GatewayServerClosedConnectionError as ex:
                 if not ex.can_reconnect:
@@ -952,16 +951,16 @@ class GatewayShardImpl(shard.GatewayShard):
                 # reconnect in large sharded bots for a very long period of time.
                 backoff.reset()
 
-            except errors.GatewayError as ex:
-                self._logger.error("encountered gateway error", exc_info=ex)
+            except errors.GatewayError:
+                self._logger.exception("encountered gateway error")
                 raise
 
             except asyncio.CancelledError:
                 self._is_closing = True
                 return
 
-            except Exception as ex:
-                self._logger.error("encountered some unhandled error", exc_info=ex)
+            except Exception:
+                self._logger.exception("encountered some unhandled error")
                 raise
 
             finally:

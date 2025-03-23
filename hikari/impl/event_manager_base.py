@@ -631,10 +631,8 @@ class EventManagerBase(event_manager_.EventManager):
             trio = (type(ex), ex, ex.__traceback__.tb_next) if ex.__traceback__ else ex
 
             if base_events.is_no_recursive_throw_event(event):
-                _LOGGER.error(
-                    "an exception occurred handling an event (%s), but it has been ignored",
-                    type(event).__name__,
-                    exc_info=trio,
+                _LOGGER.exception(
+                    "an exception occurred handling an event (%s), but it has been ignored", type(event).__name__
                 )
             else:
                 exception_event = base_events.ExceptionEvent(exception=ex, failed_event=event, failed_callback=callback)

@@ -428,7 +428,7 @@ class InteractionServer(interaction_server.InteractionServer):
             public_key.verify(timestamp + body, signature)
 
         except (self._nacl.exceptions.BadSignatureError, ValueError):
-            _LOGGER.error("Received a request with an invalid signature")
+            _LOGGER.exception("Received a request with an invalid signature")
             return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 
         try:
@@ -436,12 +436,12 @@ class InteractionServer(interaction_server.InteractionServer):
             assert isinstance(payload, dict)
             interaction_type = int(payload["type"])
 
-        except (ValueError, TypeError) as exc:
-            _LOGGER.error("Received a request with an invalid JSON body", exc_info=exc)
+        except (ValueError, TypeError):
+            _LOGGER.exception("Received a request with an invalid JSON body")
             return _Response(_BAD_REQUEST_STATUS, b"Invalid JSON body")
 
-        except KeyError as exc:
-            _LOGGER.error("Missing 'type' field in received JSON payload", exc_info=exc)
+        except KeyError:
+            _LOGGER.exception("Missing 'type' field in received JSON payload")
             return _Response(_BAD_REQUEST_STATUS, b"Missing required 'type' field in payload")
 
         if interaction_type == _PING_INTERACTION_TYPE:

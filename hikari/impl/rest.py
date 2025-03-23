@@ -429,7 +429,7 @@ class RESTApp(traits.ExecutorAware):
             if token_type is None:
                 token_type = applications.TokenType.BEARER
 
-        rest_client = RESTClientImpl(
+        return RESTClientImpl(
             cache=None,
             entity_factory=entity_factory,
             executor=self._executor,
@@ -447,7 +447,6 @@ class RESTApp(traits.ExecutorAware):
             client_session_owner=False,
         )
 
-        return rest_client
 
 
 def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> str:
