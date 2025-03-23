@@ -44,9 +44,6 @@ if typing.TYPE_CHECKING:
     import socket as socket_
     import ssl
 
-    import aiohttp.abc
-    import aiohttp.typedefs
-
     # This is kept inline as pynacl is an optional dependency.
     from nacl import signing
 

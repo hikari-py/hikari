@@ -214,19 +214,14 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 class _RESTProvider(traits.RESTAware):
     __slots__: typing.Sequence[str] = ("_entity_factory", "_executor", "_rest")
 
-    def __init__(
-        self,
-        entity_factory: typing.Callable[[], entity_factory_.EntityFactory],
-        executor: typing.Optional[concurrent.futures.Executor],
-        rest: typing.Callable[[], RESTClientImpl],
-    ) -> None:
-        self._entity_factory = entity_factory
+    def __init__(self, executor: typing.Optional[concurrent.futures.Executor]) -> None:
         self._executor = executor
-        self._rest = rest
+        self._entity_factory: entity_factory_.EntityFactory = NotImplemented
+        self._rest: RESTClientImpl = NotImplemented
 
     @property
     def entity_factory(self) -> entity_factory_.EntityFactory:
-        return self._entity_factory()
+        return self._entity_factory
 
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
@@ -234,15 +229,19 @@ class _RESTProvider(traits.RESTAware):
 
     @property
     def rest(self) -> rest_api.RESTClient:
-        return self._rest()
+        return self._rest
 
     @property
     def http_settings(self) -> config_impl.HTTPSettings:
-        return self._rest().http_settings
+        return self._rest.http_settings
 
     @property
     def proxy_settings(self) -> config_impl.ProxySettings:
-        return self._rest().proxy_settings
+        return self._rest.proxy_settings
+
+    def update(self, rest: RESTClientImpl, entity_factory: entity_factory_.EntityFactory) -> None:
+        self._rest = rest
+        self._entity_factory = entity_factory
 
 
 class RESTApp(traits.ExecutorAware):
@@ -420,7 +419,7 @@ class RESTApp(traits.ExecutorAware):
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
-        provider = _RESTProvider(lambda: entity_factory, self._executor, lambda: rest_client)
+        provider = _RESTProvider(self._executor)
         entity_factory = entity_factory_impl.EntityFactoryImpl(provider)
 
         if isinstance(token, str):
@@ -429,7 +428,7 @@ class RESTApp(traits.ExecutorAware):
             if token_type is None:
                 token_type = applications.TokenType.BEARER
 
-        return RESTClientImpl(
+        rest_client = RESTClientImpl(
             cache=None,
             entity_factory=entity_factory,
             executor=self._executor,
@@ -447,6 +446,9 @@ class RESTApp(traits.ExecutorAware):
             client_session_owner=False,
         )
 
+        provider.update(rest_client, entity_factory)
+
+        return rest_client
 
 
 def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> str:

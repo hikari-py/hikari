@@ -153,7 +153,7 @@ class Route:
 
         self.major_params = None
         match = PARAM_REGEX.findall(path_template)
-        for major_param_combo in MAJOR_PARAM_COMBOS.keys():
+        for major_param_combo in MAJOR_PARAM_COMBOS:
             if major_param_combo.issubset(match):
                 self.major_params = major_param_combo
                 break

@@ -17,11 +17,11 @@ ignore = [
     "TRY003",  # Avoid specifying long messages outside the exception class (has false positives)
     "D105",    # Missing docstring in magic method
     "SLOT000", # Subclasses of X should define `__slots__` (too many false positives, we use slotscheck instead)
+    "PLR2004", # Usage of "magic value" (consider removing in the future)
+    "SIM110",  # Use `any`/`all` (worst for performance)
     "TD002",   # Missing issue link for todo
     "TD003",   # Line contains todo
     "FIX002",  # Line contains todo
-    "PLR2004", # Usage of "magic value" (consider removing in the future)
-    "SIM110",  # Use `any`/`all` (they are usually bad for performance)
 ]
 
 [lint.per-file-ignores]

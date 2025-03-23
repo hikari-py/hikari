@@ -1090,7 +1090,7 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return cache_utility.EmptyCacheView()
 
-        views = ((guild_id, self.clear_members_for_guild(guild_id)) for guild_id in self._guild_entries.freeze().keys())
+        views = ((guild_id, self.clear_members_for_guild(guild_id)) for guild_id in self._guild_entries.freeze())
         return cache_utility.CacheMappingView({guild_id: view for guild_id, view in views if view})
 
     def clear_members_for_guild(
@@ -1251,9 +1251,7 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config_api.CacheComponents.PRESENCES):
             return cache_utility.EmptyCacheView()
 
-        views = (
-            (guild_id, self.clear_presences_for_guild(guild_id)) for guild_id in self._guild_entries.freeze().keys()
-        )
+        views = ((guild_id, self.clear_presences_for_guild(guild_id)) for guild_id in self._guild_entries.freeze())
         return cache_utility.CacheMappingView({guild_id: view for guild_id, view in views if view})
 
     def clear_presences_for_guild(
@@ -1526,9 +1524,7 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config_api.CacheComponents.VOICE_STATES):
             return cache_utility.EmptyCacheView()
 
-        views = (
-            (guild_id, self.clear_voice_states_for_guild(guild_id)) for guild_id in self._guild_entries.freeze().keys()
-        )
+        views = ((guild_id, self.clear_voice_states_for_guild(guild_id)) for guild_id in self._guild_entries.freeze())
         return cache_utility.CacheMappingView({guild_id: view for guild_id, view in views if view})
 
     def clear_voice_states_for_channel(

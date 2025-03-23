@@ -53,9 +53,6 @@ from hikari.internal import ux
 if typing.TYPE_CHECKING:
     import datetime
 
-    import aiohttp.http_websocket
-    import aiohttp.typedefs
-
     from hikari import channels
     from hikari import guilds
     from hikari import users as users_

@@ -670,7 +670,7 @@ class TestCheckForUpdates:
         with stack:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
-        logger.exception.assert_called_once_with("Failed to fetch hikari version details")
+        logger.warning.assert_called_once_with("Failed to fetch hikari version details", exc_info=ex)
         create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),

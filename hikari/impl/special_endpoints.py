@@ -53,6 +53,7 @@ import typing
 import attrs
 
 from hikari import channels
+from hikari import colors
 from hikari import commands
 from hikari import components as component_models
 from hikari import emojis
@@ -79,7 +80,6 @@ if typing.TYPE_CHECKING:
 
     from hikari import applications
     from hikari import audit_logs
-    from hikari import colors
     from hikari import embeds as embeds_
     from hikari import guilds
     from hikari import permissions as permissions_

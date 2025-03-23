@@ -90,7 +90,11 @@ class TestRestProvider:
 
     @pytest.fixture
     def rest_provider(self, rest_client, executor, entity_factory):
-        return rest._RESTProvider(lambda: entity_factory, executor, lambda: rest_client)
+        provider = rest._RESTProvider(executor)
+
+        provider.update(rest_client, entity_factory)
+
+        return provider
 
     def test_rest_property(self, rest_provider, rest_client):
         assert rest_provider.rest == rest_client
