@@ -6101,6 +6101,30 @@ class TestRESTClientImplAsync:
             expected_route, json={"type": 1, "data": {"testing": "ensure_in_test"}}, auth=None
         )
 
+    async def test_create_interaction_voice_message_response(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.create_interaction_voice_message_response(
+            StubModel(432),
+            token="some token",
+            response_type=1,
+            attachment=object(),
+            waveform="AAA",
+            duration=3,
+            flags=54123,
+        )
+
+        rest_client._request.assert_awaited_once()
+
+    async def test_create_interaction_voice_message_response_no_flags(self, rest_client):
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.create_interaction_voice_message_response(
+            StubModel(432), token="some token", response_type=1, attachment=object(), waveform="AAA", duration=3
+        )
+
+        rest_client._request.assert_awaited_once()
+
     async def test_edit_interaction_response_when_form(self, rest_client):
         attachment_obj = object()
         attachment_obj2 = object()
