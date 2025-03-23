@@ -221,7 +221,7 @@ class _GatewayTransport:
             # str(message.extra) is used to cast the possible None to a string
             raise errors.GatewayServerClosedConnectionError(str(message.extra), close_code, can_reconnect)
 
-        if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
+        if message.type in {aiohttp.WSMsgType.CLOSING or message.type, aiohttp.WSMsgType.CLOSED}:
             # May be caused by the server shutting us down.
             # May be caused by Windows injecting an EOF if something disconnects, as some
             # network drivers appear to do this.

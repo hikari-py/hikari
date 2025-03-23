@@ -419,7 +419,7 @@ class Color(int):
             If an invalid format is given, or if any values exceed 1.0 for
             floats or 255 for ints.
         """
-        if tuple_str[:: len(tuple_str) - 1] in ("()", "{}", "<>", "[]"):
+        if tuple_str[:: len(tuple_str) - 1] in {"()", "{}", "<>", "[]"}:
             tuple_str = tuple_str[1:-1].strip()
 
         try:

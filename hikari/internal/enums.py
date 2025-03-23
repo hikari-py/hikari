@@ -91,7 +91,7 @@ class _EnumNamespace(dict[str, _T]):
                 raise KeyError(name) from None
 
     def __setitem__(self, name: str, value: _T) -> None:
-        if name in ("", "mro"):
+        if name in {"", "mro"}:
             msg = f"Invalid enum member name: {name!r}"
             raise TypeError(msg)
 
@@ -192,7 +192,7 @@ class _EnumMeta(type):
             **{
                 name: value
                 for name, value in Enum.__dict__.items()
-                if name not in ("__class__", "__module__", "__doc__")
+                if name not in {"__class__", "__module__", "__doc__"}
             },
         }
 
@@ -470,7 +470,7 @@ class _FlagMeta(type):
             **{
                 name: value
                 for name, value in Flag.__dict__.items()
-                if name not in ("__class__", "__module__", "__doc__")
+                if name not in {"__class__", "__module__", "__doc__"}
             },
         }
         # We update the namespace to ensure new fields override inherited attributes and methods.

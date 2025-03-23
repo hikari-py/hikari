@@ -18,6 +18,7 @@ ignore = [
     "D105",    # Missing docstring in magic method
     "SLOT000", # Subclasses of X should define `__slots__` (too many false positives, we use slotscheck instead)
     "PLR2004", # Usage of "magic value" (consider removing in the future)
+    "SIM105",  # Use `contextlib.supress` (worst for performance)
     "SIM110",  # Use `any`/`all` (worst for performance)
     "TD002",   # Missing issue link for todo
     "TD003",   # Line contains todo

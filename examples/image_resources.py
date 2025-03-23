@@ -49,7 +49,7 @@ async def inspect_image(event: hikari.GuildMessageCreateEvent, what: str) -> Non
         await event.message.respond("User avatar", attachment=user.avatar_url or user.default_avatar_url)
 
     # Show the guild icon:
-    elif what.casefold() in ("guild", "server", "here", "this"):
+    elif what.casefold() in {"guild", "server", "here", "this"}:
         guild = event.get_guild()
         if guild is None:
             await event.message.respond("Guild is missing from the cache :(")

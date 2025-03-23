@@ -417,7 +417,7 @@ def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Ite
         try:
             results.append(cast(value))
 
-        except errors.UnrecognisedEntityError:
+        except errors.UnrecognisedEntityError:  # noqa: PERF203 - Move try-except outside of loop
             pass
 
     return results
