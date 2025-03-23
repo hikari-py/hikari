@@ -163,8 +163,8 @@ def unix_epoch_to_datetime(epoch: float, /, *, is_millis: bool = True) -> dateti
         return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
     except (OSError, ValueError):
         if epoch > 0:
-            return datetime.datetime.max
-        return datetime.datetime.min
+            return datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
+        return datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
 
 
 def timespan_to_int(value: Intervalish, /) -> int:

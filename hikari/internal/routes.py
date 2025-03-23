@@ -158,7 +158,7 @@ class Route:
                 self.major_params = major_param_combo
                 break
 
-    def compile(self, **kwargs: object) -> CompiledRoute:
+    def compile(self, **kwargs: data_binding.Stringish) -> CompiledRoute:
         """Generate a formatted [`CompiledRoute`][] for this route.
 
         This takes into account any URL parameters that have been passed.
@@ -175,7 +175,7 @@ class Route:
         """
         data = data_binding.StringMapBuilder()
         for k, v in kwargs.items():
-            data.put(k, str(v))
+            data.put(k, v)
 
         return CompiledRoute(
             route=self,
@@ -554,7 +554,7 @@ PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/role-connections/metadata"
 )
 
-# Entitlements (monetization)
+# Entitlements (also known as Monetization)
 GET_APPLICATION_SKUS: typing.Final[Route] = Route(GET, "/applications/{application}/skus")
 GET_APPLICATION_ENTITLEMENTS: typing.Final[Route] = Route(GET, "/applications/{application}/entitlements")
 POST_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(POST, "/applications/{application}/entitlements")

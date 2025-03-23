@@ -91,7 +91,7 @@ class _EnumNamespace(dict[str, _T]):
                 raise KeyError(name) from None
 
     def __setitem__(self, name: str, value: _T) -> None:
-        if name == "" or name == "mro":
+        if name in ("", "mro"):
             msg = f"Invalid enum member name: {name!r}"
             raise TypeError(msg)
 
@@ -166,8 +166,8 @@ class _EnumMeta(type):
         yield from cls._name_to_member_map_.values()
 
     def __new__(
-        mcs,
-        name: str,
+        mcls: type[Self],
+        cls_name: str,
         bases: tuple[type[typing.Any], ...],
         namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
     ) -> Self:
@@ -175,7 +175,7 @@ class _EnumMeta(type):
 
         if _Enum is NotImplemented:
             # noinspection PyRedundantParentheses
-            return (_Enum := super().__new__(mcs, name, bases, namespace))
+            return (_Enum := super().__new__(mcls, cls_name, bases, namespace))
 
         assert isinstance(namespace, _EnumNamespace)
 
@@ -203,11 +203,10 @@ class _EnumMeta(type):
         # We update the name space to ensure new fields override inherited attributes and methods.
         new_namespace.update(namespace)
 
-        cls = super().__new__(mcs, name, bases, new_namespace)
+        cls = super().__new__(mcls, cls_name, bases, new_namespace)
 
         for name, value in namespace.names_to_values.items():
-            member = new_namespace.get(name)
-            if isinstance(member, _DeprecatedAlias):
+            if isinstance(new_namespace.get(name), _DeprecatedAlias):
                 continue
 
             # Patching the member init call is around 100ns faster per call than
@@ -228,7 +227,7 @@ class _EnumMeta(type):
 
     @classmethod
     def __prepare__(
-        mcs, name: str, bases: tuple[type[typing.Any], ...] = ()
+        cls, name: str, bases: tuple[type[typing.Any], ...] = ()
     ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
         if _Enum is NotImplemented:
             if name != "Enum":
@@ -342,8 +341,7 @@ class Enum(metaclass=_EnumMeta):
         return self._name_
 
     @property
-    @typing.no_type_check
-    def value(self):
+    def value(self) -> object:
         """Return the value of the enum member."""
         return self._value_
 
@@ -362,13 +360,13 @@ def _name_resolver(members: dict[int, _Flag], value: int) -> typing.Generator[st
     has_yielded = False
     remaining = value
     while bit <= value:
-        if member := members.get(bit):
-            # Use ._value_ to prevent overhead of making new members each time.
-            # Also let's my testing logic for the cache size be more accurate.
-            if member._value_ & remaining == member._value_:
-                remaining ^= member._value_
-                yield member.name
-                has_yielded = True
+        # Use ._value_ to prevent overhead of making new members each time.
+        # Also let's my testing logic for the cache size be more accurate.
+        member = members.get(bit)
+        if member and member._value_ & remaining == member._value_:
+            remaining ^= member._value_
+            yield member.name
+            has_yielded = True
         bit <<= 1
 
     if not has_yielded:
@@ -395,7 +393,7 @@ class _FlagMeta(type):
 
             temp_members = cls._temp_members_
             # For huge enums, don't ever cache anything. We could consume masses of memory otherwise
-            # (e.g. Permissions)
+            # (for example: Permissions)
             try:
                 # Try to get a cached value.
                 return temp_members[value]
@@ -422,7 +420,7 @@ class _FlagMeta(type):
 
     @classmethod
     def __prepare__(
-        mcs, name: str, bases: tuple[type[typing.Any], ...] = ()
+        cls, name: str, bases: tuple[type[typing.Any], ...] = ()
     ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
         if _Flag is NotImplemented:
             if name != "Flag":
@@ -438,16 +436,16 @@ class _FlagMeta(type):
 
     @staticmethod
     def __new__(
-        mcs,
-        name: str,
+        mcls: type[Flag],
+        cls_name: str,
         bases: tuple[type[typing.Any], ...],
         namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
-    ) -> Self:
+    ) -> Flag:
         global _Flag
 
         if _Flag is NotImplemented:
             # noinspection PyRedundantParentheses
-            return (_Flag := super().__new__(mcs, name, bases, namespace))
+            return (_Flag := super().__new__(mcls, cls_name, bases, namespace))
 
         assert isinstance(namespace, _EnumNamespace)
         new_namespace = {
@@ -478,11 +476,10 @@ class _FlagMeta(type):
         # We update the namespace to ensure new fields override inherited attributes and methods.
         new_namespace.update(namespace)
 
-        cls = super().__new__(mcs, name, (int, *bases), new_namespace)
+        cls = super().__new__(mcls, cls_name, (int, *bases), new_namespace)
 
         for name, value in namespace.names_to_values.items():
-            member = new_namespace.get(name)
-            if isinstance(member, _DeprecatedAlias):
+            if isinstance(new_namespace.get(name), _DeprecatedAlias):
                 continue
 
             # Patching the member init call is around 100ns faster per call than

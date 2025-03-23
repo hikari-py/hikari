@@ -67,7 +67,7 @@ logging.addLevelName(TRACE, "TRACE_HIKARI")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 
-def init_logging(
+def init_logging(  # noqa: C901 - Function too complex
     flavor: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]], allow_color: bool, force_color: bool
 ) -> None:
     """Initialize logging for the user.
@@ -294,7 +294,7 @@ def print_banner(
         "hikari_git_sha1": about.__git_sha1__[:8],
         "hikari_copyright": about.__copyright__,
         "hikari_license": about.__license__,
-        "hikari_install_location": os.path.abspath(os.path.dirname(about.__file__)),
+        "hikari_install_location": str(pathlib.Path(about.__file__).resolve().parent),
         "hikari_documentation_url": about.__docs__,
         "hikari_discord_invite": about.__discord_invite__,
         "hikari_source_url": about.__url__,
@@ -333,7 +333,7 @@ def warn_if_not_optimized(suppress: bool) -> None:
         )
 
 
-def supports_color(allow_color: bool, force_color: bool) -> bool:
+def supports_color(allow_color: bool, force_color: bool) -> bool:  # noqa: PLR0911 - Too many return statements
     """Return [`True`][] if the terminal device supports color output.
 
     Parameters
@@ -412,7 +412,7 @@ class HikariVersion:
         self.prerelease = (prerelease, int(prerelease_num) if prerelease_num else 0) if prerelease else None
 
         prerelease_num = int(prerelease_num) if prerelease else float("inf")
-        self._cmp = self.version + (prerelease_num,)
+        self._cmp = (*self.version, prerelease_num)
 
     def __str__(self) -> str:
         vstring = ".".join(map(str, self.version))
@@ -506,5 +506,5 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
 
         if newest_version:
             _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest_version)
-    except Exception as ex:
+    except Exception as ex:  # noqa: BLE001 - Do not catch blind exceptions (this will run as a headless task, so we want this)
         _LOGGER.warning("Failed to fetch hikari version details", exc_info=ex)

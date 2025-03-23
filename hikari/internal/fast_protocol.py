@@ -85,7 +85,7 @@ class _FastProtocolChecking(type(typing.Protocol)):
 
         return obj
 
-    def __subclasscheck__(cls, other):
+    def __subclasscheck__(cls, other: type) -> bool:
         return _abc_subclasscheck(cls, other)
 
     def __instancecheck__(cls, other: object) -> bool:

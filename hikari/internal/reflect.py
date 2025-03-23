@@ -64,11 +64,12 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
     none_type = type(None)
     for name, param in signature.parameters.items():
-        if isinstance(param.annotation, str):
-            param = param.replace(annotation=resolved_typehints[name] if name in resolved_typehints else EMPTY)
-        if param.annotation is none_type:
-            param = param.replace(annotation=None)
-        params.append(param)
+        real_param = param
+        if isinstance(real_param.annotation, str):
+            real_param = real_param.replace(annotation=resolved_typehints.get(name, EMPTY))
+        if real_param.annotation is none_type:
+            real_param = real_param.replace(annotation=None)
+        params.append(real_param)
 
     return_annotation = resolved_typehints.get("return", EMPTY)
     if return_annotation is none_type:

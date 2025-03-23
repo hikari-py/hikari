@@ -481,18 +481,21 @@ class StubModel(snowflakes.Unique):
 
 
 class TestStringifyHttpMessage:
-    def test_when_body_is_None(self, rest_client):
+    def test_when_body_is_str(self, rest_client):
         headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
-        expected_return = "    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**"
-        assert rest._stringify_http_message(headers, None) == expected_return
 
-    @pytest.mark.parametrize(("body", "expected"), [(bytes("hello :)", "ascii"), "hello :)"), (123, "123")])
-    def test_when_body_is_not_None(self, rest_client, body, expected):
+        returned = rest._stringify_http_message(headers, None)
+
+        assert returned == "    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**"
+
+    def test_when_body_is_not_None(self, rest_client, expected):
         headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
-        expected_return = (
-            f"    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**\n\n    {expected}"
+
+        returned = rest._stringify_http_message(headers, bytes("hello :)", "ascii"))
+
+        assert returned == (
+            f"    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**\n\n    hello :)"
         )
-        assert rest._stringify_http_message(headers, body) == expected_return
 
 
 class TestTransformEmojiToUrlFormat:

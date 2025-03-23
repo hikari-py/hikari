@@ -107,7 +107,7 @@ def handle_interrupts(
     for sig in _INTERRUPT_SIGNALS:
         try:
             signum = getattr(signal, sig)
-        except AttributeError:
+        except AttributeError:  # noqa: PERF203 - no try except within a loop
             _LOGGER.log(ux.TRACE, "signal %s is not implemented on your platform; skipping", sig)
         else:
             original_handlers[signum] = signal.getsignal(signum)

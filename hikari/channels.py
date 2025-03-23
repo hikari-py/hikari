@@ -282,7 +282,7 @@ class PermissionOverwriteType(int, enums.Enum):
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-class PermissionOverwrite:
+class PermissionOverwrite(snowflakes.Unique):
     """Represents permission overwrites for a channel or role in a channel.
 
     You may sometimes need to make instances of this object to add/edit

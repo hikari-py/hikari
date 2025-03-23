@@ -36,7 +36,7 @@ if typing.TYPE_CHECKING:
     from hikari.impl import config
 
 
-async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HTTPError:
+async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HTTPError:  # noqa: PLR0911 - Too many return statements
     """Given an erroneous HTTP response, return a corresponding exception."""
     real_url = str(response.real_url)
     raw_body = await response.read()

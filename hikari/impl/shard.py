@@ -193,9 +193,9 @@ class _GatewayTransport:
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
 
-        data = self._loads(pl)
-        assert isinstance(data, dict)
-        return data
+        val = self._loads(pl)
+        assert isinstance(val, dict)
+        return val
 
     async def send_json(self, data: data_binding.JSONObject) -> None:
         pl = self._dumps(data)
