@@ -137,6 +137,10 @@ release = ["twine==6.1.0"]
 ruff = ["ruff==0.11.2"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
+example-voice-message = [
+    "pydub==0.25",
+    "pydub-stubs==0.25.1.5"
+]
 
 [tool.uv]
 required-version = "~=0.6"
@@ -280,7 +284,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ['numpy.*', 'pydub.*']
+module = ["numpy.*"] # Numpy has already abonded py 3.9 and since we still support it we can't bring numpy into the project dependencies
 ignore_missing_imports = true
 
 [tool.slotscheck]

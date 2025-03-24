@@ -1212,6 +1212,10 @@ codespell = [
 coverage = [
     { name = "coverage", extra = ["toml"] },
 ]
+example-voice-message = [
+    { name = "pydub" },
+    { name = "pydub-stubs" },
+]
 flake8 = [
     { name = "flake8" },
     { name = "flake8-bandit" },
@@ -1289,6 +1293,10 @@ provides-extras = ["server", "speedups"]
 audit = [{ name = "uv-secure" }]
 codespell = [{ name = "codespell", specifier = "==2.4.1" }]
 coverage = [{ name = "coverage", extras = ["toml"], specifier = "==7.7.0" }]
+example-voice-message = [
+    { name = "pydub", specifier = "==0.25" },
+    { name = "pydub-stubs", specifier = "==0.25.1.5" },
+]
 flake8 = [
     { name = "flake8", specifier = "==7.1.2" },
     { name = "flake8-bandit", specifier = "~=4.1.1" },
@@ -2608,6 +2616,27 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e9/5c/d5385ca59fd065e3c6a5fe19f9bc9d5ea7f2509fa8c9c22fb6b2031dd953/pydocstyle-6.3.0.tar.gz", hash = "sha256:7ce43f0c0ac87b07494eb9c0b462c0b73e6ff276807f204d6b53edc72b7e44e1", size = 36796 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/36/ea/99ddefac41971acad68f14114f38261c1f27dac0b3ec529824ebc739bdaa/pydocstyle-6.3.0-py3-none-any.whl", hash = "sha256:118762d452a49d6b05e194ef344a55822987a462831ade91ec5c06fd2169d019", size = 38038 },
+]
+
+[[package]]
+name = "pydub"
+version = "0.25.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/af/3b479c1851cf6c10d4021a4c0dc2a4fb9be66f7898302306eb1d375ac138/pydub-0.25.0.tar.gz", hash = "sha256:c3fb5f3c60c4eb4af84666342507e8983f3a96b87b6ef90e13b996d4402942e2", size = 38357 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8c/74/e6258e98c8fd43ca8e74a411a3a163ac2f12fc2374d2a609c23442ec90a5/pydub-0.25.0-py2.py3-none-any.whl", hash = "sha256:d857a384f29eae6138d222aeadf51d02a87288c8991db5c1c9e3c57e356226eb", size = 32323 },
+]
+
+[[package]]
+name = "pydub-stubs"
+version = "0.25.1.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c1/f5/0482df00f87e95295888007c4dc94bf33bed74daf910f0587bcb9a2b6cf5/pydub_stubs-0.25.1.5.tar.gz", hash = "sha256:fa5e98441e7de3be3b8329c02c8a34c7900a2712d49cf52e47cd58c722c779e6", size = 8413 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/9c/7c6fffba2b87dfda8248701d4fc28bc662562d5687123084fe63aa330b1c/pydub_stubs-0.25.1.5-py3-none-any.whl", hash = "sha256:a463a81c832e4b720478c5e2e8f6c76000765c821797457b253aa695a352c414", size = 9326 },
 ]
 
 [[package]]

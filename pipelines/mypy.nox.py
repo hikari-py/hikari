@@ -36,7 +36,7 @@ STUBGEN_GENERATE = [
 @nox.session()
 def mypy(session: nox.Session) -> None:
     """Perform static type analysis on Python source code using mypy."""
-    nox.sync(session, self=True, extras=["speedups", "server"], groups=["mypy", "ruff"])
+    nox.sync(session, self=True, extras=["speedups", "server"], groups=["mypy", "ruff", "example-voice-message"])
 
     _generate_stubs(session)
 
