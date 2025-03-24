@@ -7716,7 +7716,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
-        response_type: typing.Union[int, base_interactions.ResponseType],
         attachment: files.Resourceish,
         waveform: str,
         duration: float,

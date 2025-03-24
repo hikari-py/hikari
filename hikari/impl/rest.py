@@ -4189,7 +4189,6 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
-        response_type: typing.Union[int, base_interactions.ResponseType],
         attachment: files.Resourceish,
         waveform: str,
         duration: float,
@@ -4220,7 +4219,7 @@ class RESTClientImpl(rest_api.RESTClient):
         data.put("attachments", [attachment_payload])
 
         body = data_binding.JSONObjectBuilder()
-        body.put("type", response_type)
+        body.put("type", base_interactions.ResponseType.MESSAGE_CREATE)
         body.put("data", data)
 
         form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
