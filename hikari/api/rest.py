@@ -574,7 +574,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Edit permissions for a target entity."""
+        # Edit permissions for a target entity
+        ...
 
     @typing.overload
     @abc.abstractmethod
@@ -588,7 +589,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Edit permissions for a given entity ID and type."""
+        # Edit permissions for a given entity ID and type
+        ...
 
     @abc.abstractmethod
     async def edit_permission_overwrite(
