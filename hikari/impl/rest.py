@@ -1516,6 +1516,57 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return body, form_builder
 
+    def _build_voice_message_payload(
+        self,
+        /,
+        *,
+        attachment: typing.Union[files.Resourceish, messages_.Attachment],
+        waveform: str,
+        duration: float,
+        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+    ) -> data_binding.URLEncodedFormBuilder:
+        if flags is undefined.UNDEFINED:
+            flags = messages_.MessageFlag.IS_VOICE_MESSAGE
+        else:
+            flags = messages_.MessageFlag(flags) | messages_.MessageFlag.IS_VOICE_MESSAGE
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("flags", flags)
+        if mentions_reply is not undefined.UNDEFINED:
+            body.put(
+                "allowed_mentions",
+                mentions.generate_allowed_mentions(
+                    undefined.UNDEFINED, mentions_reply, undefined.UNDEFINED, undefined.UNDEFINED
+                ),
+            )
+
+        if reply:
+            message_reference = data_binding.JSONObjectBuilder()
+            message_reference.put_snowflake("message_id", reply)
+            message_reference.put("fail_if_not_exists", reply_must_exist)
+
+            body.put("message_reference", message_reference)
+
+        form_builder = data_binding.URLEncodedFormBuilder()
+        attachment_id = 0
+
+        resource = files.ensure_resource(attachment)
+        attachment_payload: dict[str, typing.Any] = {
+            "duration_secs": duration,
+            "waveform": waveform,
+            "id": attachment_id,
+            "filename": resource.filename,
+        }
+        form_builder.add_resource(f"files[{attachment_id}]", resource)
+
+        body.put("attachments", [attachment_payload])
+
+        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+        return form_builder
+
     async def create_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1592,43 +1643,15 @@ class RESTClientImpl(rest_api.RESTClient):
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
-        if flags is undefined.UNDEFINED:
-            flags = messages_.MessageFlag.IS_VOICE_MESSAGE
-        else:
-            flags = messages_.MessageFlag(flags) | messages_.MessageFlag.IS_VOICE_MESSAGE
-
-        body = data_binding.JSONObjectBuilder()
-        body.put("flags", flags)
-        if mentions_reply is not undefined.UNDEFINED:
-            body.put(
-                "allowed_mentions",
-                mentions.generate_allowed_mentions(
-                    undefined.UNDEFINED, mentions_reply, undefined.UNDEFINED, undefined.UNDEFINED
-                ),
-            )
-
-        if reply:
-            message_reference = data_binding.JSONObjectBuilder()
-            message_reference.put_snowflake("message_id", reply)
-            message_reference.put("fail_if_not_exists", reply_must_exist)
-
-            body.put("message_reference", message_reference)
-
-        form_builder = data_binding.URLEncodedFormBuilder()
-        attachment_id = 0
-
-        resource = files.ensure_resource(attachment)
-        attachment_payload: dict[str, typing.Any] = {
-            "duration_secs": duration,
-            "waveform": waveform,
-            "id": attachment_id,
-            "filename": resource.filename,
-        }
-        form_builder.add_resource(f"files[{attachment_id}]", resource)
-
-        body.put("attachments", [attachment_payload])
-
-        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+        form_builder = self._build_voice_message_payload(
+            attachment=attachment,
+            waveform=waveform,
+            duration=duration,
+            reply=reply,
+            reply_must_exist=reply_must_exist,
+            mentions_reply=mentions_reply,
+            flags=flags,
+        )
         response = await self._request(route, form_builder=form_builder)
 
         assert isinstance(response, dict)
@@ -4196,33 +4219,9 @@ class RESTClientImpl(rest_api.RESTClient):
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> None:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
-        if flags is undefined.UNDEFINED:
-            flags = messages_.MessageFlag.IS_VOICE_MESSAGE
-        else:
-            flags = messages_.MessageFlag(flags) | messages_.MessageFlag.IS_VOICE_MESSAGE
-
-        data = data_binding.JSONObjectBuilder()
-        data.put("flags", flags)
-
-        form_builder = data_binding.URLEncodedFormBuilder()
-        attachment_id = 0
-
-        resource = files.ensure_resource(attachment)
-        attachment_payload: dict[str, typing.Any] = {
-            "duration_secs": duration,
-            "waveform": waveform,
-            "id": attachment_id,
-            "filename": resource.filename,
-        }
-        form_builder.add_resource(f"files[{attachment_id}]", resource)
-
-        data.put("attachments", [attachment_payload])
-
-        body = data_binding.JSONObjectBuilder()
-        body.put("type", base_interactions.ResponseType.MESSAGE_CREATE)
-        body.put("data", data)
-
-        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+        form_builder = self._build_voice_message_payload(
+            attachment=attachment, waveform=waveform, duration=duration, flags=flags
+        )
         await self._request(route, form_builder=form_builder, auth=None)
 
     async def edit_interaction_response(
@@ -4273,6 +4272,20 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             response = await self._request(route, json=body, auth=None)
 
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
+
+    async def edit_interaction_voice_message_response(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        token: str,
+        attachment: typing.Union[files.Resourceish, messages_.Attachment],
+        waveform: str,
+        duration: float,
+    ) -> messages_.Message:
+        route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=application, token=token)
+        form_builder = self._build_voice_message_payload(attachment=attachment, waveform=waveform, duration=duration)
+        response = await self._request(route, form_builder=form_builder, auth=None)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 

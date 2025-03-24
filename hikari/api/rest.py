@@ -7960,6 +7960,130 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def edit_interaction_voice_message_response(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        token: str,
+        attachment: typing.Union[files.Resourceish, messages_.Attachment],
+        waveform: str,
+        duration: float,
+    ) -> messages_.Message:
+        """Edit the initial response to a command interaction.
+
+        !!! note
+            Mentioning everyone, roles, or users in message edits currently
+            will not send a push notification showing a new mention to people
+            on Discord. It will still highlight in their chat as if they
+            were mentioned, however.
+
+            Also important to note that if you specify a text `content`, `mentions_everyone`,
+            `mentions_reply`, `user_mentions`, and `role_mentions` will default
+            to [`False`][] as the message will be re-parsed for mentions. This will
+            also occur if only one of the four are specified
+
+            This is a limitation of Discord's design. If in doubt, specify all
+            four of them each time.
+
+        Parameters
+        ----------
+        application
+            Object or ID of the application to edit a command response for.
+        token
+            The interaction's token.
+        content
+            If provided, the message content to update with. If
+            [`hikari.undefined.UNDEFINED`][], then the content will not
+            be changed. If [`None`][], then the content will be removed.
+
+            Any other value will be cast to a [`str`][] before sending.
+
+            If this is a [`hikari.embeds.Embed`][] and neither the
+            `embed` or `embeds` kwargs are provided or if this is a
+            [`hikari.files.Resourceish`][] and neither the `attachment` or
+            `attachments` kwargs are provided, the values will be overwritten.
+            This allows for simpler syntax when sending an embed or an
+            attachment alone.
+        attachment
+            If provided, the attachment to set on the message. If
+            [`hikari.undefined.UNDEFINED`][], the previous attachment, if
+            present, is not changed. If this is [`None`][], then the
+            attachment is removed, if present. Otherwise, the new attachment
+            that was provided will be attached.
+        attachments
+            If provided, the attachments to set on the message. If
+            [`hikari.undefined.UNDEFINED`][], the previous attachments, if
+            present, are not changed. If this is [`None`][], then the
+            attachments is removed, if present. Otherwise, the new attachments
+            that were provided will be attached.
+        component
+            If provided, builder object of the component to set for this message.
+            This component will replace any previously set components and passing
+            [`None`][] will remove all components.
+        components
+            If provided, a sequence of the component builder objects set for
+            this message. These components will replace any previously set
+            components and passing [`None`][] or an empty sequence will
+            remove all components.
+        embed
+            If provided, the embed to set on the message. If
+            [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
+            If this is [`None`][] then any present embeds are removed.
+            Otherwise, the new embed that was provided will be used as the
+            replacement.
+        embeds
+            If provided, the embeds to set on the message. If
+            [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
+            If this is [`None`][] then any present embeds are removed.
+            Otherwise, the new embeds that were provided will be used as the
+            replacement.
+        mentions_everyone
+            If provided, whether the message should parse @everyone/@here
+            mentions.
+        user_mentions
+            If provided, and [`True`][], all user mentions will be detected.
+            If provided, and [`False`][], all user mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
+            specific users.
+        role_mentions
+            If provided, and [`True`][], all role mentions will be detected.
+            If provided, and [`False`][], all role mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
+            specific roles.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The edited message.
+
+        Raises
+        ------
+        ValueError
+            If both `attachment` and `attachments`, `component` and `components`
+            or `embed` and `embeds` are specified.
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; too many components.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or the message are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def delete_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> None:
