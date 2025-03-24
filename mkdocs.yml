@@ -63,7 +63,6 @@ theme:
     - navigation.tabs
     - navigation.indexes
     - navigation.top
-    - toc.follow
 
 markdown_extensions:
   - abbr
