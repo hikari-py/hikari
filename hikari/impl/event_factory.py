@@ -515,9 +515,8 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> interaction_events.InteractionCreateEvent:
         interaction = self._app.entity_factory.deserialize_interaction(payload)
 
-        if event := self._interaction_events_map.get(interaction.type):
-            return event(shard=shard, interaction=interaction)
-        raise errors.UnrecognisedEntityError(f"Unrecognised interaction type {interaction.type}")
+        event = _interaction_events_map[interaction.type]
+        return self._interaction_events_map[interaction.type](shard=shard, interaction=interaction)
 
     #################
     # MEMBER EVENTS #
