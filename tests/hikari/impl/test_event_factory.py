@@ -28,7 +28,6 @@ import pytest
 
 from hikari import channels as channel_models
 from hikari import emojis as emoji_models
-from hikari import errors
 from hikari import traits
 from hikari import undefined
 from hikari import users as user_models
@@ -765,7 +764,7 @@ class TestEventFactoryImpl:
 
     def test_deserialize_interaction_create_event_error(self, event_factory, mock_app, mock_shard):
         payload = {"id": "1561232344"}
-        with pytest.raises(errors.UnrecognisedEntityError):
+        with pytest.raises(KeyError):
             event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
     #################

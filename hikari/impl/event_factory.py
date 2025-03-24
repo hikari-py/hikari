@@ -33,7 +33,6 @@ from hikari import applications as application_models
 from hikari import channels as channel_models
 from hikari import colors
 from hikari import emojis as emojis_models
-from hikari import errors
 from hikari import snowflakes
 from hikari import undefined
 from hikari import users as user_models
@@ -69,7 +68,7 @@ if typing.TYPE_CHECKING:
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
 
-_interaction_events_map: dict[
+_INTERACTION_EVENTS_MAP: dict[
     base_interactions.InteractionType, typing.Type[interaction_events.InteractionCreateEvent]
 ] = {
     base_interactions.InteractionType.APPLICATION_COMMAND: interaction_events.CommandInteractionCreateEvent,
@@ -501,22 +500,12 @@ class EventFactoryImpl(event_factory.EventFactory):
     # INTERACTION EVENTS #
     ######################
 
-    _interaction_events_map: dict[
-        base_interactions.InteractionType, typing.Type[interaction_events.InteractionCreateEvent]
-    ] = {
-        base_interactions.InteractionType.APPLICATION_COMMAND: interaction_events.CommandInteractionCreateEvent,
-        base_interactions.InteractionType.AUTOCOMPLETE: interaction_events.AutocompleteInteractionCreateEvent,
-        base_interactions.InteractionType.MESSAGE_COMPONENT: interaction_events.ComponentInteractionCreateEvent,
-        base_interactions.InteractionType.MODAL_SUBMIT: interaction_events.ModalInteractionCreateEvent,
-    }
-
     def deserialize_interaction_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> interaction_events.InteractionCreateEvent:
         interaction = self._app.entity_factory.deserialize_interaction(payload)
 
-        event = _interaction_events_map[interaction.type]
-        return self._interaction_events_map[interaction.type](shard=shard, interaction=interaction)
+        return _INTERACTION_EVENTS_MAP[interaction.type](shard=shard, interaction=interaction)
 
     #################
     # MEMBER EVENTS #
