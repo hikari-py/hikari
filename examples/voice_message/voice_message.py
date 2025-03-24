@@ -58,16 +58,29 @@ def calculate_waveform(audio_file_path: str) -> tuple[str, float]:
 
 
 @bot.listen()
-async def on_message(event: hikari.MessageCreateEvent) -> None:
+async def register_commands(event: hikari.StartingEvent) -> None:
+    """Register ping and info commands."""
+    application = await bot.rest.fetch_application()
+
+    commands = [bot.rest.slash_command_builder("audio", "Receive a voice message from the bot!")]
+
+    await bot.rest.set_application_commands(application=application.id, commands=commands)
+
+
+@bot.listen()
+async def handle_interactions(event: hikari.InteractionCreateEvent) -> None:
     """Listen for messages being created."""
-    if not event.is_human:
-        # Do not respond to bots or webhooks!
+    if not isinstance(event.interaction, hikari.CommandInteraction):
         return
 
-    if event.content == "!audio":
+    if event.interaction.command_name == "audio":
         waveform, duration = calculate_waveform("./sample.wav")
-        await event.app.rest.create_voice_message(
-            channel=event.channel_id, attachment=hikari.File("./sample.wav"), waveform=waveform, duration=duration
+        await event.app.rest.create_interaction_voice_message_response(
+            interaction=event.interaction,
+            token=event.interaction.token,
+            attachment=hikari.File("./sample.wav"),
+            waveform=waveform,
+            duration=duration,
         )
 
 
