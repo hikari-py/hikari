@@ -2146,6 +2146,114 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def execute_webhook_voice_message(
+        self,
+        # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
+        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
+        token: str,
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        thread: typing.Union[
+            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
+        ] = undefined.UNDEFINED,
+        username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
+        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        """Execute a webhook.
+
+        !!! warning
+            At the time of writing, `username` and `avatar_url` are ignored for
+            interaction webhooks.
+
+            Additionally, [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][],
+            [`hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`][] and
+            [`hikari.messages.MessageFlag.EPHEMERAL`][] are the only flags that
+            can be set, with [`hikari.messages.MessageFlag.EPHEMERAL`][] limited to
+            interaction webhooks.
+
+        Parameters
+        ----------
+        webhook
+            The webhook to execute. This may be the object
+            or the ID of an existing webhook.
+        token
+            The webhook token.
+        thread
+            If provided then the message will be created in the target thread
+            within the webhook's channel, otherwise it will be created in
+            the webhook's target channel.
+
+            This is required when trying to create a thread message.
+        username
+            If provided, the username to override the webhook's username
+            for this request.
+        avatar_url
+            If provided, the url of an image to override the webhook's
+            avatar with for this request.
+        attachment
+            If provided, the message attachment. This can be a resource,
+            or string of a path on your computer or a URL.
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a [`pathlib.PurePath`][] or [`str`][] to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                [`hikari.files.WebResource`][] such as
+                [`hikari.files.URL`][],
+                [`hikari.messages.Attachment`][],
+                [`hikari.emojis.Emoji`][],
+                [`hikari.embeds.EmbedResource`][], etc. will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a [hikari.files.Bytes] is passed, or a [`str`][]
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a [hikari.files.File], [`pathlib.PurePath`][] or
+                [`str`][] that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of [`concurrent.futures.Executor`][] that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
+        flags
+            The flags to set for this webhook message.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The created message.
+
+        Raises
+        ------
+        ValueError
+            If more than 100 unique objects/entities are passed for
+            `role_mentions` or `user_mentions` or if both `attachment` and
+            `attachments` or `embed` and `embeds` are specified.
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; too many components.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhook is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def execute_webhook(
         self,
         # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
