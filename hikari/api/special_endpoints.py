@@ -103,7 +103,10 @@ class TypingIndicator(abc.ABC):
 
     @abc.abstractmethod
     async def __aexit__(
-        self, exception_type: type[BaseException], exception: BaseException, exception_traceback: types.TracebackType
+        self,
+        exception_type: typing.Optional[type[BaseException]],
+        exception: typing.Optional[BaseException],
+        exception_traceback: typing.Optional[types.TracebackType],
     ) -> None: ...
 
 

@@ -45,6 +45,8 @@ from hikari.internal import time
 if typing.TYPE_CHECKING:
     import types
 
+    from typing_extensions import Self
+
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ratelimits")
 
 
@@ -65,13 +67,13 @@ class BaseRateLimiter(abc.ABC):
     def close(self) -> None:
         """Close the rate limiter, cancelling any internal tasks that are executing."""
 
-    def __enter__(self) -> BaseRateLimiter:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
         self,
-        exc_type: typing.Optional[type[Exception]],
-        exc_val: typing.Optional[Exception],
+        exc_type: typing.Optional[type[BaseException]],
+        exc_val: typing.Optional[BaseException],
         exc_tb: typing.Optional[types.TracebackType],
     ) -> None:
         self.close()

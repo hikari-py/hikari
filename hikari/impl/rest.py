@@ -85,6 +85,8 @@ if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
 
+    from typing_extensions import Self
+
     from hikari import audit_logs
     from hikari import invites
     from hikari import sessions
@@ -688,7 +690,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if self._bucket_manager_owner:
             self._bucket_manager.start()
 
-    async def __aenter__(self) -> RESTClientImpl:
+    async def __aenter__(self) -> Self:
         self.start()
         return self
 
