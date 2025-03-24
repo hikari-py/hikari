@@ -1300,11 +1300,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions` or if both `attachment` and
-            `attachments`, `component` and `components` or `embed` and `embeds`
-            are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -2162,7 +2157,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
-        """Execute a webhook.
+        """Execute a webhook, by sending a voice message.
 
         !!! warning
             At the time of writing, `username` and `avatar_url` are ignored for
@@ -2232,10 +2227,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions` or if both `attachment` and
-            `attachments` or `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -7830,7 +7821,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> None:
-        """Create the initial response for a interaction.
+        """Create the a initial voice message response for a interaction.
 
         !!! warning
             Calling this with an interaction which already has an initial
@@ -7844,33 +7835,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the interaction this response is for.
         token
             The interaction's token.
-        response_type
-            The type of interaction response this is.
-        content
-            If provided, the message contents. If
-            [`hikari.undefined.UNDEFINED`][], then nothing will be sent
-            in the content. Any other value here will be cast to a
-            [`str`][].
-
-            If this is a [`hikari.embeds.Embed`][] and no `embed` nor
-            no `embeds` kwarg is provided, then this will instead
-            update the embed. This allows for simpler syntax when
-            sending an embed alone.
         attachment
             If provided, the message attachment. This can be a resource,
             or string of a path on your computer or a URL.
-        attachments
-            If provided, the message attachments. These can be resources, or
-            strings consisting of paths on your computer or URLs.
-        component
-            If provided, builder object of the component to include in this message.
-        components
-            If provided, a sequence of the component builder objects to include
-            in this message.
-        embed
-            If provided, the message embed.
-        embeds
-            If provided, the message embeds.
         flags
             If provided, the message flags this response should have.
 
@@ -7878,36 +7845,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             [`hikari.messages.MessageFlag.EPHEMERAL`][],
             [`hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`][]
             and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
-        tts
-            If provided, whether the message will be read out by a screen
-            reader using Discord's TTS (text-to-speech) system.
-        mentions_everyone
-            If provided, whether the message should parse @everyone/@here
-            mentions.
-        user_mentions
-            If provided, and [`True`][], all user mentions will be detected.
-            If provided, and [`False`][], all user mentions will be ignored
-            if appearing in the message body.
-            Alternatively this may be a collection of
-            [`hikari.snowflakes.Snowflake`][], or
-            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
-            specific users.
-        role_mentions
-            If provided, and [`True`][], all role mentions will be detected.
-            If provided, and [`False`][], all role mentions will be ignored
-            if appearing in the message body.
-            Alternatively this may be a collection of
-            [`hikari.snowflakes.Snowflake`][], or
-            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
-            specific roles.
 
         Raises
         ------
-        ValueError
-            If more than 100 unique objects/entities are passed for
-            `role_mentions` or `user_mentions`.
-        TypeError
-            If both `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no embeds; messages with more than 2000 characters
@@ -8076,21 +8016,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         waveform: str,
         duration: float,
     ) -> messages_.Message:
-        """Edit the initial response to a command interaction.
-
-        !!! note
-            Mentioning everyone, roles, or users in message edits currently
-            will not send a push notification showing a new mention to people
-            on Discord. It will still highlight in their chat as if they
-            were mentioned, however.
-
-            Also important to note that if you specify a text `content`, `mentions_everyone`,
-            `mentions_reply`, `user_mentions`, and `role_mentions` will default
-            to [`False`][] as the message will be re-parsed for mentions. This will
-            also occur if only one of the four are specified
-
-            This is a limitation of Discord's design. If in doubt, specify all
-            four of them each time.
+        """Edit the initial response to a voice message.
 
         Parameters
         ----------
@@ -8098,71 +8024,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Object or ID of the application to edit a command response for.
         token
             The interaction's token.
-        content
-            If provided, the message content to update with. If
-            [`hikari.undefined.UNDEFINED`][], then the content will not
-            be changed. If [`None`][], then the content will be removed.
-
-            Any other value will be cast to a [`str`][] before sending.
-
-            If this is a [`hikari.embeds.Embed`][] and neither the
-            `embed` or `embeds` kwargs are provided or if this is a
-            [`hikari.files.Resourceish`][] and neither the `attachment` or
-            `attachments` kwargs are provided, the values will be overwritten.
-            This allows for simpler syntax when sending an embed or an
-            attachment alone.
         attachment
             If provided, the attachment to set on the message. If
             [`hikari.undefined.UNDEFINED`][], the previous attachment, if
             present, is not changed. If this is [`None`][], then the
             attachment is removed, if present. Otherwise, the new attachment
             that was provided will be attached.
-        attachments
-            If provided, the attachments to set on the message. If
-            [`hikari.undefined.UNDEFINED`][], the previous attachments, if
-            present, are not changed. If this is [`None`][], then the
-            attachments is removed, if present. Otherwise, the new attachments
-            that were provided will be attached.
-        component
-            If provided, builder object of the component to set for this message.
-            This component will replace any previously set components and passing
-            [`None`][] will remove all components.
-        components
-            If provided, a sequence of the component builder objects set for
-            this message. These components will replace any previously set
-            components and passing [`None`][] or an empty sequence will
-            remove all components.
-        embed
-            If provided, the embed to set on the message. If
-            [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
-            If this is [`None`][] then any present embeds are removed.
-            Otherwise, the new embed that was provided will be used as the
-            replacement.
-        embeds
-            If provided, the embeds to set on the message. If
-            [`hikari.undefined.UNDEFINED`][], the previous embed(s) are not changed.
-            If this is [`None`][] then any present embeds are removed.
-            Otherwise, the new embeds that were provided will be used as the
-            replacement.
-        mentions_everyone
-            If provided, whether the message should parse @everyone/@here
-            mentions.
-        user_mentions
-            If provided, and [`True`][], all user mentions will be detected.
-            If provided, and [`False`][], all user mentions will be ignored
-            if appearing in the message body.
-            Alternatively this may be a collection of
-            [`hikari.snowflakes.Snowflake`][], or
-            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
-            specific users.
-        role_mentions
-            If provided, and [`True`][], all role mentions will be detected.
-            If provided, and [`False`][], all role mentions will be ignored
-            if appearing in the message body.
-            Alternatively this may be a collection of
-            [`hikari.snowflakes.Snowflake`][], or
-            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
-            specific roles.
 
         Returns
         -------
@@ -8171,9 +8038,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        ValueError
-            If both `attachment` and `attachments`, `component` and `components`
-            or `embed` and `embeds` are specified.
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
