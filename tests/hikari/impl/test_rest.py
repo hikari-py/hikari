@@ -6105,13 +6105,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock()
 
         await rest_client.create_interaction_voice_message_response(
-            StubModel(432),
-            token="some token",
-            response_type=1,
-            attachment=object(),
-            waveform="AAA",
-            duration=3,
-            flags=54123,
+            StubModel(432), token="some token", attachment=object(), waveform="AAA", duration=3, flags=54123
         )
 
         rest_client._request.assert_awaited_once()
@@ -6120,7 +6114,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock()
 
         await rest_client.create_interaction_voice_message_response(
-            StubModel(432), token="some token", response_type=1, attachment=object(), waveform="AAA", duration=3
+            StubModel(432), token="some token", attachment=object(), waveform="AAA", duration=3
         )
 
         rest_client._request.assert_awaited_once()
