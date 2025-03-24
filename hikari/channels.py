@@ -1206,7 +1206,7 @@ class PermissibleGuildChannel(GuildChannel):
             return await self.app.rest.edit_permission_overwrite(self.id, target, allow=allow, deny=deny, reason=reason)
 
         return await self.app.rest.edit_permission_overwrite(
-            self.id, typing.cast(int, target), target_type=target_type, allow=allow, deny=deny, reason=reason
+            self.id, typing.cast("int", target), target_type=target_type, allow=allow, deny=deny, reason=reason
         )
 
     async def remove_overwrite(
