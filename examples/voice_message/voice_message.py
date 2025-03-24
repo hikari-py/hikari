@@ -25,10 +25,8 @@ bot = hikari.GatewayBot(token=os.environ["BOT_TOKEN"])
 # Discord states that this is implementation detail and might
 # change without notice. You have been warned!
 def calculate_waveform(audio_file_path: str) -> tuple[str, float]:
-    """Calculate the waveform and the duration from an audio file.
-
-    "fancy maths, get a PhD if you want to understand it & come back" ~ Hyper
-    """
+    """Calculate the waveform and the duration from an audio file."""
+    # Author note: This is fancy maths that not even I understand, but it is based off <ref>
     audio = AudioSegment.from_file(audio_file_path)
     samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
 
