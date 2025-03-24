@@ -1294,8 +1294,8 @@ audit = [{ name = "uv-secure" }]
 codespell = [{ name = "codespell", specifier = "==2.4.1" }]
 coverage = [{ name = "coverage", extras = ["toml"], specifier = "==7.7.0" }]
 example-voice-message = [
-    { name = "pydub", specifier = "==0.25" },
-    { name = "pydub-stubs", specifier = "==0.25.1.5" },
+    { name = "pydub", specifier = "~=0.25" },
+    { name = "pydub-stubs", specifier = "~=0.25.1.5" },
 ]
 flake8 = [
     { name = "flake8", specifier = "==7.1.2" },
