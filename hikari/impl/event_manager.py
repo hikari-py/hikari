@@ -251,7 +251,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         await self.dispatch(event)
 
     # Internal granularity is preferred for GUILD_CREATE over decorator based filtering due to its large scope.
-    async def on_guild_create(  # noqa: C901  - Function too long
+    async def on_guild_create(  # noqa: C901, PLR0912, PLR0915 - Function too complex, too many branches and too long
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#guild-create for more info."""
@@ -718,8 +718,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         old_messages = {}
 
         if self._cache:
-            for message_id in payload["ids"]:
-                message_id = snowflakes.Snowflake(message_id)
+            for raw_message_id in payload["ids"]:
+                message_id = snowflakes.Snowflake(raw_message_id)
 
                 if message := self._cache.delete_message(message_id):
                     old_messages[message_id] = message
@@ -856,14 +856,14 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     async def on_guild_scheduled_event_user_add(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway-events#guild-scheduled-event-user-add for more info."""
+        """See https://discord.com/developers/docs/topics/gateway-events#guild-scheduled-event-user-add for more info."""  # noqa: E501
         await self.dispatch(self._event_factory.deserialize_scheduled_event_user_add_event(shard, payload))
 
     @event_manager_base.filtered(scheduled_events.ScheduledEventUserRemoveEvent)
     async def on_guild_scheduled_event_user_remove(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> None:
-        """See https://discord.com/developers/docs/topics/gateway-events#guild-scheduled-event-user-remove for more info."""
+        """See https://discord.com/developers/docs/topics/gateway-events#guild-scheduled-event-user-remove for more info."""  # noqa: E501
         await self.dispatch(self._event_factory.deserialize_scheduled_event_user_remove_event(shard, payload))
 
     @event_manager_base.filtered(guild_events.AuditLogEntryCreateEvent)

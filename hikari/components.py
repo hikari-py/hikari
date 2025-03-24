@@ -387,14 +387,14 @@ The following values are valid for this:
 
 * [`hikari.components.ButtonComponent`][]
 * [`hikari.components.SelectMenuComponent`][]
-"""
+"""  # noqa: E501
 ModalComponentTypesT = TextInputComponent
 """Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:
 
 * [`hikari.components.TextInputComponent`][]
-"""
+"""  # noqa: E501
 
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""

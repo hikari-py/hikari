@@ -114,8 +114,8 @@ class ComponentInteraction(
 
         !!! note
             For interactions received over the gateway
-            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][] should be used to set
-            the interaction response message.
+            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][]
+            should be used to set the interaction response message.
 
         Parameters
         ----------
@@ -156,8 +156,8 @@ class ComponentInteraction(
 
         !!! note
             For interactions received over the gateway
-            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][] should be used to set
-            the interaction response message.
+            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][]
+            should be used to set the interaction response message.
 
         !!! note
             Unlike [`hikari.api.special_endpoints.InteractionMessageBuilder`][],

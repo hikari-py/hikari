@@ -1234,7 +1234,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached thread channel if found (else [`None`][])
             and the new cached thread channel if it could be cached
             (else [`None`][]).
-        """
+        """  # noqa: E501
 
     @abc.abstractmethod
     def clear_invites(self) -> CacheView[str, invites.InviteWithMetadata]:
@@ -1333,7 +1333,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached invite object if found (else
             [`None`][]) and the new cached invite object if it could be
             cached (else [`None`][]).
-        """
+        """  # noqa: E501
 
     @abc.abstractmethod
     def delete_me(self) -> typing.Optional[users.OwnUser]:

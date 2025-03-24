@@ -510,7 +510,8 @@ class RESTBucketManager:
 
         !!! note
             You MUST keep the context manager acquired during the full duration
-            of the request: from making the request until calling [`hikari.impl.buckets.RESTBucket.update_rate_limit`][].
+            of the request: from making the request until you call
+            [`hikari.impl.buckets.RESTBucket.update_rate_limit`][].
 
         Parameters
         ----------

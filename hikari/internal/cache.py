@@ -422,7 +422,8 @@ class MemberData(BaseData[guilds.Member]):
             user=user or RefCell(copy.copy(member.user)),
             raw_communication_disabled_until=member.raw_communication_disabled_until,
             guild_flags=member.guild_flags,
-            # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
+            # role_ids is a special case as it may be mutable so we want to ensure it's
+            # immutable when cached.
             role_ids=tuple(member.role_ids),
         )
 
@@ -477,7 +478,8 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
             is_managed=emoji.is_managed,
             is_available=emoji.is_available,
             user=user,
-            # role_ids is a special case as it may be a mutable sequence so we want to ensure it's immutable when cached.
+            # role_ids is a special case as it may be a mutable sequence so we want to ensure it's
+            # immutable when cached.
             role_ids=tuple(emoji.role_ids),
         )
 

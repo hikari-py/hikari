@@ -459,7 +459,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.MFA_LEVEL: guild_models.GuildMFALevel,
             audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: guild_models.GuildVerificationLevel,
             audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guild_models.GuildExplicitContentFilterLevel,
-            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,
+            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,  # noqa: E501
             audit_log_models.AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,
@@ -553,7 +553,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             int, typing.Callable[[data_binding.JSONObject], base_interactions.PartialInteractionMetadata]
         ] = {
             base_interactions.InteractionType.APPLICATION_COMMAND: self._deserialize_command_interaction_metadata,
-            base_interactions.InteractionType.MESSAGE_COMPONENT: self._deserialize_message_component_interaction_metadata,
+            base_interactions.InteractionType.MESSAGE_COMPONENT: self._deserialize_message_component_interaction_metadata,  # noqa: E501
             base_interactions.InteractionType.MODAL_SUBMIT: self._deserialize_modal_interaction_metadata,
         }
         self._scheduled_event_type_mapping = {

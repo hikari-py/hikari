@@ -181,9 +181,9 @@ def generate_deep_copier(cls: type[ModelT]) -> typing.Callable[[ModelT, typing.M
         return lambda _, __: None
 
     setters = ";".join(
-        f"m.{attrsibute.name}=std_copy(m.{attrsibute.name},memo)if(id_:=id(m.{attrsibute.name}))not in memo else memo[id_]"
-        for attrsibute in _normalize_kwargs_and_setters(kwargs, setters)
-        if not attrsibute.metadata.get(SKIP_DEEP_COPY)
+        f"m.{attr.name}=std_copy(m.{attr.name},memo)if(id_:=id(m.{attr.name}))not in memo else memo[id_]"
+        for attr in _normalize_kwargs_and_setters(kwargs, setters)
+        if not attr.metadata.get(SKIP_DEEP_COPY)
     )
     code = f"def deep_copy(m,memo):{setters}"
     globals_ = {"std_copy": std_copy.deepcopy, "cls": cls}

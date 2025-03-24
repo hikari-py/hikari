@@ -605,8 +605,8 @@ class Embed:
         """Return the sequence of fields in the embed.
 
         !!! note
-            Use [`hikari.embeds.Embed.add_field`][] to add a new field, [`hikari.embeds.Embed.edit_field`][] to edit an existing
-            field, or [`hikari.embeds.Embed.remove_field`][] to remove a field.
+            Use [`hikari.embeds.Embed.add_field`][] to add a new field, [`hikari.embeds.Embed.edit_field`][]
+            to edit an existing field, or [`hikari.embeds.Embed.remove_field`][] to remove a field.
         """
         return self._fields if self._fields else []
 
