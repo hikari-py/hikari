@@ -24,6 +24,8 @@ ignore = [
     "TD003",   # Line contains todo
     "FIX002",  # Line contains todo
     "A002",    # Function argument is shadowing a python builtin
+
+    "ARG002", # TODO: Temp disable until https://github.com/hikari-py/hikari/pull/2244 is merged
 ]
 
 [lint.per-file-ignores]
