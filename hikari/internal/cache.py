@@ -727,7 +727,6 @@ class MessageData(BaseData[messages.Message]):
             typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]
         ] = undefined.UNDEFINED,
         referenced_message: typing.Optional[RefCell[MessageData]] = None,
-        interaction_user: typing.Optional[RefCell[users_.User]] = None,
     ) -> MessageData:
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))

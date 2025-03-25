@@ -396,7 +396,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         await self._close_event.wait()
 
-    async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
+    async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:  # noqa: PLR0911
         """Handle an interaction received from Discord as a REST server.
 
         !!! note
