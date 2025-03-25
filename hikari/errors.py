@@ -92,7 +92,7 @@ class HikariWarning(RuntimeWarning):
 
 
 @attrs.define(auto_exc=True, repr=False, slots=False)
-class HikariInterrupt(KeyboardInterrupt, HikariError):
+class HikariInterrupt(KeyboardInterrupt):
     """Exception raised when a kill signal is handled internally."""
 
     signum: int = attrs.field()
