@@ -68,11 +68,8 @@ async def register_commands(event: hikari.StartingEvent) -> None:
 
 
 @bot.listen()
-async def handle_interactions(event: hikari.InteractionCreateEvent) -> None:
+async def handle_interactions(event: hikari.CommandInteractionCreateEvent) -> None:
     """Listen for messages being created."""
-    if not isinstance(event.interaction, hikari.CommandInteraction):
-        return
-
     if event.interaction.command_name == "audio":
         waveform, duration = calculate_waveform("./sample.wav")
         await event.app.rest.create_interaction_voice_message_response(
