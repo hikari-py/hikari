@@ -655,6 +655,18 @@ class InteractionServer(interaction_server.InteractionServer):
         replace: bool = False,
     ) -> None: ...
 
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: type[_InteractionT_co],
+        listener: typing.Optional[
+            interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None: ...
+
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],
