@@ -23,6 +23,7 @@ ignore = [
     "TD002",   # Missing issue link for todo
     "TD003",   # Line contains todo
     "FIX002",  # Line contains todo
+    "A002",    # Function argument is shadowing a python builtin
 ]
 
 [lint.per-file-ignores]
