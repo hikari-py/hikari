@@ -103,11 +103,11 @@ if typing.TYPE_CHECKING:
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
 
-    _GuildThreadChannelCovT = typing.TypeVar(
-        "_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True
+    _GuildThreadChannelT_co = typing.TypeVar(
+        "_GuildThreadChannelT_co", bound=channels.GuildThreadChannel, covariant=True
     )
 
-    class _ThreadDeserializeSig(typing.Protocol[_GuildThreadChannelCovT]):
+    class _ThreadDeserializeSig(typing.Protocol[_GuildThreadChannelT_co]):
         def __call__(
             self,
             payload: data_binding.JSONObject,
@@ -115,7 +115,7 @@ if typing.TYPE_CHECKING:
             *,
             guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
             member: undefined.UndefinedNoneOr[channels.ThreadMember] = undefined.UNDEFINED,
-        ) -> _GuildThreadChannelCovT:
+        ) -> _GuildThreadChannelT_co:
             raise NotImplementedError
 
 
