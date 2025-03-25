@@ -2547,9 +2547,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         members: dict[snowflakes.Snowflake, base_interactions.InteractionMember] = {}
         if raw_members := payload.get("members"):
-            for user_id, member_payload in raw_members.items():
+            for raw_user_id, member_payload in raw_members.items():
                 assert guild_id is not None
-                user_id = snowflakes.Snowflake(user_id)
+                user_id = snowflakes.Snowflake(raw_user_id)
                 members[user_id] = self._deserialize_interaction_member(
                     member_payload, user=users[user_id], guild_id=guild_id
                 )
