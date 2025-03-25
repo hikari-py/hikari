@@ -419,7 +419,10 @@ class EventManagerBase(event_manager_.EventManager):
         self, event_type: type[typing.Any], callback: event_manager_.CallbackT[typing.Any], *, _nested: int = 0
     ) -> None:
         if not (
-            inspect.iscoroutinefunction(callback) or inspect.iscoroutinefunction(getattr(callback, "__call__", None))
+            inspect.iscoroutinefunction(callback)
+            or inspect.iscoroutinefunction(
+                getattr(callback, "__call__", None)  # noqa: B004 - False positive
+            )
         ):
             msg = "Cannot subscribe a non-coroutine function callback"
             raise TypeError(msg)

@@ -41,7 +41,7 @@ from hikari.api import config
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 
-_BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
+_BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # noqa: S105
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
 
 
