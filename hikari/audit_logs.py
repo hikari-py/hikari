@@ -38,7 +38,6 @@ __all__: typing.Sequence[str] = (
     "MessagePinEntryInfo",
 )
 
-import abc
 import typing
 
 import attrs
