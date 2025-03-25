@@ -1,3 +1,26 @@
+## 2.2.0 (2025-03-21)
+
+### Breaking Changes
+
+- Remove `PartialInteraction.get_channel` and `PartialInteraction.fetch_channel`. You can directly use `PartialInteraction.channel` instead ([#1621](https://github.com/hikari-py/hikari/issues/1621))
+- User commands breaking changes:
+    - Remove previously deprecated `command_interactions.InteractionChannel` and `command_interactions.ResolvedOptionData`
+    - `CommandInteraction.app_permissions` is no longer optional
+    - Removal of `Commands.dm_permissions` and `Message.interaction`. Use `Commands.contexts` and `Message.interaction_metadata` respectively ([#2195](https://github.com/hikari-py/hikari/issues/2195))
+- Remove `with_expiration` parameter from REST client's `fetch_invite` method.
+    - The parameter has been a noop for a while as Discord removed it ([#2224](https://github.com/hikari-py/hikari/issues/2224))
+
+### Features
+
+- Several new `PartialInteraction` features:
+    - Add new `PartialInteraction.channel` attribute
+    - Moved common interaction fields to `PartialInteraction`
+    - `app_permissions` is now available for all interaction types
+    - Add missing fields to `InteractionChannel` ([#1621](https://github.com/hikari-py/hikari/issues/1621))
+- Add missing fields to `AuditLogEventType` ([#1991](https://github.com/hikari-py/hikari/issues/1991))
+- Add user installations support ([#2177](https://github.com/hikari-py/hikari/issues/2177))
+
+---
 ## 2.1.1 (2025-02-26)
 
 ### Features

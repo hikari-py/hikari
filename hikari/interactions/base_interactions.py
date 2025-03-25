@@ -46,6 +46,7 @@ import attrs
 from hikari import channels
 from hikari import guilds
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import webhooks
 from hikari.internal import attrs_extensions
@@ -55,9 +56,10 @@ if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import embeds as embeds_
     from hikari import files
+    from hikari import locales
     from hikari import messages
+    from hikari import monetization
     from hikari import permissions as permissions_
-    from hikari import traits
     from hikari import users
     from hikari.api import special_endpoints
 
@@ -212,7 +214,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     application_id: snowflakes.Snowflake = attrs.field(eq=False, repr=False)
     """ID of the application this interaction belongs to."""
 
-    type: typing.Union[InteractionType, int] = attrs.field(eq=False, repr=True)
+    type: InteractionType = attrs.field(eq=False, repr=True)
     """The type of interaction this is."""
 
     token: str = attrs.field(eq=False, repr=False)
@@ -220,6 +222,44 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
 
     version: int = attrs.field(eq=False, repr=True)
     """Version of the interaction system this interaction is under."""
+
+    app_permissions: typing.Optional[permissions_.Permissions] = attrs.field(eq=False, hash=False, repr=False)
+    """Permissions the bot has in this interaction's channel if it's in a guild."""
+
+    user: users.User = attrs.field(eq=False, hash=False, repr=True)
+    """The user who triggered this interaction."""
+
+    member: typing.Optional[InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
+    """The member who triggered this interaction.
+
+    This will be [`None`][] for interactions triggered in DMs.
+
+    !!! note
+        This member object comes with the extra field `permissions` which
+        contains the member's permissions in the current channel.
+    """
+
+    channel: InteractionChannel = attrs.field(eq=False, repr=False)
+    """The channel this interaction was triggered in."""
+
+    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    """ID of the guild this modal interaction event was triggered in.
+
+    This will be [`None`][] for modal interactions triggered in DMs.
+    """
+
+    guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attrs.field(eq=False, hash=False, repr=True)
+    """The preferred language of the guild this component interaction was triggered in.
+
+    This will be [`None`][] for component interactions triggered in DMs.
+
+    !!! note
+        This value can usually only be changed if [COMMUNITY] is in [`hikari.guilds.Guild.features`][]
+        for the guild and will otherwise default to `en-US`.
+    """
+
+    locale: str = attrs.field(eq=False, hash=False, repr=True)
+    """The selected language of the user who triggered this modal interaction."""
 
     authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (
         attrs.field(eq=False, repr=True)
@@ -229,10 +269,59 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     context: applications.ApplicationContextType = attrs.field(eq=False, repr=True)
     """The interaction context."""
 
+    entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
+    """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
+
+    @property
+    def channel_id(self) -> snowflakes.Snowflake:
+        """The ID of the channel this interaction was invoked in."""
+        return self.channel.id
+
     @property
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.application_id
+
+    async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
+        """Fetch the guild this interaction happened in.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.RESTGuild]
+            Object of the guild this interaction happened in or [`None`][]
+            if this occurred within a DM channel.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not part of the guild.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        if not self.guild_id:
+            return None
+
+        return await self.app.rest.fetch_guild(self.guild_id)
+
+    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+        """Get the object of the guild this interaction was triggered in from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The object of the guild if found, else [`None`][].
+        """
+        if self.guild_id and isinstance(self.app, traits.CacheAware):
+            return self.app.cache.get_guild(self.guild_id)
+
+        return None
 
 
 @attrs_extensions.with_copy
@@ -686,6 +775,15 @@ class InteractionChannel(channels.PartialChannel):
 
     permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=True)
     """Permissions the command's executor has in this channel."""
+
+    parent_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    """The parent ID of the channel.
+
+    This will be [`None`][] for DM channels and guild channels that have no parent.
+    """
+
+    thread_metadata: typing.Optional[channels.ThreadMetadata] = attrs.field(eq=False, hash=False, repr=False)
+    """The thread metadata, if the channel is a thread."""
 
 
 @attrs_extensions.with_copy

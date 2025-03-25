@@ -34,20 +34,13 @@ import typing
 
 import attrs
 
-from hikari import channels
-from hikari import guilds
 from hikari import messages
-from hikari import permissions
 from hikari import snowflakes
-from hikari import traits
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import components as components_
-    from hikari import locales
-    from hikari import monetization
-    from hikari import users as _users
     from hikari.api import special_endpoints
 
 ModalResponseTypesT = typing.Literal[
@@ -78,28 +71,8 @@ class ModalInteraction(
 ):
     """Represents a modal interaction on Discord."""
 
-    channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
-    """ID of the channel this modal interaction event was triggered in."""
-
     custom_id: str = attrs.field(eq=False, hash=False, repr=True)
     """The custom id of the modal."""
-
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
-    """ID of the guild this modal interaction event was triggered in.
-
-    This will be [`None`][] for modal interactions triggered in DMs.
-    """
-
-    guild_locale: typing.Union[str, locales.Locale, None] = attrs.field(eq=False, hash=False, repr=True)
-    """The preferred language of the guild this modal interaction was triggered in.
-
-    This will be [`None`][] for modal interactions triggered in DMs.
-
-    !!! note
-        This value can usually only be changed if [`hikari.guilds.GuildFeature.COMMUNITY`][]
-        is in [`hikari.guilds.Guild.features`][] for the guild and will otherwise
-        default to [`hikari.locales.Locale.EN_US`][].
-    """
 
     message: typing.Optional[messages.Message] = attrs.field(eq=False, repr=False)
     """The message whose component triggered the modal.
@@ -107,122 +80,8 @@ class ModalInteraction(
     This will be [`None`][] if the modal was a response to a command.
     """
 
-    member: typing.Optional[base_interactions.InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
-    """The member who triggered this modal interaction.
-
-    This will be [`None`][] for modal interactions triggered in DMs.
-
-    !!! note
-        This member object comes with the extra field `permissions` which
-        contains the member's permissions in the current channel.
-    """
-
-    user: _users.User = attrs.field(eq=False, hash=False, repr=True)
-    """The user who triggered this modal interaction."""
-
-    locale: str = attrs.field(eq=False, hash=False, repr=True)
-    """The selected language of the user who triggered this modal interaction."""
-
-    app_permissions: typing.Optional[permissions.Permissions] = attrs.field(eq=False, hash=False, repr=False)
-    """Permissions the bot has in this interaction's channel if it's in a guild."""
-
     components: typing.Sequence[components_.ModalActionRowComponent] = attrs.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
-
-    entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
-    """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
-
-    async def fetch_channel(self) -> channels.TextableChannel:
-        """Fetch the guild channel this interaction was triggered in.
-
-        Returns
-        -------
-        hikari.channels.TextableChannel
-            The requested partial channel derived object of the channel this
-            interaction was triggered in.
-
-        Raises
-        ------
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.VIEW_CHANNEL`][]
-            permission in the channel.
-        hikari.errors.NotFoundError
-            If the channel is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        channel = await self.app.rest.fetch_channel(self.channel_id)
-        assert isinstance(channel, channels.TextableChannel)
-        return channel
-
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
-        """Get the guild channel this interaction was triggered in from the cache.
-
-        !!! note
-            This will always return [`None`][] for interactions triggered
-            in a DM channel.
-
-        Returns
-        -------
-        typing.Optional[hikari.channels.TextableGuildChannel]
-            The object of the guild channel that was found in the cache or
-            [`None`][].
-        """
-        if isinstance(self.app, traits.CacheAware):
-            channel = self.app.cache.get_guild_channel(self.channel_id)
-            assert channel is None or isinstance(channel, channels.TextableGuildChannel)
-            return channel
-
-        return None
-
-    async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
-        """Fetch the guild this interaction happened in.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.RESTGuild]
-            Object of the guild this interaction happened in or [`None`][]
-            if this occurred within a DM channel.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you are not part of the guild.
-        hikari.errors.NotFoundError
-            If the guild is not found.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        if not self.guild_id:
-            return None
-
-        return await self.app.rest.fetch_guild(self.guild_id)
-
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
-        """Get the object of the guild this interaction was triggered in from the cache.
-
-        Returns
-        -------
-        typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else [`None`][].
-        """
-        if self.guild_id and isinstance(self.app, traits.CacheAware):
-            return self.app.cache.get_guild(self.guild_id)
-
-        return None
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
@@ -280,7 +139,7 @@ class ModalInteractionMetadata(base_interactions.PartialInteractionMetadata):
     original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the original response message, present only on follow-up messages."""
 
-    triggering_interaction_metadata: typing.Union[base_interactions.PartialInteractionMetadata] = attrs.field(
+    triggering_interaction_metadata: base_interactions.PartialInteractionMetadata = attrs.field(
         eq=False, hash=False, repr=True
     )
     """The metadata for the interaction that was used to open the modal."""
