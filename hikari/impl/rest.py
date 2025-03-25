@@ -3828,7 +3828,7 @@ class RESTClientImpl(rest_api.RESTClient):
             try:
                 command_objs.append(self._entity_factory.deserialize_command(payload, guild_id=guild_id))
 
-            except errors.UnrecognisedEntityError:
+            except errors.UnrecognisedEntityError:  # noqa: PERF203 - Usage of try-except inside a loop
                 pass
 
         return command_objs

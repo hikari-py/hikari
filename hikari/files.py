@@ -973,15 +973,15 @@ class IteratorReader(AsyncReader):
         buff = bytearray()
         iterator = self._wrap_iter()
 
-        while True:
-            try:
+        try:
+            while True:
                 while len(buff) < _MAGIC:
                     chunk = await iterator.__anext__()
                     buff.extend(chunk)
                 yield bytes(buff)
                 buff.clear()
-            except StopAsyncIteration:
-                break
+        except StopAsyncIteration:
+            pass
 
         if buff:
             yield bytes(buff)

@@ -923,7 +923,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             try:
                 entry = self.deserialize_audit_log_entry(entry_payload, guild_id=guild_id)
 
-            except errors.UnrecognisedEntityError as exc:
+            except errors.UnrecognisedEntityError as exc:  # noqa: PERF203 - try-except inside a loop
                 _LOGGER.debug(exc.reason)
 
             else:

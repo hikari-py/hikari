@@ -198,7 +198,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 # second if the request is slow to execute.
                 try:
                     await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
-                except asyncio.TimeoutError:
+                except asyncio.TimeoutError:  # noqa: PERF203
                     pass
 
         except (asyncio.CancelledError, errors.ComponentStateConflictError):
