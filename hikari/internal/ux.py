@@ -67,7 +67,7 @@ logging.addLevelName(TRACE, "TRACE_HIKARI")
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 
-def init_logging(  # noqa: C901 - Function too complex
+def init_logging(
     flavor: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]], allow_color: bool, force_color: bool
 ) -> None:
     """Initialize logging for the user.

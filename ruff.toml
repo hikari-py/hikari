@@ -91,3 +91,6 @@ convention = "numpy"
 
 [lint.pylint]
 max-args = 20
+
+[lint.mccabe]
+max-complexity = 20
