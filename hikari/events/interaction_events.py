@@ -23,10 +23,10 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "InteractionCreateEvent",
+    "AutocompleteInteractionCreateEvent",
     "CommandInteractionCreateEvent",
     "ComponentInteractionCreateEvent",
-    "AutocompleteInteractionCreateEvent",
+    "InteractionCreateEvent",
     "ModalInteractionCreateEvent",
 )
 
