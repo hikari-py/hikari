@@ -1301,16 +1301,15 @@ class GatewayBot(traits.GatewayBotAware):
             await new_shard.start()
             end = time.monotonic()
 
-            if new_shard.is_alive:
-                _LOGGER.debug("shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
-                self._shards[shard_id] = new_shard
-                return
-
-            msg = f"shard {shard_id} shut down immediately when starting"
-            raise RuntimeError(msg)
-
         except Exception:
             if new_shard.is_alive:
                 await new_shard.close()
 
             raise
+
+        if not new_shard.is_alive:
+            msg = f"shard {shard_id} shut down immediately when starting"
+            raise RuntimeError(msg)
+
+        _LOGGER.debug("shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
+        self._shards[shard_id] = new_shard

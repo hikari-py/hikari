@@ -49,7 +49,6 @@ class TestAsyncReaderContextManager:
         return hikari_test_helpers.mock_class_namespace(files.AsyncReaderContextManager)
 
     def test___enter__(self, reader):
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             reader().__enter__()
 

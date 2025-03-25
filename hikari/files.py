@@ -609,48 +609,46 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
         self._client_response_ctx: typing.AsyncContextManager[aiohttp.ClientResponse] = NotImplemented
 
     async def __aenter__(self) -> WebReader:
-        client_session = aiohttp.ClientSession()
-
         method = "HEAD" if self._head_only else "GET"
 
-        ctx = client_session.request(method, self._web_resource.url, raise_for_status=False)
+        ctx = None
+        client_session = aiohttp.ClientSession()
 
         try:
-            # Double try is needed to avoid calling __aexit__ if the __aenter__ raised the error
+            ctx = client_session.request(method, self._web_resource.url, raise_for_status=False)
             resp: aiohttp.ClientResponse = await ctx.__aenter__()
 
-            try:
-                if 200 <= resp.status < 400:
-                    mimetype = None
-                    filename = self._web_resource.filename
+            if not (200 <= resp.status < 400):
+                raise await net.generate_error_response(resp)  # noqa: TRY301 - We need the traceback to be set
 
-                    if resp.content_disposition is not None:
-                        mimetype = resp.content_disposition.type
+            filename = self._web_resource.filename
 
-                    if mimetype is None:
-                        mimetype = resp.content_type
+            mimetype = None
+            if resp.content_disposition is not None:
+                mimetype = resp.content_disposition.type
 
-                    self._client_response_ctx = ctx
-                    self._client_session = client_session
+            if mimetype is None:
+                mimetype = resp.content_type
 
-                    return WebReader(
-                        stream=resp.content,
-                        url=str(resp.real_url),
-                        status=resp.status,
-                        reason=str(resp.reason),
-                        filename=filename,
-                        charset=resp.charset,
-                        mimetype=mimetype,
-                        size=resp.content_length,
-                        head_only=self._head_only,
-                    )
-                raise await net.generate_error_response(resp)
+            self._client_response_ctx = ctx
+            self._client_session = client_session
 
-            except Exception as ex:
+            return WebReader(
+                stream=resp.content,
+                url=str(resp.real_url),
+                status=resp.status,
+                reason=str(resp.reason),
+                filename=filename,
+                charset=resp.charset,
+                mimetype=mimetype,
+                size=resp.content_length,
+                head_only=self._head_only,
+            )
+
+        except Exception as ex:
+            if ctx is not None:
                 await ctx.__aexit__(type(ex), ex, ex.__traceback__)
-                raise
 
-        except Exception:
             await client_session.close()
             raise
 

@@ -36,9 +36,6 @@ from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import routes
 
-# import unicodedata
-
-
 if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import users
@@ -184,16 +181,6 @@ class UnicodeEmoji(str, Emoji):
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
-    # @property
-    # @typing.final
-    # def unicode_names(self) -> typing.Sequence[str]:
-    #     """Get the unicode name of the emoji as a sequence.
-    #
-    #     This returns the name of each codepoint. If only one codepoint exists,
-    #     then this will only have one item in the resulting sequence.
-    #     """
-    #     return [unicodedata.name(c) for c in self]
-
     @property
     @typing.final
     def unicode_escape(self) -> str:
@@ -227,10 +214,7 @@ class UnicodeEmoji(str, Emoji):
         UnicodeEmoji
             The parsed UnicodeEmoji object.
         """
-        # TODO: Re-add validity
-        # Ensure validity.
-        # for i, codepoint in enumerate(string, start=1):
-        #     unicodedata.name(codepoint)
+        # TODO: Add validity check here (maybe use optional discord_emojis package)
 
         return cls(string)
 
