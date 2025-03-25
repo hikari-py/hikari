@@ -791,7 +791,7 @@ class URL(WebResource):
             return self._filename
 
         url = urllib.parse.urlparse(self._url)
-        return os.path.basename(url.path)
+        return os.path.basename(url.path)  # noqa: PTH119 - Use `Path.name`
 
 
 ########################################

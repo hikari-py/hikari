@@ -22,7 +22,7 @@
 
 from __future__ import annotations
 
-import os
+import pathlib
 import platform
 import sys
 
@@ -31,7 +31,7 @@ from hikari import _about
 
 def main() -> None:
     """Print package info and exit."""
-    path = os.path.abspath(os.path.dirname(_about.__file__))
+    path = str(pathlib.Path(_about.__file__).resolve().parent)
     sha1 = _about.__git_sha1__[:8]
     version = _about.__version__
     py_impl = platform.python_implementation()
