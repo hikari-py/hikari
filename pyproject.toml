@@ -82,7 +82,7 @@ nox = ["nox[uv]==2025.2.9"]
 
 audit = ["uv-secure"]
 codespell = ["codespell==2.4.1"]
-coverage = ["coverage[toml]==7.7.0"]
+coverage = ["coverage[toml]==7.7.1"]
 flake8 = [
     "flake8==7.1.2",
     #
@@ -127,7 +127,7 @@ pyright = ["pyright==1.1.397"]
 pytest = [
     "mock==5.2.0",
     "pytest==8.3.5",
-    "pytest-asyncio==0.25.3",
+    "pytest-asyncio==0.26.0",
     "pytest-cov==6.0.0",
     "pytest-randomly==3.16.0",
     "async-timeout==5.0.1",

@@ -36,12 +36,8 @@ async def register_commands(_: hikari.StartingEvent) -> None:
 
 
 @bot.listen()
-async def handle_interactions(event: hikari.InteractionCreateEvent) -> None:
+async def handle_interactions(event: hikari.CommandInteractionCreateEvent) -> None:
     """Listen for slash commands being executed."""
-    if not isinstance(event.interaction, hikari.CommandInteraction):
-        # only listen to command interactions, no others!
-        return
-
     if event.interaction.command_name == "ping":
         await event.interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE, f"Pong! {bot.heartbeat_latency * 1_000:.0f}ms"

@@ -41,9 +41,9 @@ class Intents(enums.Flag):
 
     !!! note
         Discord now places limits on certain events you can receive without
-        whitelisting your bot first. On the `Bot` tab in the [developer's portal]
-        (https://discord.com/developers/applications/) for your bot, you should
-        now have the option to enable functionality for receiving these events.
+        whitelisting your bot first. On the `Bot` tab in the
+        [developer's portal](https://discord.com/developers/applications/) for your bot,
+        you should now have the option to enable functionality for receiving these events.
 
         If you attempt to request an intent type that you have not whitelisted
         your bot for, you will be disconnected on startup with a `4014` closure

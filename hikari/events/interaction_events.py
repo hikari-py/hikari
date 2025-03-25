@@ -22,7 +22,13 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("InteractionCreateEvent",)
+__all__: typing.Sequence[str] = (
+    "InteractionCreateEvent",
+    "CommandInteractionCreateEvent",
+    "ComponentInteractionCreateEvent",
+    "AutocompleteInteractionCreateEvent",
+    "ModalInteractionCreateEvent",
+)
 
 import typing
 
@@ -35,6 +41,9 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari.api import shard as gateway_shard
     from hikari.interactions import base_interactions
+    from hikari.interactions import command_interactions
+    from hikari.interactions import component_interactions
+    from hikari.interactions import modal_interactions
 
 
 @attrs_extensions.with_copy
@@ -52,3 +61,39 @@ class InteractionCreateEvent(shard_events.ShardEvent):
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.interaction.app
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class CommandInteractionCreateEvent(InteractionCreateEvent):
+    """Event fired when a command interaction is created."""
+
+    interaction: command_interactions.CommandInteraction = attrs.field(repr=True)
+    """Interaction that this event is related to."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ComponentInteractionCreateEvent(InteractionCreateEvent):
+    """Event fired when a component interaction is created."""
+
+    interaction: component_interactions.ComponentInteraction = attrs.field(repr=True)
+    """Interaction that this event is related to."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutocompleteInteractionCreateEvent(InteractionCreateEvent):
+    """Event fired when an autocomplete interaction is created."""
+
+    interaction: command_interactions.AutocompleteInteraction = attrs.field(repr=True)
+    """Interaction that this event is related to."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ModalInteractionCreateEvent(InteractionCreateEvent):
+    """Event fired when a modal interaction is created."""
+
+    interaction: modal_interactions.ModalInteraction = attrs.field(repr=True)
+    """Interaction that this event is related to."""
