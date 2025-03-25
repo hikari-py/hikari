@@ -93,7 +93,12 @@ async def _request_guild_members(
 class EventManagerImpl(event_manager_base.EventManagerBase):
     """Provides event handling logic for Discord events."""
 
-    __slots__: typing.Sequence[str] = ("_auto_chunk_members", "_cache", "_entity_factory")
+    __slots__: typing.Sequence[str] = (
+        "_auto_chunk_members",
+        "_cache",
+        "_entity_factory",
+        "_guild_member_request_tasks",
+    )
 
     def __init__(
         self,
@@ -108,6 +113,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         self._cache = cache
         self._auto_chunk_members = auto_chunk_members
         self._entity_factory = entity_factory
+        self._guild_member_request_tasks: set[asyncio.Task[None]] = set()
+
         components = cache.settings.components if cache else config.CacheComponents.NONE
         super().__init__(event_factory=event_factory, intents=intents, cache_components=components)
 
@@ -380,7 +387,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         #           1. We have a cache, and it requires it (it is enabled for [`MEMBERS`][]), but we are
         #              not limited to only our own member (which is included in the `GUILD_CREATE` payload).
         #           2. The user is waiting for the member chunks (there is an event listener for it).
-        presences_declared = self._intents & intents_.Intents.GUILD_PRESENCES
+        presences_declared = bool(self._intents & intents_.Intents.GUILD_PRESENCES)
 
         if (
             self._auto_chunk_members
@@ -396,14 +403,19 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
                 or self._enabled_for_event(shard_events.MemberChunkEvent)
             )
         ):
-            # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
             nonce = f"{shard.id}.{_fixed_size_nonce()}"
 
             if event:
                 event.chunk_nonce = nonce
 
-            coroutine = _request_guild_members(shard, guild_id, include_presences=bool(presences_declared), nonce=nonce)
-            asyncio.create_task(coroutine, name=f"{shard.id}:{guild_id} guild create members request")
+            # We create a task here instead of awaiting the result to avoid any rate-limits from delaying dispatch.
+            task = asyncio.create_task(
+                _request_guild_members(shard, guild_id, include_presences=presences_declared, nonce=nonce),
+                name=f"{shard.id}:{guild_id} guild create members request",
+            )
+
+            self._guild_member_request_tasks.add(task)
+            task.add_done_callback(self._guild_member_request_tasks.discard)
 
         if event:
             await self.dispatch(event)

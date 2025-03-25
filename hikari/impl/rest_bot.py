@@ -661,7 +661,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self._close_event = asyncio.Event()
 
         if check_for_updates:
-            asyncio.create_task(
+            asyncio.create_task(  # noqa: RUF006 - We want this to be a dangling asyncio task
                 ux.check_for_updates(self._http_settings, self._proxy_settings), name="check for package updates"
             )
 

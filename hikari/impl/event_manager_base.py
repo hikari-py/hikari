@@ -323,7 +323,14 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_consumers", "_event_factory", "_intents", "_listeners", "_waiters")
+    __slots__: typing.Sequence[str] = (
+        "_consumers",
+        "_event_factory",
+        "_handling_dispatch_tasks",
+        "_intents",
+        "_listeners",
+        "_waiters",
+    )
 
     def __init__(
         self,
@@ -337,6 +344,7 @@ class EventManagerBase(event_manager_.EventManager):
         self._intents = intents
         self._listeners: _ListenerMapT[base_events.Event] = {}
         self._waiters: _WaiterMapT[base_events.Event] = {}
+        self._handling_dispatch_tasks: set[asyncio.Task[None]] = set()
 
         for name, member in inspect.getmembers(self):
             if name.startswith("on_"):
@@ -409,7 +417,11 @@ class EventManagerBase(event_manager_.EventManager):
             payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
             self.dispatch(payload_event)
         consumer = self._consumers[event_name.lower()]
-        asyncio.create_task(self._handle_dispatch(consumer, shard, payload), name=f"dispatch {event_name}")
+
+        task = asyncio.create_task(self._handle_dispatch(consumer, shard, payload), name=f"dispatch {event_name}")
+
+        self._handling_dispatch_tasks.add(task)
+        task.add_done_callback(self._handling_dispatch_tasks.discard)
 
     # Yes, this is not generic. The reason for this is MyPy complains about
     # using ABCs that are not concrete in generic types passed to functions.
@@ -567,10 +579,6 @@ class EventManagerBase(event_manager_.EventManager):
         timeout: typing.Union[float, None],
         predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
-        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
-            msg = "Cannot wait for a non-Event type"
-            raise TypeError(msg)
-
         self._check_event(event_type, 1)
 
         future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
