@@ -71,7 +71,7 @@ from hikari import webhooks
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -362,7 +362,7 @@ class PartialChannel(snowflakes.Unique):
         """
         return f"<#{self.id}>"
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed {self.__class__.__name__} ID {self.id}"
 
@@ -849,7 +849,7 @@ class DMChannel(PrivateChannel, TextableChannel):
         """Return the shard ID for the shard."""
         return 0
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return f"{self.__class__.__name__} with: {self.recipient}"
 
@@ -882,7 +882,7 @@ class GroupDMChannel(PrivateChannel):
     If the group DM was not created by a bot, this will be [`None`][].
     """
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         if self.name is None:
             return f"{self.__class__.__name__} with: {', '.join(str(user) for user in self.recipients.values())}"

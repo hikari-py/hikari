@@ -69,7 +69,7 @@ from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -439,18 +439,18 @@ class Member(users.User):
     """The flags this member has in the guild."""
 
     @property
-    @override
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
 
     @property
-    @override
+    @typing_backport.override
     def avatar_hash(self) -> typing.Optional[str]:
         return self.user.avatar_hash
 
     @property
-    @override
+    @typing_backport.override
     def avatar_url(self) -> typing.Optional[files.URL]:
         return self.user.avatar_url
 
@@ -464,37 +464,37 @@ class Member(users.User):
         return self.make_guild_avatar_url()
 
     @property
-    @override
+    @typing_backport.override
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
 
     @property
-    @override
+    @typing_backport.override
     def display_avatar_url(self) -> files.URL:
         return self.make_guild_avatar_url() or super().display_avatar_url
 
     @property
-    @override
+    @typing_backport.override
     def banner_hash(self) -> typing.Optional[str]:
         return self.user.banner_hash
 
     @property
-    @override
+    @typing_backport.override
     def banner_url(self) -> typing.Optional[files.URL]:
         return self.user.banner_url
 
     @property
-    @override
+    @typing_backport.override
     def accent_color(self) -> typing.Optional[colors.Color]:
         return self.user.accent_color
 
     @property
-    @override
+    @typing_backport.override
     def discriminator(self) -> str:
         return self.user.discriminator
 
     @property
-    @override
+    @typing_backport.override
     def display_name(self) -> str:
         """Return the member's display name.
 
@@ -511,27 +511,27 @@ class Member(users.User):
         return self.nickname or self.global_name or self.username
 
     @property
-    @override
+    @typing_backport.override
     def flags(self) -> users.UserFlag:
         return self.user.flags
 
     @property
-    @override
+    @typing_backport.override
     def id(self) -> snowflakes.Snowflake:
         return self.user.id
 
     @property
-    @override
+    @typing_backport.override
     def is_bot(self) -> bool:
         return self.user.is_bot
 
     @property
-    @override
+    @typing_backport.override
     def is_system(self) -> bool:
         return self.user.is_system
 
     @property
-    @override
+    @typing_backport.override
     def mention(self) -> str:
         return self.user.mention
 
@@ -620,16 +620,16 @@ class Member(users.User):
             return None
 
     @property
-    @override
+    @typing_backport.override
     def username(self) -> str:
         return self.user.username
 
     @property
-    @override
+    @typing_backport.override
     def global_name(self) -> typing.Optional[str]:
         return self.user.global_name
 
-    @override
+    @typing_backport.override
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         return self.user.make_avatar_url(ext=ext, size=size)
 
@@ -684,7 +684,7 @@ class Member(users.User):
             file_format=ext,
         )
 
-    @override
+    @typing_backport.override
     async def fetch_self(self) -> Member:
         """Fetch an up-to-date view of this member from the API.
 
@@ -707,7 +707,7 @@ class Member(users.User):
         """
         return await self.user.app.rest.fetch_member(self.guild_id, self.user.id)
 
-    @override
+    @typing_backport.override
     async def fetch_dm_channel(self) -> channels_.DMChannel:
         return await self.user.fetch_dm_channel()
 
@@ -975,15 +975,15 @@ class Member(users.User):
             reason=reason,
         )
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return str(self.user)
 
-    @override
+    @typing_backport.override
     def __hash__(self) -> int:
         return hash(self.user)
 
-    @override
+    @typing_backport.override
     def __eq__(self, other: object) -> bool:
         return self.user == other
 
@@ -1009,7 +1009,7 @@ class PartialRole(snowflakes.Unique):
         """Return a raw mention string for the role."""
         return f"<@&{self.id}>"
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.name
 
@@ -1096,7 +1096,7 @@ class Role(PartialRole):
         return self.make_icon_url()
 
     @property
-    @override
+    @typing_backport.override
     def mention(self) -> str:
         """Return a raw mention string for the role.
 
@@ -1179,7 +1179,7 @@ class IntegrationAccount:
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of this account."""
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.name
 
@@ -1202,7 +1202,7 @@ class PartialApplication(snowflakes.Unique):
     icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN hash of this application's icon, if set."""
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.name
 
@@ -1268,7 +1268,7 @@ class PartialIntegration(snowflakes.Unique):
     type: typing.Union[IntegrationType, str] = attrs.field(eq=False, hash=False, repr=True)
     """The type of this integration."""
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.name
 
@@ -1397,7 +1397,7 @@ class PartialGuild(snowflakes.Unique):
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the guild."""
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.name
 

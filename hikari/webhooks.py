@@ -44,7 +44,7 @@ from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
@@ -487,7 +487,7 @@ class PartialWebhook(snowflakes.Unique):
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this webhook."""
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
 
@@ -590,7 +590,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     """
 
     @property
-    @override
+    @typing_backport.override
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.id

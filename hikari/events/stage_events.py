@@ -32,7 +32,7 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 from hikari.stage_instances import StageInstance
 
 if typing.TYPE_CHECKING:
@@ -47,7 +47,7 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    @override
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.stage_instance.app

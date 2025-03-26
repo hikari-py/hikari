@@ -41,7 +41,7 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     from hikari import scheduled_events
@@ -75,13 +75,13 @@ class ScheduledEventCreateEvent(ScheduledEventEvent):
     """The scheduled event that was created."""
 
     @property
-    @override
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.event.app
 
     @property
-    @override
+    @typing_backport.override
     def event_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id
@@ -100,13 +100,13 @@ class ScheduledEventDeleteEvent(ScheduledEventEvent):
     """The scheduled event that was deleted."""
 
     @property
-    @override
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.event.app
 
     @property
-    @override
+    @typing_backport.override
     def event_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id
@@ -125,13 +125,13 @@ class ScheduledEventUpdateEvent(ScheduledEventEvent):
     """The scheduled event that was updated."""
 
     @property
-    @override
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.event.app
 
     @property
-    @override
+    @typing_backport.override
     def event_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id

@@ -29,7 +29,7 @@ import re
 import string
 import typing
 
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 
 def _to_rgb_int(value: str, name: str) -> int:
@@ -168,12 +168,12 @@ class Color(int):
         # than keeping the linter happy.
         super().__init__()
 
-    @override
+    @typing_backport.override
     def __repr__(self) -> str:
         r, g, b = self.rgb
         return f"Color(r={hex(r)}, g={hex(g)}, b={hex(b)})"
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.hex_code
 
@@ -510,7 +510,7 @@ class Color(int):
 
         raise ValueError(f"Could not transform {value!r} into a {cls.__qualname__} object")
 
-    @override
+    @typing_backport.override
     def to_bytes(
         self, length: typing.SupportsIndex, byteorder: typing.Literal["little", "big"], *, signed: bool = True
     ) -> bytes:

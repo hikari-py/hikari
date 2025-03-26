@@ -35,7 +35,7 @@ from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -51,7 +51,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    @override
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.user.app
@@ -101,13 +101,13 @@ class MemberCreateEvent(MemberEvent):
     """Member object for the member that joined the guild."""
 
     @property
-    @override
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MemberEvent>>.
         return self.member.guild_id
 
     @property
-    @override
+    @typing_backport.override
     def user(self) -> users.User:
         # <<inherited docstring from MemberEvent>>.
         return self.member.user
@@ -135,13 +135,13 @@ class MemberUpdateEvent(MemberEvent):
     """Member object for the member that was updated."""
 
     @property
-    @override
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MemberEvent>>.
         return self.member.guild_id
 
     @property
-    @override
+    @typing_backport.override
     def user(self) -> users.User:
         # <<inherited docstring from MemberEvent>>.
         return self.member.user

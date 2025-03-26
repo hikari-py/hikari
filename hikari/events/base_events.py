@@ -43,7 +43,7 @@ from hikari import intents
 from hikari import traits
 from hikari.api import shard as gateway_shard
 from hikari.internal import attrs_extensions
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     import types
@@ -64,7 +64,7 @@ class Event(abc.ABC):
     __dispatches: typing.ClassVar[tuple[type[Event], ...]]
     __bitmask: typing.ClassVar[int]
 
-    @override
+    @typing_backport.override
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
         # hasattr doesn't work with private variables in this case so we use a try except.
@@ -210,7 +210,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
     """Event callback that threw an exception."""
 
     @property
-    @override
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.failed_event.app
