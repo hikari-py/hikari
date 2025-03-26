@@ -55,7 +55,7 @@ import typing
 from hikari import components as components_
 from hikari import polls
 from hikari import undefined
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     import types
@@ -541,7 +541,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def type(self) -> base_interactions.DeferredResponseTypesT:
         """Type of this response."""
 
@@ -663,7 +663,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def type(self) -> base_interactions.MessageResponseTypesT:
         """Type of this response."""
 
@@ -959,7 +959,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
         """Type of this response."""
 
@@ -1021,7 +1021,7 @@ class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
         """Type of this response."""
 
@@ -1315,7 +1315,7 @@ class SlashCommandBuilder(CommandBuilder):
         """
 
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1353,7 +1353,7 @@ class ContextMenuCommandBuilder(CommandBuilder):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1414,7 +1414,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def type(self) -> typing.Literal[components_.ComponentType.BUTTON]:
         """Type of component this builder represents."""
 
@@ -1861,7 +1861,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def type(self) -> typing.Literal[components_.ComponentType.TEXT_INPUT]:
         """Type of component this builder represents."""
 
@@ -2038,7 +2038,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
@@ -2276,7 +2276,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 

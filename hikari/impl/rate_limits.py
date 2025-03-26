@@ -41,7 +41,7 @@ import random
 import typing
 
 from hikari.internal import time
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     import types
@@ -104,7 +104,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.queue = []
 
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
@@ -112,7 +112,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         being rate limited.
         """
 
-    @override
+    @typing_backport.override
     def close(self) -> None:
         """Close the rate limiter, and shut down any pending tasks."""
         if self.throttle_task is not None:
@@ -170,7 +170,7 @@ class ManualRateLimiter(BurstRateLimiter):
         super().__init__("global")
         self.reset_at = None
 
-    @override
+    @typing_backport.override
     async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
@@ -322,7 +322,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.limit = limit
         self.period = period
 
-    @override
+    @typing_backport.override
     async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 

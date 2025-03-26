@@ -36,7 +36,7 @@ from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if not typing.TYPE_CHECKING:
     # This is insanely hacky, but it is needed for ruff to not complain until it gets type inference
@@ -462,13 +462,13 @@ class User(PartialUser, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         """Client application that models may use for procedures."""
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def accent_color(self) -> typing.Optional[colors.Color]:
         """The custom banner color for the user, if set else [`None`][].
 
@@ -476,14 +476,14 @@ class User(PartialUser, abc.ABC):
         """
 
     @property
-    @override
+    @typing_backport.override
     def accent_colour(self) -> typing.Optional[colors.Color]:
         """Alias for the [`hikari.users.User.accent_color`][] field."""
         return self.accent_color
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def avatar_hash(self) -> typing.Optional[str]:
         """Avatar hash for the user, if they have one, otherwise [`None`][]."""
 
@@ -498,7 +498,7 @@ class User(PartialUser, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def banner_hash(self) -> typing.Optional[str]:
         """Banner hash for the user, if they have one, otherwise [`None`][]."""
 
@@ -534,7 +534,7 @@ class User(PartialUser, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def discriminator(self) -> str:
         """Discriminator for the user.
 
@@ -546,25 +546,25 @@ class User(PartialUser, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def flags(self) -> UserFlag:
         """Flag bits that are set for the user."""
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def is_bot(self) -> bool:
         """Whether this user is a bot account."""
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def is_system(self) -> bool:
         """Whether this user is a system account."""
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def mention(self) -> str:
         """Return a raw mention string for the given user.
 
@@ -578,13 +578,13 @@ class User(PartialUser, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def username(self) -> str:
         """Username for the user."""
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def global_name(self) -> typing.Optional[str]:
         """Global name for the user, if they have one, otherwise [`None`][]."""
 
@@ -723,7 +723,7 @@ class PartialUserImpl(PartialUser):
     """Public flags for this user."""
 
     @property
-    @override
+    @typing_backport.override
     def mention(self) -> str:
         """Return a raw mention string for the given user.
 
@@ -736,7 +736,7 @@ class PartialUserImpl(PartialUser):
         """
         return f"<@{self.id}>"
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         if self.username is undefined.UNDEFINED or self.discriminator is undefined.UNDEFINED:
             return f"Partial user ID {self.id}"
@@ -819,7 +819,7 @@ class OwnUser(UserImpl):
     This will always be [`None`][] for bots.
     """
 
-    @override
+    @typing_backport.override
     async def fetch_self(self) -> OwnUser:
         """Get this user's up-to-date object.
 
@@ -840,7 +840,7 @@ class OwnUser(UserImpl):
         """
         return await self.app.rest.fetch_my_user()
 
-    @override
+    @typing_backport.override
     async def fetch_dm_channel(self) -> typing.NoReturn:
         msg = "Unable to fetch your own DM channel"
         raise TypeError(msg)

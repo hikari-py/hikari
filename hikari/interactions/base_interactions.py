@@ -50,7 +50,7 @@ from hikari import undefined
 from hikari import webhooks
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     from hikari import applications
@@ -278,7 +278,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
         return self.channel.id
 
     @property
-    @override
+    @typing_backport.override
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.application_id

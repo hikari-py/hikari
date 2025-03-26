@@ -34,7 +34,7 @@ import asyncio
 import typing
 
 from hikari.internal import spel
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     from _typeshed import SupportsRichComparison
@@ -791,7 +791,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     @abc.abstractmethod
     async def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]: ...
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         # This sneaky snippet of code let's us use generators rather than lists.
         # This is important, as we can use this to make generators that
@@ -820,14 +820,14 @@ class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
     def __init__(self, values: typing.Iterable[ValueT]) -> None:
         self._iter = iter(values)
 
-    @override
+    @typing_backport.override
     def __iter__(self) -> FlatLazyIterator[ValueT]:
         return self
 
     def __next__(self) -> ValueT:
         return next(self._iter)
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         try:
             return next(self._iter)
@@ -843,7 +843,7 @@ class NOOPLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
     def __init__(self, iterator: typing.AsyncIterable[ValueT]) -> None:
         self._iterator = iterator.__aiter__()
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         return await self._iterator.__anext__()
 
@@ -855,7 +855,7 @@ class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[tuple[int, Va
         self._i = start
         self._iterator = iterator
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> tuple[int, ValueT]:
         pair = self._i, await self._iterator.__anext__()
         self._i += 1
@@ -873,7 +873,7 @@ class _LimitedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._count = 0
         self._limit = limit
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         if self._count >= self._limit:
             self._complete()
@@ -894,7 +894,7 @@ class _DropCountLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._count = 0
         self._number = number
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         while self._count < self._number:
             self._count += 1
@@ -910,7 +910,7 @@ class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._iterator = iterator
         self._predicate = predicate
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         async for item in self._iterator:
             if self._predicate(item):
@@ -926,7 +926,7 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         self._iterator = iterator
         self._chunk_size = chunk_size
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> typing.Sequence[ValueT]:
         chunk: list[ValueT] = []
 
@@ -949,7 +949,7 @@ class _ReversedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._buffer: typing.MutableSequence[ValueT] = []
         self._origin: typing.Optional[LazyIterator[ValueT]] = iterator
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         if self._origin is not None:
             self._buffer.extend(await self._origin)
@@ -970,7 +970,7 @@ class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[V
         self._iterator = iterator
         self._transformation = transformation
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         return self._transformation(await self._iterator.__anext__())
 
@@ -982,7 +982,7 @@ class _TakeWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._iterator = iterator
         self._condition = condition
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         item = await self._iterator.__anext__()
 
@@ -1000,7 +1000,7 @@ class _DropWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._condition = condition
         self._has_dropped = False
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         if not self._has_dropped:
             while not self._condition(item := await self._iterator.__anext__()):
@@ -1040,7 +1040,7 @@ class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[A
                 async for output_item in result_iterator:
                     yield output_item
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> AnotherValueT:
         if self._result_iterator is None:
             self._result_iterator = self._generator()
@@ -1056,7 +1056,7 @@ class _AwaitingLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._window_size = float("inf") if window_size <= 0 else window_size
         self._buffer: list[ValueT] = []
 
-    @override
+    @typing_backport.override
     async def __anext__(self) -> ValueT:
         if not self._buffer:
             coroutines: list[typing.Awaitable[ValueT]] = []

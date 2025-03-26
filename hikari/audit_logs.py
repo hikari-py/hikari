@@ -47,7 +47,7 @@ from hikari import snowflakes
 from hikari.internal import attrs_extensions
 from hikari.internal import collections
 from hikari.internal import enums
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -630,16 +630,16 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     @typing.overload
     def __getitem__(self, slice_: slice, /) -> typing.Sequence[AuditLogEntry]: ...
 
-    @override
+    @typing_backport.override
     def __getitem__(
         self, index_or_slice: typing.Union[int, slice], /
     ) -> typing.Union[AuditLogEntry, typing.Sequence[AuditLogEntry]]:
         return collections.get_index_or_slice(self.entries, index_or_slice)
 
-    @override
+    @typing_backport.override
     def __iter__(self) -> typing.Iterator[AuditLogEntry]:
         return iter(self.entries.values())
 
-    @override
+    @typing_backport.override
     def __len__(self) -> int:
         return len(self.entries)

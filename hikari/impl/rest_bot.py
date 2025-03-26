@@ -39,8 +39,8 @@ from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
 from hikari.internal import aio
 from hikari.internal import signals
+from hikari.internal import typing_backport
 from hikari.internal import ux
-from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -333,49 +333,49 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         )
 
     @property
-    @override
+    @typing_backport.override
     def is_alive(self) -> bool:
         return self._close_event is not None
 
     @property
-    @override
+    @typing_backport.override
     def interaction_server(self) -> interaction_server_.InteractionServer:
         return self._server
 
     @property
-    @override
+    @typing_backport.override
     def on_shutdown(
         self,
     ) -> typing.Sequence[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]]:
         return self._on_shutdown.copy()
 
     @property
-    @override
+    @typing_backport.override
     def on_startup(self) -> typing.Sequence[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]]:
         return self._on_startup.copy()
 
     @property
-    @override
+    @typing_backport.override
     def rest(self) -> rest_api.RESTClient:
         return self._rest
 
     @property
-    @override
+    @typing_backport.override
     def entity_factory(self) -> entity_factory_api.EntityFactory:
         return self._entity_factory
 
     @property
-    @override
+    @typing_backport.override
     def http_settings(self) -> config_impl.HTTPSettings:
         return self._http_settings
 
     @property
-    @override
+    @typing_backport.override
     def proxy_settings(self) -> config_impl.ProxySettings:
         return self._proxy_settings
 
     @property
-    @override
+    @typing_backport.override
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
         return self._executor
 
@@ -421,31 +421,31 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         """
         ux.print_banner(banner, allow_color=allow_color, force_color=force_color, extra_args=extra_args)
 
-    @override
+    @typing_backport.override
     def add_shutdown_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_shutdown.append(callback)
 
-    @override
+    @typing_backport.override
     def remove_shutdown_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_shutdown.remove(callback)
 
-    @override
+    @typing_backport.override
     def add_startup_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_startup.append(callback)
 
-    @override
+    @typing_backport.override
     def remove_startup_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_startup.remove(callback)
 
-    @override
+    @typing_backport.override
     async def close(self) -> None:
         if not self._close_event:
             msg = "Cannot close an inactive bot"
@@ -472,7 +472,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
             _LOGGER.info("bot shut down")
 
-    @override
+    @typing_backport.override
     async def join(self) -> None:
         if not self._close_event:
             msg = "Cannot wait for an inactive bot to join"
@@ -480,11 +480,11 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
         await self._close_event.wait()
 
-    @override
+    @typing_backport.override
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server_.Response:
         return await self._server.on_interaction(body, signature, timestamp)
 
-    @override
+    @typing_backport.override
     def run(
         self,
         *,
@@ -635,7 +635,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                     _LOGGER.warning("forcefully terminated")
                     raise
 
-    @override
+    @typing_backport.override
     async def start(
         self,
         *,
@@ -717,7 +717,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             ssl_context=ssl_context,
         )
 
-    @override
+    @typing_backport.override
     def get_listener(
         self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
@@ -785,7 +785,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         replace: bool = False,
     ) -> None: ...
 
-    @override
+    @typing_backport.override
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],

@@ -38,7 +38,7 @@ import abc
 import typing
 
 from hikari.internal import time
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -123,11 +123,11 @@ class Unique(abc.ABC):
     def __int__(self) -> int:
         return int(self.id)
 
-    @override
+    @typing_backport.override
     def __hash__(self) -> int:
         return hash(self.id)
 
-    @override
+    @typing_backport.override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, type(self)) and self.id == other.id
 

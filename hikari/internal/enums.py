@@ -30,7 +30,7 @@ import sys
 import types
 import typing
 
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
@@ -347,11 +347,11 @@ class Enum(metaclass=_EnumMeta):
         """Return the value of the enum member."""
         return self._value_
 
-    @override
+    @typing_backport.override
     def __repr__(self) -> str:
         return f"<{type(self).__name__}.{self._name_}: {self._value_!r}>"
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self._name_
 
@@ -821,7 +821,7 @@ class Flag(metaclass=_FlagMeta):
         # case for us.
         return self.__class__(other) - self
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.name
 

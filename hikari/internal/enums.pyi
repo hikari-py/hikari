@@ -36,7 +36,7 @@ from typing import TypeVar as __TypeVar
 
 from typing_extensions import Self as __Self
 
-from hikari.internal.typing_backport import override as __override
+from hikari.internal import typing_backport as __typing_backport
 
 Enum = __enum.Enum
 
@@ -62,7 +62,7 @@ class Flag(__enum.IntFlag):  # type: ignore[misc]
     def symmetricdifference(self, other: int | __Self) -> __Self: ...  # symmetric_difference
     def issubset(self, other: int | __Self) -> bool: ...  # is_subset
     # '__invert__' is explicitly defined as a special case because it is typed as returning 'int' in typeshed
-    @__override
+    @__typing_backport.override
     def __invert__(self) -> __Self: ...  # invert
 
 _V = __TypeVar("_V")

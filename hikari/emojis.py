@@ -35,7 +35,7 @@ from hikari import snowflakes
 from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import routes
-from hikari.internal.typing_backport import override
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     from hikari import traits
@@ -63,7 +63,7 @@ class Emoji(files.WebResource, abc.ABC):
 
     @property
     @abc.abstractmethod
-    @override
+    @typing_backport.override
     def url(self) -> str:
         """URL of the emoji image to display in clients."""
 
@@ -124,19 +124,19 @@ class UnicodeEmoji(str, Emoji):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    @override
+    @typing_backport.override
     def name(self) -> str:
         """Return the code points which form the emoji."""
         return self
 
     @property
     @typing.final
-    @override
+    @typing_backport.override
     def url_name(self) -> str:
         return self
 
     @property
-    @override
+    @typing_backport.override
     def mention(self) -> str:
         return self
 
@@ -147,7 +147,7 @@ class UnicodeEmoji(str, Emoji):
         return [ord(c) for c in self]
 
     @property
-    @override
+    @typing_backport.override
     def filename(self) -> str:
         """Filename to use if re-uploading this emoji's PNG."""
         codepoints = self.codepoints
@@ -166,7 +166,7 @@ class UnicodeEmoji(str, Emoji):
         return "-".join(hex(c)[2:] for c in codepoints) + ".png"
 
     @property
-    @override
+    @typing_backport.override
     def url(self) -> str:
         """Get the URL of the PNG rendition of this emoji.
 
@@ -208,7 +208,7 @@ class UnicodeEmoji(str, Emoji):
 
     @classmethod
     @typing.final
-    @override
+    @typing_backport.override
     def parse(cls, string: str, /) -> UnicodeEmoji:
         """Parse a given string into a unicode emoji object.
 
@@ -262,11 +262,11 @@ class CustomEmoji(snowflakes.Unique, Emoji):
     is_animated: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether the emoji is animated."""
 
-    @override
+    @typing_backport.override
     def __str__(self) -> str:
         return self.mention
 
-    @override
+    @typing_backport.override
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CustomEmoji):
             return self.id == other.id
@@ -274,32 +274,32 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         return False
 
     @property
-    @override
+    @typing_backport.override
     def filename(self) -> str:
         return str(self.id) + (".gif" if self.is_animated else ".png")
 
     @property
     @typing.final
-    @override
+    @typing_backport.override
     def url_name(self) -> str:
         return f"{self.name}:{self.id}"
 
     @property
     @typing.final
-    @override
+    @typing_backport.override
     def mention(self) -> str:
         return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
 
     @property
     @typing.final
-    @override
+    @typing_backport.override
     def url(self) -> str:
         ext = "gif" if self.is_animated else "png"
 
         return routes.CDN_CUSTOM_EMOJI.compile(urls.CDN_URL, emoji_id=self.id, file_format=ext)
 
     @classmethod
-    @override
+    @typing_backport.override
     def parse(cls, string: str, /) -> CustomEmoji:
         """Parse a given emoji mention string into a custom emoji object.
 

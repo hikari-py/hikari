@@ -201,8 +201,8 @@ from hikari import errors
 from hikari.impl import rate_limits
 from hikari.internal import routes
 from hikari.internal import time
+from hikari.internal import typing_backport
 from hikari.internal import ux
-from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     import types
@@ -270,7 +270,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Release the lock on the bucket."""
         self._lock.release()
 
-    @override
+    @typing_backport.override
     async def acquire(self) -> None:
         """Acquire time and the lock on this bucket.
 

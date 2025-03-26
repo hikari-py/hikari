@@ -46,7 +46,7 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    @override
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.stage_instance.app
