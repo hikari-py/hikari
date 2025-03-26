@@ -2854,9 +2854,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ##################
 
     def deserialize_sticker_pack(self, payload: data_binding.JSONObject) -> sticker_models.StickerPack:
-        pack_stickers: list[sticker_models.StandardSticker] = []
-        for sticker_payload in payload["stickers"]:
-            pack_stickers.append(self.deserialize_standard_sticker(sticker_payload))
+        pack_stickers: list[sticker_models.StandardSticker] = [
+            self.deserialize_standard_sticker(p) for p in payload["stickers"]
+        ]
 
         cover_sticker_id: typing.Optional[snowflakes.Snowflake] = None
         if raw_cover_sticker_id := payload.get("cover_sticker_id"):
@@ -3015,8 +3015,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> component_models.ChannelSelectMenuComponent:
         channel_types: list[typing.Union[int, channel_models.ChannelType]] = []
         if "channel_types" in payload:
-            for channel_type in payload["channel_types"]:
-                channel_types.append(channel_models.ChannelType(channel_type))
+            channel_types.extend(channel_models.ChannelType(t) for t in payload["channel_types"])
 
         return component_models.ChannelSelectMenuComponent(
             type=component_models.ComponentType(payload["type"]),

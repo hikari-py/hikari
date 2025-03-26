@@ -555,19 +555,19 @@ class InteractionServer(interaction_server.InteractionServer):
             if isinstance(host, str):
                 host = (host,)
 
-            for h in host:
-                sites.append(
-                    aiohttp.web.TCPSite(
-                        self._server,
-                        h,
-                        port=port,
-                        shutdown_timeout=shutdown_timeout,
-                        ssl_context=ssl_context,
-                        backlog=backlog,
-                        reuse_address=reuse_address,
-                        reuse_port=reuse_port,
-                    )
+            sites.extend(
+                aiohttp.web.TCPSite(
+                    self._server,
+                    h,
+                    port=port,
+                    shutdown_timeout=shutdown_timeout,
+                    ssl_context=ssl_context,
+                    backlog=backlog,
+                    reuse_address=reuse_address,
+                    reuse_port=reuse_port,
                 )
+                for h in host
+            )
 
         elif (path is None and socket is None) or port is not None:
             sites.append(

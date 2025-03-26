@@ -532,9 +532,7 @@ class EventManagerBase(event_manager_.EventManager):
         tasks: list[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in event.dispatches():
-            if listeners := self._listeners.get(cls):
-                for callback in listeners:
-                    tasks.append(self._invoke_callback(callback, event))
+            tasks.extend(self._invoke_callback(c) for c in self._listeners.get(cls, ()))
 
             if cls not in self._waiters:
                 continue
@@ -546,7 +544,8 @@ class EventManagerBase(event_manager_.EventManager):
                     try:
                         if predicate and not predicate(event):
                             continue
-                    except Exception as ex:
+                    # We need to use a blind except here as it is a user provided predicate
+                    except Exception as ex:  # noqa: BLE001
                         future.set_exception(ex)
                     else:
                         future.set_result(event)

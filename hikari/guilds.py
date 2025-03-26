@@ -575,16 +575,10 @@ class Member(users.User):
         typing.Sequence[hikari.guilds.Role]
             The roles the users has.
         """
-        roles: list[Role] = []
-
         if not isinstance(self.user.app, traits.CacheAware):
-            return roles
+            return []
 
-        for role_id in self.role_ids:
-            if role := self.user.app.cache.get_role(role_id):
-                roles.append(role)
-
-        return roles
+        return [role for role_id in self.role_ids if (role := self.user.app.cache.get_role(role_id))]
 
     def get_top_role(self) -> typing.Optional[Role]:
         """Return the highest role the member has.
