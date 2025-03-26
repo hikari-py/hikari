@@ -28,7 +28,7 @@ import re
 import string
 import typing
 
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 
 def _to_rgb_int(value: str, name: str) -> int:

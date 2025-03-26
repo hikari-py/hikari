@@ -57,7 +57,7 @@ import attrs
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import enums
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     from hikari import intents as intents_

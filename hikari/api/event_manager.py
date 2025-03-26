@@ -29,7 +29,7 @@ import typing
 
 from hikari import iterators
 from hikari.events import base_events
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     import asyncio

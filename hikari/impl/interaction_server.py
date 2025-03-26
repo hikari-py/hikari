@@ -38,7 +38,7 @@ from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
 from hikari.internal import data_binding
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

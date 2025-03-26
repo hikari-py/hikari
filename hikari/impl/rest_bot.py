@@ -40,7 +40,7 @@ from hikari.impl import rest as rest_impl
 from hikari.internal import aio
 from hikari.internal import signals
 from hikari.internal import ux
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

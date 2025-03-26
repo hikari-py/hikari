@@ -37,7 +37,7 @@ from hikari.api import cache
 from hikari.api import config as config_api
 from hikari.internal import cache as cache_utility
 from hikari.internal import collections
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     from hikari import guilds

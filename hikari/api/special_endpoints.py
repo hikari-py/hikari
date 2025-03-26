@@ -55,7 +55,7 @@ import typing
 from hikari import components as components_
 from hikari import polls
 from hikari import undefined
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     import types

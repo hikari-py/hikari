@@ -45,7 +45,7 @@ from hikari import errors
 from hikari import files
 from hikari import undefined
 from hikari.internal import attrs_extensions
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     import concurrent.futures

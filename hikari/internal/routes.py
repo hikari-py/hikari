@@ -34,7 +34,7 @@ import attrs
 from hikari import files
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 HASH_SEPARATOR: typing.Final[str] = ";"
 PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")

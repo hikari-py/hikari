@@ -30,7 +30,7 @@ import sys
 import types
 import typing
 
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
