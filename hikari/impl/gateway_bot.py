@@ -95,7 +95,7 @@ async def _close_resource(name: str, awaitable: typing.Awaitable[typing.Any]) ->
 
     try:
         await future
-    except Exception as ex:
+    except Exception as ex:  # noqa: BLE001 - Do not catch blind exception
         asyncio.get_running_loop().call_exception_handler(
             {"message": f"{name} raised an exception during shut down", "future": future, "exception": ex}
         )

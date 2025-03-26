@@ -175,7 +175,8 @@ async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.An
     except StopAsyncIteration:
         pass
 
-    except Exception as exc:
+    # Blind except as we do not control the function that is being called
+    except Exception as exc:  # noqa: BLE001
         asyncio.get_running_loop().call_exception_handler(
             {"message": "Exception occurred during interaction post dispatch", "exception": exc}
         )
@@ -249,7 +250,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
-        self._running_generator_listeners: list[asyncio.Task[None]] = []
+        self._running_generator_listeners: set[asyncio.Task[None]] = set()
 
     @property
     def is_alive(self) -> bool:
@@ -382,7 +383,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         # Wait for handlers to complete
         await asyncio.gather(*self._running_generator_listeners)
-        self._running_generator_listeners = []
+        self._running_generator_listeners = set()
 
         self._close_event.set()
         self._close_event = None
@@ -452,7 +453,7 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.debug("Ignoring unknown interaction type %s", interaction_type)
             return _Response(_NOT_IMPLEMENTED, b"Interaction type not implemented")
 
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - Blind except
             asyncio.get_running_loop().call_exception_handler(
                 {
                     "message": "Exception occurred during interaction deserialization",
@@ -470,8 +471,9 @@ class InteractionServer(interaction_server.InteractionServer):
                 if inspect.isasyncgen(call):
                     result = await call.__anext__()
                     task = asyncio.create_task(_consume_generator_listener(call))
-                    task.add_done_callback(self._running_generator_listeners.remove)
-                    self._running_generator_listeners.append(task)
+
+                    self._running_generator_listeners.add(task)
+                    task.add_done_callback(self._running_generator_listeners.discard)
 
                 else:
                     result = await call
@@ -479,7 +481,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 raw_payload, files = result.build(self._entity_factory)
                 payload = self._dumps(raw_payload)
 
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - Blind ecept
                 asyncio.get_running_loop().call_exception_handler(
                     {"message": "Exception occurred during interaction dispatch", "exception": exc}
                 )

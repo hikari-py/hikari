@@ -208,7 +208,7 @@ def destroy_loop(loop: asyncio.AbstractEventLoop, logger: logging.Logger) -> Non
             await future
         except asyncio.CancelledError:
             pass
-        except Exception as ex:
+        except Exception as ex:  # noqa: BLE001 - Do not catch blind exception
             loop.call_exception_handler(
                 {
                     "message": "Future raised unexpected exception after requesting cancellation",

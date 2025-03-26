@@ -620,7 +620,7 @@ class EventManagerBase(event_manager_.EventManager):
             pass
         except errors.UnrecognisedEntityError:
             _LOGGER.debug("Event referenced an unrecognised entity, discarding")
-        except BaseException as ex:
+        except Exception as ex:  # noqa: BLE001 - Do not catch blind exception
             asyncio.get_running_loop().call_exception_handler(
                 {
                     "message": "Exception occurred in raw event dispatch conduit",
