@@ -35,7 +35,7 @@ import asyncio
 import typing
 
 from hikari.internal import spel
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 ValueT = typing.TypeVar("ValueT")
 """Type-hint of the type of the value returned by a lazy iterator."""

@@ -61,7 +61,7 @@ import attrs
 
 from hikari.internal import net
 from hikari.internal import time
-from hikari.internal.override import override
+from hikari.internal.typing_backport import override
 
 if typing.TYPE_CHECKING:
     import types

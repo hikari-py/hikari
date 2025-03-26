@@ -42,7 +42,7 @@ from typing import Union as __Union
 
 from typing_extensions import Self as __Self
 
-from hikari.internal.override import override as __override
+from hikari.internal.typing_backport import override as __override
 
 Enum = __enum.Enum
 

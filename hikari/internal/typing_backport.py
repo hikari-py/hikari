@@ -23,20 +23,30 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("override",)
+__all__: typing.Sequence[str] = ("deprecated", "override")
 
 import typing
 
 if typing.TYPE_CHECKING:
+    from typing_extensions import deprecated
     from typing_extensions import override
 
-else:
+else:  # pragma: no cover
 
     def override(method, /):
         """Mark a method as overriding a parent method."""
+        # Set to match the documented behaviour of https://docs.python.org/3/library/typing.html#typing.override
+        # the real function
         try:
             method.__override__ = True
         except (AttributeError, TypeError):
             pass
 
         return method
+
+    def deprecated(*args, **kwargs):
+        """Mark a function, overload, or class as deprecated for type-checkers.
+
+        This has no runtime side-effects.
+        """
+        return lambda value: value
