@@ -296,9 +296,9 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 token_type = applications.TokenType.BOT
 
         # Beautification and logging
-        ux.init_logging(logs, allow_color, force_color)
-        self.print_banner(banner, allow_color, force_color)
-        ux.warn_if_not_optimized(suppress_optimization_warning)
+        ux.init_logging(logs, allow_color=allow_color, force_color=force_color)
+        self.print_banner(banner, allow_color=allow_color, force_color=force_color)
+        ux.warn_if_not_optimized(suppress=suppress_optimization_warning)
 
         # Settings and state
         self._close_event: typing.Optional[asyncio.Event] = None
@@ -409,7 +409,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         ValueError
             If `extra_args` contains a default $-substitution.
         """
-        ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
+        ux.print_banner(banner, allow_color=allow_color, force_color=force_color, extra_args=extra_args)
 
     def add_shutdown_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /

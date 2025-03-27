@@ -532,7 +532,7 @@ class EventManagerBase(event_manager_.EventManager):
         tasks: list[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in event.dispatches():
-            tasks.extend(self._invoke_callback(c) for c in self._listeners.get(cls, ()))
+            tasks.extend(self._invoke_callback(c, event) for c in self._listeners.get(cls, ()))
 
             if cls not in self._waiters:
                 continue

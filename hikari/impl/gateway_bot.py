@@ -329,9 +329,9 @@ class GatewayBot(traits.GatewayBotAware):
         rest_url: typing.Optional[str] = None,
     ) -> None:
         # Beautification and logging
-        ux.init_logging(logs, allow_color, force_color)
-        self.print_banner(banner, allow_color, force_color)
-        ux.warn_if_not_optimized(suppress_optimization_warning)
+        ux.init_logging(logs, allow_color=allow_color, force_color=force_color)
+        self.print_banner(banner, allow_color=allow_color, force_color=force_color)
+        ux.warn_if_not_optimized(suppress=suppress_optimization_warning)
 
         # Settings and state
         self._closed_event: typing.Optional[asyncio.Event] = None
@@ -676,7 +676,7 @@ class GatewayBot(traits.GatewayBotAware):
         ValueError
             If `extra_args` contains a default $-substitution.
         """
-        ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
+        ux.print_banner(banner, allow_color=allow_color, force_color=force_color, extra_args=extra_args)
 
     def run(
         self,

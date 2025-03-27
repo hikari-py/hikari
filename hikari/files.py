@@ -418,8 +418,8 @@ def _to_write_path(path: Pathish, default_filename: str, *, force: bool) -> path
     return path.expanduser()
 
 
-def _open_write_path(path: Pathish, default_filename: str, *, force: bool) -> typing.BinaryIO:
-    path = _to_write_path(path, default_filename, force)
+def _open_write_path(path: Pathish, default_filename: str, force: bool) -> typing.BinaryIO:  # noqa: FBT001
+    path = _to_write_path(path, default_filename, force=force)
     return path.open("wb")
 
 
@@ -748,7 +748,7 @@ class WebResource(Resource[WebReader], abc.ABC):
         hikari.errors.HTTPResponseError
             If any other unexpected response code is returned.
         """
-        return _WebReaderAsyncReaderContextManagerImpl(self, head_only)
+        return _WebReaderAsyncReaderContextManagerImpl(self, head_only=head_only)
 
 
 @typing.final
@@ -856,8 +856,8 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
         self.file = None
 
 
-def _copy_to_path(current_path: pathlib.Path, copy_to_path: Pathish, default_filename: str, *, force: bool) -> None:
-    copy_to_path = _to_write_path(copy_to_path, default_filename, force)
+def _copy_to_path(current_path: pathlib.Path, copy_to_path: Pathish, default_filename: str, force: bool) -> None:  # noqa: FBT001
+    copy_to_path = _to_write_path(copy_to_path, default_filename, force=force)
     shutil.copy2(current_path, copy_to_path)
 
 
@@ -1038,9 +1038,12 @@ class IteratorReader(AsyncReader):
 
 
 def _write_bytes(
-    path: Pathish, default_filename: str, data: typing.Union[bytearray, bytes, memoryview], *, force: bool
+    path: Pathish,
+    default_filename: str,
+    data: typing.Union[bytearray, bytes, memoryview],
+    force: bool,  # noqa: FBT001
 ) -> None:
-    path = _to_write_path(path, default_filename, force)
+    path = _to_write_path(path, default_filename, force=force)
     path.write_bytes(data)
 
 
@@ -1134,7 +1137,7 @@ class Bytes(Resource[IteratorReader]):
         # An optimization can be done here to avoid a lot of thread calls and streaming
         # by just writing the whole data at once
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(executor, _write_bytes, path, self.data, self.filename, force)
+        await loop.run_in_executor(executor, _write_bytes, path, self.filename, self.data, force)
 
     @staticmethod
     def from_data_uri(data_uri: str, filename: typing.Optional[str] = None) -> Bytes:

@@ -732,11 +732,11 @@ class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_event
         self,
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
         *,
         first_id: str,
         newest_first: bool,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
     ) -> None:
         super().__init__()
         self._entity_factory = entity_factory

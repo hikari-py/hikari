@@ -3457,7 +3457,7 @@ class RESTClientImpl(rest_api.RESTClient):
             start_at = int(start_at)
 
         return special_endpoints_impl.GuildBanIterator(
-            self._entity_factory, self._request, guild, newest_first, str(start_at)
+            self._entity_factory, self._request, guild, newest_first=newest_first, first_id=str(start_at)
         )
 
     async def fetch_role(
@@ -4505,7 +4505,7 @@ class RESTClientImpl(rest_api.RESTClient):
             start_at = int(start_at)
 
         return special_endpoints_impl.ScheduledEventUserIterator(
-            self._entity_factory, self._request, newest_first, str(start_at), guild, event
+            self._entity_factory, self._request, guild, event, first_id=str(start_at), newest_first=newest_first
         )
 
     async def fetch_skus(

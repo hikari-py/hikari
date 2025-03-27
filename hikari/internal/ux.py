@@ -204,7 +204,7 @@ def init_logging(
 
     # Default config (stream)
     try:
-        if supports_color(allow_color, force_color):
+        if supports_color(allow_color=allow_color, force_color=force_color):
             logging.basicConfig(level=flavor, stream=sys.stdout)
             handler = logging.root.handlers[0]
             handler.setFormatter(
@@ -316,7 +316,7 @@ def print_banner(
                 raise ValueError(msg)
         args.update(extra_args)
 
-    if supports_color(allow_color, force_color):
+    if supports_color(allow_color=allow_color, force_color=force_color):
         args.update(colorlog.escape_codes.escape_codes)
     else:
         for code in colorlog.escape_codes.escape_codes:
