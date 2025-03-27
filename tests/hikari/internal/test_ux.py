@@ -264,23 +264,26 @@ class TestPrintBanner:
 
     @pytest.fixture
     def mock_args(self):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(platform, "release", return_value="1.0.0"))
-        stack.enter_context(mock.patch.object(platform, "system", return_value="Potato"))
-        stack.enter_context(mock.patch.object(platform, "machine", return_value="Machine"))
-        stack.enter_context(mock.patch.object(platform, "python_implementation", return_value="CPython"))
-        stack.enter_context(mock.patch.object(platform, "python_version", return_value="4.0.0"))
+        _about_path = str(pathlib.Path("/", "somewhere", "..", "coding", "hikari", "_about.py"))
 
-        stack.enter_context(mock.patch.object(_about, "__version__", new="2.2.2"))
-        stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="12345678901234567890"))
-        stack.enter_context(mock.patch.object(_about, "__copyright__", new="2020, Nekokatt"))
-        stack.enter_context(mock.patch.object(_about, "__license__", new="MIT"))
-        stack.enter_context(mock.patch.object(_about, "__file__", new="~/hikari"))
-        stack.enter_context(mock.patch.object(_about, "__docs__", new="https://nekokatt.github.io/hikari/docs"))
-        stack.enter_context(mock.patch.object(_about, "__discord_invite__", new="https://discord.gg/Jx4cNGG"))
-        stack.enter_context(mock.patch.object(_about, "__url__", new="https://nekokatt.github.io/hikari"))
+        stack = contextlib.ExitStack()
 
         with stack:
+            stack.enter_context(mock.patch.object(platform, "release", return_value="1.0.0"))
+            stack.enter_context(mock.patch.object(platform, "system", return_value="Potato"))
+            stack.enter_context(mock.patch.object(platform, "machine", return_value="Machine"))
+            stack.enter_context(mock.patch.object(platform, "python_implementation", return_value="CPython"))
+            stack.enter_context(mock.patch.object(platform, "python_version", return_value="4.0.0"))
+
+            stack.enter_context(mock.patch.object(_about, "__version__", new="2.2.2"))
+            stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="12345678901234567890"))
+            stack.enter_context(mock.patch.object(_about, "__copyright__", new="2020, Nekokatt"))
+            stack.enter_context(mock.patch.object(_about, "__license__", new="MIT"))
+            stack.enter_context(mock.patch.object(_about, "__file__", new=_about_path))
+            stack.enter_context(mock.patch.object(_about, "__docs__", new="https://nekokatt.github.io/hikari/docs"))
+            stack.enter_context(mock.patch.object(_about, "__discord_invite__", new="https://discord.gg/Jx4cNGG"))
+            stack.enter_context(mock.patch.object(_about, "__url__", new="https://nekokatt.github.io/hikari"))
+
             yield None
 
     def test_when_supports_color(self, mock_args):
@@ -289,7 +292,6 @@ class TestPrintBanner:
             mock.patch.object(colorlog.escape_codes, "escape_codes", new={"red": 0, "green": 1, "blue": 2})
         )
         stack.enter_context(mock.patch.object(time, "sleep"))
-        stack.enter_context(mock.patch.object(_about, "__file__", "/somewhere/../coding/hikari/_about.py"))
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
         read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
@@ -304,7 +306,7 @@ class TestPrintBanner:
             "hikari_git_sha1": "12345678",
             "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
-            "hikari_install_location": "/coding/hikari",
+            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari")),
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
             "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
             "hikari_source_url": "https://nekokatt.github.io/hikari",
@@ -330,7 +332,6 @@ class TestPrintBanner:
             mock.patch.object(colorlog.escape_codes, "escape_codes", new={"red": 0, "green": 1, "blue": 2})
         )
         stack.enter_context(mock.patch.object(time, "sleep"))
-        stack.enter_context(mock.patch.object(_about, "__file__", "/somewhere/../coding/hikari/_about.py"))
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
         read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
@@ -345,7 +346,7 @@ class TestPrintBanner:
             "hikari_git_sha1": "12345678",
             "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
-            "hikari_install_location": "/coding/hikari",
+            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari")),
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
             "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
             "hikari_source_url": "https://nekokatt.github.io/hikari",
@@ -368,7 +369,6 @@ class TestPrintBanner:
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(colorlog.escape_codes, "escape_codes", new={}))
         stack.enter_context(mock.patch.object(time, "sleep"))
-        stack.enter_context(mock.patch.object(_about, "__file__", "/somewhere/../coding/hikari/_about.py"))
         read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
         stdout = stack.enter_context(mock.patch.object(sys, "stdout"))
@@ -384,7 +384,7 @@ class TestPrintBanner:
             "hikari_git_sha1": "12345678",
             "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
-            "hikari_install_location": "/coding/hikari",
+            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari")),
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
             "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
             "hikari_source_url": "https://nekokatt.github.io/hikari",
