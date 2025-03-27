@@ -1049,6 +1049,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -1126,6 +1127,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to create.
         sticker
             If provided, the object or ID of a sticker to send on the message.
 
@@ -2048,6 +2051,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
@@ -2144,6 +2148,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the message poll.
         tts
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
@@ -4787,6 +4793,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -4869,6 +4876,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the message poll.
         sticker
             If provided, the object or ID of a sticker to send on the message.
 
@@ -7492,6 +7501,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -7541,6 +7551,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to add to the message.
         flags
             If provided, the message flags this response should have.
 
@@ -7690,6 +7702,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
+        poll
+            If provided, the poll to set on the message.
         mentions_everyone
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -8649,6 +8663,83 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             rate-limiting, such as limits per attribute. These cannot be
             detected or handled normally by Hikari due to their undocumented
             nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_poll_voters(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        answer_id: int,
+        /,
+        *,
+        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> typing.Sequence[users.User]:
+        """Fetch users that voted for a specific answer.
+
+        Parameters
+        ----------
+        channel
+            The channel the poll is in.
+        message
+            The message the poll is in.
+        answer_id
+            The answers id.
+        after
+            The votes to collect, after this user voted.
+        limit
+            The amount of votes to collect. Maximum 100, default 25
+
+        Returns
+        -------
+        typing.Sequence[users.User]
+            An sequence of Users.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def end_poll(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        /,
+    ) -> None:
+        """End a poll.
+
+        Parameters
+        ----------
+        channel
+            The channel the poll is in.
+        message
+            The message the poll is in.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """

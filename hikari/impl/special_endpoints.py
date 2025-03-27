@@ -39,6 +39,8 @@ __all__: typing.Sequence[str] = (
     "LinkButtonBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "PollAnswerBuilder",
+    "PollBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
     "SlashCommandBuilder",
@@ -62,6 +64,7 @@ from hikari import files
 from hikari import iterators
 from hikari import locales
 from hikari import messages
+from hikari import polls
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
@@ -2173,3 +2176,89 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
             "type": component_models.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
         }
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PollBuilder(special_endpoints.PollBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.PollBuilder`][]."""
+
+    _question_text: str = attrs.field(alias="question_text")
+    _answers: list[special_endpoints.PollAnswerBuilder] = attrs.field(alias="answers", factory=list)
+    _duration: undefined.UndefinedOr[int] = attrs.field(alias="duration", default=undefined.UNDEFINED)
+    _allow_multiselect: bool = attrs.field(alias="allow_multiselect")
+    _layout_type: undefined.UndefinedOr[polls.PollLayoutType] = attrs.field(
+        alias="layout_type", default=undefined.UNDEFINED
+    )
+
+    @property
+    def question_text(self) -> str:
+        return self._question_text
+
+    @property
+    def answers(self) -> typing.Sequence[special_endpoints.PollAnswerBuilder]:
+        return self._answers
+
+    @property
+    def duration(self) -> undefined.UndefinedOr[int]:
+        return self._duration
+
+    @property
+    def allow_multiselect(self) -> bool:
+        return self._allow_multiselect
+
+    @property
+    def layout_type(self) -> undefined.UndefinedOr[polls.PollLayoutType]:
+        return self._layout_type
+
+    def add_answer(
+        self,
+        *,
+        text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
+    ) -> Self:
+        answer = PollAnswerBuilder(text=text, emoji=emoji)
+        self._answers.append(answer)
+        return self
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+
+        payload.put("question", {"text": self._question_text})
+        payload.put("answers", [answer.build() for answer in self._answers])
+        payload.put("duration", self._duration)
+        payload.put("allow_multiselect", self._allow_multiselect)
+        payload.put("layout_type", self._layout_type)
+
+        return payload
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PollAnswerBuilder(special_endpoints.PollAnswerBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.PollAnswerBuilder`][]."""
+
+    _text: undefined.UndefinedOr[str] = attrs.field(alias="text", default=undefined.UNDEFINED)
+    _emoji: undefined.UndefinedOr[emojis.Emoji] = attrs.field(alias="emoji", default=undefined.UNDEFINED)
+
+    @property
+    def text(self) -> undefined.UndefinedOr[str]:
+        return self._text
+
+    @property
+    def emoji(self) -> undefined.UndefinedOr[emojis.Emoji]:
+        return self._emoji
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+
+        payload.put("text", self._text)
+
+        if self._emoji is not undefined.UNDEFINED:
+            emoji_id, emoji_name = _build_emoji(self._emoji)
+
+            if emoji_id is not undefined.UNDEFINED:
+                payload["emoji"] = {"id": emoji_id}
+
+            elif emoji_name is not undefined.UNDEFINED:
+                payload["emoji"] = {"name": emoji_name}
+
+        return {"poll_media": payload}

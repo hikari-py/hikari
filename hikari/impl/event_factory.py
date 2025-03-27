@@ -43,6 +43,7 @@ from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import monetization_events
+from hikari.events import poll_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
@@ -986,4 +987,34 @@ class EventFactoryImpl(event_factory.EventFactory):
     ) -> stage_events.StageInstanceDeleteEvent:
         return stage_events.StageInstanceDeleteEvent(
             shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
+        )
+
+    ################
+    #  POLL EVENTS #
+    ################
+
+    def deserialize_poll_vote_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteCreateEvent:
+        return poll_events.PollVoteCreateEvent(
+            app=self._app,
+            shard=shard,
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            message_id=snowflakes.Snowflake(payload["message_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
+            answer_id=payload["answer_id"],
+        )
+
+    def deserialize_poll_vote_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteDeleteEvent:
+        return poll_events.PollVoteDeleteEvent(
+            app=self._app,
+            shard=shard,
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            message_id=snowflakes.Snowflake(payload["message_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
+            answer_id=payload["answer_id"],
         )
