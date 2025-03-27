@@ -488,7 +488,7 @@ class TestStringifyHttpMessage:
 
         assert returned == "    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**"
 
-    def test_when_body_is_not_None(self, rest_client, expected):
+    def test_when_body_is_not_None(self, rest_client):
         headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
 
         returned = rest._stringify_http_message(headers, bytes("hello :)", "ascii"))
@@ -1109,7 +1109,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(187, newest_first=True, start_at=StubModel(65652342134))
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, 187, True, "65652342134"
+            rest_client._entity_factory, rest_client._request, 187, newest_first=True, first_id="65652342134"
         )
         assert iterator is iterator_cls.return_value
 
@@ -1119,7 +1119,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(9000, newest_first=True, start_at=start_at)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, 9000, True, "950000286338908160"
+            rest_client._entity_factory, rest_client._request, 9000, newest_first=True, first_id="950000286338908160"
         )
         assert iterator is iterator_cls.return_value
 
@@ -1128,7 +1128,11 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(8844)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, 8844, False, str(snowflakes.Snowflake.min())
+            rest_client._entity_factory,
+            rest_client._request,
+            8844,
+            newest_first=False,
+            first_id=str(snowflakes.Snowflake.min()),
         )
         assert iterator is iterator_cls.return_value
 
@@ -1137,7 +1141,11 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(3848, newest_first=True)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, 3848, True, str(snowflakes.Snowflake.max())
+            rest_client._entity_factory,
+            rest_client._request,
+            3848,
+            newest_first=True,
+            first_id=str(snowflakes.Snowflake.max()),
         )
         assert iterator is iterator_cls.return_value
 
@@ -1595,7 +1603,12 @@ class TestRESTClientImpl:
             )
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, True, "65652342134", 33432234, 6666655555
+            rest_client._entity_factory,
+            rest_client._request,
+            33432234,
+            6666655555,
+            first_id="65652342134",
+            newest_first=True,
         )
         assert iterator is iterator_cls.return_value
 
@@ -1605,7 +1618,12 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_scheduled_event_users(54123, 656324, newest_first=True, start_at=start_at)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, True, "950000286338908160", 54123, 656324
+            rest_client._entity_factory,
+            rest_client._request,
+            54123,
+            656324,
+            newest_first=True,
+            first_id="950000286338908160",
         )
         assert iterator is iterator_cls.return_value
 
@@ -1616,10 +1634,10 @@ class TestRESTClientImpl:
         iterator_cls.assert_called_once_with(
             rest_client._entity_factory,
             rest_client._request,
-            False,
-            str(snowflakes.Snowflake.min()),
             54563245,
             123321123,
+            newest_first=False,
+            first_id=str(snowflakes.Snowflake.min()),
         )
         assert iterator is iterator_cls.return_value
 
@@ -1630,7 +1648,12 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_scheduled_event_users(6423, 65456234, newest_first=True)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, True, str(snowflakes.Snowflake.max()), 6423, 65456234
+            rest_client._entity_factory,
+            rest_client._request,
+            6423,
+            65456234,
+            newest_first=True,
+            first_id=str(snowflakes.Snowflake.max()),
         )
         assert iterator is iterator_cls.return_value
 
