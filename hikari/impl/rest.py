@@ -1528,10 +1528,10 @@ class RESTClientImpl(rest_api.RESTClient):
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> tuple[data_binding.JSONObjectBuilder, data_binding.URLEncodedFormBuilder]:
-        if flags is undefined.UNDEFINED:
+        if not flags:
             flags = messages_.MessageFlag.IS_VOICE_MESSAGE
         else:
-            flags = messages_.MessageFlag(flags) | messages_.MessageFlag.IS_VOICE_MESSAGE
+            flags |= messages_.MessageFlag.IS_VOICE_MESSAGE
 
         body = data_binding.JSONObjectBuilder()
         body.put("flags", flags)
