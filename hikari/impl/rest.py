@@ -1551,16 +1551,15 @@ class RESTClientImpl(rest_api.RESTClient):
             body.put("message_reference", message_reference)
 
         form_builder = data_binding.URLEncodedFormBuilder()
-        attachment_id = 0
 
         resource = files.ensure_resource(attachment)
         attachment_payload: dict[str, typing.Any] = {
             "duration_secs": duration,
             "waveform": waveform,
-            "id": attachment_id,
+            "id": 0,
             "filename": resource.filename,
         }
-        form_builder.add_resource(f"files[{attachment_id}]", resource)
+        form_builder.add_resource(f"files[0]", resource)
 
         body.put("attachments", [attachment_payload])
 
