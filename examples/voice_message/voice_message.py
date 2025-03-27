@@ -21,7 +21,7 @@ import hikari
 bot = hikari.GatewayBot(token=os.environ["BOT_TOKEN"])
 
 
-# This function works at time of writing this (2025.22.03) but
+# This function works at time of writing this (2025.03.22) but
 # Discord states that this is implementation detail and might
 # change without notice. You have been warned!
 def calculate_waveform(audio_file_path: str) -> tuple[str, float]:
