@@ -4650,7 +4650,7 @@ class RESTClientImpl(rest_api.RESTClient):
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> typing.Sequence[users.User]:
         route = routes.GET_POLL_ANSWER.compile(channel=channel, message=message, answer=answer_id)
-        
+
         query = data_binding.StringMapBuilder()
         query.put("after", after)
         query.put("limit", limit)

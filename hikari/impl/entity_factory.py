@@ -3303,7 +3303,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             interaction_metadata=interaction_metadata,
         )
 
-    def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:  # noqa: PLR0912
+    def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:  # noqa: PLR0912, PLR0915
         author = self.deserialize_user(payload["author"])
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,18 +22,19 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("PollMedia", "PollAnswer", "PollResult", "PollAnswerCount", "PollLayoutType", "Poll")
+__all__: typing.Sequence[str] = ("Poll", "PollAnswer", "PollAnswerCount", "PollLayoutType", "PollMedia", "PollResult")
 
 import typing
 
 import attrs
 
-from hikari import emojis
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     import datetime
+
+    from hikari import emojis
 
 
 @attrs_extensions.with_copy
