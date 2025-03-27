@@ -1997,6 +1997,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("username", username)
         body.put("avatar_url", avatar_url, conversion=str)
         form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+
         response = await self._request(route, form_builder=form_builder, query=query, auth=None)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
