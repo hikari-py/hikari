@@ -592,6 +592,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         self,
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
+        *,
         newest_first: bool,
         first_id: str,
     ) -> None:
@@ -642,6 +643,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
         newest_first: bool,
         first_id: str,
     ) -> None:
@@ -730,8 +732,9 @@ class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_event
         self,
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
-        newest_first: bool,
+        *,
         first_id: str,
+        newest_first: bool,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
     ) -> None:
@@ -840,6 +843,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
         request_call: _RequestCallSig,
         route: routes.CompiledRoute,
         before: undefined.UndefinedOr[str],
+        *,
         before_is_timestamp: bool,
     ) -> None:
         super().__init__()
@@ -1559,7 +1563,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         self._label = label
         return self
 
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         self._is_disabled = state
         return self
 
@@ -1673,7 +1677,7 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
         self._emoji = emoji
         return self
 
-    def set_is_default(self, state: bool, /) -> Self:
+    def set_is_default(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         self._is_default = state
         return self
 
@@ -1734,7 +1738,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         self._custom_id = custom_id
         return self
 
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         self._is_disabled = state
         return self
 
@@ -1957,7 +1961,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         self._value = value
         return self
 
-    def set_required(self, required: bool, /) -> Self:
+    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         self._required = required
         return self
 

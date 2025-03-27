@@ -234,7 +234,7 @@ class TestFile:
 
 def test_write_bytes():
     with mock.patch.object(files, "_to_write_path") as to_write_path:
-        files._write_bytes("path", "some_filename.png", False, b"some bytes")
+        files._write_bytes("path", "some_filename.png", b"some bytes", force=False)
 
     to_write_path.assert_called_once_with("path", "some_filename.png", False)
     to_write_path.return_value.write_bytes.assert_called_once_with(b"some bytes")
@@ -258,7 +258,7 @@ class TestBytes:
 
         super_save.assert_not_called()
         loop.run_in_executor.assert_awaited_once_with(
-            mock_executor, files._write_bytes, "some_path/", "something.txt", True, bytes_obj.data
+            mock_executor, files._write_bytes, "some_path/", "something.txt", bytes_obj.data, True
         )
 
     @pytest.mark.asyncio

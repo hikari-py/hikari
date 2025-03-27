@@ -144,6 +144,7 @@ class _GatewayTransport:
 
     def __init__(
         self,
+        *,
         ws: aiohttp.ClientWebSocketResponse,
         transport_compression: bool,
         exit_stack: contextlib.AsyncExitStack,
@@ -588,7 +589,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
         await asyncio.wait_for(asyncio.shield(self._keep_alive_task), timeout=None)
 
-    async def _send_json(self, data: data_binding.JSONObject, /, priority: bool = False) -> None:
+    async def _send_json(self, data: data_binding.JSONObject, *, priority: bool = False) -> None:
         if not priority:
             await self._non_priority_rate_limit.acquire()
 

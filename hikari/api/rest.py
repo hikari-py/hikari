@@ -2488,7 +2488,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_invite(
-        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True
+        self, invite: typing.Union[invites.InviteCode, str], *, with_counts: bool = True
     ) -> invites.Invite:
         """Fetch an existing invite.
 

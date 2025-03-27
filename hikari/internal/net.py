@@ -110,8 +110,9 @@ def create_tcp_connector(
 
 def create_client_session(
     connector: aiohttp.BaseConnector,
-    connector_owner: bool,
     http_settings: config.HTTPSettings,
+    *,
+    connector_owner: bool,
     raise_for_status: bool,
     trust_env: bool,
 ) -> aiohttp.ClientSession:

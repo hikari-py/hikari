@@ -68,7 +68,10 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 
 def init_logging(
-    flavor: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]], allow_color: bool, force_color: bool
+    flavor: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]],
+    *,
+    allow_color: bool,
+    force_color: bool,
 ) -> None:
     """Initialize logging for the user.
 
@@ -243,6 +246,7 @@ def _read_banner(package: str) -> str:
 
 def print_banner(
     package: typing.Optional[str],
+    *,
     allow_color: bool,
     force_color: bool,
     extra_args: typing.Optional[dict[str, str]] = None,
@@ -323,7 +327,7 @@ def print_banner(
     sys.stdout.flush()
 
 
-def warn_if_not_optimized(suppress: bool) -> None:
+def warn_if_not_optimized(*, suppress: bool) -> None:
     """Log a warning if not running in optimization mode."""
     if __debug__ and not suppress:
         _LOGGER.warning(
@@ -333,7 +337,7 @@ def warn_if_not_optimized(suppress: bool) -> None:
         )
 
 
-def supports_color(allow_color: bool, force_color: bool) -> bool:  # noqa: PLR0911 - Too many return statements
+def supports_color(*, allow_color: bool, force_color: bool) -> bool:  # noqa: PLR0911 - Too many return statements
     """Return [`True`][] if the terminal device supports color output.
 
     Parameters

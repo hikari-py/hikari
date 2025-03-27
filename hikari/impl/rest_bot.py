@@ -372,6 +372,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     @staticmethod
     def print_banner(
         banner: typing.Optional[str],
+        *,
         allow_color: bool,
         force_color: bool,
         extra_args: typing.Optional[dict[str, str]] = None,
@@ -468,6 +469,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     def run(
         self,
+        *,
         asyncio_debug: bool = False,
         backlog: int = 128,
         check_for_updates: bool = True,
@@ -533,6 +535,15 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             TCP/IP host or a sequence of hosts for the HTTP server.
         port
             TCP/IP port for the HTTP server.
+        propagate_interrupts
+            If [`True`][], then any internal [`hikari.errors.HikariInterrupt`][]
+            that is raises as a result of catching an OS level signal will
+            result in the exception being rethrown once the application has
+            closed. This can allow you to use hikari signal handlers and
+            still be able to determine what kind of interrupt the
+            application received after it closes. When [`False`][], nothing
+            is raised and the call will terminate cleanly and silently
+            where possible instead.
         path
             File system path for HTTP server unix domain socket.
         reuse_address
@@ -608,6 +619,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     async def start(
         self,
+        *,
         backlog: int = 128,
         check_for_updates: bool = True,
         host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,

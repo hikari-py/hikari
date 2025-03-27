@@ -1030,7 +1030,10 @@ class MutableCache(Cache, abc.ABC):
 
     @abc.abstractmethod
     def set_guild_availability(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], is_available: bool, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        is_available: bool,  # noqa: FBT001 - Boolean-typed positional argument
+        /,
     ) -> None:
         """Set whether a cached guild is available or not.
 

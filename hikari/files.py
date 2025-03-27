@@ -406,7 +406,7 @@ class _NoOpAsyncReaderContextManagerImpl(AsyncReaderContextManager[ReaderImplT])
         pass
 
 
-def _to_write_path(path: Pathish, default_filename: str, force: bool) -> pathlib.Path:
+def _to_write_path(path: Pathish, default_filename: str, *, force: bool) -> pathlib.Path:
     path = ensure_path(path)
     if path.is_dir():
         path = path.joinpath(default_filename)
@@ -418,7 +418,7 @@ def _to_write_path(path: Pathish, default_filename: str, force: bool) -> pathlib
     return path.expanduser()
 
 
-def _open_write_path(path: Pathish, default_filename: str, force: bool) -> typing.BinaryIO:
+def _open_write_path(path: Pathish, default_filename: str, *, force: bool) -> typing.BinaryIO:
     path = _to_write_path(path, default_filename, force)
     return path.open("wb")
 
@@ -602,7 +602,7 @@ class WebReader(AsyncReader):
 class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReader]):
     __slots__: typing.Sequence[str] = ("_client_response_ctx", "_client_session", "_head_only", "_web_resource")
 
-    def __init__(self, web_resource: WebResource, head_only: bool) -> None:
+    def __init__(self, web_resource: WebResource, *, head_only: bool) -> None:
         self._web_resource = web_resource
         self._head_only = head_only
         self._client_session: aiohttp.ClientSession = NotImplemented
@@ -856,7 +856,7 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
         self.file = None
 
 
-def _copy_to_path(current_path: pathlib.Path, copy_to_path: Pathish, default_filename: str, force: bool) -> None:
+def _copy_to_path(current_path: pathlib.Path, copy_to_path: Pathish, default_filename: str, *, force: bool) -> None:
     copy_to_path = _to_write_path(copy_to_path, default_filename, force)
     shutil.copy2(current_path, copy_to_path)
 
@@ -1038,7 +1038,7 @@ class IteratorReader(AsyncReader):
 
 
 def _write_bytes(
-    path: Pathish, default_filename: str, force: bool, data: typing.Union[bytearray, bytes, memoryview]
+    path: Pathish, default_filename: str, data: typing.Union[bytearray, bytes, memoryview], *, force: bool
 ) -> None:
     path = _to_write_path(path, default_filename, force)
     path.write_bytes(data)
@@ -1134,7 +1134,7 @@ class Bytes(Resource[IteratorReader]):
         # An optimization can be done here to avoid a lot of thread calls and streaming
         # by just writing the whole data at once
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(executor, _write_bytes, path, self.filename, force, self.data)
+        await loop.run_in_executor(executor, _write_bytes, path, self.data, self.filename, force)
 
     @staticmethod
     def from_data_uri(data_uri: str, filename: typing.Optional[str] = None) -> Bytes:

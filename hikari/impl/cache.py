@@ -543,7 +543,10 @@ class CacheImpl(cache.MutableCache):
         guild_record.is_available = True
 
     def set_guild_availability(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], is_available: bool, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        is_available: bool,  # noqa: FBT001 - Boolean-typed positional argument
+        /,
     ) -> None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILDS):
             return

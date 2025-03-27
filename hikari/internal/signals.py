@@ -77,21 +77,21 @@ def _interrupt_handler(loop: asyncio.AbstractEventLoop) -> _SignalHandlerT:
 
 @contextlib.contextmanager
 def handle_interrupts(
-    enabled: typing.Optional[bool], loop: asyncio.AbstractEventLoop, propagate_interrupts: bool
+    loop: asyncio.AbstractEventLoop, *, propagate_interrupts: bool, enabled: typing.Optional[bool]
 ) -> typing.Generator[None, None, None]:
     """Context manager which cleanly exits on signal interrupts.
 
     Parameters
     ----------
+    loop
+        The event loop the interrupt will be raised in.
+    propagate_interrupts
+        Whether to propagate interrupts.
     enabled
         Whether to enable the signal interrupts.
 
         If set to [`None`][], then it will be enabled or not based on whether the running
         thread is the main one or not.
-    loop
-        The event loop the interrupt will be raised in.
-    propagate_interrupts
-        Whether to propagate interrupts.
     """
     if enabled is None:
         enabled = threading.current_thread() is threading.main_thread()

@@ -639,6 +639,7 @@ class GatewayBot(traits.GatewayBotAware):
     @staticmethod
     def print_banner(
         banner: typing.Optional[str],
+        *,
         allow_color: bool,
         force_color: bool,
         extra_args: typing.Optional[dict[str, str]] = None,
@@ -1269,6 +1270,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     async def _start_one_shard(
         self,
+        *,
         activity: typing.Optional[presences.Activity],
         afk: bool,
         idle_since: typing.Optional[datetime.datetime],
