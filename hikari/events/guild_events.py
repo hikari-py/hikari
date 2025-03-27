@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,23 +24,23 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "AuditLogEntryCreateEvent",
-    "GuildEvent",
-    "GuildVisibilityEvent",
-    "GuildAvailableEvent",
-    "GuildJoinEvent",
-    "GuildUnavailableEvent",
-    "GuildLeaveEvent",
-    "GuildUpdateEvent",
-    "BanEvent",
     "BanCreateEvent",
     "BanDeleteEvent",
+    "BanEvent",
     "EmojisUpdateEvent",
-    "StickersUpdateEvent",
-    "IntegrationEvent",
+    "GuildAvailableEvent",
+    "GuildEvent",
+    "GuildJoinEvent",
+    "GuildLeaveEvent",
+    "GuildUnavailableEvent",
+    "GuildUpdateEvent",
+    "GuildVisibilityEvent",
     "IntegrationCreateEvent",
     "IntegrationDeleteEvent",
+    "IntegrationEvent",
     "IntegrationUpdateEvent",
     "PresenceUpdateEvent",
+    "StickersUpdateEvent",
 )
 
 import abc

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -29,89 +28,89 @@ from hikari.internal import fast_protocol
 
 @typing.runtime_checkable
 class BasicPyProtocol(typing.Protocol):
-    def test(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test2(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test2(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test3(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test3(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test4(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test4(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test5(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test5(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test6(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test6(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test7(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test7(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test8(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test8(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test9(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test9(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test10(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test10(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
 
 class BasicHikariProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
-    def test(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test2(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test2(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test3(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test3(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test4(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test4(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test5(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test5(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test6(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test6(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test7(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test7(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test8(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test8(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test9(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test9(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test10(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test10(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
 
 class Valid:
-    def test(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test2(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test2(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test3(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test3(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test4(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test4(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test5(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test5(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test6(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test6(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test7(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test7(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test8(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test8(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test9(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test9(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test10(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test10(self, arg1: str, arg2: int) -> list[int]: ...
 
 
 class Invalid: ...
@@ -125,29 +124,29 @@ for i in range(100_000):
     assert sum(i for i in range(10)) > 0
 
 py_protocol_isinstance_long_time = timeit.timeit(
-    "isinstance(isinstance_long, BasicPyProtocol)", number=1_000_000, globals=globals()
+    "assert isinstance(isinstance_long, BasicPyProtocol) is True", number=1_000_000, globals=globals()
 )
 hikari_protocol_isinstance_long_time = timeit.timeit(
-    "isinstance(isinstance_long, BasicHikariProtocol)", number=1_000_000, globals=globals()
+    "assert isinstance(isinstance_long, BasicHikariProtocol) is True", number=1_000_000, globals=globals()
 )
 py_protocol_isinstance_failfast_time = timeit.timeit(
-    "isinstance(isinstance_failfast, BasicPyProtocol)", number=1_000_000, globals=globals()
+    "assert isinstance(isinstance_failfast, BasicPyProtocol) is False", number=1_000_000, globals=globals()
 )
 hikari_protocol_isinstance_failfast_time = timeit.timeit(
-    "isinstance(isinstance_failfast, BasicHikariProtocol)", number=1_000_000, globals=globals()
+    "assert isinstance(isinstance_failfast, BasicHikariProtocol) is False", number=1_000_000, globals=globals()
 )
 
 py_protocol_issubclass_long_time = timeit.timeit(
-    "issubclass(Invalid, BasicPyProtocol)", number=1_000_000, globals=globals()
+    "assert issubclass(Valid, BasicPyProtocol) is True", number=1_000_000, globals=globals()
 )
 hikari_protocol_issubclass_long_time = timeit.timeit(
-    "issubclass(Invalid, BasicHikariProtocol)", number=1_000_000, globals=globals()
+    "assert issubclass(Valid, BasicHikariProtocol) is True", number=1_000_000, globals=globals()
 )
 py_protocol_issubclass_failfast_time = timeit.timeit(
-    "issubclass(Valid, BasicPyProtocol)", number=1_000_000, globals=globals()
+    "assert issubclass(Invalid, BasicPyProtocol) is False", number=1_000_000, globals=globals()
 )
 hikari_protocol_issubclass_failfast_time = timeit.timeit(
-    "issubclass(Valid, BasicHikariProtocol)", number=1_000_000, globals=globals()
+    "assert issubclass(Invalid, BasicHikariProtocol) is False", number=1_000_000, globals=globals()
 )
 
 print("isinstance(long, BasicPyProtocol)", py_protocol_isinstance_long_time, "µs")

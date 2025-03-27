@@ -82,7 +82,7 @@ nox = ["nox[uv]==2025.2.9"]
 
 audit = ["uv-secure"]
 codespell = ["codespell==2.4.1"]
-coverage = ["coverage[toml]==7.7.0"]
+coverage = ["coverage[toml]==7.7.1"]
 flake8 = [
     "flake8==7.1.2",
     #
@@ -123,38 +123,23 @@ mkdocs = [
     # "mkdocs-glightbox==0.3.7",
 ]
 mypy = ["mypy[faster-cache]==1.15.0"]
-pyright = ["pyright==1.1.397"]
+pyright = ["pyright==1.1.398"]
 pytest = [
     "mock==5.2.0",
     "pytest==8.3.5",
-    "pytest-asyncio==0.25.3",
+    "pytest-asyncio==0.26.0",
     "pytest-cov==6.0.0",
     "pytest-randomly==3.16.0",
     "async-timeout==5.0.1",
     { include-group = "coverage" },
 ]
 release = ["twine==6.1.0"]
-ruff = ["ruff==0.11.1"]
+ruff = ["ruff==0.11.2"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
 
 [tool.uv]
 required-version = "~=0.6"
-
-[tool.ruff]
-line-length = 120
-target-version = "py39"
-
-[tool.ruff.format]
-docstring-code-format = true
-docstring-code-line-length = 80
-quote-style = "double"
-line-ending = "lf"
-skip-magic-trailing-comma = true
-
-[tool.ruff.lint.isort]
-required-imports = ["from __future__ import annotations"]
-force-single-line = true
 
 [tool.coverage.run]
 relative_files = true
@@ -245,6 +230,7 @@ type = [
     { name = "Breaking Changes", directory = "breaking", showcontent = true },
     { name = "Deprecation", directory = "deprecation", showcontent = true },
     { name = "Features", directory = "feature", showcontent = true },
+    { name = "Optimizations", directory = "optimization", showcontent = true },
     { name = "Bugfixes", directory = "bugfix", showcontent = true },
     { name = "Documentation Improvements", directory = "documentation", showcontent = true },
 ]

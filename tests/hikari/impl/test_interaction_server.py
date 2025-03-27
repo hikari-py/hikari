@@ -610,7 +610,7 @@ class TestInteractionServer:
         mock_runner.cleanup.assert_awaited_once()
         mock_event.set.assert_called_once()
         assert mock_interaction_server._is_closing is False
-        assert mock_interaction_server._running_generator_listeners == []
+        assert mock_interaction_server._running_generator_listeners == set()
         gather.assert_awaited_once_with(
             generator_listener_1, generator_listener_2, generator_listener_3, generator_listener_4
         )
@@ -675,6 +675,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         mock_listener = mock.AsyncMock(return_value=mock_builder)
@@ -723,6 +731,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         g_called = False
@@ -895,6 +911,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.Mock(side_effect=mock_exception)
@@ -931,6 +955,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
         mock_interaction_server.set_listener(
@@ -969,6 +1001,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No"}, [])))
         mock_interaction_server.set_listener(

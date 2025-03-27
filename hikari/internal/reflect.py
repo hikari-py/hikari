@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -65,11 +64,12 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
 
     none_type = type(None)
     for name, param in signature.parameters.items():
-        if isinstance(param.annotation, str):
-            param = param.replace(annotation=resolved_typehints[name] if name in resolved_typehints else EMPTY)
-        if param.annotation is none_type:
-            param = param.replace(annotation=None)
-        params.append(param)
+        real_param = param
+        if isinstance(real_param.annotation, str):
+            real_param = real_param.replace(annotation=resolved_typehints.get(name, EMPTY))
+        if real_param.annotation is none_type:
+            real_param = real_param.replace(annotation=None)
+        params.append(real_param)
 
     return_annotation = resolved_typehints.get("return", EMPTY)
     if return_annotation is none_type:
@@ -91,12 +91,13 @@ def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pra
     import cProfile
 
     if inspect.iscoroutinefunction(call):
-        raise TypeError("cannot profile async calls")
+        msg = "cannot profile async calls"
+        raise TypeError(msg)
 
     @functools.wraps(call)
-    def wrapped(*args: typing.Any, **kwargs: typing.Any) -> typing.Any:
+    def wrapped(*args: object, **kwargs: object) -> _T:
         print("Profiling", call.__module__ + "." + call.__qualname__)  # noqa: T201 print disallowed.
         cProfile.runctx("result = call(*args, **kwargs)", globals=globals(), locals=locals(), filename=None, sort=1)
-        return locals()["result"]
+        return typing.cast("_T", locals()["result"])
 
     return wrapped

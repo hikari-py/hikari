@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -21,34 +20,12 @@
 # SOFTWARE.
 from __future__ import annotations
 
-import typing
-
-from pipelines import config
 from pipelines import nox
 
 
 @nox.session()
-def flake8(session: nox.Session) -> None:
-    """Run code linting, SAST, and analysis."""
-    _flake8(session)
+def ruff(session: nox.Session) -> None:
+    """Run code linting using ruff."""
+    nox.sync(session, self=True, groups=["ruff"])
 
-
-@nox.session()
-def flake8_html(session: nox.Session) -> None:
-    """Run code linting, SAST, and analysis and generate an HTML report."""
-    _flake8(session, ("--format=html", f"--htmldir={config.FLAKE8_REPORT}"))
-
-
-def _flake8(session: nox.Session, extra_args: typing.Sequence[str] = ()) -> None:
-    nox.sync(session, self=True, groups=["flake8"])
-    session.run(
-        "flake8",
-        "--statistics",
-        "--show-source",
-        "--benchmark",
-        "--tee",
-        *extra_args,
-        config.MAIN_PACKAGE,
-        config.TEST_PACKAGE,
-        config.EXAMPLE_SCRIPTS,
-    )
+    session.run("ruff", "check", *session.posargs)

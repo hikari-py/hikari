@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,11 +23,11 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "with_copy",
     "copy_attrs",
     "deep_copy_attrs",
     "invalidate_deep_copy_cache",
     "invalidate_shallow_copy_cache",
+    "with_copy",
 )
 
 import copy as std_copy
@@ -79,7 +78,7 @@ def get_fields_definition(
 
     for field in attrs.fields(cls):
         if field.init:
-            key_word = field.name[1:] if field.name.startswith("_") else field.name
+            key_word = field.name.removeprefix("_")
             init_results.append((field, key_word))
         else:
             non_init_results.append(field)
@@ -182,9 +181,9 @@ def generate_deep_copier(cls: type[ModelT]) -> typing.Callable[[ModelT, typing.M
         return lambda _, __: None
 
     setters = ";".join(
-        f"m.{attrsibute.name}=std_copy(m.{attrsibute.name},memo)if(id_:=id(m.{attrsibute.name}))not in memo else memo[id_]"
-        for attrsibute in _normalize_kwargs_and_setters(kwargs, setters)
-        if not attrsibute.metadata.get(SKIP_DEEP_COPY)
+        f"m.{attr.name}=std_copy(m.{attr.name},memo)if(id_:=id(m.{attr.name}))not in memo else memo[id_]"
+        for attr in _normalize_kwargs_and_setters(kwargs, setters)
+        if not attr.metadata.get(SKIP_DEEP_COPY)
     )
     code = f"def deep_copy(m,memo):{setters}"
     globals_ = {"std_copy": std_copy.deepcopy, "cls": cls}

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -85,6 +84,8 @@ from hikari.internal import ux
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
+
+    from typing_extensions import Self
 
     from hikari import audit_logs
     from hikari import invites
@@ -215,19 +216,14 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 class _RESTProvider(traits.RESTAware):
     __slots__: typing.Sequence[str] = ("_entity_factory", "_executor", "_rest")
 
-    def __init__(
-        self,
-        entity_factory: typing.Callable[[], entity_factory_.EntityFactory],
-        executor: typing.Optional[concurrent.futures.Executor],
-        rest: typing.Callable[[], RESTClientImpl],
-    ) -> None:
-        self._entity_factory = entity_factory
+    def __init__(self, executor: typing.Optional[concurrent.futures.Executor]) -> None:
         self._executor = executor
-        self._rest = rest
+        self._entity_factory: entity_factory_.EntityFactory = NotImplemented
+        self._rest: RESTClientImpl = NotImplemented
 
     @property
     def entity_factory(self) -> entity_factory_.EntityFactory:
-        return self._entity_factory()
+        return self._entity_factory
 
     @property
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
@@ -235,15 +231,19 @@ class _RESTProvider(traits.RESTAware):
 
     @property
     def rest(self) -> rest_api.RESTClient:
-        return self._rest()
+        return self._rest
 
     @property
     def http_settings(self) -> config_impl.HTTPSettings:
-        return self._rest().http_settings
+        return self._rest.http_settings
 
     @property
     def proxy_settings(self) -> config_impl.ProxySettings:
-        return self._rest().proxy_settings
+        return self._rest.proxy_settings
+
+    def update(self, rest: RESTClientImpl, entity_factory: entity_factory_.EntityFactory) -> None:
+        self._rest = rest
+        self._entity_factory = entity_factory
 
 
 class RESTApp(traits.ExecutorAware):
@@ -289,15 +289,15 @@ class RESTApp(traits.ExecutorAware):
     """
 
     __slots__: typing.Sequence[str] = (
+        "_bucket_manager",
+        "_client_session",
+        "_dumps",
         "_executor",
         "_http_settings",
+        "_loads",
         "_max_retries",
         "_proxy_settings",
         "_url",
-        "_bucket_manager",
-        "_client_session",
-        "_loads",
-        "_dumps",
     )
 
     def __init__(
@@ -336,7 +336,8 @@ class RESTApp(traits.ExecutorAware):
 
     async def start(self) -> None:
         if self._client_session:
-            raise errors.ComponentStateConflictError("Rest app has already been started")
+            msg = "Rest app has already been started"
+            raise errors.ComponentStateConflictError(msg)
 
         self._bucket_manager.start()
         self._client_session = net.create_client_session(
@@ -349,7 +350,8 @@ class RESTApp(traits.ExecutorAware):
 
     async def close(self) -> None:
         if self._client_session is None:
-            raise errors.ComponentStateConflictError("Rest app is not running")
+            msg = "Rest app is not running"
+            raise errors.ComponentStateConflictError(msg)
 
         await self._client_session.close()
         await self._bucket_manager.close()
@@ -413,12 +415,13 @@ class RESTApp(traits.ExecutorAware):
             If `token_type` is provided when a token strategy is passed for `token`.
         """
         if not self._client_session:
-            raise errors.ComponentStateConflictError("Rest app is not running so it cannot be interacted with")
+            msg = "Rest app is not running so it cannot be interacted with"
+            raise errors.ComponentStateConflictError(msg)
 
         # Since we essentially mimic a fake App instance, we need to make a circular provider.
         # We can achieve this using a lambda. This allows the entity factory to build models that
         # are also REST-aware
-        provider = _RESTProvider(lambda: entity_factory, self._executor, lambda: rest_client)
+        provider = _RESTProvider(self._executor)
         entity_factory = entity_factory_impl.EntityFactoryImpl(provider)
 
         if isinstance(token, str):
@@ -445,18 +448,20 @@ class RESTApp(traits.ExecutorAware):
             client_session_owner=False,
         )
 
+        provider.update(rest_client, entity_factory)
+
         return rest_client
 
 
-def _stringify_http_message(headers: data_binding.Headers, body: typing.Any) -> str:
+def _stringify_http_message(headers: data_binding.Headers, body: typing.Union[bytes, None]) -> str:
     string = "\n".join(
         f"    {name}: {value}" if name != _AUTHORIZATION_HEADER else f"    {name}: **REDACTED TOKEN**"
         for name, value in headers.items()
     )
 
-    if body is not None:
+    if body:
         string += "\n\n    "
-        string += body.decode("ascii") if isinstance(body, bytes) else str(body)
+        string += body.decode("ascii")
 
     return string
 
@@ -468,7 +473,8 @@ def _transform_emoji_to_url_format(
 ) -> str:
     if isinstance(emoji, emojis.Emoji):
         if emoji_id is not undefined.UNDEFINED:
-            raise ValueError("emoji_id shouldn't be passed when an Emoji object is passed for emoji")
+            msg = "emoji_id shouldn't be passed when an Emoji object is passed for emoji"
+            raise ValueError(msg)
 
         return emoji.url_name
 
@@ -528,19 +534,19 @@ class RESTClientImpl(rest_api.RESTClient):
         "_bucket_manager",
         "_bucket_manager_owner",
         "_cache",
-        "_entity_factory",
-        "_executor",
-        "_http_settings",
-        "_max_retries",
-        "_proxy_settings",
-        "_dumps",
-        "_loads",
-        "_rest_url",
-        "_token",
-        "_token_type",
         "_client_session",
         "_client_session_owner",
         "_close_event",
+        "_dumps",
+        "_entity_factory",
+        "_executor",
+        "_http_settings",
+        "_loads",
+        "_max_retries",
+        "_proxy_settings",
+        "_rest_url",
+        "_token",
+        "_token_type",
     )
 
     def __init__(
@@ -564,16 +570,19 @@ class RESTClientImpl(rest_api.RESTClient):
         rest_url: typing.Optional[str],
     ) -> None:
         if max_retries > 5:
-            raise ValueError("'max_retries' must be below or equal to 5")
+            msg = "'max_retries' must be below or equal to 5"
+            raise ValueError(msg)
 
         if client_session_owner is False and client_session is None:
-            raise ValueError(
+            msg = (
                 "Cannot delegate ownership of unknown client session [client_session_owner=False, client_session=None]"
             )
+            raise ValueError(msg)
         if bucket_manager_owner is False and bucket_manager is None:
-            raise ValueError(
+            msg = (
                 "Cannot delegate ownership of unknown bucket manager [bucket_manager_owner=False, bucket_manager=None]"
             )
+            raise ValueError(msg)
 
         self._cache = cache
         self._entity_factory = entity_factory
@@ -595,14 +604,16 @@ class RESTClientImpl(rest_api.RESTClient):
         self._token_type: typing.Optional[str] = None
         if isinstance(token, str):
             if token_type is None:
-                raise ValueError("Token type required when a str is passed for `token`")
+                msg = "Token type required when a str is passed for `token`"
+                raise ValueError(msg)
 
             self._token = f"{token_type.title()} {token}"
             self._token_type = applications.TokenType(token_type.title())
 
         elif isinstance(token, rest_api.TokenStrategy):
             if token_type is not None:
-                raise ValueError("Token type should be handled by the token strategy")
+                msg = "Token type should be handled by the token strategy"
+                raise ValueError(msg)
 
             self._token = token
             self._token_type = token.token_type
@@ -634,7 +645,8 @@ class RESTClientImpl(rest_api.RESTClient):
     async def close(self) -> None:
         """Close the HTTP client and any open HTTP connections."""
         if not self._close_event or not self._client_session:
-            raise errors.ComponentStateConflictError("Cannot close an inactive REST client")
+            msg = "Cannot close an inactive REST client"
+            raise errors.ComponentStateConflictError(msg)
 
         self._close_event.set()
         self._close_event = None
@@ -658,7 +670,8 @@ class RESTClientImpl(rest_api.RESTClient):
             If this is called in an environment without an active event loop.
         """
         if self._close_event:
-            raise errors.ComponentStateConflictError("Cannot start a REST Client which is already alive")
+            msg = "Cannot start a REST Client which is already alive"
+            raise errors.ComponentStateConflictError(msg)
 
         # Assert is in running loop
         asyncio.get_running_loop()
@@ -677,7 +690,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if self._bucket_manager_owner:
             self._bucket_manager.start()
 
-    async def __aenter__(self) -> RESTClientImpl:
+    async def __aenter__(self) -> Self:
         self.start()
         return self
 
@@ -695,7 +708,8 @@ class RESTClientImpl(rest_api.RESTClient):
         def __enter__(self) -> typing.NoReturn:
             # This is async only.
             cls = type(self)
-            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+            msg = f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?"
+            raise TypeError(msg) from None
 
         def __exit__(
             self,
@@ -717,7 +731,8 @@ class RESTClientImpl(rest_api.RESTClient):
         auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
     ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]:
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot use an inactive REST client")
+            msg = "Cannot use an inactive REST client"
+            raise errors.ComponentStateConflictError(msg)
 
         request_task = asyncio.create_task(
             self._perform_request(
@@ -735,12 +750,12 @@ class RESTClientImpl(rest_api.RESTClient):
         if not request_task.cancelled():
             return request_task.result()
 
-        raise errors.ComponentStateConflictError("The REST client was closed mid-request")
+        msg = "The REST client was closed mid-request"
+        raise errors.ComponentStateConflictError(msg)
 
-    # Ignore too long and too complex, respectively
     # We rather keep everything we can here inline.
     @typing.final
-    async def _perform_request(  # noqa: CFQ001, C901
+    async def _perform_request(  # noqa: C901, PLR0912, PLR0915
         self,
         compiled_route: routes.CompiledRoute,
         *,
@@ -775,7 +790,8 @@ class RESTClientImpl(rest_api.RESTClient):
         data: typing.Union[None, aiohttp.BytesPayload, aiohttp.FormData] = None
         if json is not None:
             if form_builder:
-                raise ValueError("Can only provide one of 'json' or 'form_builder', not both")
+                msg = "Can only provide one of 'json' or 'form_builder', not both"
+                raise ValueError(msg)
 
             data = data_binding.JSONPayload(json, dumps=self._dumps)
 
@@ -804,7 +820,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         uuid,
                         compiled_route.method,
                         url,
-                        _stringify_http_message(headers, json),
+                        _stringify_http_message(headers, self._dumps(json)) if json else None,
                     )
                     start = time.monotonic()
 
@@ -874,7 +890,8 @@ class RESTClientImpl(rest_api.RESTClient):
                     return self._loads(await response.read())
 
                 real_url = str(response.real_url)
-                raise errors.HTTPError(f"Expected JSON [{response.content_type=}, {real_url=}]")
+                msg = f"Expected JSON [{response.content_type=}, {real_url=}]"
+                raise errors.HTTPError(msg)
 
             # Handling 5xx errors
             if response.status in _RETRY_ERROR_CODES and retry_count < self._max_retries:
@@ -1039,7 +1056,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return result
 
-    async def edit_channel(
+    async def edit_channel(  # noqa: PLR0913
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         /,
@@ -1234,9 +1251,8 @@ class RESTClientImpl(rest_api.RESTClient):
             elif isinstance(target, channels_.PermissionOverwrite):
                 target_type = target.type
             else:
-                raise TypeError(
-                    "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
-                )
+                msg = "Cannot determine the type of the target to update. Try specifying 'target_type' manually."
+                raise TypeError(msg)
 
         target = target.id if isinstance(target, channels_.PermissionOverwrite) else target
         route = routes.PUT_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
@@ -1296,7 +1312,8 @@ class RESTClientImpl(rest_api.RESTClient):
         self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> special_endpoints.TypingIndicator:
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot use an inactive REST client")
+            msg = "Cannot use an inactive REST client"
+            raise errors.ComponentStateConflictError(msg)
 
         return special_endpoints_impl.TypingIndicator(
             request_call=self._request, channel=channel, rest_close_event=self._close_event
@@ -1335,7 +1352,8 @@ class RESTClientImpl(rest_api.RESTClient):
         around: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[messages_.Message]:
         if undefined.count(before, after, around) < 2:
-            raise TypeError("Expected no kwargs, or a maximum of one of 'before', 'after', 'around'")
+            msg = "Expected no kwargs, or a maximum of one of 'before', 'after', 'around'"
+            raise TypeError(msg)
 
         timestamp: undefined.UndefinedOr[str]
 
@@ -1379,7 +1397,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    def _build_message_payload(  # noqa: C901- Function too complex
+    def _build_message_payload(  # noqa: C901, PLR0912, PLR0915
         self,
         /,
         *,
@@ -1414,16 +1432,20 @@ class RESTClientImpl(rest_api.RESTClient):
         edit: bool = False,
     ) -> tuple[data_binding.JSONObjectBuilder, typing.Optional[data_binding.URLEncodedFormBuilder]]:
         if not undefined.any_undefined(attachment, attachments):
-            raise ValueError("You may only specify one of 'attachment' or 'attachments', not both")
+            msg = "You may only specify one of 'attachment' or 'attachments', not both"
+            raise ValueError(msg)
 
         if not undefined.any_undefined(component, components):
-            raise ValueError("You may only specify one of 'component' or 'components', not both")
+            msg = "You may only specify one of 'component' or 'components', not both"
+            raise ValueError(msg)
 
         if not undefined.any_undefined(embed, embeds):
-            raise ValueError("You may only specify one of 'embed' or 'embeds', not both")
+            msg = "You may only specify one of 'embed' or 'embeds', not both"
+            raise ValueError(msg)
 
         if not undefined.any_undefined(sticker, stickers):
-            raise ValueError("You may only specify one of 'sticker' or 'stickers', not both")
+            msg = "You may only specify one of 'sticker' or 'stickers', not both"
+            raise ValueError(msg)
 
         if undefined.all_undefined(embed, embeds) and isinstance(content, embeds_.Embed):
             # Syntactic sugar, common mistake to accidentally send an embed
@@ -1449,16 +1471,10 @@ class RESTClientImpl(rest_api.RESTClient):
 
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
-            if component is not None:
-                serialized_components = [component.build()]
-            else:
-                serialized_components = []
+            serialized_components = [component.build()] if component is not None else []
 
         elif components is not undefined.UNDEFINED:
-            if components is not None:
-                serialized_components = [component.build() for component in components]
-            else:
-                serialized_components = []
+            serialized_components = [component.build() for component in components] if components is not None else []
 
         serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
         if embed is not undefined.UNDEFINED:
@@ -1679,7 +1695,8 @@ class RESTClientImpl(rest_api.RESTClient):
         iterator: iterators.LazyIterator[snowflakes.SnowflakeishOr[messages_.PartialMessage]]
         if isinstance(messages, typing.AsyncIterable):
             if other_messages:
-                raise TypeError("Cannot use *args with an async iterable.")
+                msg = "Cannot use *args with an async iterable."
+                raise TypeError(msg)
 
             iterator = iterators.NOOPLazyIterator(messages)
         else:
@@ -2070,7 +2087,7 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_gateway_bot_info(response)
 
     async def fetch_invite(
-        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True
+        self, invite: typing.Union[invites.InviteCode, str], *, with_counts: bool = True
     ) -> invites.Invite:
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         query = data_binding.StringMapBuilder()
@@ -2319,7 +2336,6 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -2335,9 +2351,8 @@ class RESTClientImpl(rest_api.RESTClient):
         if (response := await self._request(route, json=body)) is not None:
             assert isinstance(response, dict)
             return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
-        else:
-            # User already is in the guild.
-            return None
+        # User already is in the guild.
+        return None
 
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_VOICE_REGIONS.compile()
@@ -3035,7 +3050,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_thread(response)
 
-    async def create_forum_post(
+    async def create_forum_post(  # noqa: PLR0913
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         name: str,
@@ -3296,7 +3311,6 @@ class RESTClientImpl(rest_api.RESTClient):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        nick: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -3452,7 +3466,7 @@ class RESTClientImpl(rest_api.RESTClient):
             start_at = int(start_at)
 
         return special_endpoints_impl.GuildBanIterator(
-            self._entity_factory, self._request, guild, newest_first, str(start_at)
+            self._entity_factory, self._request, guild, newest_first=newest_first, first_id=str(start_at)
         )
 
     async def fetch_role(
@@ -3486,10 +3500,12 @@ class RESTClientImpl(rest_api.RESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
         if not undefined.any_undefined(color, colour):
-            raise TypeError("Can not specify 'color' and 'colour' together.")
+            msg = "Can not specify 'color' and 'colour' together."
+            raise TypeError(msg)
 
         if not undefined.any_undefined(icon, unicode_emoji):
-            raise TypeError("Can not specify 'icon' and 'unicode_emoji' together.")
+            msg = "Can not specify 'icon' and 'unicode_emoji' together."
+            raise TypeError(msg)
 
         route = routes.POST_GUILD_ROLES.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
@@ -3535,10 +3551,12 @@ class RESTClientImpl(rest_api.RESTClient):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
         if not undefined.any_undefined(color, colour):
-            raise TypeError("Can not specify 'color' and 'colour' together.")
+            msg = "Can not specify 'color' and 'colour' together."
+            raise TypeError(msg)
 
         if not undefined.any_undefined(icon, unicode_emoji):
-            raise TypeError("Can not specify 'icon' and 'unicode_emoji' together.")
+            msg = "Can not specify 'icon' and 'unicode_emoji' together."
+            raise TypeError(msg)
 
         route = routes.PATCH_GUILD_ROLE.compile(guild=guild, role=role)
 
@@ -3819,7 +3837,7 @@ class RESTClientImpl(rest_api.RESTClient):
             try:
                 command_objs.append(self._entity_factory.deserialize_command(payload, guild_id=guild_id))
 
-            except errors.UnrecognisedEntityError:
+            except errors.UnrecognisedEntityError:  # noqa: PERF203 - Usage of try-except inside a loop
                 pass
 
         return command_objs
@@ -4226,7 +4244,8 @@ class RESTClientImpl(rest_api.RESTClient):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
     ) -> None:
         if undefined.all_undefined(component, components) or not undefined.any_undefined(component, components):
-            raise ValueError("Must specify exactly only one of 'component' or 'components'")
+            msg = "Must specify exactly only one of 'component' or 'components'"
+            raise ValueError(msg)
 
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
@@ -4497,7 +4516,7 @@ class RESTClientImpl(rest_api.RESTClient):
             start_at = int(start_at)
 
         return special_endpoints_impl.ScheduledEventUserIterator(
-            self._entity_factory, self._request, newest_first, str(start_at), guild, event
+            self._entity_factory, self._request, guild, event, first_id=str(start_at), newest_first=newest_first
         )
 
     async def fetch_skus(

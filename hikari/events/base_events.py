@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,11 +24,11 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "Event",
-    "ExceptionEvent",
     "EventT",
+    "ExceptionEvent",
+    "get_required_intents_for",
     "is_no_recursive_throw_event",
     "no_recursive_throw",
-    "get_required_intents_for",
     "requires_intents",
 )
 
@@ -39,13 +38,14 @@ import typing
 
 import attrs
 
-from hikari import intents
-from hikari import traits
 from hikari.api import shard as gateway_shard
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
     import types
+
+    from hikari import intents
+    from hikari import traits
 
     _T = typing.TypeVar("_T")
 
@@ -65,16 +65,11 @@ class Event(abc.ABC):
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
-        # hasattr doesn't work with private variables in this case so we use a try except.
-        # We need to set Event's __dispatches when the first subclass is made as Event cannot
-        # be included in a tuple literal on itself due to not existing yet.
-        try:
-            Event.__dispatches
-        except AttributeError:
+        if not hasattr(Event, "__dispatches"):
             Event.__dispatches = (Event,)
             Event.__bitmask = 1 << 0
 
-        global _id_counter
+        global _id_counter  # noqa: PLW0603 - Do use use global
 
         mro = cls.mro()
         # We don't have to explicitly include Event here as issubclass(Event, Event) returns True.

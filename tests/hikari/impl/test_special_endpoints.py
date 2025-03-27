@@ -86,7 +86,9 @@ class TestOwnGuildIterator:
         mock_request = mock.AsyncMock(
             side_effect=[[mock_payload_1, mock_payload_2, mock_payload_3], [mock_payload_4, mock_payload_5], []]
         )
-        iterator = special_endpoints.OwnGuildIterator(mock_entity_factory, mock_request, False, first_id="123321")
+        iterator = special_endpoints.OwnGuildIterator(
+            mock_entity_factory, mock_request, newest_first=False, first_id="123321"
+        )
 
         result = await iterator
 
@@ -133,7 +135,7 @@ class TestOwnGuildIterator:
             side_effect=[[mock_payload_3, mock_payload_4, mock_payload_5], [mock_payload_1, mock_payload_2], []]
         )
         iterator = special_endpoints.OwnGuildIterator(
-            mock_entity_factory, mock_request, True, first_id="55555555555555555"
+            mock_entity_factory, mock_request, newest_first=True, first_id="55555555555555555"
         )
 
         result = await iterator
@@ -163,7 +165,7 @@ class TestOwnGuildIterator:
         mock_entity_factory = mock.Mock()
         mock_request = mock.AsyncMock(return_value=[])
         iterator = special_endpoints.OwnGuildIterator(
-            mock_entity_factory, mock_request, newest_first, first_id="123321"
+            mock_entity_factory, mock_request, newest_first=newest_first, first_id="123321"
         )
 
         result = await iterator

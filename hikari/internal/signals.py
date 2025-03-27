@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,19 +24,20 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("handle_interrupts",)
 
-import asyncio
 import contextlib
 import logging
 import signal
 import threading
 import traceback
-import types
 import typing
 
 from hikari import errors
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
+    import asyncio
+    import types
+
     _SignalHandlerT = typing.Callable[[int, typing.Optional[types.FrameType]], None]
 
 _INTERRUPT_SIGNALS: tuple[str, ...] = ("SIGINT", "SIGTERM")
@@ -77,21 +77,21 @@ def _interrupt_handler(loop: asyncio.AbstractEventLoop) -> _SignalHandlerT:
 
 @contextlib.contextmanager
 def handle_interrupts(
-    enabled: typing.Optional[bool], loop: asyncio.AbstractEventLoop, propagate_interrupts: bool
+    loop: asyncio.AbstractEventLoop, *, propagate_interrupts: bool, enabled: typing.Optional[bool]
 ) -> typing.Generator[None, None, None]:
     """Context manager which cleanly exits on signal interrupts.
 
     Parameters
     ----------
+    loop
+        The event loop the interrupt will be raised in.
+    propagate_interrupts
+        Whether to propagate interrupts.
     enabled
         Whether to enable the signal interrupts.
 
         If set to [`None`][], then it will be enabled or not based on whether the running
         thread is the main one or not.
-    loop
-        The event loop the interrupt will be raised in.
-    propagate_interrupts
-        Whether to propagate interrupts.
     """
     if enabled is None:
         enabled = threading.current_thread() is threading.main_thread()
@@ -107,7 +107,7 @@ def handle_interrupts(
     for sig in _INTERRUPT_SIGNALS:
         try:
             signum = getattr(signal, sig)
-        except AttributeError:
+        except AttributeError:  # noqa: PERF203 - no try except within a loop
             _LOGGER.log(ux.TRACE, "signal %s is not implemented on your platform; skipping", sig)
         else:
             original_handlers[signum] = signal.getsignal(signum)

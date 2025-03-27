@@ -32,11 +32,8 @@ async def on_message(event: hikari.GuildMessageCreateEvent) -> None:
     args = event.content[1:].split()
 
     if args[0] == "image":
-        if len(args) == 1:
-            # No more args where provided
-            what = ""
-        else:
-            what = args[1]
+        # If args == 1, then we were only provided "image", nothing else
+        what = "" if len(args) == 1 else args[1]
 
         # Since uploading can take some time, we give a visual indicator to the user by typing
         async with bot.rest.trigger_typing(event.channel_id):
@@ -52,7 +49,7 @@ async def inspect_image(event: hikari.GuildMessageCreateEvent, what: str) -> Non
         await event.message.respond("User avatar", attachment=user.avatar_url or user.default_avatar_url)
 
     # Show the guild icon:
-    elif what.casefold() in ("guild", "server", "here", "this"):
+    elif what.casefold() in {"guild", "server", "here", "this"}:
         guild = event.get_guild()
         if guild is None:
             await event.message.respond("Guild is missing from the cache :(")

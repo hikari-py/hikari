@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,14 +24,14 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "Embed",
+    "EmbedAuthor",
+    "EmbedField",
+    "EmbedFooter",
+    "EmbedImage",
+    "EmbedProvider",
     "EmbedResource",
     "EmbedResourceWithProxy",
     "EmbedVideo",
-    "EmbedImage",
-    "EmbedProvider",
-    "EmbedAuthor",
-    "EmbedFooter",
-    "EmbedField",
 )
 
 import textwrap
@@ -255,18 +254,18 @@ class Embed:
     """Represents an embed."""
 
     __slots__: typing.Sequence[str] = (
-        "_title",
-        "_description",
-        "_url",
+        "_author",
         "_color",
-        "_timestamp",
+        "_description",
+        "_fields",
         "_footer",
         "_image",
-        "_thumbnail",
-        "_video",
         "_provider",
-        "_author",
-        "_fields",
+        "_thumbnail",
+        "_timestamp",
+        "_title",
+        "_url",
+        "_video",
     )
 
     @classmethod
@@ -319,7 +318,8 @@ class Embed:
         timestamp: typing.Optional[datetime.datetime] = None,
     ) -> None:
         if color is not None and colour is not None:
-            raise TypeError("Please provide one of color or colour to Embed(). Do not pass both.")
+            msg = "Please provide one of color or colour to Embed(). Do not pass both."
+            raise TypeError(msg)
 
         if colour is not None:
             color = colour
@@ -605,8 +605,8 @@ class Embed:
         """Return the sequence of fields in the embed.
 
         !!! note
-            Use [`hikari.embeds.Embed.add_field`][] to add a new field, [`hikari.embeds.Embed.edit_field`][] to edit an existing
-            field, or [`hikari.embeds.Embed.remove_field`][] to remove a field.
+            Use [`hikari.embeds.Embed.add_field`][] to add a new field, [`hikari.embeds.Embed.edit_field`][]
+            to edit an existing field, or [`hikari.embeds.Embed.remove_field`][] to remove a field.
         """
         return self._fields if self._fields else []
 
@@ -698,10 +698,11 @@ class Embed:
         """
         if text is None:
             if icon is not None:
-                raise TypeError(
+                msg = (
                     "Cannot specify footer text in embed to be None while setting a non-None icon. "
                     "Set some textual content in order to use a footer icon."
                 )
+                raise TypeError(msg)
 
             self._footer = None
         else:
@@ -904,7 +905,7 @@ class Embed:
     def __repr__(self) -> str:
         return f"Embed(title={self.title}, color={self.color}, timestamp={self.timestamp})"
 
-    def __eq__(self, other: typing.Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, type(self)):
             for attrsib in self.__slots__:
                 if getattr(self, attrsib) != getattr(other, attrsib):

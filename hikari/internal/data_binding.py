@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,16 +24,16 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "Headers",
-    "Query",
-    "JSONObject",
     "JSONArray",
-    "JSONish",
-    "default_json_loads",
-    "default_json_dumps",
+    "JSONObject",
     "JSONObjectBuilder",
     "JSONPayload",
+    "JSONish",
+    "Query",
     "StringMapBuilder",
     "URLEncodedFormBuilder",
+    "default_json_dumps",
+    "default_json_loads",
 )
 
 import datetime
@@ -128,7 +127,7 @@ except ModuleNotFoundError:
 class JSONPayload(aiohttp.BytesPayload):
     """A JSON payload to use in an aiohttp request."""
 
-    def __init__(self, value: typing.Any, dumps: JSONEncoder = default_json_dumps) -> None:
+    def __init__(self, value: typing.Union[JSONArray, JSONObject], dumps: JSONEncoder = default_json_dumps) -> None:
         super().__init__(dumps(value), content_type=_JSON_CONTENT_TYPE, encoding=_UTF_8)
 
 
@@ -418,7 +417,7 @@ def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Ite
         try:
             results.append(cast(value))
 
-        except errors.UnrecognisedEntityError:
+        except errors.UnrecognisedEntityError:  # noqa: PERF203 - Move try-except outside of loop
             pass
 
     return results

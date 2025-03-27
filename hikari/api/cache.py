@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("CacheView", "Cache", "MutableCache")
+__all__: typing.Sequence[str] = ("Cache", "CacheView", "MutableCache")
 
 import abc
 import typing
@@ -1031,7 +1030,10 @@ class MutableCache(Cache, abc.ABC):
 
     @abc.abstractmethod
     def set_guild_availability(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], is_available: bool, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        is_available: bool,  # noqa: FBT001 - Boolean-typed positional argument
+        /,
     ) -> None:
         """Set whether a cached guild is available or not.
 
@@ -1235,7 +1237,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached thread channel if found (else [`None`][])
             and the new cached thread channel if it could be cached
             (else [`None`][]).
-        """
+        """  # noqa: E501
 
     @abc.abstractmethod
     def clear_invites(self) -> CacheView[str, invites.InviteWithMetadata]:
@@ -1334,7 +1336,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached invite object if found (else
             [`None`][]) and the new cached invite object if it could be
             cached (else [`None`][]).
-        """
+        """  # noqa: E501
 
     @abc.abstractmethod
     def delete_me(self) -> typing.Optional[users.OwnUser]:

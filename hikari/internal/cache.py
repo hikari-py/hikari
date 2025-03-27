@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,29 +23,28 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "BaseData",
+    "Cache3DMappingView",
     "CacheMappingView",
+    "DataT",
     "EmptyCacheView",
     "GuildRecord",
-    "BaseData",
     "InviteData",
-    "MemberData",
+    "KeyT",
     "KnownCustomEmojiData",
-    "RichActivityData",
+    "MemberData",
     "MemberPresenceData",
     "MessageData",
-    "VoiceStateData",
     "RefCell",
-    "unwrap_ref_cell",
-    "copy_guild_channel",
-    "Cache3DMappingView",
-    "DataT",
-    "KeyT",
+    "RichActivityData",
     "ValueT",
+    "VoiceStateData",
+    "copy_guild_channel",
+    "unwrap_ref_cell",
 )
 
 import abc
 import copy
-import datetime
 import typing
 
 import attrs
@@ -66,6 +64,8 @@ from hikari.internal import attrs_extensions
 from hikari.internal import collections
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from typing_extensions import Self
 
     from hikari import applications
@@ -98,7 +98,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
         mapping. This is used to cover the case when items stores [`DataT`][] objects.
     """
 
-    __slots__: typing.Sequence[str] = ("_data", "_builder")
+    __slots__: typing.Sequence[str] = ("_builder", "_data")
 
     @typing.overload
     def __init__(self, items: typing.Mapping[KeyT, ValueT]) -> None: ...
@@ -119,7 +119,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     def _copy(value: ValueT) -> ValueT:
         return copy.copy(value)
 
-    def __contains__(self, key: typing.Any) -> bool:
+    def __contains__(self, key: object) -> bool:
         return key in self._data
 
     def __getitem__(self, key: KeyT) -> ValueT:
@@ -151,10 +151,10 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
 
     __slots__: typing.Sequence[str] = ()
 
-    def __contains__(self, _: typing.Any) -> typing.Literal[False]:
+    def __contains__(self, _: object) -> typing.Literal[False]:
         return False
 
-    def __getitem__(self, key: typing.Any) -> typing.NoReturn:
+    def __getitem__(self, key: object) -> typing.NoReturn:
         raise KeyError(key)
 
     def __iter__(self) -> typing.Iterator[typing.Any]:
@@ -423,7 +423,8 @@ class MemberData(BaseData[guilds.Member]):
             user=user or RefCell(copy.copy(member.user)),
             raw_communication_disabled_until=member.raw_communication_disabled_until,
             guild_flags=member.guild_flags,
-            # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
+            # role_ids is a special case as it may be mutable so we want to ensure it's
+            # immutable when cached.
             role_ids=tuple(member.role_ids),
         )
 
@@ -478,7 +479,8 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
             is_managed=emoji.is_managed,
             is_available=emoji.is_available,
             user=user,
-            # role_ids is a special case as it may be a mutable sequence so we want to ensure it's immutable when cached.
+            # role_ids is a special case as it may be a mutable sequence so we want to ensure it's
+            # immutable when cached.
             role_ids=tuple(emoji.role_ids),
         )
 
@@ -727,7 +729,6 @@ class MessageData(BaseData[messages.Message]):
             typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]
         ] = undefined.UNDEFINED,
         referenced_message: typing.Optional[RefCell[MessageData]] = None,
-        interaction_user: typing.Optional[RefCell[users_.User]] = None,
     ) -> MessageData:
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))
