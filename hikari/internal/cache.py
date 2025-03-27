@@ -709,7 +709,7 @@ class MessageData(BaseData[messages.Message]):
     nonce: typing.Optional[str] = attrs.field()
     referenced_message: typing.Optional[RefCell[MessageData]] = attrs.field()
     application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
-    components: tuple[components_.MessageActionRowComponent, ...] = attrs.field()
+    components: tuple[components_.TopLevelComponentTypesT, ...] = attrs.field()
     thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field()
     interaction_metadata: typing.Optional[base_interactions.PartialInteractionMetadata] = attrs.field()
 
