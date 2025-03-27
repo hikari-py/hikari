@@ -4252,10 +4252,12 @@ class RESTClientImpl(rest_api.RESTClient):
         flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
     ) -> None:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+
         body, form_builder = self._build_voice_message_payload(
             attachment=attachment, waveform=waveform, duration=duration, flags=flags
         )
         form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+
         await self._request(route, form_builder=form_builder, auth=None)
 
     async def edit_interaction_response(
