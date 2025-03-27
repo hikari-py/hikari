@@ -481,7 +481,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 raw_payload, files = result.build(self._entity_factory)
                 payload = self._dumps(raw_payload)
 
-            except Exception as exc:  # noqa: BLE001 - Blind ecept
+            except Exception as exc:  # noqa: BLE001 - Blind except
                 asyncio.get_running_loop().call_exception_handler(
                     {"message": "Exception occurred during interaction dispatch", "exception": exc}
                 )
