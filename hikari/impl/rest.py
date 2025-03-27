@@ -3237,14 +3237,24 @@ class RESTClientImpl(rest_api.RESTClient):
             before_is_timestamp=False,
         )
 
-    async def reposition_channels(
+    @typing.overload
+    def reposition_channels(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> special_endpoints.ChannelRepositioner: ...
+
+    @typing.overload
+    def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
-    ) -> None:
-        route = routes.PATCH_GUILD_CHANNELS.compile(guild=guild)
-        body = [{"id": str(int(channel)), "position": pos} for pos, channel in positions.items()]
-        await self._request(route, json=body)
+    ) -> special_endpoints.ChannelRepositioner: ...
+
+    def reposition_channels(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]] = {},
+    ) -> special_endpoints.ChannelRepositioner:
+        return special_endpoints_impl.ChannelRepositioner(guild=guild, request_call=self._request, positions=positions)
 
     async def fetch_member(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
