@@ -29,6 +29,7 @@ import abc
 import datetime
 import typing
 
+from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
@@ -48,7 +49,6 @@ if typing.TYPE_CHECKING:
     from hikari import locales
     from hikari import messages as messages_
     from hikari import monetization
-    from hikari import permissions as permissions_
     from hikari import sessions
     from hikari import snowflakes
     from hikari import stage_instances
@@ -6026,7 +6026,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permissions
             The permissions to give the role. This will default to setting
             NO permissions if left as the default value. This is in contrast to
-            default behaviour on Discord where some random permissions may
+            default behaviour on Discord where some random permissions will
             be set by default.
         color
             If provided, the role's color.
