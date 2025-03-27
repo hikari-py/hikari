@@ -264,7 +264,7 @@ class TestPrintBanner:
 
     @pytest.fixture
     def mock_args(self):
-        _about_path = str(pathlib.Path("/", "somewhere", "..", "coding", "hikari", "_about.py").resolve())
+        _about_path = str(pathlib.Path("/", "somewhere", "..", "coding", "hikari", "_about.py"))
 
         stack = contextlib.ExitStack()
 
@@ -306,7 +306,7 @@ class TestPrintBanner:
             "hikari_git_sha1": "12345678",
             "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
-            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari")),
+            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari").resolve()),
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
             "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
             "hikari_source_url": "https://nekokatt.github.io/hikari",
@@ -346,7 +346,7 @@ class TestPrintBanner:
             "hikari_git_sha1": "12345678",
             "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
-            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari")),
+            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari").resolve()),
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
             "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
             "hikari_source_url": "https://nekokatt.github.io/hikari",
@@ -384,7 +384,7 @@ class TestPrintBanner:
             "hikari_git_sha1": "12345678",
             "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
-            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari")),
+            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari").resolve()),
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
             "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
             "hikari_source_url": "https://nekokatt.github.io/hikari",
