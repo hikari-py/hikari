@@ -63,6 +63,7 @@ from hikari import users
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -375,72 +376,90 @@ class TeamMember(users.User):
     """The user representation of this team member."""
 
     @property
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
 
     @property
+    @typing_backport.override
     def avatar_hash(self) -> typing.Optional[str]:
         return self.user.avatar_hash
 
     @property
+    @typing_backport.override
     def avatar_url(self) -> typing.Optional[files.URL]:
         return self.user.avatar_url
 
     @property
+    @typing_backport.override
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
 
     @property
+    @typing_backport.override
     def banner_hash(self) -> typing.Optional[str]:
         return self.user.banner_hash
 
     @property
+    @typing_backport.override
     def banner_url(self) -> typing.Optional[files.URL]:
         return self.user.banner_url
 
     @property
+    @typing_backport.override
     def accent_color(self) -> typing.Optional[colors.Color]:
         return self.user.accent_color
 
     @property
+    @typing_backport.override
     def discriminator(self) -> str:
         return self.user.discriminator
 
     @property
+    @typing_backport.override
     def flags(self) -> users.UserFlag:
         return self.user.flags
 
     @property
+    @typing_backport.override
     def id(self) -> snowflakes.Snowflake:
         return self.user.id
 
     @property
+    @typing_backport.override
     def is_bot(self) -> bool:
         return self.user.is_bot
 
     @property
+    @typing_backport.override
     def is_system(self) -> bool:
         return self.user.is_system
 
     @property
+    @typing_backport.override
     def mention(self) -> str:
         return self.user.mention
 
     @property
+    @typing_backport.override
     def username(self) -> str:
         return self.user.username
 
     @property
+    @typing_backport.override
     def global_name(self) -> typing.Optional[str]:
         return self.user.global_name
 
+    @typing_backport.override
     def __str__(self) -> str:
         return str(self.user)
 
+    @typing_backport.override
     def __hash__(self) -> int:
         return hash(self.user)
 
+    @typing_backport.override
     def __eq__(self, other: object) -> bool:
         return self.user == other
 
@@ -477,6 +496,7 @@ class Team(snowflakes.Unique):
     owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
 
+    @typing_backport.override
     def __str__(self) -> str:
         return f"Team {self.name} ({self.id})"
 
@@ -749,6 +769,7 @@ class PartialOAuth2Token:
     scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attrs.field(eq=False, hash=False, repr=True)
     """Scopes the access token has access to."""
 
+    @typing_backport.override
     def __str__(self) -> str:
         return self.access_token
 

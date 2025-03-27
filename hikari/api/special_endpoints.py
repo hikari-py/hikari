@@ -53,6 +53,7 @@ import typing
 
 from hikari import components as components_
 from hikari import undefined
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     import types
@@ -535,6 +536,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_backport.override
     def type(self) -> base_interactions.DeferredResponseTypesT:
         """Type of this response."""
 
@@ -656,6 +658,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_backport.override
     def type(self) -> base_interactions.MessageResponseTypesT:
         """Type of this response."""
 
@@ -773,6 +776,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
+    def clear_components(self, /) -> Self:
+        """Clear the components set for this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
     def add_embed(self, embed: embeds_.Embed, /) -> Self:
         """Add an embed to this response.
 
@@ -780,6 +793,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         embed
             Object of the embed to add to this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def clear_embeds(self, /) -> Self:
+        """Clear the embeds set for this embed.
 
         Returns
         -------
@@ -910,6 +933,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_backport.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
         """Type of this response."""
 
@@ -971,6 +995,7 @@ class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_backport.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
         """Type of this response."""
 
@@ -1264,6 +1289,7 @@ class SlashCommandBuilder(CommandBuilder):
         """
 
     @abc.abstractmethod
+    @typing_backport.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1301,6 +1327,7 @@ class ContextMenuCommandBuilder(CommandBuilder):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
+    @typing_backport.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1361,6 +1388,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_backport.override
     def type(self) -> typing.Literal[components_.ComponentType.BUTTON]:
         """Type of component this builder represents."""
 
@@ -1807,6 +1835,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_backport.override
     def type(self) -> typing.Literal[components_.ComponentType.TEXT_INPUT]:
         """Type of component this builder represents."""
 
@@ -1983,6 +2012,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_backport.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
@@ -2220,6 +2250,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_backport.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 

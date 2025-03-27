@@ -53,6 +53,7 @@ from hikari.internal import aio
 from hikari.internal import data_binding
 from hikari.internal import signals
 from hikari.internal import time
+from hikari.internal import typing_backport
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
@@ -389,59 +390,73 @@ class GatewayBot(traits.GatewayBotAware):
         self.shards = types.MappingProxyType(self._shards)
 
     @property
+    @typing_backport.override
     def cache(self) -> cache_.Cache:
         return self._cache
 
     @property
+    @typing_backport.override
     def event_manager(self) -> event_manager_.EventManager:
         return self._event_manager
 
     @property
+    @typing_backport.override
     def entity_factory(self) -> entity_factory_.EntityFactory:
         return self._entity_factory
 
     @property
+    @typing_backport.override
     def event_factory(self) -> event_factory_.EventFactory:
         return self._event_factory
 
     @property
+    @typing_backport.override
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
         return self._executor
 
     @property
+    @typing_backport.override
     def heartbeat_latencies(self) -> typing.Mapping[int, float]:
         return {s.id: s.heartbeat_latency for s in self._shards.values()}
 
     @property
+    @typing_backport.override
     def heartbeat_latency(self) -> float:
         latencies = [s.heartbeat_latency for s in self._shards.values() if not math.isnan(s.heartbeat_latency)]
         return sum(latencies) / len(latencies) if latencies else float("nan")
 
     @property
+    @typing_backport.override
     def http_settings(self) -> config_impl.HTTPSettings:
         return self._http_settings
 
     @property
+    @typing_backport.override
     def intents(self) -> intents_.Intents:
         return self._intents
 
     @property
+    @typing_backport.override
     def proxy_settings(self) -> config_impl.ProxySettings:
         return self._proxy_settings
 
     @property
+    @typing_backport.override
     def shard_count(self) -> int:
         return next(iter(self._shards.values())).shard_count if self._shards else 0
 
     @property
+    @typing_backport.override
     def voice(self) -> voice_.VoiceComponent:
         return self._voice
 
     @property
+    @typing_backport.override
     def rest(self) -> rest_.RESTClient:
         return self._rest
 
     @property
+    @typing_backport.override
     def is_alive(self) -> bool:
         return self._closed_event is not None
 
@@ -449,9 +464,11 @@ class GatewayBot(traits.GatewayBotAware):
         if not self._closed_event:
             raise errors.ComponentStateConflictError("bot is not running so it cannot be interacted with")
 
+    @typing_backport.override
     def get_me(self) -> typing.Optional[users_.OwnUser]:
         return self._cache.get_me()
 
+    @typing_backport.override
     async def close(self) -> None:
         if not self._closed_event or not self._closing_event:
             raise errors.ComponentStateConflictError("Cannot close an inactive bot")
@@ -595,6 +612,7 @@ class GatewayBot(traits.GatewayBotAware):
         """
         return self._event_manager.get_listeners(event_type, polymorphic=polymorphic)
 
+    @typing_backport.override
     async def join(self) -> None:
         if not self._closed_event:
             raise errors.ComponentStateConflictError("Cannot wait for an inactive bot to join")
@@ -675,6 +693,7 @@ class GatewayBot(traits.GatewayBotAware):
         """
         ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
 
+    @typing_backport.override
     def run(
         self,
         *,
@@ -847,6 +866,7 @@ class GatewayBot(traits.GatewayBotAware):
                     _LOGGER.warning("forcefully terminated")
                     raise
 
+    @typing_backport.override
     async def start(
         self,
         *,
@@ -1215,6 +1235,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         raise RuntimeError(f"Guild {guild} isn't covered by any of the shards in this client")
 
+    @typing_backport.override
     async def update_presence(
         self,
         *,
@@ -1233,6 +1254,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         await aio.all_of(*coros)
 
+    @typing_backport.override
     async def update_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -1245,6 +1267,7 @@ class GatewayBot(traits.GatewayBotAware):
         shard = self._get_shard(guild)
         await shard.update_voice_state(guild=guild, channel=channel, self_mute=self_mute, self_deaf=self_deaf)
 
+    @typing_backport.override
     async def request_guild_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

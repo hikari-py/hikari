@@ -19,45 +19,34 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Events fired when the account user is updated."""
+"""@typing.override dummy function."""
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("OwnUserUpdateEvent",)
+__all__: typing.Sequence[str] = ("deprecated", "override")
 
 import typing
 
-import attrs
-
-from hikari.events import shard_events
-from hikari.internal import attrs_extensions
-from hikari.internal import typing_backport
-
 if typing.TYPE_CHECKING:
-    from hikari import traits
-    from hikari import users
-    from hikari.api import shard as gateway_shard
+    from typing_extensions import deprecated
+    from typing_extensions import override
 
+else:  # pragma: no cover
 
-@attrs_extensions.with_copy
-@attrs.define(kw_only=True, weakref_slot=False)
-class OwnUserUpdateEvent(shard_events.ShardEvent):
-    """Event fired when the account user is updated."""
+    def override(method, /):
+        """Mark a method as overriding a parent method."""
+        # Set to match the documented behaviour of https://docs.python.org/3/library/typing.html#typing.override
+        # the real function
+        try:
+            method.__override__ = True
+        except (AttributeError, TypeError):
+            pass
 
-    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
-    # <<inherited docstring from ShardEvent>>.
+        return method
 
-    old_user: typing.Optional[users.OwnUser] = attrs.field()
-    """The old application user.
+    def deprecated(*args, **kwargs):
+        """Mark a function, overload, or class as deprecated for type-checkers.
 
-    This will be [`None`][] if the user missing from the cache.
-    """
-
-    user: users.OwnUser = attrs.field()
-    """This application user."""
-
-    @property
-    @typing_backport.override
-    def app(self) -> traits.RESTAware:
-        # <<inherited docstring from Event>>.
-        return self.user.app
+        This has no runtime side-effects.
+        """
+        return lambda value: value

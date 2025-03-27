@@ -34,6 +34,7 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -72,16 +73,19 @@ class RoleCreateEvent(RoleEvent):
     """Role that was created."""
 
     @property
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.role.app
 
     @property
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.guild_id
 
     @property
+    @typing_backport.override
     def role_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.id
@@ -106,16 +110,19 @@ class RoleUpdateEvent(RoleEvent):
     """Role that was updated."""
 
     @property
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.role.app
 
     @property
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.guild_id
 
     @property
+    @typing_backport.override
     def role_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.id

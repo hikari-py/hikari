@@ -54,6 +54,7 @@ from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_backport
 
 if typing.TYPE_CHECKING:
     from hikari import audit_logs
@@ -187,11 +188,13 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     """
 
     @property
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.guild.app
 
     @property
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.guild.id
@@ -249,11 +252,13 @@ class GuildJoinEvent(GuildVisibilityEvent):
     """
 
     @property
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.guild.app
 
     @property
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.guild.id
@@ -285,6 +290,7 @@ class GuildLeaveEvent(GuildVisibilityEvent):
 
     if typing.TYPE_CHECKING:
         # This should always fail.
+        @typing_backport.override
         async def fetch_guild(self) -> typing.NoReturn: ...
 
 
@@ -332,11 +338,13 @@ class GuildUpdateEvent(GuildEvent):
     """Mapping of role IDs to the roles in the guild."""
 
     @property
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.guild.app
 
     @property
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.guild.id
@@ -349,6 +357,7 @@ class BanEvent(GuildEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.user.app
@@ -540,16 +549,19 @@ class IntegrationCreateEvent(IntegrationEvent):
     """Integration that was created."""
 
     @property
+    @typing_backport.override
     def application_id(self) -> typing.Optional[snowflakes.Snowflake]:
         # <<inherited docstring from IntegrationEvent>>.
         return self.integration.application.id if self.integration.application else None
 
     @property
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ShardEvent>>.
         return self.integration.guild_id
 
     @property
+    @typing_backport.override
     def id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from IntegrationEvent>>
         return self.integration.id
@@ -593,16 +605,19 @@ class IntegrationUpdateEvent(IntegrationEvent):
     """Integration that was updated."""
 
     @property
+    @typing_backport.override
     def application_id(self) -> typing.Optional[snowflakes.Snowflake]:
         # <<inherited docstring from IntegrationEvent>>.
         return self.integration.application.id if self.integration.application else None
 
     @property
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.integration.guild_id
 
     @property
+    @typing_backport.override
     def id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from IntegrationEvent>>
         return self.integration.id
@@ -649,6 +664,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     """
 
     @property
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.presence.app
@@ -700,11 +716,13 @@ class AuditLogEntryCreateEvent(GuildEvent):
     """The created entry."""
 
     @property
+    @typing_backport.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.entry.app
 
     @property
+    @typing_backport.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from GuildEvent>>.
         return self.entry.guild_id
