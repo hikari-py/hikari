@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,14 +23,14 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ShardEvent",
-    "ShardPayloadEvent",
-    "ShardStateEvent",
+    "MemberChunkEvent",
     "ShardConnectedEvent",
     "ShardDisconnectedEvent",
+    "ShardEvent",
+    "ShardPayloadEvent",
     "ShardReadyEvent",
     "ShardResumedEvent",
-    "MemberChunkEvent",
+    "ShardStateEvent",
 )
 
 import abc

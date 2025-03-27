@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,7 +24,6 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("EventFactoryImpl",)
 
-import datetime
 import types
 import typing
 
@@ -53,11 +51,14 @@ from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
+from hikari.interactions import base_interactions
 from hikari.internal import collections
 from hikari.internal import data_binding
 from hikari.internal import time
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import guilds as guild_models
     from hikari import invites as invite_models
     from hikari import messages as messages_models
@@ -66,6 +67,13 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
+
+_INTERACTION_EVENTS_MAP: dict[base_interactions.InteractionType, type[interaction_events.InteractionCreateEvent]] = {
+    base_interactions.InteractionType.APPLICATION_COMMAND: interaction_events.CommandInteractionCreateEvent,
+    base_interactions.InteractionType.AUTOCOMPLETE: interaction_events.AutocompleteInteractionCreateEvent,
+    base_interactions.InteractionType.MESSAGE_COMPONENT: interaction_events.ComponentInteractionCreateEvent,
+    base_interactions.InteractionType.MODAL_SUBMIT: interaction_events.ModalInteractionCreateEvent,
+}
 
 
 class EventFactoryImpl(event_factory.EventFactory):
@@ -493,9 +501,9 @@ class EventFactoryImpl(event_factory.EventFactory):
     def deserialize_interaction_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> interaction_events.InteractionCreateEvent:
-        return interaction_events.InteractionCreateEvent(
-            shard=shard, interaction=self._app.entity_factory.deserialize_interaction(payload)
-        )
+        interaction = self._app.entity_factory.deserialize_interaction(payload)
+
+        return _INTERACTION_EVENTS_MAP[interaction.type](shard=shard, interaction=interaction)
 
     #################
     # MEMBER EVENTS #

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -235,7 +234,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__: typing.Sequence[str] = ("_compiled_route", "_max_rate_limit", "_global_ratelimit", "_lock")
+    __slots__: typing.Sequence[str] = ("_compiled_route", "_global_ratelimit", "_lock", "_max_rate_limit")
 
     def __init__(
         self,
@@ -357,7 +356,8 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             If the hash of the bucket is already known.
         """
         if not self.is_unknown:
-            raise RuntimeError("Cannot resolve known bucket")
+            msg = "Cannot resolve known bucket"
+            raise RuntimeError(msg)
 
         self.name: str = real_bucket_hash
 
@@ -367,7 +367,7 @@ def _create_authentication_hash(authentication: typing.Optional[str]) -> str:
 
 
 def _create_unknown_hash(route: routes.CompiledRoute, authentication_hash: str) -> str:
-    return f"{UNKNOWN_HASH}{routes.HASH_SEPARATOR}{authentication_hash}{routes.HASH_SEPARATOR}{str(hash(route))}"
+    return f"{UNKNOWN_HASH}{routes.HASH_SEPARATOR}{authentication_hash}{routes.HASH_SEPARATOR}{hash(route)!s}"
 
 
 class RESTBucketManager:
@@ -385,11 +385,11 @@ class RESTBucketManager:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_routes_to_hashes",
-        "_real_hashes_to_buckets",
-        "_global_ratelimit",
         "_gc_task",
+        "_global_ratelimit",
         "_max_rate_limit",
+        "_real_hashes_to_buckets",
+        "_routes_to_hashes",
     )
 
     def __init__(self, max_rate_limit: float) -> None:
@@ -427,7 +427,8 @@ class RESTBucketManager:
             as the rate limit has reset.
         """
         if self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot start an active bucket manager")
+            msg = "Cannot start an active bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         # Assert is in running loop
         asyncio.get_running_loop()
@@ -437,7 +438,8 @@ class RESTBucketManager:
     async def close(self) -> None:
         """Close the garbage collector and kill any tasks waiting on ratelimits."""
         if not self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
+            msg = "Cannot interact with an inactive bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         for bucket in self._real_hashes_to_buckets.values():
             bucket.close()
@@ -508,7 +510,8 @@ class RESTBucketManager:
 
         !!! note
             You MUST keep the context manager acquired during the full duration
-            of the request: from making the request until calling [`hikari.impl.buckets.RESTBucket.update_rate_limit`][].
+            of the request: from making the request until you call
+            [`hikari.impl.buckets.RESTBucket.update_rate_limit`][].
 
         Parameters
         ----------
@@ -523,7 +526,8 @@ class RESTBucketManager:
             The context manager to use during the duration of the request.
         """
         if not self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
+            msg = "Cannot interact with an inactive bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         authentication_hash = _create_authentication_hash(authentication)
 
@@ -568,7 +572,8 @@ class RESTBucketManager:
             The `X-RateLimit-Reset-After` header cast to a [`float`][].
         """
         if not self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
+            msg = "Cannot interact with an inactive bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         self._routes_to_hashes[compiled_route.route] = bucket_header
         authentication_hash = _create_authentication_hash(authentication)

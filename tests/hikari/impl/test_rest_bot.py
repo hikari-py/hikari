@@ -99,23 +99,24 @@ class TestRESTBot:
     def test___init__(
         self, mock_http_settings, mock_proxy_settings, mock_entity_factory, mock_rest_client, mock_interaction_server
     ):
-        cls = hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, print_banner=mock.Mock())
-        mock_executor = object()
+        mock_executor = mock.Mock()
 
         stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-        stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
-        stack.enter_context(
+        patched_init_logging = stack.enter_context(mock.patch.object(ux, "init_logging"))
+        patched_warn_if_not_optimized = stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
+        patched_print_banner = stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
+        patched_entity_factory = stack.enter_context(
             mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=mock_entity_factory)
         )
-        stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client))
-        stack.enter_context(
+        patched_rest_client = stack.enter_context(
+            mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client)
+        )
+        patched_interaction_server = stack.enter_context(
             mock.patch.object(interaction_server_impl, "InteractionServer", return_value=mock_interaction_server)
         )
 
         with stack:
-            result = cls(
+            result = rest_bot_impl.RESTBot(
                 "token",
                 "token_type",
                 b"2123123123123132",
@@ -132,26 +133,25 @@ class TestRESTBot:
                 rest_url="hresresres",
             )
 
-            ux.init_logging.assert_called_once_with("ERROR", False, True)
-            ux.warn_if_not_optimized.assert_called_once_with(True)
-            entity_factory_impl.EntityFactoryImpl.assert_called_once_with(result)
-            rest_impl.RESTClientImpl.assert_called_once_with(
-                cache=None,
-                entity_factory=mock_entity_factory,
-                executor=mock_executor,
-                http_settings=mock_http_settings,
-                max_rate_limit=32123123,
-                max_retries=0,
-                proxy_settings=mock_proxy_settings,
-                rest_url="hresresres",
-                token="token",
-                token_type="token_type",
-            )
-            interaction_server_impl.InteractionServer.assert_called_once_with(
-                entity_factory=mock_entity_factory, public_key=b"2123123123123132", rest_client=mock_rest_client
-            )
-
-        result.print_banner.assert_called_once_with("a banner", False, True)
+        patched_init_logging.assert_called_once_with("ERROR", allow_color=False, force_color=True)
+        patched_warn_if_not_optimized.assert_called_once_with(suppress=True)
+        patched_entity_factory.assert_called_once_with(result)
+        patched_print_banner.assert_called_once_with("a banner", allow_color=False, force_color=True)
+        patched_rest_client.assert_called_once_with(
+            cache=None,
+            entity_factory=mock_entity_factory,
+            executor=mock_executor,
+            http_settings=mock_http_settings,
+            max_rate_limit=32123123,
+            max_retries=0,
+            proxy_settings=mock_proxy_settings,
+            rest_url="hresresres",
+            token="token",
+            token_type="token_type",
+        )
+        patched_interaction_server.assert_called_once_with(
+            entity_factory=mock_entity_factory, public_key=b"2123123123123132", rest_client=mock_rest_client
+        )
         assert result.interaction_server is mock_interaction_server
         assert result.rest is mock_rest_client
         assert result.entity_factory is mock_entity_factory
@@ -241,9 +241,13 @@ class TestRESTBot:
 
     def test_print_banner(self, mock_rest_bot):
         with mock.patch.object(ux, "print_banner") as print_banner:
-            mock_rest_bot.print_banner("okokok", True, False, {"test_key": "test_value"})
+            mock_rest_bot.print_banner(
+                "okokok", allow_color=True, force_color=False, extra_args={"test_key": "test_value"}
+            )
 
-            print_banner.assert_called_once_with("okokok", True, False, extra_args={"test_key": "test_value"})
+        print_banner.assert_called_once_with(
+            "okokok", allow_color=True, force_color=False, extra_args={"test_key": "test_value"}
+        )
 
     def test_add_shutdown_callback(self, mock_rest_bot: rest_bot_impl.RESTBot):
         callback = mock.Mock()

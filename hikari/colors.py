@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -35,14 +34,17 @@ def _to_rgb_int(value: str, name: str) -> int:
     #
     # isdigit allows chars like ² according to the docs.
     if not all(c in string.digits for c in value):
-        raise ValueError(f"Expected digits only for {name} channel")
+        msg = f"Expected digits only for {name} channel"
+        raise ValueError(msg)
     if not value or len(value) > 3:
-        raise ValueError(f"Expected 1 to 3 digits for {name} channel, got {len(value)}")
+        msg = f"Expected 1 to 3 digits for {name} channel, got {len(value)}"
+        raise ValueError(msg)
 
     int_value = int(value)
 
     if int_value >= 256:
-        raise ValueError(f"Expected {name} channel to be in the inclusive range of 0 and 255, got {value!r}")
+        msg = f"Expected {name} channel to be in the inclusive range of 0 and 255, got {value!r}"
+        raise ValueError(msg)
 
     return int_value
 
@@ -54,9 +56,11 @@ def _to_rgb_float(value: str, name: str) -> float:
     # Floats are easier to handle, as they don't overflow, they just become [`inf`][].
 
     if value.count(".") != 1:
-        raise ValueError(f'Expected exactly 1 decimal point "." in {name} channel')
+        msg = f'Expected exactly 1 decimal point "." in {name} channel'
+        raise ValueError(msg)
     if not _FLOAT_PATTERN.match(value):
-        raise ValueError(f"Expected {name} channel to be a decimal in the inclusive range of 0.0 and 1.0")
+        msg = f"Expected {name} channel to be a decimal in the inclusive range of 0.0 and 1.0"
+        raise ValueError(msg)
     return float(value)
 
 
@@ -161,7 +165,8 @@ class Color(int):
 
     def __init__(self, raw_rgb: typing.SupportsInt) -> None:
         if not (0 <= int(raw_rgb) <= 0xFFFFFF):
-            raise ValueError(f"raw_rgb must be in the exclusive range of 0 and {0xFF_FF_FF}")
+            msg = f"raw_rgb must be in the exclusive range of 0 and {0xFF_FF_FF}"
+            raise ValueError(msg)
         # The __new__ for [`int`][] initializes the value for us, this super-call does nothing other
         # than keeping the linter happy.
         super().__init__()
@@ -253,11 +258,14 @@ class Color(int):
             If red, green, or blue are outside the range [0x0, 0xFF].
         """
         if not 0 <= red <= 0xFF:
-            raise ValueError("Expected red channel to be in the inclusive range of 0 and 255")
+            msg = "Expected red channel to be in the inclusive range of 0 and 255"
+            raise ValueError(msg)
         if not 0 <= green <= 0xFF:
-            raise ValueError("Expected green channel to be in the inclusive range of 0 and 255")
+            msg = "Expected green channel to be in the inclusive range of 0 and 255"
+            raise ValueError(msg)
         if not 0 <= blue <= 0xFF:
-            raise ValueError("Expected blue channel to be in the inclusive range of 0 and 255")
+            msg = "Expected blue channel to be in the inclusive range of 0 and 255"
+            raise ValueError(msg)
         return cls((red << 16) | (green << 8) | blue)
 
     @classmethod
@@ -287,11 +295,14 @@ class Color(int):
             If red, green or blue are outside the range [0, 1].
         """
         if not 0 <= red <= 1:
-            raise ValueError("Expected red channel to be in the inclusive range of 0.0 and 1.0")
+            msg = "Expected red channel to be in the inclusive range of 0.0 and 1.0"
+            raise ValueError(msg)
         if not 0 <= green <= 1:
-            raise ValueError("Expected green channel to be in the inclusive range of 0.0 and 1.0")
+            msg = "Expected green channel to be in the inclusive range of 0.0 and 1.0"
+            raise ValueError(msg)
         if not 0 <= blue <= 1:
-            raise ValueError("Expected blue channel to be in the inclusive range of 0.0 and 1.0")
+            msg = "Expected blue channel to be in the inclusive range of 0.0 and 1.0"
+            raise ValueError(msg)
         return cls.from_rgb(int(red * 0xFF), int(green * 0xFF), int(blue * 0xFF))
 
     @classmethod
@@ -324,7 +335,8 @@ class Color(int):
             hex_code = hex_code[2:]
 
         if not all(c in string.hexdigits for c in hex_code):
-            raise ValueError("Color code must be hexadecimal")
+            msg = "Color code must be hexadecimal"
+            raise ValueError(msg)
 
         if len(hex_code) == 3:
             # Web-safe
@@ -334,7 +346,8 @@ class Color(int):
         if len(hex_code) == 6:
             return cls.from_rgb(int(hex_code[:2], 16), int(hex_code[2:4], 16), int(hex_code[4:6], 16))
 
-        raise ValueError("Color code is invalid length. Must be 3 or 6 digits")
+        msg = "Color code is invalid length. Must be 3 or 6 digits"
+        raise ValueError(msg)
 
     @classmethod
     def from_int(cls, integer: typing.SupportsInt, /) -> Color:
@@ -406,7 +419,7 @@ class Color(int):
             If an invalid format is given, or if any values exceed 1.0 for
             floats or 255 for ints.
         """
-        if tuple_str[:: len(tuple_str) - 1] in ("()", "{}", "<>", "[]"):
+        if tuple_str[:: len(tuple_str) - 1] in {"()", "{}", "<>", "[]"}:
             tuple_str = tuple_str[1:-1].strip()
 
         try:
@@ -415,12 +428,12 @@ class Color(int):
             else:
                 r, g, b = tuple_str.split()
         except ValueError:
-            raise ValueError("Expected three comma/space separated values") from None
+            msg = "Expected three comma/space separated values"
+            raise ValueError(msg) from None
 
         if any("." in s for s in (r, g, b)):
             return cls.from_rgb_float(_to_rgb_float(r, "red"), _to_rgb_float(g, "green"), _to_rgb_float(b, "blue"))
-        else:
-            return cls.from_rgb(_to_rgb_int(r, "red"), _to_rgb_int(g, "green"), _to_rgb_int(b, "blue"))
+        return cls.from_rgb(_to_rgb_int(r, "red"), _to_rgb_int(g, "green"), _to_rgb_int(b, "blue"))
 
     @classmethod
     def of(cls, value: Colorish, /) -> Color:
@@ -485,7 +498,8 @@ class Color(int):
             return cls.from_int(value)
         if isinstance(value, (list, tuple)):
             if len(value) != 3:
-                raise ValueError(f"Color must be an RGB triplet if set to a {type(value).__name__} type")
+                msg = f"Color must be an RGB triplet if set to a {type(value).__name__} type"
+                raise ValueError(msg)
 
             r, g, b = value
 
@@ -504,7 +518,8 @@ class Color(int):
             if is_start_hash_or_hex_literal or is_hex_digits:
                 return cls.from_hex_code(value)
 
-        raise ValueError(f"Could not transform {value!r} into a {cls.__qualname__} object")
+        msg = f"Could not transform {value!r} into a {cls.__qualname__} object"
+        raise ValueError(msg)
 
     def to_bytes(
         self, length: typing.SupportsIndex, byteorder: typing.Literal["little", "big"], *, signed: bool = True

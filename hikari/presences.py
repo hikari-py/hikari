@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -27,10 +26,10 @@ __all__: typing.Sequence[str] = (
     "Activity",
     "ActivityAssets",
     "ActivityFlag",
+    "ActivityParty",
     "ActivitySecret",
     "ActivityTimestamps",
     "ActivityType",
-    "ActivityParty",
     "ClientStatus",
     "MemberPresence",
     "RichActivity",
@@ -148,7 +147,8 @@ class ActivityAssets:
             return files.URL(url=_DYNAMIC_URLS[resource].format(identifier))
 
         except KeyError:
-            raise RuntimeError("Unknown asset type") from None
+            msg = "Unknown asset type"
+            raise RuntimeError(msg) from None
 
         except ValueError:
             assert self._application_id is not None

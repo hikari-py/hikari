@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -28,24 +27,24 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "AutocompleteChoiceBuilder",
+    "ChannelSelectMenuBuilder",
     "CommandBuilder",
-    "SlashCommandBuilder",
     "ContextMenuCommandBuilder",
-    "TypingIndicator",
     "GuildBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
+    "InteractionModalBuilder",
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
-    "SelectMenuBuilder",
-    "SelectOptionBuilder",
-    "ChannelSelectMenuBuilder",
-    "TextSelectMenuBuilder",
-    "TextInputBuilder",
-    "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "SelectMenuBuilder",
+    "SelectOptionBuilder",
+    "SlashCommandBuilder",
+    "TextInputBuilder",
+    "TextSelectMenuBuilder",
+    "TypingIndicator",
 )
 
 import asyncio
@@ -54,6 +53,7 @@ import typing
 import attrs
 
 from hikari import channels
+from hikari import colors
 from hikari import commands
 from hikari import components as component_models
 from hikari import emojis
@@ -80,7 +80,6 @@ if typing.TYPE_CHECKING:
 
     from hikari import applications
     from hikari import audit_logs
-    from hikari import colors
     from hikari import embeds as embeds_
     from hikari import guilds
     from hikari import permissions as permissions_
@@ -104,11 +103,11 @@ if typing.TYPE_CHECKING:
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
 
-    _GuildThreadChannelCovT = typing.TypeVar(
-        "_GuildThreadChannelCovT", bound=channels.GuildThreadChannel, covariant=True
+    _GuildThreadChannelT_co = typing.TypeVar(
+        "_GuildThreadChannelT_co", bound=channels.GuildThreadChannel, covariant=True
     )
 
-    class _ThreadDeserializeSig(typing.Protocol[_GuildThreadChannelCovT]):
+    class _ThreadDeserializeSig(typing.Protocol[_GuildThreadChannelT_co]):
         def __call__(
             self,
             payload: data_binding.JSONObject,
@@ -116,7 +115,7 @@ if typing.TYPE_CHECKING:
             *,
             guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
             member: undefined.UndefinedNoneOr[channels.ThreadMember] = undefined.UNDEFINED,
-        ) -> _GuildThreadChannelCovT:
+        ) -> _GuildThreadChannelT_co:
             raise NotImplementedError
 
 
@@ -138,7 +137,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         produced by that API.
     """
 
-    __slots__: typing.Sequence[str] = ("_route", "_request_call", "_task", "_rest_close_event", "_task_name")
+    __slots__: typing.Sequence[str] = ("_request_call", "_rest_close_event", "_route", "_task", "_task_name")
 
     def __init__(
         self,
@@ -157,7 +156,8 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     async def __aenter__(self) -> None:
         if self._task is not None:
-            raise TypeError("Cannot enter a typing indicator context more than once")
+            msg = "Cannot enter a typing indicator context more than once"
+            raise TypeError(msg)
         self._task = asyncio.create_task(self._keep_typing(), name=self._task_name)
 
     async def __aexit__(
@@ -176,7 +176,8 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         def __enter__(self) -> typing.NoReturn:
             # This is async only.
             cls = type(self)
-            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+            msg = f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?"
+            raise TypeError(msg) from None
 
         def __exit__(
             self,
@@ -197,7 +198,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
                 # second if the request is slow to execute.
                 try:
                     await asyncio.gather(self, asyncio.wait_for(self._rest_close_event.wait(), timeout=9.0))
-                except asyncio.TimeoutError:
+                except asyncio.TimeoutError:  # noqa: PERF203
                     pass
 
         except (asyncio.CancelledError, errors.ComponentStateConflictError):
@@ -340,15 +341,16 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         if not undefined.any_undefined(color, colour):
-            raise TypeError("Cannot specify 'color' and 'colour' together.")
+            msg = "Cannot specify 'color' and 'colour' together."
+            raise TypeError(msg)
 
         if len(self._roles) == 0:
             if name != "@everyone":
-                raise ValueError("First role must always be the '@everyone' role")
+                msg = "First role must always be the '@everyone' role"
+                raise ValueError(msg)
             if not undefined.all_undefined(color, colour, hoist, mentionable, position):
-                raise ValueError(
-                    "Cannot pass 'color', 'colour', 'hoist', 'mentionable' nor 'position' to the '@everyone' role."
-                )
+                msg = "Cannot pass 'color', 'colour', 'hoist', 'mentionable' nor 'position' to the '@everyone' role."
+                raise ValueError(msg)
 
         snowflake_id = self._new_snowflake()
         payload = data_binding.JSONObjectBuilder()
@@ -507,7 +509,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
 class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
     """Implementation of an iterator for message history."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_request_call", "_direction", "_first_id", "_route")
+    __slots__: typing.Sequence[str] = ("_direction", "_entity_factory", "_first_id", "_request_call", "_route")
 
     def __init__(
         self,
@@ -547,7 +549,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
 class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
     """Implementation of an iterator for message reactions."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_route", "_request_call")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_request_call", "_route")
 
     def __init__(
         self,
@@ -584,12 +586,13 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
 class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
     """Implementation of an iterator for retrieving guilds you are in."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_request_call", "_route", "_newest_first", "_first_id")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_newest_first", "_request_call", "_route")
 
     def __init__(
         self,
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
+        *,
         newest_first: bool,
         first_id: str,
     ) -> None:
@@ -628,11 +631,11 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
 
     __slots__: typing.Sequence[str] = (
         "_entity_factory",
+        "_first_id",
         "_guild_id",
+        "_newest_first",
         "_request_call",
         "_route",
-        "_first_id",
-        "_newest_first",
     )
 
     def __init__(
@@ -640,6 +643,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
         newest_first: bool,
         first_id: str,
     ) -> None:
@@ -676,7 +680,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
 class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
     """Implementation of an iterator for retrieving members in a guild."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_guild_id", "_request_call", "_route", "_first_id")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_guild_id", "_request_call", "_route")
 
     def __init__(
         self,
@@ -728,10 +732,11 @@ class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_event
         self,
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
-        newest_first: bool,
-        first_id: str,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         event: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent],
+        *,
+        first_id: str,
+        newest_first: bool,
     ) -> None:
         super().__init__()
         self._entity_factory = entity_factory
@@ -770,12 +775,12 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
     """Iterator implementation for an audit log."""
 
     __slots__: typing.Sequence[str] = (
-        "_entity_factory",
         "_action_type",
+        "_entity_factory",
+        "_first_id",
         "_guild_id",
         "_request_call",
         "_route",
-        "_first_id",
         "_user",
     )
 
@@ -838,6 +843,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
         request_call: _RequestCallSig,
         route: routes.CompiledRoute,
         before: undefined.UndefinedOr[str],
+        *,
         before_is_timestamp: bool,
     ) -> None:
         super().__init__()
@@ -914,7 +920,7 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
         self._name = name
         return self
 
-    def set_value(self, value: typing.Union[int, float, str], /) -> Self:
+    def set_value(self, value: typing.Union[float, str], /) -> Self:
         self._value = value
         return self
 
@@ -1557,7 +1563,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         self._label = label
         return self
 
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         self._is_disabled = state
         return self
 
@@ -1671,7 +1677,7 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
         self._emoji = emoji
         return self
 
-    def set_is_default(self, state: bool, /) -> Self:
+    def set_is_default(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         self._is_default = state
         return self
 
@@ -1732,7 +1738,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         self._custom_id = custom_id
         return self
 
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         self._is_disabled = state
         return self
 
@@ -1823,7 +1829,8 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     @property
     def parent(self) -> _ParentT:
         if self._parent is None:
-            raise RuntimeError("This menu has no parent")
+            msg = "This menu has no parent"
+            raise RuntimeError(msg)
 
         return self._parent
 
@@ -1954,7 +1961,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         self._value = value
         return self
 
-    def set_required(self, required: bool, /) -> Self:
+    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         self._required = required
         return self
 
@@ -1999,9 +2006,8 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
     def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
-            raise ValueError(
-                f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
-            )
+            msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
+            raise ValueError(msg)
 
         self._stored_type = type_
 
@@ -2126,9 +2132,8 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
 
     def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
-            raise ValueError(
-                f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
-            )
+            msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
+            raise ValueError(msg)
 
         self._stored_type = type_
 

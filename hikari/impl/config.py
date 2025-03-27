@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,11 +24,11 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "BasicAuthHeader",
-    "ProxySettings",
-    "HTTPTimeoutSettings",
-    "HTTPSettings",
     "CacheComponents",
     "CacheSettings",
+    "HTTPSettings",
+    "HTTPTimeoutSettings",
+    "ProxySettings",
 )
 
 import base64
@@ -42,7 +41,7 @@ from hikari.api import config
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 
-_BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
+_BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # noqa: S105
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
 
 
@@ -188,11 +187,12 @@ class HTTPTimeoutSettings:
     @request_socket_connect.validator
     @request_socket_read.validator
     @total.validator
-    def _(self, attrsib: attrs.Attribute[typing.Optional[float]], value: typing.Any) -> None:
+    def _(self, attrsib: attrs.Attribute[typing.Optional[float]], value: object) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, (float, int)) or value <= 0):
-            raise ValueError(f"HTTPTimeoutSettings.{attrsib.name} must be None, or a POSITIVE float/int")
+            msg = f"HTTPTimeoutSettings.{attrsib.name} must be None, or a POSITIVE float/int"
+            raise ValueError(msg)
 
 
 @attrs_extensions.with_copy
@@ -239,11 +239,12 @@ class HTTPSettings(config.HTTPSettings):
     """
 
     @max_redirects.validator
-    def _(self, _: attrs.Attribute[typing.Optional[int]], value: typing.Any) -> None:
+    def _(self, _: attrs.Attribute[typing.Optional[int]], value: object) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, int) or value <= 0):
-            raise ValueError("http_settings.max_redirects must be None or a POSITIVE integer")
+            msg = "http_settings.max_redirects must be None or a POSITIVE integer"
+            raise ValueError(msg)
 
     ssl: ssl_.SSLContext = attrs.field(
         factory=lambda: _ssl_factory(True),

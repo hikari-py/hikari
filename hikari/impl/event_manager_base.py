@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("filtered", "EventManagerBase", "EventStream")
+__all__: typing.Sequence[str] = ("EventManagerBase", "EventStream", "filtered")
 
 import asyncio
 import inspect
@@ -103,9 +102,8 @@ def _generate_weak_listener(
     async def call_weak_method(event: base_events.Event) -> None:
         method = reference()
         if method is None:
-            raise TypeError(
-                "dead weak referenced subscriber method cannot be executed, try actually closing your event streamers"
-            )
+            msg = "dead weak referenced subscriber method cannot be executed, try actually closing your event streamers"
+            raise TypeError(msg)
 
         await method(event)
 
@@ -142,7 +140,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         event_manager: event_manager_.EventManager,
         event_type: type[base_events.EventT],
         *,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         limit: typing.Optional[int] = None,
     ) -> None:
         self._active = False
@@ -172,7 +170,8 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
     async def __anext__(self) -> base_events.EventT:
         if not self._active:
-            raise TypeError("stream must be started with before entering it")
+            msg = "stream must be started with before entering it"
+            raise TypeError(msg)
 
         while not self._queue:
             if not self._event:
@@ -227,7 +226,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
     def filter(
         self,
         *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
-        **attrs: typing.Any,
+        **attrs: object,
     ) -> Self:
         filter_ = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
         if self._active:
@@ -251,10 +250,12 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
 def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> None:
     if next(parameters, None) is None:
-        raise TypeError("Event listener must have one positional argument for the event object.")
+        msg = "Event listener must have one positional argument for the event object."
+        raise TypeError(msg)
 
     if any(param.default is inspect.Parameter.empty for param in parameters):
-        raise TypeError("Only the first argument for a listener can be required, the event argument.")
+        msg = "Only the first argument for a listener can be required, the event argument."
+        raise TypeError(msg)
 
 
 def filtered(
@@ -322,7 +323,14 @@ class EventManagerBase(event_manager_.EventManager):
     is the raw event name being dispatched in lower-case.
     """
 
-    __slots__: typing.Sequence[str] = ("_consumers", "_event_factory", "_intents", "_listeners", "_waiters")
+    __slots__: typing.Sequence[str] = (
+        "_consumers",
+        "_event_factory",
+        "_handling_dispatch_tasks",
+        "_intents",
+        "_listeners",
+        "_waiters",
+    )
 
     def __init__(
         self,
@@ -336,6 +344,7 @@ class EventManagerBase(event_manager_.EventManager):
         self._intents = intents
         self._listeners: _ListenerMapT[base_events.Event] = {}
         self._waiters: _WaiterMapT[base_events.Event] = {}
+        self._handling_dispatch_tasks: set[asyncio.Task[None]] = set()
 
         for name, member in inspect.getmembers(self):
             if name.startswith("on_"):
@@ -380,7 +389,8 @@ class EventManagerBase(event_manager_.EventManager):
             is_event = False
 
         if not is_event:
-            raise TypeError("'event_type' is a non-Event type")
+            msg = "'event_type' is a non-Event type"
+            raise TypeError(msg)
 
         # Collection of combined bitfield combinations of intents that
         # could be enabled to receive this event.
@@ -407,7 +417,11 @@ class EventManagerBase(event_manager_.EventManager):
             payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
             self.dispatch(payload_event)
         consumer = self._consumers[event_name.lower()]
-        asyncio.create_task(self._handle_dispatch(consumer, shard, payload), name=f"dispatch {event_name}")
+
+        task = asyncio.create_task(self._handle_dispatch(consumer, shard, payload), name=f"dispatch {event_name}")
+
+        self._handling_dispatch_tasks.add(task)
+        task.add_done_callback(self._handling_dispatch_tasks.discard)
 
     # Yes, this is not generic. The reason for this is MyPy complains about
     # using ABCs that are not concrete in generic types passed to functions.
@@ -417,9 +431,13 @@ class EventManagerBase(event_manager_.EventManager):
         self, event_type: type[typing.Any], callback: event_manager_.CallbackT[typing.Any], *, _nested: int = 0
     ) -> None:
         if not (
-            inspect.iscoroutinefunction(callback) or inspect.iscoroutinefunction(getattr(callback, "__call__", None))
+            inspect.iscoroutinefunction(callback)
+            or inspect.iscoroutinefunction(
+                getattr(callback, "__call__", None)  # noqa: B004 - False positive
+            )
         ):
-            raise TypeError("Cannot subscribe a non-coroutine function callback")
+            msg = "Cannot subscribe a non-coroutine function callback"
+            raise TypeError(msg)
 
         # [`_nested`][] is used to show the correct source code snippet if an intent
         # warning is triggered.
@@ -493,7 +511,8 @@ class EventManagerBase(event_manager_.EventManager):
                 annotation = event_param.annotation
 
                 if annotation is event_param.empty:
-                    raise TypeError("Must provide the event type in the @listen decorator or as a type hint!")
+                    msg = "Must provide the event type in the @listen decorator or as a type hint!"
+                    raise TypeError(msg)
 
                 if typing.get_origin(annotation) in _UNIONS:
                     # Resolve the types inside the union
@@ -513,9 +532,7 @@ class EventManagerBase(event_manager_.EventManager):
         tasks: list[typing.Coroutine[None, typing.Any, None]] = []
 
         for cls in event.dispatches():
-            if listeners := self._listeners.get(cls):
-                for callback in listeners:
-                    tasks.append(self._invoke_callback(callback, event))
+            tasks.extend(self._invoke_callback(c, event) for c in self._listeners.get(cls, ()))
 
             if cls not in self._waiters:
                 continue
@@ -527,7 +544,8 @@ class EventManagerBase(event_manager_.EventManager):
                     try:
                         if predicate and not predicate(event):
                             continue
-                    except Exception as ex:
+                    # We need to use a blind except here as it is a user provided predicate
+                    except Exception as ex:  # noqa: BLE001
                         future.set_exception(ex)
                     else:
                         future.set_result(event)
@@ -547,7 +565,7 @@ class EventManagerBase(event_manager_.EventManager):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         limit: typing.Optional[int] = None,
     ) -> event_manager_.EventStream[base_events.EventT]:
         self._check_event(event_type, 1)
@@ -557,12 +575,9 @@ class EventManagerBase(event_manager_.EventManager):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
-        if not inspect.isclass(event_type) or not issubclass(event_type, base_events.Event):
-            raise TypeError("Cannot wait for a non-Event type")
-
         self._check_event(event_type, 1)
 
         future: asyncio.Future[base_events.EventT] = asyncio.get_running_loop().create_future()
@@ -605,7 +620,7 @@ class EventManagerBase(event_manager_.EventManager):
             pass
         except errors.UnrecognisedEntityError:
             _LOGGER.debug("Event referenced an unrecognised entity, discarding")
-        except BaseException as ex:
+        except Exception as ex:  # noqa: BLE001 - Do not catch blind exception
             asyncio.get_running_loop().call_exception_handler(
                 {
                     "message": "Exception occurred in raw event dispatch conduit",
@@ -626,10 +641,8 @@ class EventManagerBase(event_manager_.EventManager):
             trio = (type(ex), ex, ex.__traceback__.tb_next) if ex.__traceback__ else ex
 
             if base_events.is_no_recursive_throw_event(event):
-                _LOGGER.error(
-                    "an exception occurred handling an event (%s), but it has been ignored",
-                    type(event).__name__,
-                    exc_info=trio,
+                _LOGGER.exception(
+                    "an exception occurred handling an event (%s), but it has been ignored", type(event).__name__
                 )
             else:
                 exception_event = base_events.ExceptionEvent(exception=ex, failed_event=event, failed_callback=callback)

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -297,9 +296,9 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 token_type = applications.TokenType.BOT
 
         # Beautification and logging
-        ux.init_logging(logs, allow_color, force_color)
-        self.print_banner(banner, allow_color, force_color)
-        ux.warn_if_not_optimized(suppress_optimization_warning)
+        ux.init_logging(logs, allow_color=allow_color, force_color=force_color)
+        self.print_banner(banner, allow_color=allow_color, force_color=force_color)
+        ux.warn_if_not_optimized(suppress=suppress_optimization_warning)
 
         # Settings and state
         self._close_event: typing.Optional[asyncio.Event] = None
@@ -373,6 +372,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     @staticmethod
     def print_banner(
         banner: typing.Optional[str],
+        *,
         allow_color: bool,
         force_color: bool,
         extra_args: typing.Optional[dict[str, str]] = None,
@@ -409,7 +409,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         ValueError
             If `extra_args` contains a default $-substitution.
         """
-        ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
+        ux.print_banner(banner, allow_color=allow_color, force_color=force_color, extra_args=extra_args)
 
     def add_shutdown_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
@@ -433,7 +433,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     async def close(self) -> None:
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot close an inactive bot")
+            msg = "Cannot close an inactive bot"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._is_closing:
             await self.join()
@@ -458,7 +459,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     async def join(self) -> None:
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot wait for an inactive bot to join")
+            msg = "Cannot wait for an inactive bot to join"
+            raise errors.ComponentStateConflictError(msg)
 
         await self._close_event.wait()
 
@@ -467,6 +469,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     def run(
         self,
+        *,
         asyncio_debug: bool = False,
         backlog: int = 128,
         check_for_updates: bool = True,
@@ -532,6 +535,15 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             TCP/IP host or a sequence of hosts for the HTTP server.
         port
             TCP/IP port for the HTTP server.
+        propagate_interrupts
+            If [`True`][], then any internal [`hikari.errors.HikariInterrupt`][]
+            that is raises as a result of catching an OS level signal will
+            result in the exception being rethrown once the application has
+            closed. This can allow you to use hikari signal handlers and
+            still be able to determine what kind of interrupt the
+            application received after it closes. When [`False`][], nothing
+            is raised and the call will terminate cleanly and silently
+            where possible instead.
         path
             File system path for HTTP server unix domain socket.
         reuse_address
@@ -549,7 +561,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self.is_alive:
-            raise errors.ComponentStateConflictError("Cannot start a bot that's already active")
+            msg = "Cannot start a bot that's already active"
+            raise errors.ComponentStateConflictError(msg)
 
         loop = aio.get_or_make_loop()
         if asyncio_debug:
@@ -606,6 +619,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     async def start(
         self,
+        *,
         backlog: int = 128,
         check_for_updates: bool = True,
         host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
@@ -652,13 +666,14 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self.is_alive:
-            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
+            msg = "Cannot start an already active interaction server"
+            raise errors.ComponentStateConflictError(msg)
 
         self._is_closing = False
         self._close_event = asyncio.Event()
 
         if check_for_updates:
-            asyncio.create_task(
+            asyncio.create_task(  # noqa: RUF006 - We want this to be a dangling asyncio task
                 ux.check_for_updates(self._http_settings, self._proxy_settings), name="check for package updates"
             )
 
@@ -738,6 +753,18 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         replace: bool = False,
     ) -> None: ...
 
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: type[_InteractionT_co],
+        listener: typing.Optional[
+            interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None: ...
+
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],
@@ -748,4 +775,4 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         *,
         replace: bool = False,
     ) -> None:
-        self._server.set_listener(interaction_type, listener, replace=replace)  # type: ignore
+        self._server.set_listener(interaction_type, listener, replace=replace)

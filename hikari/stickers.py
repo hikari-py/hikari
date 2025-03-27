@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,12 +23,12 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "StickerType",
-    "StickerFormatType",
-    "PartialSticker",
     "GuildSticker",
+    "PartialSticker",
     "StandardSticker",
+    "StickerFormatType",
     "StickerPack",
+    "StickerType",
 )
 
 import typing
@@ -162,8 +161,9 @@ class PartialSticker(snowflakes.Unique):
     def image_url(self) -> files.URL:
         """URL for the image.
 
-        The extension will be based on `format_type`. If `format_type` is [`hikari.stickers.StickerFormatType.LOTTIE`][],
-        then the extension will be `.json`, if it's [`hikari.stickers.StickerFormatType.GIF`][] it will be `.gif`.
+        The extension will be based on `format_type`. If `format_type` is
+        [`hikari.stickers.StickerFormatType.LOTTIE`][], then the extension will be `.json`,
+        if it's [`hikari.stickers.StickerFormatType.GIF`][] it will be `.gif`.
         Otherwise, it will be `.png`.
         """
         ext = _STICKER_EXTENSIONS.get(self.format_type, "png")
@@ -219,5 +219,6 @@ class GuildSticker(PartialSticker):
     user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
     """The user that uploaded this sticker.
 
-    This will only be available if you have the [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][] permission.
+    This will only be available if you have the [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]
+    permission.
     """

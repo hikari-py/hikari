@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -26,7 +25,6 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("GatewayBot",)
 
 import asyncio
-import datetime
 import logging
 import math
 import sys
@@ -57,6 +55,7 @@ from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
+    import datetime
     import os
 
     from hikari import channels
@@ -96,7 +95,7 @@ async def _close_resource(name: str, awaitable: typing.Awaitable[typing.Any]) ->
 
     try:
         await future
-    except Exception as ex:
+    except Exception as ex:  # noqa: BLE001 - Do not catch blind exception
         asyncio.get_running_loop().call_exception_handler(
             {"message": f"{name} raised an exception during shut down", "future": future, "exception": ex}
         )
@@ -290,21 +289,21 @@ class GatewayBot(traits.GatewayBotAware):
 
     __slots__: typing.Sequence[str] = (
         "_cache",
-        "_closing_event",
         "_closed_event",
+        "_closing_event",
+        "_dumps",
         "_entity_factory",
-        "_event_manager",
         "_event_factory",
+        "_event_manager",
         "_executor",
         "_http_settings",
         "_intents",
+        "_loads",
         "_proxy_settings",
         "_rest",
         "_shards",
         "_token",
         "_voice",
-        "_loads",
-        "_dumps",
         "shards",
     )
 
@@ -330,9 +329,9 @@ class GatewayBot(traits.GatewayBotAware):
         rest_url: typing.Optional[str] = None,
     ) -> None:
         # Beautification and logging
-        ux.init_logging(logs, allow_color, force_color)
-        self.print_banner(banner, allow_color, force_color)
-        ux.warn_if_not_optimized(suppress_optimization_warning)
+        ux.init_logging(logs, allow_color=allow_color, force_color=force_color)
+        self.print_banner(banner, allow_color=allow_color, force_color=force_color)
+        ux.warn_if_not_optimized(suppress=suppress_optimization_warning)
 
         # Settings and state
         self._closed_event: typing.Optional[asyncio.Event] = None
@@ -447,14 +446,16 @@ class GatewayBot(traits.GatewayBotAware):
 
     def _check_if_alive(self) -> None:
         if not self._closed_event:
-            raise errors.ComponentStateConflictError("bot is not running so it cannot be interacted with")
+            msg = "bot is not running so it cannot be interacted with"
+            raise errors.ComponentStateConflictError(msg)
 
     def get_me(self) -> typing.Optional[users_.OwnUser]:
         return self._cache.get_me()
 
     async def close(self) -> None:
         if not self._closed_event or not self._closing_event:
-            raise errors.ComponentStateConflictError("Cannot close an inactive bot")
+            msg = "Cannot close an inactive bot"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._closing_event.is_set():
             await self.join()
@@ -597,7 +598,8 @@ class GatewayBot(traits.GatewayBotAware):
 
     async def join(self) -> None:
         if not self._closed_event:
-            raise errors.ComponentStateConflictError("Cannot wait for an inactive bot to join")
+            msg = "Cannot wait for an inactive bot to join"
+            raise errors.ComponentStateConflictError(msg)
 
         await aio.first_completed(self._closed_event.wait(), *(s.join() for s in self._shards.values()))
 
@@ -637,6 +639,7 @@ class GatewayBot(traits.GatewayBotAware):
     @staticmethod
     def print_banner(
         banner: typing.Optional[str],
+        *,
         allow_color: bool,
         force_color: bool,
         extra_args: typing.Optional[dict[str, str]] = None,
@@ -673,7 +676,7 @@ class GatewayBot(traits.GatewayBotAware):
         ValueError
             If `extra_args` contains a default $-substitution.
         """
-        ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
+        ux.print_banner(banner, allow_color=allow_color, force_color=force_color, extra_args=extra_args)
 
     def run(
         self,
@@ -788,10 +791,12 @@ class GatewayBot(traits.GatewayBotAware):
             If `shard_ids` is passed without `shard_count`.
         """
         if self._closed_event:
-            raise errors.ComponentStateConflictError("bot is already running")
+            msg = "bot is already running"
+            raise errors.ComponentStateConflictError(msg)
 
         if shard_ids is not None and shard_count is None:
-            raise TypeError("'shard_ids' must be passed with 'shard_count'")
+            msg = "'shard_ids' must be passed with 'shard_count'"
+            raise TypeError(msg)
 
         loop = aio.get_or_make_loop()
 
@@ -909,10 +914,12 @@ class GatewayBot(traits.GatewayBotAware):
             If bot is already running.
         """
         if self._closed_event:
-            raise errors.ComponentStateConflictError("bot is already running")
+            msg = "bot is already running"
+            raise errors.ComponentStateConflictError(msg)
 
         if shard_ids is not None and shard_count is None:
-            raise TypeError("'shard_ids' must be passed with 'shard_count'")
+            msg = "'shard_ids' must be passed with 'shard_count'"
+            raise TypeError(msg)
 
         _validate_activity(activity)
 
@@ -921,7 +928,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._closing_event = asyncio.Event()
 
         if check_for_updates:
-            asyncio.create_task(
+            asyncio.create_task(  # noqa: RUF006 - We want this to be a dangling asyncio task
                 ux.check_for_updates(self._http_settings, self._proxy_settings), name="check for package updates"
             )
 
@@ -933,10 +940,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         if shard_count is None:
             shard_count = requirements.shard_count
-        if shard_ids is None:
-            shard_ids = tuple(range(shard_count))
-        else:
-            shard_ids = tuple(dict.fromkeys(shard_ids))
+        shard_ids = tuple(range(shard_count) if shard_ids is None else dict.fromkeys(shard_ids))
 
         if requirements.session_start_limit.remaining < len(shard_ids) and not ignore_session_start_limit:
             _LOGGER.critical(
@@ -949,7 +953,8 @@ class GatewayBot(traits.GatewayBotAware):
                 "s" if requirements.session_start_limit.remaining != 1 else "",
                 requirements.session_start_limit.reset_at,
             )
-            raise RuntimeError("Attempted to start more sessions than were allowed in the given time-window")
+            msg = "Attempted to start more sessions than were allowed in the given time-window"
+            raise RuntimeError(msg)
 
         _LOGGER.info(
             "you can start %s session%s before the next window which starts at %s; planning to start %s session%s... ",
@@ -977,7 +982,8 @@ class GatewayBot(traits.GatewayBotAware):
                         return
 
                     _LOGGER.critical("one or more shards closed while starting; shutting down")
-                    raise RuntimeError("One or more shards closed while starting")
+                    msg = "One or more shards closed while starting"
+                    raise RuntimeError(msg)
                 except asyncio.TimeoutError:
                     # new window starts.
                     pass
@@ -1008,7 +1014,7 @@ class GatewayBot(traits.GatewayBotAware):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         limit: typing.Optional[int] = None,
     ) -> event_manager_.EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
@@ -1160,7 +1166,7 @@ class GatewayBot(traits.GatewayBotAware):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
+        timeout: typing.Union[float, None],
         predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
@@ -1213,7 +1219,8 @@ class GatewayBot(traits.GatewayBotAware):
         if shard := self._shards.get(snowflakes.calculate_shard_id(self.shard_count, guild)):
             return shard
 
-        raise RuntimeError(f"Guild {guild} isn't covered by any of the shards in this client")
+        msg = f"Guild {guild} isn't covered by any of the shards in this client"
+        raise RuntimeError(msg)
 
     async def update_presence(
         self,
@@ -1263,6 +1270,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     async def _start_one_shard(
         self,
+        *,
         activity: typing.Optional[presences.Activity],
         afk: bool,
         idle_since: typing.Optional[datetime.datetime],
@@ -1295,15 +1303,15 @@ class GatewayBot(traits.GatewayBotAware):
             await new_shard.start()
             end = time.monotonic()
 
-            if new_shard.is_alive:
-                _LOGGER.debug("shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
-                self._shards[shard_id] = new_shard
-                return
-
-            raise RuntimeError(f"shard {shard_id} shut down immediately when starting")
-
         except Exception:
             if new_shard.is_alive:
                 await new_shard.close()
 
             raise
+
+        if not new_shard.is_alive:
+            msg = f"shard {shard_id} shut down immediately when starting"
+            raise RuntimeError(msg)
+
+        _LOGGER.debug("shard %s started successfully in %.1fms", shard_id, (end - start) * 1_000)
+        self._shards[shard_id] = new_shard

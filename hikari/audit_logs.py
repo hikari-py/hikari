@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -39,7 +38,6 @@ __all__: typing.Sequence[str] = (
     "MessagePinEntryInfo",
 )
 
-import abc
 import typing
 
 import attrs
@@ -354,7 +352,7 @@ class AuditLogEventType(int, enums.Enum):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class BaseAuditLogEntryInfo(abc.ABC):
+class BaseAuditLogEntryInfo:
     """A base object that all audit log entry info objects will inherit from."""
 
     app: traits.RESTAware = attrs.field(repr=False, eq=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True})

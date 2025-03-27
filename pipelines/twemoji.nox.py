@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,7 +24,7 @@ from pipelines import nox
 
 
 @nox.session()
-def twemoji_test(session: nox.Session):
+def twemoji_test(session: nox.Session) -> None:
     """Brute-force test all possible Twemoji mappings for Discord unicode emojis."""
     nox.sync(session, self=True)
     session.run("python", "scripts/ci/test_twemoji_mapping.py", session.create_tmp())

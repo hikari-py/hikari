@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -27,11 +26,10 @@ __all__: typing.Sequence[str] = ("generate_allowed_mentions",)
 
 import typing
 
-from hikari import undefined
-
 if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import snowflakes
+    from hikari import undefined
     from hikari import users
     from hikari.internal import data_binding
 

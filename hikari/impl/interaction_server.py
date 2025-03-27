@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -38,7 +37,6 @@ from hikari import applications
 from hikari import errors
 from hikari.api import interaction_server
 from hikari.api import special_endpoints
-from hikari.interactions import base_interactions
 from hikari.internal import data_binding
 
 if typing.TYPE_CHECKING:
@@ -46,15 +44,13 @@ if typing.TYPE_CHECKING:
     import socket as socket_
     import ssl
 
-    import aiohttp.abc
-    import aiohttp.typedefs
-
     # This is kept inline as pynacl is an optional dependency.
     from nacl import signing
 
     from hikari import files as files_
     from hikari.api import entity_factory as entity_factory_api
     from hikari.api import rest as rest_api
+    from hikari.interactions import base_interactions
     from hikari.interactions import command_interactions
     from hikari.interactions import component_interactions
     from hikari.interactions import modal_interactions
@@ -160,7 +156,8 @@ class _FilePayload(aiohttp.Payload):
         self._executor = executor
 
     def decode(self, encoding: str = "utf-8", errors: str = "strict") -> str:
-        raise RuntimeError("Impossible to decode a _FilePayload. If you see this, please file a bug report with hikari")
+        msg = "Impossible to decode a _FilePayload. If you see this, please file a bug report with hikari"
+        raise RuntimeError(msg)
 
     async def write(self, writer: aiohttp.abc.AbstractStreamWriter) -> None:
         async with self._value.stream(executor=self._executor) as data:
@@ -178,7 +175,8 @@ async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.An
     except StopAsyncIteration:
         pass
 
-    except Exception as exc:
+    # Blind except as we do not control the function that is being called
+    except Exception as exc:  # noqa: BLE001
         asyncio.get_running_loop().call_exception_handler(
             {"message": "Exception occurred during interaction post dispatch", "exception": exc}
         )
@@ -215,8 +213,8 @@ class InteractionServer(interaction_server.InteractionServer):
         "_nacl",
         "_public_key",
         "_rest_client",
-        "_server",
         "_running_generator_listeners",
+        "_server",
     )
 
     def __init__(
@@ -235,9 +233,8 @@ class InteractionServer(interaction_server.InteractionServer):
             import nacl.signing
 
         except ModuleNotFoundError as exc:
-            raise RuntimeError(
-                "You must install the optional `hikari[server]` dependencies to use the default interaction server."
-            ) from exc
+            msg = "You must install the optional `hikari[server]` dependencies to use the default interaction server."
+            raise RuntimeError(msg) from exc
 
         # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
         self._application_fetch_lock: typing.Optional[asyncio.Lock] = None
@@ -253,7 +250,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._rest_client = rest_client
         self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
         self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
-        self._running_generator_listeners: list[asyncio.Task[None]] = []
+        self._running_generator_listeners: set[asyncio.Task[None]] = set()
 
     @property
     def is_alive(self) -> bool:
@@ -370,7 +367,8 @@ class InteractionServer(interaction_server.InteractionServer):
     async def close(self) -> None:
         """Gracefully close the server and any open connections."""
         if not self._server or not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot close an inactive interaction server")
+            msg = "Cannot close an inactive interaction server"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._is_closing:
             await self.join()
@@ -385,7 +383,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         # Wait for handlers to complete
         await asyncio.gather(*self._running_generator_listeners)
-        self._running_generator_listeners = []
+        self._running_generator_listeners = set()
 
         self._close_event.set()
         self._close_event = None
@@ -394,11 +392,12 @@ class InteractionServer(interaction_server.InteractionServer):
     async def join(self) -> None:
         """Wait for the process to halt before continuing."""
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot wait for an inactive interaction server to join")
+            msg = "Cannot wait for an inactive interaction server to join"
+            raise errors.ComponentStateConflictError(msg)
 
         await self._close_event.wait()
 
-    async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:
+    async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:  # noqa: PLR0911
         """Handle an interaction received from Discord as a REST server.
 
         !!! note
@@ -427,7 +426,7 @@ class InteractionServer(interaction_server.InteractionServer):
             public_key.verify(timestamp + body, signature)
 
         except (self._nacl.exceptions.BadSignatureError, ValueError):
-            _LOGGER.error("Received a request with an invalid signature")
+            _LOGGER.exception("Received a request with an invalid signature")
             return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 
         try:
@@ -435,12 +434,12 @@ class InteractionServer(interaction_server.InteractionServer):
             assert isinstance(payload, dict)
             interaction_type = int(payload["type"])
 
-        except (ValueError, TypeError) as exc:
-            _LOGGER.error("Received a request with an invalid JSON body", exc_info=exc)
+        except (ValueError, TypeError):
+            _LOGGER.exception("Received a request with an invalid JSON body")
             return _Response(_BAD_REQUEST_STATUS, b"Invalid JSON body")
 
-        except KeyError as exc:
-            _LOGGER.error("Missing 'type' field in received JSON payload", exc_info=exc)
+        except KeyError:
+            _LOGGER.exception("Missing 'type' field in received JSON payload")
             return _Response(_BAD_REQUEST_STATUS, b"Missing required 'type' field in payload")
 
         if interaction_type == _PING_INTERACTION_TYPE:
@@ -454,7 +453,7 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.debug("Ignoring unknown interaction type %s", interaction_type)
             return _Response(_NOT_IMPLEMENTED, b"Interaction type not implemented")
 
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - Blind except
             asyncio.get_running_loop().call_exception_handler(
                 {
                     "message": "Exception occurred during interaction deserialization",
@@ -472,8 +471,9 @@ class InteractionServer(interaction_server.InteractionServer):
                 if inspect.isasyncgen(call):
                     result = await call.__anext__()
                     task = asyncio.create_task(_consume_generator_listener(call))
-                    task.add_done_callback(self._running_generator_listeners.remove)
-                    self._running_generator_listeners.append(task)
+
+                    self._running_generator_listeners.add(task)
+                    task.add_done_callback(self._running_generator_listeners.discard)
 
                 else:
                     result = await call
@@ -481,7 +481,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 raw_payload, files = result.build(self._entity_factory)
                 payload = self._dumps(raw_payload)
 
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 - Blind except
                 asyncio.get_running_loop().call_exception_handler(
                     {"message": "Exception occurred during interaction dispatch", "exception": exc}
                 )
@@ -538,7 +538,8 @@ class InteractionServer(interaction_server.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self._server:
-            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
+            msg = "Cannot start an already active interaction server"
+            raise errors.ComponentStateConflictError(msg)
 
         self._close_event = asyncio.Event()
         self._is_closing = False
@@ -556,21 +557,21 @@ class InteractionServer(interaction_server.InteractionServer):
             if isinstance(host, str):
                 host = (host,)
 
-            for h in host:
-                sites.append(
-                    aiohttp.web.TCPSite(
-                        self._server,
-                        h,
-                        port=port,
-                        shutdown_timeout=shutdown_timeout,
-                        ssl_context=ssl_context,
-                        backlog=backlog,
-                        reuse_address=reuse_address,
-                        reuse_port=reuse_port,
-                    )
+            sites.extend(
+                aiohttp.web.TCPSite(
+                    self._server,
+                    h,
+                    port=port,
+                    shutdown_timeout=shutdown_timeout,
+                    ssl_context=ssl_context,
+                    backlog=backlog,
+                    reuse_address=reuse_address,
+                    reuse_port=reuse_port,
                 )
+                for h in host
+            )
 
-        elif path is None and socket is None or port is not None:
+        elif (path is None and socket is None) or port is not None:
             sites.append(
                 aiohttp.web.TCPSite(
                     self._server,
@@ -656,6 +657,18 @@ class InteractionServer(interaction_server.InteractionServer):
         replace: bool = False,
     ) -> None: ...
 
+    @typing.overload
+    def set_listener(
+        self,
+        interaction_type: type[_InteractionT_co],
+        listener: typing.Optional[
+            interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
+        ],
+        /,
+        *,
+        replace: bool = False,
+    ) -> None: ...
+
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],
@@ -668,7 +681,8 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         if listener:
             if not replace and interaction_type in self._listeners:
-                raise TypeError(f"Listener already set for {interaction_type.__name__}")
+                msg = f"Listener already set for {interaction_type.__name__}"
+                raise TypeError(msg)
 
             self._listeners[interaction_type] = listener
 

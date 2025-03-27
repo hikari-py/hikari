@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji")
+__all__: typing.Sequence[str] = ("CustomEmoji", "Emoji", "KnownCustomEmoji", "UnicodeEmoji")
 
 import abc
 import re
@@ -36,9 +35,6 @@ from hikari import snowflakes
 from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import routes
-
-# import unicodedata
-
 
 if typing.TYPE_CHECKING:
     from hikari import traits
@@ -185,16 +181,6 @@ class UnicodeEmoji(str, Emoji):
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
-    # @property
-    # @typing.final
-    # def unicode_names(self) -> typing.Sequence[str]:
-    #     """Get the unicode name of the emoji as a sequence.
-    #
-    #     This returns the name of each codepoint. If only one codepoint exists,
-    #     then this will only have one item in the resulting sequence.
-    #     """
-    #     return [unicodedata.name(c) for c in self]
-
     @property
     @typing.final
     def unicode_escape(self) -> str:
@@ -228,10 +214,7 @@ class UnicodeEmoji(str, Emoji):
         UnicodeEmoji
             The parsed UnicodeEmoji object.
         """
-        # TODO: Re-add validity
-        # Ensure validity.
-        # for i, codepoint in enumerate(string, start=1):
-        #     unicodedata.name(codepoint)
+        # TODO: Add validity check here (maybe use optional discord_emojis package)
 
         return cls(string)
 
@@ -327,7 +310,8 @@ class CustomEmoji(snowflakes.Unique, Emoji):
                 is_animated=emoji_match.group("flags").lower() == "a",
             )
 
-        raise ValueError("Expected an emoji mention")
+        msg = "Expected an emoji mention"
+        raise ValueError(msg)
 
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
