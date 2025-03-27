@@ -26,7 +26,7 @@ bot = hikari.GatewayBot(token=os.environ["BOT_TOKEN"])
 # change without notice. You have been warned!
 def calculate_waveform(audio_file_path: str) -> tuple[str, float]:
     """Calculate the waveform and the duration from an audio file."""
-    # Author note: This is fancy maths that not even I understand,but it is based off
+    # Author note: This is fancy maths that not even I understand, but it is based off
     # https://github.com/Vendicated/Vencord/blob/b3bff83dd5040950c55e09bed9e47a60490f81d8/src/plugins/voiceMessages/index.tsx#L145
     audio = AudioSegment.from_file(audio_file_path)
     samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
