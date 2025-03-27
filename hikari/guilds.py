@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,34 +23,34 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "Guild",
-    "RESTGuild",
     "GatewayGuild",
-    "GuildWidget",
-    "Role",
-    "GuildFeature",
-    "GuildSystemChannelFlag",
-    "GuildMessageNotificationsLevel",
+    "Guild",
+    "GuildBan",
     "GuildExplicitContentFilterLevel",
+    "GuildFeature",
     "GuildMFALevel",
-    "GuildVerificationLevel",
+    "GuildMemberFlags",
+    "GuildMessageNotificationsLevel",
+    "GuildNSFWLevel",
     "GuildPremiumTier",
     "GuildPreview",
-    "GuildBan",
-    "GuildNSFWLevel",
-    "GuildMemberFlags",
-    "Member",
+    "GuildSystemChannelFlag",
+    "GuildVerificationLevel",
+    "GuildWidget",
     "Integration",
     "IntegrationAccount",
-    "IntegrationType",
     "IntegrationApplication",
     "IntegrationExpireBehaviour",
+    "IntegrationType",
+    "Member",
     "PartialApplication",
     "PartialGuild",
     "PartialIntegration",
     "PartialRole",
-    "WelcomeScreen",
+    "RESTGuild",
+    "Role",
     "WelcomeChannel",
+    "WelcomeScreen",
 )
 
 import typing
@@ -576,16 +575,10 @@ class Member(users.User):
         typing.Sequence[hikari.guilds.Role]
             The roles the users has.
         """
-        roles: list[Role] = []
-
         if not isinstance(self.user.app, traits.CacheAware):
-            return roles
+            return []
 
-        for role_id in self.role_ids:
-            if role := self.user.app.cache.get_role(role_id):
-                roles.append(role)
-
-        return roles
+        return [role for role_id in self.role_ids if (role := self.user.app.cache.get_role(role_id))]
 
     def get_top_role(self) -> typing.Optional[Role]:
         """Return the highest role the member has.
@@ -651,10 +644,7 @@ class Member(users.User):
             return None
 
         if ext is None:
-            if self.guild_avatar_hash.startswith("a_"):
-                ext = "gif"
-            else:
-                ext = "png"
+            ext = "gif" if self.guild_avatar_hash.startswith("a_") else "png"
 
         return routes.CDN_MEMBER_AVATAR.compile_to_file(
             urls.CDN_URL,
@@ -1420,10 +1410,7 @@ class PartialGuild(snowflakes.Unique):
             return None
 
         if ext is None:
-            if self.icon_hash.startswith("a_"):
-                ext = "gif"
-            else:
-                ext = "png"
+            ext = "gif" if self.icon_hash.startswith("a_") else "png"
 
         return routes.CDN_GUILD_ICON.compile_to_file(
             urls.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=ext
@@ -2815,11 +2802,7 @@ class Guild(PartialGuild):
             return None
 
         if ext is None:
-            if self.banner_hash.startswith("a_"):
-                ext = "gif"
-
-            else:
-                ext = "png"
+            ext = "gif" if self.banner_hash.startswith("a_") else "png"
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
             urls.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext

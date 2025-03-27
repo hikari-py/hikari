@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,37 +23,44 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ChannelType",
     "ChannelFlag",
-    "VideoQualityMode",
     "ChannelFollow",
-    "PermissionOverwrite",
-    "PermissionOverwriteType",
-    "PartialChannel",
-    "PermissibleGuildChannel",
-    "TextableChannel",
-    "TextableGuildChannel",
-    "ThreadMetadata",
-    "PrivateChannel",
+    "ChannelType",
     "DMChannel",
+    "ForumLayoutType",
+    "ForumSortOrderType",
+    "ForumTag",
     "GroupDMChannel",
     "GuildCategory",
     "GuildChannel",
-    "GuildTextChannel",
-    "GuildThreadChannel",
+    "GuildForumChannel",
     "GuildNewsChannel",
     "GuildNewsThread",
     "GuildPrivateThread",
     "GuildPublicThread",
-    "ForumSortOrderType",
-    "ForumLayoutType",
-    "ForumTag",
-    "GuildForumChannel",
-    "GuildVoiceChannel",
     "GuildStageChannel",
+    "GuildTextChannel",
+    "GuildThreadChannel",
+    "GuildVoiceChannel",
+    "PartialChannel",
+    "PartialChannel",
+    "PermissibleGuildChannel",
+    "PermissibleGuildChannel",
+    "PermissionOverwrite",
+    "PermissionOverwrite",
+    "PermissionOverwriteType",
+    "PermissionOverwriteType",
+    "PrivateChannel",
+    "PrivateChannel",
+    "TextableChannel",
+    "TextableChannel",
+    "TextableGuildChannel",
+    "TextableGuildChannel",
+    "ThreadMember",
+    "ThreadMetadata",
+    "VideoQualityMode",
     "WebhookChannelT",
     "WebhookChannelTypes",
-    "ThreadMember",
 )
 
 import typing
@@ -276,7 +282,7 @@ class PermissionOverwriteType(int, enums.Enum):
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-class PermissionOverwrite:
+class PermissionOverwrite(snowflakes.Unique):
     """Represents permission overwrites for a channel or role in a channel.
 
     You may sometimes need to make instances of this object to add/edit
@@ -1200,7 +1206,7 @@ class PermissibleGuildChannel(GuildChannel):
             return await self.app.rest.edit_permission_overwrite(self.id, target, allow=allow, deny=deny, reason=reason)
 
         return await self.app.rest.edit_permission_overwrite(
-            self.id, typing.cast(int, target), target_type=target_type, allow=allow, deny=deny, reason=reason
+            self.id, typing.cast("int", target), target_type=target_type, allow=allow, deny=deny, reason=reason
         )
 
     async def remove_overwrite(

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,10 +23,10 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ComponentInteraction",
     "COMPONENT_RESPONSE_TYPES",
-    "ComponentResponseTypesT",
+    "ComponentInteraction",
     "ComponentInteractionMetadata",
+    "ComponentResponseTypesT",
 )
 
 import typing
@@ -115,8 +114,8 @@ class ComponentInteraction(
 
         !!! note
             For interactions received over the gateway
-            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][] should be used to set
-            the interaction response message.
+            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][]
+            should be used to set the interaction response message.
 
         Parameters
         ----------
@@ -147,7 +146,8 @@ class ComponentInteraction(
             Interaction message response builder object.
         """
         if type_ not in _IMMEDIATE_TYPES:
-            raise ValueError("Invalid type passed for an immediate response")
+            msg = "Invalid type passed for an immediate response"
+            raise ValueError(msg)
 
         return self.app.rest.interaction_message_builder(type_)
 
@@ -156,8 +156,8 @@ class ComponentInteraction(
 
         !!! note
             For interactions received over the gateway
-            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][] should be used to set
-            the interaction response message.
+            [`hikari.interactions.component_interactions.ComponentInteraction.create_initial_response`][]
+            should be used to set the interaction response message.
 
         !!! note
             Unlike [`hikari.api.special_endpoints.InteractionMessageBuilder`][],
@@ -180,7 +180,8 @@ class ComponentInteraction(
             Deferred interaction message response builder object.
         """
         if type_ not in _DEFERRED_TYPES:
-            raise ValueError("Invalid type passed for a deferred response")
+            msg = "Invalid type passed for a deferred response"
+            raise ValueError(msg)
 
         return self.app.rest.interaction_deferred_builder(type_)
 

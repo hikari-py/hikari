@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("CompiledRoute", "Route", "CDNRoute")
+__all__: typing.Sequence[str] = ("CDNRoute", "CompiledRoute", "Route")
 
 import math
 import re
@@ -154,12 +153,12 @@ class Route:
 
         self.major_params = None
         match = PARAM_REGEX.findall(path_template)
-        for major_param_combo in MAJOR_PARAM_COMBOS.keys():
+        for major_param_combo in MAJOR_PARAM_COMBOS:
             if major_param_combo.issubset(match):
                 self.major_params = major_param_combo
                 break
 
-    def compile(self, **kwargs: typing.Any) -> CompiledRoute:
+    def compile(self, **kwargs: data_binding.Stringish) -> CompiledRoute:
         """Generate a formatted [`CompiledRoute`][] for this route.
 
         This takes into account any URL parameters that have been passed.
@@ -209,14 +208,13 @@ class CDNRoute:
     @valid_formats.validator
     def _(self, _: attrs.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
         if not values:
-            raise ValueError(f"{self.path_template} must have at least one valid format set")
+            msg = f"{self.path_template} must have at least one valid format set"
+            raise ValueError(msg)
 
     is_sizable: bool = attrs.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
     """Whether a `size` param can be specified."""
 
-    def compile(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
-    ) -> str:
+    def compile(self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: object) -> str:
         """Generate a full CDN url from this endpoint.
 
         Parameters
@@ -255,8 +253,9 @@ class CDNRoute:
                 + ", ".join(self.valid_formats)
             )
 
-        if "hash" in kwargs and not kwargs["hash"].startswith("a_") and file_format == GIF:
-            raise TypeError("This asset is not animated, so cannot be retrieved as a GIF")
+        if "hash" in kwargs and not str(kwargs["hash"]).startswith("a_") and file_format == GIF:
+            msg = "This asset is not animated, so cannot be retrieved as a GIF"
+            raise TypeError(msg)
 
         # Make URL-safe first.
         kwargs = {k: urllib.parse.quote(str(v)) for k, v in kwargs.items()}
@@ -264,22 +263,25 @@ class CDNRoute:
 
         if size is not None:
             if not self.is_sizable:
-                raise TypeError("This asset cannot be resized.")
+                msg = "This asset cannot be resized."
+                raise TypeError(msg)
 
             if size < 0:
-                raise ValueError("size must be positive")
+                msg = "size must be positive"
+                raise ValueError(msg)
 
             size_power = math.log2(size)
             if size_power.is_integer() and 2 <= size_power <= 16:
                 url += "?"
                 url += urllib.parse.urlencode({"size": str(size)})
             else:
-                raise ValueError("size must be an integer power of 2 between 16 and 4096 inclusive")
+                msg = "size must be an integer power of 2 between 16 and 4096 inclusive"
+                raise ValueError(msg)
 
         return url
 
     def compile_to_file(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
+        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: object
     ) -> files.URL:
         """Perform the same as `compile`, but return the URL as a [`hikari.files.URL`][]."""
         return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))
@@ -552,7 +554,7 @@ PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/role-connections/metadata"
 )
 
-# Entitlements (monetization)
+# Entitlements (also known as Monetization)
 GET_APPLICATION_SKUS: typing.Final[Route] = Route(GET, "/applications/{application}/skus")
 GET_APPLICATION_ENTITLEMENTS: typing.Final[Route] = Route(GET, "/applications/{application}/entitlements")
 POST_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(POST, "/applications/{application}/entitlements")

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -29,89 +28,89 @@ from hikari.internal import fast_protocol
 
 @typing.runtime_checkable
 class BasicPyProtocol(typing.Protocol):
-    def test(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test2(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test2(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test3(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test3(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test4(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test4(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test5(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test5(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test6(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test6(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test7(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test7(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test8(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test8(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test9(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test9(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test10(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test10(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
 
 class BasicHikariProtocol(fast_protocol.FastProtocolChecking, typing.Protocol):
-    def test(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test2(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test2(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test3(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test3(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test4(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test4(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test5(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test5(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test6(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test6(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test7(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test7(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test8(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test8(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test9(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test9(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
-    def test10(self, arg1: str, arg2: bool) -> typing.List[int]:
+    def test10(self, arg1: str, arg2: int) -> list[int]:
         raise NotImplementedError
 
 
 class Valid:
-    def test(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test2(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test2(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test3(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test3(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test4(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test4(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test5(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test5(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test6(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test6(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test7(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test7(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test8(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test8(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test9(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test9(self, arg1: str, arg2: int) -> list[int]: ...
 
-    def test10(self, arg1: str, arg2: bool) -> typing.List[int]: ...
+    def test10(self, arg1: str, arg2: int) -> list[int]: ...
 
 
 class Invalid: ...

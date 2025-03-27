@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -185,7 +184,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def edit_channel(
+    async def edit_channel(  # noqa: PLR0913 - Too many arguments
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         /,
@@ -575,7 +574,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Edit permissions for a target entity."""
+        # Edit permissions for a target entity
+        ...
 
     @typing.overload
     @abc.abstractmethod
@@ -589,7 +589,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Edit permissions for a given entity ID and type."""
+        # Edit permissions for a given entity ID and type
+        ...
 
     @abc.abstractmethod
     async def edit_permission_overwrite(
@@ -2487,7 +2488,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_invite(
-        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True
+        self, invite: typing.Union[invites.InviteCode, str], *, with_counts: bool = True
     ) -> invites.Invite:
         """Fetch an existing invite.
 
@@ -4772,7 +4773,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def create_forum_post(
+    async def create_forum_post(  # noqa: PLR0913
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         name: str,

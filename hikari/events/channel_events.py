@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -28,25 +27,25 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "ChannelEvent",
-    "GuildChannelEvent",
     "DMChannelEvent",
-    "GuildChannelCreateEvent",
-    "GuildChannelUpdateEvent",
-    "GuildChannelDeleteEvent",
-    "PinsUpdateEvent",
-    "GuildPinsUpdateEvent",
     "DMPinsUpdateEvent",
-    "InviteEvent",
-    "InviteCreateEvent",
-    "InviteDeleteEvent",
-    "WebhookUpdateEvent",
-    "GuildThreadEvent",
+    "GuildChannelCreateEvent",
+    "GuildChannelDeleteEvent",
+    "GuildChannelEvent",
+    "GuildChannelUpdateEvent",
+    "GuildPinsUpdateEvent",
     "GuildThreadAccessEvent",
     "GuildThreadCreateEvent",
-    "GuildThreadUpdateEvent",
     "GuildThreadDeleteEvent",
-    "ThreadMembersUpdateEvent",
+    "GuildThreadEvent",
+    "GuildThreadUpdateEvent",
+    "InviteCreateEvent",
+    "InviteDeleteEvent",
+    "InviteEvent",
+    "PinsUpdateEvent",
     "ThreadListSyncEvent",
+    "ThreadMembersUpdateEvent",
+    "WebhookUpdateEvent",
 )
 
 import abc

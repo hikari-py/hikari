@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("completed_future", "get_or_make_loop", "first_completed", "all_of", "destroy_loop")
+__all__: typing.Sequence[str] = ("all_of", "completed_future", "destroy_loop", "first_completed", "get_or_make_loop")
 
 import asyncio
 import typing
@@ -92,9 +91,11 @@ async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: typing.Op
     try:
         await next(iterator)
     except asyncio.CancelledError:
-        raise asyncio.CancelledError("first_completed gatherer cancelled") from None
+        msg = "first_completed gatherer cancelled"
+        raise asyncio.CancelledError(msg) from None
     except asyncio.TimeoutError:
-        raise asyncio.TimeoutError("first_completed gatherer timed out") from None
+        msg = "first_completed gatherer timed out"
+        raise asyncio.TimeoutError(msg) from None
     finally:
         for f in fs:
             if not f.done() and not f.cancelled():
@@ -130,9 +131,11 @@ async def all_of(*aws: typing.Awaitable[T_co], timeout: typing.Optional[float] =
     try:
         return await asyncio.wait_for(gatherer, timeout=timeout)
     except asyncio.TimeoutError:
-        raise asyncio.TimeoutError("all_of gatherer timed out") from None
+        msg = "all_of gatherer timed out"
+        raise asyncio.TimeoutError(msg) from None
     except asyncio.CancelledError:
-        raise asyncio.CancelledError("all_of gatherer cancelled") from None
+        msg = "all_of gatherer cancelled"
+        raise asyncio.CancelledError(msg) from None
     finally:
         for f in fs:
             if not f.done() and not f.cancelled():
@@ -205,7 +208,7 @@ def destroy_loop(loop: asyncio.AbstractEventLoop, logger: logging.Logger) -> Non
             await future
         except asyncio.CancelledError:
             pass
-        except Exception as ex:
+        except Exception as ex:  # noqa: BLE001 - Do not catch blind exception
             loop.call_exception_handler(
                 {
                     "message": "Future raised unexpected exception after requesting cancellation",

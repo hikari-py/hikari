@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -28,14 +27,13 @@ __all__: typing.Sequence[str] = ("VoiceComponent", "VoiceConnection")
 import abc
 import typing
 
-from hikari.events import voice_events
-
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from hikari import channels
     from hikari import guilds
     from hikari import snowflakes
+    from hikari.events import voice_events
 
     _VoiceConnectionT = typing.TypeVar("_VoiceConnectionT", bound="VoiceConnection")
 
@@ -89,7 +87,7 @@ class VoiceComponent(abc.ABC):
         deaf: bool = False,
         mute: bool = False,
         timeout: typing.Optional[int] = 5,
-        **kwargs: typing.Any,
+        **kwargs: object,
     ) -> _VoiceConnectionT:
         """Connect to a given voice channel.
 
@@ -158,7 +156,7 @@ class VoiceConnection(abc.ABC):
         shard_id: int,
         token: str,
         user_id: snowflakes.Snowflake,
-        **kwargs: typing.Any,
+        **kwargs: object,
     ) -> Self:
         """Initialize and connect the voice connection.
 

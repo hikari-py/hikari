@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("PartialUser", "User", "OwnUser", "UserFlag", "PremiumType")
+__all__: typing.Sequence[str] = ("OwnUser", "PartialUser", "PremiumType", "User", "UserFlag")
 
 import abc
 import typing
@@ -38,7 +37,13 @@ from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 
+if not typing.TYPE_CHECKING:
+    # This is insanely hacky, but it is needed for ruff to not complain until it gets type inference
+    from hikari.internal import typing_extensions
+
 if typing.TYPE_CHECKING:
+    import typing_extensions  # noqa: TC004
+
     from hikari import channels
     from hikari import colors
     from hikari import embeds as embeds_
@@ -601,10 +606,7 @@ class User(PartialUser, abc.ABC):
             return None
 
         if ext is None:
-            if self.avatar_hash.startswith("a_"):
-                ext = "gif"
-            else:
-                ext = "png"
+            ext = "gif" if self.avatar_hash.startswith("a_") else "png"
 
         return routes.CDN_USER_AVATAR.compile_to_file(
             urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext
@@ -642,10 +644,7 @@ class User(PartialUser, abc.ABC):
             return None
 
         if ext is None:
-            if self.banner_hash.startswith("a_"):
-                ext = "gif"
-            else:
-                ext = "png"
+            ext = "gif" if self.banner_hash.startswith("a_") else "png"
 
         return routes.CDN_USER_BANNER.compile_to_file(
             urls.CDN_URL, user_id=self.id, hash=self.banner_hash, size=size, file_format=ext
@@ -721,7 +720,7 @@ class PartialUserImpl(PartialUser):
     def __str__(self) -> str:
         if self.username is undefined.UNDEFINED or self.discriminator is undefined.UNDEFINED:
             return f"Partial user ID {self.id}"
-        elif self.discriminator == "0":  # migrated account
+        if self.discriminator == "0":  # migrated account
             return self.username
         return f"{self.username}#{self.discriminator}"
 
@@ -821,8 +820,10 @@ class OwnUser(UserImpl):
         return await self.app.rest.fetch_my_user()
 
     async def fetch_dm_channel(self) -> typing.NoReturn:
-        raise TypeError("Unable to fetch your own DM channel")
+        msg = "Unable to fetch your own DM channel"
+        raise TypeError(msg)
 
+    @typing_extensions.override
     async def send(
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
@@ -847,4 +848,5 @@ class OwnUser(UserImpl):
         ] = undefined.UNDEFINED,
         flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = undefined.UNDEFINED,
     ) -> typing.NoReturn:
-        raise TypeError("Unable to send a DM to yourself")
+        msg = "Unable to send a DM to yourself"
+        raise TypeError(msg)

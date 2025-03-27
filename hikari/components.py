@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,32 +23,34 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ComponentType",
-    "PartialComponent",
     "ActionRowComponent",
-    "ButtonStyle",
     "ButtonComponent",
-    "SelectMenuOption",
-    "SelectMenuComponent",
-    "TextSelectMenuComponent",
+    "ButtonStyle",
     "ChannelSelectMenuComponent",
-    "TextInputStyle",
-    "TextInputComponent",
+    "ComponentType",
     "InteractiveButtonTypes",
     "InteractiveButtonTypesT",
-    "MessageComponentTypesT",
-    "ModalComponentTypesT",
     "MessageActionRowComponent",
+    "MessageComponentTypesT",
     "ModalActionRowComponent",
+    "ModalComponentTypesT",
+    "PartialComponent",
+    "SelectMenuComponent",
+    "SelectMenuOption",
+    "TextInputComponent",
+    "TextInputStyle",
+    "TextSelectMenuComponent",
 )
 
 import typing
 
 import attrs
 
-from hikari import channels
-from hikari import emojis
 from hikari.internal import enums
+
+if typing.TYPE_CHECKING:
+    from hikari import channels
+    from hikari import emojis
 
 
 @typing.final
@@ -310,17 +311,17 @@ class TextInputComponent(PartialComponent):
     """Value provided for this text input."""
 
 
-SelectMenuTypesT = typing.Union[
-    typing.Literal[ComponentType.TEXT_SELECT_MENU],
-    typing.Literal[3],
-    typing.Literal[ComponentType.USER_SELECT_MENU],
-    typing.Literal[5],
-    typing.Literal[ComponentType.ROLE_SELECT_MENU],
-    typing.Literal[6],
-    typing.Literal[ComponentType.MENTIONABLE_SELECT_MENU],
-    typing.Literal[7],
-    typing.Literal[ComponentType.CHANNEL_SELECT_MENU],
-    typing.Literal[8],
+SelectMenuTypesT = typing.Literal[
+    ComponentType.TEXT_SELECT_MENU,
+    3,
+    ComponentType.USER_SELECT_MENU,
+    5,
+    ComponentType.ROLE_SELECT_MENU,
+    6,
+    ComponentType.MENTIONABLE_SELECT_MENU,
+    7,
+    ComponentType.CHANNEL_SELECT_MENU,
+    8,
 ]
 """Type hints of the [`hikari.components.ComponentType`][] values which are valid for select menus.
 
@@ -353,15 +354,8 @@ The following values are included in this:
 * [`hikari.components.ComponentType.CHANNEL_SELECT_MENU`][]
 """
 
-InteractiveButtonTypesT = typing.Union[
-    typing.Literal[ButtonStyle.PRIMARY],
-    typing.Literal[1],
-    typing.Literal[ButtonStyle.SECONDARY],
-    typing.Literal[2],
-    typing.Literal[ButtonStyle.SUCCESS],
-    typing.Literal[3],
-    typing.Literal[ButtonStyle.DANGER],
-    typing.Literal[4],
+InteractiveButtonTypesT = typing.Literal[
+    ButtonStyle.PRIMARY, 1, ButtonStyle.SECONDARY, 2, ButtonStyle.SUCCESS, 3, ButtonStyle.DANGER, 4
 ]
 """Type hints of the [`hikari.components.ButtonStyle`][] values which are valid for interactive buttons.
 
@@ -393,14 +387,14 @@ The following values are valid for this:
 
 * [`hikari.components.ButtonComponent`][]
 * [`hikari.components.SelectMenuComponent`][]
-"""
+"""  # noqa: E501
 ModalComponentTypesT = TextInputComponent
 """Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:
 
 * [`hikari.components.TextInputComponent`][]
-"""
+"""  # noqa: E501
 
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""

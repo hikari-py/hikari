@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,7 +24,6 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("EventFactoryImpl",)
 
-import datetime
 import types
 import typing
 
@@ -59,6 +57,8 @@ from hikari.internal import data_binding
 from hikari.internal import time
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import guilds as guild_models
     from hikari import invites as invite_models
     from hikari import messages as messages_models
@@ -68,9 +68,7 @@ if typing.TYPE_CHECKING:
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
 
-_INTERACTION_EVENTS_MAP: dict[
-    base_interactions.InteractionType, typing.Type[interaction_events.InteractionCreateEvent]
-] = {
+_INTERACTION_EVENTS_MAP: dict[base_interactions.InteractionType, type[interaction_events.InteractionCreateEvent]] = {
     base_interactions.InteractionType.APPLICATION_COMMAND: interaction_events.CommandInteractionCreateEvent,
     base_interactions.InteractionType.AUTOCOMPLETE: interaction_events.AutocompleteInteractionCreateEvent,
     base_interactions.InteractionType.MESSAGE_COMPONENT: interaction_events.ComponentInteractionCreateEvent,

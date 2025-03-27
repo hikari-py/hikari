@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,14 +23,14 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "AutocompleteInteraction",
-    "BaseCommandInteraction",
-    "CommandInteractionOption",
-    "AutocompleteInteractionOption",
-    "CommandInteraction",
     "COMMAND_RESPONSE_TYPES",
-    "CommandResponseTypesT",
+    "AutocompleteInteraction",
+    "AutocompleteInteractionOption",
+    "BaseCommandInteraction",
+    "CommandInteraction",
     "CommandInteractionMetadata",
+    "CommandInteractionOption",
+    "CommandResponseTypesT",
 )
 
 import typing
@@ -194,8 +193,8 @@ class CommandInteraction(
 
         !!! note
             For interactions received over the gateway
-            [`hikari.interactions.command_interactions.CommandInteraction.create_initial_response`][] should be used to set
-            the interaction response message.
+            [`hikari.interactions.command_interactions.CommandInteraction.create_initial_response`][]
+            should be used to set the interaction response message.
 
         Examples
         --------
@@ -222,8 +221,8 @@ class CommandInteraction(
 
         !!! note
             For interactions received over the gateway
-            [`hikari.interactions.command_interactions.CommandInteraction.create_initial_response`][] should be used to set
-            the interaction response message.
+            [`hikari.interactions.command_interactions.CommandInteraction.create_initial_response`][]
+            should be used to set the interaction response message.
 
         !!! note
             Unlike [`hikari.api.special_endpoints.InteractionMessageBuilder`][],
@@ -264,8 +263,8 @@ class AutocompleteInteraction(BaseCommandInteraction):
 
         !!! note
             For interactions received over the gateway
-            [`hikari.interactions.command_interactions.AutocompleteInteraction.create_response`][] should be used to set
-            the interaction response.
+            [`hikari.interactions.command_interactions.AutocompleteInteraction.create_response`][]
+            should be used to set the interaction response.
 
         Parameters
         ----------

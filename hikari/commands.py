@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,16 +23,16 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "PartialCommand",
-    "ContextMenuCommand",
-    "SlashCommand",
     "CommandChoice",
     "CommandOption",
     "CommandPermission",
     "CommandPermissionType",
     "CommandType",
+    "ContextMenuCommand",
     "GuildCommandPermissions",
     "OptionType",
+    "PartialCommand",
+    "SlashCommand",
 )
 
 import typing
@@ -293,10 +292,9 @@ class PartialCommand(snowflakes.Unique):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        command = await self.app.rest.fetch_application_command(
+        return await self.app.rest.fetch_application_command(
             self.application_id, self.id, undefined.UNDEFINED if self.guild_id is None else self.guild_id
         )
-        return command
 
     async def edit(
         self,
@@ -340,7 +338,7 @@ class PartialCommand(snowflakes.Unique):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        command = await self.app.rest.edit_application_command(
+        return await self.app.rest.edit_application_command(
             self.application_id,
             self.id,
             undefined.UNDEFINED if self.guild_id is None else self.guild_id,
@@ -348,7 +346,6 @@ class PartialCommand(snowflakes.Unique):
             description=description,
             options=options,
         )
-        return command
 
     async def delete(self) -> None:
         """Delete this command.

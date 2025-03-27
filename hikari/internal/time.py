@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,15 +24,15 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "DISCORD_EPOCH",
+    "Intervalish",
     "datetime_to_discord_epoch",
     "discord_epoch_to_datetime",
-    "unix_epoch_to_datetime",
-    "Intervalish",
-    "timespan_to_int",
     "local_datetime",
-    "utc_datetime",
     "monotonic",
     "monotonic_ns",
+    "timespan_to_int",
+    "unix_epoch_to_datetime",
+    "utc_datetime",
     "uuid",
 )
 
@@ -136,7 +135,7 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
     return int((timestamp - DISCORD_EPOCH).timestamp() * 1_000)
 
 
-def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: bool = True) -> datetime.datetime:
+def unix_epoch_to_datetime(epoch: float, /, *, is_millis: bool = True) -> datetime.datetime:
     """Parse a UNIX epoch to a [`datetime.datetime`][] object.
 
     !!! note
@@ -164,9 +163,8 @@ def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: boo
         return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
     except (OSError, ValueError):
         if epoch > 0:
-            return datetime.datetime.max
-        else:
-            return datetime.datetime.min
+            return datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
+        return datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
 
 
 def timespan_to_int(value: Intervalish, /) -> int:
