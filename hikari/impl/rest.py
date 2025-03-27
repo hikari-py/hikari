@@ -755,7 +755,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     # We rather keep everything we can here inline.
     @typing.final
-    async def _perform_request(  # noqa: C901
+    async def _perform_request(  # noqa: C901, PLR0912, PLR0915
         self,
         compiled_route: routes.CompiledRoute,
         *,
@@ -1056,7 +1056,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return result
 
-    async def edit_channel(
+    async def edit_channel(  # noqa: PLR0913
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         /,
@@ -1397,7 +1397,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    def _build_message_payload(  # noqa: C901 - Function too complex
+    def _build_message_payload(  # noqa: C901, PLR0912, PLR0915
         self,
         /,
         *,
@@ -3043,7 +3043,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_thread(response)
 
-    async def create_forum_post(
+    async def create_forum_post(  # noqa: PLR0913
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         name: str,

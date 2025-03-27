@@ -986,7 +986,8 @@ class IteratorReader(AsyncReader):
         if buff:
             yield bytes(buff)
 
-    async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+    # We rather keep everything we can here inline.
+    async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:  # noqa: PLR0912
         if isinstance(self.data, bytes):
             for i in range(0, len(self.data), _MAGIC):
                 yield self.data[i : i + _MAGIC]

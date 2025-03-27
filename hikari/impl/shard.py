@@ -896,7 +896,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
         return lifetime_tasks
 
-    async def _keep_alive(self) -> None:
+    # We rather keep everything we can here inline.
+    async def _keep_alive(self) -> None:  # noqa: PLR0912, PLR0915
         assert self._handshake_event is not None
 
         lifetime_tasks: tuple[asyncio.Task[None], ...] = ()

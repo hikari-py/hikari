@@ -1801,7 +1801,8 @@ class CacheImpl(cache.MutableCache):
         cached_messages.update(self._referenced_messages)
         return cache_utility.CacheMappingView(cached_messages, builder=self._build_message)  # type: ignore[type-var]
 
-    def _set_message(
+    # We rather keep everything we can here inline.
+    def _set_message(  # noqa: PLR0912
         self, message: messages.Message, /, *, is_reference: bool = True
     ) -> cache_utility.RefCell[cache_utility.MessageData]:
         author = self._set_user(message.author)

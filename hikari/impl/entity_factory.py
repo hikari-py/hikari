@@ -1618,7 +1618,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             fields=fields,
         )
 
-    def serialize_embed(  # noqa: C901 - Function too complex
+    # We rather keep everything we can here inline.
+    def serialize_embed(  # noqa: C901, PLR0912, PLR0915
         self, embed: embed_models.Embed
     ) -> tuple[data_binding.JSONObject, list[files.Resource[files.AsyncReader]]]:
         payload: dict[str, typing.Any] = {}
@@ -3165,7 +3166,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         msg = f"Unrecognised interaction metadata type: {interaction_metadata_type}"
         raise errors.UnrecognisedEntityError(msg)
 
-    def deserialize_partial_message(  # noqa: C901 - Too complex
+    def deserialize_partial_message(  # noqa: C901, PLR0912, PLR0915
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
         author: undefined.UndefinedOr[user_models.User] = undefined.UNDEFINED
@@ -3296,7 +3297,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             interaction_metadata=interaction_metadata,
         )
 
-    def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:
+    def deserialize_message(self, payload: data_binding.JSONObject) -> message_models.Message:  # noqa: PLR0912
         author = self.deserialize_user(payload["author"])
 
         guild_id: typing.Optional[snowflakes.Snowflake] = None
