@@ -264,7 +264,7 @@ class TestPrintBanner:
 
     @pytest.fixture
     def mock_args(self):
-        _about_path = str(pathlib.Path("/", "somewhere", "..", "coding", "hikari", "_about.py"))
+        _about_path = str(pathlib.Path("/", "somewhere", "..", "coding", "hikari", "_about.py").resolve())
 
         stack = contextlib.ExitStack()
 
