@@ -6005,7 +6005,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -6025,8 +6025,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the name for the role.
         permissions
             The permissions to give the role. This will default to setting
-            NO roles if left to the default value. This is in contrast to
-            default behaviour on Discord where some random permissions will
+            NO permissions if left as the default value. This is in contrast to
+            default behaviour on Discord where some random permissions may
             be set by default.
         color
             If provided, the role's color.
