@@ -1037,6 +1037,9 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]] = (
         attrs.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
     )
+    _poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = attrs.field(
+        alias="poll", default=undefined.UNDEFINED, kw_only=True
+    )
     _attachments: undefined.UndefinedNoneOr[list[files.Resourceish]] = attrs.field(
         alias="attachments", default=undefined.UNDEFINED, kw_only=True
     )
@@ -1090,6 +1093,10 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self,
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
+
+    @property
+    def poll(self) -> undefined.UndefinedOr[special_endpoints.PollBuilder]:
+        return self._poll
 
     def add_attachment(self, attachment: files.Resourceish, /) -> Self:
         if not self._attachments:
@@ -1164,6 +1171,10 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._user_mentions = user_mentions
         return self
 
+    def set_poll(self, poll: undefined.UndefinedOr[special_endpoints.PollBuilder], /) -> Self:
+        self._poll = poll
+        return self
+
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
@@ -1204,6 +1215,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
         data.put("flags", self.flags)
         data.put("tts", self.is_tts)
+        data.put("poll", self.poll, conversion=lambda poll: poll.build())
 
         if (
             not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions)

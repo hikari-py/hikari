@@ -734,6 +734,11 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         user mentions or [`True`][] to allow all user mentions.
         """
 
+    @property
+    @abc.abstractmethod
+    def poll(self) -> undefined.UndefinedOr[PollBuilder]:
+        """The poll to include with this response."""
+
     @abc.abstractmethod
     def clear_attachments(self, /) -> Self:
         """Clear attachments for this response.
@@ -895,6 +900,22 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             Either a sequence of object/IDs of the users mentions should be enabled for,
             [`False`][] or [`hikari.undefined.UNDEFINED`][] to disallow any user
             mentions or [`True`][] to allow all user mentions.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_poll(self, poll: undefined.UndefinedOr[PollBuilder], /) -> Self:
+        """Set the poll to include with this response.
+
+        Parameters
+        ----------
+        poll
+            The poll to include with this response, or [`hikari.undefined.UNDEFINED`][]
+            to remove a previously added poll.
 
         Returns
         -------
