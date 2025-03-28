@@ -415,6 +415,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
             typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
@@ -459,6 +460,8 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to set on the message.
         flags
             If provided, the message flags this response should have.
 
@@ -524,6 +527,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             flags=flags,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
