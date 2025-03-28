@@ -1037,7 +1037,9 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]] = (
         attrs.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
     )
-    _poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = attrs.field(alias="poll", default=undefined.UNDEFINED, kw_only=True)
+    _poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = attrs.field(
+        alias="poll", default=undefined.UNDEFINED, kw_only=True
+    )
     _attachments: undefined.UndefinedNoneOr[list[files.Resourceish]] = attrs.field(
         alias="attachments", default=undefined.UNDEFINED, kw_only=True
     )
