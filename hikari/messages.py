@@ -1004,6 +1004,8 @@ class PartialMessage(snowflakes.Unique):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to set on the message.
         sticker
             If provided, object or ID of a sticker to send on the message.
 
