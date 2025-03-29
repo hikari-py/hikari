@@ -84,7 +84,7 @@ audit = ["uv-secure"]
 codespell = ["codespell==2.4.1"]
 coverage = ["coverage[toml]==7.7.1"]
 flake8 = [
-    "flake8==7.1.2",
+    "flake8==7.2.0",
     #
     # Plugins
     # Ref: https://github.com/DmytroLitvinov/awesome-flake8-extensions
