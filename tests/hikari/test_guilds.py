@@ -377,6 +377,11 @@ class TestMember:
             file_format="url",
         )
 
+    def test_make_banner_url(self, model, mock_user):
+        result = model.make_banner_url(ext="png", size=4096)
+        mock_user.make_banner_url.assert_called_once_with(ext="png", size=4096)
+        assert result is mock_user.make_banner_url.return_value
+
     def test_make_guild_banner_url_when_no_hash(self, model):
         model.guild_banner_hash = None
         assert model.make_guild_banner_url(ext="png", size=1024) is None
