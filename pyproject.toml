@@ -44,7 +44,6 @@ readme = "README.md"
 authors = [
     { name = "Nekokatt" },
     { name = "davfsa" },
-    { name = "FasterSpeeding" },
 ]
 maintainers = [{ name = "davfsa", email = "davfsa@hikari-py.dev" }]
 classifiers = [
