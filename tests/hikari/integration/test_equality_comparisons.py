@@ -67,6 +67,7 @@ def make_guild_member(user_id):
         nickname=user.username,
         premium_since=None,
         guild_avatar_hash="no",
+        guild_banner_hash="yes",
         is_deaf=False,
         is_mute=False,
         is_pending=False,

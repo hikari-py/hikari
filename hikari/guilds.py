@@ -427,10 +427,17 @@ class Member(users.User):
     """This member's corresponding user object."""
 
     guild_avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
-    """Hash of the member's guild avatar guild if set, else [`None`][].
+    """Hash of the member's guild avatar if set, else [`None`][].
 
     !!! note
         This takes precedence over [`hikari.guilds.Member.avatar_hash`][].
+    """
+
+    guild_banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    """Hash of the member's guild banner if set, else [`None`][].
+
+    !!! note
+        This takes precedence over [`hikari.guilds.Member.banner_hash`][].
     """
 
     guild_flags: typing.Union[GuildMemberFlags, int] = attrs.field(eq=False, hash=False, repr=False)
@@ -473,6 +480,19 @@ class Member(users.User):
     @property
     def banner_url(self) -> typing.Optional[files.URL]:
         return self.user.banner_url
+
+    @property
+    def guild_banner_url(self) -> typing.Optional[files.URL]:
+        """Guild Banner URL for the user, if they have one set.
+
+        May be [`None`][] if no guild banner is set. In this case, you
+        should use [`hikari.guilds.Member.banner_hash`][] instead.
+        """
+        return self.make_guild_banner_url()
+
+    @property
+    def display_banner_url(self) -> typing.Optional[files.URL]:
+        return self.make_guild_banner_url() or super().display_banner_url
 
     @property
     def accent_color(self) -> typing.Optional[colors.Color]:
@@ -651,6 +671,53 @@ class Member(users.User):
             guild_id=self.guild_id,
             user_id=self.id,
             hash=self.guild_avatar_hash,
+            size=size,
+            file_format=ext,
+        )
+
+    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        return self.user.make_banner_url(ext=ext, size=size)
+
+    def make_guild_banner_url(
+        self, *, ext: typing.Optional[str] = None, size: int = 4096
+    ) -> typing.Optional[files.URL]:
+        """Generate the guild specific banner url for this member, if set.
+
+        If no guild banner is set, this returns [`None`][].
+
+        Parameters
+        ----------
+        ext
+            The ext to use for this URL.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            If [`None`][], then the correct default extension is
+            determined based on whether the banner is animated or not.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the banner, or [`None`][] if not present.
+
+        Raises
+        ------
+        ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.guild_banner_hash is None:
+            return None
+
+        if ext is None:
+            ext = "gif" if self.guild_banner_hash.startswith("a_") else "png"
+
+        return routes.CDN_MEMBER_BANNER.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.guild_id,
+            user_id=self.id,
+            hash=self.guild_banner_hash,
             size=size,
             file_format=ext,
         )

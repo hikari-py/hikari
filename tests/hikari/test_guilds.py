@@ -226,6 +226,7 @@ class TestMember:
             joined_at=datetime.datetime.now().astimezone(),
             nickname="davb",
             guild_avatar_hash="dab",
+            guild_banner_hash="dimma",
             premium_since=None,
             role_ids=[snowflakes.Snowflake(456), snowflakes.Snowflake(1234)],
             user=mock_user,
@@ -272,6 +273,15 @@ class TestMember:
             with mock.patch.object(users.User, "display_avatar_url") as mock_display_avatar_url:
                 assert model.display_avatar_url is mock_display_avatar_url
 
+    def test_display_banner_url_when_guild_hash_is_None(self, model, mock_user):
+        with mock.patch.object(guilds.Member, "make_guild_banner_url") as mock_make_guild_banner_url:
+            assert model.display_banner_url is mock_make_guild_banner_url.return_value
+
+    def test_display_banner_url_when_guild_hash_is_not_None(self, model, mock_user):
+        with mock.patch.object(guilds.Member, "make_guild_banner_url", return_value=None):
+            with mock.patch.object(users.User, "display_banner_url") as mock_display_banner_url:
+                assert model.display_banner_url is mock_display_banner_url
+
     def test_banner_hash_property(self, model, mock_user):
         assert model.banner_hash is mock_user.banner_hash
 
@@ -284,6 +294,10 @@ class TestMember:
     def test_guild_avatar_url_property(self, model):
         with mock.patch.object(guilds.Member, "make_guild_avatar_url") as make_guild_avatar_url:
             assert model.guild_avatar_url is make_guild_avatar_url.return_value
+
+    def test_guild_banner_url_property(self, model):
+        with mock.patch.object(guilds.Member, "make_guild_banner_url") as make_guild_banner_url:
+            assert model.guild_banner_url is make_guild_banner_url.return_value
 
     def test_communication_disabled_until(self, model):
         model.raw_communication_disabled_until = datetime.datetime(2021, 11, 22)
@@ -359,6 +373,61 @@ class TestMember:
             guild_id=model.guild_id,
             user_id=model.id,
             hash=model.guild_avatar_hash,
+            size=4096,
+            file_format="url",
+        )
+
+    def test_make_guild_banner_url_when_no_hash(self, model):
+        model.guild_banner_hash = None
+        assert model.make_guild_banner_url(ext="png", size=1024) is None
+
+    def test_make_guild_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model):
+        model.guild_banner_hash = "a_18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=model.id,
+            guild_id=model.guild_id,
+            hash=model.guild_banner_hash,
+            size=4096,
+            file_format="gif",
+        )
+
+    def test_make_guild_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model):
+        model.guild_banner_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=model.id,
+            guild_id=model.guild_id,
+            hash=model.guild_banner_hash,
+            size=4096,
+            file_format="png",
+        )
+
+    def test_make_guild_banner_url_with_all_args(self, model):
+        model.guild_banner_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_banner_url(ext="url", size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            guild_id=model.guild_id,
+            user_id=model.id,
+            hash=model.guild_banner_hash,
             size=4096,
             file_format="url",
         )
