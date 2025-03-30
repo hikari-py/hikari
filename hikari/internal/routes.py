@@ -34,6 +34,7 @@ import attrs
 from hikari import files
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import typing_extensions
 
 HASH_SEPARATOR: typing.Final[str] = ";"
 PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")
@@ -108,6 +109,7 @@ class CompiledRoute:
         """
         return f"{initial_bucket_hash}{HASH_SEPARATOR}{authentication_hash}{HASH_SEPARATOR}{self.major_param_hash}"
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"{self.method} {self.compiled_path}"
 
@@ -183,6 +185,7 @@ class Route:
             major_param_hash=MAJOR_PARAM_COMBOS[self.major_params](data) if self.major_params else "-",
         )
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.method + " " + self.path_template
 

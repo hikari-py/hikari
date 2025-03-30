@@ -48,6 +48,7 @@ from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -255,6 +256,7 @@ class Attachment(snowflakes.Unique, files.WebResource):
     waveform: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=False)
     """A base64 encoded representation of the sampled waveform for the voice message."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.filename
 
@@ -273,6 +275,7 @@ class Reaction:
     is_me: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return str(self.emoji)
 

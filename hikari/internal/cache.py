@@ -63,9 +63,15 @@ from hikari.api import cache
 from hikari.internal import attrs_extensions
 from hikari.internal import collections
 
+if not typing.TYPE_CHECKING:
+    # This is insanely hacky, but it is needed for ruff to not complain until it gets type inference
+    from hikari.internal import typing_extensions
+
+
 if typing.TYPE_CHECKING:
     import datetime
 
+    import typing_extensions  # noqa: TC004
     from typing_extensions import Self
 
     from hikari import applications
@@ -119,9 +125,11 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     def _copy(value: ValueT) -> ValueT:
         return copy.copy(value)
 
+    @typing_extensions.override
     def __contains__(self, key: object) -> bool:
         return key in self._data
 
+    @typing_extensions.override
     def __getitem__(self, key: KeyT) -> ValueT:
         entry = self._data[key]
 
@@ -130,9 +138,11 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
 
         return self._copy(entry)  # type: ignore[arg-type]
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[KeyT]:
         return iter(self._data)
 
+    @typing_extensions.override
     def __len__(self) -> int:
         return len(self._data)
 
@@ -142,6 +152,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     @typing.overload
     def get_item_at(self, index: slice, /) -> typing.Sequence[ValueT]: ...
 
+    @typing_extensions.override
     def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
         return collections.get_index_or_slice(self, index)
 
@@ -151,18 +162,23 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
 
     __slots__: typing.Sequence[str] = ()
 
+    @typing_extensions.override
     def __contains__(self, _: object) -> typing.Literal[False]:
         return False
 
+    @typing_extensions.override
     def __getitem__(self, key: object) -> typing.NoReturn:
         raise KeyError(key)
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[typing.Any]:
         yield from ()
 
+    @typing_extensions.override
     def __len__(self) -> typing.Literal[0]:
         return 0
 
+    @typing_extensions.override
     def get_item_at(self, index: typing.Union[slice, int]) -> typing.NoReturn:
         raise IndexError(index)
 
@@ -334,6 +350,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     is_temporary: bool = attrs.field()
     created_at: datetime.datetime = attrs.field()
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> invites.InviteWithMetadata:
         return invites.InviteWithMetadata(
             code=self.code,
@@ -357,6 +374,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
         )
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls,
         invite: invites.InviteWithMetadata,
@@ -409,6 +427,7 @@ class MemberData(BaseData[guilds.Member]):
     has_been_deleted: bool = attrs.field(default=False, init=False)
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, member: guilds.Member, /, *, user: typing.Optional[RefCell[users_.User]] = None
     ) -> MemberData:
@@ -430,6 +449,7 @@ class MemberData(BaseData[guilds.Member]):
             role_ids=tuple(member.role_ids),
         )
 
+    @typing_extensions.override
     def build_entity(self, _: traits.RESTAware, /) -> guilds.Member:
         return guilds.Member(
             guild_id=self.guild_id,
@@ -464,6 +484,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     is_available: bool = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, emoji: emojis.KnownCustomEmoji, /, *, user: typing.Optional[RefCell[users_.User]] = None
     ) -> KnownCustomEmojiData:
@@ -487,6 +508,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
             role_ids=tuple(emoji.role_ids),
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> emojis.KnownCustomEmoji:
         return emojis.KnownCustomEmoji(
             id=self.id,
@@ -517,6 +539,7 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
     user: typing.Optional[RefCell[users_.User]] = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, sticker: stickers_.GuildSticker, /, *, user: typing.Optional[RefCell[users_.User]] = None
     ) -> GuildStickerData:
@@ -534,6 +557,7 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
             user=user,
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> stickers_.GuildSticker:
         return stickers_.GuildSticker(
             id=self.id,
@@ -569,6 +593,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
     buttons: tuple[str, ...] = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, activity: presences.RichActivity, /, *, emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = None
     ) -> RichActivityData:
@@ -603,6 +628,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
             buttons=tuple(activity.buttons),
         )
 
+    @typing_extensions.override
     def build_entity(self, _: traits.RESTAware, /) -> presences.RichActivity:
         emoji: typing.Optional[emojis.Emoji] = None
         if isinstance(self.emoji, RefCell):
@@ -642,6 +668,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
     client_status: presences.ClientStatus = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(cls, presence: presences.MemberPresence, /) -> MemberPresenceData:
         # role_ids and activities are special cases as may be mutable sequences, therefore we want to ensure they're
         # stored in immutable sequences (tuples). Plus activities need to be converted to Data objects.
@@ -653,6 +680,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
             client_status=copy.copy(presence.client_status),
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> presences.MemberPresence:
         return presences.MemberPresence(
             user_id=self.user_id,
@@ -721,6 +749,7 @@ class MessageData(BaseData[messages.Message]):
     interaction_metadata: typing.Optional[base_interactions.PartialInteractionMetadata] = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls,
         message: messages.Message,
@@ -784,6 +813,7 @@ class MessageData(BaseData[messages.Message]):
             interaction_metadata=message.interaction_metadata,
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
         channel_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = (
             {channel_id: copy.copy(channel) for channel_id, channel in self.channel_mentions.items()}
@@ -894,6 +924,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     session_id: str = attrs.field()
     requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field()
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
         member = self.member.object.build_entity(app) if self.member else None
         return voices.VoiceState(
@@ -914,6 +945,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
         )
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, voice_state: voices.VoiceState, /, *, member: typing.Optional[RefCell[MemberData]] = None
     ) -> VoiceStateData:
@@ -1012,5 +1044,6 @@ class Cache3DMappingView(CacheMappingView[snowflakes.Snowflake, cache.CacheView[
     __slots__: typing.Sequence[str] = ()
 
     @staticmethod
+    @typing_extensions.override
     def _copy(value: cache.CacheView[KeyT, ValueT]) -> cache.CacheView[KeyT, ValueT]:
         return value

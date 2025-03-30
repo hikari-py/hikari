@@ -45,6 +45,7 @@ from hikari import errors
 from hikari import files
 from hikari import undefined
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -64,15 +65,18 @@ class EmbedResource(files.Resource[files.AsyncReader]):
 
     @property
     @typing.final
+    @typing_extensions.override
     def url(self) -> str:
         """URL of this embed resource."""
         return self.resource.url
 
     @property
+    @typing_extensions.override
     def filename(self) -> str:
         """File name of this embed resource."""
         return self.resource.filename
 
+    @typing_extensions.override
     def stream(
         self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
     ) -> files.AsyncReaderContextManager[files.AsyncReader]:
@@ -902,9 +906,11 @@ class Embed:
         self._fields = None
         return self
 
+    @typing_extensions.override
     def __repr__(self) -> str:
         return f"Embed(title={self.title}, color={self.color}, timestamp={self.timestamp})"
 
+    @typing_extensions.override
     def __eq__(self, other: object) -> bool:
         if isinstance(other, type(self)):
             for attrsib in self.__slots__:

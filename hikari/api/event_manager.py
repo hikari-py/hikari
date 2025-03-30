@@ -29,6 +29,7 @@ import typing
 
 from hikari import iterators
 from hikari.events import base_events
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import asyncio
@@ -108,6 +109,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
         """
 
     @abc.abstractmethod
+    @typing_extensions.override
     def filter(
         self,
         *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],

@@ -31,6 +31,7 @@ import attrs
 from hikari import guilds
 from hikari import undefined
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -313,5 +314,6 @@ class Template:
         """
         return await self.app.rest.create_guild_from_template(self, name, icon=icon)
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"https://discord.new/{self.code}"

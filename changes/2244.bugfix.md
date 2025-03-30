@@ -1,0 +1,1 @@
+Add in the missing `hikari.api.InteractionMessageBuilder.clear_components`, `hikari.api.InteractionMessageBuilder.clear_embeds` and abstract methods + enforce using `@typing_extensions.override` within the library.

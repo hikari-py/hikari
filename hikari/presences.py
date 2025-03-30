@@ -46,6 +46,7 @@ from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -318,6 +319,7 @@ class Activity:
     type: typing.Union[ActivityType, int] = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
