@@ -36,7 +36,7 @@ from typing import TypeVar as __TypeVar
 
 from typing_extensions import Self as __Self
 
-from hikari.internal import typing_backport as __typing_backport
+from hikari.internal import typing_extensions as __typing_backport
 
 Enum = __enum.Enum
 

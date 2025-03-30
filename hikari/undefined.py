@@ -34,7 +34,7 @@ __all__: typing.Sequence[str] = (
 
 import typing
 
-from hikari.internal import typing_backport
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
@@ -69,7 +69,7 @@ class UndefinedType:
         # Returning a string makes pickle fetch from the module namespace.
         return "UNDEFINED"
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return "UNDEFINED"
 

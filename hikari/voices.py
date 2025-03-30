@@ -29,7 +29,7 @@ import typing
 import attrs
 
 from hikari.internal import attrs_extensions
-from hikari.internal import typing_backport
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -129,6 +129,6 @@ class VoiceRegion:
     is_custom: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this region is custom (e.g. used for events)."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.id

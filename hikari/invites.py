@@ -34,7 +34,7 @@ from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
-from hikari.internal import typing_backport
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -68,7 +68,7 @@ class InviteCode(abc.ABC):
     def code(self) -> str:
         """Code for this invite."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"https://discord.gg/{self.code}"
 

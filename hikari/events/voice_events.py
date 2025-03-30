@@ -33,7 +33,7 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
-from hikari.internal import typing_backport
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import snowflakes
@@ -78,13 +78,13 @@ class VoiceStateUpdateEvent(VoiceEvent):
     """Voice state that this update contained."""
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.state.app
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from VoiceEvent>>
         return self.state.guild_id

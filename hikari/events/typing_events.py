@@ -35,7 +35,7 @@ from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
-from hikari.internal import typing_backport
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -149,18 +149,18 @@ class GuildTypingEvent(TypingEvent):
     """Object of the member who triggered this typing event."""
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.member.app
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def user_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from TypingEvent>>.
         return self.member.id
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_channel(self) -> channels.TextableGuildChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 
@@ -259,7 +259,7 @@ class DMTypingEvent(TypingEvent):
     timestamp: datetime.datetime = attrs.field(repr=False)
     # <<inherited docstring from TypingEvent>>.
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_channel(self) -> channels.DMChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 

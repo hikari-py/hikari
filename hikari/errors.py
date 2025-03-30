@@ -57,7 +57,7 @@ import attrs
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import enums
-from hikari.internal import typing_backport
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import intents as intents_
@@ -102,7 +102,7 @@ class HikariInterrupt(KeyboardInterrupt):
     signame: str = attrs.field()
     """The signal name that was raised."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Signal {self.signum} ({self.signame}) received"
 
@@ -118,7 +118,7 @@ class ComponentStateConflictError(HikariError):
     reason: str = attrs.field()
     """A string to explain the issue."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.reason
 
@@ -130,7 +130,7 @@ class UnrecognisedEntityError(HikariError):
     reason: str = attrs.field()
     """A string to explain the issue."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.reason
 
@@ -142,7 +142,7 @@ class GatewayError(HikariError):
     reason: str = attrs.field()
     """A string to explain the issue."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.reason
 
@@ -184,7 +184,7 @@ class ShardCloseCode(int, enums.Enum):
 class GatewayTransportError(GatewayError):
     """An exception thrown if an issue occurs at the transport layer."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Gateway transport error: {self.reason}"
 
@@ -193,7 +193,7 @@ class GatewayTransportError(GatewayError):
 class GatewayConnectionError(GatewayError):
     """An exception thrown if a connection issue occurs."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Failed to connect to server: {self.reason!r}"
 
@@ -214,7 +214,7 @@ class GatewayServerClosedConnectionError(GatewayError):
     user.
     """
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Server closed connection with code {self.code} ({self.reason})"
 
@@ -253,7 +253,7 @@ class HTTPResponseError(HTTPError):
     code: int = attrs.field(default=0)
     """The error code."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         if isinstance(self.status, http.HTTPStatus):
             name = self.status.name.replace("_", " ").title()
@@ -322,7 +322,7 @@ class BadRequestError(ClientHTTPResponseError):
 
     _cached_str: str = attrs.field(default=None, init=False)
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         if self._cached_str:
             return self._cached_str
@@ -426,7 +426,7 @@ class RateLimitTooLongError(HTTPError):
         """
         return 0
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.message
 
@@ -459,7 +459,7 @@ class BulkDeleteError(HikariError):
     deleted_messages: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attrs.field()
     """Any message objects that were deleted before an exception occurred."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Error encountered when bulk deleting messages ({len(self.deleted_messages)} messages deleted)"
 
@@ -480,6 +480,6 @@ class MissingIntentError(HikariError, ValueError):
     intents: intents_.Intents = attrs.field()
     """The combination of intents that are missing."""
 
-    @typing_backport.override
+    @typing_extensions.override
     def __str__(self) -> str:
         return "You are missing the following intent(s): " + ", ".join(map(str, self.intents.split()))

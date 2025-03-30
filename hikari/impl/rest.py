@@ -79,7 +79,7 @@ from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
 from hikari.internal import time
-from hikari.internal import typing_backport
+from hikari.internal import typing_extensions
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
@@ -176,11 +176,11 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
         return self._scopes
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def token_type(self) -> applications.TokenType:
         return applications.TokenType.BEARER
 
-    @typing_backport.override
+    @typing_extensions.override
     async def acquire(self, client: rest_api.RESTClient) -> str:
         if self._token and not self._is_expired:
             return self._token
@@ -210,7 +210,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
             self._token = f"{response.token_type} {response.access_token}"
             return self._token
 
-    @typing_backport.override
+    @typing_extensions.override
     def invalidate(self, token: typing.Optional[str]) -> None:
         if not token or token == self._token:
             self._expire_at = 0.0
@@ -226,27 +226,27 @@ class _RESTProvider(traits.RESTAware):
         self._rest: RESTClientImpl = NotImplemented
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def entity_factory(self) -> entity_factory_.EntityFactory:
         return self._entity_factory
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
         return self._executor
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def rest(self) -> rest_api.RESTClient:
         return self._rest
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def http_settings(self) -> config_impl.HTTPSettings:
         return self._rest.http_settings
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def proxy_settings(self) -> config_impl.ProxySettings:
         return self._rest.proxy_settings
 
@@ -332,7 +332,7 @@ class RESTApp(traits.ExecutorAware):
         self._client_session: typing.Optional[aiohttp.ClientSession] = None
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def executor(self) -> typing.Optional[concurrent.futures.Executor]:
         return self._executor
 
@@ -633,31 +633,31 @@ class RESTClientImpl(rest_api.RESTClient):
         self._rest_url = str(rest_url) if rest_url is not None else urls.REST_API_URL
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def is_alive(self) -> bool:
         return self._close_event is not None
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def http_settings(self) -> config_impl.HTTPSettings:
         return self._http_settings
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def proxy_settings(self) -> config_impl.ProxySettings:
         return self._proxy_settings
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def entity_factory(self) -> entity_factory_.EntityFactory:
         return self._entity_factory
 
     @property
-    @typing_backport.override
+    @typing_extensions.override
     def token_type(self) -> typing.Union[str, applications.TokenType, None]:
         return self._token_type
 
-    @typing_backport.override
+    @typing_extensions.override
     async def close(self) -> None:
         """Close the HTTP client and any open HTTP connections."""
         if not self._close_event or not self._client_session:
@@ -1059,7 +1059,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return body_retry_after
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_channel(
         self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
     ) -> channels_.PartialChannel:
@@ -1073,7 +1073,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return result
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_channel(  # noqa: PLR0913
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
@@ -1167,7 +1167,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def follow_channel(
         self,
         news_channel: snowflakes.SnowflakeishOr[channels_.GuildNewsChannel],
@@ -1184,7 +1184,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel_follow(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_channel(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
@@ -1195,7 +1195,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_channel(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
         route = routes.GET_MY_GUILD_VOICE_STATE.compile(guild=guild)
 
@@ -1204,7 +1204,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_voice_state(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_voice_state(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
     ) -> voices.VoiceState:
@@ -1215,7 +1215,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_voice_state(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_my_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -1240,7 +1240,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await self._request(route, json=body)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -1255,7 +1255,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("suppress", suppress)
         await self._request(route, json=body)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
@@ -1287,7 +1287,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("deny", deny)
         await self._request(route, json=body, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
@@ -1298,7 +1298,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_channel_invites(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildChannel]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
@@ -1307,7 +1307,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_invite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
@@ -1336,7 +1336,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite_with_metadata(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     def trigger_typing(
         self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> special_endpoints.TypingIndicator:
@@ -1348,7 +1348,7 @@ class RESTClientImpl(rest_api.RESTClient):
             request_call=self._request, channel=channel, rest_close_event=self._close_event
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_pins(
         self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
     ) -> typing.Sequence[messages_.Message]:
@@ -1357,7 +1357,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_message(message_pl) for message_pl in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def pin_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1366,7 +1366,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PUT_CHANNEL_PINS.compile(channel=channel, message=message)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def unpin_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1375,7 +1375,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_CHANNEL_PIN.compile(channel=channel, message=message)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_messages(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1420,7 +1420,7 @@ class RESTClientImpl(rest_api.RESTClient):
             first_id=timestamp,
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1569,7 +1569,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return body, form_builder
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1635,7 +1635,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def crosspost_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildNewsChannel],
@@ -1648,7 +1648,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1703,7 +1703,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1714,7 +1714,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         await self._request(route, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_messages(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1779,7 +1779,7 @@ class RESTClientImpl(rest_api.RESTClient):
             except Exception as ex:
                 raise errors.BulkDeleteError(deleted) from ex
 
-    @typing_backport.override
+    @typing_extensions.override
     async def add_reaction(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1792,7 +1792,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_my_reaction(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1805,7 +1805,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_all_reactions_for_emoji(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1818,7 +1818,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_reaction(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1832,7 +1832,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_all_reactions(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1841,7 +1841,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_ALL_REACTIONS.compile(channel=channel, message=message)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_reactions_for_emoji(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1857,7 +1857,7 @@ class RESTClientImpl(rest_api.RESTClient):
             emoji=_transform_emoji_to_url_format(emoji, emoji_id),
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_webhook(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT],
@@ -1879,7 +1879,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_incoming_webhook(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_webhook(
         self,
         webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
@@ -1897,7 +1897,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_webhook(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_channel_webhooks(
         self, channel: snowflakes.SnowflakeishOr[channels_.WebhookChannelT]
     ) -> typing.Sequence[webhooks.PartialWebhook]:
@@ -1906,7 +1906,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return data_binding.cast_variants_array(self._entity_factory.deserialize_webhook, response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild_webhooks(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[webhooks.PartialWebhook]:
@@ -1915,7 +1915,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return data_binding.cast_variants_array(self._entity_factory.deserialize_webhook, response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_webhook(
         self,
         webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
@@ -1948,7 +1948,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_webhook(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_webhook(
         self,
         webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
@@ -1964,7 +1964,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await self._request(route, auth=auth)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def execute_webhook(
         self,
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
@@ -2028,7 +2028,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_webhook_message(
         self,
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
@@ -2048,7 +2048,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_webhook_message(
         self,
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
@@ -2108,7 +2108,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_webhook_message(
         self,
         webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
@@ -2126,7 +2126,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         await self._request(route, query=query, auth=None)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_gateway_url(self) -> str:
         route = routes.GET_GATEWAY.compile()
         # This doesn't need authorization.
@@ -2136,14 +2136,14 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(url, str)
         return url
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_gateway_bot_info(self) -> sessions.GatewayBotInfo:
         route = routes.GET_GATEWAY_BOT.compile()
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_gateway_bot_info(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_invite(
         self, invite: typing.Union[invites.InviteCode, str], *, with_counts: bool = True
     ) -> invites.Invite:
@@ -2154,21 +2154,21 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_invite(self, invite: typing.Union[invites.InviteCode, str]) -> invites.Invite:
         route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_my_user(self) -> users.OwnUser:
         route = routes.GET_MY_USER.compile()
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_my_user(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_my_user(
         self,
         *,
@@ -2198,14 +2198,14 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_my_user(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_my_connections(self) -> typing.Sequence[applications.OwnConnection]:
         route = routes.GET_MY_CONNECTIONS.compile()
         response = await self._request(route)
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_own_connection(connection_payload) for connection_payload in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_my_guilds(
         self,
         *,
@@ -2226,12 +2226,12 @@ class RESTClientImpl(rest_api.RESTClient):
             first_id=str(start_at),
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def leave_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /) -> None:
         route = routes.DELETE_MY_GUILD.compile(guild=guild)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_my_user_application_role_connection(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
     ) -> applications.OwnApplicationRoleConnection:
@@ -2241,7 +2241,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_own_application_role_connection(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def set_my_user_application_role_connection(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -2272,7 +2272,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_own_application_role_connection(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels_.DMChannel:
         route = routes.POST_MY_CHANNELS.compile()
         body = data_binding.JSONObjectBuilder()
@@ -2286,21 +2286,21 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return channel
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_application(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_authorization(self) -> applications.AuthorizationInformation:
         route = routes.GET_MY_AUTHORIZATION.compile()
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_authorization_information(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_application_role_connection_metadata_records(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
     ) -> typing.Sequence[applications.ApplicationRoleConnectionMetadataRecord]:
@@ -2310,7 +2310,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_application_connection_metadata_record(r) for r in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def set_application_role_connection_metadata_records(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -2329,7 +2329,7 @@ class RESTClientImpl(rest_api.RESTClient):
         token = base64.b64encode(f"{int(client)}:{client_secret}".encode()).decode("utf-8")
         return f"{applications.TokenType.BASIC} {token}"
 
-    @typing_backport.override
+    @typing_extensions.override
     async def authorize_client_credentials_token(
         self,
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -2347,7 +2347,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_partial_token(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def authorize_access_token(
         self,
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -2367,7 +2367,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_authorization_token(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def refresh_access_token(
         self,
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -2392,7 +2392,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_authorization_token(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def revoke_access_token(
         self,
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -2404,7 +2404,7 @@ class RESTClientImpl(rest_api.RESTClient):
         form_builder.add_field("token", str(token))
         await self._request(route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret))
 
-    @typing_backport.override
+    @typing_extensions.override
     async def add_user_to_guild(
         self,
         access_token: typing.Union[str, applications.PartialOAuth2Token],
@@ -2430,7 +2430,7 @@ class RESTClientImpl(rest_api.RESTClient):
         # User already is in the guild.
         return None
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_voice_regions(self) -> typing.Sequence[voices.VoiceRegion]:
         route = routes.GET_VOICE_REGIONS.compile()
         response = await self._request(route)
@@ -2439,14 +2439,14 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory.deserialize_voice_region(voice_region_payload) for voice_region_payload in response
         ]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> users.User:
         route = routes.GET_USER.compile(user=user)
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_user(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_audit_log(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2472,7 +2472,7 @@ class RESTClientImpl(rest_api.RESTClient):
             action_type=event_type,
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_emoji(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2483,7 +2483,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflakes.Snowflake(guild))
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild_emojis(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[emojis.KnownCustomEmoji]:
@@ -2496,7 +2496,7 @@ class RESTClientImpl(rest_api.RESTClient):
             for emoji_payload in response
         ]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_emoji(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2519,7 +2519,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflakes.Snowflake(guild))
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_emoji(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2538,7 +2538,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_known_custom_emoji(response, guild_id=snowflakes.Snowflake(guild))
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_emoji(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2549,7 +2549,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_EMOJI.compile(guild=guild, emoji=emoji)
         await self._request(route, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_application_emoji(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -2560,7 +2560,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_known_custom_emoji(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_application_emojis(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
     ) -> typing.Sequence[emojis.KnownCustomEmoji]:
@@ -2571,7 +2571,7 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory.deserialize_known_custom_emoji(emoji_payload) for emoji_payload in response["items"]
         ]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_application_emoji(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], name: str, image: files.Resourceish
     ) -> emojis.KnownCustomEmoji:
@@ -2586,7 +2586,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_known_custom_emoji(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_application_emoji(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -2601,7 +2601,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_known_custom_emoji(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_application_emoji(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -2610,7 +2610,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_APPLICATION_EMOJI.compile(application=application, emoji=emoji)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_available_sticker_packs(self) -> typing.Sequence[stickers_.StickerPack]:
         route = routes.GET_STICKER_PACKS.compile()
         response = await self._request(route, auth=None)
@@ -2620,7 +2620,7 @@ class RESTClientImpl(rest_api.RESTClient):
             for sticker_pack_payload in response["sticker_packs"]
         ]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_sticker(
         self, sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker]
     ) -> typing.Union[stickers_.StandardSticker, stickers_.GuildSticker]:
@@ -2633,7 +2633,7 @@ class RESTClientImpl(rest_api.RESTClient):
             else self._entity_factory.deserialize_standard_sticker(response)
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild_stickers(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[stickers_.GuildSticker]:
@@ -2644,7 +2644,7 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory.deserialize_guild_sticker(guild_sticker_payload) for guild_sticker_payload in response
         ]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2655,7 +2655,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_sticker(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2677,7 +2677,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_sticker(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2698,7 +2698,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_sticker(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_sticker(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2709,13 +2709,13 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_STICKER.compile(guild=guild, sticker=sticker)
         await self._request(route, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
         return special_endpoints_impl.GuildBuilder(
             entity_factory=self._entity_factory, executor=self._executor, request_call=self._request, name=name
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
         route = routes.GET_GUILD.compile(guild=guild)
         query = data_binding.StringMapBuilder()
@@ -2724,14 +2724,14 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_rest_guild(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild_preview(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildPreview:
         route = routes.GET_GUILD_PREVIEW.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_preview(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_guild(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2820,12 +2820,12 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_rest_guild(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
         route = routes.DELETE_GUILD.compile(guild=guild)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild_channels(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[channels_.GuildChannel]:
@@ -2836,7 +2836,7 @@ class RESTClientImpl(rest_api.RESTClient):
         # Will always be guild channels unless Discord messes up severely on something!
         return typing.cast("typing.Sequence[channels_.GuildChannel]", channels)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_guild_text_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2868,7 +2868,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_guild_text_channel(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_guild_news_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2900,7 +2900,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_guild_news_channel(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_guild_forum_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2946,7 +2946,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_guild_forum_channel(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_guild_voice_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -2978,7 +2978,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_guild_voice_channel(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_guild_stage_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3008,7 +3008,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_guild_stage_channel(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_guild_category(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3103,7 +3103,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return response
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_message_thread(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
@@ -3131,7 +3131,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(channel, (channels_.GuildPublicThread, channels_.GuildNewsThread))
         return channel
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_thread(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
@@ -3160,7 +3160,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_thread(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_forum_post(  # noqa: PLR0913
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
@@ -3240,12 +3240,12 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_public_thread(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def join_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildTextChannel], /) -> None:
         route = routes.PUT_MY_THREAD_MEMBER.compile(channel=channel)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def add_thread_member(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
@@ -3255,12 +3255,12 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PUT_THREAD_MEMBER.compile(channel=channel, user=user)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def leave_thread(self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]) -> None:
         route = routes.DELETE_MY_THREAD_MEMBER.compile(channel=channel)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def remove_thread_member(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
@@ -3270,7 +3270,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_THREAD_MEMBER.compile(channel=channel, user=user)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_thread_member(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
@@ -3282,7 +3282,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_thread_member(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_thread_members(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel], /
     ) -> typing.Sequence[channels_.ThreadMember]:
@@ -3291,7 +3291,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_thread_member(member) for member in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_active_threads(
         self, guild: snowflakes.SnowflakeishOr[guilds.Guild], /
     ) -> typing.Sequence[channels_.GuildThreadChannel]:
@@ -3320,7 +3320,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(channel, (channels_.GuildNewsThread, channels_.GuildPublicThread))
         return channel
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_public_archived_threads(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
@@ -3337,7 +3337,7 @@ class RESTClientImpl(rest_api.RESTClient):
             before_is_timestamp=True,
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_private_archived_threads(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
@@ -3354,7 +3354,7 @@ class RESTClientImpl(rest_api.RESTClient):
             before_is_timestamp=True,
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_joined_private_archived_threads(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
@@ -3382,7 +3382,7 @@ class RESTClientImpl(rest_api.RESTClient):
             before_is_timestamp=False,
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3392,7 +3392,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body = [{"id": str(int(channel)), "position": pos} for pos, channel in positions.items()]
         await self._request(route, json=body)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_member(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
     ) -> guilds.Member:
@@ -3401,7 +3401,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_members(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> iterators.LazyIterator[guilds.Member]:
@@ -3409,14 +3409,14 @@ class RESTClientImpl(rest_api.RESTClient):
             entity_factory=self._entity_factory, request_call=self._request, guild=guild
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_my_member(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.Member:
         route = routes.GET_MY_GUILD_MEMBER.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
-    @typing_backport.override
+    @typing_extensions.override
     async def search_members(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], name: str
     ) -> typing.Sequence[guilds.Member]:
@@ -3431,7 +3431,7 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory.deserialize_member(member_payload, guild_id=guild_id) for member_payload in response
         ]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3468,7 +3468,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_my_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3484,7 +3484,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_member(response, guild_id=snowflakes.Snowflake(guild))
 
-    @typing_backport.override
+    @typing_extensions.override
     async def add_role_to_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3496,7 +3496,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild=guild, user=user, role=role)
         await self._request(route, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def remove_role_from_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3508,7 +3508,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_MEMBER_ROLE.compile(guild=guild, user=user, role=role)
         await self._request(route, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def kick_user(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3519,7 +3519,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_MEMBER.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     def kick_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3529,7 +3529,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Coroutine[typing.Any, typing.Any, None]:
         return self.kick_user(guild, user, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def ban_user(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3546,7 +3546,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PUT_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, json=body, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     def ban_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3557,7 +3557,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Coroutine[typing.Any, typing.Any, None]:
         return self.ban_user(guild, user, delete_message_seconds=delete_message_seconds, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def unban_user(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3568,7 +3568,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_GUILD_BAN.compile(guild=guild, user=user)
         await self._request(route, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     def unban_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3578,7 +3578,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> typing.Coroutine[typing.Any, typing.Any, None]:
         return self.unban_user(guild, user, reason=reason)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_ban(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
     ) -> guilds.GuildBan:
@@ -3587,7 +3587,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_member_ban(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_bans(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3607,7 +3607,7 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory, self._request, guild, newest_first=newest_first, first_id=str(start_at)
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_role(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
     ) -> guilds.Role:
@@ -3617,7 +3617,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild_id = snowflakes.Snowflake(guild)
         return self._entity_factory.deserialize_role(response, guild_id=guild_id)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_roles(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> typing.Sequence[guilds.Role]:
         route = routes.GET_GUILD_ROLES.compile(guild=guild)
         response = await self._request(route)
@@ -3625,7 +3625,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild_id = snowflakes.Snowflake(guild)
         return [self._entity_factory.deserialize_role(role_payload, guild_id=guild_id) for role_payload in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_role(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3667,7 +3667,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_role(response, guild_id=snowflakes.Snowflake(guild))
 
-    @typing_backport.override
+    @typing_extensions.override
     async def reposition_roles(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3677,7 +3677,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body = [{"id": str(int(role)), "position": pos} for pos, role in positions.items()]
         await self._request(route, json=body)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_role(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3723,14 +3723,14 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_role(response, guild_id=snowflakes.Snowflake(guild))
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_role(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
     ) -> None:
         route = routes.DELETE_GUILD_ROLE.compile(guild=guild, role=role)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def estimate_guild_prune_count(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3748,7 +3748,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return int(response["pruned"])
 
-    @typing_backport.override
+    @typing_extensions.override
     async def begin_guild_prune(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3768,7 +3768,7 @@ class RESTClientImpl(rest_api.RESTClient):
         pruned = response.get("pruned")
         return int(pruned) if pruned is not None else None
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild_voice_regions(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[voices.VoiceRegion]:
@@ -3779,7 +3779,7 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory.deserialize_voice_region(voice_region_payload) for voice_region_payload in response
         ]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild_invites(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[invites.InviteWithMetadata]:
@@ -3788,7 +3788,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_integrations(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[guilds.Integration]:
@@ -3801,14 +3801,14 @@ class RESTClientImpl(rest_api.RESTClient):
             for integration_payload in response
         ]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_widget(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.GuildWidget:
         route = routes.GET_GUILD_WIDGET.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_widget(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_widget(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3830,14 +3830,14 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_widget(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_welcome_screen(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.WelcomeScreen:
         route = routes.GET_GUILD_WELCOME_SCREEN.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_welcome_screen(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_welcome_screen(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3863,14 +3863,14 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_welcome_screen(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_vanity_url(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_template(self, template: typing.Union[templates.Template, str]) -> templates.Template:
         template = template if isinstance(template, str) else template.code
         route = routes.GET_TEMPLATE.compile(template=template)
@@ -3878,7 +3878,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_guild_templates(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[templates.Template]:
@@ -3887,7 +3887,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_template(template_payload) for template_payload in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def sync_guild_template(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: typing.Union[templates.Template, str]
     ) -> templates.Template:
@@ -3897,7 +3897,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_guild_from_template(
         self,
         template: typing.Union[str, templates.Template],
@@ -3919,7 +3919,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_rest_guild(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3935,7 +3935,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -3954,7 +3954,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_template(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: typing.Union[str, templates.Template]
     ) -> templates.Template:
@@ -3964,17 +3964,17 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_template(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     def slash_command_builder(self, name: str, description: str) -> special_endpoints.SlashCommandBuilder:
         return special_endpoints_impl.SlashCommandBuilder(name, description)
 
-    @typing_backport.override
+    @typing_extensions.override
     def context_menu_command_builder(
         self, type: typing.Union[commands.CommandType, int], name: str
     ) -> special_endpoints.ContextMenuCommandBuilder:
         return special_endpoints_impl.ContextMenuCommandBuilder(commands.CommandType(type), name)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4006,7 +4006,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return command_objs
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_application_commands(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4069,7 +4069,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return response
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_slash_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4105,7 +4105,7 @@ class RESTClientImpl(rest_api.RESTClient):
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_context_menu_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4134,7 +4134,7 @@ class RESTClientImpl(rest_api.RESTClient):
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def set_application_commands(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4152,7 +4152,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild_id = snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         return self._deserialize_command_list(response, guild_id)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4190,7 +4190,7 @@ class RESTClientImpl(rest_api.RESTClient):
             response, guild_id=snowflakes.Snowflake(guild) if guild is not undefined.UNDEFINED else None
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4207,7 +4207,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_application_guild_commands_permissions(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4218,7 +4218,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_guild_command_permissions(payload) for payload in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_application_command_permissions(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4232,7 +4232,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_command_permissions(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def set_application_command_permissions(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4250,33 +4250,33 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_command_permissions(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     def interaction_deferred_builder(
         self, type_: typing.Union[base_interactions.ResponseType, int], /
     ) -> special_endpoints.InteractionDeferredBuilder:
         return special_endpoints_impl.InteractionDeferredBuilder(type=type_)
 
-    @typing_backport.override
+    @typing_extensions.override
     def interaction_autocomplete_builder(
         self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]
     ) -> special_endpoints.InteractionAutocompleteBuilder:
         return special_endpoints_impl.InteractionAutocompleteBuilder(choices)
 
-    @typing_backport.override
+    @typing_extensions.override
     def interaction_message_builder(
         self, type_: typing.Union[base_interactions.ResponseType, int], /
     ) -> special_endpoints.InteractionMessageBuilder:
         return special_endpoints_impl.InteractionMessageBuilder(type=type_)
 
-    @typing_backport.override
+    @typing_extensions.override
     def interaction_modal_builder(self, title: str, custom_id: str) -> special_endpoints.InteractionModalBuilder:
         return special_endpoints_impl.InteractionModalBuilder(title=title, custom_id=custom_id)
 
-    @typing_backport.override
+    @typing_extensions.override
     def interaction_premium_required_builder(self) -> special_endpoints.InteractionPremiumRequiredBuilder:
         return special_endpoints_impl.InteractionPremiumRequiredBuilder()
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
@@ -4285,7 +4285,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_interaction_response(
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
@@ -4339,7 +4339,7 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             await self._request(route, json=body, auth=None)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_interaction_response(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4391,14 +4391,14 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> None:
         route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=application, token=token)
         await self._request(route, auth=None)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_autocomplete_response(
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
@@ -4416,7 +4416,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("data", data)
         await self._request(route, json=body, auth=None)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_modal_response(
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
@@ -4449,15 +4449,15 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await self._request(route, json=body, auth=None)
 
-    @typing_backport.override
+    @typing_extensions.override
     def build_message_action_row(self) -> special_endpoints.MessageActionRowBuilder:
         return special_endpoints_impl.MessageActionRowBuilder()
 
-    @typing_backport.override
+    @typing_extensions.override
     def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
         return special_endpoints_impl.ModalActionRowBuilder()
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_premium_required_response(
         self, interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction], token: str
     ) -> None:
@@ -4469,7 +4469,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await self._request(route, json=body, auth=None)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_scheduled_event(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4485,7 +4485,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_scheduled_event(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_scheduled_events(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> typing.Sequence[scheduled_events.ScheduledEvent]:
@@ -4538,7 +4538,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return response
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_external_event(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4570,7 +4570,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_scheduled_external_event(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_stage_event(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4602,7 +4602,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_scheduled_stage_event(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_voice_event(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4634,7 +4634,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_scheduled_voice_event(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_scheduled_event(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4682,7 +4682,7 @@ class RESTClientImpl(rest_api.RESTClient):
         )
         return self._entity_factory.deserialize_scheduled_event(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_scheduled_event(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4693,7 +4693,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     def fetch_scheduled_event_users(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -4714,7 +4714,7 @@ class RESTClientImpl(rest_api.RESTClient):
             self._entity_factory, self._request, guild, event, first_id=str(start_at), newest_first=newest_first
         )
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_skus(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication]
     ) -> typing.Sequence[monetization.SKU]:
@@ -4724,7 +4724,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return [self._entity_factory.deserialize_sku(payload) for payload in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_entitlements(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4752,7 +4752,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return [self._entity_factory.deserialize_entitlement(payload) for payload in response]
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_test_entitlement(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4774,7 +4774,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return self._entity_factory.deserialize_entitlement(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_test_entitlement(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4783,7 +4783,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.DELETE_APPLICATION_TEST_ENTITLEMENT.compile(application=application, entitlement=entitlement)
         await self._request(route)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def fetch_stage_instance(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
     ) -> stage_instances.StageInstance:
@@ -4792,7 +4792,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_stage_instance(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def create_stage_instance(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
@@ -4818,7 +4818,7 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_stage_instance(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def edit_stage_instance(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
@@ -4837,11 +4837,12 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_stage_instance(response)
 
-    @typing_backport.override
+    @typing_extensions.override
     async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
         route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
         await self._request(route)
 
+    @typing_extensions.override
     async def fetch_poll_voters(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -4864,6 +4865,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return [self._entity_factory.deserialize_user(payload) for payload in response]
 
+    @typing_extensions.override
     async def end_poll(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
