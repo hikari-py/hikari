@@ -1,0 +1,1 @@
+Remove disused `poll` argument from `message.edit`.
