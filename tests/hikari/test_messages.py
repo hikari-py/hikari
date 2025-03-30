@@ -176,7 +176,6 @@ class TestAsyncMessage:
         message.channel_id = 456
         embed = object()
         embeds = [object(), object()]
-        poll = object()
         component = object()
         components = object(), object()
         attachment = object()
@@ -185,7 +184,6 @@ class TestAsyncMessage:
             content="test content",
             embed=embed,
             embeds=embeds,
-            poll=poll,
             attachment=attachment,
             attachments=[attachment, attachment],
             component=component,
