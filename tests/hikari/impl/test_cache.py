@@ -1862,6 +1862,7 @@ class TestCacheImpl:
             guild_id=snowflakes.Snowflake(6434435234),
             nickname="NICK",
             guild_avatar_hash="only slightly gay",
+            guild_banner_hash="ok maybe alotta gay",
             role_ids=(snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123)),
             joined_at=datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
             premium_since=datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
@@ -1881,6 +1882,7 @@ class TestCacheImpl:
         assert member.guild_id == 6434435234
         assert member.nickname == "NICK"
         assert member.guild_avatar_hash == "only slightly gay"
+        assert member.guild_banner_hash == "ok maybe alotta gay"
         assert member.role_ids == (snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123))
         assert member.joined_at == datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
@@ -2218,6 +2220,7 @@ class TestCacheImpl:
             premium_since=datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.timezone.utc),
             is_deaf=True,
             guild_avatar_hash="gay",
+            guild_banner_hash="gayge",
             is_mute=False,
             is_pending=True,
             raw_communication_disabled_until=datetime.datetime(
@@ -2243,6 +2246,7 @@ class TestCacheImpl:
         assert member_entry.object.role_ids == (65345234, 123123)
         assert member_entry.object.role_ids is not member_model.role_ids
         assert member_entry.object.guild_avatar_hash == "gay"
+        assert member_entry.object.guild_banner_hash == "gayge"
         assert isinstance(member_entry.object.role_ids, tuple)
         assert member_entry.object.joined_at == datetime.datetime(
             2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc

@@ -522,6 +522,11 @@ class User(PartialUser, abc.ABC):
         return self.make_avatar_url() or self.default_avatar_url
 
     @property
+    def display_banner_url(self) -> typing.Optional[files.URL]:
+        """Display banner URL for this user."""
+        return self.make_banner_url()
+
+    @property
     @abc.abstractmethod
     def discriminator(self) -> str:
         """Discriminator for the user.

@@ -246,6 +246,14 @@ class TestUser:
             with mock.patch.object(users.User, "default_avatar_url") as mock_default_avatar_url:
                 assert obj.display_avatar_url is mock_default_avatar_url
 
+    def test_display_banner_url_when_banner_url(self, obj):
+        with mock.patch.object(users.User, "make_banner_url") as mock_make_banner_url:
+            assert obj.display_banner_url is mock_make_banner_url.return_value
+
+    def test_display_banner_url_when_no_banner_url(self, obj):
+        with mock.patch.object(users.User, "make_banner_url", return_value=None):
+            assert obj.display_banner_url is None
+
     def test_default_avatar(self, obj):
         obj.avatar_hash = "18dnf8dfbakfdh"
         obj.discriminator = "1234"
