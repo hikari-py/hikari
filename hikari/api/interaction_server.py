@@ -46,8 +46,8 @@ if typing.TYPE_CHECKING:
 
 
 ListenerT = typing.Union[
-    typing.Callable[["_InteractionT_co"], typing.Awaitable["_ResponseT_co"]],
-    typing.Callable[["_InteractionT_co"], typing.AsyncGenerator["_ResponseT_co", None]],
+    typing.Callable[["_InteractionT_co"], typing.Awaitable[typing.Union["_ResponseT_co", None]]],
+    typing.Callable[["_InteractionT_co"], typing.AsyncGenerator[typing.Union["_ResponseT_co", None], None]],
 ]
 """Type hint of a Interaction server's listener callback.
 
@@ -56,6 +56,9 @@ subclasses [`hikari.interactions.base_interactions.PartialInteraction`][] and ma
 instance of the relevant [`hikari.api.special_endpoints.InteractionResponseBuilder`][]
 subclass for the provided interaction type which will instruct the server on how
 to respond.
+
+If the callback returns [`None`][], an HTTP no-content response will be returned. In this case
+you should respond to the interaction using the appropriate REST method instead.
 
 !!! note
     For the standard implementations of

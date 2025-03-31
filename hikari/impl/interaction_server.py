@@ -78,6 +78,7 @@ _PONG_RESPONSE_TYPE: typing.Final[int] = 1
 
 # HTTP status codes.
 _OK_STATUS: typing.Final[int] = 200
+_NO_CONTENT_STATUS: typing.Final[int] = 204
 _BAD_REQUEST_STATUS: typing.Final[int] = 400
 _PAYLOAD_TOO_LARGE_STATUS: typing.Final[int] = 413
 _UNSUPPORTED_MEDIA_TYPE_STATUS: typing.Final[int] = 415
@@ -487,6 +488,9 @@ class InteractionServer(interaction_server.InteractionServer):
 
                 else:
                     result = await call
+
+                if result is None:
+                    return _Response(_NO_CONTENT_STATUS)
 
                 raw_payload, files = result.build(self._entity_factory)
                 payload = self._dumps(raw_payload)
