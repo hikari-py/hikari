@@ -42,10 +42,10 @@ if typing.TYPE_CHECKING:
 class PollMedia:
     """Common object backing a poll's questions and answers."""
 
-    text: typing.Optional[str] = attrs.field(default=None, repr=True)
+    text: str | None = attrs.field(default=None, repr=True)
     """The text of the element, or [`None`][] if not present."""
 
-    emoji: typing.Optional[emojis.Emoji] = attrs.field(default=None, repr=True)
+    emoji: emojis.Emoji | None = attrs.field(default=None, repr=True)
     """The emoji of the element, or [`None`][] if not present."""
 
 
@@ -106,7 +106,7 @@ class Poll:
     answers: typing.Sequence[PollAnswer] = attrs.field(repr=True)
     """The answers attached to the poll."""
 
-    expiry: typing.Optional[datetime.datetime] = attrs.field(repr=True)
+    expiry: datetime.datetime | None = attrs.field(repr=True)
     """The expiry time for the poll."""
 
     allow_multiselect: bool = attrs.field(repr=True)
@@ -115,5 +115,5 @@ class Poll:
     layout_type: PollLayoutType = attrs.field(repr=True)
     """The type of layout the poll uses."""
 
-    results: typing.Optional[PollResult] = attrs.field(repr=True)
+    results: PollResult | None = attrs.field(repr=True)
     """The results of the poll."""

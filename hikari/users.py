@@ -284,13 +284,11 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[PartialUser], bool]
-        ] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[PartialUser] | bool] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages.MessageFlag = undefined.UNDEFINED,
     ) -> messages.Message:
         """Send a message to this user in DM's.
 
@@ -468,7 +466,7 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     @typing_extensions.override
-    def accent_color(self) -> typing.Optional[colors.Color]:
+    def accent_color(self) -> colors.Color | None:
         """The custom banner color for the user, if set else [`None`][].
 
         The official client will decide the default color if not set.
@@ -476,18 +474,18 @@ class User(PartialUser, abc.ABC):
 
     @property
     @typing_extensions.override
-    def accent_colour(self) -> typing.Optional[colors.Color]:
+    def accent_colour(self) -> colors.Color | None:
         """Alias for the [`hikari.users.User.accent_color`][] field."""
         return self.accent_color
 
     @property
     @abc.abstractmethod
     @typing_extensions.override
-    def avatar_hash(self) -> typing.Optional[str]:
+    def avatar_hash(self) -> str | None:
         """Avatar hash for the user, if they have one, otherwise [`None`][]."""
 
     @property
-    def avatar_url(self) -> typing.Optional[files.URL]:
+    def avatar_url(self) -> files.URL | None:
         """Avatar URL for the user, if they have one set.
 
         May be [`None`][] if no custom avatar is set. In this case, you
@@ -498,11 +496,11 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     @typing_extensions.override
-    def banner_hash(self) -> typing.Optional[str]:
+    def banner_hash(self) -> str | None:
         """Banner hash for the user, if they have one, otherwise [`None`][]."""
 
     @property
-    def banner_url(self) -> typing.Optional[files.URL]:
+    def banner_url(self) -> files.URL | None:
         """Banner URL for the user, if they have one set.
 
         May be [`None`][] if no custom banner is set.
@@ -527,7 +525,7 @@ class User(PartialUser, abc.ABC):
         return self.make_avatar_url() or self.default_avatar_url
 
     @property
-    def display_banner_url(self) -> typing.Optional[files.URL]:
+    def display_banner_url(self) -> files.URL | None:
         """Display banner URL for this user."""
         return self.make_banner_url()
 
@@ -584,10 +582,10 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     @typing_extensions.override
-    def global_name(self) -> typing.Optional[str]:
+    def global_name(self) -> str | None:
         """Global name for the user, if they have one, otherwise [`None`][]."""
 
-    def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+    def make_avatar_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
         """Generate the avatar URL for this user, if set.
 
         If no custom avatar is set, this returns [`None`][]. You can then
@@ -629,7 +627,7 @@ class User(PartialUser, abc.ABC):
             urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext
         )
 
-    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+    def make_banner_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
         """Generate the banner URL for this user, if set.
 
         If no custom banner is set, this returns [`None`][].
@@ -760,16 +758,16 @@ class UserImpl(PartialUserImpl, User):
     username: str = attrs.field(eq=False, hash=False, repr=True)
     """The user's username."""
 
-    global_name: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
+    global_name: str | None = attrs.field(eq=False, hash=False, repr=True)
     """The user's global name."""
 
-    avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The user's avatar hash, if they have one, otherwise [`None`][]."""
 
-    banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    banner_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """Banner hash of the user, if they have one, otherwise [`None`][]"""
 
-    accent_color: typing.Optional[colors.Color] = attrs.field(eq=False, hash=False, repr=False)
+    accent_color: colors.Color | None = attrs.field(eq=False, hash=False, repr=False)
     """The custom banner color for the user, if set.
 
     The official client will decide the default color if not set.
@@ -792,27 +790,27 @@ class OwnUser(UserImpl):
     is_mfa_enabled: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the user's account has multi-factor authentication enabled."""
 
-    locale: typing.Optional[typing.Union[str, locales.Locale]] = attrs.field(eq=False, hash=False, repr=False)
+    locale: str | locales.Locale | None = attrs.field(eq=False, hash=False, repr=False)
     """The user's set locale.
 
     This is not provided in the `READY` event.
     """
 
-    is_verified: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
+    is_verified: bool | None = attrs.field(eq=False, hash=False, repr=False)
     """Whether the email for this user's account has been verified.
 
     Will be [`None`][] if retrieved through the OAuth2 flow without the `email`
     scope.
     """
 
-    email: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    email: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The user's set email.
 
     Will be [`None`][] if retrieved through OAuth2 flow without the `email`
     scope. Will always be [`None`][] for bot users.
     """
 
-    premium_type: typing.Union[PremiumType, int, None] = attrs.field(eq=False, hash=False, repr=False)
+    premium_type: PremiumType | int | None = attrs.field(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
     This will always be [`None`][] for bots.
@@ -861,13 +859,11 @@ class OwnUser(UserImpl):
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[PartialUser], bool]
-        ] = undefined.UNDEFINED,
+        user_mentions: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[PartialUser] | bool] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages.MessageFlag = undefined.UNDEFINED,
     ) -> typing.NoReturn:
         msg = "Unable to send a DM to yourself"
         raise TypeError(msg)

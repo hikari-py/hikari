@@ -80,7 +80,7 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
         assert isinstance(channel, channels.TextableChannel)
         return channel
 
-    def get_user(self) -> typing.Optional[users.User]:
+    def get_user(self) -> users.User | None:
         """Get the cached user that is typing, if known.
 
         Returns
@@ -205,7 +205,7 @@ class GuildTypingEvent(TypingEvent):
         """
         return await self.app.rest.fetch_member(self.guild_id, self.user_id)
 
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+    def get_channel(self) -> channels.TextableGuildChannel | None:
         """Get the cached channel object this typing event occurred in.
 
         Returns
@@ -222,7 +222,7 @@ class GuildTypingEvent(TypingEvent):
         )
         return channel
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached object of the guild this typing event occurred in.
 
         If the guild is not found then this will return [`None`][].

@@ -86,7 +86,7 @@ class VoiceComponent(abc.ABC):
         *,
         deaf: bool = False,
         mute: bool = False,
-        timeout: typing.Optional[int] = 5,
+        timeout: int | None = 5,
         **kwargs: object,
     ) -> _VoiceConnectionT:
         """Connect to a given voice channel.

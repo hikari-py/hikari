@@ -94,44 +94,44 @@ class VanityURL(InviteCode):
 class InviteGuild(guilds.PartialGuild):
     """Represents the partial data of a guild that is attached to invites."""
 
-    features: typing.Sequence[typing.Union[str, guilds.GuildFeature]] = attrs.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[str | guilds.GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
-    splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    splash_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
 
-    banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    banner_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The hash for the guild's banner.
 
     This is only present if [`hikari.guilds.GuildFeature.BANNER`][] is in the
     `features` for this guild. For all other purposes, it is [`None`][].
     """
 
-    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description."""
 
-    verification_level: typing.Union[guilds.GuildVerificationLevel, int] = attrs.field(eq=False, hash=False, repr=False)
+    verification_level: guilds.GuildVerificationLevel | int = attrs.field(eq=False, hash=False, repr=False)
     """The verification level required for a user to participate in this guild."""
 
-    vanity_url_code: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=True)
+    vanity_url_code: str | None = attrs.field(eq=False, hash=False, repr=True)
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if [`hikari.guilds.GuildFeature.VANITY_URL`][] is in the
     `features` for this guild. If not, this will always be [`None`][].
     """
 
-    welcome_screen: typing.Optional[guilds.WelcomeScreen] = attrs.field(eq=False, hash=False, repr=False)
+    welcome_screen: guilds.WelcomeScreen | None = attrs.field(eq=False, hash=False, repr=False)
     """The welcome screen of a community guild shown to new members, if set."""
 
     nsfw_level: guilds.GuildNSFWLevel = attrs.field(eq=False, hash=False, repr=False)
     """The NSFW level of the guild."""
 
     @property
-    def splash_url(self) -> typing.Optional[files.URL]:
+    def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         return self.make_splash_url()
 
-    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the guild's splash image URL, if set.
 
         Parameters
@@ -161,11 +161,11 @@ class InviteGuild(guilds.PartialGuild):
         )
 
     @property
-    def banner_url(self) -> typing.Optional[files.URL]:
+    def banner_url(self) -> files.URL | None:
         """Banner URL for the guild, if set."""
         return self.make_banner_url()
 
-    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+    def make_banner_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
         """Generate the guild's banner image URL, if set.
 
         Parameters
@@ -215,20 +215,20 @@ class Invite(InviteCode):
     code: str = attrs.field(hash=True, repr=True)
     """The code for this invite."""
 
-    guild: typing.Optional[InviteGuild] = attrs.field(eq=False, hash=False, repr=False)
+    guild: InviteGuild | None = attrs.field(eq=False, hash=False, repr=False)
     """The partial object of the guild this invite belongs to.
 
     Will be [`None`][] for group DM invites and when attached to a gateway event;
     for invites received over the gateway you should refer to [`hikari.invites.Invite.guild_id`][].
     """
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the guild this invite belongs to.
 
     Will be [`None`][] for group DM invites.
     """
 
-    channel: typing.Optional[channels.PartialChannel] = attrs.field(eq=False, hash=False, repr=False)
+    channel: channels.PartialChannel | None = attrs.field(eq=False, hash=False, repr=False)
     """The partial object of the channel this invite targets.
 
     Will be [`None`][] for invite objects that are attached to gateway events,
@@ -238,31 +238,31 @@ class Invite(InviteCode):
     channel_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the channel this invite targets."""
 
-    inviter: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
+    inviter: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """The object of the user who created this invite."""
 
-    target_type: typing.Union[TargetType, int, None] = attrs.field(eq=False, hash=False, repr=False)
+    target_type: TargetType | int | None = attrs.field(eq=False, hash=False, repr=False)
     """The type of the target of this invite, if applicable."""
 
-    target_user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
+    target_user: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """The object of the user who this invite targets, if set."""
 
-    target_application: typing.Optional[applications.InviteApplication] = attrs.field(eq=False, hash=False, repr=False)
+    target_application: applications.InviteApplication | None = attrs.field(eq=False, hash=False, repr=False)
     """The embedded application this invite targets, if applicable."""
 
-    approximate_active_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    approximate_active_member_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The approximate amount of presences in this invite's guild.
 
     This is only returned by the GET REST Invites endpoint.
     """
 
-    approximate_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    approximate_member_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The approximate amount of members in this invite's guild.
 
     This is only returned by the GET Invites REST endpoint.
     """
 
-    expires_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
+    expires_at: datetime.datetime | None = attrs.field(eq=False, hash=False, repr=False)
     """When this invite will expire.
 
     This field is only returned by the GET Invite REST endpoint and will be
@@ -282,7 +282,7 @@ class InviteWithMetadata(Invite):
     uses: int = attrs.field(eq=False, hash=False, repr=True)
     """The amount of times this invite has been used."""
 
-    max_uses: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=True)
+    max_uses: int | None = attrs.field(eq=False, hash=False, repr=True)
     """The limit for how many times this invite can be used before it expires.
 
     If set to [`None`][] then this is unlimited.
@@ -290,7 +290,7 @@ class InviteWithMetadata(Invite):
 
     # TODO: can we use a non-None value to represent infinity here somehow, or
     # make a timedelta that is infinite for comparisons?
-    max_age: typing.Optional[datetime.timedelta] = attrs.field(eq=False, hash=False, repr=False)
+    max_age: datetime.timedelta | None = attrs.field(eq=False, hash=False, repr=False)
     """The timedelta of how long this invite will be valid for.
 
     If set to [`None`][] then this is unlimited.
@@ -302,14 +302,14 @@ class InviteWithMetadata(Invite):
     created_at: datetime.datetime = attrs.field(eq=False, hash=False, repr=False)
     """When this invite was created."""
 
-    expires_at: typing.Optional[datetime.datetime]
+    expires_at: datetime.datetime | None
     """When this invite will expire.
 
     If this invite doesn't have a set expiry then this will be [`None`][].
     """
 
     @property
-    def uses_left(self) -> typing.Optional[int]:
+    def uses_left(self) -> int | None:
         """Return the number of uses left for this invite.
 
         This will be [`None`][] if the invite has unlimited uses.

@@ -210,7 +210,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     not passed as [`True`][] while requesting the member chunks.
     """
 
-    nonce: typing.Optional[str] = attrs.field(repr=True)
+    nonce: str | None = attrs.field(repr=True)
     """String nonce used to identify the request member chunks are associated with.
 
     This is the nonce value passed while requesting member chunks or [`None`][]
@@ -224,9 +224,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     def __getitem__(self, index_or_slice: slice, /) -> typing.Sequence[guilds.Member]: ...
 
     @typing_extensions.override
-    def __getitem__(
-        self, index_or_slice: typing.Union[int, slice], /
-    ) -> typing.Union[guilds.Member, typing.Sequence[guilds.Member]]:
+    def __getitem__(self, index_or_slice: int | slice, /) -> guilds.Member | typing.Sequence[guilds.Member]:
         return collections.get_index_or_slice(self.members, index_or_slice)
 
     @typing_extensions.override

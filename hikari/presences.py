@@ -95,10 +95,10 @@ class ActivityType(int, enums.Enum):
 class ActivityTimestamps:
     """The datetimes for the start and/or end of an activity session."""
 
-    start: typing.Optional[datetime.datetime] = attrs.field(repr=True)
+    start: datetime.datetime | None = attrs.field(repr=True)
     """When this activity's session was started, if applicable."""
 
-    end: typing.Optional[datetime.datetime] = attrs.field(repr=True)
+    end: datetime.datetime | None = attrs.field(repr=True)
     """When this activity's session will end, if applicable."""
 
 
@@ -107,13 +107,13 @@ class ActivityTimestamps:
 class ActivityParty:
     """Used to represent activity groups of users."""
 
-    id: typing.Optional[str] = attrs.field(hash=True, repr=True)
+    id: str | None = attrs.field(hash=True, repr=True)
     """The string id of this party instance, if set."""
 
-    current_size: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    current_size: int | None = attrs.field(eq=False, hash=False, repr=False)
     """Current size of this party, if applicable."""
 
-    max_size: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    max_size: int | None = attrs.field(eq=False, hash=False, repr=False)
     """Maximum size of this party, if applicable."""
 
 
@@ -125,21 +125,21 @@ _DYNAMIC_URLS = {"mp": urls.MEDIA_PROXY_URL + "/{}"}
 class ActivityAssets:
     """Used to represent possible assets for an activity."""
 
-    _application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(alias="application_id", repr=False)
+    _application_id: snowflakes.Snowflake | None = attrs.field(alias="application_id", repr=False)
 
-    large_image: typing.Optional[str] = attrs.field(repr=False)
+    large_image: str | None = attrs.field(repr=False)
     """The ID of the asset's large image, if set."""
 
-    large_text: typing.Optional[str] = attrs.field(repr=True)
+    large_text: str | None = attrs.field(repr=True)
     """The text that'll appear when hovering over the large image, if set."""
 
-    small_image: typing.Optional[str] = attrs.field(repr=False)
+    small_image: str | None = attrs.field(repr=False)
     """The ID of the asset's small image, if set."""
 
-    small_text: typing.Optional[str] = attrs.field(repr=True)
+    small_text: str | None = attrs.field(repr=True)
     """The text that'll appear when hovering over the small image, if set."""
 
-    def _make_asset_url(self, asset: typing.Optional[str], ext: str, size: int) -> typing.Optional[files.URL]:
+    def _make_asset_url(self, asset: str | None, ext: str, size: int) -> files.URL | None:
         if asset is None:
             return None
 
@@ -158,7 +158,7 @@ class ActivityAssets:
             )
 
     @property
-    def large_image_url(self) -> typing.Optional[files.URL]:
+    def large_image_url(self) -> files.URL | None:
         """Large image asset URL.
 
         !!! note
@@ -171,7 +171,7 @@ class ActivityAssets:
         except RuntimeError:
             return None
 
-    def make_large_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_large_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the large image asset URL for this application.
 
         !!! note
@@ -203,7 +203,7 @@ class ActivityAssets:
         return self._make_asset_url(self.large_image, ext, size)
 
     @property
-    def small_image_url(self) -> typing.Optional[files.URL]:
+    def small_image_url(self) -> files.URL | None:
         """Small image asset URL.
 
         !!! note
@@ -216,7 +216,7 @@ class ActivityAssets:
         except RuntimeError:
             return None
 
-    def make_small_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_small_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the small image asset URL for this application.
 
         Parameters
@@ -249,13 +249,13 @@ class ActivityAssets:
 class ActivitySecret:
     """The secrets used for interacting with an activity party."""
 
-    join: typing.Optional[str] = attrs.field(repr=False)
+    join: str | None = attrs.field(repr=False)
     """The secret used for joining a party, if applicable."""
 
-    spectate: typing.Optional[str] = attrs.field(repr=False)
+    spectate: str | None = attrs.field(repr=False)
     """The secret used for spectating a party, if applicable."""
 
-    match: typing.Optional[str] = attrs.field(repr=False)
+    match: str | None = attrs.field(repr=False)
     """The secret used for matching a party, if applicable."""
 
 
@@ -303,20 +303,20 @@ class Activity:
     name: str = attrs.field()
     """The activity name."""
 
-    state: typing.Optional[str] = attrs.field(default=None)
+    state: str | None = attrs.field(default=None)
     """The activities state, if set.
 
     This field can be use to set a custom status or provide more information
     on the activity.
     """
 
-    url: typing.Optional[str] = attrs.field(default=None, repr=False)
+    url: str | None = attrs.field(default=None, repr=False)
     """The activity URL, if set.
 
     Only valid for [`hikari.presences.ActivityType.STREAMING`][] activities.
     """
 
-    type: typing.Union[ActivityType, int] = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
+    type: ActivityType | int = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""
 
     @typing_extensions.override
@@ -331,31 +331,31 @@ class RichActivity(Activity):
     created_at: datetime.datetime = attrs.field(repr=False)
     """When this activity was added to the user's session."""
 
-    timestamps: typing.Optional[ActivityTimestamps] = attrs.field(repr=False)
+    timestamps: ActivityTimestamps | None = attrs.field(repr=False)
     """The timestamps for when this activity's current state will start and end, if applicable."""
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=False)
+    application_id: snowflakes.Snowflake | None = attrs.field(repr=False)
     """The ID of the application this activity is for, if applicable."""
 
-    details: typing.Optional[str] = attrs.field(repr=False)
+    details: str | None = attrs.field(repr=False)
     """The text that describes what the activity's target is doing, if set."""
 
-    emoji: typing.Optional[emojis_.Emoji] = attrs.field(repr=False)
+    emoji: emojis_.Emoji | None = attrs.field(repr=False)
     """The emoji of this activity, if it is a custom status and set."""
 
-    party: typing.Optional[ActivityParty] = attrs.field(repr=False)
+    party: ActivityParty | None = attrs.field(repr=False)
     """Information about the party associated with this activity, if set."""
 
-    assets: typing.Optional[ActivityAssets] = attrs.field(repr=False)
+    assets: ActivityAssets | None = attrs.field(repr=False)
     """Images and their hover over text for the activity."""
 
-    secrets: typing.Optional[ActivitySecret] = attrs.field(repr=False)
+    secrets: ActivitySecret | None = attrs.field(repr=False)
     """Secrets for Rich Presence joining and spectating."""
 
-    is_instance: typing.Optional[bool] = attrs.field(repr=False)
+    is_instance: bool | None = attrs.field(repr=False)
     """Whether this activity is an instanced game session."""
 
-    flags: typing.Optional[ActivityFlag] = attrs.field(repr=False)
+    flags: ActivityFlag | None = attrs.field(repr=False)
     """Flags that describe what the activity includes, if present."""
 
     buttons: typing.Sequence[str] = attrs.field(repr=False)
@@ -384,13 +384,13 @@ class Status(str, enums.Enum):
 class ClientStatus:
     """The client statuses for this member."""
 
-    desktop: typing.Union[Status, str] = attrs.field(repr=True)
+    desktop: Status | str = attrs.field(repr=True)
     """The status of the target user's desktop session."""
 
-    mobile: typing.Union[Status, str] = attrs.field(repr=True)
+    mobile: Status | str = attrs.field(repr=True)
     """The status of the target user's mobile session."""
 
-    web: typing.Union[Status, str] = attrs.field(repr=True)
+    web: Status | str = attrs.field(repr=True)
     """The status of the target user's web session."""
 
 
@@ -410,7 +410,7 @@ class MemberPresence:
     guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of the guild this presence belongs to."""
 
-    visible_status: typing.Union[Status, str] = attrs.field(eq=False, hash=False, repr=True)
+    visible_status: Status | str = attrs.field(eq=False, hash=False, repr=True)
     """This user's current status being displayed by the client."""
 
     activities: typing.Sequence[RichActivity] = attrs.field(eq=False, hash=False, repr=False)

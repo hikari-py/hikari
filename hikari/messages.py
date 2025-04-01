@@ -217,17 +217,17 @@ class Attachment(snowflakes.Unique, files.WebResource):
     filename: str = attrs.field(hash=False, eq=False, repr=True)
     """The filename of the file."""
 
-    title: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=True)
+    title: str | None = attrs.field(hash=False, eq=False, repr=True)
     """The title of the file.
 
     This will be the original filename of the attachment if it contained
     non-unicode characters.
     """
 
-    description: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=True)
+    description: str | None = attrs.field(hash=False, eq=False, repr=True)
     """The description of the file."""
 
-    media_type: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=True)
+    media_type: str | None = attrs.field(hash=False, eq=False, repr=True)
     """The media type of the file."""
 
     size: int = attrs.field(hash=False, eq=False, repr=True)
@@ -236,10 +236,10 @@ class Attachment(snowflakes.Unique, files.WebResource):
     proxy_url: str = attrs.field(hash=False, eq=False, repr=False)
     """The proxied URL of file."""
 
-    height: typing.Optional[int] = attrs.field(hash=False, eq=False, repr=False)
+    height: int | None = attrs.field(hash=False, eq=False, repr=False)
     """The height of the image (if the file is an image)."""
 
-    width: typing.Optional[int] = attrs.field(hash=False, eq=False, repr=False)
+    width: int | None = attrs.field(hash=False, eq=False, repr=False)
     """The width of the image (if the file is an image)."""
 
     is_ephemeral: bool = attrs.field(hash=False, eq=False, repr=True)
@@ -250,10 +250,10 @@ class Attachment(snowflakes.Unique, files.WebResource):
     time (but will exist as long as their relevant message exists).
     """
 
-    duration: typing.Optional[float] = attrs.field(hash=False, eq=False, repr=False)
+    duration: float | None = attrs.field(hash=False, eq=False, repr=False)
     """The duration (in seconds) of the voice message."""
 
-    waveform: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=False)
+    waveform: str | None = attrs.field(hash=False, eq=False, repr=False)
     """A base64 encoded representation of the sampled waveform for the voice message."""
 
     @typing_extensions.override
@@ -269,7 +269,7 @@ class Reaction:
     count: int = attrs.field(eq=False, hash=False, repr=True)
     """The number of times the emoji has been used to react."""
 
-    emoji: typing.Union[emojis_.UnicodeEmoji, emojis_.CustomEmoji] = attrs.field(hash=True, repr=True)
+    emoji: emojis_.UnicodeEmoji | emojis_.CustomEmoji = attrs.field(hash=True, repr=True)
     """The emoji used to react."""
 
     is_me: bool = attrs.field(eq=False, hash=False, repr=False)
@@ -285,10 +285,10 @@ class Reaction:
 class MessageActivity:
     """Represents the activity of a rich presence-enabled message."""
 
-    type: typing.Union[MessageActivityType, int] = attrs.field(repr=True)
+    type: MessageActivityType | int = attrs.field(repr=True)
     """The type of message activity."""
 
-    party_id: typing.Optional[str] = attrs.field(repr=True)
+    party_id: str | None = attrs.field(repr=True)
     """The party ID of the message activity."""
 
 
@@ -306,7 +306,7 @@ class MessageReference:
     )
     """Client application that models may use for procedures."""
 
-    id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=True)
+    id: snowflakes.Snowflake | None = attrs.field(repr=True)
     """The ID of the original message.
 
     This will be [`None`][] for channel follow add messages. This may
@@ -316,7 +316,7 @@ class MessageReference:
     channel_id: snowflakes.Snowflake = attrs.field(repr=True)
     """The ID of the channel that the original message originated from."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=True)
+    guild_id: snowflakes.Snowflake | None = attrs.field(repr=True)
     """The ID of the guild that the message originated from.
 
     This will be [`None`][] when the original message is not from
@@ -324,7 +324,7 @@ class MessageReference:
     """
 
     @property
-    def message_link(self) -> typing.Optional[str]:
+    def message_link(self) -> str | None:
         """Generate a jump link to the referenced message.
 
         This will be [`None`][] for channel follow add messages. This may
@@ -351,15 +351,15 @@ class MessageReference:
 class MessageApplication(guilds.PartialApplication):
     """The representation of an application used in messages."""
 
-    cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    cover_image_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
     @property
-    def cover_image_url(self) -> typing.Optional[files.URL]:
+    def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
         return self.make_cover_image_url()
 
-    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
 
         Parameters
@@ -391,7 +391,7 @@ class MessageApplication(guilds.PartialApplication):
 
 
 def _map_cache_maybe_discover(
-    ids: typing.Iterable[snowflakes.Snowflake], cache_call: typing.Callable[[snowflakes.Snowflake], typing.Optional[_T]]
+    ids: typing.Iterable[snowflakes.Snowflake], cache_call: typing.Callable[[snowflakes.Snowflake], _T | None]
 ) -> dict[snowflakes.Snowflake, _T]:
     results: dict[snowflakes.Snowflake, _T] = {}
     for id_ in ids:
@@ -427,7 +427,7 @@ class PartialMessage(snowflakes.Unique):
     channel_id: snowflakes.Snowflake = attrs.field(hash=False, eq=False, repr=True)
     """The ID of the channel that the message was sent in."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=True)
+    guild_id: snowflakes.Snowflake | None = attrs.field(hash=False, eq=False, repr=True)
     """The ID of the guild that the message was sent in or [`None`][] for messages out of guilds.
 
     !!! warning
@@ -537,7 +537,7 @@ class PartialMessage(snowflakes.Unique):
     webhook_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """If the message was generated by a webhook, the webhook's ID."""
 
-    type: undefined.UndefinedOr[typing.Union[MessageType, int]] = attrs.field(hash=False, eq=False, repr=False)
+    type: undefined.UndefinedOr[MessageType | int] = attrs.field(hash=False, eq=False, repr=False)
     """The message type."""
 
     activity: undefined.UndefinedNoneOr[MessageActivity] = attrs.field(hash=False, eq=False, repr=False)
@@ -593,7 +593,7 @@ class PartialMessage(snowflakes.Unique):
     )
     """Sequence of the components attached to this message."""
 
-    interaction_metadata: typing.Optional[base_interactions.PartialInteractionMetadata] = attrs.field(
+    interaction_metadata: base_interactions.PartialInteractionMetadata | None = attrs.field(
         hash=False, eq=False, repr=False
     )
     """Sent if the message is sent as a result of an interaction."""
@@ -694,7 +694,7 @@ class PartialMessage(snowflakes.Unique):
 
         return {}
 
-    def make_link(self, guild: typing.Optional[snowflakes.SnowflakeishOr[guilds.PartialGuild]]) -> str:
+    def make_link(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild] | None) -> str:
         """Generate a jump link to this message.
 
         Parameters
@@ -746,10 +746,8 @@ class PartialMessage(snowflakes.Unique):
         self,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedNoneOr[typing.Union[files.Resourceish, Attachment]] = undefined.UNDEFINED,
-        attachments: undefined.UndefinedNoneOr[
-            typing.Sequence[typing.Union[files.Resourceish, Attachment]]
-        ] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish | Attachment] = undefined.UNDEFINED,
+        attachments: undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish | Attachment]] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
             typing.Sequence[special_endpoints.ComponentBuilder]
@@ -759,10 +757,10 @@ class PartialMessage(snowflakes.Unique):
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[MessageFlag] = undefined.UNDEFINED,
     ) -> Message:
@@ -934,19 +932,17 @@ class PartialMessage(snowflakes.Unique):
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        reply: typing.Union[
-            undefined.UndefinedType, snowflakes.SnowflakeishOr[PartialMessage], bool
-        ] = undefined.UNDEFINED,
+        reply: undefined.UndefinedType | snowflakes.SnowflakeishOr[PartialMessage] | bool = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | MessageFlag = undefined.UNDEFINED,
     ) -> Message:
         """Create a message in the channel this message belongs to.
 
@@ -1125,14 +1121,14 @@ class PartialMessage(snowflakes.Unique):
         await self.app.rest.delete_message(self.channel_id, self.id)
 
     @typing.overload
-    async def add_reaction(self, emoji: typing.Union[str, emojis_.Emoji]) -> None: ...
+    async def add_reaction(self, emoji: str | emojis_.Emoji) -> None: ...
 
     @typing.overload
     async def add_reaction(self, emoji: str, emoji_id: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> None: ...
 
     async def add_reaction(
         self,
-        emoji: typing.Union[str, emojis_.Emoji],
+        emoji: str | emojis_.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis_.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         r"""Add a reaction to this message.
@@ -1189,7 +1185,7 @@ class PartialMessage(snowflakes.Unique):
     @typing.overload
     async def remove_reaction(
         self,
-        emoji: typing.Union[str, emojis_.Emoji],
+        emoji: str | emojis_.Emoji,
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
     ) -> None: ...
@@ -1205,7 +1201,7 @@ class PartialMessage(snowflakes.Unique):
 
     async def remove_reaction(
         self,
-        emoji: typing.Union[str, emojis_.Emoji],
+        emoji: str | emojis_.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis_.CustomEmoji]] = undefined.UNDEFINED,
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
@@ -1278,7 +1274,7 @@ class PartialMessage(snowflakes.Unique):
     async def remove_all_reactions(self) -> None: ...
 
     @typing.overload
-    async def remove_all_reactions(self, emoji: typing.Union[str, emojis_.Emoji]) -> None: ...
+    async def remove_all_reactions(self, emoji: str | emojis_.Emoji) -> None: ...
 
     @typing.overload
     async def remove_all_reactions(
@@ -1287,7 +1283,7 @@ class PartialMessage(snowflakes.Unique):
 
     async def remove_all_reactions(
         self,
-        emoji: undefined.UndefinedOr[typing.Union[str, emojis_.Emoji]] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[str | emojis_.Emoji] = undefined.UNDEFINED,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis_.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         r"""Remove all users' reactions for a specific emoji from the message.
@@ -1344,16 +1340,16 @@ class Message(PartialMessage):
     author: users_.User = attrs.field(hash=False, eq=False, repr=True)
     """The author of this message."""
 
-    member: typing.Optional[guilds.Member] = attrs.field(hash=False, eq=False, repr=False)
+    member: guilds.Member | None = attrs.field(hash=False, eq=False, repr=False)
     """The member properties for the message's author."""
 
-    content: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=False)
+    content: str | None = attrs.field(hash=False, eq=False, repr=False)
     """The content of the message."""
 
     timestamp: datetime.datetime = attrs.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was sent at."""
 
-    edited_timestamp: typing.Optional[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
+    edited_timestamp: datetime.datetime | None = attrs.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was last edited at.
 
     Will be [`None`][] if it wasn't ever edited.
@@ -1368,7 +1364,7 @@ class Message(PartialMessage):
     embeds: typing.Sequence[embeds_.Embed] = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
 
-    poll: typing.Optional[polls_.Poll] = attrs.field(hash=False, eq=False, repr=False)
+    poll: polls_.Poll | None = attrs.field(hash=False, eq=False, repr=False)
     """The message poll."""
 
     reactions: typing.Sequence[Reaction] = attrs.field(hash=False, eq=False, repr=False)
@@ -1377,13 +1373,13 @@ class Message(PartialMessage):
     is_pinned: bool = attrs.field(hash=False, eq=False, repr=False)
     """Whether the message is pinned."""
 
-    webhook_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
+    webhook_id: snowflakes.Snowflake | None = attrs.field(hash=False, eq=False, repr=False)
     """If the message was generated by a webhook, the webhook's id."""
 
-    type: typing.Union[MessageType, int] = attrs.field(hash=False, eq=False, repr=False)
+    type: MessageType | int = attrs.field(hash=False, eq=False, repr=False)
     """The message type."""
 
-    activity: typing.Optional[MessageActivity] = attrs.field(hash=False, eq=False, repr=False)
+    activity: MessageActivity | None = attrs.field(hash=False, eq=False, repr=False)
     """The message activity.
 
     !!! note
@@ -1391,7 +1387,7 @@ class Message(PartialMessage):
         embeds.
     """
 
-    application: typing.Optional[MessageApplication] = attrs.field(hash=False, eq=False, repr=False)
+    application: MessageApplication | None = attrs.field(hash=False, eq=False, repr=False)
     """The message application.
 
     !!! note
@@ -1399,7 +1395,7 @@ class Message(PartialMessage):
         embeds.
     """
 
-    message_reference: typing.Optional[MessageReference] = attrs.field(hash=False, eq=False, repr=False)
+    message_reference: MessageReference | None = attrs.field(hash=False, eq=False, repr=False)
     """The message reference data."""
 
     flags: MessageFlag = attrs.field(hash=False, eq=False, repr=True)
@@ -1408,16 +1404,16 @@ class Message(PartialMessage):
     stickers: typing.Sequence[stickers_.PartialSticker] = attrs.field(hash=False, eq=False, repr=False)
     """The stickers sent with this message."""
 
-    nonce: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=False)
+    nonce: str | None = attrs.field(hash=False, eq=False, repr=False)
     """The message nonce. This is a string used for validating a message was sent."""
 
-    referenced_message: typing.Optional[PartialMessage] = attrs.field(hash=False, eq=False, repr=False)
+    referenced_message: PartialMessage | None = attrs.field(hash=False, eq=False, repr=False)
     """The message that was replied to.
 
     If `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
+    application_id: snowflakes.Snowflake | None = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.
 
     !!! note
@@ -1429,7 +1425,7 @@ class Message(PartialMessage):
     )
     """Sequence of the components attached to this message."""
 
-    thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field(hash=False, eq=False, repr=False)
+    thread: channels_.GuildThreadChannel | None = attrs.field(hash=False, eq=False, repr=False)
     """The thread that was started from this message.
 
     Will be [`None`][] if the message was not used to start a thread.

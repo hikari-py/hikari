@@ -223,13 +223,13 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     version: int = attrs.field(eq=False, repr=True)
     """Version of the interaction system this interaction is under."""
 
-    app_permissions: typing.Optional[permissions_.Permissions] = attrs.field(eq=False, hash=False, repr=False)
+    app_permissions: permissions_.Permissions | None = attrs.field(eq=False, hash=False, repr=False)
     """Permissions the bot has in this interaction's channel if it's in a guild."""
 
     user: users.User = attrs.field(eq=False, hash=False, repr=True)
     """The user who triggered this interaction."""
 
-    member: typing.Optional[InteractionMember] = attrs.field(eq=False, hash=False, repr=True)
+    member: InteractionMember | None = attrs.field(eq=False, hash=False, repr=True)
     """The member who triggered this interaction.
 
     This will be [`None`][] for interactions triggered in DMs.
@@ -242,13 +242,13 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     channel: InteractionChannel = attrs.field(eq=False, repr=False)
     """The channel this interaction was triggered in."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this modal interaction event was triggered in.
 
     This will be [`None`][] for modal interactions triggered in DMs.
     """
 
-    guild_locale: typing.Optional[typing.Union[str, locales.Locale]] = attrs.field(eq=False, hash=False, repr=True)
+    guild_locale: str | locales.Locale | None = attrs.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this component interaction was triggered in.
 
     This will be [`None`][] for component interactions triggered in DMs.
@@ -283,7 +283,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
         # <<inherited docstring from ExecutableWebhook>>.
         return self.application_id
 
-    async def fetch_guild(self) -> typing.Optional[guilds.RESTGuild]:
+    async def fetch_guild(self) -> guilds.RESTGuild | None:
         """Fetch the guild this interaction happened in.
 
         Returns
@@ -311,7 +311,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
 
         return await self.app.rest.fetch_guild(self.guild_id)
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the object of the guild this interaction was triggered in from the cache.
 
         Returns
@@ -333,7 +333,7 @@ class PartialInteractionMetadata:
     interaction_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID for this message interaction."""
 
-    type: typing.Union[InteractionType, int] = attrs.field(eq=False, repr=True)
+    type: InteractionType | int = attrs.field(eq=False, repr=True)
     """The type of this message interaction."""
 
     user: users.User = attrs.field(eq=False, repr=True)
@@ -344,7 +344,7 @@ class PartialInteractionMetadata:
     )
     """A mapping of the [applications.ApplicationIntegrationType] to the related guild or user ID."""
 
-    original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(hash=True, repr=True)
+    original_response_message_id: snowflakes.Snowflake | None = attrs.field(hash=True, repr=True)
     """The ID of the original response message."""
 
 
@@ -407,7 +407,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         response_type: _CommandResponseTypesT,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
+        flags: int | messages.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         attachment: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
@@ -420,10 +420,10 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
     ) -> None:
         """Create the initial response for this interaction.
@@ -540,11 +540,9 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         self,
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedNoneOr[
-            typing.Union[files.Resourceish, messages.Attachment]
-        ] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish | messages.Attachment] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[
-            typing.Sequence[typing.Union[files.Resourceish, messages.Attachment]]
+            typing.Sequence[files.Resourceish | messages.Attachment]
         ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
@@ -554,10 +552,10 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
     ) -> messages.Message:
         """Edit the initial response of this command interaction.
@@ -781,13 +779,13 @@ class InteractionChannel(channels.PartialChannel):
     permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=True)
     """Permissions the command's executor has in this channel."""
 
-    parent_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    parent_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The parent ID of the channel.
 
     This will be [`None`][] for DM channels and guild channels that have no parent.
     """
 
-    thread_metadata: typing.Optional[channels.ThreadMetadata] = attrs.field(eq=False, hash=False, repr=False)
+    thread_metadata: channels.ThreadMetadata | None = attrs.field(eq=False, hash=False, repr=False)
     """The thread metadata, if the channel is a thread."""
 
 

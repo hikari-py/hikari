@@ -137,7 +137,7 @@ class Route:
     path_template: str = attrs.field()
     """The template string used for the path."""
 
-    major_params: typing.Optional[frozenset[str]] = attrs.field(hash=False, eq=False, repr=False)
+    major_params: frozenset[str] | None = attrs.field(hash=False, eq=False, repr=False)
     """The optional major parameter name combination for this endpoint."""
 
     has_ratelimits: bool = attrs.field(hash=False, eq=False, repr=False)
@@ -217,7 +217,7 @@ class CDNRoute:
     is_sizable: bool = attrs.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
     """Whether a `size` param can be specified."""
 
-    def compile(self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: object) -> str:
+    def compile(self, base_url: str, *, file_format: str, size: int | None = None, **kwargs: object) -> str:
         """Generate a full CDN url from this endpoint.
 
         Parameters
@@ -284,7 +284,7 @@ class CDNRoute:
         return url
 
     def compile_to_file(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: object
+        self, base_url: str, *, file_format: str, size: int | None = None, **kwargs: object
     ) -> files.URL:
         """Perform the same as `compile`, but return the URL as a [`hikari.files.URL`][]."""
         return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))

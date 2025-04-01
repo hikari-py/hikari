@@ -104,7 +104,7 @@ class GuildEvent(shard_events.ShardEvent, abc.ABC):
         """
         return await self.app.rest.fetch_guild_preview(self.guild_id)
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached guild that this event relates to, if known.
 
         If not known, this will return [`None`][] instead.
@@ -177,7 +177,7 @@ class GuildAvailableEvent(GuildVisibilityEvent):
     voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attrs.field(repr=False)
     """Mapping of user IDs to the voice states active in this guild."""
 
-    chunk_nonce: typing.Optional[str] = attrs.field(repr=False, default=None)
+    chunk_nonce: str | None = attrs.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
 
     This will be [`None`][] if no chunks were requested.
@@ -241,7 +241,7 @@ class GuildJoinEvent(GuildVisibilityEvent):
     voice_states: typing.Mapping[snowflakes.Snowflake, voices.VoiceState] = attrs.field(repr=False)
     """Mapping of user IDs to the voice states active in this guild."""
 
-    chunk_nonce: typing.Optional[str] = attrs.field(repr=False, default=None)
+    chunk_nonce: str | None = attrs.field(repr=False, default=None)
     """Nonce used to request the member chunks for this guild.
 
     This will be [`None`][] if no chunks were requested.
@@ -281,7 +281,7 @@ class GuildLeaveEvent(GuildVisibilityEvent):
     guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildEvent>>.
 
-    old_guild: typing.Optional[guilds.GatewayGuild] = attrs.field()
+    old_guild: guilds.GatewayGuild | None = attrs.field()
     """The old guild object.
 
     This will be [`None`][] if the guild missing from the cache.
@@ -318,7 +318,7 @@ class GuildUpdateEvent(GuildEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_guild: typing.Optional[guilds.GatewayGuild] = attrs.field()
+    old_guild: guilds.GatewayGuild | None = attrs.field()
     """The old guild object.
 
     This will be [`None`][] if the guild missing from the cache.
@@ -442,7 +442,7 @@ class EmojisUpdateEvent(GuildEvent):
     guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildEvent>>.
 
-    old_emojis: typing.Optional[typing.Sequence[emojis_.KnownCustomEmoji]] = attrs.field()
+    old_emojis: typing.Sequence[emojis_.KnownCustomEmoji] | None = attrs.field()
     """Sequence of all old emojis in this guild.
 
     This will be [`None`][] if it's missing from the cache.
@@ -477,7 +477,7 @@ class StickersUpdateEvent(GuildEvent):
     guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildEvent>>.
 
-    old_stickers: typing.Optional[typing.Sequence[stickers_.GuildSticker]] = attrs.field()
+    old_stickers: typing.Sequence[stickers_.GuildSticker] | None = attrs.field()
     """Sequence of all old stickers in this guild.
 
     This will be [`None`][] if it's missing from the cache.
@@ -505,7 +505,7 @@ class IntegrationEvent(GuildEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def application_id(self) -> typing.Optional[snowflakes.Snowflake]:
+    def application_id(self) -> snowflakes.Snowflake | None:
         """ID of Discord bot application this integration is connected to."""
 
     @property
@@ -549,7 +549,7 @@ class IntegrationCreateEvent(IntegrationEvent):
 
     @property
     @typing_extensions.override
-    def application_id(self) -> typing.Optional[snowflakes.Snowflake]:
+    def application_id(self) -> snowflakes.Snowflake | None:
         # <<inherited docstring from IntegrationEvent>>.
         return self.integration.application.id if self.integration.application else None
 
@@ -578,7 +578,7 @@ class IntegrationDeleteEvent(IntegrationEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    application_id: snowflakes.Snowflake | None = attrs.field()
     # <<inherited docstring from IntegrationEvent>>.
 
     guild_id: snowflakes.Snowflake = attrs.field()
@@ -605,7 +605,7 @@ class IntegrationUpdateEvent(IntegrationEvent):
 
     @property
     @typing_extensions.override
-    def application_id(self) -> typing.Optional[snowflakes.Snowflake]:
+    def application_id(self) -> snowflakes.Snowflake | None:
         # <<inherited docstring from IntegrationEvent>>.
         return self.integration.application.id if self.integration.application else None
 
@@ -642,7 +642,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_presence: typing.Optional[presences_.MemberPresence] = attrs.field()
+    old_presence: presences_.MemberPresence | None = attrs.field()
     """The old member presence object.
 
     This will be [`None`][] if the member presence missing from the cache.
@@ -651,7 +651,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
     presence: presences_.MemberPresence = attrs.field()
     """Member presence."""
 
-    user: typing.Optional[users.PartialUser] = attrs.field()
+    user: users.PartialUser | None = attrs.field()
     """User that was updated.
 
     This is a partial user object that only contains the fields that were
@@ -678,7 +678,7 @@ class PresenceUpdateEvent(shard_events.ShardEvent):
         """Guild ID that the presence was updated in."""
         return self.presence.guild_id
 
-    def get_user(self) -> typing.Optional[users.User]:
+    def get_user(self) -> users.User | None:
         """Get the full cached user, if it is available.
 
         Returns

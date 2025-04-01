@@ -57,7 +57,7 @@ class BasePollVoteEvent(shard_events.ShardEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     """ID of the message that the poll is in."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    guild_id: snowflakes.Snowflake | None = attrs.field()
     """ID of the guild that the poll is in."""
 
     answer_id: int = attrs.field()

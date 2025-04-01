@@ -37,8 +37,8 @@ if typing.TYPE_CHECKING:
 def generate_allowed_mentions(
     mentions_everyone: undefined.UndefinedOr[bool],
     mentions_reply: undefined.UndefinedOr[bool],
-    user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]],
-    role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]],
+    user_mentions: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users.PartialUser] | bool],
+    role_mentions: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool],
 ) -> data_binding.JSONObject:
     """Generate an allowed mentions JSON object.
 

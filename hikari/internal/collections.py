@@ -106,7 +106,7 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
 
     __slots__: typing.Sequence[str] = ("_data",)
 
-    def __init__(self, source: typing.Optional[dict[KeyT, ValueT]] = None, /) -> None:
+    def __init__(self, source: dict[KeyT, ValueT] | None = None, /) -> None:
         self._data = source or {}
 
     @typing_extensions.override
@@ -168,11 +168,11 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
     def __init__(
         self,
-        source: typing.Optional[dict[KeyT, ValueT]] = None,
+        source: dict[KeyT, ValueT] | None = None,
         /,
         *,
         limit: int,
-        on_expire: typing.Optional[typing.Callable[[ValueT], None]] = None,
+        on_expire: typing.Callable[[ValueT], None] | None = None,
     ) -> None:
         self._data: dict[KeyT, ValueT] = source or {}
         self._limit = limit
@@ -339,8 +339,8 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
 
 
 def get_index_or_slice(
-    mapping: typing.Mapping[KeyT, ValueT], index_or_slice: typing.Union[int, slice]
-) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
+    mapping: typing.Mapping[KeyT, ValueT], index_or_slice: int | slice
+) -> ValueT | typing.Sequence[ValueT]:
     """Get a mapping's entry at a given index as if it's a sequence of it's values.
 
     Parameters

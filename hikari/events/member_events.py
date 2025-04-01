@@ -70,7 +70,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
         """ID of the user that this event concerns."""
         return self.user.id
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached view of the guild this member event occurred in.
 
         If the guild itself is not cached, this will return [`None`][].
@@ -124,7 +124,7 @@ class MemberUpdateEvent(MemberEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_member: typing.Optional[guilds.Member] = attrs.field()
+    old_member: guilds.Member | None = attrs.field()
     """The old member object.
 
     This will be [`None`][] if the member missing from the cache.
@@ -161,7 +161,7 @@ class MemberDeleteEvent(MemberEvent):
     user: users.User = attrs.field()
     # <<inherited docstring from MemberEvent>>.
 
-    old_member: typing.Optional[guilds.Member] = attrs.field()
+    old_member: guilds.Member | None = attrs.field()
     """The old member object.
 
     This will be [`None`][] if the member was missing from the cache.

@@ -134,26 +134,26 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
         "_timeout",
     )
 
-    __weakref__: typing.Optional[weakref.ref[EventStream[base_events.EventT]]]
+    __weakref__: weakref.ref[EventStream[base_events.EventT]] | None
 
     def __init__(
         self,
         event_manager: event_manager_.EventManager,
         event_type: type[base_events.EventT],
         *,
-        timeout: typing.Union[float, None],
-        limit: typing.Optional[int] = None,
+        timeout: float | None,
+        limit: int | None = None,
     ) -> None:
         self._active = False
-        self._event: typing.Optional[asyncio.Event] = None
+        self._event: asyncio.Event | None = None
         self._event_manager = event_manager
         self._event_type = event_type
         self._filters: iterators.All[base_events.EventT] = iterators.All(())
         self._limit = limit
         self._queue: list[base_events.EventT] = []
-        self._registered_listener: typing.Optional[
-            typing.Callable[[base_events.EventT], typing.Coroutine[typing.Any, typing.Any, None]]
-        ] = None
+        self._registered_listener: (
+            typing.Callable[[base_events.EventT], typing.Coroutine[typing.Any, typing.Any, None]] | None
+        ) = None
         # The registered wrapping function for the weak ref to this class's _listener method.
         self._timeout = timeout
 
@@ -164,10 +164,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
     @typing_extensions.override
     def __exit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         self.close()
 
@@ -231,9 +228,7 @@ class EventStream(event_manager_.EventStream[base_events.EventT]):
 
     @typing_extensions.override
     def filter(
-        self,
-        *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
-        **attrs: object,
+        self, *predicates: tuple[str, typing.Any] | typing.Callable[[base_events.EventT], bool], **attrs: object
     ) -> Self:
         filter_ = self._map_predicates_and_attr_getters("filter", *predicates, **attrs)
         if self._active:
@@ -267,7 +262,7 @@ def _assert_is_listener(parameters: typing.Iterator[inspect.Parameter], /) -> No
 
 
 def filtered(
-    event_types: typing.Union[type[base_events.Event], typing.Sequence[type[base_events.Event]]],
+    event_types: type[base_events.Event] | typing.Sequence[type[base_events.Event]],
     cache_components: config.CacheComponents = config.CacheComponents.NONE,
     /,
 ) -> typing.Callable[[_UnboundMethodT[_EventManagerBaseT]], _UnboundMethodT[_EventManagerBaseT]]:
@@ -577,11 +572,7 @@ class EventManagerBase(event_manager_.EventManager):
 
     @typing_extensions.override
     def stream(
-        self,
-        event_type: type[base_events.EventT],
-        /,
-        timeout: typing.Union[float, None],
-        limit: typing.Optional[int] = None,
+        self, event_type: type[base_events.EventT], /, timeout: float | None, limit: int | None = None
     ) -> event_manager_.EventStream[base_events.EventT]:
         self._check_event(event_type, 1)
         return EventStream(self, event_type, timeout=timeout, limit=limit)
@@ -591,8 +582,8 @@ class EventManagerBase(event_manager_.EventManager):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, None],
-        predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
+        timeout: float | None,
+        predicate: event_manager_.PredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         self._check_event(event_type, 1)
 
@@ -653,7 +644,7 @@ class EventManagerBase(event_manager_.EventManager):
             await callback(event)
         except Exception as ex:
             # Skip the first frame in logs if it exists, as it means it wasn't our fault
-            trio: typing.Union[tuple[type[Exception], Exception, typing.Optional[types.TracebackType]], Exception]
+            trio: tuple[type[Exception], Exception, types.TracebackType | None] | Exception
             trio = (type(ex), ex, ex.__traceback__.tb_next) if ex.__traceback__ else ex
 
             if base_events.is_no_recursive_throw_event(event):

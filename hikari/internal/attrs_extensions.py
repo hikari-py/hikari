@@ -215,7 +215,7 @@ def get_or_generate_deep_copier(
         return copier
 
 
-def deep_copy_attrs(model: ModelT, memo: typing.Optional[typing.MutableMapping[int, typing.Any]] = None) -> ModelT:
+def deep_copy_attrs(model: ModelT, memo: typing.MutableMapping[int, typing.Any] | None = None) -> ModelT:
     """Deep copy an attrs model with [`init`][] enabled.
 
     !!! note

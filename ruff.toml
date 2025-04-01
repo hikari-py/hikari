@@ -85,9 +85,6 @@ ignore = [
 required-imports = ["from __future__ import annotations"]
 force-single-line = true
 
-[lint.pyupgrade]
-keep-runtime-typing = true # FIXME: Consider removing
-
 [lint.pydocstyle]
 convention = "numpy"
 

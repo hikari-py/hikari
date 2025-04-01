@@ -49,7 +49,7 @@ class VoiceState:
     )
     """Client application that models may use for procedures."""
 
-    channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the channel this user is connected to.
 
     This will be [`None`][] if they are leaving voice.
@@ -86,7 +86,7 @@ class VoiceState:
     user_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the user this voice state is for."""
 
-    member: typing.Optional[guilds.Member] = attrs.field(eq=False, hash=False, repr=False)
+    member: guilds.Member | None = attrs.field(eq=False, hash=False, repr=False)
     """The guild member this voice state is for.
 
     This can be [`None`][] in cases where the Discord backend fails to
@@ -97,7 +97,7 @@ class VoiceState:
     session_id: str = attrs.field(hash=True, repr=True)
     """The string ID of this voice state's session."""
 
-    requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=True)
+    requested_to_speak_at: datetime.datetime | None = attrs.field(eq=False, hash=False, repr=True)
     """When the user requested to speak in a stage channel.
 
     Will be [`None`][] if they have not requested to speak.

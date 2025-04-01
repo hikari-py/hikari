@@ -254,10 +254,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         await self.acquire()
 
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         self.release()
 
@@ -364,7 +361,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         self.name: str = real_bucket_hash
 
 
-def _create_authentication_hash(authentication: typing.Optional[str]) -> str:
+def _create_authentication_hash(authentication: str | None) -> str:
     return str(hash(authentication))
 
 
@@ -397,7 +394,7 @@ class RESTBucketManager:
     def __init__(self, max_rate_limit: float) -> None:
         self._routes_to_hashes: dict[routes.Route, str] = {}
         self._real_hashes_to_buckets: dict[str, RESTBucket] = {}
-        self._gc_task: typing.Optional[asyncio.Task[None]] = None
+        self._gc_task: asyncio.Task[None] | None = None
         self._max_rate_limit = max_rate_limit
         self._global_ratelimit = rate_limits.ManualRateLimiter()
 
@@ -506,7 +503,7 @@ class RESTBucketManager:
             _LOGGER.log(ux.TRACE, "no buckets purged, %s remain in survival, %s active", survival, active)
 
     def acquire_bucket(
-        self, compiled_route: routes.CompiledRoute, authentication: typing.Optional[str]
+        self, compiled_route: routes.CompiledRoute, authentication: str | None
     ) -> typing.AsyncContextManager[None]:
         """Acquire a bucket for the given route.
 
@@ -550,7 +547,7 @@ class RESTBucketManager:
     def update_rate_limits(
         self,
         compiled_route: routes.CompiledRoute,
-        authentication: typing.Optional[str],
+        authentication: str | None,
         bucket_header: str,
         remaining_header: int,
         limit_header: int,

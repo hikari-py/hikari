@@ -82,10 +82,10 @@ class CommandInteractionOption:
     name: str = attrs.field(repr=True)
     """Name of this option."""
 
-    type: typing.Union[commands.OptionType, int] = attrs.field(repr=True)
+    type: commands.OptionType | int = attrs.field(repr=True)
     """Type of this option."""
 
-    value: typing.Union[snowflakes.Snowflake, str, int, float, bool, None] = attrs.field(repr=True)
+    value: snowflakes.Snowflake | str | int | float | bool | None = attrs.field(repr=True)
     """Value provided for this option.
 
     Either [`hikari.interactions.command_interactions.CommandInteractionOption.value`][]
@@ -95,7 +95,7 @@ class CommandInteractionOption:
     subcommand or group.
     """
 
-    options: typing.Optional[typing.Sequence[Self]] = attrs.field(repr=True)
+    options: typing.Sequence[Self] | None = attrs.field(repr=True)
     """Options provided for this option.
 
     Either [`hikari.interactions.command_interactions.CommandInteractionOption.value`][]
@@ -133,10 +133,10 @@ class BaseCommandInteraction(base_interactions.PartialInteraction):
     command_name: str = attrs.field(eq=False, hash=False, repr=True)
     """Name of the command being invoked."""
 
-    command_type: typing.Union[commands.CommandType, int] = attrs.field(eq=False, hash=False, repr=True)
+    command_type: commands.CommandType | int = attrs.field(eq=False, hash=False, repr=True)
     """The type of the command."""
 
-    registered_guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    registered_guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild the command is registered to."""
 
     async def fetch_command(self) -> commands.PartialCommand:
@@ -182,10 +182,10 @@ class CommandInteraction(
     options: typing.Sequence[CommandInteractionOption] = attrs.field(eq=False, hash=False, repr=True)
     """Parameter values provided by the user invoking this command."""
 
-    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attrs.field(eq=False, hash=False, repr=False)
+    resolved: base_interactions.ResolvedOptionData | None = attrs.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
 
-    target_id: typing.Optional[snowflakes.Snowflake] = attrs.field(default=None, eq=False, hash=False, repr=True)
+    target_id: snowflakes.Snowflake | None = attrs.field(default=None, eq=False, hash=False, repr=True)
     """The target of the command. Only available if the command is a context menu command."""
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
@@ -309,8 +309,8 @@ class AutocompleteInteraction(BaseCommandInteraction):
 class CommandInteractionMetadata(base_interactions.PartialInteractionMetadata):
     """The interaction metadata for a command initiated message."""
 
-    target_user: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
+    target_user: users_.User | None = attrs.field(eq=False, hash=False, repr=True)
     """The user the command was run on, present only on user command interactions."""
 
-    target_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    target_message_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the message the command was run on, present only on message command interactions."""

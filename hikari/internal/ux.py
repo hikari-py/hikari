@@ -69,10 +69,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 
 def init_logging(
-    flavor: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]],
-    *,
-    allow_color: bool,
-    force_color: bool,
+    flavor: None | str | int | dict[str, typing.Any] | os.PathLike[str], *, allow_color: bool, force_color: bool
 ) -> None:
     """Initialize logging for the user.
 
@@ -246,11 +243,7 @@ def _read_banner(package: str) -> str:
 
 
 def print_banner(
-    package: typing.Optional[str],
-    *,
-    allow_color: bool,
-    force_color: bool,
-    extra_args: typing.Optional[dict[str, str]] = None,
+    package: str | None, *, allow_color: bool, force_color: bool, extra_args: dict[str, str] | None = None
 ) -> None:
     """Print a banner of choice to [`sys.stdout`][].
 
@@ -403,7 +396,7 @@ class HikariVersion:
     __slots__: typing.Sequence[str] = ("_cmp", "prerelease", "version")
 
     version: tuple[int, int, int]
-    prerelease: typing.Optional[tuple[str, int]]
+    prerelease: tuple[str, int] | None
 
     def __init__(self, vstring: str) -> None:
         match = _VERSION_REGEX.match(vstring)
@@ -499,7 +492,7 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None
-        newest_version: typing.Optional[HikariVersion] = None
+        newest_version: HikariVersion | None = None
 
         for release_string, artifacts in data["releases"].items():
             if not all(artifact["yanked"] for artifact in artifacts):

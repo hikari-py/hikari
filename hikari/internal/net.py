@@ -48,7 +48,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
         assert isinstance(json_body, dict)
         args.append(json_body.get("message", ""))
         args.append(json_body.get("code", 0))
-        raw_error_array: typing.Optional[data_binding.JSONObject] = json_body.get("errors")
+        raw_error_array: data_binding.JSONObject | None = json_body.get("errors")
     except ValueError:
         raw_error_array = None
 
@@ -62,7 +62,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
         return errors.NotFoundError(*args)
 
     try:
-        status: typing.Union[http.HTTPStatus, int] = http.HTTPStatus(response.status)
+        status: http.HTTPStatus | int = http.HTTPStatus(response.status)
     except ValueError:
         status = response.status
 
@@ -74,7 +74,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
 
 
 def create_tcp_connector(
-    http_settings: config.HTTPSettings, *, dns_cache: typing.Union[bool, int] = True, limit: int = 100
+    http_settings: config.HTTPSettings, *, dns_cache: bool | int = True, limit: int = 100
 ) -> aiohttp.TCPConnector:
     """Create a TCP connector and return it.
 
