@@ -63,14 +63,21 @@ from hikari.api import cache
 from hikari.internal import attrs_extensions
 from hikari.internal import collections
 
+if not typing.TYPE_CHECKING:
+    # This is insanely hacky, but it is needed for ruff to not complain until it gets type inference
+    from hikari.internal import typing_extensions
+
+
 if typing.TYPE_CHECKING:
     import datetime
 
+    import typing_extensions  # noqa: TC004
     from typing_extensions import Self
 
     from hikari import applications
     from hikari import channels as channels_
     from hikari import components as components_
+    from hikari import polls as polls_
     from hikari import traits
     from hikari import users as users_
     from hikari.interactions import base_interactions
@@ -118,9 +125,11 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     def _copy(value: ValueT) -> ValueT:
         return copy.copy(value)
 
+    @typing_extensions.override
     def __contains__(self, key: object) -> bool:
         return key in self._data
 
+    @typing_extensions.override
     def __getitem__(self, key: KeyT) -> ValueT:
         entry = self._data[key]
 
@@ -129,9 +138,11 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
 
         return self._copy(entry)  # type: ignore[arg-type]
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[KeyT]:
         return iter(self._data)
 
+    @typing_extensions.override
     def __len__(self) -> int:
         return len(self._data)
 
@@ -141,6 +152,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     @typing.overload
     def get_item_at(self, index: slice, /) -> typing.Sequence[ValueT]: ...
 
+    @typing_extensions.override
     def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
         return collections.get_index_or_slice(self, index)
 
@@ -150,18 +162,23 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
 
     __slots__: typing.Sequence[str] = ()
 
+    @typing_extensions.override
     def __contains__(self, _: object) -> typing.Literal[False]:
         return False
 
+    @typing_extensions.override
     def __getitem__(self, key: object) -> typing.NoReturn:
         raise KeyError(key)
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[typing.Any]:
         yield from ()
 
+    @typing_extensions.override
     def __len__(self) -> typing.Literal[0]:
         return 0
 
+    @typing_extensions.override
     def get_item_at(self, index: typing.Union[slice, int]) -> typing.NoReturn:
         raise IndexError(index)
 
@@ -333,6 +350,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     is_temporary: bool = attrs.field()
     created_at: datetime.datetime = attrs.field()
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> invites.InviteWithMetadata:
         return invites.InviteWithMetadata(
             code=self.code,
@@ -356,6 +374,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
         )
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls,
         invite: invites.InviteWithMetadata,
@@ -395,6 +414,7 @@ class MemberData(BaseData[guilds.Member]):
     guild_id: snowflakes.Snowflake = attrs.field()
     nickname: typing.Optional[str] = attrs.field()
     guild_avatar_hash: typing.Optional[str] = attrs.field()
+    guild_banner_hash: typing.Optional[str] = attrs.field()
     role_ids: tuple[snowflakes.Snowflake, ...] = attrs.field()
     joined_at: typing.Optional[datetime.datetime] = attrs.field()
     premium_since: typing.Optional[datetime.datetime] = attrs.field()
@@ -407,6 +427,7 @@ class MemberData(BaseData[guilds.Member]):
     has_been_deleted: bool = attrs.field(default=False, init=False)
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, member: guilds.Member, /, *, user: typing.Optional[RefCell[users_.User]] = None
     ) -> MemberData:
@@ -416,6 +437,7 @@ class MemberData(BaseData[guilds.Member]):
             joined_at=member.joined_at,
             premium_since=member.premium_since,
             guild_avatar_hash=member.guild_avatar_hash,
+            guild_banner_hash=member.guild_banner_hash,
             is_deaf=member.is_deaf,
             is_mute=member.is_mute,
             is_pending=member.is_pending,
@@ -427,6 +449,7 @@ class MemberData(BaseData[guilds.Member]):
             role_ids=tuple(member.role_ids),
         )
 
+    @typing_extensions.override
     def build_entity(self, _: traits.RESTAware, /) -> guilds.Member:
         return guilds.Member(
             guild_id=self.guild_id,
@@ -434,6 +457,7 @@ class MemberData(BaseData[guilds.Member]):
             role_ids=self.role_ids,
             joined_at=self.joined_at,
             guild_avatar_hash=self.guild_avatar_hash,
+            guild_banner_hash=self.guild_banner_hash,
             premium_since=self.premium_since,
             is_deaf=self.is_deaf,
             is_mute=self.is_mute,
@@ -460,6 +484,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     is_available: bool = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, emoji: emojis.KnownCustomEmoji, /, *, user: typing.Optional[RefCell[users_.User]] = None
     ) -> KnownCustomEmojiData:
@@ -483,6 +508,7 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
             role_ids=tuple(emoji.role_ids),
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> emojis.KnownCustomEmoji:
         return emojis.KnownCustomEmoji(
             id=self.id,
@@ -513,6 +539,7 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
     user: typing.Optional[RefCell[users_.User]] = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, sticker: stickers_.GuildSticker, /, *, user: typing.Optional[RefCell[users_.User]] = None
     ) -> GuildStickerData:
@@ -530,6 +557,7 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
             user=user,
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> stickers_.GuildSticker:
         return stickers_.GuildSticker(
             id=self.id,
@@ -565,6 +593,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
     buttons: tuple[str, ...] = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, activity: presences.RichActivity, /, *, emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = None
     ) -> RichActivityData:
@@ -599,6 +628,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
             buttons=tuple(activity.buttons),
         )
 
+    @typing_extensions.override
     def build_entity(self, _: traits.RESTAware, /) -> presences.RichActivity:
         emoji: typing.Optional[emojis.Emoji] = None
         if isinstance(self.emoji, RefCell):
@@ -638,6 +668,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
     client_status: presences.ClientStatus = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(cls, presence: presences.MemberPresence, /) -> MemberPresenceData:
         # role_ids and activities are special cases as may be mutable sequences, therefore we want to ensure they're
         # stored in immutable sequences (tuples). Plus activities need to be converted to Data objects.
@@ -649,6 +680,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
             client_status=copy.copy(presence.client_status),
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> presences.MemberPresence:
         return presences.MemberPresence(
             user_id=self.user_id,
@@ -700,6 +732,7 @@ class MessageData(BaseData[messages.Message]):
     attachments: tuple[messages.Attachment, ...] = attrs.field()
     embeds: tuple[embeds_.Embed, ...] = attrs.field()
     reactions: tuple[messages.Reaction, ...] = attrs.field()
+    poll: typing.Optional[polls_.Poll] = attrs.field()
     is_pinned: bool = attrs.field()
     webhook_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
     type: typing.Union[messages.MessageType, int] = attrs.field()
@@ -716,6 +749,7 @@ class MessageData(BaseData[messages.Message]):
     interaction_metadata: typing.Optional[base_interactions.PartialInteractionMetadata] = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls,
         message: messages.Message,
@@ -761,6 +795,7 @@ class MessageData(BaseData[messages.Message]):
             mentions_everyone=message.mentions_everyone,
             attachments=tuple(map(copy.copy, message.attachments)),
             embeds=tuple(map(_copy_embed, message.embeds)),
+            poll=message.poll,
             reactions=tuple(map(copy.copy, message.reactions)),
             is_pinned=message.is_pinned,
             webhook_id=message.webhook_id,
@@ -778,6 +813,7 @@ class MessageData(BaseData[messages.Message]):
             interaction_metadata=message.interaction_metadata,
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
         channel_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = (
             {channel_id: copy.copy(channel) for channel_id, channel in self.channel_mentions.items()}
@@ -807,6 +843,7 @@ class MessageData(BaseData[messages.Message]):
             mentions_everyone=self.mentions_everyone,
             attachments=tuple(map(copy.copy, self.attachments)),
             embeds=tuple(map(_copy_embed, self.embeds)),
+            poll=self.poll,
             reactions=tuple(map(copy.copy, self.reactions)),
             is_pinned=self.is_pinned,
             webhook_id=self.webhook_id,
@@ -887,6 +924,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     session_id: str = attrs.field()
     requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field()
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
         member = self.member.object.build_entity(app) if self.member else None
         return voices.VoiceState(
@@ -907,6 +945,7 @@ class VoiceStateData(BaseData[voices.VoiceState]):
         )
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls, voice_state: voices.VoiceState, /, *, member: typing.Optional[RefCell[MemberData]] = None
     ) -> VoiceStateData:
@@ -1005,5 +1044,6 @@ class Cache3DMappingView(CacheMappingView[snowflakes.Snowflake, cache.CacheView[
     __slots__: typing.Sequence[str] = ()
 
     @staticmethod
+    @typing_extensions.override
     def _copy(value: cache.CacheView[KeyT, ValueT]) -> cache.CacheView[KeyT, ValueT]:
         return value

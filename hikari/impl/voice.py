@@ -33,6 +33,7 @@ from hikari import errors
 from hikari import snowflakes
 from hikari.api import voice
 from hikari.events import voice_events
+from hikari.internal import typing_extensions
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
@@ -73,6 +74,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self._voice_listener = False
 
     @property
+    @typing_extensions.override
     def is_alive(self) -> bool:
         return self._is_alive
 
@@ -85,6 +87,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
             msg = "Component cannot be used while it's closing"
             raise errors.ComponentStateConflictError(msg)
 
+    @typing_extensions.override
     async def disconnect(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
         self._check_if_alive()
         guild_id = snowflakes.Snowflake(guild)
@@ -103,10 +106,12 @@ class VoiceComponentImpl(voice.VoiceComponent):
         # emptying self._connections.
         await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
 
+    @typing_extensions.override
     async def disconnect_all(self) -> None:
         self._check_if_alive()
         await self._disconnect_all()
 
+    @typing_extensions.override
     async def close(self) -> None:
         self._check_if_alive()
         self._is_closing = True
@@ -131,6 +136,7 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self._is_alive = True
         self._voice_listener = False
 
+    @typing_extensions.override
     async def connect_to(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],

@@ -39,6 +39,8 @@ __all__: typing.Sequence[str] = (
     "LinkButtonBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "PollAnswerBuilder",
+    "PollBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
     "SlashCommandBuilder",
@@ -51,7 +53,9 @@ import abc
 import typing
 
 from hikari import components as components_
+from hikari import polls
 from hikari import undefined
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import types
@@ -537,6 +541,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> base_interactions.DeferredResponseTypesT:
         """Type of this response."""
 
@@ -658,6 +663,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> base_interactions.MessageResponseTypesT:
         """Type of this response."""
 
@@ -731,6 +737,11 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         user mentions or [`True`][] to allow all user mentions.
         """
 
+    @property
+    @abc.abstractmethod
+    def poll(self) -> undefined.UndefinedOr[PollBuilder]:
+        """The poll to include with this response."""
+
     @abc.abstractmethod
     def clear_attachments(self, /) -> Self:
         """Clear attachments for this response.
@@ -775,6 +786,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
+    def clear_components(self, /) -> Self:
+        """Clear the components set for this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
     def add_embed(self, embed: embeds_.Embed, /) -> Self:
         """Add an embed to this response.
 
@@ -782,6 +803,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         embed
             Object of the embed to add to this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def clear_embeds(self, /) -> Self:
+        """Clear the embeds set for this embed.
 
         Returns
         -------
@@ -899,6 +930,22 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             Object of this builder to allow for chained calls.
         """
 
+    @abc.abstractmethod
+    def set_poll(self, poll: undefined.UndefinedOr[PollBuilder], /) -> Self:
+        """Set the poll to include with this response.
+
+        Parameters
+        ----------
+        poll
+            The poll to include with this response, or [`hikari.undefined.UNDEFINED`][]
+            to remove a previously added poll.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
 
 class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
     """Interface of an interaction modal response builder used within REST servers.
@@ -912,6 +959,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
         """Type of this response."""
 
@@ -973,6 +1021,7 @@ class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
         """Type of this response."""
 
@@ -1266,6 +1315,7 @@ class SlashCommandBuilder(CommandBuilder):
         """
 
     @abc.abstractmethod
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1303,6 +1353,7 @@ class ContextMenuCommandBuilder(CommandBuilder):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1363,6 +1414,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.BUTTON]:
         """Type of component this builder represents."""
 
@@ -1809,6 +1861,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.TEXT_INPUT]:
         """Type of component this builder represents."""
 
@@ -1985,6 +2038,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
@@ -2222,6 +2276,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
@@ -2294,4 +2349,93 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         -------
         ModalActionRowBuilder
             The modal action row builder to enable call chaining.
+        """
+
+
+class PollBuilder(abc.ABC):
+    """Builder class for polls."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def question_text(self) -> str:
+        """The question text for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def answers(self) -> typing.Sequence[PollAnswerBuilder]:
+        """The answers for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def duration(self) -> undefined.UndefinedOr[int]:
+        """The duration of the poll."""
+
+    @property
+    @abc.abstractmethod
+    def allow_multiselect(self) -> bool:
+        """Whether a user can select multiple answers."""
+
+    @property
+    @abc.abstractmethod
+    def layout_type(self) -> undefined.UndefinedOr[polls.PollLayoutType]:
+        """The layout type for the poll."""
+
+    @abc.abstractmethod
+    def add_answer(
+        self,
+        *,
+        text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a answer to the poll.
+
+        Parameters
+        ----------
+        text
+            The text for the answer.
+        emoji
+            The emoji for the answer.
+
+        Returns
+        -------
+        PollAnswerBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class PollAnswerBuilder(abc.ABC):
+    """Builder class for poll answers."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def text(self) -> undefined.UndefinedOr[str]:
+        """The text for the media object."""
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> undefined.UndefinedOr[emojis.Emoji]:
+        """The emoji for the media object."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
         """

@@ -39,6 +39,8 @@ __all__: typing.Sequence[str] = (
     "LinkButtonBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "PollAnswerBuilder",
+    "PollBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
     "SlashCommandBuilder",
@@ -62,6 +64,7 @@ from hikari import files
 from hikari import iterators
 from hikari import locales
 from hikari import messages
+from hikari import polls
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints
@@ -72,10 +75,16 @@ from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
 
+if not typing.TYPE_CHECKING:
+    # This is insanely hacky, but it is needed for ruff to not complain until it gets type inference
+    from hikari.internal import typing_extensions
+
+
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import types
 
+    import typing_extensions  # noqa: TC004
     from typing_extensions import Self
 
     from hikari import applications
@@ -151,15 +160,18 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         self._task: typing.Optional[asyncio.Task[None]] = None
         self._rest_close_event = rest_close_event
 
+    @typing_extensions.override
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
         return self._request_call(self._route).__await__()
 
+    @typing_extensions.override
     async def __aenter__(self) -> None:
         if self._task is not None:
             msg = "Cannot enter a typing indicator context more than once"
             raise TypeError(msg)
         self._task = asyncio.create_task(self._keep_typing(), name=self._task_name)
 
+    @typing_extensions.override
     async def __aexit__(
         self,
         exc_type: typing.Optional[type[BaseException]],
@@ -304,9 +316,11 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     _roles: typing.MutableSequence[data_binding.JSONObject] = attrs.field(factory=list, init=False)
 
     @property
+    @typing_extensions.override
     def name(self) -> str:
         return self._name
 
+    @typing_extensions.override
     async def create(self) -> guilds.RESTGuild:
         route = routes.POST_GUILDS.compile()
         payload = data_binding.JSONObjectBuilder()
@@ -328,6 +342,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_rest_guild(response)
 
+    @typing_extensions.override
     def add_role(
         self,
         name: str,
@@ -365,6 +380,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         self._roles.append(payload)
         return snowflake_id
 
+    @typing_extensions.override
     def add_category(
         self,
         name: str,
@@ -393,6 +409,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         self._channels.append(payload)
         return snowflake_id
 
+    @typing_extensions.override
     def add_text_channel(
         self,
         name: str,
@@ -427,6 +444,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         self._channels.append(payload)
         return snowflake_id
 
+    @typing_extensions.override
     def add_voice_channel(
         self,
         name: str,
@@ -463,6 +481,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         self._channels.append(payload)
         return snowflake_id
 
+    @typing_extensions.override
     def add_stage_channel(
         self,
         name: str,
@@ -526,6 +545,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
         self._first_id = first_id
         self._route = routes.GET_CHANNEL_MESSAGES.compile(channel=channel)
 
+    @typing_extensions.override
     async def _next_chunk(self) -> typing.Optional[typing.Generator[messages.Message, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put(self._direction, self._first_id)
@@ -565,6 +585,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         self._first_id = undefined.UNDEFINED
         self._route = routes.GET_REACTIONS.compile(channel=channel, message=message, emoji=emoji)
 
+    @typing_extensions.override
     async def _next_chunk(self) -> typing.Optional[typing.Generator[users.User, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
@@ -603,6 +624,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         self._first_id = first_id
         self._route = routes.GET_MY_GUILDS.compile()
 
+    @typing_extensions.override
     async def _next_chunk(self) -> typing.Optional[typing.Generator[applications.OwnGuild, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
@@ -655,6 +677,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
         self._first_id = first_id
         self._newest_first = newest_first
 
+    @typing_extensions.override
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.GuildBan, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("before" if self._newest_first else "after", self._first_id)
@@ -697,6 +720,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         # because that caused Discord to take about 2 seconds more to return the first response.
         self._first_id = undefined.UNDEFINED
 
+    @typing_extensions.override
     async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
@@ -746,6 +770,7 @@ class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_event
         self._request_call = request_call
         self._route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=guild, scheduled_event=event)
 
+    @typing_extensions.override
     async def _next_chunk(
         self,
     ) -> typing.Optional[typing.Generator[scheduled_events.ScheduledEventUser, typing.Any, None]]:
@@ -801,6 +826,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         self._route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=guild)
         self._user = user
 
+    @typing_extensions.override
     async def __anext__(self) -> audit_logs.AuditLog:
         query = data_binding.StringMapBuilder()
         query.put("limit", 100)
@@ -855,6 +881,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
         self._request_call = request_call
         self._route = route
 
+    @typing_extensions.override
     async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelT, typing.Any, None]]:
         if not self._has_more:
             return None
@@ -909,21 +936,26 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
     _value: typing.Union[int, str, float] = attrs.field(alias="value")
 
     @property
+    @typing_extensions.override
     def name(self) -> str:
         return self._name
 
     @property
+    @typing_extensions.override
     def value(self) -> typing.Union[int, str, float]:
         return self._value
 
+    @typing_extensions.override
     def set_name(self, name: str, /) -> Self:
         self._name = name
         return self
 
+    @typing_extensions.override
     def set_value(self, value: typing.Union[float, str], /) -> Self:
         self._value = value
         return self
 
+    @typing_extensions.override
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {"name": self._name, "value": self._value}
 
@@ -936,17 +968,21 @@ class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBu
     _choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder] = attrs.field(factory=tuple)
 
     @property
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.AUTOCOMPLETE]:
         return base_interactions.ResponseType.AUTOCOMPLETE
 
     @property
+    @typing_extensions.override
     def choices(self) -> typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]:
         return self._choices
 
+    @typing_extensions.override
     def set_choices(self, choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder], /) -> Self:
         self._choices = choices
         return self
 
+    @typing_extensions.override
     def build(
         self, _: entity_factory_.EntityFactory, /
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
@@ -976,17 +1012,21 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
     )
 
     @property
+    @typing_extensions.override
     def type(self) -> base_interactions.DeferredResponseTypesT:
         return self._type
 
     @property
+    @typing_extensions.override
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
         return self._flags
 
+    @typing_extensions.override
     def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
         self._flags = flags
         return self
 
+    @typing_extensions.override
     def build(
         self, _: entity_factory_.EntityFactory, /
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
@@ -1034,6 +1074,9 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]] = (
         attrs.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
     )
+    _poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = attrs.field(
+        alias="poll", default=undefined.UNDEFINED, kw_only=True
+    )
     _attachments: undefined.UndefinedNoneOr[list[files.Resourceish]] = attrs.field(
         alias="attachments", default=undefined.UNDEFINED, kw_only=True
     )
@@ -1045,49 +1088,65 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     )
 
     @property
+    @typing_extensions.override
     def attachments(self) -> undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]]:
         return self._attachments.copy() if self._attachments else self._attachments
 
     @property
+    @typing_extensions.override
     def content(self) -> undefined.UndefinedNoneOr[str]:
         return self._content
 
     @property
+    @typing_extensions.override
     def components(self) -> undefined.UndefinedNoneOr[typing.Sequence[special_endpoints.ComponentBuilder]]:
         return self._components.copy() if self._components else self._components
 
     @property
+    @typing_extensions.override
     def embeds(self) -> undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]]:
         return self._embeds.copy() if self._embeds else self._embeds
 
     @property
+    @typing_extensions.override
     def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
         return self._flags
 
     @property
+    @typing_extensions.override
     def is_tts(self) -> undefined.UndefinedOr[bool]:
         return self._is_tts
 
     @property
+    @typing_extensions.override
     def mentions_everyone(self) -> undefined.UndefinedOr[bool]:
         return self._mentions_everyone
 
     @property
+    @typing_extensions.override
     def role_mentions(
         self,
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]]:
         return self._role_mentions
 
     @property
+    @typing_extensions.override
     def type(self) -> base_interactions.MessageResponseTypesT:
         return self._type
 
     @property
+    @typing_extensions.override
     def user_mentions(
         self,
     ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
         return self._user_mentions
 
+    @property
+    @typing_extensions.override
+    def poll(self) -> undefined.UndefinedOr[special_endpoints.PollBuilder]:
+        return self._poll
+
+    @typing_extensions.override
     def add_attachment(self, attachment: files.Resourceish, /) -> Self:
         if not self._attachments:
             self._attachments = []
@@ -1095,10 +1154,12 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._attachments.append(attachment)
         return self
 
+    @typing_extensions.override
     def clear_attachments(self, /) -> Self:
         self._attachments = None
         return self
 
+    @typing_extensions.override
     def add_component(self, component: special_endpoints.ComponentBuilder, /) -> Self:
         if not self._components:
             self._components = []
@@ -1106,10 +1167,12 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._components.append(component)
         return self
 
+    @typing_extensions.override
     def clear_components(self, /) -> Self:
         self._components = None
         return self
 
+    @typing_extensions.override
     def add_embed(self, embed: embeds_.Embed, /) -> Self:
         if not self._embeds:
             self._embeds = []
@@ -1117,10 +1180,12 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._embeds.append(embed)
         return self
 
+    @typing_extensions.override
     def clear_embeds(self, /) -> Self:
         self._embeds = None
         return self
 
+    @typing_extensions.override
     def set_content(self, content: undefined.UndefinedOr[str], /) -> Self:
         self._content = str(content) if content is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
@@ -1129,18 +1194,22 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._content = None
         return self
 
+    @typing_extensions.override
     def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
         self._flags = flags
         return self
 
+    @typing_extensions.override
     def set_tts(self, tts: undefined.UndefinedOr[bool], /) -> Self:
         self._is_tts = tts
         return self
 
+    @typing_extensions.override
     def set_mentions_everyone(self, state: undefined.UndefinedOr[bool] = undefined.UNDEFINED, /) -> Self:
         self._mentions_everyone = state
         return self
 
+    @typing_extensions.override
     def set_role_mentions(
         self,
         role_mentions: undefined.UndefinedOr[
@@ -1151,6 +1220,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._role_mentions = role_mentions
         return self
 
+    @typing_extensions.override
     def set_user_mentions(
         self,
         user_mentions: undefined.UndefinedOr[
@@ -1161,6 +1231,12 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._user_mentions = user_mentions
         return self
 
+    @typing_extensions.override
+    def set_poll(self, poll: undefined.UndefinedOr[special_endpoints.PollBuilder], /) -> Self:
+        self._poll = poll
+        return self
+
+    @typing_extensions.override
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
@@ -1201,6 +1277,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
         data.put("flags", self.flags)
         data.put("tts", self.is_tts)
+        data.put("poll", self.poll, conversion=lambda poll: poll.build())
 
         if (
             not undefined.all_undefined(self.mentions_everyone, self.user_mentions, self.role_mentions)
@@ -1222,33 +1299,41 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
     _components: list[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
 
     @property
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
         return base_interactions.ResponseType.MODAL
 
     @property
+    @typing_extensions.override
     def title(self) -> str:
         return self._title
 
     @property
+    @typing_extensions.override
     def custom_id(self) -> str:
         return self._custom_id
 
     @property
+    @typing_extensions.override
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components
 
+    @typing_extensions.override
     def set_title(self, title: str, /) -> Self:
         self._title = title
         return self
 
+    @typing_extensions.override
     def set_custom_id(self, custom_id: str, /) -> Self:
         self._custom_id = custom_id
         return self
 
+    @typing_extensions.override
     def add_component(self, component: special_endpoints.ComponentBuilder, /) -> Self:
         self._components.append(component)
         return self
 
+    @typing_extensions.override
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
@@ -1265,9 +1350,11 @@ class InteractionPremiumRequiredBuilder(special_endpoints.InteractionPremiumRequ
     """Standard implementation of `hikari.api.special_endpoints.InteractionPremiumRequiredBuilder`."""
 
     @property
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
         return base_interactions.ResponseType.PREMIUM_REQUIRED
 
+    @typing_extensions.override
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
     ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
@@ -1303,69 +1390,84 @@ class CommandBuilder(special_endpoints.CommandBuilder):
     )
 
     @property
+    @typing_extensions.override
     def id(self) -> undefined.UndefinedOr[snowflakes.Snowflake]:
         return self._id
 
     @property
+    @typing_extensions.override
     def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
         return self._default_member_permissions
 
     @property
+    @typing_extensions.override
     def is_nsfw(self) -> undefined.UndefinedOr[bool]:
         return self._is_nsfw
 
     @property
+    @typing_extensions.override
     def name(self) -> str:
         return self._name
 
     @property
+    @typing_extensions.override
     def integration_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]:
         return self._integration_types
 
     @property
+    @typing_extensions.override
     def context_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]:
         return self._context_types
 
     @property
+    @typing_extensions.override
     def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         return self._name_localizations
 
+    @typing_extensions.override
     def set_name(self, name: str, /) -> Self:
         self._name = name
         return self
 
+    @typing_extensions.override
     def set_id(self, id_: undefined.UndefinedOr[snowflakes.Snowflakeish], /) -> Self:
         self._id = snowflakes.Snowflake(id_) if id_ is not undefined.UNDEFINED else undefined.UNDEFINED
         return self
 
+    @typing_extensions.override
     def set_default_member_permissions(
         self, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
     ) -> Self:
         self._default_member_permissions = default_member_permissions
         return self
 
+    @typing_extensions.override
     def set_is_nsfw(self, state: undefined.UndefinedOr[bool], /) -> Self:
         self._is_nsfw = state
         return self
 
+    @typing_extensions.override
     def set_integration_types(
         self, integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]
     ) -> Self:
         self._integration_types = integration_types
         return self
 
+    @typing_extensions.override
     def set_context_types(
         self, context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]
     ) -> Self:
         self._context_types = context_types
         return self
 
+    @typing_extensions.override
     def set_name_localizations(
         self, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
     ) -> Self:
         self._name_localizations = name_localizations
         return self
 
+    @typing_extensions.override
     def build(self, _: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
         data["name"] = self._name
@@ -1396,35 +1498,43 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     )
 
     @property
+    @typing_extensions.override
     def description(self) -> str:
         return self._description
 
     @property
+    @typing_extensions.override
     def type(self) -> commands.CommandType:
         return commands.CommandType.SLASH
 
     @property
+    @typing_extensions.override
     def options(self) -> typing.Sequence[commands.CommandOption]:
         return self._options.copy()
 
     @property
+    @typing_extensions.override
     def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
         return self._description_localizations
 
+    @typing_extensions.override
     def set_description(self, description: str, /) -> Self:
         self._description = description
         return self
 
+    @typing_extensions.override
     def set_description_localizations(
         self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
     ) -> Self:
         self._description_localizations = description_localizations
         return self
 
+    @typing_extensions.override
     def add_option(self, option: commands.CommandOption) -> Self:
         self._options.append(option)
         return self
 
+    @typing_extensions.override
     def build(self, entity_factory: entity_factory_.EntityFactory, /) -> typing.MutableMapping[str, typing.Any]:
         data = super().build(entity_factory)
         # Under this context we know this'll always be a JSONObjectBuilder but
@@ -1436,6 +1546,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         data.put("description_localizations", self._description_localizations)
         return data
 
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1467,9 +1578,11 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
     _name: str = attrs.field(alias="name")
 
     @property
+    @typing_extensions.override
     def type(self) -> commands.CommandType:
         return self._type
 
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1533,25 +1646,31 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
 
     @property
+    @typing_extensions.override
     def type(self) -> typing.Literal[component_models.ComponentType.BUTTON]:
         return component_models.ComponentType.BUTTON
 
     @property
+    @typing_extensions.override
     def style(self) -> typing.Union[int, component_models.ButtonStyle]:
         return self._style
 
     @property
+    @typing_extensions.override
     def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
         return self._emoji
 
     @property
+    @typing_extensions.override
     def label(self) -> undefined.UndefinedOr[str]:
         return self._label
 
     @property
+    @typing_extensions.override
     def is_disabled(self) -> bool:
         return self._is_disabled
 
+    @typing_extensions.override
     def set_emoji(
         self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
     ) -> Self:
@@ -1559,14 +1678,17 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         self._emoji = emoji
         return self
 
+    @typing_extensions.override
     def set_label(self, label: undefined.UndefinedOr[str], /) -> Self:
         self._label = label
         return self
 
-    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+    @typing_extensions.override
+    def set_is_disabled(self, state: bool, /) -> Self:
         self._is_disabled = state
         return self
 
+    @typing_extensions.override
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
@@ -1598,6 +1720,7 @@ class LinkButtonBuilder(_ButtonBuilder, special_endpoints.LinkButtonBuilder):
     _url: str = attrs.field(alias="url")
 
     @property
+    @typing_extensions.override
     def url(self) -> str:
         return self._url
 
@@ -1610,9 +1733,11 @@ class InteractiveButtonBuilder(_ButtonBuilder, special_endpoints.InteractiveButt
     _url: undefined.UndefinedType = attrs.field(init=False, default=undefined.UNDEFINED)
 
     @property
+    @typing_extensions.override
     def custom_id(self) -> str:
         return self._custom_id
 
+    @typing_extensions.override
     def set_custom_id(self, custom_id: str, /) -> Self:
         self._custom_id = custom_id
         return self
@@ -1639,37 +1764,46 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
         self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
 
     @property
+    @typing_extensions.override
     def label(self) -> str:
         return self._label
 
     @property
+    @typing_extensions.override
     def value(self) -> str:
         return self._value
 
     @property
+    @typing_extensions.override
     def description(self) -> undefined.UndefinedOr[str]:
         return self._description
 
     @property
+    @typing_extensions.override
     def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
         return self._emoji
 
     @property
+    @typing_extensions.override
     def is_default(self) -> bool:
         return self._is_default
 
+    @typing_extensions.override
     def set_label(self, label: str, /) -> Self:
         self._label = label
         return self
 
+    @typing_extensions.override
     def set_value(self, value: str, /) -> Self:
         self._value = value
         return self
 
+    @typing_extensions.override
     def set_description(self, value: undefined.UndefinedOr[str], /) -> Self:
         self._description = value
         return self
 
+    @typing_extensions.override
     def set_emoji(
         self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
     ) -> Self:
@@ -1677,10 +1811,12 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
         self._emoji = emoji
         return self
 
-    def set_is_default(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+    @typing_extensions.override
+    def set_is_default(self, state: bool, /) -> Self:
         self._is_default = state
         return self
 
+    @typing_extensions.override
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
@@ -1711,49 +1847,61 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     _is_disabled: bool = attrs.field(alias="is_disabled", default=False)
 
     @property
+    @typing_extensions.override
     def type(self) -> typing.Union[int, component_models.ComponentType]:
         return self._type
 
     @property
+    @typing_extensions.override
     def custom_id(self) -> str:
         return self._custom_id
 
     @property
+    @typing_extensions.override
     def is_disabled(self) -> bool:
         return self._is_disabled
 
     @property
+    @typing_extensions.override
     def placeholder(self) -> undefined.UndefinedOr[str]:
         return self._placeholder
 
     @property
+    @typing_extensions.override
     def min_values(self) -> int:
         return self._min_values
 
     @property
+    @typing_extensions.override
     def max_values(self) -> int:
         return self._max_values
 
+    @typing_extensions.override
     def set_custom_id(self, custom_id: str, /) -> Self:
         self._custom_id = custom_id
         return self
 
-    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+    @typing_extensions.override
+    def set_is_disabled(self, state: bool, /) -> Self:
         self._is_disabled = state
         return self
 
+    @typing_extensions.override
     def set_placeholder(self, value: undefined.UndefinedOr[str], /) -> Self:
         self._placeholder = value
         return self
 
+    @typing_extensions.override
     def set_min_values(self, value: int, /) -> Self:
         self._min_values = value
         return self
 
+    @typing_extensions.override
     def set_max_values(self, value: int, /) -> Self:
         self._max_values = value
         return self
 
+    @typing_extensions.override
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
@@ -1827,6 +1975,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         self._parent = parent
 
     @property
+    @typing_extensions.override
     def parent(self) -> _ParentT:
         if self._parent is None:
             msg = "This menu has no parent"
@@ -1835,9 +1984,11 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         return self._parent
 
     @property
+    @typing_extensions.override
     def options(self) -> typing.Sequence[special_endpoints.SelectOptionBuilder]:
         return self._options.copy()
 
+    @typing_extensions.override
     def add_option(
         self,
         label: str,
@@ -1856,6 +2007,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         self._options.append(option)
         return self
 
+    @typing_extensions.override
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = super().build()
 
@@ -1874,13 +2026,16 @@ class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelec
     )
 
     @property
+    @typing_extensions.override
     def channel_types(self) -> typing.Sequence[channels.ChannelType]:
         return self._channel_types
 
+    @typing_extensions.override
     def set_channel_types(self, value: typing.Sequence[channels.ChannelType], /) -> Self:
         self._channel_types = value
         return self
 
+    @typing_extensions.override
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = super().build()
 
@@ -1906,73 +2061,91 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
     _max_length: int = attrs.field(alias="max_length", default=4000, kw_only=True)
 
     @property
+    @typing_extensions.override
     def type(self) -> typing.Literal[component_models.ComponentType.TEXT_INPUT]:
         return component_models.ComponentType.TEXT_INPUT
 
     @property
+    @typing_extensions.override
     def custom_id(self) -> str:
         return self._custom_id
 
     @property
+    @typing_extensions.override
     def label(self) -> str:
         return self._label
 
     @property
+    @typing_extensions.override
     def style(self) -> component_models.TextInputStyle:
         return self._style
 
     @property
+    @typing_extensions.override
     def placeholder(self) -> undefined.UndefinedOr[str]:
         return self._placeholder
 
     @property
+    @typing_extensions.override
     def value(self) -> undefined.UndefinedOr[str]:
         return self._value
 
     @property
+    @typing_extensions.override
     def is_required(self) -> bool:
         return self._required
 
     @property
+    @typing_extensions.override
     def min_length(self) -> int:
         return self._min_length
 
     @property
+    @typing_extensions.override
     def max_length(self) -> int:
         return self._max_length
 
+    @typing_extensions.override
     def set_style(self, style: typing.Union[component_models.TextInputStyle, int], /) -> Self:
         self._style = component_models.TextInputStyle(style)
         return self
 
+    @typing_extensions.override
     def set_custom_id(self, custom_id: str, /) -> Self:
         self._custom_id = custom_id
         return self
 
+    @typing_extensions.override
     def set_label(self, label: str, /) -> Self:
         self._label = label
         return self
 
+    @typing_extensions.override
     def set_placeholder(self, placeholder: undefined.UndefinedOr[str], /) -> Self:
         self._placeholder = placeholder
         return self
 
+    @typing_extensions.override
     def set_value(self, value: undefined.UndefinedOr[str], /) -> Self:
         self._value = value
         return self
 
-    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+    @typing_extensions.override
+    def set_required(self, required: bool, /) -> Self:
         self._required = required
         return self
 
+    @typing_extensions.override
     def set_min_length(self, min_length: int, /) -> Self:
         self._min_length = min_length
         return self
 
+    @typing_extensions.override
     def set_max_length(self, max_length: int, /) -> Self:
         self._max_length = max_length
         return self
 
+    @typing_extensions.override
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         data = data_binding.JSONObjectBuilder()
 
@@ -1997,10 +2170,12 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     _stored_type: typing.Optional[int] = attrs.field(default=None, init=False)
 
     @property
+    @typing_extensions.override
     def type(self) -> typing.Literal[component_models.ComponentType.ACTION_ROW]:
         return component_models.ComponentType.ACTION_ROW
 
     @property
+    @typing_extensions.override
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components.copy()
 
@@ -2011,11 +2186,13 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
         self._stored_type = type_
 
+    @typing_extensions.override
     def add_component(self, component: special_endpoints.ComponentBuilder, /) -> Self:
         self._assert_can_add_type(component.type)
         self._components.append(component)
         return self
 
+    @typing_extensions.override
     def add_interactive_button(
         self,
         style: component_models.InteractiveButtonTypesT,
@@ -2032,6 +2209,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
             )
         )
 
+    @typing_extensions.override
     def add_link_button(
         self,
         url: str,
@@ -2043,6 +2221,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     ) -> Self:
         return self.add_component(LinkButtonBuilder(url=url, label=label, emoji=emoji, is_disabled=is_disabled))
 
+    @typing_extensions.override
     def add_select_menu(
         self,
         type_: typing.Union[component_models.ComponentType, int],
@@ -2065,6 +2244,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
             )
         )
 
+    @typing_extensions.override
     def add_channel_menu(
         self,
         custom_id: str,
@@ -2087,6 +2267,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
             )
         )
 
+    @typing_extensions.override
     def add_text_menu(
         self,
         custom_id: str,
@@ -2108,6 +2289,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         self.add_component(component)
         return component
 
+    @typing_extensions.override
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "type": component_models.ComponentType.ACTION_ROW,
@@ -2123,10 +2305,12 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     _stored_type: typing.Optional[int] = attrs.field(init=False, default=None)
 
     @property
+    @typing_extensions.override
     def type(self) -> typing.Literal[component_models.ComponentType.ACTION_ROW]:
         return component_models.ComponentType.ACTION_ROW
 
     @property
+    @typing_extensions.override
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components.copy()
 
@@ -2137,11 +2321,13 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
 
         self._stored_type = type_
 
+    @typing_extensions.override
     def add_component(self, component: special_endpoints.ComponentBuilder, /) -> Self:
         self._assert_can_add_type(component.type)
         self._components.append(component)
         return self
 
+    @typing_extensions.override
     def add_text_input(
         self,
         custom_id: str,
@@ -2168,8 +2354,105 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
             )
         )
 
+    @typing_extensions.override
     def build(self) -> typing.MutableMapping[str, typing.Any]:
         return {
             "type": component_models.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
         }
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PollBuilder(special_endpoints.PollBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.PollBuilder`][]."""
+
+    _question_text: str = attrs.field(alias="question_text")
+    _answers: list[special_endpoints.PollAnswerBuilder] = attrs.field(alias="answers", factory=list)
+    _duration: undefined.UndefinedOr[int] = attrs.field(alias="duration", default=undefined.UNDEFINED)
+    _allow_multiselect: bool = attrs.field(alias="allow_multiselect")
+    _layout_type: undefined.UndefinedOr[polls.PollLayoutType] = attrs.field(
+        alias="layout_type", default=undefined.UNDEFINED
+    )
+
+    @property
+    @typing_extensions.override
+    def question_text(self) -> str:
+        return self._question_text
+
+    @property
+    @typing_extensions.override
+    def answers(self) -> typing.Sequence[special_endpoints.PollAnswerBuilder]:
+        return self._answers
+
+    @property
+    @typing_extensions.override
+    def duration(self) -> undefined.UndefinedOr[int]:
+        return self._duration
+
+    @property
+    @typing_extensions.override
+    def allow_multiselect(self) -> bool:
+        return self._allow_multiselect
+
+    @property
+    @typing_extensions.override
+    def layout_type(self) -> undefined.UndefinedOr[polls.PollLayoutType]:
+        return self._layout_type
+
+    @typing_extensions.override
+    def add_answer(
+        self,
+        *,
+        text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
+    ) -> Self:
+        answer = PollAnswerBuilder(text=text, emoji=emoji)
+        self._answers.append(answer)
+        return self
+
+    @typing_extensions.override
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+
+        payload.put("question", {"text": self._question_text})
+        payload.put("answers", [answer.build() for answer in self._answers])
+        payload.put("duration", self._duration)
+        payload.put("allow_multiselect", self._allow_multiselect)
+        payload.put("layout_type", self._layout_type)
+
+        return payload
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PollAnswerBuilder(special_endpoints.PollAnswerBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.PollAnswerBuilder`][]."""
+
+    _text: undefined.UndefinedOr[str] = attrs.field(alias="text", default=undefined.UNDEFINED)
+    _emoji: undefined.UndefinedOr[emojis.Emoji] = attrs.field(alias="emoji", default=undefined.UNDEFINED)
+
+    @property
+    @typing_extensions.override
+    def text(self) -> undefined.UndefinedOr[str]:
+        return self._text
+
+    @property
+    @typing_extensions.override
+    def emoji(self) -> undefined.UndefinedOr[emojis.Emoji]:
+        return self._emoji
+
+    @typing_extensions.override
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        payload = data_binding.JSONObjectBuilder()
+
+        payload.put("text", self._text)
+
+        if self._emoji is not undefined.UNDEFINED:
+            emoji_id, emoji_name = _build_emoji(self._emoji)
+
+            if emoji_id is not undefined.UNDEFINED:
+                payload["emoji"] = {"id": emoji_id}
+
+            elif emoji_name is not undefined.UNDEFINED:
+                payload["emoji"] = {"name": emoji_name}
+
+        return {"poll_media": payload}

@@ -48,6 +48,7 @@ from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -55,6 +56,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels as channels_
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
+    from hikari import polls as polls_
     from hikari import stickers as stickers_
     from hikari import users as users_
     from hikari.api import special_endpoints
@@ -132,6 +134,9 @@ class MessageType(int, enums.Enum):
 
     ROLE_SUBSCRIPTION_PURCHASE = 25
     """A message sent to indicate a role subscription has been purchased."""
+
+    POLL_RESULT = 46
+    """A message sent to indicate a poll has finished."""
 
 
 @typing.final
@@ -251,6 +256,7 @@ class Attachment(snowflakes.Unique, files.WebResource):
     waveform: typing.Optional[str] = attrs.field(hash=False, eq=False, repr=False)
     """A base64 encoded representation of the sampled waveform for the voice message."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.filename
 
@@ -269,6 +275,7 @@ class Reaction:
     is_me: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return str(self.emoji)
 
@@ -517,6 +524,9 @@ class PartialMessage(snowflakes.Unique):
 
     embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
+
+    poll: undefined.UndefinedNoneOr[polls_.Poll] = attrs.field(hash=False, eq=False, repr=False)
+    """The message poll."""
 
     reactions: undefined.UndefinedOr[typing.Sequence[Reaction]] = attrs.field(hash=False, eq=False, repr=False)
     """The message reactions."""
@@ -918,6 +928,7 @@ class PartialMessage(snowflakes.Unique):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -995,6 +1006,8 @@ class PartialMessage(snowflakes.Unique):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to set on the message.
         sticker
             If provided, object or ID of a sticker to send on the message.
 
@@ -1085,6 +1098,7 @@ class PartialMessage(snowflakes.Unique):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             sticker=sticker,
             stickers=stickers,
             tts=tts,
@@ -1353,6 +1367,9 @@ class Message(PartialMessage):
 
     embeds: typing.Sequence[embeds_.Embed] = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
+
+    poll: typing.Optional[polls_.Poll] = attrs.field(hash=False, eq=False, repr=False)
+    """The message poll."""
 
     reactions: typing.Sequence[Reaction] = attrs.field(hash=False, eq=False, repr=False)
     """The message reactions."""

@@ -39,10 +39,17 @@ from hikari.api import interaction_server
 from hikari.api import special_endpoints
 from hikari.internal import data_binding
 
+if not typing.TYPE_CHECKING:
+    # This is insanely hacky, but it is needed for ruff to not complain until it gets type inference
+    from hikari.internal import typing_extensions
+
+
 if typing.TYPE_CHECKING:
     import concurrent.futures
     import socket as socket_
     import ssl
+
+    import typing_extensions  # noqa: TC004
 
     # This is kept inline as pynacl is an optional dependency.
     from nacl import signing
@@ -71,6 +78,7 @@ _PONG_RESPONSE_TYPE: typing.Final[int] = 1
 
 # HTTP status codes.
 _OK_STATUS: typing.Final[int] = 200
+_NO_CONTENT_STATUS: typing.Final[int] = 204
 _BAD_REQUEST_STATUS: typing.Final[int] = 400
 _PAYLOAD_TOO_LARGE_STATUS: typing.Final[int] = 413
 _UNSUPPORTED_MEDIA_TYPE_STATUS: typing.Final[int] = 415
@@ -155,10 +163,12 @@ class _FilePayload(aiohttp.Payload):
         super().__init__(value=value, headers=headers, content_type=content_type)
         self._executor = executor
 
+    @typing_extensions.override
     def decode(self, encoding: str = "utf-8", errors: str = "strict") -> str:
         msg = "Impossible to decode a _FilePayload. If you see this, please file a bug report with hikari"
         raise RuntimeError(msg)
 
+    @typing_extensions.override
     async def write(self, writer: aiohttp.abc.AbstractStreamWriter) -> None:
         async with self._value.stream(executor=self._executor) as data:
             async for chunk in data:
@@ -397,6 +407,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
         await self._close_event.wait()
 
+    @typing_extensions.override
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server.Response:  # noqa: PLR0911
         """Handle an interaction received from Discord as a REST server.
 
@@ -477,6 +488,9 @@ class InteractionServer(interaction_server.InteractionServer):
 
                 else:
                     result = await call
+
+                if result is None:
+                    return _Response(_NO_CONTENT_STATUS)
 
                 raw_payload, files = result.build(self._entity_factory)
                 payload = self._dumps(raw_payload)
@@ -602,6 +616,7 @@ class InteractionServer(interaction_server.InteractionServer):
             _LOGGER.info("Starting site on %s", site.name)
             await site.start()
 
+    @typing_extensions.override
     def get_listener(
         self, interaction_type: type[_InteractionT_co], /
     ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
@@ -669,6 +684,7 @@ class InteractionServer(interaction_server.InteractionServer):
         replace: bool = False,
     ) -> None: ...
 
+    @typing_extensions.override
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],

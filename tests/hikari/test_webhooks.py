@@ -51,6 +51,7 @@ class TestExecutableWebhook:
         mock_components = object(), object()
         mock_embed = object()
         mock_embeds = object(), object()
+        mock_poll = object()
 
         result = await executable_webhook.execute(
             content="coooo",
@@ -63,6 +64,7 @@ class TestExecutableWebhook:
             components=mock_components,
             embed=mock_embed,
             embeds=mock_embeds,
+            poll=mock_poll,
             mentions_everyone=False,
             user_mentions=[1235432],
             role_mentions=[65234123],
@@ -83,6 +85,7 @@ class TestExecutableWebhook:
             components=mock_components,
             embed=mock_embed,
             embeds=mock_embeds,
+            poll=mock_poll,
             mentions_everyone=False,
             user_mentions=[1235432],
             role_mentions=[65234123],
@@ -107,6 +110,7 @@ class TestExecutableWebhook:
             components=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
+            poll=undefined.UNDEFINED,
             mentions_everyone=undefined.UNDEFINED,
             user_mentions=undefined.UNDEFINED,
             role_mentions=undefined.UNDEFINED,

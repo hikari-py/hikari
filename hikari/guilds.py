@@ -68,6 +68,7 @@ from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -427,25 +428,35 @@ class Member(users.User):
     """This member's corresponding user object."""
 
     guild_avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
-    """Hash of the member's guild avatar guild if set, else [`None`][].
+    """Hash of the member's guild avatar if set, else [`None`][].
 
     !!! note
         This takes precedence over [`hikari.guilds.Member.avatar_hash`][].
+    """
+
+    guild_banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    """Hash of the member's guild banner if set, else [`None`][].
+
+    !!! note
+        This takes precedence over [`hikari.guilds.Member.banner_hash`][].
     """
 
     guild_flags: typing.Union[GuildMemberFlags, int] = attrs.field(eq=False, hash=False, repr=False)
     """The flags this member has in the guild."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
 
     @property
+    @typing_extensions.override
     def avatar_hash(self) -> typing.Optional[str]:
         return self.user.avatar_hash
 
     @property
+    @typing_extensions.override
     def avatar_url(self) -> typing.Optional[files.URL]:
         return self.user.avatar_url
 
@@ -459,30 +470,51 @@ class Member(users.User):
         return self.make_guild_avatar_url()
 
     @property
+    @typing_extensions.override
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
 
     @property
+    @typing_extensions.override
     def display_avatar_url(self) -> files.URL:
         return self.make_guild_avatar_url() or super().display_avatar_url
 
     @property
+    @typing_extensions.override
     def banner_hash(self) -> typing.Optional[str]:
         return self.user.banner_hash
 
     @property
+    @typing_extensions.override
     def banner_url(self) -> typing.Optional[files.URL]:
         return self.user.banner_url
 
     @property
+    def guild_banner_url(self) -> typing.Optional[files.URL]:
+        """Guild Banner URL for the user, if they have one set.
+
+        May be [`None`][] if no guild banner is set. In this case, you
+        should use [`hikari.guilds.Member.banner_hash`][] instead.
+        """
+        return self.make_guild_banner_url()
+
+    @property
+    @typing_extensions.override
+    def display_banner_url(self) -> typing.Optional[files.URL]:
+        return self.make_guild_banner_url() or super().display_banner_url
+
+    @property
+    @typing_extensions.override
     def accent_color(self) -> typing.Optional[colors.Color]:
         return self.user.accent_color
 
     @property
+    @typing_extensions.override
     def discriminator(self) -> str:
         return self.user.discriminator
 
     @property
+    @typing_extensions.override
     def display_name(self) -> str:
         """Return the member's display name.
 
@@ -499,22 +531,27 @@ class Member(users.User):
         return self.nickname or self.global_name or self.username
 
     @property
+    @typing_extensions.override
     def flags(self) -> users.UserFlag:
         return self.user.flags
 
     @property
+    @typing_extensions.override
     def id(self) -> snowflakes.Snowflake:
         return self.user.id
 
     @property
+    @typing_extensions.override
     def is_bot(self) -> bool:
         return self.user.is_bot
 
     @property
+    @typing_extensions.override
     def is_system(self) -> bool:
         return self.user.is_system
 
     @property
+    @typing_extensions.override
     def mention(self) -> str:
         return self.user.mention
 
@@ -597,13 +634,16 @@ class Member(users.User):
             return None
 
     @property
+    @typing_extensions.override
     def username(self) -> str:
         return self.user.username
 
     @property
+    @typing_extensions.override
     def global_name(self) -> typing.Optional[str]:
         return self.user.global_name
 
+    @typing_extensions.override
     def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
         return self.user.make_avatar_url(ext=ext, size=size)
 
@@ -655,6 +695,55 @@ class Member(users.User):
             file_format=ext,
         )
 
+    @typing_extensions.override
+    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+        return self.user.make_banner_url(ext=ext, size=size)
+
+    def make_guild_banner_url(
+        self, *, ext: typing.Optional[str] = None, size: int = 4096
+    ) -> typing.Optional[files.URL]:
+        """Generate the guild specific banner url for this member, if set.
+
+        If no guild banner is set, this returns [`None`][].
+
+        Parameters
+        ----------
+        ext
+            The ext to use for this URL.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            If [`None`][], then the correct default extension is
+            determined based on whether the banner is animated or not.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the banner, or [`None`][] if not present.
+
+        Raises
+        ------
+        ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.guild_banner_hash is None:
+            return None
+
+        if ext is None:
+            ext = "gif" if self.guild_banner_hash.startswith("a_") else "png"
+
+        return routes.CDN_MEMBER_BANNER.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.guild_id,
+            user_id=self.id,
+            hash=self.guild_banner_hash,
+            size=size,
+            file_format=ext,
+        )
+
+    @typing_extensions.override
     async def fetch_self(self) -> Member:
         """Fetch an up-to-date view of this member from the API.
 
@@ -677,6 +766,7 @@ class Member(users.User):
         """
         return await self.user.app.rest.fetch_member(self.guild_id, self.user.id)
 
+    @typing_extensions.override
     async def fetch_dm_channel(self) -> channels_.DMChannel:
         return await self.user.fetch_dm_channel()
 
@@ -944,12 +1034,15 @@ class Member(users.User):
             reason=reason,
         )
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return str(self.user)
 
+    @typing_extensions.override
     def __hash__(self) -> int:
         return hash(self.user)
 
+    @typing_extensions.override
     def __eq__(self, other: object) -> bool:
         return self.user == other
 
@@ -975,6 +1068,7 @@ class PartialRole(snowflakes.Unique):
         """Return a raw mention string for the role."""
         return f"<@&{self.id}>"
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
@@ -1061,6 +1155,7 @@ class Role(PartialRole):
         return self.make_icon_url()
 
     @property
+    @typing_extensions.override
     def mention(self) -> str:
         """Return a raw mention string for the role.
 
@@ -1143,6 +1238,7 @@ class IntegrationAccount:
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of this account."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
@@ -1165,6 +1261,7 @@ class PartialApplication(snowflakes.Unique):
     icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
     """The CDN hash of this application's icon, if set."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
@@ -1230,6 +1327,7 @@ class PartialIntegration(snowflakes.Unique):
     type: typing.Union[IntegrationType, str] = attrs.field(eq=False, hash=False, repr=True)
     """The type of this integration."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
@@ -1358,6 +1456,7 @@ class PartialGuild(snowflakes.Unique):
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the guild."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 

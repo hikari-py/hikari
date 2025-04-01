@@ -40,6 +40,7 @@ import attrs
 from hikari.api import config
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import typing_extensions
 
 _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # noqa: S105
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
@@ -86,6 +87,7 @@ class BasicAuthHeader:
         token_part = base64.b64encode(raw_token).decode(self.charset)
         return f"{_BASICAUTH_TOKEN_PREFIX} {token_part}"
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.header
 
