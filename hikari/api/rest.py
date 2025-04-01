@@ -7852,8 +7852,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token
             The interaction's token.
         attachment
-            If provided, the message attachment. This can be a resource,
-            or string of a path on your computer or a URL.
+            The audio attachment used as source for the voice message.
+            This can be a resource, or string of a path on your computer
+            or a URL. The Content-Type of the attachment has to start with
+            `audio/`.
         flags
             If provided, the message flags this response should have.
 
