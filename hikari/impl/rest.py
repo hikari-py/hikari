@@ -1641,6 +1641,7 @@ class RESTClientImpl(rest_api.RESTClient):
         flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
+
         body, form_builder = self._build_voice_message_payload(
             attachment=attachment,
             waveform=waveform,
@@ -1651,8 +1652,8 @@ class RESTClientImpl(rest_api.RESTClient):
             flags=flags,
         )
         form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
-        response = await self._request(route, form_builder=form_builder)
 
+        response = await self._request(route, form_builder=form_builder)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
