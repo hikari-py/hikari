@@ -8018,6 +8018,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> messages_.Message:
         """Edit the initial response to a voice message.
 
+        !!! note
+            Even though this edits the initial response, this only works for
+            editing/responding to deferred responses. Voice messages can not
+            be edited.
+
         Parameters
         ----------
         application
@@ -8025,11 +8030,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token
             The interaction's token.
         attachment
-            If provided, the attachment to set on the message. If
-            [`hikari.undefined.UNDEFINED`][], the previous attachment, if
-            present, is not changed. If this is [`None`][], then the
-            attachment is removed, if present. Otherwise, the new attachment
-            that was provided will be attached.
+            The attachment used for the voice message. The Content-Type has
+            to begin with `audio/`
+
 
         Returns
         -------
