@@ -1559,7 +1559,7 @@ class RESTClientImpl(rest_api.RESTClient):
             "id": 0,
             "filename": resource.filename,
         }
-        form_builder.add_resource(f"files[0]", resource)
+        form_builder.add_resource("files[0]", resource)
 
         body.put("attachments", [attachment_payload])
 
