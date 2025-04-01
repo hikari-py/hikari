@@ -1230,11 +1230,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel
             The channel to create the message in.
         attachment
-            The audio you want to send. This can be a resource,
-            or string of a path on your computer or a URL.
-
-            Its important that it is an audio resource. The content type
-            must start with `audio/`
+            The audio attachment used as source for the voice message.
+            This can be a resource, or string of a path on your computer
+            or a URL. The Content-Type of the attachment has to start with
+            `audio/`.
 
             Attachments can be passed as many different things, to aid in
             convenience.
