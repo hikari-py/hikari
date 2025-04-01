@@ -2178,33 +2178,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             or the ID of an existing webhook.
         token
             The webhook token.
-        waveform
-            The waveform of the entire message, with 1 byte
-            per datapoint encoded in base64.
-            Official clients sample the recording at most once per 100
-            milliseconds, but will downsample so that no more than 256
-            datapoints are in the waveform.
-            !!! note
-                Discord states that this is implementation detail and might
-                change without notice. You have been warned!
-        duration
-            The duration of the voice message in seconds. This is intended to be
-            a float.
-        thread
-            If provided then the message will be created in the target thread
-            within the webhook's channel, otherwise it will be created in
-            the webhook's target channel.
-
-            This is required when trying to create a thread message.
-        username
-            If provided, the username to override the webhook's username
-            for this request.
-        avatar_url
-            If provided, the url of an image to override the webhook's
-            avatar with for this request.
         attachment
-            If provided, the message attachment. This can be a resource,
-            or string of a path on your computer or a URL.
+            The audio attachment used as source for the voice message.
+            This can be a resource, or string of a path on your computer
+            or a URL. The Content-Type of the attachment has to start with
+            `audio/`.
+
 
             Attachments can be passed as many different things, to aid in
             convenience.
@@ -2231,6 +2210,30 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 type of [`concurrent.futures.Executor`][] that is being used for
                 the application (default is a thread pool which supports this
                 behaviour).
+        waveform
+            The waveform of the entire message, with 1 byte
+            per datapoint encoded in base64.
+            Official clients sample the recording at most once per 100
+            milliseconds, but will downsample so that no more than 256
+            datapoints are in the waveform.
+            !!! note
+                Discord states that this is implementation detail and might
+                change without notice. You have been warned!
+        duration
+            The duration of the voice message in seconds. This is intended to be
+            a float.
+        thread
+            If provided then the message will be created in the target thread
+            within the webhook's channel, otherwise it will be created in
+            the webhook's target channel.
+
+            This is required when trying to create a thread message.
+        username
+            If provided, the username to override the webhook's username
+            for this request.
+        avatar_url
+            If provided, the url of an image to override the webhook's
+            avatar with for this request.
         flags
             The flags to set for this webhook message.
 
