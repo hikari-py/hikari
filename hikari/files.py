@@ -203,7 +203,7 @@ def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
     return typing.cast("Resource[AsyncReader]", File(path, path.name))
 
 
-def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
+def guess_mimetype_from_filename(name: str, /) -> str | None:
     """Guess the mimetype of an object given a filename.
 
     Parameters
@@ -221,7 +221,7 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
     return guess
 
 
-def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
+def guess_mimetype_from_data(data: bytes, /) -> str | None:
     """Guess the mimetype of some data from the header.
 
     !!! warning
@@ -250,7 +250,7 @@ def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
     return None
 
 
-def guess_file_extension(mimetype: str) -> typing.Optional[str]:
+def guess_file_extension(mimetype: str) -> str | None:
     """Guess the file extension for a given mimetype.
 
     Parameters
@@ -275,10 +275,7 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
 
 def generate_filename_from_details(
-    *,
-    mimetype: typing.Optional[str] = None,
-    extension: typing.Optional[str] = None,
-    data: typing.Optional[bytes] = None,
+    *, mimetype: str | None = None, extension: str | None = None, data: bytes | None = None
 ) -> str:
     """Given optional information about a resource, generate a filename.
 
@@ -311,7 +308,7 @@ def generate_filename_from_details(
     return time.uuid() + extension
 
 
-def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
+def to_data_uri(data: bytes, mimetype: str | None) -> str:
     """Convert the data and mimetype to a data URI.
 
     Parameters
@@ -348,7 +345,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     filename: str = attrs.field(repr=True)
     """The filename of the resource."""
 
-    mimetype: typing.Optional[str] = attrs.field(repr=True)
+    mimetype: str | None = attrs.field(repr=True)
     """The mimetype of the resource. May be [`None`][] if not known."""
 
     async def data_uri(self) -> str:
@@ -376,10 +373,7 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
 
     @abc.abstractmethod
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None: ...
 
     # These are only included at runtime in-order to avoid the model being typed as a synchronous context manager.
@@ -406,10 +400,7 @@ class _NoOpAsyncReaderContextManagerImpl(AsyncReaderContextManager[ReaderImplT])
 
     @typing_extensions.override
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         pass
 
@@ -452,12 +443,12 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         """Filename of the resource."""
 
     @property
-    def extension(self) -> typing.Optional[str]:
+    def extension(self) -> str | None:
         """File extension, if there is one."""
         _, _, ext = self.filename.rpartition(".")
         return ext if ext != self.filename else None
 
-    async def read(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> bytes:
+    async def read(self, *, executor: concurrent.futures.Executor | None = None) -> bytes:
         """Read the entire resource at once into memory.
 
         ```py
@@ -490,7 +481,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
             return await reader.read()
 
     async def save(
-        self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
+        self, path: Pathish, *, executor: concurrent.futures.Executor | None = None, force: bool = False
     ) -> None:
         """Save this resource to disk.
 
@@ -521,7 +512,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
     @abc.abstractmethod
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> AsyncReaderContextManager[ReaderImplT]:
         """Produce a stream of data for the resource.
 
@@ -585,10 +576,10 @@ class WebReader(AsyncReader):
     reason: str = attrs.field()
     """The HTTP response status reason."""
 
-    charset: typing.Optional[str] = attrs.field()
+    charset: str | None = attrs.field()
     """Optional character set information, if known."""
 
-    size: typing.Optional[int] = attrs.field()
+    size: int | None = attrs.field()
     """The size of the resource, if known."""
 
     head_only: bool = attrs.field()
@@ -669,10 +660,7 @@ class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReade
 
     @typing_extensions.override
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         await self._client_response_ctx.__aexit__(exc_type, exc, exc_tb)
         await self._client_session.close()
@@ -696,7 +684,7 @@ class WebResource(Resource[WebReader], abc.ABC):
 
     @typing_extensions.override
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> AsyncReaderContextManager[WebReader]:
         """Start streaming the content into memory by downloading it.
 
@@ -792,7 +780,7 @@ class URL(WebResource):
 
     __slots__: typing.Sequence[str] = ("_filename", "_url")
 
-    def __init__(self, url: str, filename: typing.Optional[str] = None) -> None:
+    def __init__(self, url: str, filename: str | None = None) -> None:
         self._url = url
         self._filename = filename
 
@@ -825,7 +813,7 @@ class ThreadedFileReader(AsyncReader):
     do not need to be pickled to be communicated.
     """
 
-    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attrs.field(alias="executor")
+    _executor: concurrent.futures.ThreadPoolExecutor | None = attrs.field(alias="executor")
     _pointer: typing.BinaryIO = attrs.field(alias="pointer")
 
     @typing_extensions.override
@@ -846,8 +834,8 @@ def _open_read_path(path: pathlib.Path) -> typing.BinaryIO:
 @attrs.define(weakref_slot=False)
 @typing.final
 class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFileReader]):
-    executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attrs.field()
-    file: typing.Optional[typing.BinaryIO] = attrs.field(default=None, init=False)
+    executor: concurrent.futures.ThreadPoolExecutor | None = attrs.field()
+    file: typing.BinaryIO | None = attrs.field(default=None, init=False)
     filename: str = attrs.field()
     path: pathlib.Path = attrs.field()
 
@@ -864,10 +852,7 @@ class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFi
 
     @typing_extensions.override
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         if not self.file:
             msg = "File isn't open"
@@ -912,9 +897,9 @@ class File(Resource[ThreadedFileReader]):
     is_spoiler: bool
     """Whether the file will be marked as a spoiler."""
 
-    _filename: typing.Optional[str]
+    _filename: str | None
 
-    def __init__(self, path: Pathish, /, filename: typing.Optional[str] = None, *, spoiler: bool = False) -> None:
+    def __init__(self, path: Pathish, /, filename: str | None = None, *, spoiler: bool = False) -> None:
         self.path = ensure_path(path)
         self.is_spoiler = spoiler
         self._filename = filename
@@ -937,7 +922,7 @@ class File(Resource[ThreadedFileReader]):
 
     @typing_extensions.override
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> AsyncReaderContextManager[ThreadedFileReader]:
         """Start streaming the resource using a thread pool executor.
 
@@ -975,7 +960,7 @@ class File(Resource[ThreadedFileReader]):
 
     @typing_extensions.override
     async def save(
-        self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
+        self, path: Pathish, *, executor: concurrent.futures.Executor | None = None, force: bool = False
     ) -> None:
         # An optimization can be done here to avoid a lot of thread calls and streaming
         # by just copying the file
@@ -992,7 +977,7 @@ class File(Resource[ThreadedFileReader]):
 class IteratorReader(AsyncReader):
     """Asynchronous file reader that operates on in-memory data."""
 
-    data: typing.Union[bytes, LazyByteIteratorish] = attrs.field()
+    data: bytes | LazyByteIteratorish = attrs.field()
     """The data that will be yielded in chunks."""
 
     @typing_extensions.override
@@ -1068,7 +1053,7 @@ class IteratorReader(AsyncReader):
 def _write_bytes(
     path: Pathish,
     default_filename: str,
-    data: typing.Union[bytearray, bytes, memoryview],
+    data: bytearray | bytes | memoryview,
     force: bool,  # noqa: FBT001
 ) -> None:
     path = _to_write_path(path, default_filename, force=force)
@@ -1094,10 +1079,10 @@ class Bytes(Resource[IteratorReader]):
 
     __slots__: typing.Sequence[str] = ("_filename", "data", "is_spoiler", "mimetype")
 
-    data: typing.Union[bytes, LazyByteIteratorish]
+    data: bytes | LazyByteIteratorish
     """The raw data/provider of raw data to upload."""
 
-    mimetype: typing.Optional[str]
+    mimetype: str | None
     """The provided mimetype, if provided. Otherwise [`None`][]."""
 
     is_spoiler: bool
@@ -1105,10 +1090,10 @@ class Bytes(Resource[IteratorReader]):
 
     def __init__(
         self,
-        data: typing.Union[Rawish, LazyByteIteratorish],
+        data: Rawish | LazyByteIteratorish,
         filename: str,
         /,
-        mimetype: typing.Optional[str] = None,
+        mimetype: str | None = None,
         *,
         spoiler: bool = False,
     ) -> None:
@@ -1139,7 +1124,7 @@ class Bytes(Resource[IteratorReader]):
 
     @typing_extensions.override
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> AsyncReaderContextManager[IteratorReader]:
         """Start streaming the content in chunks.
 
@@ -1160,7 +1145,7 @@ class Bytes(Resource[IteratorReader]):
 
     @typing_extensions.override
     async def save(
-        self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
+        self, path: Pathish, *, executor: concurrent.futures.Executor | None = None, force: bool = False
     ) -> None:
         if not isinstance(self.data, (bytes, bytearray, memoryview)):
             await super().save(path, executor=executor, force=force)
@@ -1172,7 +1157,7 @@ class Bytes(Resource[IteratorReader]):
         await loop.run_in_executor(executor, _write_bytes, path, self.filename, self.data, force)
 
     @staticmethod
-    def from_data_uri(data_uri: str, filename: typing.Optional[str] = None) -> Bytes:
+    def from_data_uri(data_uri: str, filename: str | None = None) -> Bytes:
         """Parse a given data URI.
 
         Parameters

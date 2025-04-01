@@ -84,7 +84,7 @@ class CacheImpl(cache.MutableCache):
     )
 
     # For the sake of keeping things clean, the annotations are being kept separate from the assignment here.
-    _me: typing.Optional[users.OwnUser]
+    _me: users.OwnUser | None
     _emoji_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, cache_utility.KnownCustomEmojiData]
     _dm_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, snowflakes.Snowflake]
     _guild_channel_entries: collections.ExtendedMutableMapping[snowflakes.Snowflake, channels_.PermissibleGuildChannel]
@@ -159,16 +159,14 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def delete_dm_channel_id(
         self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
-    ) -> typing.Optional[snowflakes.Snowflake]:
+    ) -> snowflakes.Snowflake | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.DM_CHANNEL_IDS):
             return None
 
         return self._dm_channel_entries.pop(snowflakes.Snowflake(user), None)
 
     @typing_extensions.override
-    def get_dm_channel_id(
-        self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
-    ) -> typing.Optional[snowflakes.Snowflake]:
+    def get_dm_channel_id(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> snowflakes.Snowflake | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.DM_CHANNEL_IDS):
             return None
 
@@ -237,9 +235,7 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_emojis, builder=self._build_emoji)
 
     @typing_extensions.override
-    def delete_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /
-    ) -> typing.Optional[emojis.KnownCustomEmoji]:
+    def delete_emoji(self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /) -> emojis.KnownCustomEmoji | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
             return None
 
@@ -262,9 +258,7 @@ class CacheImpl(cache.MutableCache):
         return self._build_emoji(emoji_data)
 
     @typing_extensions.override
-    def get_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /
-    ) -> typing.Optional[emojis.KnownCustomEmoji]:
+    def get_emoji(self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /) -> emojis.KnownCustomEmoji | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
             return None
 
@@ -301,7 +295,7 @@ class CacheImpl(cache.MutableCache):
             msg = "Cannot cache an emoji without a guild ID."
             raise ValueError(msg)
 
-        user: typing.Optional[cache_utility.RefCell[users.User]] = None
+        user: cache_utility.RefCell[users.User] | None = None
         if emoji.user:
             user = self._set_user(emoji.user)
             if emoji.id not in self._emoji_entries:
@@ -319,7 +313,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def update_emoji(
         self, emoji: emojis.KnownCustomEmoji, /
-    ) -> tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
+    ) -> tuple[emojis.KnownCustomEmoji | None, emojis.KnownCustomEmoji | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.EMOJIS):
             return None, None
 
@@ -375,9 +369,7 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_stickers, builder=self._build_sticker)
 
     @typing_extensions.override
-    def get_sticker(
-        self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /
-    ) -> typing.Optional[stickers.GuildSticker]:
+    def get_sticker(self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /) -> stickers.GuildSticker | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
             return None
 
@@ -408,7 +400,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def delete_sticker(
         self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /
-    ) -> typing.Optional[stickers.GuildSticker]:
+    ) -> stickers.GuildSticker | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
             return None
 
@@ -434,7 +426,7 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_STICKERS):
             return
 
-        user: typing.Optional[cache_utility.RefCell[users.User]] = None
+        user: cache_utility.RefCell[users.User] | None = None
         if sticker.user:
             user = self._set_user(sticker.user)
             if sticker.id not in self._sticker_entries:
@@ -478,9 +470,7 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_guilds) if cached_guilds else cache_utility.EmptyCacheView()
 
     @typing_extensions.override
-    def delete_guild(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> typing.Optional[guilds.GatewayGuild]:
+    def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /) -> guilds.GatewayGuild | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILDS):
             return None
 
@@ -500,7 +490,7 @@ class CacheImpl(cache.MutableCache):
 
     def _get_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /, *, availability: bool
-    ) -> typing.Optional[guilds.GatewayGuild]:
+    ) -> guilds.GatewayGuild | None:
         guild_record = self._guild_entries.get(snowflakes.Snowflake(guild))
         if not guild_record or not guild_record.guild or guild_record.is_available is not availability:
             return None
@@ -508,9 +498,7 @@ class CacheImpl(cache.MutableCache):
         return copy.copy(guild_record.guild)
 
     @typing_extensions.override
-    def get_guild(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /) -> guilds.GatewayGuild | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILDS):
             return None
 
@@ -520,7 +508,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def get_available_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> typing.Optional[guilds.GatewayGuild]:
+    ) -> guilds.GatewayGuild | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILDS):
             return None
 
@@ -529,7 +517,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def get_unavailable_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> typing.Optional[guilds.GatewayGuild]:
+    ) -> guilds.GatewayGuild | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILDS):
             return None
 
@@ -591,7 +579,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def update_guild(
         self, guild: guilds.GatewayGuild, /
-    ) -> tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
+    ) -> tuple[guilds.GatewayGuild | None, guilds.GatewayGuild | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILDS):
             return None, None
 
@@ -670,7 +658,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def delete_thread(
         self, thread: snowflakes.SnowflakeishOr[channels_.PartialChannel], /
-    ) -> typing.Optional[channels_.GuildThreadChannel]:
+    ) -> channels_.GuildThreadChannel | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_THREADS):
             return None
 
@@ -692,7 +680,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def get_thread(
         self, thread: snowflakes.SnowflakeishOr[channels_.PartialChannel], /
-    ) -> typing.Optional[channels_.GuildThreadChannel]:
+    ) -> channels_.GuildThreadChannel | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_THREADS):
             return None
 
@@ -750,7 +738,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def update_thread(
         self, thread: channels_.GuildThreadChannel, /
-    ) -> tuple[typing.Optional[channels_.GuildThreadChannel], typing.Optional[channels_.GuildThreadChannel]]:
+    ) -> tuple[channels_.GuildThreadChannel | None, channels_.GuildThreadChannel | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_THREADS):
             return None, None
 
@@ -793,7 +781,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def delete_guild_channel(
         self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel], /
-    ) -> typing.Optional[channels_.PermissibleGuildChannel]:
+    ) -> channels_.PermissibleGuildChannel | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return None
 
@@ -815,7 +803,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def get_guild_channel(
         self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel], /
-    ) -> typing.Optional[channels_.PermissibleGuildChannel]:
+    ) -> channels_.PermissibleGuildChannel | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return None
 
@@ -879,7 +867,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def update_guild_channel(
         self, channel: channels_.PermissibleGuildChannel, /
-    ) -> tuple[typing.Optional[channels_.PermissibleGuildChannel], typing.Optional[channels_.PermissibleGuildChannel]]:
+    ) -> tuple[channels_.PermissibleGuildChannel | None, channels_.PermissibleGuildChannel | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.GUILD_CHANNELS):
             return None, None
 
@@ -972,9 +960,7 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_invites, builder=self._build_invite)
 
     @typing_extensions.override
-    def delete_invite(
-        self, code: typing.Union[invites.InviteCode, str], /
-    ) -> typing.Optional[invites.InviteWithMetadata]:
+    def delete_invite(self, code: invites.InviteCode | str, /) -> invites.InviteWithMetadata | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.INVITES):
             return None
 
@@ -997,7 +983,7 @@ class CacheImpl(cache.MutableCache):
         return self._build_invite(invite_data)
 
     @typing_extensions.override
-    def get_invite(self, code: typing.Union[invites.InviteCode, str], /) -> typing.Optional[invites.InviteWithMetadata]:
+    def get_invite(self, code: invites.InviteCode | str, /) -> invites.InviteWithMetadata | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.INVITES):
             return None
 
@@ -1055,13 +1041,13 @@ class CacheImpl(cache.MutableCache):
         if not self._is_cache_enabled_for(config_api.CacheComponents.INVITES):
             return
 
-        inviter: typing.Optional[cache_utility.RefCell[users.User]] = None
+        inviter: cache_utility.RefCell[users.User] | None = None
         if invite.inviter:
             inviter = self._set_user(invite.inviter)
             if invite.code not in self._invite_entries:
                 self._increment_ref_count(inviter)
 
-        target_user: typing.Optional[cache_utility.RefCell[users.User]] = None
+        target_user: cache_utility.RefCell[users.User] | None = None
         if invite.target_user:
             target_user = self._set_user(invite.target_user)
             if invite.code not in self._invite_entries:
@@ -1081,7 +1067,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def update_invite(
         self, invite: invites.InviteWithMetadata, /
-    ) -> tuple[typing.Optional[invites.InviteWithMetadata], typing.Optional[invites.InviteWithMetadata]]:
+    ) -> tuple[invites.InviteWithMetadata | None, invites.InviteWithMetadata | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.INVITES):
             return None, None
 
@@ -1090,13 +1076,13 @@ class CacheImpl(cache.MutableCache):
         return cached_invite, self.get_invite(invite.code)
 
     @typing_extensions.override
-    def delete_me(self) -> typing.Optional[users.OwnUser]:
+    def delete_me(self) -> users.OwnUser | None:
         cached_user = self._me
         self._me = None
         return cached_user
 
     @typing_extensions.override
-    def get_me(self) -> typing.Optional[users.OwnUser]:
+    def get_me(self) -> users.OwnUser | None:
         return copy.copy(self._me)
 
     @typing_extensions.override
@@ -1106,9 +1092,7 @@ class CacheImpl(cache.MutableCache):
             self._me = copy.copy(user)
 
     @typing_extensions.override
-    def update_me(
-        self, user: users.OwnUser, /
-    ) -> tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
+    def update_me(self, user: users.OwnUser, /) -> tuple[users.OwnUser | None, users.OwnUser | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.ME):
             return None, None
 
@@ -1128,9 +1112,9 @@ class CacheImpl(cache.MutableCache):
         guild_record: cache_utility.GuildRecord,
         member: cache_utility.RefCell[cache_utility.MemberData],
         *,
-        decrement: typing.Optional[int] = None,
+        decrement: int | None = None,
         deleting: bool = False,
-    ) -> typing.Optional[cache_utility.RefCell[cache_utility.MemberData]]:
+    ) -> cache_utility.RefCell[cache_utility.MemberData] | None:
         if deleting:
             member.object.has_been_deleted = True
 
@@ -1188,7 +1172,7 @@ class CacheImpl(cache.MutableCache):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[guilds.Member]:
+    ) -> guilds.Member | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return None
 
@@ -1216,7 +1200,7 @@ class CacheImpl(cache.MutableCache):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[guilds.Member]:
+    ) -> guilds.Member | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return None
 
@@ -1295,9 +1279,7 @@ class CacheImpl(cache.MutableCache):
         return guild_record.members[member.id]
 
     @typing_extensions.override
-    def update_member(
-        self, member: guilds.Member, /
-    ) -> tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
+    def update_member(self, member: guilds.Member, /) -> tuple[guilds.Member | None, guilds.Member | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MEMBERS):
             return None, None
 
@@ -1309,7 +1291,7 @@ class CacheImpl(cache.MutableCache):
         return presence_data.build_entity(self._app)
 
     def _garbage_collect_unknown_custom_emoji(
-        self, emoji: cache_utility.RefCell[emojis.CustomEmoji], *, decrement: typing.Optional[int] = None
+        self, emoji: cache_utility.RefCell[emojis.CustomEmoji], *, decrement: int | None = None
     ) -> None:
         if decrement is not None:
             self._increment_ref_count(emoji, -decrement)
@@ -1359,7 +1341,7 @@ class CacheImpl(cache.MutableCache):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[presences.MemberPresence]:
+    ) -> presences.MemberPresence | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.PRESENCES):
             return None
 
@@ -1388,7 +1370,7 @@ class CacheImpl(cache.MutableCache):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[presences.MemberPresence]:
+    ) -> presences.MemberPresence | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.PRESENCES):
             return None
 
@@ -1458,7 +1440,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def update_presence(
         self, presence: presences.MemberPresence, /
-    ) -> tuple[typing.Optional[presences.MemberPresence], typing.Optional[presences.MemberPresence]]:
+    ) -> tuple[presences.MemberPresence | None, presences.MemberPresence | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.PRESENCES):
             return None, None
 
@@ -1501,7 +1483,7 @@ class CacheImpl(cache.MutableCache):
         return view
 
     @typing_extensions.override
-    def delete_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> typing.Optional[guilds.Role]:
+    def delete_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> guilds.Role | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.ROLES):
             return None
 
@@ -1521,7 +1503,7 @@ class CacheImpl(cache.MutableCache):
         return role
 
     @typing_extensions.override
-    def get_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> typing.Optional[guilds.Role]:
+    def get_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> guilds.Role | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.ROLES):
             return None
 
@@ -1562,7 +1544,7 @@ class CacheImpl(cache.MutableCache):
         guild_record.roles.add(role.id)
 
     @typing_extensions.override
-    def update_role(self, role: guilds.Role, /) -> tuple[typing.Optional[guilds.Role], typing.Optional[guilds.Role]]:
+    def update_role(self, role: guilds.Role, /) -> tuple[guilds.Role | None, guilds.Role | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.ROLES):
             return None, None
 
@@ -1574,9 +1556,7 @@ class CacheImpl(cache.MutableCache):
     def _can_remove_user(user_data: cache_utility.RefCell[users.User]) -> bool:
         return user_data.ref_count < 1
 
-    def _garbage_collect_user(
-        self, user: cache_utility.RefCell[users.User], *, decrement: typing.Optional[int] = None
-    ) -> None:
+    def _garbage_collect_user(self, user: cache_utility.RefCell[users.User], *, decrement: int | None = None) -> None:
         if decrement is not None:
             self._increment_ref_count(user, -decrement)
 
@@ -1585,7 +1565,7 @@ class CacheImpl(cache.MutableCache):
             self._dm_channel_entries.pop(user.object.id, None)
 
     @typing_extensions.override
-    def get_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> typing.Optional[users.User]:
+    def get_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> users.User | None:
         user = self._user_entries.get(snowflakes.Snowflake(user))
         return user.copy() if user else None
 
@@ -1682,7 +1662,7 @@ class CacheImpl(cache.MutableCache):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[voices.VoiceState]:
+    ) -> voices.VoiceState | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.VOICE_STATES):
             return None
 
@@ -1711,7 +1691,7 @@ class CacheImpl(cache.MutableCache):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[voices.VoiceState]:
+    ) -> voices.VoiceState | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.VOICE_STATES):
             return None
 
@@ -1800,7 +1780,7 @@ class CacheImpl(cache.MutableCache):
     @typing_extensions.override
     def update_voice_state(
         self, voice_state: voices.VoiceState, /
-    ) -> tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
+    ) -> tuple[voices.VoiceState | None, voices.VoiceState | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.VOICE_STATES):
             return None, None
 
@@ -1818,9 +1798,9 @@ class CacheImpl(cache.MutableCache):
         self,
         message: cache_utility.RefCell[cache_utility.MessageData],
         *,
-        decrement: typing.Optional[int] = None,
+        decrement: int | None = None,
         override_ref: bool = False,
-    ) -> typing.Optional[cache_utility.RefCell[cache_utility.MessageData]]:
+    ) -> cache_utility.RefCell[cache_utility.MessageData] | None:
         if decrement is not None:
             self._increment_ref_count(message, -decrement)
 
@@ -1869,9 +1849,7 @@ class CacheImpl(cache.MutableCache):
         return cache_utility.CacheMappingView(cached_messages, builder=self._build_message)  # type: ignore[type-var]
 
     @typing_extensions.override
-    def delete_message(
-        self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /
-    ) -> typing.Optional[messages.Message]:
+    def delete_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /) -> messages.Message | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MESSAGES):
             return None
 
@@ -1888,9 +1866,7 @@ class CacheImpl(cache.MutableCache):
         return self._build_message(message_data)
 
     @typing_extensions.override
-    def get_message(
-        self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /
-    ) -> typing.Optional[messages.Message]:
+    def get_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /) -> messages.Message | None:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MESSAGES):
             return None
 
@@ -1920,7 +1896,7 @@ class CacheImpl(cache.MutableCache):
         if message.user_mentions is not undefined.UNDEFINED:
             user_mentions = {user_id: self._set_user(user) for user_id, user in message.user_mentions.items()}
 
-        referenced_message: typing.Optional[cache_utility.RefCell[cache_utility.MessageData]] = None
+        referenced_message: cache_utility.RefCell[cache_utility.MessageData] | None = None
         if message.referenced_message:
             reference_id = message.referenced_message.id
             referenced_message = self._message_entries.get(reference_id) or self._referenced_messages.get(reference_id)
@@ -1972,8 +1948,8 @@ class CacheImpl(cache.MutableCache):
 
     @typing_extensions.override
     def update_message(
-        self, message: typing.Union[messages.PartialMessage, messages.Message], /
-    ) -> tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
+        self, message: messages.PartialMessage | messages.Message, /
+    ) -> tuple[messages.Message | None, messages.Message | None]:
         if not self._is_cache_enabled_for(config_api.CacheComponents.MESSAGES):
             return None, None
 

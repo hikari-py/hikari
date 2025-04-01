@@ -83,7 +83,7 @@ def slow_iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.date
     return datetime.datetime.fromisoformat(datetime_str)
 
 
-fast_iso8601_datetime_string_to_datetime: typing.Optional[typing.Callable[[str], datetime.datetime]]
+fast_iso8601_datetime_string_to_datetime: typing.Callable[[str], datetime.datetime] | None
 try:
     # CISO8601 is around 600x faster than modules like dateutil, which is
     # going to be noticeable on big bots where you are parsing hundreds of

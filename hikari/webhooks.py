@@ -88,7 +88,7 @@ class ExecutableWebhook(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def token(self) -> typing.Optional[str]:
+    def token(self) -> str | None:
         """Webhook's token.
 
         !!! note
@@ -101,7 +101,7 @@ class ExecutableWebhook(abc.ABC):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
+        avatar_url: undefined.UndefinedType | str | files.URL = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files_.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files_.Resourceish]] = undefined.UNDEFINED,
@@ -112,12 +112,12 @@ class ExecutableWebhook(abc.ABC):
         poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds_.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds_.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 
@@ -278,11 +278,9 @@ class ExecutableWebhook(abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedNoneOr[
-            typing.Union[files.Resourceish, messages_.Attachment]
-        ] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish | messages_.Attachment] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[
-            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+            typing.Sequence[files.Resourceish | messages_.Attachment]
         ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
@@ -292,10 +290,10 @@ class ExecutableWebhook(abc.ABC):
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds_.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds_.PartialRole] | bool
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
@@ -482,16 +480,16 @@ class PartialWebhook(snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[WebhookType, int] = attrs.field(eq=False, hash=False, repr=True)
+    type: WebhookType | int = attrs.field(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
-    avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The avatar hash of the webhook."""
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    application_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this webhook."""
 
     @typing_extensions.override
@@ -517,7 +515,7 @@ class PartialWebhook(snowflakes.Unique):
         return f"<@{self.id}>"
 
     @property
-    def avatar_url(self) -> typing.Optional[files_.URL]:
+    def avatar_url(self) -> files_.URL | None:
         """URL for this webhook's avatar, if set.
 
         May be [`None`][] if no avatar is set. In this case, you should use
@@ -530,7 +528,7 @@ class PartialWebhook(snowflakes.Unique):
         """Default avatar URL for the user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(urls.CDN_URL, style=0, file_format="png")
 
-    def make_avatar_url(self, ext: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
+    def make_avatar_url(self, ext: str = "png", size: int = 4096) -> files_.URL | None:
         """Generate the avatar URL for this webhook's custom avatar if set.
 
         If no avatar is specified, return [`None`][]. In this case, you should
@@ -580,7 +578,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
+    author: users_.User | None = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
     !!! note
@@ -588,7 +586,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         rather than bot authorization or when received within audit logs.
     """
 
-    token: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    token: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The token for the webhook.
 
     !!! note
@@ -793,21 +791,21 @@ class ChannelFollowerWebhook(PartialWebhook):
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
+    author: users_.User | None = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
     !!! note
         This will be [`None`][] when received within an audit log.
     """
 
-    source_channel: typing.Optional[channels_.PartialChannel] = attrs.field(eq=False, hash=False, repr=True)
+    source_channel: channels_.PartialChannel | None = attrs.field(eq=False, hash=False, repr=True)
     """The partial object of the channel this webhook is following.
 
     This will be [`None`][] when the user that followed the channel is no
     longer in the source guild or has lost access to the source channel.
     """
 
-    source_guild: typing.Optional[guilds_.PartialGuild] = attrs.field(eq=False, hash=False, repr=True)
+    source_guild: guilds_.PartialGuild | None = attrs.field(eq=False, hash=False, repr=True)
     """The partial object of the guild this webhook is following.
 
     This will be [`None`][] when the user that followed the channel is no

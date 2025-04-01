@@ -125,7 +125,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
     def guild_id(self) -> snowflakes.Snowflake:
         """ID of the guild that this event relates to."""
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached guild that this event relates to, if known.
 
         If not, return [`None`][].
@@ -165,7 +165,7 @@ class GuildChannelEvent(ChannelEvent, abc.ABC):
         """
         return await self.app.rest.fetch_guild(self.guild_id)
 
-    def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
+    def get_channel(self) -> channels.PermissibleGuildChannel | None:
         """Get the cached channel that this event relates to, if known.
 
         If not, return [`None`][].
@@ -294,7 +294,7 @@ class GuildChannelUpdateEvent(GuildChannelEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_channel: typing.Optional[channels.PermissibleGuildChannel] = attrs.field(repr=True)
+    old_channel: channels.PermissibleGuildChannel | None = attrs.field(repr=True)
     """The old guild channel object.
 
     This will be [`None`][] if the channel missing from the cache.
@@ -366,7 +366,7 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def last_pin_timestamp(self) -> typing.Optional[datetime.datetime]:
+    def last_pin_timestamp(self) -> datetime.datetime | None:
         """Datetime of when the most recent message was pinned in the channel.
 
         Will be [`None`][] if nothing is pinned or the information is
@@ -415,11 +415,11 @@ class GuildPinsUpdateEvent(PinsUpdateEvent, GuildChannelEvent):
     guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildChannelEvent>>.
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(repr=True)
+    last_pin_timestamp: datetime.datetime | None = attrs.field(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
     @typing_extensions.override
-    def get_channel(self) -> typing.Optional[channels.PermissibleGuildChannel]:
+    def get_channel(self) -> channels.PermissibleGuildChannel | None:
         """Get the cached channel that this event relates to, if known.
 
         If not, return [`None`][].
@@ -479,7 +479,7 @@ class DMPinsUpdateEvent(PinsUpdateEvent, DMChannelEvent):
     channel_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ChannelEvent>>.
 
-    last_pin_timestamp: typing.Optional[datetime.datetime] = attrs.field(repr=True)
+    last_pin_timestamp: datetime.datetime | None = attrs.field(repr=True)
     # <<inherited docstring from ChannelPinsUpdateEvent>>.
 
     @typing_extensions.override
@@ -602,7 +602,7 @@ class InviteDeleteEvent(InviteEvent):
     code: str = attrs.field()
     # <<inherited docstring from InviteEvent>>.
 
-    old_invite: typing.Optional[invites.InviteWithMetadata] = attrs.field()
+    old_invite: invites.InviteWithMetadata | None = attrs.field()
     """Object of the old cached invite.
 
     This will be [`None`][] if the invite is missing from the cache.
@@ -917,7 +917,7 @@ class ThreadListSyncEvent(shard_events.ShardEvent):
     guild_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from GuildThreadEvent>>.
 
-    channel_ids: typing.Optional[typing.Sequence[snowflakes.Snowflake]] = attrs.field()
+    channel_ids: typing.Sequence[snowflakes.Snowflake] | None = attrs.field()
     """IDs of the text channels threads are being synced for.
 
     If this is [`None`][] then threads are being synced for all text

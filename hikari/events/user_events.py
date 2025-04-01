@@ -46,7 +46,7 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_user: typing.Optional[users.OwnUser] = attrs.field()
+    old_user: users.OwnUser | None = attrs.field()
     """The old application user.
 
     This will be [`None`][] if the user missing from the cache.

@@ -54,7 +54,7 @@ def _raise_interrupt(signum: int) -> typing.NoReturn:
 def _interrupt_handler(loop: asyncio.AbstractEventLoop) -> _SignalHandlerT:
     loop_thread_id = threading.get_native_id()
 
-    def handler(signum: int, frame: typing.Optional[types.FrameType]) -> None:
+    def handler(signum: int, frame: types.FrameType | None) -> None:
         # The loop may or may not be running, depending on the state of the application when this occurs.
         # Signals on POSIX only occur on the main thread usually, too, so we need to ensure this is
         # threadsafe.
@@ -77,7 +77,7 @@ def _interrupt_handler(loop: asyncio.AbstractEventLoop) -> _SignalHandlerT:
 
 @contextlib.contextmanager
 def handle_interrupts(
-    loop: asyncio.AbstractEventLoop, *, propagate_interrupts: bool, enabled: typing.Optional[bool]
+    loop: asyncio.AbstractEventLoop, *, propagate_interrupts: bool, enabled: bool | None
 ) -> typing.Generator[None, None, None]:
     """Context manager which cleanly exits on signal interrupts.
 
@@ -102,7 +102,7 @@ def handle_interrupts(
         return
 
     interrupt_handler = _interrupt_handler(loop)
-    original_handlers: dict[int, typing.Union[int, _SignalHandlerT, None]] = {}
+    original_handlers: dict[int, int | _SignalHandlerT | None] = {}
 
     for sig in _INTERRUPT_SIGNALS:
         try:

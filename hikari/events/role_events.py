@@ -99,7 +99,7 @@ class RoleUpdateEvent(RoleEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_role: typing.Optional[guilds.Role] = attrs.field()
+    old_role: guilds.Role | None = attrs.field()
     """The old role object.
 
     This will be [`None`][] if the role missing from the cache.
@@ -145,7 +145,7 @@ class RoleDeleteEvent(RoleEvent):
     role_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from RoleEvent>>.
 
-    old_role: typing.Optional[guilds.Role] = attrs.field()
+    old_role: guilds.Role | None = attrs.field()
     """The old role object.
 
     This will be [`None`][] if the role was missing from the cache.

@@ -103,9 +103,9 @@ class _Response:
     def __init__(
         self,
         status_code: int,
-        payload: typing.Optional[bytes] = None,
+        payload: bytes | None = None,
         *,
-        content_type: typing.Optional[str] = None,
+        content_type: str | None = None,
         files: typing.Sequence[files_.Resource[files_.AsyncReader]] = (),
     ) -> None:
         if payload and not content_type:
@@ -117,11 +117,11 @@ class _Response:
         self._status_code = status_code
 
     @property
-    def content_type(self) -> typing.Optional[str]:
+    def content_type(self) -> str | None:
         return self._content_type
 
     @property
-    def charset(self) -> typing.Optional[str]:
+    def charset(self) -> str | None:
         # No cases of charset not being UTF-8
         return _UTF_8_CHARSET if self._payload else None
 
@@ -130,11 +130,11 @@ class _Response:
         return self._files
 
     @property
-    def headers(self) -> typing.Optional[typing.MutableMapping[str, str]]:
+    def headers(self) -> typing.MutableMapping[str, str] | None:
         return None
 
     @property
-    def payload(self) -> typing.Optional[bytes]:
+    def payload(self) -> bytes | None:
         return self._payload
 
     @property
@@ -157,8 +157,8 @@ class _FilePayload(aiohttp.Payload):
         content_type: str,
         /,
         *,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
-        headers: typing.Optional[dict[str, str]] = None,
+        executor: concurrent.futures.Executor | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         super().__init__(value=value, headers=headers, content_type=content_type)
         self._executor = executor
@@ -232,10 +232,10 @@ class InteractionServer(interaction_server.InteractionServer):
         *,
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         entity_factory: entity_factory_api.EntityFactory,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         rest_client: rest_api.RESTClient,
-        public_key: typing.Optional[bytes] = None,
+        public_key: bytes | None = None,
     ) -> None:
         # This is kept inline as pynacl is an optional dependency.
         try:
@@ -247,9 +247,9 @@ class InteractionServer(interaction_server.InteractionServer):
             raise RuntimeError(msg) from exc
 
         # Building asyncio.Lock when there isn't a running loop may lead to runtime errors.
-        self._application_fetch_lock: typing.Optional[asyncio.Lock] = None
+        self._application_fetch_lock: asyncio.Lock | None = None
         # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
-        self._close_event: typing.Optional[asyncio.Event] = None
+        self._close_event: asyncio.Event | None = None
         self._dumps = dumps
         self._entity_factory = entity_factory
         self._executor = executor
@@ -258,7 +258,7 @@ class InteractionServer(interaction_server.InteractionServer):
         self._loads = loads
         self._nacl = nacl
         self._rest_client = rest_client
-        self._server: typing.Optional[aiohttp.web_runner.AppRunner] = None
+        self._server: aiohttp.web_runner.AppRunner | None = None
         self._public_key = nacl.signing.VerifyKey(public_key) if public_key is not None else None
         self._running_generator_listeners: set[asyncio.Task[None]] = set()
 
@@ -271,7 +271,7 @@ class InteractionServer(interaction_server.InteractionServer):
         if self._application_fetch_lock is None:
             self._application_fetch_lock = asyncio.Lock()
 
-        application: typing.Union[applications.Application, applications.AuthorizationApplication]
+        application: applications.Application | applications.AuthorizationApplication
         async with self._application_fetch_lock:
             if self._public_key:
                 return self._public_key
@@ -511,14 +511,14 @@ class InteractionServer(interaction_server.InteractionServer):
     async def start(
         self,
         backlog: int = 128,
-        host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
-        port: typing.Optional[int] = None,
-        path: typing.Optional[str] = None,
-        reuse_address: typing.Optional[bool] = None,
-        reuse_port: typing.Optional[bool] = None,
-        socket: typing.Optional[socket_.socket] = None,
+        host: str | typing.Sequence[str] | None = None,
+        port: int | None = None,
+        path: str | None = None,
+        reuse_address: bool | None = None,
+        reuse_port: bool | None = None,
+        socket: socket_.socket | None = None,
         shutdown_timeout: float = 60.0,
-        ssl_context: typing.Optional[ssl.SSLContext] = None,
+        ssl_context: ssl.SSLContext | None = None,
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
@@ -619,16 +619,15 @@ class InteractionServer(interaction_server.InteractionServer):
     @typing_extensions.override
     def get_listener(
         self, interaction_type: type[_InteractionT_co], /
-    ) -> typing.Optional[interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
+    ) -> interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None:
         return self._listeners.get(interaction_type)
 
     @typing.overload
     def set_listener(
         self,
         interaction_type: type[command_interactions.CommandInteraction],
-        listener: typing.Optional[
-            interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
-        ],
+        listener: interaction_server.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -638,9 +637,10 @@ class InteractionServer(interaction_server.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[component_interactions.ComponentInteraction],
-        listener: typing.Optional[
-            interaction_server.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
-        ],
+        listener: interaction_server.ListenerT[
+            component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT
+        ]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -650,11 +650,10 @@ class InteractionServer(interaction_server.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[command_interactions.AutocompleteInteraction],
-        listener: typing.Optional[
-            interaction_server.ListenerT[
-                command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
-            ]
-        ],
+        listener: interaction_server.ListenerT[
+            command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+        ]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -664,9 +663,7 @@ class InteractionServer(interaction_server.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[modal_interactions.ModalInteraction],
-        listener: typing.Optional[
-            interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
-        ],
+        listener: interaction_server.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT] | None,
         /,
         *,
         replace: bool = False,
@@ -676,9 +673,7 @@ class InteractionServer(interaction_server.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],
-        listener: typing.Optional[
-            interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
-        ],
+        listener: interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None,
         /,
         *,
         replace: bool = False,
@@ -688,9 +683,7 @@ class InteractionServer(interaction_server.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],
-        listener: typing.Optional[
-            interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
-        ],
+        listener: interaction_server.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None,
         /,
         *,
         replace: bool = False,

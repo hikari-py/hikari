@@ -170,7 +170,7 @@ def no_recursive_throw() -> typing.Callable[[_T], _T]:
     return decorator
 
 
-def is_no_recursive_throw_event(obj: typing.Union[_T, type[_T]]) -> bool:
+def is_no_recursive_throw_event(obj: _T | type[_T]) -> bool:
     """Whether the event is marked as `___norecursivethrow___`."""
     result = getattr(obj, NO_RECURSIVE_THROW_attrs, False)
     assert isinstance(result, bool)
@@ -211,7 +211,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
         return self.failed_event.app
 
     @property
-    def shard(self) -> typing.Optional[gateway_shard.GatewayShard]:
+    def shard(self) -> gateway_shard.GatewayShard | None:
         """Shard that received the event, if there was one associated.
 
         This may be [`None`][] if no specific shard was the cause of this
@@ -223,7 +223,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
         return None
 
     @property
-    def exc_info(self) -> tuple[type[Exception], Exception, typing.Optional[types.TracebackType]]:
+    def exc_info(self) -> tuple[type[Exception], Exception, types.TracebackType | None]:
         """Exception triplet that follows the same format as [`sys.exc_info`][].
 
         The [`sys.exc_info`][] triplet consists of the exception type, the exception

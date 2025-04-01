@@ -73,7 +73,7 @@ class ModalInteraction(
     custom_id: str = attrs.field(eq=False, hash=False, repr=True)
     """The custom id of the modal."""
 
-    message: typing.Optional[messages.Message] = attrs.field(eq=False, repr=False)
+    message: messages.Message | None = attrs.field(eq=False, repr=False)
     """The message whose component triggered the modal.
 
     This will be [`None`][] if the modal was a response to a command.
@@ -135,7 +135,7 @@ class ModalInteraction(
 class ModalInteractionMetadata(base_interactions.PartialInteractionMetadata):
     """The interaction metadata for a modal initiated message."""
 
-    original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    original_response_message_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the original response message, present only on follow-up messages."""
 
     triggering_interaction_metadata: base_interactions.PartialInteractionMetadata = attrs.field(

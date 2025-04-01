@@ -99,7 +99,7 @@ class SKU(snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of the SKU"""
 
-    type: typing.Union[SKUType, int] = attrs.field(eq=False, hash=False, repr=True)
+    type: SKUType | int = attrs.field(eq=False, hash=False, repr=True)
     """The type of the SKU"""
 
     application_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -128,26 +128,26 @@ class Entitlement(snowflakes.Unique):
     application_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the parent application"""
 
-    user_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    user_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """ID of the user that is granted access to the entitlement's SKU"""
 
-    type: typing.Union[EntitlementType, int] = attrs.field(eq=False, hash=False, repr=True)
+    type: EntitlementType | int = attrs.field(eq=False, hash=False, repr=True)
     """Type of entitlement"""
 
     is_deleted: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the entitlement has been deleted"""
 
-    starts_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
+    starts_at: datetime.datetime | None = attrs.field(eq=False, hash=False, repr=False)
     """Start date at which the entitlement is valid. Not present when using test entitlements."""
 
-    ends_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
+    ends_at: datetime.datetime | None = attrs.field(eq=False, hash=False, repr=False)
     """Date at which the entitlement is no longer valid. Not present when using test entitlements."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """ID of the guild that is granted access to the entitlement's SKU"""
 
     # Only partially documented by Discord
-    subscription_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    subscription_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the subscription that this entitlement is associated with.
 
     Not present when using test entitlements.

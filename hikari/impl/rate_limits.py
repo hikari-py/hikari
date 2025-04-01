@@ -72,10 +72,7 @@ class BaseRateLimiter(abc.ABC):
         return self
 
     def __exit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         self.close()
 
@@ -92,7 +89,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     name: str
     """The name of the rate limiter."""
 
-    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    throttle_task: asyncio.Task[typing.Any] | None
     """The throttling task, or [`None`][] if it is not running."""
 
     queue: list[asyncio.Future[typing.Any]]
@@ -160,10 +157,10 @@ class ManualRateLimiter(BurstRateLimiter):
 
     __slots__: typing.Sequence[str] = ("reset_at",)
 
-    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    throttle_task: asyncio.Task[typing.Any] | None
     # <<inherited docstring from BurstRateLimiter>>.
 
-    reset_at: typing.Optional[float]
+    reset_at: float | None
     """The monotonic [`time.monotonic`][] timestamp at which the ratelimit gets lifted."""
 
     def __init__(self) -> None:
@@ -298,7 +295,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
     __slots__: typing.Sequence[str] = ("limit", "period", "remaining", "reset_at")
 
-    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    throttle_task: asyncio.Task[typing.Any] | None
     # <<inherited docstring from BurstRateLimiter>>.
 
     reset_at: float

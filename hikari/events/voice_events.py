@@ -68,7 +68,7 @@ class VoiceStateUpdateEvent(VoiceEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring>>.
 
-    old_state: typing.Optional[voices.VoiceState] = attrs.field(repr=True)
+    old_state: voices.VoiceState | None = attrs.field(repr=True)
     """The old voice state.
 
     This will be [`None`][] if the voice state missing from the cache.
@@ -111,7 +111,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
     token: str = attrs.field(repr=False)
     """Token that should be used to authenticate with the voice gateway."""
 
-    raw_endpoint: typing.Optional[str] = attrs.field(repr=True)
+    raw_endpoint: str | None = attrs.field(repr=True)
     """Raw endpoint URI that Discord sent.
 
     If this is [`None`][], it means that the server has been deallocated
@@ -125,7 +125,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
     """
 
     @property
-    def endpoint(self) -> typing.Optional[str]:
+    def endpoint(self) -> str | None:
         """URI for this voice server host, with the correct scheme prepended.
 
         If this is [`None`][], it means that the server has been deallocated

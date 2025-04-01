@@ -105,7 +105,7 @@ class MessageCreateEvent(MessageEvent, abc.ABC):
         return self.message.channel_id
 
     @property
-    def content(self) -> typing.Optional[str]:
+    def content(self) -> str | None:
         """Content of the message.
 
         The content of the message, if present. This will be [`None`][]
@@ -170,7 +170,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         return self.message.author
 
     @property
-    def member(self) -> typing.Optional[guilds.Member]:
+    def member(self) -> guilds.Member | None:
         """Member object of the user that sent the message."""
         return self.message.member
 
@@ -182,7 +182,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         assert isinstance(guild_id, snowflakes.Snowflake), "no guild_id attribute set"
         return guild_id
 
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+    def get_channel(self) -> channels.TextableGuildChannel | None:
         """Channel that the message was sent in, if known.
 
         Returns
@@ -200,7 +200,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
         )
         return channel
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached guild that this event occurred in, if known.
 
         !!! note
@@ -218,7 +218,7 @@ class GuildMessageCreateEvent(MessageCreateEvent):
 
         return self.app.cache.get_guild(self.guild_id)
 
-    def get_member(self) -> typing.Optional[guilds.Member]:
+    def get_member(self) -> guilds.Member | None:
         """Get the member that sent this message from the cache if available.
 
         Returns
@@ -379,7 +379,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         due to Discord limitations.
     """
 
-    old_message: typing.Optional[messages.PartialMessage] = attrs.field()
+    old_message: messages.PartialMessage | None = attrs.field()
     """The old message object.
 
     This will be [`None`][] if the message missing from the cache.
@@ -402,7 +402,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         """
         return self.message.member
 
-    def get_member(self) -> typing.Optional[guilds.Member]:
+    def get_member(self) -> guilds.Member | None:
         """Get the member that sent this message from the cache if available.
 
         Returns
@@ -423,7 +423,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         assert isinstance(guild_id, snowflakes.Snowflake), f"expected guild_id, got {guild_id}"
         return guild_id
 
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+    def get_channel(self) -> channels.TextableGuildChannel | None:
         """Channel that the message was sent in, if known.
 
         Returns
@@ -441,7 +441,7 @@ class GuildMessageUpdateEvent(MessageUpdateEvent):
         )
         return channel
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached guild that this event occurred in, if known.
 
         !!! note
@@ -471,7 +471,7 @@ class DMMessageUpdateEvent(MessageUpdateEvent):
         due to Discord limitations.
     """
 
-    old_message: typing.Optional[messages.PartialMessage] = attrs.field()
+    old_message: messages.PartialMessage | None = attrs.field()
     """The old message object.
 
     This will be [`None`][] if the message missing from the cache.
@@ -503,7 +503,7 @@ class MessageDeleteEvent(MessageEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def old_message(self) -> typing.Optional[messages.Message]:
+    def old_message(self) -> messages.Message | None:
         """Object of the message that was deleted.
 
         Will be [`None`][] if the message was not found in the cache.
@@ -533,13 +533,13 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    old_message: typing.Optional[messages.Message] = attrs.field()
+    old_message: messages.Message | None = attrs.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
     shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+    def get_channel(self) -> channels.TextableGuildChannel | None:
         """Get the cached channel the message were sent in, if known.
 
         Returns
@@ -557,7 +557,7 @@ class GuildMessageDeleteEvent(MessageDeleteEvent):
         )
         return channel
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached guild this event corresponds to, if known.
 
         !!! note
@@ -596,7 +596,7 @@ class DMMessageDeleteEvent(MessageDeleteEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
-    old_message: typing.Optional[messages.Message] = attrs.field()
+    old_message: messages.Message | None = attrs.field()
     # <<inherited docstring from MessageDeleteEvent>>
 
     shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -635,7 +635,7 @@ class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
     shard: shard_.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>
 
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+    def get_channel(self) -> channels.TextableGuildChannel | None:
         """Get the cached channel the messages were sent in, if known.
 
         Returns
@@ -653,7 +653,7 @@ class GuildBulkMessageDeleteEvent(shard_events.ShardEvent):
         )
         return channel
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached guild this event corresponds to, if known.
 
         !!! note

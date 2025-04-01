@@ -78,7 +78,7 @@ class EmbedResource(files.Resource[files.AsyncReader]):
 
     @typing_extensions.override
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> files.AsyncReaderContextManager[files.AsyncReader]:
         """Produce a stream of data for the resource.
 
@@ -100,7 +100,7 @@ class EmbedResource(files.Resource[files.AsyncReader]):
 class EmbedResourceWithProxy(EmbedResource):
     """Resource with a corresponding proxied element."""
 
-    proxy_resource: typing.Optional[files.Resource[files.AsyncReader]] = attrs.field(default=None, repr=False)
+    proxy_resource: files.Resource[files.AsyncReader] | None = attrs.field(default=None, repr=False)
     """The proxied version of the resource, or [`None`][] if not present.
 
     !!! note
@@ -111,13 +111,13 @@ class EmbedResourceWithProxy(EmbedResource):
 
     @property
     @typing.final
-    def proxy_url(self) -> typing.Optional[str]:
+    def proxy_url(self) -> str | None:
         """Proxied URL of this embed resource if applicable, else [`None`][]."""
         return self.proxy_resource.url if self.proxy_resource else None
 
     @property
     @typing.final
-    def proxy_filename(self) -> typing.Optional[str]:
+    def proxy_filename(self) -> str | None:
         """File name of the proxied version of this embed resource if applicable, else [`None`][]."""
         return self.proxy_resource.filename if self.proxy_resource else None
 
@@ -129,10 +129,10 @@ class EmbedFooter:
 
     # Discord says this is never None. We know that is invalid because Discord.py
     # sets it to None. Seems like undocumented behaviour again.
-    text: typing.Optional[str] = attrs.field(default=None, repr=True)
+    text: str | None = attrs.field(default=None, repr=True)
     """The footer text, or [`None`][] if not present."""
 
-    icon: typing.Optional[EmbedResourceWithProxy] = attrs.field(default=None, repr=True)
+    icon: EmbedResourceWithProxy | None = attrs.field(default=None, repr=True)
     """The URL of the footer icon, or [`None`][] if not present."""
 
 
@@ -140,7 +140,7 @@ class EmbedFooter:
 class EmbedImage(EmbedResourceWithProxy):
     """Represents an embed image."""
 
-    height: typing.Optional[int] = attrs.field(default=None, repr=False)
+    height: int | None = attrs.field(default=None, repr=False)
     """The height of the image, if present and known, otherwise [`None`][].
 
     !!! note
@@ -149,7 +149,7 @@ class EmbedImage(EmbedResourceWithProxy):
         any received embed attached to a message event.
     """
 
-    width: typing.Optional[int] = attrs.field(default=None, repr=False)
+    width: int | None = attrs.field(default=None, repr=False)
     """The width of the image, if present and known, otherwise [`None`][].
 
     !!! note
@@ -172,10 +172,10 @@ class EmbedVideo(EmbedResourceWithProxy):
         class yourself.**
     """
 
-    height: typing.Optional[int] = attrs.field(default=None, repr=False)
+    height: int | None = attrs.field(default=None, repr=False)
     """The height of the video."""
 
-    width: typing.Optional[int] = attrs.field(default=None, repr=False)
+    width: int | None = attrs.field(default=None, repr=False)
     """The width of the video."""
 
 
@@ -194,10 +194,10 @@ class EmbedProvider:
         class yourself.**
     """
 
-    name: typing.Optional[str] = attrs.field(default=None, repr=True)
+    name: str | None = attrs.field(default=None, repr=True)
     """The name of the provider."""
 
-    url: typing.Optional[str] = attrs.field(default=None, repr=True)
+    url: str | None = attrs.field(default=None, repr=True)
     """The URL of the provider."""
 
 
@@ -206,16 +206,16 @@ class EmbedProvider:
 class EmbedAuthor:
     """Represents an author of an embed."""
 
-    name: typing.Optional[str] = attrs.field(default=None, repr=True)
+    name: str | None = attrs.field(default=None, repr=True)
     """The name of the author, or [`None`][] if not specified."""
 
-    url: typing.Optional[str] = attrs.field(default=None, repr=True)
+    url: str | None = attrs.field(default=None, repr=True)
     """The URL that the author's name should act as a hyperlink to.
 
     This may be [`None`][] if no hyperlink on the author's name is specified.
     """
 
-    icon: typing.Optional[EmbedResourceWithProxy] = attrs.field(default=None, repr=False)
+    icon: EmbedResourceWithProxy | None = attrs.field(default=None, repr=False)
     """The author's icon, or [`None`][] if not present."""
 
 
@@ -276,18 +276,18 @@ class Embed:
     def from_received_embed(
         cls,
         *,
-        title: typing.Optional[str],
-        description: typing.Optional[str],
-        url: typing.Optional[str],
-        color: typing.Optional[colors.Color],
-        timestamp: typing.Optional[datetime.datetime],
-        image: typing.Optional[EmbedImage],
-        thumbnail: typing.Optional[EmbedImage],
-        video: typing.Optional[EmbedVideo],
-        author: typing.Optional[EmbedAuthor],
-        provider: typing.Optional[EmbedProvider],
-        footer: typing.Optional[EmbedFooter],
-        fields: typing.Optional[typing.MutableSequence[EmbedField]],
+        title: str | None,
+        description: str | None,
+        url: str | None,
+        color: colors.Color | None,
+        timestamp: datetime.datetime | None,
+        image: EmbedImage | None,
+        thumbnail: EmbedImage | None,
+        video: EmbedVideo | None,
+        author: EmbedAuthor | None,
+        provider: EmbedProvider | None,
+        footer: EmbedFooter | None,
+        fields: typing.MutableSequence[EmbedField] | None,
     ) -> Embed:
         """Generate an embed from the given attributes.
 
@@ -314,12 +314,12 @@ class Embed:
     def __init__(
         self,
         *,
-        title: typing.Optional[str] = None,
-        description: typing.Optional[str] = None,
-        url: typing.Optional[str] = None,
-        color: typing.Optional[colors.Colorish] = None,
-        colour: typing.Optional[colors.Colorish] = None,
-        timestamp: typing.Optional[datetime.datetime] = None,
+        title: str | None = None,
+        description: str | None = None,
+        url: str | None = None,
+        color: colors.Colorish | None = None,
+        colour: colors.Colorish | None = None,
+        timestamp: datetime.datetime | None = None,
     ) -> None:
         if color is not None and colour is not None:
             msg = "Please provide one of color or colour to Embed(). Do not pass both."
@@ -339,19 +339,19 @@ class Embed:
         self._title = title
         self._description = description
         self._url = url
-        self._author: typing.Optional[EmbedAuthor] = None
-        self._image: typing.Optional[EmbedImage] = None
-        self._video: typing.Optional[EmbedVideo] = None
-        self._provider: typing.Optional[EmbedProvider] = None
-        self._thumbnail: typing.Optional[EmbedImage] = None
-        self._footer: typing.Optional[EmbedFooter] = None
+        self._author: EmbedAuthor | None = None
+        self._image: EmbedImage | None = None
+        self._video: EmbedVideo | None = None
+        self._provider: EmbedProvider | None = None
+        self._thumbnail: EmbedImage | None = None
+        self._footer: EmbedFooter | None = None
 
         # More boilerplate to allow this to be optional, but saves a useless list on every embed
         # when we don't always need it.
-        self._fields: typing.Optional[typing.MutableSequence[EmbedField]] = None
+        self._fields: typing.MutableSequence[EmbedField] | None = None
 
     @property
-    def title(self) -> typing.Optional[str]:
+    def title(self) -> str | None:
         """Return the title of the embed.
 
         This will be [`None`][] if not set.
@@ -359,11 +359,11 @@ class Embed:
         return self._title
 
     @title.setter
-    def title(self, value: typing.Optional[str]) -> None:
+    def title(self, value: str | None) -> None:
         self._title = value
 
     @property
-    def description(self) -> typing.Optional[str]:
+    def description(self) -> str | None:
         """Return the description of the embed.
 
         This will be [`None`][] if not set.
@@ -371,11 +371,11 @@ class Embed:
         return self._description
 
     @description.setter
-    def description(self, value: typing.Optional[str]) -> None:
+    def description(self, value: str | None) -> None:
         self._description = value
 
     @property
-    def url(self) -> typing.Optional[str]:
+    def url(self) -> str | None:
         """Return the URL of the embed title.
 
         This will be [`None`][] if not set.
@@ -383,11 +383,11 @@ class Embed:
         return self._url
 
     @url.setter
-    def url(self, value: typing.Optional[str]) -> None:
+    def url(self, value: str | None) -> None:
         self._url = value
 
     @property
-    def color(self) -> typing.Optional[colors.Color]:
+    def color(self) -> colors.Color | None:
         """Return the colour of the embed.
 
         This will be [`None`][] if not set.
@@ -397,12 +397,12 @@ class Embed:
     # As a note, MYPY currently complains about setting embed.color to a Colourish value which isn't explicitly Color.
     # see https://github.com/python/mypy/issues/3004
     @color.setter
-    def color(self, value: typing.Optional[colors.Colorish]) -> None:
+    def color(self, value: colors.Colorish | None) -> None:
         self._color = colors.Color.of(value) if value is not None else None
 
     # Alias.
     @property
-    def colour(self) -> typing.Optional[colors.Color]:
+    def colour(self) -> colors.Color | None:
         """Alias of [`hikari.colors.Color`][]."""
         return self._color
 
@@ -410,11 +410,11 @@ class Embed:
     # As a note, MYPY currently complains about setting embed.color to a Colourish value which isn't explicitly Color.
     # see https://github.com/python/mypy/issues/3004
     @colour.setter
-    def colour(self, value: typing.Optional[colors.Colorish]) -> None:
+    def colour(self, value: colors.Colorish | None) -> None:
         self._color = colors.Color.of(value) if value is not None else None
 
     @property
-    def timestamp(self) -> typing.Optional[datetime.datetime]:
+    def timestamp(self) -> datetime.datetime | None:
         """Return the timestamp of the embed.
 
         This will be [`None`][] if not set.
@@ -499,7 +499,7 @@ class Embed:
         return self._timestamp
 
     @timestamp.setter
-    def timestamp(self, value: typing.Optional[datetime.datetime]) -> None:
+    def timestamp(self, value: datetime.datetime | None) -> None:
         if value is not None and value.tzinfo is None:
             self.__warn_naive_datetime()
             value = value.astimezone()
@@ -536,7 +536,7 @@ class Embed:
         warnings.warn(message, category=errors.HikariWarning, stacklevel=3)
 
     @property
-    def footer(self) -> typing.Optional[EmbedFooter]:
+    def footer(self) -> EmbedFooter | None:
         """Return the footer of the embed.
 
         Will be [`None`][] if not set.
@@ -544,7 +544,7 @@ class Embed:
         return self._footer
 
     @property
-    def image(self) -> typing.Optional[EmbedImage]:
+    def image(self) -> EmbedImage | None:
         """Return the image set in the embed.
 
         Will be [`None`][] if not set.
@@ -555,7 +555,7 @@ class Embed:
         return self._image
 
     @property
-    def thumbnail(self) -> typing.Optional[EmbedImage]:
+    def thumbnail(self) -> EmbedImage | None:
         """Return the thumbnail set in the embed.
 
         Will be [`None`][] if not set.
@@ -566,7 +566,7 @@ class Embed:
         return self._thumbnail
 
     @property
-    def video(self) -> typing.Optional[EmbedVideo]:
+    def video(self) -> EmbedVideo | None:
         """Return the video to show in the embed.
 
         Will be [`None`][] if not set.
@@ -580,7 +580,7 @@ class Embed:
         return self._video
 
     @property
-    def provider(self) -> typing.Optional[EmbedProvider]:
+    def provider(self) -> EmbedProvider | None:
         """Return the provider to show in the embed.
 
         Will be [`None`][] if not set.
@@ -594,7 +594,7 @@ class Embed:
         return self._provider
 
     @property
-    def author(self) -> typing.Optional[EmbedAuthor]:
+    def author(self) -> EmbedAuthor | None:
         """Return the author to show in the embed.
 
         Will be [`None`][] if not set.
@@ -615,11 +615,7 @@ class Embed:
         return self._fields if self._fields else []
 
     def set_author(
-        self,
-        *,
-        name: typing.Optional[str] = None,
-        url: typing.Optional[str] = None,
-        icon: typing.Optional[files.Resourceish] = None,
+        self, *, name: str | None = None, url: str | None = None, icon: files.Resourceish | None = None
     ) -> Embed:
         """Set the author of this embed.
 
@@ -664,7 +660,7 @@ class Embed:
             self._author = EmbedAuthor(name=name, url=url, icon=real_icon)
         return self
 
-    def set_footer(self, text: typing.Optional[str], *, icon: typing.Optional[files.Resourceish] = None) -> Embed:
+    def set_footer(self, text: str | None, *, icon: files.Resourceish | None = None) -> Embed:
         """Set the footer of this embed.
 
         Parameters
@@ -714,7 +710,7 @@ class Embed:
             self._footer = EmbedFooter(icon=real_icon, text=text)
         return self
 
-    def set_image(self, image: typing.Optional[files.Resourceish] = None, /) -> Embed:
+    def set_image(self, image: files.Resourceish | None = None, /) -> Embed:
         """Set the image on this embed.
 
         Parameters
@@ -754,7 +750,7 @@ class Embed:
 
         return self
 
-    def set_thumbnail(self, image: typing.Optional[files.Resourceish] = None, /) -> Embed:
+    def set_thumbnail(self, image: files.Resourceish | None = None, /) -> Embed:
         """Set the image on this embed.
 
         Parameters
