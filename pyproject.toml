@@ -137,8 +137,8 @@ release = ["twine==6.1.0"]
 ruff = ["ruff==0.11.2"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
-example-voice-message = [
-    "pydub~=0.25",
+types = [
+    # examples/voice_message/*
     "pydub-stubs~=0.25.1.5"
 ]
 
