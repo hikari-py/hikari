@@ -1287,16 +1287,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             This will not do anything if not being used with `reply`.
         flags
             If provided, optional flags to set on the message. If
-            [`hikari.undefined.UNDEFINED`][], then nothing is changed.
+            [`hikari.undefined.UNDEFINED`][], the flags will be set
+            to [`hikari.MessageFlag.IS_VOICE_MESSAGE`][], which is
+            needed for sending voice messages.
+
 
             Note that some flags may not be able to be set. Currently the only
-            flags that can be set are [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS] and
-            [hikari.messages.MessageFlag.SUPPRESS_EMBEDS].
+            flags that can be set are [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS].
 
         Returns
         -------
         hikari.messages.Message
-            The created message.
+            The created voice message.
 
         Raises
         ------
