@@ -8672,7 +8672,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         /,
-    ) -> None:
+    ) -> messages_.Message:
         """End a poll.
 
         Parameters
@@ -8681,6 +8681,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The channel the poll is in.
         message
             The message the poll is in.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The message that had its poll ended.
 
         Raises
         ------
