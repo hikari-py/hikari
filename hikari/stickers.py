@@ -77,7 +77,7 @@ class StickerFormatType(int, enums.Enum):
     """A GIF sticker."""
 
 
-_STICKER_EXTENSIONS: dict[typing.Union[StickerFormatType, int], str] = {
+_STICKER_EXTENSIONS: dict[StickerFormatType | int, str] = {
     StickerFormatType.LOTTIE: "json",
     StickerFormatType.GIF: "gif",
 }
@@ -96,7 +96,7 @@ class StickerPack(snowflakes.Unique):
     description: str = attrs.field(eq=False, hash=False, repr=False)
     """The description of the pack."""
 
-    cover_sticker_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    cover_sticker_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of a sticker in the pack which is shown as the pack's icon."""
 
     stickers: typing.Sequence[StandardSticker] = attrs.field(eq=False, hash=False, repr=False)
@@ -105,15 +105,15 @@ class StickerPack(snowflakes.Unique):
     sku_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the packs SKU."""
 
-    banner_asset_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    banner_asset_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """ID of the sticker pack's banner image, if set."""
 
     @property
-    def banner_url(self) -> typing.Optional[files.URL]:
+    def banner_url(self) -> files.URL | None:
         """Banner URL for the pack, if set."""
         return self.make_banner_url()
 
-    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the pack's banner image URL, if set.
 
         Parameters
@@ -154,7 +154,7 @@ class PartialSticker(snowflakes.Unique):
     name: str = attrs.field(eq=False, hash=False, repr=False)
     """The name of the sticker."""
 
-    format_type: typing.Union[StickerFormatType, int] = attrs.field(eq=False, hash=False, repr=True)
+    format_type: StickerFormatType | int = attrs.field(eq=False, hash=False, repr=True)
     """The format of this sticker's asset."""
 
     @property
@@ -183,7 +183,7 @@ class StandardSticker(PartialSticker):
     type: StickerType = attrs.field(eq=False, hash=False, repr=False, init=False, default=StickerType.STANDARD)
     """The sticker type."""
 
-    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The description of this sticker."""
 
     pack_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -204,7 +204,7 @@ class GuildSticker(PartialSticker):
     type: StickerType = attrs.field(eq=False, hash=False, repr=False, init=False, default=StickerType.GUILD)
     """The sticker type."""
 
-    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The description of this sticker."""
 
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False)
@@ -216,7 +216,7 @@ class GuildSticker(PartialSticker):
     tag: str = attrs.field(eq=False, hash=False)
     """This sticker's tag."""
 
-    user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
+    user: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """The user that uploaded this sticker.
 
     This will only be available if you have the [`hikari.permissions.Permissions.MANAGE_GUILD_EXPRESSIONS`][]

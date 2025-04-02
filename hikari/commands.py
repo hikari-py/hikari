@@ -118,12 +118,12 @@ class CommandChoice:
     name: str = attrs.field(repr=True)
     """The choice's name (inclusively between 1-100 characters)."""
 
-    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
+    name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
         eq=False, factory=dict, hash=False, repr=False
     )
     """A mapping of name localizations for this command choice."""
 
-    value: typing.Union[str, int, float] = attrs.field(repr=True)
+    value: str | int | float = attrs.field(repr=True)
     """Value of the choice (up to 100 characters if a string)."""
 
 
@@ -132,7 +132,7 @@ class CommandChoice:
 class CommandOption:
     """Represents an application command's argument."""
 
-    type: typing.Union[OptionType, int] = attrs.field(repr=True)
+    type: OptionType | int = attrs.field(repr=True)
     """The type of command option this is."""
 
     name: str = attrs.field(repr=True)
@@ -153,7 +153,7 @@ class CommandOption:
     is_required: bool = attrs.field(default=False, repr=False)
     """Whether this command option is required."""
 
-    choices: typing.Optional[typing.Sequence[CommandChoice]] = attrs.field(default=None, repr=False)
+    choices: typing.Sequence[CommandChoice] | None = attrs.field(default=None, repr=False)
     """A sequence of up to (and including) 25 choices for this command.
 
     This will be [`None`][] if the input values for this option aren't
@@ -161,12 +161,10 @@ class CommandOption:
     option.
     """
 
-    options: typing.Optional[typing.Sequence[CommandOption]] = attrs.field(default=None, repr=False)
+    options: typing.Sequence[CommandOption] | None = attrs.field(default=None, repr=False)
     """Sequence of up to (and including) 25 of the options for this command option."""
 
-    channel_types: typing.Optional[typing.Sequence[typing.Union[channels.ChannelType, int]]] = attrs.field(
-        default=None, repr=False
-    )
+    channel_types: typing.Sequence[channels.ChannelType | int] | None = attrs.field(default=None, repr=False)
     """The channel types that this option will accept.
 
     If [`None`][], then all channel types will be accepted.
@@ -175,38 +173,38 @@ class CommandOption:
     autocomplete: bool = attrs.field(default=False, repr=False)
     """Whether this option has autocomplete."""
 
-    min_value: typing.Union[int, float, None] = attrs.field(default=None, repr=False)
+    min_value: int | float | None = attrs.field(default=None, repr=False)
     """The minimum value permitted (inclusive).
 
     This will be [`int`][] if the type of the option is [`hikari.commands.OptionType.INTEGER`][]
     and [`float`][] if the type is [`hikari.commands.OptionType.FLOAT`][].
     """
 
-    max_value: typing.Union[int, float, None] = attrs.field(default=None, repr=False)
+    max_value: int | float | None = attrs.field(default=None, repr=False)
     """The maximum value permitted (inclusive).
 
     This will be [`int`][] if the type of the option is [`hikari.commands.OptionType.INTEGER`][]
     and [`float`][] if the type is [`hikari.commands.OptionType.FLOAT`][].
     """
 
-    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
+    name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
         eq=False, factory=dict, hash=False, repr=False
     )
     """A mapping of name localizations for this option."""
 
-    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
+    description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
         eq=False, factory=dict, hash=False, repr=False
     )
     """A mapping of description localizations for this option."""
 
-    min_length: typing.Optional[int] = attrs.field(default=None, repr=False)
+    min_length: int | None = attrs.field(default=None, repr=False)
     """The minimum length permitted (inclusive).
 
     This is only valid for [`hikari.commands.OptionType.STRING`][],
     otherwise it will be [`None`][].
     """
 
-    max_length: typing.Optional[int] = attrs.field(default=None, repr=False)
+    max_length: int | None = attrs.field(default=None, repr=False)
     """The maximum length permitted (inclusive).
 
     This is only valid for [`hikari.commands.OptionType.STRING`][],
@@ -248,7 +246,7 @@ class PartialCommand(snowflakes.Unique):
     is_nsfw: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this command is age-restricted."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """ID of the guild this command is in.
 
     This will be [`None`][] if this is a global command.
@@ -257,9 +255,7 @@ class PartialCommand(snowflakes.Unique):
     version: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """Auto-incrementing version identifier updated during substantial record changes."""
 
-    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(eq=False, hash=False, repr=False)
     """A mapping of name localizations for this command."""
 
     integration_types: typing.Sequence[applications.ApplicationIntegrationType] = attrs.field(
@@ -454,12 +450,10 @@ class SlashCommand(PartialCommand):
         This will be inclusively between 1-100 characters in length.
     """
 
-    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(eq=False, hash=False, repr=False)
     """A set of description localizations for this command."""
 
-    options: typing.Optional[typing.Sequence[CommandOption]] = attrs.field(eq=False, hash=False, repr=False)
+    options: typing.Sequence[CommandOption] | None = attrs.field(eq=False, hash=False, repr=False)
     """Sequence of up to (and including) 25 of the options for this command."""
 
 
@@ -496,7 +490,7 @@ class CommandPermission:
     * If equals to (`guild_id` - 1), then it applies to all channels in a guild.
     """
 
-    type: typing.Union[CommandPermissionType, int] = attrs.field(converter=CommandPermissionType)
+    type: CommandPermissionType | int = attrs.field(converter=CommandPermissionType)
     """The entity this permission overrides the command's state for."""
 
     has_access: bool = attrs.field()

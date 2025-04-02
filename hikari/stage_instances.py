@@ -73,7 +73,7 @@ class StageInstance(snowflakes.Unique):
     discoverable_disabled: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether or not stage discovery is disabled."""
 
-    scheduled_event_id: typing.Optional[snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]] = attrs.field(
+    scheduled_event_id: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent] | None = attrs.field(
         eq=False, hash=False, repr=False
     )
     """The ID of the scheduled event for this stage instance, if it exists."""

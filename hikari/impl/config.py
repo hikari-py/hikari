@@ -46,7 +46,7 @@ _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # noqa: S105
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
 
 
-def _ssl_factory(value: typing.Union[bool, ssl_.SSLContext]) -> ssl_.SSLContext:
+def _ssl_factory(value: bool | ssl_.SSLContext) -> ssl_.SSLContext:
     if not isinstance(value, bool):
         return value
 
@@ -111,10 +111,10 @@ class ProxySettings(config.ProxySettings):
     result in no authentication being provided.
     """
 
-    headers: typing.Optional[data_binding.Headers] = attrs.field(default=None)
+    headers: data_binding.Headers | None = attrs.field(default=None)
     """Additional headers to use for requests via a proxy, if required."""
 
-    url: typing.Union[None, str] = attrs.field(default=None)
+    url: None | str = attrs.field(default=None)
     """Proxy URL to use.
 
     Defaults to [`None`][] which disables the use of an explicit proxy.
@@ -137,7 +137,7 @@ class ProxySettings(config.ProxySettings):
     """
 
     @property
-    def all_headers(self) -> typing.Optional[data_binding.Headers]:
+    def all_headers(self) -> data_binding.Headers | None:
         """Return all proxy headers.
 
         Will be [`None`][] if no headers are to be send with any request.
@@ -157,28 +157,28 @@ class ProxySettings(config.ProxySettings):
 class HTTPTimeoutSettings:
     """Settings to control HTTP request timeouts."""
 
-    acquire_and_connect: typing.Optional[float] = attrs.field(default=None)
+    acquire_and_connect: float | None = attrs.field(default=None)
     """Timeout for `request_socket_connect` PLUS connection acquisition.
 
     By default, this has no timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
-    request_socket_connect: typing.Optional[float] = attrs.field(default=None)
+    request_socket_connect: float | None = attrs.field(default=None)
     """Timeout for connecting a socket.
 
     By default, this has no timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
-    request_socket_read: typing.Optional[float] = attrs.field(default=None)
+    request_socket_read: float | None = attrs.field(default=None)
     """Timeout for reading a socket.
 
     By default, this has no timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
-    total: typing.Optional[float] = attrs.field(default=30.0)
+    total: float | None = attrs.field(default=30.0)
     """Total timeout for entire request.
 
     By default, this has a 30 second timeout allocated. Setting it to [`None`][]
@@ -189,7 +189,7 @@ class HTTPTimeoutSettings:
     @request_socket_connect.validator
     @request_socket_read.validator
     @total.validator
-    def _(self, attrsib: attrs.Attribute[typing.Optional[float]], value: object) -> None:
+    def _(self, attrsib: attrs.Attribute[float | None], value: object) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, (float, int)) or value <= 0):
@@ -220,7 +220,7 @@ class HTTPSettings(config.HTTPSettings):
     behavior internally.
     """
 
-    max_redirects: typing.Optional[int] = attrs.field(default=10)
+    max_redirects: int | None = attrs.field(default=10)
     """Behavior for handling redirect HTTP responses.
 
     If a [`int`][], allow following redirects from `3xx` HTTP responses
@@ -241,7 +241,7 @@ class HTTPSettings(config.HTTPSettings):
     """
 
     @max_redirects.validator
-    def _(self, _: attrs.Attribute[typing.Optional[int]], value: object) -> None:
+    def _(self, _: attrs.Attribute[int | None], value: object) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, int) or value <= 0):

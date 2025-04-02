@@ -78,7 +78,7 @@ class Emoji(files.WebResource, abc.ABC):
         """Mention string to use to mention the emoji with."""
 
     @classmethod
-    def parse(cls, string: str, /) -> typing.Union[UnicodeEmoji, CustomEmoji]:
+    def parse(cls, string: str, /) -> UnicodeEmoji | CustomEmoji:
         """Parse a given string into an emoji object.
 
         Parameters
@@ -345,7 +345,7 @@ class KnownCustomEmoji(CustomEmoji):
     )
     """Client application that models may use for procedures."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the guild this emoji belongs to, if applicable.
 
     This will be [`None`][] if the emoji is an application emoji.
@@ -357,7 +357,7 @@ class KnownCustomEmoji(CustomEmoji):
     If this is empty then any user can use this emoji regardless of their roles.
     """
 
-    user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
+    user: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
     !!! note

@@ -235,57 +235,57 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self,
         token: rest_api.TokenStrategy,
         *,
-        public_key: typing.Union[bytes, str, None] = None,
+        public_key: bytes | str | None = None,
         allow_color: bool = True,
-        banner: typing.Optional[str] = "hikari",
+        banner: str | None = "hikari",
         suppress_optimization_warning: bool = False,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
-        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        http_settings: config_impl.HTTPSettings | None = None,
+        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
-        rest_url: typing.Optional[str] = None,
+        proxy_settings: config_impl.ProxySettings | None = None,
+        rest_url: str | None = None,
     ) -> None: ...
 
     @typing.overload
     def __init__(
         self,
         token: str,
-        token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BOT,
-        public_key: typing.Union[bytes, str, None] = None,
+        token_type: str | applications.TokenType = applications.TokenType.BOT,
+        public_key: bytes | str | None = None,
         *,
         allow_color: bool = True,
-        banner: typing.Optional[str] = "hikari",
+        banner: str | None = "hikari",
         suppress_optimization_warning: bool = False,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
-        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        http_settings: config_impl.HTTPSettings | None = None,
+        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
-        rest_url: typing.Optional[str] = None,
+        proxy_settings: config_impl.ProxySettings | None = None,
+        rest_url: str | None = None,
     ) -> None: ...
 
     def __init__(
         self,
-        token: typing.Union[str, rest_api.TokenStrategy],
-        token_type: typing.Union[applications.TokenType, str, None] = None,
-        public_key: typing.Union[bytes, str, None] = None,
+        token: str | rest_api.TokenStrategy,
+        token_type: applications.TokenType | str | None = None,
+        public_key: bytes | str | None = None,
         *,
         allow_color: bool = True,
-        banner: typing.Optional[str] = "hikari",
+        banner: str | None = "hikari",
         suppress_optimization_warning: bool = False,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
-        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        http_settings: config_impl.HTTPSettings | None = None,
+        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
-        rest_url: typing.Optional[str] = None,
+        proxy_settings: config_impl.ProxySettings | None = None,
+        rest_url: str | None = None,
     ) -> None:
         if isinstance(public_key, str):
             public_key = bytes.fromhex(public_key)
@@ -302,7 +302,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         ux.warn_if_not_optimized(suppress=suppress_optimization_warning)
 
         # Settings and state
-        self._close_event: typing.Optional[asyncio.Event] = None
+        self._close_event: asyncio.Event | None = None
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._is_closing = False
@@ -376,16 +376,12 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
     @property
     @typing_extensions.override
-    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
+    def executor(self) -> concurrent.futures.Executor | None:
         return self._executor
 
     @staticmethod
     def print_banner(
-        banner: typing.Optional[str],
-        *,
-        allow_color: bool,
-        force_color: bool,
-        extra_args: typing.Optional[dict[str, str]] = None,
+        banner: str | None, *, allow_color: bool, force_color: bool, extra_args: dict[str, str] | None = None
     ) -> None:
         """Print the banner.
 
@@ -493,17 +489,17 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         check_for_updates: bool = True,
         close_loop: bool = True,
         close_passed_executor: bool = False,
-        coroutine_tracking_depth: typing.Optional[int] = None,
-        enable_signal_handlers: typing.Optional[bool] = None,
-        host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
-        path: typing.Optional[str] = None,
-        port: typing.Optional[int] = None,
+        coroutine_tracking_depth: int | None = None,
+        enable_signal_handlers: bool | None = None,
+        host: str | typing.Sequence[str] | None = None,
+        path: str | None = None,
+        port: int | None = None,
         propagate_interrupts: bool = False,
-        reuse_address: typing.Optional[bool] = None,
-        reuse_port: typing.Optional[bool] = None,
+        reuse_address: bool | None = None,
+        reuse_port: bool | None = None,
         shutdown_timeout: float = 60.0,
-        socket: typing.Optional[socket_.socket] = None,
-        ssl_context: typing.Optional[ssl.SSLContext] = None,
+        socket: socket_.socket | None = None,
+        ssl_context: ssl.SSLContext | None = None,
     ) -> None:
         """Open this REST server and block until it closes.
 
@@ -641,14 +637,14 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         *,
         backlog: int = 128,
         check_for_updates: bool = True,
-        host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
-        port: typing.Optional[int] = None,
-        path: typing.Optional[str] = None,
-        reuse_address: typing.Optional[bool] = None,
-        reuse_port: typing.Optional[bool] = None,
-        socket: typing.Optional[socket_.socket] = None,
+        host: str | typing.Sequence[str] | None = None,
+        port: int | None = None,
+        path: str | None = None,
+        reuse_address: bool | None = None,
+        reuse_port: bool | None = None,
+        socket: socket_.socket | None = None,
         shutdown_timeout: float = 60.0,
-        ssl_context: typing.Optional[ssl.SSLContext] = None,
+        ssl_context: ssl.SSLContext | None = None,
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
@@ -720,16 +716,17 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     @typing_extensions.override
     def get_listener(
         self, interaction_type: type[_InteractionT_co], /
-    ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
+    ) -> interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None:
         return self._server.get_listener(interaction_type)
 
     @typing.overload
     def set_listener(
         self,
         interaction_type: type[command_interactions.CommandInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
-        ],
+        listener: interaction_server_.ListenerT[
+            command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT
+        ]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -739,9 +736,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[component_interactions.ComponentInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
-        ],
+        listener: interaction_server_.ListenerT[
+            component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT
+        ]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -751,11 +749,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[command_interactions.AutocompleteInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[
-                command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
-            ]
-        ],
+        listener: interaction_server_.ListenerT[
+            command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+        ]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -765,9 +762,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[modal_interactions.ModalInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
-        ],
+        listener: interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT] | None,
         /,
         *,
         replace: bool = False,
@@ -777,9 +772,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
-        ],
+        listener: interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None,
         /,
         *,
         replace: bool = False,
@@ -789,9 +782,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
-        ],
+        listener: interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None,
         /,
         *,
         replace: bool = False,

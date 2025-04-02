@@ -202,7 +202,7 @@ class GatewayConnectionError(GatewayError):
 class GatewayServerClosedConnectionError(GatewayError):
     """An exception raised when the server closes the connection."""
 
-    code: typing.Union[ShardCloseCode, int, None] = attrs.field(default=None)
+    code: ShardCloseCode | int | None = attrs.field(default=None)
     """Return the close code that was received, if there is one."""
 
     can_reconnect: bool = attrs.field(default=False)
@@ -234,7 +234,7 @@ class HTTPResponseError(HTTPError):
     url: str = attrs.field()
     """The URL that produced this error message."""
 
-    status: typing.Union[http.HTTPStatus, int] = attrs.field()
+    status: http.HTTPStatus | int = attrs.field()
     """The HTTP status code for the response.
 
     This will be [`int`][] if it's outside the range of status codes in the HTTP
@@ -312,7 +312,7 @@ class BadRequestError(ClientHTTPResponseError):
     status: http.HTTPStatus = attrs.field(default=http.HTTPStatus.BAD_REQUEST, init=False)
     """The HTTP status code for the response."""
 
-    errors: typing.Optional[typing.Mapping[str, data_binding.JSONObject]] = attrs.field(default=None, kw_only=True)
+    errors: typing.Mapping[str, data_binding.JSONObject] | None = attrs.field(default=None, kw_only=True)
     """Dict of top level field names to field specific error paths.
 
     For more information, this error format is loosely defined at
@@ -398,10 +398,10 @@ class RateLimitTooLongError(HTTPError):
     reset_at: float = attrs.field()
     """UNIX timestamp of when this limit will be lifted."""
 
-    limit: typing.Optional[int] = attrs.field()
+    limit: int | None = attrs.field()
     """The maximum number of calls per window for this rate limit, if known."""
 
-    period: typing.Optional[float] = attrs.field()
+    period: float | None = attrs.field()
     """How long the rate limit window lasts for from start to end, if known."""
 
     message: str = attrs.field(init=False)

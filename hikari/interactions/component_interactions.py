@@ -89,7 +89,7 @@ class ComponentInteraction(
 ):
     """Represents a component interaction on Discord."""
 
-    component_type: typing.Union[components_.ComponentType, int] = attrs.field(eq=False)
+    component_type: components_.ComponentType | int = attrs.field(eq=False)
     """The type of component which triggers this interaction.
 
     !!! note
@@ -103,7 +103,7 @@ class ComponentInteraction(
     values: typing.Sequence[str] = attrs.field(eq=False)
     """Sequence of the values which were selected for a select menu component."""
 
-    resolved: typing.Optional[base_interactions.ResolvedOptionData] = attrs.field(eq=False, hash=False, repr=False)
+    resolved: base_interactions.ResolvedOptionData | None = attrs.field(eq=False, hash=False, repr=False)
     """Mappings of the objects resolved for the provided command options."""
 
     message: messages.Message = attrs.field(eq=False, repr=False)
@@ -190,7 +190,7 @@ class ComponentInteraction(
 class ComponentInteractionMetadata(base_interactions.PartialInteractionMetadata):
     """The interaction metadata for a component belonging to a message."""
 
-    original_response_message_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    original_response_message_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the original response message, present only on follow-up messages."""
 
     interacted_message_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)

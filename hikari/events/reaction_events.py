@@ -108,7 +108,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji_name(self) -> typing.Union[emojis.UnicodeEmoji, str, None]:
+    def emoji_name(self) -> emojis.UnicodeEmoji | str | None:
         """Name of the emoji which was added if known.
 
         This can either be the string name of the custom emoji which was added,
@@ -119,7 +119,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
+    def emoji_id(self) -> snowflakes.Snowflake | None:
         """ID of the emoji which was added if it is custom, else [`None`][]."""
 
     @property
@@ -127,7 +127,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
     def is_animated(self) -> bool:
         """Whether the emoji which was added is animated."""
 
-    def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
+    def is_for_emoji(self, emoji: emojis.Emoji | str, /) -> bool:
         """Get whether the reaction event is for a specific emoji.
 
         Parameters
@@ -158,7 +158,7 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji_name(self) -> typing.Union[emojis.UnicodeEmoji, str, None]:
+    def emoji_name(self) -> emojis.UnicodeEmoji | str | None:
         """Name of the emoji which was removed.
 
         Either the string name of the custom emoji which was removed, the object
@@ -169,10 +169,10 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
+    def emoji_id(self) -> snowflakes.Snowflake | None:
         """ID of the emoji which was added if it is custom, else [`None`][]."""
 
-    def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
+    def is_for_emoji(self, emoji: emojis.Emoji | str, /) -> bool:
         """Get whether the reaction event is for a specific emoji.
 
         Parameters
@@ -205,7 +205,7 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji_name(self) -> typing.Union[emojis.UnicodeEmoji, str, None]:
+    def emoji_name(self) -> emojis.UnicodeEmoji | str | None:
         """Name of the emoji which was removed.
 
         Either the string name of the custom emoji which was removed, the object
@@ -216,10 +216,10 @@ class ReactionDeleteEmojiEvent(ReactionEvent, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji_id(self) -> typing.Optional[snowflakes.Snowflake]:
+    def emoji_id(self) -> snowflakes.Snowflake | None:
         """ID of the emoji which was added if it is custom, else [`None`][]."""
 
-    def is_for_emoji(self, emoji: typing.Union[emojis.Emoji, str], /) -> bool:
+    def is_for_emoji(self, emoji: emojis.Emoji | str, /) -> bool:
         """Get whether the reaction event is for a specific emoji.
 
         Parameters
@@ -255,10 +255,10 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
+    emoji_name: str | emojis.UnicodeEmoji | None = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    emoji_id: snowflakes.Snowflake | None = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
     is_animated: bool = attrs.field()
@@ -307,10 +307,10 @@ class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
+    emoji_name: str | emojis.UnicodeEmoji | None = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    emoji_id: snowflakes.Snowflake | None = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
 
@@ -335,10 +335,10 @@ class GuildReactionDeleteEmojiEvent(GuildReactionEvent, ReactionDeleteEmojiEvent
     message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
+    emoji_name: str | emojis.UnicodeEmoji | None = attrs.field()
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    emoji_id: snowflakes.Snowflake | None = attrs.field()
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
 
@@ -385,10 +385,10 @@ class DMReactionAddEvent(DMReactionEvent, ReactionAddEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
+    emoji_name: str | emojis.UnicodeEmoji | None = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    emoji_id: snowflakes.Snowflake | None = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
     is_animated: bool = attrs.field()
@@ -416,10 +416,10 @@ class DMReactionDeleteEvent(DMReactionEvent, ReactionDeleteEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
+    emoji_name: str | emojis.UnicodeEmoji | None = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    emoji_id: snowflakes.Snowflake | None = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
 
@@ -441,10 +441,10 @@ class DMReactionDeleteEmojiEvent(DMReactionEvent, ReactionDeleteEmojiEvent):
     message_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from ReactionEvent>>.
 
-    emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field()
+    emoji_name: str | emojis.UnicodeEmoji | None = attrs.field()
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    emoji_id: snowflakes.Snowflake | None = attrs.field()
     # <<inherited docstring from ReactionDeleteEmojiEvent>>.
 
 

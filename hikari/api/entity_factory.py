@@ -962,7 +962,7 @@ class EntityFactory(abc.ABC):
     @abc.abstractmethod
     def deserialize_emoji(
         self, payload: data_binding.JSONObject
-    ) -> typing.Union[emoji_models.UnicodeEmoji, emoji_models.CustomEmoji]:
+    ) -> emoji_models.UnicodeEmoji | emoji_models.CustomEmoji:
         """Parse a raw payload from Discord into an emoji object.
 
         Parameters

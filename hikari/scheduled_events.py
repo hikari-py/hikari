@@ -113,13 +113,13 @@ class ScheduledEvent(snowflakes.Unique):
     name: str = attrs.field(hash=False, repr=True)
     """Name of the scheduled event."""
 
-    description: typing.Optional[str] = attrs.field(hash=False, repr=False)
+    description: str | None = attrs.field(hash=False, repr=False)
     """Description of the scheduled event."""
 
     start_time: datetime.datetime = attrs.field(hash=False, repr=False)
     """When the event is scheduled to start."""
 
-    end_time: typing.Optional[datetime.datetime] = attrs.field(hash=False, repr=False)
+    end_time: datetime.datetime | None = attrs.field(hash=False, repr=False)
     """When the event is scheduled to end, if set."""
 
     privacy_level: EventPrivacyLevel = attrs.field(hash=False, repr=False)
@@ -134,28 +134,28 @@ class ScheduledEvent(snowflakes.Unique):
     entity_type: ScheduledEventType = attrs.field(hash=False, repr=True)
     """The type of entity this scheduled event is associated with."""
 
-    creator: typing.Optional[users.User] = attrs.field(hash=False, repr=False)
+    creator: users.User | None = attrs.field(hash=False, repr=False)
     """The user who created the scheduled event.
 
     This will only be set for event created after 2021-10-25.
     """
 
-    user_count: typing.Optional[int] = attrs.field(hash=False, repr=False)
+    user_count: int | None = attrs.field(hash=False, repr=False)
     """The number of users that have subscribed to the event.
 
     This will be [`None`][] on gateway events when creating and
     editing a scheduled event.
     """
 
-    image_hash: typing.Optional[str] = attrs.field(hash=False, repr=False)
+    image_hash: str | None = attrs.field(hash=False, repr=False)
     """Hash of the image used for the scheduled event, if set."""
 
     @property
-    def image_url(self) -> typing.Optional[files.URL]:
+    def image_url(self) -> files.URL | None:
         """Cover image for this scheduled event, if set."""
         return self.make_image_url()
 
-    def make_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the cover image for this scheduled event, if set.
 
         Parameters
@@ -231,5 +231,5 @@ class ScheduledEventUser:
     user: users.User = attrs.field(hash=True, repr=True)
     """Object representing the user."""
 
-    member: typing.Optional[guilds.Member] = attrs.field(hash=False, repr=False)
+    member: guilds.Member | None = attrs.field(hash=False, repr=False)
     """Their guild member object if they're in the event's guild."""

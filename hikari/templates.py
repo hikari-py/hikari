@@ -76,18 +76,18 @@ class TemplateRole(guilds.PartialRole):
 class TemplateGuild(guilds.PartialGuild):
     """The partial guild object attached to [`hikari.templates.Template`][]."""
 
-    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description, if set."""
 
-    verification_level: typing.Union[guilds.GuildVerificationLevel, int] = attrs.field(eq=False, hash=False, repr=False)
+    verification_level: guilds.GuildVerificationLevel | int = attrs.field(eq=False, hash=False, repr=False)
     """The verification level needed for a user to participate in this guild."""
 
-    default_message_notifications: typing.Union[guilds.GuildMessageNotificationsLevel, int] = attrs.field(
+    default_message_notifications: guilds.GuildMessageNotificationsLevel | int = attrs.field(
         eq=False, hash=False, repr=False
     )
     """The default setting for message notifications in this guild."""
 
-    explicit_content_filter: typing.Union[guilds.GuildExplicitContentFilterLevel, int] = attrs.field(
+    explicit_content_filter: guilds.GuildExplicitContentFilterLevel | int = attrs.field(
         eq=False, hash=False, repr=False
     )
     """The setting for the explicit content filter in this guild."""
@@ -124,13 +124,13 @@ class TemplateGuild(guilds.PartialGuild):
         the channel objects found attached this template guild.
     """
 
-    afk_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    afk_channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
     If [`None`][], then no AFK channel is set up for this guild.
     """
 
-    system_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    system_channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the system channel or [`None`][] if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
@@ -159,7 +159,7 @@ class Template:
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The template's name."""
 
-    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The template's description."""
 
     usage_count: int = attrs.field(eq=False, hash=False, repr=True)

@@ -111,9 +111,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
     @abc.abstractmethod
     @typing_extensions.override
     def filter(
-        self,
-        *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
-        **attrs: object,
+        self, *predicates: tuple[str, typing.Any] | typing.Callable[[base_events.EventT], bool], **attrs: object
     ) -> Self:
         """Filter the items by one or more conditions.
 
@@ -150,10 +148,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
 
     @abc.abstractmethod
     def __exit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         raise NotImplementedError
 
@@ -416,11 +411,7 @@ class EventManager(abc.ABC):
 
     @abc.abstractmethod
     def stream(
-        self,
-        event_type: type[base_events.EventT],
-        /,
-        timeout: typing.Union[float, None],
-        limit: typing.Optional[int] = None,
+        self, event_type: type[base_events.EventT], /, timeout: float | None, limit: int | None = None
     ) -> EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
 
@@ -486,8 +477,8 @@ class EventManager(abc.ABC):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, None],
-        predicate: typing.Optional[PredicateT[base_events.EventT]] = None,
+        timeout: float | None,
+        predicate: PredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
 

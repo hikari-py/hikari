@@ -35,7 +35,7 @@ T_co = typing.TypeVar("T_co", covariant=True)
 T_inv = typing.TypeVar("T_inv")
 
 
-def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future[typing.Optional[T_inv]]:
+def completed_future(result: T_inv | None = None, /) -> asyncio.Future[T_inv | None]:
     """Create a future on the current running loop that is completed, then return it.
 
     Parameters
@@ -61,7 +61,7 @@ def completed_future(result: typing.Optional[T_inv] = None, /) -> asyncio.Future
     return future
 
 
-async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: typing.Optional[float] = None) -> None:
+async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: float | None = None) -> None:
     """Wait for the first awaitable to complete.
 
     The awaitables that don't complete first will be cancelled.
@@ -107,7 +107,7 @@ async def first_completed(*aws: typing.Awaitable[typing.Any], timeout: typing.Op
                     pass
 
 
-async def all_of(*aws: typing.Awaitable[T_co], timeout: typing.Optional[float] = None) -> typing.Sequence[T_co]:
+async def all_of(*aws: typing.Awaitable[T_co], timeout: float | None = None) -> typing.Sequence[T_co]:
     """Await the completion of all the given awaitable items.
 
     If any fail or time out, then they are all cancelled.

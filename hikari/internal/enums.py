@@ -52,7 +52,7 @@ class _DeprecatedAlias(typing.Generic[_T]):
 
         deprecation.check_if_past_removal(self._name, removal_version=removal_version)
 
-    def __get__(self, instance: typing.Optional[_T], owner_enum: _T) -> _T:
+    def __get__(self, instance: _T | None, owner_enum: _T) -> _T:
         # Import kept in-line due to circular import issues
         from hikari.internal import deprecation
 
@@ -83,7 +83,7 @@ class _EnumNamespace(dict[str, _T]):
         self.values_to_names: dict[_T, str] = {}
         self["__doc__"] = "An enumeration."
 
-    def __getitem__(self, name: str) -> typing.Union[_T, object]:
+    def __getitem__(self, name: str) -> _T | object:
         try:
             return super().__getitem__(name)
         except KeyError:
@@ -171,7 +171,7 @@ class _EnumMeta(type):
         mcls: type[Self],
         cls_name: str,
         bases: tuple[type[typing.Any], ...],
-        namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
+        namespace: dict[str, typing.Any] | _EnumNamespace,
     ) -> Self:
         global _Enum
 
@@ -228,9 +228,7 @@ class _EnumMeta(type):
         return cls
 
     @classmethod
-    def __prepare__(
-        cls, name: str, bases: tuple[type[typing.Any], ...] = ()
-    ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
+    def __prepare__(cls, name: str, bases: tuple[type[typing.Any], ...] = ()) -> dict[str, typing.Any] | _EnumNamespace:
         if _Enum is NotImplemented:
             if name != "Enum":
                 msg = "First instance of _EnumMeta must be Enum"
@@ -423,9 +421,7 @@ class _FlagMeta(type):
         yield from cls._name_to_member_map_.values()
 
     @classmethod
-    def __prepare__(
-        cls, name: str, bases: tuple[type[typing.Any], ...] = ()
-    ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
+    def __prepare__(cls, name: str, bases: tuple[type[typing.Any], ...] = ()) -> dict[str, typing.Any] | _EnumNamespace:
         if _Flag is NotImplemented:
             if name != "Flag":
                 msg = "First instance of _FlagMeta must be Flag"
@@ -443,7 +439,7 @@ class _FlagMeta(type):
         mcls: type[Flag],
         cls_name: str,
         bases: tuple[type[typing.Any], ...],
-        namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
+        namespace: dict[str, typing.Any] | _EnumNamespace,
     ) -> Flag:
         global _Flag
 
@@ -669,7 +665,7 @@ class Flag(metaclass=_FlagMeta):
     __members__: typing.ClassVar[typing.Mapping[str, Flag]]
     __objtype__: typing.ClassVar[type[int]]
     __enumtype__: typing.ClassVar[type[Flag]]
-    _name_: typing.Optional[str]
+    _name_: str | None
     _value_: int
 
     @property
@@ -706,7 +702,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return any((flag & self) == flag for flag in flags)
 
-    def difference(self, other: typing.Union[Self, int]) -> _T:
+    def difference(self, other: Self | int) -> _T:
         """Perform a set difference with the other set.
 
         This will return all flags in this set that are not in the other value.
@@ -715,7 +711,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return self.__class__(self & ~int(other))
 
-    def intersection(self, other: typing.Union[Self, int]) -> _T:
+    def intersection(self, other: Self | int) -> _T:
         """Return a combination of flags that are set for both given values.
 
         Equivalent to using the "AND" `&` operator.
@@ -726,7 +722,7 @@ class Flag(metaclass=_FlagMeta):
         """Return a set of all flags not in the current set."""
         return self.__class__(self.__class__.__everything__._value_ & ~self._value_)
 
-    def is_disjoint(self, other: typing.Union[Self, int]) -> bool:
+    def is_disjoint(self, other: Self | int) -> bool:
         """Return whether two sets have a intersection or not.
 
         If the two sets have an intersection, then this returns
@@ -735,14 +731,14 @@ class Flag(metaclass=_FlagMeta):
         """
         return not (self & other)
 
-    def is_subset(self, other: typing.Union[Self, int]) -> bool:
+    def is_subset(self, other: Self | int) -> bool:
         """Return whether another set contains this set or not.
 
         Equivalent to using the "in" operator.
         """
         return (self & other) == other
 
-    def is_superset(self, other: typing.Union[Self, int]) -> bool:
+    def is_superset(self, other: Self | int) -> bool:
         """Return whether this set contains another set or not."""
         return (self & other) == self
 
@@ -773,7 +769,7 @@ class Flag(metaclass=_FlagMeta):
             key=lambda m: m._name_,
         )
 
-    def symmetric_difference(self, other: typing.Union[_T, int]) -> Self:
+    def symmetric_difference(self, other: _T | int) -> Self:
         """Return a set with the symmetric differences of two flag sets.
 
         Equivalent to using the "XOR" `^` operator.
@@ -782,7 +778,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return self.__class__(self._value_ ^ int(other))
 
-    def union(self, other: typing.Union[_T, int]) -> Self:
+    def union(self, other: _T | int) -> Self:
         """Return a combination of all flags in this set and the other set.
 
         Equivalent to using the "OR" `~` operator.
@@ -815,7 +811,7 @@ class Flag(metaclass=_FlagMeta):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}.{self.name}: {self.value!r}>"
 
-    def __rsub__(self, other: typing.Union[int, _T]) -> Self:
+    def __rsub__(self, other: int | _T) -> Self:
         # This logic has to be reversed to be correct, since order matters for
         # a subtraction operator. This also ensures `int - _T -> _T` is a valid
         # case for us.

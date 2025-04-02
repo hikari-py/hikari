@@ -313,21 +313,21 @@ class GatewayBot(traits.GatewayBotAware):
         token: str,
         *,
         allow_color: bool = True,
-        banner: typing.Optional[str] = "hikari",
+        banner: str | None = "hikari",
         suppress_optimization_warning: bool = False,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
-        cache_settings: typing.Optional[config_impl.CacheSettings] = None,
-        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
+        cache_settings: config_impl.CacheSettings | None = None,
+        http_settings: config_impl.HTTPSettings | None = None,
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         auto_chunk_members: bool = True,
-        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
-        rest_url: typing.Optional[str] = None,
+        proxy_settings: config_impl.ProxySettings | None = None,
+        rest_url: str | None = None,
     ) -> None:
         # Beautification and logging
         ux.init_logging(logs, allow_color=allow_color, force_color=force_color)
@@ -335,8 +335,8 @@ class GatewayBot(traits.GatewayBotAware):
         ux.warn_if_not_optimized(suppress=suppress_optimization_warning)
 
         # Settings and state
-        self._closed_event: typing.Optional[asyncio.Event] = None
-        self._closing_event: typing.Optional[asyncio.Event] = None
+        self._closed_event: asyncio.Event | None = None
+        self._closing_event: asyncio.Event | None = None
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._intents = intents
@@ -410,7 +410,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     @property
     @typing_extensions.override
-    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
+    def executor(self) -> concurrent.futures.Executor | None:
         return self._executor
 
     @property
@@ -465,7 +465,7 @@ class GatewayBot(traits.GatewayBotAware):
             raise errors.ComponentStateConflictError(msg)
 
     @typing_extensions.override
-    def get_me(self) -> typing.Optional[users_.OwnUser]:
+    def get_me(self) -> users_.OwnUser | None:
         return self._cache.get_me()
 
     @typing_extensions.override
@@ -656,11 +656,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     @staticmethod
     def print_banner(
-        banner: typing.Optional[str],
-        *,
-        allow_color: bool,
-        force_color: bool,
-        extra_args: typing.Optional[dict[str, str]] = None,
+        banner: str | None, *, allow_color: bool, force_color: bool, extra_args: dict[str, str] | None = None
     ) -> None:
         """Print the banner.
 
@@ -700,21 +696,21 @@ class GatewayBot(traits.GatewayBotAware):
     def run(
         self,
         *,
-        activity: typing.Optional[presences.Activity] = None,
+        activity: presences.Activity | None = None,
         afk: bool = False,
-        asyncio_debug: typing.Optional[bool] = None,
+        asyncio_debug: bool | None = None,
         check_for_updates: bool = True,
         close_passed_executor: bool = False,
         close_loop: bool = True,
-        coroutine_tracking_depth: typing.Optional[int] = None,
-        enable_signal_handlers: typing.Optional[bool] = None,
-        idle_since: typing.Optional[datetime.datetime] = None,
+        coroutine_tracking_depth: int | None = None,
+        enable_signal_handlers: bool | None = None,
+        idle_since: datetime.datetime | None = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
         propagate_interrupts: bool = False,
         status: presences.Status = presences.Status.ONLINE,
-        shard_ids: typing.Optional[typing.Sequence[int]] = None,
-        shard_count: typing.Optional[int] = None,
+        shard_ids: typing.Sequence[int] | None = None,
+        shard_count: int | None = None,
     ) -> None:
         """Start the application and block until it's finished running.
 
@@ -875,14 +871,14 @@ class GatewayBot(traits.GatewayBotAware):
     async def start(
         self,
         *,
-        activity: typing.Optional[presences.Activity] = None,
+        activity: presences.Activity | None = None,
         afk: bool = False,
         check_for_updates: bool = True,
-        idle_since: typing.Optional[datetime.datetime] = None,
+        idle_since: datetime.datetime | None = None,
         ignore_session_start_limit: bool = False,
         large_threshold: int = 250,
-        shard_ids: typing.Optional[typing.Sequence[int]] = None,
-        shard_count: typing.Optional[int] = None,
+        shard_ids: typing.Sequence[int] | None = None,
+        shard_count: int | None = None,
         status: presences.Status = presences.Status.ONLINE,
     ) -> None:
         """Start the bot, wait for all shards to become ready, and then return.
@@ -1031,11 +1027,7 @@ class GatewayBot(traits.GatewayBotAware):
         _LOGGER.info("started successfully in approx %.2f seconds", time.monotonic() - start_time)
 
     def stream(
-        self,
-        event_type: type[base_events.EventT],
-        /,
-        timeout: typing.Union[float, None],
-        limit: typing.Optional[int] = None,
+        self, event_type: type[base_events.EventT], /, timeout: float | None, limit: int | None = None
     ) -> event_manager_.EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
 
@@ -1186,8 +1178,8 @@ class GatewayBot(traits.GatewayBotAware):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, None],
-        predicate: typing.Optional[event_manager_.PredicateT[base_events.EventT]] = None,
+        timeout: float | None,
+        predicate: event_manager_.PredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
 
@@ -1265,7 +1257,7 @@ class GatewayBot(traits.GatewayBotAware):
     async def update_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
+        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel] | None,
         *,
         self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         self_deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1294,9 +1286,9 @@ class GatewayBot(traits.GatewayBotAware):
     async def _start_one_shard(
         self,
         *,
-        activity: typing.Optional[presences.Activity],
+        activity: presences.Activity | None,
         afk: bool,
-        idle_since: typing.Optional[datetime.datetime],
+        idle_since: datetime.datetime | None,
         status: presences.Status,
         large_threshold: int,
         shard_id: int,

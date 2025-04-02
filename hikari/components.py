@@ -172,7 +172,7 @@ class TextInputStyle(int, enums.Enum):
 class PartialComponent:
     """Base class for all component entities."""
 
-    type: typing.Union[ComponentType, int] = attrs.field()
+    type: ComponentType | int = attrs.field()
     """The type of component this is."""
 
 
@@ -192,9 +192,7 @@ class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
     @typing.overload
     def __getitem__(self, slice_: slice, /) -> typing.Sequence[AllowedComponentsT]: ...
 
-    def __getitem__(
-        self, index_or_slice: typing.Union[int, slice], /
-    ) -> typing.Union[PartialComponent, typing.Sequence[AllowedComponentsT]]:
+    def __getitem__(self, index_or_slice: int | slice, /) -> PartialComponent | typing.Sequence[AllowedComponentsT]:
         return self.components[index_or_slice]
 
     def __iter__(self) -> typing.Iterator[AllowedComponentsT]:
@@ -208,16 +206,16 @@ class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
 class ButtonComponent(PartialComponent):
     """Represents a button component."""
 
-    style: typing.Union[ButtonStyle, int] = attrs.field(eq=False)
+    style: ButtonStyle | int = attrs.field(eq=False)
     """The button's style."""
 
-    label: typing.Optional[str] = attrs.field(eq=False)
+    label: str | None = attrs.field(eq=False)
     """Text label which appears on the button."""
 
-    emoji: typing.Optional[emojis.Emoji] = attrs.field(eq=False)
+    emoji: emojis.Emoji | None = attrs.field(eq=False)
     """Custom or unicode emoji which appears on the button."""
 
-    custom_id: typing.Optional[str] = attrs.field(hash=True)
+    custom_id: str | None = attrs.field(hash=True)
     """Developer defined identifier for this button (will be <= 100 characters).
 
     !!! note
@@ -229,7 +227,7 @@ class ButtonComponent(PartialComponent):
         * [`hikari.components.ButtonStyle.DANGER`][]
     """
 
-    url: typing.Optional[str] = attrs.field(eq=False)
+    url: str | None = attrs.field(eq=False)
     """Url for [`hikari.components.ButtonStyle.LINK`][] style buttons."""
 
     is_disabled: bool = attrs.field(eq=False)
@@ -246,10 +244,10 @@ class SelectMenuOption:
     value: str = attrs.field()
     """Dev-defined value of the option, max 100 characters."""
 
-    description: typing.Optional[str] = attrs.field()
+    description: str | None = attrs.field()
     """Optional description of the option, max 100 characters."""
 
-    emoji: typing.Optional[emojis.Emoji] = attrs.field(eq=False)
+    emoji: emojis.Emoji | None = attrs.field(eq=False)
     """Custom or unicode emoji which appears on the button."""
 
     is_default: bool = attrs.field()
@@ -263,7 +261,7 @@ class SelectMenuComponent(PartialComponent):
     custom_id: str = attrs.field(hash=True)
     """Developer defined identifier for this menu (will be <= 100 characters)."""
 
-    placeholder: typing.Optional[str] = attrs.field(eq=False)
+    placeholder: str | None = attrs.field(eq=False)
     """Custom placeholder text shown if nothing is selected, max 100 characters."""
 
     min_values: int = attrs.field(eq=False)
@@ -296,7 +294,7 @@ class TextSelectMenuComponent(SelectMenuComponent):
 class ChannelSelectMenuComponent(SelectMenuComponent):
     """Represents a channel select menu component."""
 
-    channel_types: typing.Sequence[typing.Union[int, channels.ChannelType]] = attrs.field(eq=False)
+    channel_types: typing.Sequence[int | channels.ChannelType] = attrs.field(eq=False)
     """The valid channel types for this menu."""
 
 

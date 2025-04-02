@@ -106,7 +106,7 @@ default_json_loads: JSONDecoder
 try:
     import orjson
 
-    def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
+    def default_json_dumps(obj: JSONArray | JSONObject) -> bytes:
         """Encode a JSON object to [`bytes`][]."""
         return orjson.dumps(obj, option=orjson.OPT_NON_STR_KEYS)
 
@@ -116,7 +116,7 @@ except ModuleNotFoundError:
 
     _json_separators = (",", ":")
 
-    def default_json_dumps(obj: typing.Union[JSONArray, JSONObject]) -> bytes:
+    def default_json_dumps(obj: JSONArray | JSONObject) -> bytes:
         """Encode a JSON object to [`bytes`][]."""
         return json.dumps(obj, separators=_json_separators).encode(_UTF_8)
 
@@ -127,7 +127,7 @@ except ModuleNotFoundError:
 class JSONPayload(aiohttp.BytesPayload):
     """A JSON payload to use in an aiohttp request."""
 
-    def __init__(self, value: typing.Union[JSONArray, JSONObject], dumps: JSONEncoder = default_json_dumps) -> None:
+    def __init__(self, value: JSONArray | JSONObject, dumps: JSONEncoder = default_json_dumps) -> None:
         super().__init__(dumps(value), content_type=_JSON_CONTENT_TYPE, encoding=_UTF_8)
 
 
@@ -138,22 +138,18 @@ class URLEncodedFormBuilder:
     __slots__: typing.Sequence[str] = ("_fields", "_resources")
 
     def __init__(self) -> None:
-        self._fields: list[tuple[str, typing.Union[str, aiohttp.BytesPayload], typing.Optional[str]]] = []
+        self._fields: list[tuple[str, str | aiohttp.BytesPayload, str | None]] = []
         self._resources: list[tuple[str, files.Resource[files.AsyncReader]]] = []
 
-    def add_field(
-        self, name: str, data: typing.Union[str, bytes], *, content_type: typing.Optional[str] = None
-    ) -> None:
-        field_data: typing.Union[str, aiohttp.BytesPayload] = (
-            aiohttp.BytesPayload(data) if isinstance(data, bytes) else data
-        )
+    def add_field(self, name: str, data: str | bytes, *, content_type: str | None = None) -> None:
+        field_data: str | aiohttp.BytesPayload = aiohttp.BytesPayload(data) if isinstance(data, bytes) else data
         self._fields.append((name, field_data, content_type))
 
     def add_resource(self, name: str, resource: files.Resource[files.AsyncReader]) -> None:
         self._resources.append((name, resource))
 
     async def build(
-        self, stack: contextlib.AsyncExitStack, executor: typing.Optional[concurrent.futures.Executor] = None
+        self, stack: contextlib.AsyncExitStack, executor: concurrent.futures.Executor | None = None
     ) -> aiohttp.FormData:
         form = aiohttp.FormData()
 
@@ -204,7 +200,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
         value: undefined.UndefinedOr[typing.Any],
         /,
         *,
-        conversion: typing.Optional[typing.Callable[[typing.Any], typing.Any]] = None,
+        conversion: typing.Callable[[typing.Any], typing.Any] | None = None,
     ) -> None:
         """Add a key and value to the string map.
 
@@ -282,7 +278,7 @@ class JSONObjectBuilder(dict[str, JSONish]):
         value: undefined.UndefinedNoneOr[typing.Any],
         /,
         *,
-        conversion: typing.Optional[typing.Callable[[typing.Any], JSONish]] = None,
+        conversion: typing.Callable[[typing.Any], JSONish] | None = None,
     ) -> None:
         """Put a JSON value.
 
@@ -326,7 +322,7 @@ class JSONObjectBuilder(dict[str, JSONish]):
         values: undefined.UndefinedOr[typing.Iterable[typing.Any]],
         /,
         *,
-        conversion: typing.Optional[typing.Callable[[typing.Any], JSONish]] = None,
+        conversion: typing.Callable[[typing.Any], JSONish] | None = None,
     ) -> None:
         """Put a JSON array.
 

@@ -348,19 +348,19 @@ class _GatewayTransport:
             raise
 
 
-def _serialize_datetime(dt: typing.Optional[datetime.datetime]) -> typing.Optional[int]:
+def _serialize_datetime(dt: datetime.datetime | None) -> int | None:
     if dt is None:
         return None
 
     return int(dt.timestamp() * 1_000)
 
 
-def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_binding.JSONish:
+def _serialize_activity(activity: presences.Activity | None) -> data_binding.JSONish:
     if activity is None:
         return None
 
     # Syntactic sugar, treat `name` as state if using `CUSTOM` and `state` is not passed.
-    state: typing.Optional[str]
+    state: str | None
     if activity.type is presences.ActivityType.CUSTOM and activity.name and not activity.state:
         name = _CUSTOM_STATUS_NAME
         state = activity.name
@@ -467,11 +467,11 @@ class GatewayShardImpl(shard.GatewayShard):
     def __init__(
         self,
         *,
-        compression: typing.Optional[str] = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM,
+        compression: str | None = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM,
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
-        initial_activity: typing.Optional[presences.Activity] = None,
-        initial_idle_since: typing.Optional[datetime.datetime] = None,
+        initial_activity: presences.Activity | None = None,
+        initial_idle_since: datetime.datetime | None = None,
         initial_is_afk: bool = False,
         initial_status: presences.Status = presences.Status.ONLINE,
         intents: intents_.Intents,
@@ -498,14 +498,14 @@ class GatewayShardImpl(shard.GatewayShard):
         self._event_manager = event_manager
         self._event_factory = event_factory
         self._gateway_url = url
-        self._handshake_event: typing.Optional[asyncio.Event] = None
+        self._handshake_event: asyncio.Event | None = None
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
         self._idle_since = initial_idle_since
         self._intents = intents
         self._is_afk = initial_is_afk
         self._is_closing = False
-        self._keep_alive_task: typing.Optional[asyncio.Task[None]] = None
+        self._keep_alive_task: asyncio.Task[None] | None = None
         self._large_threshold = large_threshold
         self._last_heartbeat_ack_received = float("nan")
         self._last_heartbeat_sent = float("nan")
@@ -514,9 +514,9 @@ class GatewayShardImpl(shard.GatewayShard):
             f"shard {shard_id} non-priority rate limit", *_NON_PRIORITY_RATELIMIT
         )
         self._proxy_settings = proxy_settings
-        self._resume_gateway_url: typing.Optional[str] = None
-        self._seq: typing.Optional[int] = None
-        self._session_id: typing.Optional[str] = None
+        self._resume_gateway_url: str | None = None
+        self._seq: int | None = None
+        self._session_id: str | None = None
         self._shard_count = shard_count
         self._shard_id = shard_id
         self._status = initial_status
@@ -527,8 +527,8 @@ class GatewayShardImpl(shard.GatewayShard):
         self._transport_compression = compression is not None
         self._dumps = dumps
         self._loads = loads
-        self._user_id: typing.Optional[snowflakes.Snowflake] = None
-        self._ws: typing.Optional[_GatewayTransport] = None
+        self._user_id: snowflakes.Snowflake | None = None
+        self._ws: _GatewayTransport | None = None
 
     @property
     @typing_extensions.override
@@ -697,7 +697,7 @@ class GatewayShardImpl(shard.GatewayShard):
     async def update_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
+        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel] | None,
         *,
         self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         self_deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,

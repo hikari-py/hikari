@@ -105,12 +105,12 @@ if typing.TYPE_CHECKING:
             self,
             compiled_route: routes.CompiledRoute,
             *,
-            query: typing.Optional[data_binding.StringMapBuilder] = None,
-            form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
-            json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
+            query: data_binding.StringMapBuilder | None = None,
+            form_builder: data_binding.URLEncodedFormBuilder | None = None,
+            json: data_binding.JSONObjectBuilder | data_binding.JSONArray | None = None,
             reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
+        ) -> None | data_binding.JSONObject | data_binding.JSONArray: ...
 
     _GuildThreadChannelT_co = typing.TypeVar(
         "_GuildThreadChannelT_co", bound=channels.GuildThreadChannel, covariant=True
@@ -157,7 +157,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
         self._route = routes.POST_CHANNEL_TYPING.compile(channel=channel)
         self._request_call = request_call
         self._task_name = f"repeatedly trigger typing in {channel}"
-        self._task: typing.Optional[asyncio.Task[None]] = None
+        self._task: asyncio.Task[None] | None = None
         self._rest_close_event = rest_close_event
 
     @typing_extensions.override
@@ -173,10 +173,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
     @typing_extensions.override
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc_val: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         # This will always be true, but this keeps MyPy quiet.
         if self._task is not None:
@@ -192,10 +189,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
             raise TypeError(msg) from None
 
         def __exit__(
-            self,
-            exc_type: typing.Optional[type[Exception]],
-            exc_val: typing.Optional[Exception],
-            exc_tb: typing.Optional[types.TracebackType],
+            self, exc_type: type[Exception] | None, exc_val: Exception | None, exc_tb: types.TracebackType | None
         ) -> None:
             return None
 
@@ -292,7 +286,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
     _entity_factory: entity_factory_.EntityFactory = attrs.field(
         alias="entity_factory", metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
-    _executor: typing.Optional[concurrent.futures.Executor] = attrs.field(
+    _executor: concurrent.futures.Executor | None = attrs.field(
         alias="executor", metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     _name: str = attrs.field(alias="name")
@@ -306,7 +300,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         default=undefined.UNDEFINED
     )
     icon: undefined.UndefinedOr[files.Resourceish] = attrs.field(default=undefined.UNDEFINED)
-    verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]] = attrs.field(
+    verification_level: undefined.UndefinedOr[guilds.GuildVerificationLevel | int] = attrs.field(
         default=undefined.UNDEFINED
     )
 
@@ -452,12 +446,12 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         *,
         parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[typing.Union[channels.VideoQualityMode, int]] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels.VideoQualityMode | int] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
+        region: undefined.UndefinedNoneOr[voices.VoiceRegion | str],
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         snowflake_id = self._new_snowflake()
@@ -493,7 +487,7 @@ class GuildBuilder(special_endpoints.GuildBuilder):
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
+        region: undefined.UndefinedNoneOr[voices.VoiceRegion | str],
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         snowflake_id = self._new_snowflake()
@@ -546,7 +540,7 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
         self._route = routes.GET_CHANNEL_MESSAGES.compile(channel=channel)
 
     @typing_extensions.override
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[messages.Message, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Generator[messages.Message, typing.Any, None] | None:
         query = data_binding.StringMapBuilder()
         query.put(self._direction, self._first_id)
         query.put("limit", 100)
@@ -586,7 +580,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         self._route = routes.GET_REACTIONS.compile(channel=channel, message=message, emoji=emoji)
 
     @typing_extensions.override
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[users.User, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Generator[users.User, typing.Any, None] | None:
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
         query.put("limit", 100)
@@ -625,7 +619,7 @@ class OwnGuildIterator(iterators.BufferedLazyIterator["applications.OwnGuild"]):
         self._route = routes.GET_MY_GUILDS.compile()
 
     @typing_extensions.override
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[applications.OwnGuild, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Generator[applications.OwnGuild, typing.Any, None] | None:
         query = data_binding.StringMapBuilder()
         query.put("with_counts", True)
         query.put("before" if self._newest_first else "after", self._first_id)
@@ -678,7 +672,7 @@ class GuildBanIterator(iterators.BufferedLazyIterator["guilds.GuildBan"]):
         self._newest_first = newest_first
 
     @typing_extensions.override
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.GuildBan, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Generator[guilds.GuildBan, typing.Any, None] | None:
         query = data_binding.StringMapBuilder()
         query.put("before" if self._newest_first else "after", self._first_id)
         query.put("limit", 1000)
@@ -721,7 +715,7 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         self._first_id = undefined.UNDEFINED
 
     @typing_extensions.override
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[guilds.Member, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Generator[guilds.Member, typing.Any, None] | None:
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
         query.put("limit", 1000)
@@ -771,9 +765,7 @@ class ScheduledEventUserIterator(iterators.BufferedLazyIterator["scheduled_event
         self._route = routes.GET_GUILD_SCHEDULED_EVENT_USERS.compile(guild=guild, scheduled_event=event)
 
     @typing_extensions.override
-    async def _next_chunk(
-        self,
-    ) -> typing.Optional[typing.Generator[scheduled_events.ScheduledEventUser, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Generator[scheduled_events.ScheduledEventUser, typing.Any, None] | None:
         query = data_binding.StringMapBuilder()
         query.put("before" if self._newest_first else "after", self._first_id)
         query.put("limit", 100)
@@ -816,7 +808,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         before: undefined.UndefinedOr[str],
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
-        action_type: undefined.UndefinedOr[typing.Union[audit_logs.AuditLogEventType, int]],
+        action_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int],
     ) -> None:
         self._action_type = action_type
         self._entity_factory = entity_factory
@@ -882,7 +874,7 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
         self._route = route
 
     @typing_extensions.override
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[_GuildThreadChannelT, typing.Any, None]]:
+    async def _next_chunk(self) -> typing.Generator[_GuildThreadChannelT, typing.Any, None] | None:
         if not self._has_more:
             return None
 
@@ -919,8 +911,8 @@ class GuildThreadIterator(iterators.BufferedLazyIterator[_GuildThreadChannelT]):
 
 
 def _maybe_cast(
-    callback: typing.Callable[[data_binding.JSONObject], _T], data: typing.Optional[data_binding.JSONObject]
-) -> typing.Optional[_T]:
+    callback: typing.Callable[[data_binding.JSONObject], _T], data: data_binding.JSONObject | None
+) -> _T | None:
     if data:
         return callback(data)
 
@@ -933,7 +925,7 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.AutocompleteChoiceBuilder`][]."""
 
     _name: str = attrs.field(alias="name")
-    _value: typing.Union[int, str, float] = attrs.field(alias="value")
+    _value: int | str | float = attrs.field(alias="value")
 
     @property
     @typing_extensions.override
@@ -942,7 +934,7 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
 
     @property
     @typing_extensions.override
-    def value(self) -> typing.Union[int, str, float]:
+    def value(self) -> int | str | float:
         return self._value
 
     @typing_extensions.override
@@ -951,7 +943,7 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
         return self
 
     @typing_extensions.override
-    def set_value(self, value: typing.Union[float, str], /) -> Self:
+    def set_value(self, value: float | str, /) -> Self:
         self._value = value
         return self
 
@@ -1007,7 +999,7 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
         validator=attrs.validators.in_(base_interactions.DEFERRED_RESPONSE_TYPES),
     )
 
-    _flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag] = attrs.field(
+    _flags: undefined.UndefinedType | int | messages.MessageFlag = attrs.field(
         alias="flags", default=undefined.UNDEFINED, kw_only=True
     )
 
@@ -1018,11 +1010,11 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
 
     @property
     @typing_extensions.override
-    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
         return self._flags
 
     @typing_extensions.override
-    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
         self._flags = flags
         return self
 
@@ -1061,18 +1053,18 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _content: undefined.UndefinedNoneOr[str] = attrs.field(alias="content", default=undefined.UNDEFINED)
 
     # Key-word only not-required arguments.
-    _flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = attrs.field(
+    _flags: int | messages.MessageFlag | undefined.UndefinedType = attrs.field(
         alias="flags", default=undefined.UNDEFINED, kw_only=True
     )
     _is_tts: undefined.UndefinedOr[bool] = attrs.field(alias="is_tts", default=undefined.UNDEFINED, kw_only=True)
     _mentions_everyone: undefined.UndefinedOr[bool] = attrs.field(
         alias="mentions_everyone", default=undefined.UNDEFINED, kw_only=True
     )
-    _role_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]] = (
-        attrs.field(alias="role_mentions", default=undefined.UNDEFINED, kw_only=True)
+    _role_mentions: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool] = attrs.field(
+        alias="role_mentions", default=undefined.UNDEFINED, kw_only=True
     )
-    _user_mentions: undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]] = (
-        attrs.field(alias="user_mentions", default=undefined.UNDEFINED, kw_only=True)
+    _user_mentions: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users.PartialUser] | bool] = attrs.field(
+        alias="user_mentions", default=undefined.UNDEFINED, kw_only=True
     )
     _poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = attrs.field(
         alias="poll", default=undefined.UNDEFINED, kw_only=True
@@ -1109,7 +1101,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     @property
     @typing_extensions.override
-    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
         return self._flags
 
     @property
@@ -1124,9 +1116,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     @property
     @typing_extensions.override
-    def role_mentions(
-        self,
-    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]]:
+    def role_mentions(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool]:
         return self._role_mentions
 
     @property
@@ -1136,9 +1126,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     @property
     @typing_extensions.override
-    def user_mentions(
-        self,
-    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
+    def user_mentions(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users.PartialUser] | bool]:
         return self._user_mentions
 
     @property
@@ -1195,7 +1183,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         return self
 
     @typing_extensions.override
-    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
         self._flags = flags
         return self
 
@@ -1213,7 +1201,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     def set_role_mentions(
         self,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
         /,
     ) -> Self:
@@ -1224,7 +1212,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     def set_user_mentions(
         self,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         /,
     ) -> Self:
@@ -1371,13 +1359,13 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         alias="id", default=undefined.UNDEFINED, kw_only=True
     )
 
-    _default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions] = attrs.field(
+    _default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions = attrs.field(
         alias="default_member_permissions", default=undefined.UNDEFINED, kw_only=True
     )
 
     _is_nsfw: undefined.UndefinedOr[bool] = attrs.field(alias="is_nsfw", default=undefined.UNDEFINED, kw_only=True)
 
-    _name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
+    _name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
         alias="name_localizations", factory=dict, kw_only=True
     )
 
@@ -1396,7 +1384,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @property
     @typing_extensions.override
-    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
+    def default_member_permissions(self) -> undefined.UndefinedType | permissions_.Permissions | int:
         return self._default_member_permissions
 
     @property
@@ -1421,7 +1409,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @property
     @typing_extensions.override
-    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def name_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
         return self._name_localizations
 
     @typing_extensions.override
@@ -1436,7 +1424,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
 
     @typing_extensions.override
     def set_default_member_permissions(
-        self, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
+        self, default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions, /
     ) -> Self:
         self._default_member_permissions = default_member_permissions
         return self
@@ -1461,9 +1449,7 @@ class CommandBuilder(special_endpoints.CommandBuilder):
         return self
 
     @typing_extensions.override
-    def set_name_localizations(
-        self, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
-    ) -> Self:
+    def set_name_localizations(self, name_localizations: typing.Mapping[locales.Locale | str, str], /) -> Self:
         self._name_localizations = name_localizations
         return self
 
@@ -1493,7 +1479,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attrs.field(alias="description")
     _options: list[commands.CommandOption] = attrs.field(alias="options", factory=list, kw_only=True)
-    _description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
+    _description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
         alias="description_localizations", factory=dict, kw_only=True
     )
 
@@ -1514,7 +1500,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     @property
     @typing_extensions.override
-    def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def description_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
         return self._description_localizations
 
     @typing_extensions.override
@@ -1524,7 +1510,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     @typing_extensions.override
     def set_description_localizations(
-        self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
+        self, description_localizations: typing.Mapping[locales.Locale | str, str], /
     ) -> Self:
         self._description_localizations = description_localizations
         return self
@@ -1603,7 +1589,7 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
 
 
 def _build_emoji(
-    emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+    emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
 ) -> tuple[undefined.UndefinedOr[str], undefined.UndefinedOr[str]]:
     """Build an emoji into the format accepted in buttons.
 
@@ -1631,10 +1617,10 @@ def _build_emoji(
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class _ButtonBuilder(special_endpoints.ButtonBuilder):
-    _style: typing.Union[int, component_models.ButtonStyle] = attrs.field(alias="style")
+    _style: int | component_models.ButtonStyle = attrs.field(alias="style")
     _custom_id: undefined.UndefinedOr[str] = attrs.field()
     _url: undefined.UndefinedOr[str] = attrs.field()
-    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attrs.field(
+    _emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = attrs.field(
         alias="emoji", default=undefined.UNDEFINED
     )
     _emoji_id: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
@@ -1652,12 +1638,12 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
 
     @property
     @typing_extensions.override
-    def style(self) -> typing.Union[int, component_models.ButtonStyle]:
+    def style(self) -> int | component_models.ButtonStyle:
         return self._style
 
     @property
     @typing_extensions.override
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
         return self._emoji
 
     @property
@@ -1671,9 +1657,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         return self._is_disabled
 
     @typing_extensions.override
-    def set_emoji(
-        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> Self:
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
         self._emoji_id, self._emoji_name = _build_emoji(emoji)
         self._emoji = emoji
         return self
@@ -1753,7 +1737,7 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
     _description: undefined.UndefinedOr[str] = attrs.field(
         alias="description", default=undefined.UNDEFINED, kw_only=True
     )
-    _emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = attrs.field(
+    _emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = attrs.field(
         alias="emoji", default=undefined.UNDEFINED, kw_only=True
     )
     _emoji_id: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
@@ -1780,7 +1764,7 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
 
     @property
     @typing_extensions.override
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
         return self._emoji
 
     @property
@@ -1804,9 +1788,7 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
         return self
 
     @typing_extensions.override
-    def set_emoji(
-        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> Self:
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
         self._emoji_id, self._emoji_name = _build_emoji(emoji)
         self._emoji = emoji
         return self
@@ -1839,7 +1821,7 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
 class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     """Builder class for select menus."""
 
-    _type: typing.Union[component_models.ComponentType, int] = attrs.field(alias="type")
+    _type: component_models.ComponentType | int = attrs.field(alias="type")
     _custom_id: str = attrs.field(alias="custom_id")
     _placeholder: undefined.UndefinedOr[str] = attrs.field(alias="placeholder", default=undefined.UNDEFINED)
     _min_values: int = attrs.field(alias="min_values", default=0)
@@ -1848,7 +1830,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
 
     @property
     @typing_extensions.override
-    def type(self) -> typing.Union[int, component_models.ComponentType]:
+    def type(self) -> int | component_models.ComponentType:
         return self._type
 
     @property
@@ -1919,7 +1901,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     """Builder class for text select menus."""
 
     _options: list[special_endpoints.SelectOptionBuilder] = attrs.field()
-    _parent: typing.Optional[_ParentT] = attrs.field()
+    _parent: _ParentT | None = attrs.field()
     _type: typing.Literal[component_models.ComponentType.TEXT_SELECT_MENU] = attrs.field()
 
     if not typing.TYPE_CHECKING:
@@ -1956,7 +1938,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         self,
         *,
         custom_id: str,
-        parent: typing.Optional[_ParentT] = None,
+        parent: _ParentT | None = None,
         options: typing.Sequence[special_endpoints.SelectOptionBuilder] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
@@ -1996,7 +1978,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         /,
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         is_default: bool = False,
     ) -> Self:
         return self.add_raw_option(
@@ -2106,7 +2088,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         return self._max_length
 
     @typing_extensions.override
-    def set_style(self, style: typing.Union[component_models.TextInputStyle, int], /) -> Self:
+    def set_style(self, style: component_models.TextInputStyle | int, /) -> Self:
         self._style = component_models.TextInputStyle(style)
         return self
 
@@ -2167,7 +2149,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.MessageActionRowBuilder`][]."""
 
     _components: list[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
-    _stored_type: typing.Optional[int] = attrs.field(default=None, init=False)
+    _stored_type: int | None = attrs.field(default=None, init=False)
 
     @property
     @typing_extensions.override
@@ -2179,7 +2161,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components.copy()
 
-    def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
+    def _assert_can_add_type(self, type_: component_models.ComponentType | int, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
             raise ValueError(msg)
@@ -2199,7 +2181,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         custom_id: str,
         /,
         *,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
     ) -> Self:
@@ -2215,7 +2197,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         url: str,
         /,
         *,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
     ) -> Self:
@@ -2224,7 +2206,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     @typing_extensions.override
     def add_select_menu(
         self,
-        type_: typing.Union[component_models.ComponentType, int],
+        type_: component_models.ComponentType | int,
         custom_id: str,
         /,
         *,
@@ -2302,7 +2284,7 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.ModalActionRowBuilder`][]."""
 
     _components: list[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
-    _stored_type: typing.Optional[int] = attrs.field(init=False, default=None)
+    _stored_type: int | None = attrs.field(init=False, default=None)
 
     @property
     @typing_extensions.override
@@ -2314,7 +2296,7 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     def components(self) -> typing.Sequence[special_endpoints.ComponentBuilder]:
         return self._components.copy()
 
-    def _assert_can_add_type(self, type_: typing.Union[component_models.ComponentType, int], /) -> None:
+    def _assert_can_add_type(self, type_: component_models.ComponentType | int, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
             raise ValueError(msg)
