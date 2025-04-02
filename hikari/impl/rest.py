@@ -4803,7 +4803,9 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         /,
-    ) -> None:
+    ) -> messages_.Message:
         route = routes.POST_EXPIRE_POLL.compile(channel=channel, message=message)
 
-        await self._request(route)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
