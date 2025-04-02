@@ -6741,8 +6741,15 @@ class TestRESTClientImplAsync:
         expected_route = routes.POST_EXPIRE_POLL.compile(
             channel=StubModel(45874392), message=StubModel(398475938475), answer=StubModel(4)
         )
-        rest_client._request = mock.AsyncMock()
 
-        await rest_client.end_poll(StubModel(45874392), StubModel(398475938475))
+        message_obj = mock.Mock()
+
+        rest_client._request = mock.AsyncMock(return_value={"id": "398475938475"})
+
+        rest_client._entity_factory.deserialize_message = mock.Mock(return_value=message_obj)
+
+        response = await rest_client.end_poll(StubModel(45874392), StubModel(398475938475))
 
         rest_client._request.assert_awaited_once_with(expected_route)
+
+        assert response is message_obj
