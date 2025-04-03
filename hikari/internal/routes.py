@@ -370,6 +370,8 @@ DELETE_GUILD: typing.Final[Route] = Route(DELETE, "/guilds/{guild}")
 
 GET_GUILD_AUDIT_LOGS: typing.Final[Route] = Route(GET, "/guilds/{guild}/audit-logs")
 
+PUT_GUILD_INCIDENT_ACTIONS: typing.Final[Route] = Route(PUT, "/guilds/{guild}/incident-actions")
+
 GET_GUILD_BAN: typing.Final[Route] = Route(GET, "/guilds/{guild}/bans/{user}")
 PUT_GUILD_BAN: typing.Final[Route] = Route(PUT, "/guilds/{guild}/bans/{user}")
 DELETE_GUILD_BAN: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/bans/{user}")

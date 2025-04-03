@@ -4320,6 +4320,30 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_rest_guild.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
+    async def test_set_guild_incident_actions(self, rest_client: rest.RESTClientImpl):
+        incident_data = guilds.GuildIncidents(
+            invites_disabled_until=datetime.datetime(2023, 9, 1, 14, 48, 2, 222000),
+            dms_disabled_until=None,
+            dm_spam_detected_at=None,
+            raid_detected_at=None,
+        )
+        expected_route = routes.PUT_GUILD_INCIDENT_ACTIONS.compile(guild=123)
+        rest_client._request = mock.AsyncMock(
+            return_value={
+                "invites_disabled_until": "2023-09-01T14:48:02.222000+00:00",
+                "dms_disabled_until": None,
+                "dm_spam_detected_at": None,
+                "raid_detected_at": None,
+            }
+        )
+        rest_client._entity_factory.deserialize_guild_incidents = mock.Mock(return_value=incident_data)
+        assert (
+            await rest_client.set_guild_incident_actions(
+                123, invites_disabled_until=datetime.datetime(2023, 9, 1, 14, 48, 2, 222000), dms_disabled_until=None
+            )
+            == incident_data
+        )
+
     async def test_fetch_guild_channels(self, rest_client):
         channel1 = StubModel(456)
         channel2 = StubModel(789)

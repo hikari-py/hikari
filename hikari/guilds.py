@@ -1766,6 +1766,54 @@ class PartialGuild(snowflakes.Unique):
             reason=reason,
         )
 
+    async def set_incident_actions(
+        self,
+        *,
+        invites_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        dms_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> GuildIncidents:
+        """Set the incident actions for the guild.
+
+        Parameters
+        ----------
+        invites_disabled_until
+            If provided and a [`datetime.datetime`][], the datetime when invites will be enabled again. If provided and
+            [`None`][], or if not provided, invites will be enabled again immediately.
+        dms_disabled_until
+            If provided and a [`datetime.datetime`][], the datetime when direct messages between non-friend guild
+            members will be enabled again. If provided and [`None`][], or if not provided, direct messages will be
+            enabled again immediately.
+
+        Returns
+        -------
+        hikari.guilds.GuildIncidents
+            A guild incidents object with the updated incident actions.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you do not have at least one of the following permissions:
+            - [`hikari.permissions.Permissions.ADMINISTRATOR`][]
+            - [`hikari.permissions.Permissions.KICK_MEMBERS`][]
+            - [`hikari.permissions.Permissions.MODERATE_MEMBERS`][]
+            - [`hikari.permissions.Permissions.BAN_MEMBERS`][]
+            - [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.set_guild_incident_actions(
+            self.id, invites_disabled_until=invites_disabled_until, dms_disabled_until=dms_disabled_until
+        )
+
     async def fetch_emojis(self) -> typing.Sequence[emojis_.KnownCustomEmoji]:
         """Fetch the emojis of the guild.
 

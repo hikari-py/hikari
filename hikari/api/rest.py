@@ -4131,6 +4131,30 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def set_guild_incident_actions(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        invites_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        dms_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> guilds.GuildIncidents:
+        """Set the incident actions for a guild.
+
+        Parameters
+        ----------
+        guild
+            The guild to set the incident actions for. This may be the object
+            or the ID of an existing guild.
+        invites_disabled_until
+            If provided and a [`datetime.datetime`][], the datetime when invites will be enabled again. If provided and
+            [`None`][], or if not provided, invites will be enabled again immediately.
+        dms_disabled_until
+            If provided and a [`datetime.datetime`][], the datetime when direct messages between non-friend guild
+            members will be enabled again. If provided and [`None`][], or if not provided, direct messages will be
+            enabled again immediately.
+        """
+
+    @abc.abstractmethod
     async def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
         """Delete a guild.
 
