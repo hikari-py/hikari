@@ -322,6 +322,7 @@ class _GatewayGuildDefinition(entity_factory.GatewayGuildDefinition):
                 name=guild_fields.name,
                 icon_hash=guild_fields.icon_hash,
                 features=guild_fields.features,
+                incidents=self._entity_factory.deserialize_guild_incidents(payload.get("incidents_data")),
                 splash_hash=guild_fields.splash_hash,
                 discovery_splash_hash=guild_fields.discovery_splash_hash,
                 owner_id=guild_fields.owner_id,
@@ -2085,6 +2086,36 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     @typing_extensions.override
+    def deserialize_guild_incidents(self, payload: data_binding.JSONObject | None) -> guild_models.GuildIncidents:
+        if not payload:
+            return guild_models.GuildIncidents(
+                invites_disabled_until=None, dms_disabled_until=None, dm_spam_detected_at=None, raid_detected_at=None
+            )
+
+        return guild_models.GuildIncidents(
+            invites_disabled_until=(
+                time.iso8601_datetime_string_to_datetime(payload["invites_disabled_until"])
+                if payload.get("invites_disabled_until")
+                else None
+            ),
+            dms_disabled_until=(
+                time.iso8601_datetime_string_to_datetime(payload["dms_disabled_until"])
+                if payload.get("dms_disabled_until")
+                else None
+            ),
+            dm_spam_detected_at=(
+                time.iso8601_datetime_string_to_datetime(payload["dm_spam_detected_at"])
+                if payload.get("dm_spam_detected_at")
+                else None
+            ),
+            raid_detected_at=(
+                time.iso8601_datetime_string_to_datetime(payload["raid_detected_at"])
+                if payload.get("raid_detected_at")
+                else None
+            ),
+        )
+
+    @typing_extensions.override
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
         guild_fields = _GuildFields.from_payload(payload)
 
@@ -2113,12 +2144,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             snowflakes.Snowflake(sticker["id"]): self.deserialize_guild_sticker(sticker)
             for sticker in payload["stickers"]
         }
+        incidents = self.deserialize_guild_incidents(payload.get("incidents_data"))
         return guild_models.RESTGuild(
             app=self._app,
             id=guild_fields.id,
             name=guild_fields.name,
             icon_hash=guild_fields.icon_hash,
             features=guild_fields.features,
+            incidents=incidents,
             splash_hash=guild_fields.splash_hash,
             discovery_splash_hash=guild_fields.discovery_splash_hash,
             owner_id=guild_fields.owner_id,

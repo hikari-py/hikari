@@ -28,6 +28,7 @@ __all__: typing.Sequence[str] = (
     "GuildBan",
     "GuildExplicitContentFilterLevel",
     "GuildFeature",
+    "GuildIncidents",
     "GuildMFALevel",
     "GuildMemberFlags",
     "GuildMessageNotificationsLevel",
@@ -356,6 +357,39 @@ class GuildMemberFlags(enums.Flag):
 
     STARTED_ONBOARDING = 1 << 3
     """Member has started onboarding."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildIncidents:
+    """Represents the incidents of a guild."""
+
+    invites_disabled_until: datetime.datetime | None = attrs.field(repr=True)
+    """The datetime when the invites will be enabled again.
+
+    This will be [`None`][] if the invites are not temporarily disabled.
+
+    !!! note
+        This is independent of [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] which is
+        used to indefinitely disable invites. In that case, this value will be [`None`][].
+    """
+
+    dms_disabled_until: datetime.datetime | None = attrs.field(repr=True)
+    """The datetime when direct messages between non-friend guild members will be enabled again.
+
+    This will be [`None`][] if the direct messages are not temporarily disabled.
+    """
+
+    dm_spam_detected_at: datetime.datetime | None = attrs.field(repr=True)
+    """The datetime when the spam detection was triggered for the current incident session.
+
+    This will be [`None`][] if no spam detection was triggered.
+    """
+
+    raid_detected_at: datetime.datetime | None = attrs.field(repr=True)
+    """The datetime when the raid was detected for the current incident session.
+
+    This will be [`None`][] if no raid was detected.
+    """
 
 
 @attrs_extensions.with_copy
@@ -2627,6 +2661,9 @@ class Guild(PartialGuild):
     features: typing.Sequence[str | GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
+    incidents: GuildIncidents = attrs.field(eq=False, hash=False, repr=False)
+    """The state of the active incidents in this guild."""
+
     application_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this guild.
 
@@ -2765,6 +2802,19 @@ class Guild(PartialGuild):
     def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         return self.make_splash_url()
+
+    @property
+    def invites_disabled(self) -> bool:
+        """Return whether the guild has invites disabled.
+
+        Returns
+        -------
+        bool
+            [`True`][] if `self.incidents.invites_disabled_until` is set, or if
+            [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] is in `self.features`.
+            [`False`][] otherwise.
+        """
+        return self.incidents.invites_disabled_until is not None or GuildFeature.INVITES_DISABLED in self.features
 
     def get_members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
         """Get the members cached for the guild.

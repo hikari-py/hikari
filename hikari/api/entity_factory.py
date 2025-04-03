@@ -1179,6 +1179,21 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_incidents(self, payload: data_binding.JSONObject | None) -> guild_models.GuildIncidents:
+        """Parse a raw payload from Discord into a guild incidents object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.GuildIncidents
+            The deserialized guild incidents object.
+        """
+
+    @abc.abstractmethod
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
         """Parse a raw payload from Discord into a guild object.
 

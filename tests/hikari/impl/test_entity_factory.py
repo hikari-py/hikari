@@ -479,6 +479,12 @@ class TestGatewayGuildDefinition:
                 "embed_enabled": True,
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "incidents_data": {
+                    "invites_disabled_until": None,
+                    "dms_disabled_until": None,
+                    "dm_spam_detected_at": "2015-05-13T01:01:01.000001+00:00",
+                    "raid_detected_at": None,
+                },
                 "icon": "1a2b3c4d",
                 "id": "265828729970753537",
                 "joined_at": "2019-05-17T06:26:56.936000+00:00",
@@ -519,6 +525,12 @@ class TestGatewayGuildDefinition:
             guild_models.GuildFeature.NEWS,
             "SOME_UNDOCUMENTED_FEATURE",
         ]
+        assert guild.incidents.invites_disabled_until is None
+        assert guild.incidents.dms_disabled_until is None
+        assert guild.incidents.dm_spam_detected_at == datetime.datetime(
+            2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc
+        )
+        assert guild.incidents.raid_detected_at is None
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
@@ -560,6 +572,12 @@ class TestGatewayGuildDefinition:
                 "emojis": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "incidents_data": {
+                    "invites_disabled_until": None,
+                    "dms_disabled_until": None,
+                    "dm_spam_detected_at": "2015-05-13T01:01:01.000001+00:00",
+                    "raid_detected_at": None,
+                },
                 "icon": "1a2b3c4d",
                 "id": "265828729970753537",
                 "mfa_level": 1,
@@ -604,6 +622,12 @@ class TestGatewayGuildDefinition:
                 "emojis": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "incidents_data": {
+                    "invites_disabled_until": None,
+                    "dms_disabled_until": None,
+                    "dm_spam_detected_at": "2015-05-13T01:01:01.000001+00:00",
+                    "raid_detected_at": None,
+                },
                 "icon": None,
                 "id": "265828729970753537",
                 "joined_at": "2019-05-17T06:26:56.936000+00:00",
@@ -3532,6 +3556,12 @@ class TestEntityFactoryImpl:
             "stickers": [guild_sticker_payload],
             "explicit_content_filter": 2,
             "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+            "incidents_data": {
+                "invites_disabled_until": None,
+                "dms_disabled_until": None,
+                "dm_spam_detected_at": "2015-05-13T01:01:01.000001+00:00",
+                "raid_detected_at": None,
+            },
             "icon": "1a2b3c4d",
             "id": "265828729970753537",
             "max_members": 25000,
@@ -3576,6 +3606,12 @@ class TestEntityFactoryImpl:
             guild_models.GuildFeature.NEWS,
             "SOME_UNDOCUMENTED_FEATURE",
         ]
+        assert guild.incidents.invites_disabled_until is None
+        assert guild.incidents.dms_disabled_until is None
+        assert guild.incidents.dm_spam_detected_at == datetime.datetime(
+            2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc
+        )
+        assert guild.incidents.raid_detected_at is None
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
@@ -3633,6 +3669,12 @@ class TestEntityFactoryImpl:
                 "stickers": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "incidents_data": {
+                    "invites_disabled_until": None,
+                    "dms_disabled_until": None,
+                    "dm_spam_detected_at": "2015-05-13T01:01:01.000001+00:00",
+                    "raid_detected_at": None,
+                },
                 "icon": "1a2b3c4d",
                 "id": "265828729970753537",
                 "mfa_level": 1,
@@ -3678,6 +3720,12 @@ class TestEntityFactoryImpl:
                 "stickers": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "incidents_data": {
+                    "invites_disabled_until": None,
+                    "dms_disabled_until": None,
+                    "dm_spam_detected_at": "2015-05-13T01:01:01.000001+00:00",
+                    "raid_detected_at": None,
+                },
                 "icon": None,
                 "id": "265828729970753537",
                 "max_members": 25000,
@@ -3748,6 +3796,12 @@ class TestEntityFactoryImpl:
             "emojis": [known_custom_emoji_payload],
             "explicit_content_filter": 2,
             "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+            "incidents_data": {
+                "invites_disabled_until": None,
+                "dms_disabled_until": None,
+                "dm_spam_detected_at": "2015-05-13T01:01:01.000001+00:00",
+                "raid_detected_at": None,
+            },
             "icon": "1a2b3c4d",
             "id": "265828729970753537",
             "joined_at": "2019-05-17T06:26:56.936000+00:00",
@@ -3810,6 +3864,12 @@ class TestEntityFactoryImpl:
             guild_models.GuildFeature.NEWS,
             "SOME_UNDOCUMENTED_FEATURE",
         ]
+        assert guild.incidents.invites_disabled_until is None
+        assert guild.incidents.dms_disabled_until is None
+        assert guild.incidents.dm_spam_detected_at == datetime.datetime(
+            2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc
+        )
+        assert guild.incidents.raid_detected_at is None
         assert guild.splash_hash == "0ff0ff0ff"
         assert guild.discovery_splash_hash == "famfamFAMFAMfam"
         assert guild.owner_id == 6969696
@@ -3893,6 +3953,12 @@ class TestEntityFactoryImpl:
                 "emojis": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "incidents_data": {
+                    "invites_disabled_until": None,
+                    "dms_disabled_until": None,
+                    "dm_spam_detected_at": "2015-05-13T01:01:01.000001+00:00",
+                    "raid_detected_at": None,
+                },
                 "icon": "1a2b3c4d",
                 "id": "265828729970753537",
                 "mfa_level": 1,
@@ -3946,6 +4012,12 @@ class TestEntityFactoryImpl:
                 "emojis": [],
                 "explicit_content_filter": 2,
                 "features": ["ANIMATED_ICON", "MORE_EMOJI", "NEWS", "SOME_UNDOCUMENTED_FEATURE"],
+                "incidents_data": {
+                    "invites_disabled_until": None,
+                    "dms_disabled_until": None,
+                    "dm_spam_detected_at": "2015-05-13T01:01:01.000001+00:00",
+                    "raid_detected_at": None,
+                },
                 "icon": None,
                 "id": "265828729970753537",
                 "joined_at": "2019-05-17T06:26:56.936000+00:00",
