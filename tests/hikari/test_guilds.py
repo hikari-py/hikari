@@ -732,6 +732,21 @@ class TestPartialGuild:
         assert edited_guild is model.app.rest.edit_guild.return_value
 
     @pytest.mark.asyncio
+    async def test_set_incident_actions(self, model: guilds.PartialGuild):
+        model.app.rest.set_guild_incident_actions = mock.AsyncMock()
+
+        updated_incident_data = await model.set_incident_actions(
+            invites_disabled_until=datetime.datetime(2021, 11, 17), dms_disabled_until=datetime.datetime(2021, 11, 18)
+        )
+
+        assert updated_incident_data is model.app.rest.set_guild_incident_actions.return_value
+        model.app.rest.set_guild_incident_actions.assert_awaited_once_with(
+            90210,
+            invites_disabled_until=datetime.datetime(2021, 11, 17),
+            dms_disabled_until=datetime.datetime(2021, 11, 18),
+        )
+
+    @pytest.mark.asyncio
     async def test_fetch_emojis(self, model):
         model.app.rest.fetch_guild_emojis = mock.AsyncMock()
 
@@ -1034,6 +1049,12 @@ class TestGuild:
             banner_hash="banner_hash",
             icon_hash="icon_hash",
             features=[guilds.GuildFeature.ANIMATED_ICON],
+            incidents=guilds.GuildIncidents(
+                invites_disabled_until=None,
+                dms_disabled_until=None,
+                dm_spam_detected_at=datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc),
+                raid_detected_at=None,
+            ),
             name="some guild",
             application_id=snowflakes.Snowflake(9876),
             afk_channel_id=snowflakes.Snowflake(1234),
@@ -1161,6 +1182,25 @@ class TestGuild:
     def test_get_role_when_no_cache_trait(self, model):
         model.app = object()
         assert model.get_role(456) is None
+
+    @pytest.mark.asyncio
+    async def test_invites_disabled_default(self, model):
+        assert model.invites_disabled is False
+
+    @pytest.mark.asyncio
+    async def test_invites_disabled_via_incidents(self, model):
+        model.incidents = guilds.GuildIncidents(
+            invites_disabled_until=datetime.datetime(2021, 11, 17),
+            dms_disabled_until=None,
+            dm_spam_detected_at=None,
+            raid_detected_at=None,
+        )
+        assert model.invites_disabled is True
+
+    @pytest.mark.asyncio
+    async def test_invites_disabled_via_feature(self, model):
+        model.features.append(guilds.GuildFeature.INVITES_DISABLED)
+        assert model.invites_disabled is True
 
     def test_splash_url(self, model):
         splash = object()
@@ -1400,6 +1440,12 @@ class TestRestGuild:
             banner_hash="banner_hash",
             icon_hash="icon_hash",
             features=[guilds.GuildFeature.ANIMATED_ICON],
+            incidents=guilds.GuildIncidents(
+                invites_disabled_until=None,
+                dms_disabled_until=None,
+                dm_spam_detected_at=datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc),
+                raid_detected_at=None,
+            ),
             name="some guild",
             application_id=snowflakes.Snowflake(9876),
             afk_channel_id=snowflakes.Snowflake(1234),

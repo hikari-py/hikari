@@ -4131,6 +4131,65 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def set_guild_incident_actions(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        invites_disabled_until: datetime.datetime | None = None,
+        dms_disabled_until: datetime.datetime | None = None,
+    ) -> guilds.GuildIncidents:
+        """Set the incident actions for a guild.
+
+        !!! warning
+            This endpoint will reset any previous security measured if not specified.
+            This is a Discord limitation.
+
+        Parameters
+        ----------
+        guild
+            The guild to set the incident actions for. This may be the object
+            or the ID of an existing guild.
+        invites_disabled_until
+            The datetime when invites will be enabled again.
+
+            If [`None`][], invites will be enabled again immediately.
+
+            !!! note
+                If [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] is active, this value will be ignored.
+        dms_disabled_until
+            The datetime when direct messages between non-friend guild
+            members will be enabled again.
+
+            If [`None`][], direct messages will be enabled again immediately.
+
+        Returns
+        -------
+        hikari.guilds.GuildIncidents
+            A guild incidents object with the updated incident actions.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you do not have at least one of the following permissions:
+            - [`hikari.permissions.Permissions.ADMINISTRATOR`][]
+            - [`hikari.permissions.Permissions.KICK_MEMBERS`][]
+            - [`hikari.permissions.Permissions.MODERATE_MEMBERS`][]
+            - [`hikari.permissions.Permissions.BAN_MEMBERS`][]
+            - [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
         """Delete a guild.
 

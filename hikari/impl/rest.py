@@ -2787,6 +2787,24 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_rest_guild(response)
 
     @typing_extensions.override
+    async def set_guild_incident_actions(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        invites_disabled_until: datetime.datetime | None = None,
+        dms_disabled_until: datetime.datetime | None = None,
+    ) -> guilds.GuildIncidents:
+        route = routes.PUT_GUILD_INCIDENT_ACTIONS.compile(guild=guild)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("invites_disabled_until", invites_disabled_until.isoformat() if invites_disabled_until else None)
+        body.put("dms_disabled_until", dms_disabled_until.isoformat() if dms_disabled_until else None)
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_incidents(response)
+
+    @typing_extensions.override
     async def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
         route = routes.DELETE_GUILD.compile(guild=guild)
         await self._request(route)
