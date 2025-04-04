@@ -4322,7 +4322,7 @@ class TestRESTClientImplAsync:
 
     async def test_set_guild_incident_actions(self, rest_client):
         expected_route = routes.PUT_GUILD_INCIDENT_ACTIONS.compile(guild=123)
-        expected_json = {"invites_disabled_until": "2023-09-01T14:48:02.222000+00:00"}
+        expected_json = {"invites_disabled_until": "2023-09-01T14:48:02.222000+00:00", "dms_disabled_until": None}
         rest_client._request = mock.AsyncMock(return_value={"testing": "data"})
 
         result = await rest_client.set_guild_incident_actions(
