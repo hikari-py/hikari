@@ -135,6 +135,18 @@ class MessageType(int, enums.Enum):
     ROLE_SUBSCRIPTION_PURCHASE = 25
     """A message sent to indicate a role subscription has been purchased."""
 
+    GUILD_INCIDENT_ALERT_MODE_ENABLED = 36
+    """A message sent to indicate that a guild incident action has been enabled."""
+
+    GUILD_INCIDENT_ALERT_MODE_DISABLED = 37
+    """A message sent to indicate that a guild incident action has been disabled."""
+
+    GUILD_INCIDENT_REPORT_RAID = 38
+    """A message sent to indicate that a raid has been reported."""
+
+    GUILD_INCIDENT_REPORT_FALSE_ALARM = 39
+    """A message sent to indicate that a raid false alarm has been reported."""
+
     POLL_RESULT = 46
     """A message sent to indicate a poll has finished."""
 
