@@ -145,7 +145,7 @@ class MessageType(int, enums.Enum):
     """A message sent to indicate that a raid has been reported."""
 
     GUILD_INCIDENT_REPORT_FALSE_ALARM = 39
-    """A message sent to indicate that a raid false alarm has been reported."""
+    """A message sent to indicate that the raid has been reported as a false alarm."""
 
     POLL_RESULT = 46
     """A message sent to indicate a poll has finished."""
