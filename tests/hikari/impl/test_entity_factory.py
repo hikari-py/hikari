@@ -3539,6 +3539,38 @@ class TestEntityFactoryImpl:
         assert guild_preview.description is None
 
     @pytest.fixture
+    def guild_incidents_payload(self):
+        return {
+            "invites_disabled_until": "2023-10-01T00:00:00.000000+00:00",
+            "dms_disabled_until": None,
+            "dm_spam_detected_at": None,
+            "raid_detected_at": None,
+        }
+
+    def test_deserialize_guild_incidents(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        mock_app: traits.RESTAware,
+        guild_incidents_payload: dict[str, typing.Any] | None,
+    ):
+        incidents = entity_factory_impl.deserialize_guild_incidents(guild_incidents_payload)
+        assert incidents.invites_disabled_until == datetime.datetime(
+            2023, 10, 1, 0, 0, 0, 0, tzinfo=datetime.timezone.utc
+        )
+        assert incidents.dms_disabled_until is None
+        assert incidents.dm_spam_detected_at is None
+        assert incidents.raid_detected_at is None
+
+    def test__deserialize_guild_incidents_with_null_payload(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl
+    ):
+        incidents = entity_factory_impl.deserialize_guild_incidents(None)
+        assert incidents.invites_disabled_until is None
+        assert incidents.dms_disabled_until is None
+        assert incidents.dm_spam_detected_at is None
+        assert incidents.raid_detected_at is None
+
+    @pytest.fixture
     def rest_guild_payload(self, known_custom_emoji_payload, guild_sticker_payload, guild_role_payload):
         return {
             "afk_channel_id": "99998888777766",

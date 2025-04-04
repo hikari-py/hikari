@@ -1181,6 +1181,23 @@ class TestGuild:
         model.app = object()
         assert model.get_role(456) is None
 
+    @pytest.mark.asyncio
+    async def test_invites_disabled(self, model):
+        assert model.invites_disabled is False
+        model.incidents = guilds.GuildIncidents(
+            invites_disabled_until=datetime.datetime(2021, 11, 17),
+            dms_disabled_until=None,
+            dm_spam_detected_at=None,
+            raid_detected_at=None,
+        )
+        assert model.invites_disabled is True
+        model.incidents = guilds.GuildIncidents(
+            invites_disabled_until=None, dms_disabled_until=None, dm_spam_detected_at=None, raid_detected_at=None
+        )
+        assert model.invites_disabled is False
+        model.features.append(guilds.GuildFeature.INVITES_DISABLED)
+        assert model.invites_disabled is True
+
     def test_splash_url(self, model):
         splash = object()
 
