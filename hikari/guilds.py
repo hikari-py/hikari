@@ -370,7 +370,7 @@ class GuildIncidents:
 
     !!! note
         This is independent of [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] which is
-        used to indefinitely disable invites. In that case, this value will be [`None`][].
+        used to indefinitely disable invites.
     """
 
     dms_disabled_until: datetime.datetime | None = attrs.field(repr=True)

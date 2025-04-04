@@ -4148,6 +4148,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         invites_disabled_until
             If provided and a [`datetime.datetime`][], the datetime when invites will be enabled again. If provided and
             [`None`][], or if not provided, invites will be enabled again immediately.
+
+            !!! note
+                If [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] is active, this value will be ignored.
         dms_disabled_until
             If provided and a [`datetime.datetime`][], the datetime when direct messages between non-friend guild
             members will be enabled again. If provided and [`None`][], or if not provided, direct messages will be
