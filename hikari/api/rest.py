@@ -4135,10 +4135,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
-        invites_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
-        dms_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        invites_disabled_until: datetime.datetime | None = None,
+        dms_disabled_until: datetime.datetime | None = None,
     ) -> guilds.GuildIncidents:
         """Set the incident actions for a guild.
+
+        !!! warning
+            This endpoint will reset any previous security measured if not specified.
+            This is a Discord limitation.
 
         Parameters
         ----------
@@ -4146,15 +4150,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to set the incident actions for. This may be the object
             or the ID of an existing guild.
         invites_disabled_until
-            If provided and a [`datetime.datetime`][], the datetime when invites will be enabled again. If provided and
-            [`None`][], or if not provided, invites will be enabled again immediately.
+            The datetime when invites will be enabled again.
+
+            If [`None`][], invites will be enabled again immediately.
 
             !!! note
                 If [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] is active, this value will be ignored.
         dms_disabled_until
-            If provided and a [`datetime.datetime`][], the datetime when direct messages between non-friend guild
-            members will be enabled again. If provided and [`None`][], or if not provided, direct messages will be
-            enabled again immediately.
+            The datetime when direct messages between non-friend guild
+            members will be enabled again.
+
+            If [`None`][], direct messages will be enabled again immediately.
 
         Returns
         -------

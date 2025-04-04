@@ -2791,8 +2791,8 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
-        invites_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
-        dms_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
+        invites_disabled_until: datetime.datetime | None = None,
+        dms_disabled_until: datetime.datetime | None = None,
     ) -> guilds.GuildIncidents:
         route = routes.PUT_GUILD_INCIDENT_ACTIONS.compile(guild=guild)
 
