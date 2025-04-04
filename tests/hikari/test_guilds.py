@@ -734,15 +734,17 @@ class TestPartialGuild:
     @pytest.mark.asyncio
     async def test_set_incident_actions(self, model: guilds.PartialGuild):
         model.app.rest.set_guild_incident_actions = mock.AsyncMock()
+
         updated_incident_data = await model.set_incident_actions(
             invites_disabled_until=datetime.datetime(2021, 11, 17), dms_disabled_until=datetime.datetime(2021, 11, 18)
         )
+
+        assert updated_incident_data is model.app.rest.set_guild_incident_actions.return_value
         model.app.rest.set_guild_incident_actions.assert_awaited_once_with(
             90210,
             invites_disabled_until=datetime.datetime(2021, 11, 17),
             dms_disabled_until=datetime.datetime(2021, 11, 18),
         )
-        assert updated_incident_data is model.app.rest.set_guild_incident_actions.return_value
 
     @pytest.mark.asyncio
     async def test_fetch_emojis(self, model):
