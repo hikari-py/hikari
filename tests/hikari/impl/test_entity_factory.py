@@ -3551,7 +3551,7 @@ class TestEntityFactoryImpl:
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
         mock_app: traits.RESTAware,
-        guild_incidents_payload: dict[str, typing.Any] | None,
+        guild_incidents_payload: dict[str, typing.Any],
     ):
         incidents = entity_factory_impl.deserialize_guild_incidents(guild_incidents_payload)
         assert incidents.invites_disabled_until == datetime.datetime(
