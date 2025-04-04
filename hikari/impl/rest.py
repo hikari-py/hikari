@@ -2797,10 +2797,8 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PUT_GUILD_INCIDENT_ACTIONS.compile(guild=guild)
 
         body = data_binding.JSONObjectBuilder()
-        if invites_disabled_until:
-            body.put("invites_disabled_until", invites_disabled_until.isoformat())
-        if dms_disabled_until:
-            body.put("dms_disabled_until", dms_disabled_until.isoformat())
+        body.put("invites_disabled_until", invites_disabled_until.isoformat() if invites_disabled_until else None)
+        body.put("dms_disabled_until", dms_disabled_until.isoformat() if dms_disabled_until else None)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)

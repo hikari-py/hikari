@@ -1784,6 +1784,9 @@ class PartialGuild(snowflakes.Unique):
             The datetime when invites will be enabled again.
 
             If [`None`][], invites will be enabled again immediately.
+
+            !!! note
+                If [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] is active, this value will be ignored.
         dms_disabled_until
             The datetime when direct messages between non-friend guild
             members will be enabled again.
