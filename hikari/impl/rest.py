@@ -2795,9 +2795,13 @@ class RESTClientImpl(rest_api.RESTClient):
         dms_disabled_until: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
     ) -> guilds.GuildIncidents:
         route = routes.PUT_GUILD_INCIDENT_ACTIONS.compile(guild=guild)
+
         body = data_binding.JSONObjectBuilder()
-        body.put("invites_disabled_until", invites_disabled_until.isoformat() if invites_disabled_until else None)
-        body.put("dms_disabled_until", dms_disabled_until.isoformat() if dms_disabled_until else None)
+        if invites_disabled_until:
+            body.put("invites_disabled_until", invites_disabled_until.isoformat())
+        if dms_disabled_until:
+            body.put("dms_disabled_until", dms_disabled_until.isoformat())
+
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_incidents(response)
