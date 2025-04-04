@@ -1775,7 +1775,7 @@ class PartialGuild(snowflakes.Unique):
         """Set the incident actions for the guild.
 
         !!! warning
-            This endpoint will reset any previous security measured if not specified.
+            This endpoint will reset any previous security measures if not specified.
             This is a Discord limitation.
 
         Parameters
