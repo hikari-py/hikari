@@ -382,6 +382,11 @@ class TeamMember(users.User):
 
     @property
     @typing_extensions.override
+    def avatar_decoration(self) -> users.AvatarDecoration | None:
+        return self.user.avatar_decoration
+
+    @property
+    @typing_extensions.override
     def avatar_hash(self) -> str | None:
         return self.user.avatar_hash
 

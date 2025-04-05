@@ -461,6 +461,13 @@ class Member(users.User):
     user: users.User = attrs.field(repr=True)
     """This member's corresponding user object."""
 
+    guild_avatar_decoration: users.AvatarDecoration | None = attrs.field(eq=False, hash=False, repr=False)
+    """Hash of the member's guild avatar decoration if set, else [`None`][].
+
+    !!! note
+        This takes precedence over [`hikari.guilds.Member.avatar_decoration_hash`][].
+    """
+
     guild_avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the member's guild avatar if set, else [`None`][].
 
@@ -486,6 +493,11 @@ class Member(users.User):
 
     @property
     @typing_extensions.override
+    def avatar_decoration(self) -> users.AvatarDecoration | None:
+        return self.user.avatar_decoration
+
+    @property
+    @typing_extensions.override
     def avatar_hash(self) -> str | None:
         return self.user.avatar_hash
 
@@ -507,6 +519,11 @@ class Member(users.User):
     @typing_extensions.override
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
+
+    @property
+    @typing_extensions.override
+    def display_avatar_decoration(self) -> users.AvatarDecoration | None:
+        return self.guild_avatar_decoration or super().display_avatar_decoration
 
     @property
     @typing_extensions.override

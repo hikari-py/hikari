@@ -1778,6 +1778,23 @@ class EntityFactory(abc.ABC):
     ###############
 
     @abc.abstractmethod
+    def deserialize_avatar_decoration(
+        self, payload: data_binding.JSONObject | None
+    ) -> user_models.AvatarDecoration | None:
+        """Parse a raw payload from Discord into an avatar decoration object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.users.AvatarDecoration | None
+            The deserialized avatar decoration object or `None`.
+        """
+
+    @abc.abstractmethod
     def deserialize_user(self, payload: data_binding.JSONObject) -> user_models.User:
         """Parse a raw payload from Discord into a user object.
 

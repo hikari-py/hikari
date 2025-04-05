@@ -233,6 +233,7 @@ class _UserFields:
     discriminator: str = attrs.field()
     username: str = attrs.field()
     global_name: str | None = attrs.field()
+    avatar_decoration: user_models.AvatarDecoration | None = attrs.field()
     avatar_hash: str = attrs.field()
     banner_hash: str | None = attrs.field()
     accent_color: color_models.Color | None = attrs.field()
@@ -1911,12 +1912,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_communication_disabled_until := payload.get("communication_disabled_until"):
             communication_disabled_until = time.iso8601_datetime_string_to_datetime(raw_communication_disabled_until)
 
+        avatar_decoration = self.deserialize_avatar_decoration(payload.get("avatarDecorationData"))
+
         return guild_models.Member(
             user=user,
             guild_id=guild_id,
             role_ids=role_ids,
             joined_at=joined_at,
             nickname=payload.get("nick"),
+            guild_avatar_decoration=avatar_decoration,
             guild_avatar_hash=payload.get("avatar"),
             guild_banner_hash=payload.get("banner"),
             premium_since=premium_since,
@@ -2592,6 +2596,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         guild_flags = guild_models.GuildMemberFlags(payload.get("flags") or guild_models.GuildMemberFlags.NONE)
 
+        avatar_decoration = self.deserialize_avatar_decoration(payload.get("avatarDecorationData"))
+
         # TODO: deduplicate member unmarshalling logic
         return base_interactions.InteractionMember(
             user=user,
@@ -2599,6 +2605,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             role_ids=role_ids,
             joined_at=time.iso8601_datetime_string_to_datetime(payload["joined_at"]),
             premium_since=premium_since,
+            guild_avatar_decoration=avatar_decoration,
             guild_avatar_hash=payload.get("avatar"),
             guild_banner_hash=payload.get("banner"),
             nickname=payload.get("nick"),
@@ -3826,14 +3833,28 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # USER MODELS #
     ###############
 
-    @staticmethod
-    def _set_user_attributes(payload: data_binding.JSONObject) -> _UserFields:
+    @typing_extensions.override
+    def deserialize_avatar_decoration(
+        self, payload: data_binding.JSONObject | None
+    ) -> user_models.AvatarDecoration | None:
+        if payload is None:
+            return None
+
+        return user_models.AvatarDecoration(
+            asset_hash=payload["asset"],
+            sku_id=snowflakes.Snowflake(payload["sku_id"]),
+            expires_at=time.unix_epoch_to_datetime(payload["expires_at"], is_millis=False),
+        )
+
+    def _set_user_attributes(self, payload: data_binding.JSONObject) -> _UserFields:
         accent_color = payload.get("accent_color")
+        avatar_decoration = self.deserialize_avatar_decoration(payload.get("avatarDecorationData"))
         return _UserFields(
             id=snowflakes.Snowflake(payload["id"]),
             discriminator=payload["discriminator"],
             username=payload["username"],
             global_name=payload.get("global_name"),
+            avatar_decoration=avatar_decoration,
             avatar_hash=payload["avatar"],
             banner_hash=payload.get("banner", None),
             accent_color=color_models.Color(accent_color) if accent_color is not None else None,
@@ -3853,6 +3874,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             discriminator=user_fields.discriminator,
             username=user_fields.username,
             global_name=payload.get("global_name"),
+            avatar_decoration=user_fields.avatar_decoration,
             avatar_hash=user_fields.avatar_hash,
             banner_hash=user_fields.banner_hash,
             accent_color=user_fields.accent_color,
@@ -3870,6 +3892,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             discriminator=user_fields.discriminator,
             username=user_fields.username,
             global_name=payload.get("global_name"),
+            avatar_decoration=user_fields.avatar_decoration,
             avatar_hash=user_fields.avatar_hash,
             banner_hash=user_fields.banner_hash,
             accent_color=user_fields.accent_color,
