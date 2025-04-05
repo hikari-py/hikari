@@ -543,7 +543,7 @@ class User(PartialUser, abc.ABC):
     def avatar_url(self) -> files.URL | None:
         """Avatar URL for the user, if they have one set.
 
-        May be [`None`][] if no custom avatar is set. In this case, you
+        Will be [`None`][] if no custom avatar is set. In this case, you
         should use [`hikari.User.default_avatar_url`][] instead.
         """
         return self.make_avatar_url()
@@ -558,7 +558,7 @@ class User(PartialUser, abc.ABC):
     def banner_url(self) -> files.URL | None:
         """Banner URL for the user, if they have one set.
 
-        May be [`None`][] if no custom banner is set.
+        Will be [`None`][] if no custom banner is set.
         """
         return self.make_banner_url()
 
