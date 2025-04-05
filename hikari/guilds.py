@@ -465,7 +465,7 @@ class Member(users.User):
     """Hash of the member's guild avatar decoration if set, else [`None`][].
 
     !!! note
-        This takes precedence over [`hikari.guilds.Member.avatar_decoration_hash`][].
+        This takes precedence over [`hikari.guilds.Member.avatar_decoration`][].
     """
 
     guild_avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
