@@ -465,21 +465,21 @@ class Member(users.User):
     """Hash of the member's guild avatar decoration if set, else [`None`][].
 
     !!! note
-        This takes precedence over [`hikari.guilds.Member.avatar_decoration`][].
+        This takes precedence over [`hikari.guilds.Member.avatar_decoration`][] in the client.
     """
 
     guild_avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the member's guild avatar if set, else [`None`][].
 
     !!! note
-        This takes precedence over [`hikari.guilds.Member.avatar_hash`][].
+        This takes precedence over [`hikari.guilds.Member.avatar_hash`][] in the client.
     """
 
     guild_banner_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the member's guild banner if set, else [`None`][].
 
     !!! note
-        This takes precedence over [`hikari.guilds.Member.banner_hash`][].
+        This takes precedence over [`hikari.guilds.Member.banner_hash`][] in the client.
     """
 
     guild_flags: GuildMemberFlags | int = attrs.field(eq=False, hash=False, repr=False)

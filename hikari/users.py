@@ -576,9 +576,9 @@ class User(PartialUser, abc.ABC):
 
     @property
     def display_avatar_decoration(self) -> AvatarDecoration | None:
-        """Avatar decoration for the user, if they have one set.
+        """Display avatar decoration for the user, if they have one set.
 
-        May be [`None`][] if no avatar decoration is set.
+        Will be [`None`][] if no avatar decoration is set.
         """
         return self.avatar_decoration
 
@@ -589,7 +589,10 @@ class User(PartialUser, abc.ABC):
 
     @property
     def display_banner_url(self) -> files.URL | None:
-        """Display banner URL for this user."""
+        """Display banner URL for this user, if they have one set.
+
+        Will be [`None`][] if no custom banner is set.
+        """
         return self.make_banner_url()
 
     @property
