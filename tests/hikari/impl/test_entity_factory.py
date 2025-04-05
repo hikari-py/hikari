@@ -7107,7 +7107,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_avatar_decoration(
         self, entity_factory_impl, mock_app: mock.Mock, avatar_decoration_payload: dict[str, typing.Any]
     ):
-        decoration = entity_factory_impl.deserialize_avatar_decoration(avatar_decoration_payload)
+        decoration = entity_factory_impl._deserialize_avatar_decoration(avatar_decoration_payload)
         assert decoration.asset_hash == "ahhhhhhvatardecoration"
         assert decoration.sku_id == 789
         assert decoration.expires_at == datetime.datetime(2025, 4, 4, 8, 1, 1, tzinfo=datetime.timezone.utc)
@@ -7115,7 +7115,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_avatar_decoration_with_no_expiry(
         self, entity_factory_impl, mock_app: mock.Mock, avatar_decoration_payload: dict[str, typing.Any]
     ):
-        decoration = entity_factory_impl.deserialize_avatar_decoration(
+        decoration = entity_factory_impl._deserialize_avatar_decoration(
             {**avatar_decoration_payload, "expires_at": None}
         )
         assert decoration.asset_hash == "ahhhhhhvatardecoration"
@@ -7125,7 +7125,7 @@ class TestEntityFactoryImpl:
     def test_deserialize_avatar_decoration_with_empty_payload(
         self, entity_factory_impl, mock_app: mock.Mock, avatar_decoration_payload: dict[str, typing.Any]
     ):
-        decoration = entity_factory_impl.deserialize_avatar_decoration(None)
+        decoration = entity_factory_impl._deserialize_avatar_decoration(None)
         assert decoration is None
 
     def test_deserialize_user(self, entity_factory_impl, mock_app, user_payload):
