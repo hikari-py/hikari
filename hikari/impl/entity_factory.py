@@ -3839,12 +3839,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if not payload:
             return None
 
+        expires_at = (
+            time.unix_epoch_to_datetime(payload["expires_at"], is_millis=False) if payload.get("expires_at") else None
+        )
         return user_models.AvatarDecoration(
-            asset_hash=payload["asset"],
-            sku_id=snowflakes.Snowflake(payload["sku_id"]),
-            expires_at=time.unix_epoch_to_datetime(payload["expires_at"], is_millis=False)
-            if payload.get("expires_at")
-            else None,
+            asset_hash=payload["asset"], sku_id=snowflakes.Snowflake(payload["sku_id"]), expires_at=expires_at
         )
 
     def _set_user_attributes(self, payload: data_binding.JSONObject) -> _UserFields:
