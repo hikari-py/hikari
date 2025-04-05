@@ -461,18 +461,25 @@ class Member(users.User):
     user: users.User = attrs.field(repr=True)
     """This member's corresponding user object."""
 
+    guild_avatar_decoration: users.AvatarDecoration | None = attrs.field(eq=False, hash=False, repr=False)
+    """Hash of the member's guild avatar decoration if set, else [`None`][].
+
+    !!! note
+        This takes precedence over [`hikari.guilds.Member.avatar_decoration`][] in the client.
+    """
+
     guild_avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the member's guild avatar if set, else [`None`][].
 
     !!! note
-        This takes precedence over [`hikari.guilds.Member.avatar_hash`][].
+        This takes precedence over [`hikari.guilds.Member.avatar_hash`][] in the client.
     """
 
     guild_banner_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the member's guild banner if set, else [`None`][].
 
     !!! note
-        This takes precedence over [`hikari.guilds.Member.banner_hash`][].
+        This takes precedence over [`hikari.guilds.Member.banner_hash`][] in the client.
     """
 
     guild_flags: GuildMemberFlags | int = attrs.field(eq=False, hash=False, repr=False)
@@ -483,6 +490,11 @@ class Member(users.User):
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
+
+    @property
+    @typing_extensions.override
+    def avatar_decoration(self) -> users.AvatarDecoration | None:
+        return self.user.avatar_decoration
 
     @property
     @typing_extensions.override
@@ -507,6 +519,11 @@ class Member(users.User):
     @typing_extensions.override
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
+
+    @property
+    @typing_extensions.override
+    def display_avatar_decoration(self) -> users.AvatarDecoration | None:
+        return self.guild_avatar_decoration or super().display_avatar_decoration
 
     @property
     @typing_extensions.override

@@ -42,6 +42,9 @@ class TestTeamMember:
     def test_app_property(self, model):
         assert model.app is model.user.app
 
+    def test_avatar_decoration_property(self, model):
+        assert model.avatar_decoration is model.user.avatar_decoration
+
     def test_avatar_hash_property(self, model):
         assert model.avatar_hash is model.user.avatar_hash
 
