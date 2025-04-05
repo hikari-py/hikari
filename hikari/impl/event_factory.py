@@ -502,19 +502,13 @@ class EventFactoryImpl(event_factory.EventFactory):
                 raw_accent_color = user_payload["accent_color"]
                 accent_color = colors.Color(raw_accent_color) if raw_accent_color is not None else raw_accent_color
 
-            avatar_decoration: undefined.UndefinedNoneOr[user_models.AvatarDecoration] = undefined.UNDEFINED
-            if "avatar_decoration" in user_payload:
-                avatar_decoration = self._app.entity_factory.deserialize_avatar_decoration(
-                    user_payload["avatar_decoration"]
-                )
-
             user = user_models.PartialUserImpl(
                 app=self._app,
                 id=snowflakes.Snowflake(user_payload["id"]),
                 discriminator=discriminator,
                 username=user_payload.get("username", undefined.UNDEFINED),
                 global_name=user_payload.get("global_name", undefined.UNDEFINED),
-                avatar_decoration=avatar_decoration,
+                avatar_decoration=None,
                 avatar_hash=user_payload.get("avatar", undefined.UNDEFINED),
                 banner_hash=user_payload.get("banner", undefined.UNDEFINED),
                 accent_color=accent_color,
