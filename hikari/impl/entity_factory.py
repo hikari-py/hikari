@@ -1912,7 +1912,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_communication_disabled_until := payload.get("communication_disabled_until"):
             communication_disabled_until = time.iso8601_datetime_string_to_datetime(raw_communication_disabled_until)
 
-        avatar_decoration = self.deserialize_avatar_decoration(payload.get("avatarDecorationData"))
+        avatar_decoration = self.deserialize_avatar_decoration(payload.get("avatar_decoration_data"))
 
         return guild_models.Member(
             user=user,
@@ -2596,7 +2596,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         guild_flags = guild_models.GuildMemberFlags(payload.get("flags") or guild_models.GuildMemberFlags.NONE)
 
-        avatar_decoration = self.deserialize_avatar_decoration(payload.get("avatarDecorationData"))
+        avatar_decoration = self.deserialize_avatar_decoration(payload.get("avatar_decoration_data"))
 
         # TODO: deduplicate member unmarshalling logic
         return base_interactions.InteractionMember(
@@ -3848,7 +3848,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _set_user_attributes(self, payload: data_binding.JSONObject) -> _UserFields:
         accent_color = payload.get("accent_color")
-        avatar_decoration = self.deserialize_avatar_decoration(payload.get("avatarDecorationData"))
+        avatar_decoration = self.deserialize_avatar_decoration(payload.get("avatar_decoration_data"))
         return _UserFields(
             id=snowflakes.Snowflake(payload["id"]),
             discriminator=payload["discriminator"],
