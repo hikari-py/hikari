@@ -3837,13 +3837,15 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_avatar_decoration(
         self, payload: data_binding.JSONObject | None
     ) -> user_models.AvatarDecoration | None:
-        if payload is None:
+        if not payload:
             return None
 
         return user_models.AvatarDecoration(
             asset_hash=payload["asset"],
             sku_id=snowflakes.Snowflake(payload["sku_id"]),
-            expires_at=time.unix_epoch_to_datetime(payload["expires_at"], is_millis=False),
+            expires_at=time.unix_epoch_to_datetime(payload["expires_at"], is_millis=False)
+            if payload.get("expires_at")
+            else None,
         )
 
     def _set_user_attributes(self, payload: data_binding.JSONObject) -> _UserFields:
