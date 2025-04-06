@@ -60,5 +60,5 @@ def sync(
         args.extend((group_flag, group))
 
     session.run_install(
-        "uv", "sync", "--frozen", *args, silent=True, env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
+        "uv", "sync", "--locked", *args, silent=True, env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
     )
