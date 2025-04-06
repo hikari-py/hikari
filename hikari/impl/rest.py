@@ -1535,7 +1535,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("flags", flags)
-        if not mentions_reply:
+        if mentions_reply:
             body.put(
                 "allowed_mentions",
                 mentions.generate_allowed_mentions(
