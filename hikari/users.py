@@ -158,7 +158,7 @@ class AvatarDecoration:
 
         Returns
         -------
-        typing.Optional[hikari.files.URL]
+        hikari.files.URL
             The URL to the avatar decoration.
 
         Raises
