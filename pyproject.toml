@@ -122,8 +122,8 @@ mkdocs = [
     # Image viewer ext
     # "mkdocs-glightbox==0.3.7",
 ]
-mypy = ["mypy[faster-cache]==1.15.0"]
-pyright = ["pyright==1.1.397"]
+mypy = ["mypy[faster-cache]==1.15.0", { include-group = "types" }]
+pyright = ["pyright==1.1.397", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==8.3.5",
