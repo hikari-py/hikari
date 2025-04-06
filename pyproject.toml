@@ -123,10 +123,6 @@ mkdocs = [
     # "mkdocs-glightbox==0.3.7",
 ]
 mypy = ["mypy[faster-cache]==1.15.0", { include-group = "types" }]
-types = [
-    # examples/voice_message/*
-    "pydub-stubs~=0.25.1.5"
-]
 pyright = ["pyright==1.1.397", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
@@ -141,6 +137,10 @@ release = ["twine==6.1.0"]
 ruff = ["ruff==0.11.2"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
+types = [
+    # examples/voice_message/*
+    "pydub-stubs~=0.25.1.5"
+]
 
 
 [tool.uv]
