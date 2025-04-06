@@ -18,11 +18,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Events fired for application related changes."""
+"""Events related to polls."""
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("ApplicationCommandPermissionsUpdateEvent",)
+__all__: typing.Sequence[str] = ("PollVoteCreateEvent", "PollVoteDeleteEvent")
 
 import typing
 
@@ -32,15 +32,15 @@ from hikari.events import shard_events
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import commands
+    from hikari import snowflakes
     from hikari import traits
     from hikari.api import shard as gateway_shard
 
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-class ApplicationCommandPermissionsUpdateEvent(shard_events.ShardEvent):
-    """Event fired when permissions for an application command are updated."""
+class BasePollVoteEvent(shard_events.ShardEvent):
+    """Event base for any event that involves a user voting on a poll."""
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
@@ -48,5 +48,35 @@ class ApplicationCommandPermissionsUpdateEvent(shard_events.ShardEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    permissions: commands.GuildCommandPermissions = attrs.field(repr=False)
-    """The updated application command permissions."""
+    user_id: snowflakes.Snowflake = attrs.field()
+    """ID of the user that added their vote to the poll."""
+
+    channel_id: snowflakes.Snowflake = attrs.field()
+    """ID of the channel that the poll is in."""
+
+    message_id: snowflakes.Snowflake = attrs.field()
+    """ID of the message that the poll is in."""
+
+    guild_id: snowflakes.Snowflake | None = attrs.field()
+    """ID of the guild that the poll is in."""
+
+    answer_id: int = attrs.field()
+    """ID of the answer that the user voted for."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class PollVoteCreateEvent(BasePollVoteEvent):
+    """Event that is fired when a user add their vote to a poll.
+
+    If the poll allows multiple selection, one event will be fired for each vote.
+    """
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class PollVoteDeleteEvent(BasePollVoteEvent):
+    """Event that is fired when a user remove their vote to a poll.
+
+    If the poll allows multiple selection, one event will be fired for each vote.
+    """

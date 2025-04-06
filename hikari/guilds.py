@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,34 +23,35 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "Guild",
-    "RESTGuild",
     "GatewayGuild",
-    "GuildWidget",
-    "Role",
-    "GuildFeature",
-    "GuildSystemChannelFlag",
-    "GuildMessageNotificationsLevel",
+    "Guild",
+    "GuildBan",
     "GuildExplicitContentFilterLevel",
+    "GuildFeature",
+    "GuildIncidents",
     "GuildMFALevel",
-    "GuildVerificationLevel",
+    "GuildMemberFlags",
+    "GuildMessageNotificationsLevel",
+    "GuildNSFWLevel",
     "GuildPremiumTier",
     "GuildPreview",
-    "GuildBan",
-    "GuildNSFWLevel",
-    "GuildMemberFlags",
-    "Member",
+    "GuildSystemChannelFlag",
+    "GuildVerificationLevel",
+    "GuildWidget",
     "Integration",
     "IntegrationAccount",
-    "IntegrationType",
     "IntegrationApplication",
     "IntegrationExpireBehaviour",
+    "IntegrationType",
+    "Member",
     "PartialApplication",
     "PartialGuild",
     "PartialIntegration",
     "PartialRole",
-    "WelcomeScreen",
+    "RESTGuild",
+    "Role",
     "WelcomeChannel",
+    "WelcomeScreen",
 )
 
 import typing
@@ -69,6 +69,7 @@ from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -296,13 +297,13 @@ class GuildWidget:
     )
     """Client application that models may use for procedures."""
 
-    channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(repr=True)
+    channel_id: snowflakes.Snowflake | None = attrs.field(repr=True)
     """The ID of the channel the invite for this embed targets, if enabled."""
 
     is_enabled: bool = attrs.field(repr=True)
     """Whether this embed is enabled."""
 
-    async def fetch_channel(self) -> typing.Optional[channels_.GuildChannel]:
+    async def fetch_channel(self) -> channels_.GuildChannel | None:
         """Fetch the widget channel.
 
         This will be [`None`][] if not set.
@@ -358,6 +359,39 @@ class GuildMemberFlags(enums.Flag):
     """Member has started onboarding."""
 
 
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildIncidents:
+    """Represents the incidents of a guild."""
+
+    invites_disabled_until: datetime.datetime | None = attrs.field(repr=True)
+    """The datetime when the invites will be enabled again.
+
+    This will be [`None`][] if the invites are not temporarily disabled.
+
+    !!! note
+        This is independent of [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] which is
+        used to indefinitely disable invites.
+    """
+
+    dms_disabled_until: datetime.datetime | None = attrs.field(repr=True)
+    """The datetime when direct messages between non-friend guild members will be enabled again.
+
+    This will be [`None`][] if the direct messages are not temporarily disabled.
+    """
+
+    dm_spam_detected_at: datetime.datetime | None = attrs.field(repr=True)
+    """The datetime when the spam detection was triggered for the current incident session.
+
+    This will be [`None`][] if no spam detection was triggered.
+    """
+
+    raid_detected_at: datetime.datetime | None = attrs.field(repr=True)
+    """The datetime when the raid was detected for the current incident session.
+
+    This will be [`None`][] if no raid was detected.
+    """
+
+
 @attrs_extensions.with_copy
 @attrs.define(eq=False, kw_only=True, weakref_slot=False)
 class Member(users.User):
@@ -385,26 +419,26 @@ class Member(users.User):
     This will be [`hikari.undefined.UNDEFINED`][] if it's state is unknown.
     """
 
-    joined_at: typing.Optional[datetime.datetime] = attrs.field(repr=True)
+    joined_at: datetime.datetime | None = attrs.field(repr=True)
     """The datetime of when this member joined the guild they belong to.
 
     This will be [`None`][] for guest members that have been temporarily
     invited.
     """
 
-    nickname: typing.Optional[str] = attrs.field(repr=True)
+    nickname: str | None = attrs.field(repr=True)
     """This member's nickname.
 
     This will be [`None`][] if not set.
     """
 
-    premium_since: typing.Optional[datetime.datetime] = attrs.field(repr=False)
+    premium_since: datetime.datetime | None = attrs.field(repr=False)
     """The datetime of when this member started "boosting" this guild.
 
     Will be [`None`][] if the member is not a premium user.
     """
 
-    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attrs.field(repr=False)
+    raw_communication_disabled_until: datetime.datetime | None = attrs.field(repr=False)
     """The datetime when this member's timeout will expire.
 
      Will be [`None`][] if the member is not timed out.
@@ -427,31 +461,53 @@ class Member(users.User):
     user: users.User = attrs.field(repr=True)
     """This member's corresponding user object."""
 
-    guild_avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
-    """Hash of the member's guild avatar guild if set, else [`None`][].
+    guild_avatar_decoration: users.AvatarDecoration | None = attrs.field(eq=False, hash=False, repr=False)
+    """Hash of the member's guild avatar decoration if set, else [`None`][].
 
     !!! note
-        This takes precedence over [`hikari.guilds.Member.avatar_hash`][].
+        This takes precedence over [`hikari.guilds.Member.avatar_decoration`][] in the client.
     """
 
-    guild_flags: typing.Union[GuildMemberFlags, int] = attrs.field(eq=False, hash=False, repr=False)
+    guild_avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
+    """Hash of the member's guild avatar if set, else [`None`][].
+
+    !!! note
+        This takes precedence over [`hikari.guilds.Member.avatar_hash`][] in the client.
+    """
+
+    guild_banner_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
+    """Hash of the member's guild banner if set, else [`None`][].
+
+    !!! note
+        This takes precedence over [`hikari.guilds.Member.banner_hash`][] in the client.
+    """
+
+    guild_flags: GuildMemberFlags | int = attrs.field(eq=False, hash=False, repr=False)
     """The flags this member has in the guild."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
 
     @property
-    def avatar_hash(self) -> typing.Optional[str]:
+    @typing_extensions.override
+    def avatar_decoration(self) -> users.AvatarDecoration | None:
+        return self.user.avatar_decoration
+
+    @property
+    @typing_extensions.override
+    def avatar_hash(self) -> str | None:
         return self.user.avatar_hash
 
     @property
-    def avatar_url(self) -> typing.Optional[files.URL]:
+    @typing_extensions.override
+    def avatar_url(self) -> files.URL | None:
         return self.user.avatar_url
 
     @property
-    def guild_avatar_url(self) -> typing.Optional[files.URL]:
+    def guild_avatar_url(self) -> files.URL | None:
         """Guild Avatar URL for the user, if they have one set.
 
         May be [`None`][] if no guild avatar is set. In this case, you
@@ -460,30 +516,56 @@ class Member(users.User):
         return self.make_guild_avatar_url()
 
     @property
+    @typing_extensions.override
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
 
     @property
+    @typing_extensions.override
+    def display_avatar_decoration(self) -> users.AvatarDecoration | None:
+        return self.guild_avatar_decoration or super().display_avatar_decoration
+
+    @property
+    @typing_extensions.override
     def display_avatar_url(self) -> files.URL:
         return self.make_guild_avatar_url() or super().display_avatar_url
 
     @property
-    def banner_hash(self) -> typing.Optional[str]:
+    @typing_extensions.override
+    def banner_hash(self) -> str | None:
         return self.user.banner_hash
 
     @property
-    def banner_url(self) -> typing.Optional[files.URL]:
+    @typing_extensions.override
+    def banner_url(self) -> files.URL | None:
         return self.user.banner_url
 
     @property
-    def accent_color(self) -> typing.Optional[colors.Color]:
+    def guild_banner_url(self) -> files.URL | None:
+        """Guild Banner URL for the user, if they have one set.
+
+        May be [`None`][] if no guild banner is set. In this case, you
+        should use [`hikari.guilds.Member.banner_hash`][] instead.
+        """
+        return self.make_guild_banner_url()
+
+    @property
+    @typing_extensions.override
+    def display_banner_url(self) -> files.URL | None:
+        return self.make_guild_banner_url() or super().display_banner_url
+
+    @property
+    @typing_extensions.override
+    def accent_color(self) -> colors.Color | None:
         return self.user.accent_color
 
     @property
+    @typing_extensions.override
     def discriminator(self) -> str:
         return self.user.discriminator
 
     @property
+    @typing_extensions.override
     def display_name(self) -> str:
         """Return the member's display name.
 
@@ -500,26 +582,31 @@ class Member(users.User):
         return self.nickname or self.global_name or self.username
 
     @property
+    @typing_extensions.override
     def flags(self) -> users.UserFlag:
         return self.user.flags
 
     @property
+    @typing_extensions.override
     def id(self) -> snowflakes.Snowflake:
         return self.user.id
 
     @property
+    @typing_extensions.override
     def is_bot(self) -> bool:
         return self.user.is_bot
 
     @property
+    @typing_extensions.override
     def is_system(self) -> bool:
         return self.user.is_system
 
     @property
+    @typing_extensions.override
     def mention(self) -> str:
         return self.user.mention
 
-    def communication_disabled_until(self) -> typing.Optional[datetime.datetime]:
+    def communication_disabled_until(self) -> datetime.datetime | None:
         """Return when the timeout for this member ends.
 
         Unlike `raw_communication_disabled_until`, this will always be
@@ -536,7 +623,7 @@ class Member(users.User):
             return self.raw_communication_disabled_until
         return None
 
-    def get_guild(self) -> typing.Optional[Guild]:
+    def get_guild(self) -> Guild | None:
         """Return the guild associated with this member.
 
         Returns
@@ -549,7 +636,7 @@ class Member(users.User):
 
         return self.user.app.cache.get_guild(self.guild_id)
 
-    def get_presence(self) -> typing.Optional[presences_.MemberPresence]:
+    def get_presence(self) -> presences_.MemberPresence | None:
         """Get the cached presence for this member, if known.
 
         Presence info includes user status and activities.
@@ -576,18 +663,12 @@ class Member(users.User):
         typing.Sequence[hikari.guilds.Role]
             The roles the users has.
         """
-        roles: list[Role] = []
-
         if not isinstance(self.user.app, traits.CacheAware):
-            return roles
+            return []
 
-        for role_id in self.role_ids:
-            if role := self.user.app.cache.get_role(role_id):
-                roles.append(role)
+        return [role for role_id in self.role_ids if (role := self.user.app.cache.get_role(role_id))]
 
-        return roles
-
-    def get_top_role(self) -> typing.Optional[Role]:
+    def get_top_role(self) -> Role | None:
         """Return the highest role the member has.
 
         Returns
@@ -604,19 +685,20 @@ class Member(users.User):
             return None
 
     @property
+    @typing_extensions.override
     def username(self) -> str:
         return self.user.username
 
     @property
-    def global_name(self) -> typing.Optional[str]:
+    @typing_extensions.override
+    def global_name(self) -> str | None:
         return self.user.global_name
 
-    def make_avatar_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+    @typing_extensions.override
+    def make_avatar_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
         return self.user.make_avatar_url(ext=ext, size=size)
 
-    def make_guild_avatar_url(
-        self, *, ext: typing.Optional[str] = None, size: int = 4096
-    ) -> typing.Optional[files.URL]:
+    def make_guild_avatar_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
         """Generate the guild specific avatar url for this member, if set.
 
         If no guild avatar is set, this returns [`None`][].
@@ -651,10 +733,7 @@ class Member(users.User):
             return None
 
         if ext is None:
-            if self.guild_avatar_hash.startswith("a_"):
-                ext = "gif"
-            else:
-                ext = "png"
+            ext = "gif" if self.guild_avatar_hash.startswith("a_") else "png"
 
         return routes.CDN_MEMBER_AVATAR.compile_to_file(
             urls.CDN_URL,
@@ -665,6 +744,53 @@ class Member(users.User):
             file_format=ext,
         )
 
+    @typing_extensions.override
+    def make_banner_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
+        return self.user.make_banner_url(ext=ext, size=size)
+
+    def make_guild_banner_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
+        """Generate the guild specific banner url for this member, if set.
+
+        If no guild banner is set, this returns [`None`][].
+
+        Parameters
+        ----------
+        ext
+            The ext to use for this URL.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            If [`None`][], then the correct default extension is
+            determined based on whether the banner is animated or not.
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
+
+        Returns
+        -------
+        typing.Optional[hikari.files.URL]
+            The URL to the banner, or [`None`][] if not present.
+
+        Raises
+        ------
+        ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        if self.guild_banner_hash is None:
+            return None
+
+        if ext is None:
+            ext = "gif" if self.guild_banner_hash.startswith("a_") else "png"
+
+        return routes.CDN_MEMBER_BANNER.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.guild_id,
+            user_id=self.id,
+            hash=self.guild_banner_hash,
+            size=size,
+            file_format=ext,
+        )
+
+    @typing_extensions.override
     async def fetch_self(self) -> Member:
         """Fetch an up-to-date view of this member from the API.
 
@@ -687,6 +813,7 @@ class Member(users.User):
         """
         return await self.user.app.rest.fetch_member(self.guild_id, self.user.id)
 
+    @typing_extensions.override
     async def fetch_dm_channel(self) -> channels_.DMChannel:
         return await self.user.fetch_dm_channel()
 
@@ -954,12 +1081,15 @@ class Member(users.User):
             reason=reason,
         )
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return str(self.user)
 
+    @typing_extensions.override
     def __hash__(self) -> int:
         return hash(self.user)
 
+    @typing_extensions.override
     def __eq__(self, other: object) -> bool:
         return self.user == other
 
@@ -985,6 +1115,7 @@ class PartialRole(snowflakes.Unique):
         """Return a raw mention string for the role."""
         return f"<@&{self.id}>"
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
@@ -1008,10 +1139,10 @@ class Role(PartialRole):
     Members will be hoisted under their highest role where this is set to [`True`][].
     """
 
-    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    icon_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """Hash of the role's icon if set, else [`None`][]."""
 
-    unicode_emoji: typing.Optional[emojis_.UnicodeEmoji] = attrs.field(eq=False, hash=False, repr=False)
+    unicode_emoji: emojis_.UnicodeEmoji | None = attrs.field(eq=False, hash=False, repr=False)
     """Role's icon as an unicode emoji if set, else [`None`][]."""
 
     is_managed: bool = attrs.field(eq=False, hash=False, repr=False)
@@ -1033,13 +1164,13 @@ class Role(PartialRole):
     and increase as you go up the hierarchy.
     """
 
-    bot_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    bot_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the bot this role belongs to.
 
     If [`None`][], this is not a bot role.
     """
 
-    integration_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    integration_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the integration this role belongs to.
 
     If [`None`][], this is not a integration role.
@@ -1048,7 +1179,7 @@ class Role(PartialRole):
     is_premium_subscriber_role: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this role is the guild's nitro subscriber role."""
 
-    subscription_listing_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    subscription_listing_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of this role's subscription SKU and listing.
 
     If [`None`][], this is not a purchasable role.
@@ -1066,11 +1197,12 @@ class Role(PartialRole):
         return self.color
 
     @property
-    def icon_url(self) -> typing.Optional[files.URL]:
+    def icon_url(self) -> files.URL | None:
         """Role icon URL, if there is one."""
         return self.make_icon_url()
 
     @property
+    @typing_extensions.override
     def mention(self) -> str:
         """Return a raw mention string for the role.
 
@@ -1082,7 +1214,7 @@ class Role(PartialRole):
 
         return super().mention
 
-    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the icon URL for this role, if set.
 
         If no role icon is set, this returns [`None`][].
@@ -1153,6 +1285,7 @@ class IntegrationAccount:
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of this account."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
@@ -1169,21 +1302,22 @@ class PartialApplication(snowflakes.Unique):
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of this application."""
 
-    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The description of this application, if any."""
 
-    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    icon_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN hash of this application's icon, if set."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
     @property
-    def icon_url(self) -> typing.Optional[files.URL]:
+    def icon_url(self) -> files.URL | None:
         """Team icon URL, if there is one."""
         return self.make_icon_url()
 
-    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the icon URL for this application.
 
         Parameters
@@ -1219,7 +1353,7 @@ class PartialApplication(snowflakes.Unique):
 class IntegrationApplication(PartialApplication):
     """An application that's linked to an integration."""
 
-    bot: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
+    bot: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """The bot associated with this application."""
 
 
@@ -1237,9 +1371,10 @@ class PartialIntegration(snowflakes.Unique):
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of this integration."""
 
-    type: typing.Union[IntegrationType, str] = attrs.field(eq=False, hash=False, repr=True)
+    type: IntegrationType | str = attrs.field(eq=False, hash=False, repr=True)
     """The type of this integration."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
@@ -1251,7 +1386,7 @@ class Integration(PartialIntegration):
     guild_id: snowflakes.Snowflake = attrs.field()
     """The ID of the guild this integration belongs to."""
 
-    expire_behavior: typing.Union[IntegrationExpireBehaviour, int, None] = attrs.field(eq=False, hash=False, repr=False)
+    expire_behavior: IntegrationExpireBehaviour | int | None = attrs.field(eq=False, hash=False, repr=False)
     """How members should be treated after their connected subscription expires.
 
     This will not be enacted until after `GuildIntegration.expire_grace_period`
@@ -1261,7 +1396,7 @@ class Integration(PartialIntegration):
         This will always be [`None`][] for Discord integrations.
     """
 
-    expire_grace_period: typing.Optional[datetime.timedelta] = attrs.field(eq=False, hash=False, repr=False)
+    expire_grace_period: datetime.timedelta | None = attrs.field(eq=False, hash=False, repr=False)
     """How many days users with expired subscriptions are given until the expire behavior is enacted out on them.
 
     !!! note
@@ -1271,28 +1406,28 @@ class Integration(PartialIntegration):
     is_enabled: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether this integration is enabled."""
 
-    is_syncing: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
+    is_syncing: bool | None = attrs.field(eq=False, hash=False, repr=False)
     """Whether this integration is syncing subscribers/emojis."""
 
-    is_emojis_enabled: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
+    is_emojis_enabled: bool | None = attrs.field(eq=False, hash=False, repr=False)
     """Whether users under this integration are allowed to use it's custom emojis."""
 
-    is_revoked: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
+    is_revoked: bool | None = attrs.field(eq=False, hash=False, repr=False)
     """Whether the integration has been revoked."""
 
-    last_synced_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
+    last_synced_at: datetime.datetime | None = attrs.field(eq=False, hash=False, repr=False)
     """The datetime of when this integration's subscribers were last synced."""
 
-    role_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    role_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the managed role used for this integration's subscribers."""
 
-    user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
+    user: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """The user this integration belongs to."""
 
-    subscriber_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    subscriber_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The number of subscribers this integration has."""
 
-    application: typing.Optional[IntegrationApplication] = attrs.field(eq=False, hash=False, repr=False)
+    application: IntegrationApplication | None = attrs.field(eq=False, hash=False, repr=False)
     """The bot/OAuth2 application associated with this integration.
 
     !!! note
@@ -1311,9 +1446,7 @@ class WelcomeChannel:
     description: str = attrs.field(hash=False, repr=False)
     """The description shown for this channel."""
 
-    emoji_name: typing.Union[str, emojis_.UnicodeEmoji, None] = attrs.field(
-        default=None, kw_only=True, hash=False, repr=True
-    )
+    emoji_name: str | emojis_.UnicodeEmoji | None = attrs.field(default=None, kw_only=True, hash=False, repr=True)
     """The emoji shown in the welcome screen channel if set to a unicode emoji.
 
     !!! warning
@@ -1321,7 +1454,7 @@ class WelcomeChannel:
         to be provided nor accurate.
     """
 
-    emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field(default=None, kw_only=True, hash=False, repr=True)
+    emoji_id: snowflakes.Snowflake | None = attrs.field(default=None, kw_only=True, hash=False, repr=True)
     """ID of the emoji shown in the welcome screen channel if it's set to a custom emoji."""
 
 
@@ -1330,7 +1463,7 @@ class WelcomeChannel:
 class WelcomeScreen:
     """Used to represent guild welcome screens on Discord."""
 
-    description: typing.Optional[str] = attrs.field(hash=False, repr=True)
+    description: str | None = attrs.field(hash=False, repr=True)
     """The guild's description shown in the welcome screen."""
 
     channels: typing.Sequence[WelcomeChannel] = attrs.field(hash=False, repr=True)
@@ -1342,7 +1475,7 @@ class WelcomeScreen:
 class GuildBan:
     """Used to represent guild bans."""
 
-    reason: typing.Optional[str] = attrs.field(repr=True)
+    reason: str | None = attrs.field(repr=True)
     """The reason for this ban, will be [`None`][] if no reason was given."""
 
     user: users.User = attrs.field(repr=True)
@@ -1362,22 +1495,23 @@ class PartialGuild(snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    icon_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The hash for the guild icon, if there is one."""
 
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the guild."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 
     @property
-    def icon_url(self) -> typing.Optional[files.URL]:
+    def icon_url(self) -> files.URL | None:
         """Icon URL for the guild, if set; otherwise [`None`][]."""
         return self.make_icon_url()
 
     @property
-    def shard_id(self) -> typing.Optional[int]:
+    def shard_id(self) -> int | None:
         """Return the ID of the shard this guild is served by.
 
         This may return [`None`][] if the application does not have a gateway
@@ -1390,7 +1524,7 @@ class PartialGuild(snowflakes.Unique):
         assert isinstance(shard_count, int)
         return snowflakes.calculate_shard_id(shard_count, self.id)
 
-    def make_icon_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+    def make_icon_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
         """Generate the guild's icon URL, if set.
 
         Parameters
@@ -1420,10 +1554,7 @@ class PartialGuild(snowflakes.Unique):
             return None
 
         if ext is None:
-            if self.icon_hash.startswith("a_"):
-                ext = "gif"
-            else:
-                ext = "png"
+            ext = "gif" if self.icon_hash.startswith("a_") else "png"
 
         return routes.CDN_GUILD_ICON.compile_to_file(
             urls.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=ext
@@ -1560,7 +1691,7 @@ class PartialGuild(snowflakes.Unique):
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[str | locales.Locale] = undefined.UNDEFINED,
         features: undefined.UndefinedOr[typing.Sequence[GuildFeature]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
@@ -1650,6 +1781,63 @@ class PartialGuild(snowflakes.Unique):
             preferred_locale=preferred_locale,
             features=features,
             reason=reason,
+        )
+
+    async def set_incident_actions(
+        self,
+        *,
+        invites_disabled_until: datetime.datetime | None = None,
+        dms_disabled_until: datetime.datetime | None = None,
+    ) -> GuildIncidents:
+        """Set the incident actions for the guild.
+
+        !!! warning
+            This endpoint will reset any previous security measures if not specified.
+            This is a Discord limitation.
+
+        Parameters
+        ----------
+        invites_disabled_until
+            The datetime when invites will be enabled again.
+
+            If [`None`][], invites will be enabled again immediately.
+
+            !!! note
+                If [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] is active, this value will be ignored.
+        dms_disabled_until
+            The datetime when direct messages between non-friend guild
+            members will be enabled again.
+
+            If [`None`][], direct messages will be enabled again immediately.
+
+        Returns
+        -------
+        hikari.guilds.GuildIncidents
+            A guild incidents object with the updated incident actions.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you do not have at least one of the following permissions:
+            - [`hikari.permissions.Permissions.ADMINISTRATOR`][]
+            - [`hikari.permissions.Permissions.KICK_MEMBERS`][]
+            - [`hikari.permissions.Permissions.MODERATE_MEMBERS`][]
+            - [`hikari.permissions.Permissions.BAN_MEMBERS`][]
+            - [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+        return await self.app.rest.set_guild_incident_actions(
+            self.id, invites_disabled_until=invites_disabled_until, dms_disabled_until=dms_disabled_until
         )
 
     async def fetch_emojis(self) -> typing.Sequence[emojis_.KnownCustomEmoji]:
@@ -2106,14 +2294,13 @@ class PartialGuild(snowflakes.Unique):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
-        default_sort_order: undefined.UndefinedOr[
-            typing.Union[channels_.ForumSortOrderType, int]
-        ] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
         available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
-        default_reaction_emoji: typing.Union[
-            str, emojis_.Emoji, undefined.UndefinedType, snowflakes.Snowflake
-        ] = undefined.UNDEFINED,
+        default_reaction_emoji: str
+        | emojis_.Emoji
+        | undefined.UndefinedType
+        | snowflakes.Snowflake = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildForumChannel:
         """Create a forum channel in the guild.
@@ -2205,11 +2392,11 @@ class PartialGuild(snowflakes.Unique):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode | int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[typing.Union[voices_.VoiceRegion, str]] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices_.VoiceRegion | str] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildVoiceChannel:
@@ -2289,7 +2476,7 @@ class PartialGuild(snowflakes.Unique):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[typing.Union[voices_.VoiceRegion, str]] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices_.VoiceRegion | str] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildStageChannel:
@@ -2449,13 +2636,13 @@ class PartialGuild(snowflakes.Unique):
 class GuildPreview(PartialGuild):
     """A preview of a guild with the [`hikari.guilds.GuildFeature.DISCOVERABLE`][] feature."""
 
-    features: typing.Sequence[typing.Union[str, GuildFeature]] = attrs.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[str | GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
-    splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    splash_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
 
-    discovery_splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    discovery_splash_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the discovery splash for the guild, if there is one."""
 
     emojis: typing.Mapping[snowflakes.Snowflake, emojis_.KnownCustomEmoji] = attrs.field(
@@ -2469,20 +2656,20 @@ class GuildPreview(PartialGuild):
     approximate_member_count: int = attrs.field(eq=False, hash=False, repr=True)
     """The approximate amount of members in this guild."""
 
-    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description, if set."""
 
     @property
-    def discovery_splash_url(self) -> typing.Optional[files.URL]:
+    def discovery_splash_url(self) -> files.URL | None:
         """Discovery URL splash for the guild, if set."""
         return self.make_discovery_splash_url()
 
     @property
-    def splash_url(self) -> typing.Optional[files.URL]:
+    def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         return self.make_splash_url()
 
-    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the guild's discovery splash image URL, if set.
 
         Parameters
@@ -2511,7 +2698,7 @@ class GuildPreview(PartialGuild):
             urls.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext
         )
 
-    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the guild's splash image URL, if set.
 
         Parameters
@@ -2545,16 +2732,19 @@ class GuildPreview(PartialGuild):
 class Guild(PartialGuild):
     """A representation of a guild on Discord."""
 
-    features: typing.Sequence[typing.Union[str, GuildFeature]] = attrs.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[str | GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    incidents: GuildIncidents = attrs.field(eq=False, hash=False, repr=False)
+    """The state of the active incidents in this guild."""
+
+    application_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this guild.
 
     This will always be [`None`][] for guilds that weren't created by a bot.
     """
 
-    afk_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    afk_channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID for the channel that AFK voice users get sent to.
 
     If [`None`][], then no AFK channel is set up for this guild.
@@ -2567,81 +2757,77 @@ class Guild(PartialGuild):
     AFK and are moved to the AFK channel ([`hikari.guilds.Guild.afk_channel_id`][]).
     """
 
-    banner_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    banner_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The hash for the guild's banner.
 
     This is only present if the guild has [`hikari.guilds.GuildFeature.BANNER`][] in
     [`hikari.guilds.Guild.features`][] for this guild. For all other purposes, it is [`None`][].
     """
 
-    default_message_notifications: typing.Union[GuildMessageNotificationsLevel, int] = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    default_message_notifications: GuildMessageNotificationsLevel | int = attrs.field(eq=False, hash=False, repr=False)
     """The default setting for message notifications in this guild."""
 
-    description: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    description: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The guild's description.
 
     This is only present if certain [`hikari.guilds.GuildFeature`][]'s are set in
     [`hikari.guilds.Guild.features`][] for this guild. Otherwise, this will always be [`None`][].
     """
 
-    discovery_splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    discovery_splash_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the discovery splash for the guild, if there is one."""
 
-    explicit_content_filter: typing.Union[GuildExplicitContentFilterLevel, int] = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    explicit_content_filter: GuildExplicitContentFilterLevel | int = attrs.field(eq=False, hash=False, repr=False)
     """The setting for the explicit content filter in this guild."""
 
-    is_widget_enabled: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
+    is_widget_enabled: bool | None = attrs.field(eq=False, hash=False, repr=False)
     """Describes whether the guild widget is enabled or not.
 
     If this information is not present, this will be [`None`][].
     """
 
-    max_video_channel_users: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    max_video_channel_users: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of users allowed in a video channel together.
 
     This information may not be present, in which case, it will be [`None`][].
     """
 
-    mfa_level: typing.Union[GuildMFALevel, int] = attrs.field(eq=False, hash=False, repr=False)
+    mfa_level: GuildMFALevel | int = attrs.field(eq=False, hash=False, repr=False)
     """The required MFA level for users wishing to participate in this guild."""
 
     owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
 
-    preferred_locale: typing.Union[str, locales.Locale] = attrs.field(eq=False, hash=False, repr=False)
+    preferred_locale: str | locales.Locale = attrs.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
     This can only be change if [`hikari.guilds.GuildFeature.COMMUNITY`][] is in [`hikari.guilds.Guild.features`][]
     for this guild and will otherwise default to `en-US`.
     """
 
-    premium_subscription_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    premium_subscription_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The number of nitro boosts that the server currently has.
 
     This information may not be present, in which case, it will be [`None`][].
     """
 
-    premium_tier: typing.Union[GuildPremiumTier, int] = attrs.field(eq=False, hash=False, repr=False)
+    premium_tier: GuildPremiumTier | int = attrs.field(eq=False, hash=False, repr=False)
     """The premium tier for this guild."""
 
-    public_updates_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    public_updates_channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The channel ID of the channel where admins and moderators receive notices from Discord.
 
     This is only present if [`hikari.guilds.GuildFeature.COMMUNITY`][] is in [`hikari.guilds.Guild.features`][] for
     this guild. For all other purposes, it should be considered to be [`None`][].
     """
 
-    rules_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    rules_channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the channel where rules and guidelines will be displayed.
 
     If the [`hikari.guilds.GuildFeature.COMMUNITY`][] feature is not defined, then this is [`None`][].
     """
 
-    splash_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    splash_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the splash for the guild, if there is one."""
 
     system_channel_flags: GuildSystemChannelFlag = attrs.field(eq=False, hash=False, repr=False)
@@ -2650,23 +2836,23 @@ class Guild(PartialGuild):
     These are used to describe which notifications are suppressed.
     """
 
-    system_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    system_channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the system channel or [`None`][] if it is not enabled.
 
     Welcome messages and Nitro boost messages may be sent to this channel.
     """
 
-    vanity_url_code: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    vanity_url_code: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The vanity URL code for the guild's vanity URL.
 
     This is only present if [`hikari.guilds.GuildFeature.VANITY_URL`][] is in [`hikari.guilds.Guild.features`][] for
     this guild. If not, this will always be [`None`][].
     """
 
-    verification_level: typing.Union[GuildVerificationLevel, int] = attrs.field(eq=False, hash=False, repr=False)
+    verification_level: GuildVerificationLevel | int = attrs.field(eq=False, hash=False, repr=False)
     """The verification level needed for a user to participate in this guild."""
 
-    widget_channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    widget_channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The channel ID that the widget's generated invite will send the user to.
 
     If this information is unavailable or this is not enabled for the guild then
@@ -2677,19 +2863,32 @@ class Guild(PartialGuild):
     """The NSFW level of the guild."""
 
     @property
-    def banner_url(self) -> typing.Optional[files.URL]:
+    def banner_url(self) -> files.URL | None:
         """Banner URL for the guild, if set."""
         return self.make_banner_url()
 
     @property
-    def discovery_splash_url(self) -> typing.Optional[files.URL]:
+    def discovery_splash_url(self) -> files.URL | None:
         """Discovery splash URL for the guild, if set."""
         return self.make_discovery_splash_url()
 
     @property
-    def splash_url(self) -> typing.Optional[files.URL]:
+    def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         return self.make_splash_url()
+
+    @property
+    def invites_disabled(self) -> bool:
+        """Return whether the guild has invites disabled.
+
+        Returns
+        -------
+        bool
+            [`True`][] if `self.incidents.invites_disabled_until` is set, or if
+            [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] is in `self.features`.
+            [`False`][] otherwise.
+        """
+        return self.incidents.invites_disabled_until is not None or GuildFeature.INVITES_DISABLED in self.features
 
     def get_members(self) -> typing.Mapping[snowflakes.Snowflake, Member]:
         """Get the members cached for the guild.
@@ -2785,7 +2984,7 @@ class Guild(PartialGuild):
 
         return self.app.cache.get_roles_view_for_guild(self.id)
 
-    def make_banner_url(self, *, ext: typing.Optional[str] = None, size: int = 4096) -> typing.Optional[files.URL]:
+    def make_banner_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
         """Generate the guild's banner image URL, if set.
 
         Parameters
@@ -2815,17 +3014,13 @@ class Guild(PartialGuild):
             return None
 
         if ext is None:
-            if self.banner_hash.startswith("a_"):
-                ext = "gif"
-
-            else:
-                ext = "png"
+            ext = "gif" if self.banner_hash.startswith("a_") else "png"
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
             urls.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext
         )
 
-    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the guild's discovery splash image URL, if set.
 
         Parameters
@@ -2854,7 +3049,7 @@ class Guild(PartialGuild):
             urls.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext
         )
 
-    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the guild's splash image URL, if set.
 
         Parameters
@@ -2885,7 +3080,7 @@ class Guild(PartialGuild):
 
     def get_channel(
         self, channel: snowflakes.SnowflakeishOr[channels_.PartialChannel]
-    ) -> typing.Optional[channels_.PermissibleGuildChannel]:
+    ) -> channels_.PermissibleGuildChannel | None:
         """Get a cached channel that belongs to the guild by it's ID or object.
 
         Parameters
@@ -2907,7 +3102,7 @@ class Guild(PartialGuild):
 
         return None
 
-    def get_member(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> typing.Optional[Member]:
+    def get_member(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> Member | None:
         """Get a cached member that belongs to the guild by it's user ID or object.
 
         Parameters
@@ -2925,7 +3120,7 @@ class Guild(PartialGuild):
 
         return self.app.cache.get_member(self.id, user)
 
-    def get_my_member(self) -> typing.Optional[Member]:
+    def get_my_member(self) -> Member | None:
         """Return the cached member for the bot user in this guild, if known.
 
         Returns
@@ -2942,9 +3137,7 @@ class Guild(PartialGuild):
 
         return self.get_member(me.id)
 
-    def get_presence(
-        self, user: snowflakes.SnowflakeishOr[users.PartialUser]
-    ) -> typing.Optional[presences_.MemberPresence]:
+    def get_presence(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> presences_.MemberPresence | None:
         """Get a cached presence that belongs to the guild by it's user ID or object.
 
         Parameters
@@ -2962,9 +3155,7 @@ class Guild(PartialGuild):
 
         return self.app.cache.get_presence(self.id, user)
 
-    def get_voice_state(
-        self, user: snowflakes.SnowflakeishOr[users.PartialUser]
-    ) -> typing.Optional[voices_.VoiceState]:
+    def get_voice_state(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> voices_.VoiceState | None:
         """Get a cached voice state that belongs to the guild by it's user.
 
         Parameters
@@ -2982,9 +3173,7 @@ class Guild(PartialGuild):
 
         return self.app.cache.get_voice_state(self.id, user)
 
-    def get_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]
-    ) -> typing.Optional[emojis_.KnownCustomEmoji]:
+    def get_emoji(self, emoji: snowflakes.SnowflakeishOr[emojis_.CustomEmoji]) -> emojis_.KnownCustomEmoji | None:
         """Get a cached emoji that belongs to the guild by it's ID or object.
 
         Parameters
@@ -3007,9 +3196,7 @@ class Guild(PartialGuild):
 
         return None
 
-    def get_sticker(
-        self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker]
-    ) -> typing.Optional[stickers.GuildSticker]:
+    def get_sticker(self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker]) -> stickers.GuildSticker | None:
         """Get a cached sticker that belongs to the guild by it's ID or object.
 
         Parameters
@@ -3032,7 +3219,7 @@ class Guild(PartialGuild):
 
         return None
 
-    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> typing.Optional[Role]:
+    def get_role(self, role: snowflakes.SnowflakeishOr[PartialRole]) -> Role | None:
         """Get a cached role that belongs to the guild by it's ID or object.
 
         Parameters
@@ -3076,7 +3263,7 @@ class Guild(PartialGuild):
         """
         return await self.app.rest.fetch_member(self.id, self.owner_id)
 
-    async def fetch_widget_channel(self) -> typing.Optional[channels_.GuildChannel]:
+    async def fetch_widget_channel(self) -> channels_.GuildChannel | None:
         """Fetch the widget channel.
 
         This will be [`None`][] if not set.
@@ -3107,7 +3294,7 @@ class Guild(PartialGuild):
         assert isinstance(widget_channel, channels_.GuildChannel)
         return widget_channel
 
-    async def fetch_afk_channel(self) -> typing.Optional[channels_.GuildVoiceChannel]:
+    async def fetch_afk_channel(self) -> channels_.GuildVoiceChannel | None:
         """Fetch the channel that AFK voice users get sent to.
 
         Returns
@@ -3136,7 +3323,7 @@ class Guild(PartialGuild):
         assert isinstance(afk_channel, channels_.GuildVoiceChannel)
         return afk_channel
 
-    async def fetch_system_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
+    async def fetch_system_channel(self) -> channels_.GuildTextChannel | None:
         """Fetch the system channel.
 
         Returns
@@ -3166,7 +3353,7 @@ class Guild(PartialGuild):
         assert isinstance(system_channel, channels_.GuildTextChannel)
         return system_channel
 
-    async def fetch_rules_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
+    async def fetch_rules_channel(self) -> channels_.GuildTextChannel | None:
         """Fetch the channel where guilds display rules and guidelines.
 
         If the [`hikari.guilds.GuildFeature.COMMUNITY`][] feature is not defined, then this is [`None`][].
@@ -3197,7 +3384,7 @@ class Guild(PartialGuild):
         assert isinstance(rules_channel, channels_.GuildTextChannel)
         return rules_channel
 
-    async def fetch_public_updates_channel(self) -> typing.Optional[channels_.GuildTextChannel]:
+    async def fetch_public_updates_channel(self) -> channels_.GuildTextChannel | None:
         """Fetch channel ID of the channel where admins and moderators receive notices from Discord.
 
         This is only present if [`hikari.guilds.GuildFeature.COMMUNITY`][] is in [`hikari.guilds.Guild.features`][] for
@@ -3247,19 +3434,19 @@ class RESTGuild(Guild):
     roles: typing.Mapping[snowflakes.Snowflake, Role] = attrs.field(eq=False, hash=False, repr=False)
     """The roles in this guild, represented as a mapping of role ID to role object."""
 
-    approximate_active_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    approximate_active_member_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild that are not offline.
 
     This will be [`None`][] when creating a guild.
     """
 
-    approximate_member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    approximate_member_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of members in the guild.
 
     This will be [`None`][] when creating a guild.
     """
 
-    max_presences: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    max_presences: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The maximum number of presences for the guild.
 
     If [`None`][], then there is no limit.
@@ -3273,7 +3460,7 @@ class RESTGuild(Guild):
 class GatewayGuild(Guild):
     """Guild specialization that is sent via the gateway only."""
 
-    is_large: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
+    is_large: bool | None = attrs.field(eq=False, hash=False, repr=False)
     """Whether the guild is considered to be large or not.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -3284,7 +3471,7 @@ class GatewayGuild(Guild):
     sent about members who are offline or invisible.
     """
 
-    joined_at: typing.Optional[datetime.datetime] = attrs.field(eq=False, hash=False, repr=False)
+    joined_at: datetime.datetime | None = attrs.field(eq=False, hash=False, repr=False)
     """The date and time that the bot user joined this guild.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`
@@ -3292,7 +3479,7 @@ class GatewayGuild(Guild):
     [`None`][].
     """
 
-    member_count: typing.Optional[int] = attrs.field(eq=False, hash=False, repr=False)
+    member_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The number of members in this guild.
 
     This information is only available if the guild was sent via a `GUILD_CREATE`

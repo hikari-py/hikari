@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,17 +24,17 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "CacheAware",
-    "EventManagerAware",
     "EntityFactoryAware",
     "EventFactoryAware",
+    "EventManagerAware",
     "ExecutorAware",
     "GatewayBotAware",
     "IntentsAware",
+    "InteractionServerAware",
     "NetworkSettingsAware",
     "RESTAware",
     "RESTBotAware",
     "Runnable",
-    "InteractionServerAware",
     "ShardAware",
     "VoiceAware",
 )
@@ -133,7 +132,7 @@ class ExecutorAware(fast_protocol.FastProtocolChecking, typing.Protocol):
 
     @property
     @abc.abstractmethod
-    def executor(self) -> typing.Optional[futures.Executor]:
+    def executor(self) -> futures.Executor | None:
         """Executor to use for blocking operations.
 
         This may return [`None`][] if the default [`asyncio`][] thread pool
@@ -259,7 +258,7 @@ class ShardAware(
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_me(self) -> typing.Optional[users_.OwnUser]:
+    def get_me(self) -> users_.OwnUser | None:
         """Return the bot user, if known.
 
         This should be available as soon as the bot has fired the
@@ -327,7 +326,7 @@ class ShardAware(
     async def update_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
+        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel] | None,
         *,
         self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         self_deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,

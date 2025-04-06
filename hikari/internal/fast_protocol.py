@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -51,7 +50,8 @@ class _FastProtocolChecking(type(typing.Protocol)):
 
         if _Protocol is NotImplemented:
             if cls_name != "FastProtocolChecking":
-                raise TypeError("First instance of _FastProtocolChecking must be FastProtocolChecking")
+                msg = "First instance of _FastProtocolChecking must be FastProtocolChecking"
+                raise TypeError(msg)
 
             namespace["_attributes_"] = ()
             # noinspection PyRedundantParentheses
@@ -67,9 +67,8 @@ class _FastProtocolChecking(type(typing.Protocol)):
                     continue
 
                 if _Protocol not in base.__bases__:
-                    raise TypeError(
-                        f"FastProtocolChecking can only inherit from other fast checking protocols, got {base!r}"
-                    )
+                    msg = f"FastProtocolChecking can only inherit from other fast checking protocols, got {base!r}"
+                    raise TypeError(msg)
 
                 attributes.update(base._attributes_)
 
@@ -81,11 +80,12 @@ class _FastProtocolChecking(type(typing.Protocol)):
         obj = super().__new__(cls, cls_name, bases, namespace)
 
         if in_bases and not obj._is_protocol:
-            raise TypeError("FastProtocolChecking can only be used with protocols")
+            msg = "FastProtocolChecking can only be used with protocols"
+            raise TypeError(msg)
 
         return obj
 
-    def __subclasscheck__(cls, other):
+    def __subclasscheck__(cls, other: type) -> bool:
         return _abc_subclasscheck(cls, other)
 
     def __instancecheck__(cls, other: object) -> bool:
@@ -115,7 +115,7 @@ class FastProtocolChecking(typing.Protocol, metaclass=_FastProtocolChecking):
 
     __subclasshook__: typing.Callable[[type[typing.Any]], bool]
 
-    def __init_subclass__(cls, *args: typing.Any, **kwargs: typing.Any) -> None:
+    def __init_subclass__(cls, *args: object, **kwargs: object) -> None:
         # typing sets their own subclasshook if its not there. We want to
         # overwrite that one, but not any that was already defined, so we check
         # this before typing does anything to it.

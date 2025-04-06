@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("CacheView", "Cache", "MutableCache")
+__all__: typing.Sequence[str] = ("Cache", "CacheView", "MutableCache")
 
 import abc
 import typing
@@ -62,7 +61,7 @@ class CacheView(typing.Mapping[_KeyT, _ValueT], abc.ABC):
     def get_item_at(self, index: slice, /) -> typing.Sequence[_ValueT]: ...
 
     @abc.abstractmethod
-    def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[_ValueT, typing.Sequence[_ValueT]]:
+    def get_item_at(self, index: slice | int, /) -> _ValueT | typing.Sequence[_ValueT]:
         """Get an item at a specific position or slice."""
 
 
@@ -88,9 +87,7 @@ class Cache(abc.ABC):
         """Get the configured settings for this cache."""
 
     @abc.abstractmethod
-    def get_dm_channel_id(
-        self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
-    ) -> typing.Optional[snowflakes.Snowflake]:
+    def get_dm_channel_id(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> snowflakes.Snowflake | None:
         """Get the DM channel ID for a user.
 
         Parameters
@@ -116,9 +113,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /
-    ) -> typing.Optional[emojis.KnownCustomEmoji]:
+    def get_emoji(self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /) -> emojis.KnownCustomEmoji | None:
         """Get a known custom emoji from the cache.
 
         Parameters
@@ -162,9 +157,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_sticker(
-        self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /
-    ) -> typing.Optional[stickers.GuildSticker]:
+    def get_sticker(self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /) -> stickers.GuildSticker | None:
         """Get a sticker from the cache.
 
         Parameters
@@ -207,9 +200,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_guild(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /) -> guilds.GatewayGuild | None:
         """Get a guild from the cache.
 
         !!! warning
@@ -232,7 +223,7 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_available_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> typing.Optional[guilds.GatewayGuild]:
+    ) -> guilds.GatewayGuild | None:
         """Get the object of an available guild from the cache.
 
         Parameters
@@ -249,7 +240,7 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_unavailable_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> typing.Optional[guilds.GatewayGuild]:
+    ) -> guilds.GatewayGuild | None:
         """Get the object of an unavailable guild from the cache.
 
         !!! note
@@ -308,7 +299,7 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_guild_channel(
         self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /
-    ) -> typing.Optional[channels.PermissibleGuildChannel]:
+    ) -> channels.PermissibleGuildChannel | None:
         """Get a guild channel from the cache.
 
         Parameters
@@ -355,7 +346,7 @@ class Cache(abc.ABC):
     @abc.abstractmethod
     def get_thread(
         self, thread: snowflakes.SnowflakeishOr[channels.PartialChannel], /
-    ) -> typing.Optional[channels.GuildThreadChannel]:
+    ) -> channels.GuildThreadChannel | None:
         """Get a thread channel from the cache.
 
         Parameters
@@ -423,7 +414,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_invite(self, code: typing.Union[invites.InviteCode, str], /) -> typing.Optional[invites.InviteWithMetadata]:
+    def get_invite(self, code: invites.InviteCode | str, /) -> invites.InviteWithMetadata | None:
         """Get an invite object from the cache.
 
         Parameters
@@ -490,7 +481,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_me(self) -> typing.Optional[users.OwnUser]:
+    def get_me(self) -> users.OwnUser | None:
         """Get the own user object from the cache.
 
         Returns
@@ -505,7 +496,7 @@ class Cache(abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[guilds.Member]:
+    ) -> guilds.Member | None:
         """Get a member object from the cache.
 
         Parameters
@@ -550,9 +541,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_message(
-        self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /
-    ) -> typing.Optional[messages.Message]:
+    def get_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /) -> messages.Message | None:
         """Get a message object from the cache.
 
         Parameters
@@ -582,7 +571,7 @@ class Cache(abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[presences.MemberPresence]:
+    ) -> presences.MemberPresence | None:
         """Get a presence object from the cache.
 
         Parameters
@@ -631,7 +620,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> typing.Optional[guilds.Role]:
+    def get_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> guilds.Role | None:
         """Get a role object from the cache.
 
         Parameters
@@ -674,7 +663,7 @@ class Cache(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> typing.Optional[users.User]:
+    def get_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> users.User | None:
         """Get a user object from the cache.
 
         Parameters
@@ -705,7 +694,7 @@ class Cache(abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[voices.VoiceState]:
+    ) -> voices.VoiceState | None:
         """Get a voice state object from the cache.
 
         Parameters
@@ -804,7 +793,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def delete_dm_channel_id(
         self, user: snowflakes.SnowflakeishOr[users.PartialUser], /
-    ) -> typing.Optional[snowflakes.Snowflake]:
+    ) -> snowflakes.Snowflake | None:
         """Remove a DM channel ID from the cache.
 
         Parameters
@@ -874,9 +863,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_emoji(
-        self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /
-    ) -> typing.Optional[emojis.KnownCustomEmoji]:
+    def delete_emoji(self, emoji: snowflakes.SnowflakeishOr[emojis.CustomEmoji], /) -> emojis.KnownCustomEmoji | None:
         """Remove a known custom emoji from the cache.
 
         !!! note
@@ -908,7 +895,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_emoji(
         self, emoji: emojis.KnownCustomEmoji, /
-    ) -> tuple[typing.Optional[emojis.KnownCustomEmoji], typing.Optional[emojis.KnownCustomEmoji]]:
+    ) -> tuple[emojis.KnownCustomEmoji | None, emojis.KnownCustomEmoji | None]:
         """Update an emoji object in the cache.
 
         Parameters
@@ -962,7 +949,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def delete_sticker(
         self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /
-    ) -> typing.Optional[stickers.GuildSticker]:
+    ) -> stickers.GuildSticker | None:
         """Remove a sticker from the cache.
 
         !!! note
@@ -1002,9 +989,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_guild(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
-    ) -> typing.Optional[guilds.GatewayGuild]:
+    def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /) -> guilds.GatewayGuild | None:
         """Remove a guild object from the cache.
 
         Parameters
@@ -1031,7 +1016,10 @@ class MutableCache(Cache, abc.ABC):
 
     @abc.abstractmethod
     def set_guild_availability(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], is_available: bool, /
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        is_available: bool,  # noqa: FBT001 - Boolean-typed positional argument
+        /,
     ) -> None:
         """Set whether a cached guild is available or not.
 
@@ -1046,7 +1034,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_guild(
         self, guild: guilds.GatewayGuild, /
-    ) -> tuple[typing.Optional[guilds.GatewayGuild], typing.Optional[guilds.GatewayGuild]]:
+    ) -> tuple[guilds.GatewayGuild | None, guilds.GatewayGuild | None]:
         """Update a guild in the cache.
 
         Parameters
@@ -1094,7 +1082,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def delete_guild_channel(
         self, channel: snowflakes.SnowflakeishOr[channels.PartialChannel], /
-    ) -> typing.Optional[channels.PermissibleGuildChannel]:
+    ) -> channels.PermissibleGuildChannel | None:
         """Remove a guild channel from the cache.
 
         Parameters
@@ -1122,7 +1110,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_guild_channel(
         self, channel: channels.PermissibleGuildChannel, /
-    ) -> tuple[typing.Optional[channels.PermissibleGuildChannel], typing.Optional[channels.PermissibleGuildChannel]]:
+    ) -> tuple[channels.PermissibleGuildChannel | None, channels.PermissibleGuildChannel | None]:
         """Update a guild channel in the cache.
 
         Parameters
@@ -1193,7 +1181,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def delete_thread(
         self, thread: snowflakes.SnowflakeishOr[channels.PartialChannel], /
-    ) -> typing.Optional[channels.GuildThreadChannel]:
+    ) -> channels.GuildThreadChannel | None:
         """Remove a thread channel from the cache.
 
         Parameters
@@ -1221,7 +1209,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_thread(
         self, thread: channels.GuildThreadChannel, /
-    ) -> tuple[typing.Optional[channels.GuildThreadChannel], typing.Optional[channels.GuildThreadChannel]]:
+    ) -> tuple[channels.GuildThreadChannel | None, channels.GuildThreadChannel | None]:
         """Update a thread channel in the cache.
 
         Parameters
@@ -1235,7 +1223,7 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached thread channel if found (else [`None`][])
             and the new cached thread channel if it could be cached
             (else [`None`][]).
-        """
+        """  # noqa: E501
 
     @abc.abstractmethod
     def clear_invites(self) -> CacheView[str, invites.InviteWithMetadata]:
@@ -1290,9 +1278,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_invite(
-        self, code: typing.Union[invites.InviteCode, str], /
-    ) -> typing.Optional[invites.InviteWithMetadata]:
+    def delete_invite(self, code: invites.InviteCode | str, /) -> invites.InviteWithMetadata | None:
         """Remove an invite object from the cache.
 
         Parameters
@@ -1320,7 +1306,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_invite(
         self, invite: invites.InviteWithMetadata, /
-    ) -> tuple[typing.Optional[invites.InviteWithMetadata], typing.Optional[invites.InviteWithMetadata]]:
+    ) -> tuple[invites.InviteWithMetadata | None, invites.InviteWithMetadata | None]:
         """Update an invite in the cache.
 
         Parameters
@@ -1334,10 +1320,10 @@ class MutableCache(Cache, abc.ABC):
             A tuple of the old cached invite object if found (else
             [`None`][]) and the new cached invite object if it could be
             cached (else [`None`][]).
-        """
+        """  # noqa: E501
 
     @abc.abstractmethod
-    def delete_me(self) -> typing.Optional[users.OwnUser]:
+    def delete_me(self) -> users.OwnUser | None:
         """Remove the own user object from the cache.
 
         Returns
@@ -1358,9 +1344,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_me(
-        self, user: users.OwnUser, /
-    ) -> tuple[typing.Optional[users.OwnUser], typing.Optional[users.OwnUser]]:
+    def update_me(self, user: users.OwnUser, /) -> tuple[users.OwnUser | None, users.OwnUser | None]:
         """Update the own user entry in the cache.
 
         Parameters
@@ -1415,7 +1399,7 @@ class MutableCache(Cache, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[guilds.Member]:
+    ) -> guilds.Member | None:
         """Remove a member object from the cache.
 
         !!! note
@@ -1448,9 +1432,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_member(
-        self, member: guilds.Member, /
-    ) -> tuple[typing.Optional[guilds.Member], typing.Optional[guilds.Member]]:
+    def update_member(self, member: guilds.Member, /) -> tuple[guilds.Member | None, guilds.Member | None]:
         """Update a member in the cache.
 
         Parameters
@@ -1503,7 +1485,7 @@ class MutableCache(Cache, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[presences.MemberPresence]:
+    ) -> presences.MemberPresence | None:
         """Remove a presence from the cache.
 
         Parameters
@@ -1533,7 +1515,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_presence(
         self, presence: presences.MemberPresence, /
-    ) -> tuple[typing.Optional[presences.MemberPresence], typing.Optional[presences.MemberPresence]]:
+    ) -> tuple[presences.MemberPresence | None, presences.MemberPresence | None]:
         """Update a presence object in the cache.
 
         Parameters
@@ -1579,7 +1561,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> typing.Optional[guilds.Role]:
+    def delete_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> guilds.Role | None:
         """Remove a role object form the cache.
 
         Parameters
@@ -1605,7 +1587,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def update_role(self, role: guilds.Role, /) -> tuple[typing.Optional[guilds.Role], typing.Optional[guilds.Role]]:
+    def update_role(self, role: guilds.Role, /) -> tuple[guilds.Role | None, guilds.Role | None]:
         """Update a role in the cache.
 
         Parameters
@@ -1679,7 +1661,7 @@ class MutableCache(Cache, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
-    ) -> typing.Optional[voices.VoiceState]:
+    ) -> voices.VoiceState | None:
         """Remove a voice state object from the cache.
 
         Parameters
@@ -1709,7 +1691,7 @@ class MutableCache(Cache, abc.ABC):
     @abc.abstractmethod
     def update_voice_state(
         self, voice_state: voices.VoiceState, /
-    ) -> tuple[typing.Optional[voices.VoiceState], typing.Optional[voices.VoiceState]]:
+    ) -> tuple[voices.VoiceState | None, voices.VoiceState | None]:
         """Update a voice state object in the cache.
 
         Parameters
@@ -1736,9 +1718,7 @@ class MutableCache(Cache, abc.ABC):
         """
 
     @abc.abstractmethod
-    def delete_message(
-        self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /
-    ) -> typing.Optional[messages.Message]:
+    def delete_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /) -> messages.Message | None:
         """Remove a message object from the cache.
 
         Parameters
@@ -1765,8 +1745,8 @@ class MutableCache(Cache, abc.ABC):
 
     @abc.abstractmethod
     def update_message(
-        self, message: typing.Union[messages.PartialMessage, messages.Message], /
-    ) -> tuple[typing.Optional[messages.Message], typing.Optional[messages.Message]]:
+        self, message: messages.PartialMessage | messages.Message, /
+    ) -> tuple[messages.Message | None, messages.Message | None]:
         """Update a message in the cache.
 
         Parameters

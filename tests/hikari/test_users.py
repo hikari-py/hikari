@@ -193,6 +193,28 @@ class TestUser:
 
         assert obj.accent_colour is obj.accent_color
 
+    def test_avatar_decoration_property(self, obj):
+        obj.avatar_decoration = users.AvatarDecoration(
+            asset_hash="18dnf8dfbakfdh", sku_id=snowflakes.Snowflake(123), expires_at=None
+        )
+
+        with mock.patch.object(users.AvatarDecoration, "make_url") as make_url:
+            assert obj.avatar_decoration.url is make_url.return_value
+
+    def test_avatar_decoration_make_url_with_all_args(self, obj):
+        obj.avatar_decoration = users.AvatarDecoration(
+            asset_hash="18dnf8dfbakfdh", sku_id=snowflakes.Snowflake(123), expires_at=None
+        )
+
+        with mock.patch.object(
+            routes, "CDN_AVATAR_DECORATION", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.avatar_decoration.make_url(size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, hash=obj.avatar_decoration.asset_hash, size=4096, file_format="png"
+        )
+
     def test_avatar_url_property(self, obj):
         with mock.patch.object(users.User, "make_avatar_url") as make_avatar_url:
             assert obj.avatar_url is make_avatar_url.return_value
@@ -245,6 +267,14 @@ class TestUser:
         with mock.patch.object(users.User, "make_avatar_url", return_value=None):
             with mock.patch.object(users.User, "default_avatar_url") as mock_default_avatar_url:
                 assert obj.display_avatar_url is mock_default_avatar_url
+
+    def test_display_banner_url_when_banner_url(self, obj):
+        with mock.patch.object(users.User, "make_banner_url") as mock_make_banner_url:
+            assert obj.display_banner_url is mock_make_banner_url.return_value
+
+    def test_display_banner_url_when_no_banner_url(self, obj):
+        with mock.patch.object(users.User, "make_banner_url", return_value=None):
+            assert obj.display_banner_url is None
 
     def test_default_avatar(self, obj):
         obj.avatar_hash = "18dnf8dfbakfdh"
@@ -327,6 +357,7 @@ class TestPartialUserImpl:
             discriminator="8637",
             username="thomm.o",
             global_name=None,
+            avatar_decoration=None,
             avatar_hash=None,
             banner_hash=None,
             accent_color=None,
@@ -371,6 +402,7 @@ class TestOwnUser:
             discriminator="1234",
             username="foobar",
             global_name=None,
+            avatar_decoration=None,
             avatar_hash="69420",
             banner_hash="42069",
             accent_color=123456,

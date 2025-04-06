@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -42,6 +41,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites as invite_models
     from hikari import messages as message_models
     from hikari import monetization as entitlement_models
+    from hikari import polls as poll_models
     from hikari import presences as presence_models
     from hikari import scheduled_events as scheduled_events_models
     from hikari import sessions as gateway_models
@@ -962,7 +962,7 @@ class EntityFactory(abc.ABC):
     @abc.abstractmethod
     def deserialize_emoji(
         self, payload: data_binding.JSONObject
-    ) -> typing.Union[emoji_models.UnicodeEmoji, emoji_models.CustomEmoji]:
+    ) -> emoji_models.UnicodeEmoji | emoji_models.CustomEmoji:
         """Parse a raw payload from Discord into an emoji object.
 
         Parameters
@@ -1176,6 +1176,21 @@ class EntityFactory(abc.ABC):
         -------
         hikari.guilds.GuildPreview
             The deserialized guild preview object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_incidents(self, payload: data_binding.JSONObject | None) -> guild_models.GuildIncidents:
+        """Parse a raw payload from Discord into a guild incidents object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.GuildIncidents
+            The deserialized guild incidents object.
         """
 
     @abc.abstractmethod
@@ -1977,4 +1992,23 @@ class EntityFactory(abc.ABC):
         -------
         hikari.stage_intances.StageInstance
             The deserialized stage instance object
+        """
+
+    ###############
+    # POLL MODELS #
+    ###############
+
+    @abc.abstractmethod
+    def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
+        """Parse a raw payload from Discord into a poll object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.polls.Poll
+            The deserialized poll object.
         """

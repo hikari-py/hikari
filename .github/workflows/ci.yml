@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@22695119d769bdb6f7032ad67b9bca0ef8c4a174 # v5.4.0
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
         with:
           python-version: ${{ matrix.python-version }}
           # TODO(https://github.com/astral-sh/setup-uv/issues/226): Remove this.
@@ -71,7 +71,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@22695119d769bdb6f7032ad67b9bca0ef8c4a174 # v5.4.0
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
         with:
           python-version: "3.10"
 
@@ -116,7 +116,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@22695119d769bdb6f7032ad67b9bca0ef8c4a174 # v5.4.0
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
         with:
           python-version: 3.9
 
@@ -148,16 +148,10 @@ jobs:
         run: |
           nox -s verify-types
 
-      - name: Flake8
+      - name: Ruff
         if: always() && !cancelled()
         run: |
-          nox -s flake8
-
-      # Temporary until we use ruff for linting too
-      - name: Ruff format check
-        if: always() && !cancelled()
-        run: |
-          nox -s check-reformat-code
+          nox -s ruff -- --output-format=github
 
       - name: Slotscheck
         if: always() && !cancelled()
@@ -182,7 +176,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@22695119d769bdb6f7032ad67b9bca0ef8c4a174 # v5.4.0
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
         with:
           python-version: 3.9
 
@@ -200,7 +194,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@22695119d769bdb6f7032ad67b9bca0ef8c4a174 # v5.4.0
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
         with:
           # NOTE: This should be kept up to date with .readthedocs.yaml
           python-version: 3.11

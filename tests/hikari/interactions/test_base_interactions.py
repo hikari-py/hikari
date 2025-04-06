@@ -163,6 +163,7 @@ class TestMessageResponseMixin:
     async def test_create_initial_response_with_optional_args(self, mock_message_response_mixin, mock_app):
         mock_embed_1 = object()
         mock_embed_2 = object()
+        mock_poll = object()
         mock_component = object()
         mock_components = object(), object()
         mock_attachment = object()
@@ -174,6 +175,7 @@ class TestMessageResponseMixin:
             embed=mock_embed_1,
             flags=64,
             embeds=[mock_embed_2],
+            poll=mock_poll,
             component=mock_component,
             components=mock_components,
             attachment=mock_attachment,
@@ -192,6 +194,7 @@ class TestMessageResponseMixin:
             flags=64,
             embed=mock_embed_1,
             embeds=[mock_embed_2],
+            poll=mock_poll,
             component=mock_component,
             components=mock_components,
             attachment=mock_attachment,
@@ -216,6 +219,7 @@ class TestMessageResponseMixin:
             tts=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
+            poll=undefined.UNDEFINED,
             component=undefined.UNDEFINED,
             components=undefined.UNDEFINED,
             attachment=undefined.UNDEFINED,

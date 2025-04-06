@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -40,6 +39,7 @@ from hikari.impl import interaction_server as interaction_server_impl
 from hikari.impl import rest as rest_impl
 from hikari.internal import aio
 from hikari.internal import signals
+from hikari.internal import typing_extensions
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
@@ -235,57 +235,57 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         self,
         token: rest_api.TokenStrategy,
         *,
-        public_key: typing.Union[bytes, str, None] = None,
+        public_key: bytes | str | None = None,
         allow_color: bool = True,
-        banner: typing.Optional[str] = "hikari",
+        banner: str | None = "hikari",
         suppress_optimization_warning: bool = False,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
-        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        http_settings: config_impl.HTTPSettings | None = None,
+        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
-        rest_url: typing.Optional[str] = None,
+        proxy_settings: config_impl.ProxySettings | None = None,
+        rest_url: str | None = None,
     ) -> None: ...
 
     @typing.overload
     def __init__(
         self,
         token: str,
-        token_type: typing.Union[str, applications.TokenType] = applications.TokenType.BOT,
-        public_key: typing.Union[bytes, str, None] = None,
+        token_type: str | applications.TokenType = applications.TokenType.BOT,
+        public_key: bytes | str | None = None,
         *,
         allow_color: bool = True,
-        banner: typing.Optional[str] = "hikari",
+        banner: str | None = "hikari",
         suppress_optimization_warning: bool = False,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
-        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        http_settings: config_impl.HTTPSettings | None = None,
+        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
-        rest_url: typing.Optional[str] = None,
+        proxy_settings: config_impl.ProxySettings | None = None,
+        rest_url: str | None = None,
     ) -> None: ...
 
     def __init__(
         self,
-        token: typing.Union[str, rest_api.TokenStrategy],
-        token_type: typing.Union[applications.TokenType, str, None] = None,
-        public_key: typing.Union[bytes, str, None] = None,
+        token: str | rest_api.TokenStrategy,
+        token_type: applications.TokenType | str | None = None,
+        public_key: bytes | str | None = None,
         *,
         allow_color: bool = True,
-        banner: typing.Optional[str] = "hikari",
+        banner: str | None = "hikari",
         suppress_optimization_warning: bool = False,
-        executor: typing.Optional[concurrent.futures.Executor] = None,
+        executor: concurrent.futures.Executor | None = None,
         force_color: bool = False,
-        http_settings: typing.Optional[config_impl.HTTPSettings] = None,
-        logs: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]] = "INFO",
+        http_settings: config_impl.HTTPSettings | None = None,
+        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
-        proxy_settings: typing.Optional[config_impl.ProxySettings] = None,
-        rest_url: typing.Optional[str] = None,
+        proxy_settings: config_impl.ProxySettings | None = None,
+        rest_url: str | None = None,
     ) -> None:
         if isinstance(public_key, str):
             public_key = bytes.fromhex(public_key)
@@ -297,12 +297,12 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                 token_type = applications.TokenType.BOT
 
         # Beautification and logging
-        ux.init_logging(logs, allow_color, force_color)
-        self.print_banner(banner, allow_color, force_color)
-        ux.warn_if_not_optimized(suppress_optimization_warning)
+        ux.init_logging(logs, allow_color=allow_color, force_color=force_color)
+        self.print_banner(banner, allow_color=allow_color, force_color=force_color)
+        ux.warn_if_not_optimized(suppress=suppress_optimization_warning)
 
         # Settings and state
-        self._close_event: typing.Optional[asyncio.Event] = None
+        self._close_event: asyncio.Event | None = None
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._is_closing = False
@@ -333,49 +333,55 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         )
 
     @property
+    @typing_extensions.override
     def is_alive(self) -> bool:
         return self._close_event is not None
 
     @property
+    @typing_extensions.override
     def interaction_server(self) -> interaction_server_.InteractionServer:
         return self._server
 
     @property
+    @typing_extensions.override
     def on_shutdown(
         self,
     ) -> typing.Sequence[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]]:
         return self._on_shutdown.copy()
 
     @property
+    @typing_extensions.override
     def on_startup(self) -> typing.Sequence[typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]]]:
         return self._on_startup.copy()
 
     @property
+    @typing_extensions.override
     def rest(self) -> rest_api.RESTClient:
         return self._rest
 
     @property
+    @typing_extensions.override
     def entity_factory(self) -> entity_factory_api.EntityFactory:
         return self._entity_factory
 
     @property
+    @typing_extensions.override
     def http_settings(self) -> config_impl.HTTPSettings:
         return self._http_settings
 
     @property
+    @typing_extensions.override
     def proxy_settings(self) -> config_impl.ProxySettings:
         return self._proxy_settings
 
     @property
-    def executor(self) -> typing.Optional[concurrent.futures.Executor]:
+    @typing_extensions.override
+    def executor(self) -> concurrent.futures.Executor | None:
         return self._executor
 
     @staticmethod
     def print_banner(
-        banner: typing.Optional[str],
-        allow_color: bool,
-        force_color: bool,
-        extra_args: typing.Optional[dict[str, str]] = None,
+        banner: str | None, *, allow_color: bool, force_color: bool, extra_args: dict[str, str] | None = None
     ) -> None:
         """Print the banner.
 
@@ -409,31 +415,37 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
         ValueError
             If `extra_args` contains a default $-substitution.
         """
-        ux.print_banner(banner, allow_color, force_color, extra_args=extra_args)
+        ux.print_banner(banner, allow_color=allow_color, force_color=force_color, extra_args=extra_args)
 
+    @typing_extensions.override
     def add_shutdown_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_shutdown.append(callback)
 
+    @typing_extensions.override
     def remove_shutdown_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_shutdown.remove(callback)
 
+    @typing_extensions.override
     def add_startup_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_startup.append(callback)
 
+    @typing_extensions.override
     def remove_startup_callback(
         self, callback: typing.Callable[[RESTBot], typing.Coroutine[typing.Any, typing.Any, None]], /
     ) -> None:
         self._on_startup.remove(callback)
 
+    @typing_extensions.override
     async def close(self) -> None:
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot close an inactive bot")
+            msg = "Cannot close an inactive bot"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._is_closing:
             await self.join()
@@ -456,33 +468,38 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
 
             _LOGGER.info("bot shut down")
 
+    @typing_extensions.override
     async def join(self) -> None:
         if not self._close_event:
-            raise errors.ComponentStateConflictError("Cannot wait for an inactive bot to join")
+            msg = "Cannot wait for an inactive bot to join"
+            raise errors.ComponentStateConflictError(msg)
 
         await self._close_event.wait()
 
+    @typing_extensions.override
     async def on_interaction(self, body: bytes, signature: bytes, timestamp: bytes) -> interaction_server_.Response:
         return await self._server.on_interaction(body, signature, timestamp)
 
+    @typing_extensions.override
     def run(
         self,
+        *,
         asyncio_debug: bool = False,
         backlog: int = 128,
         check_for_updates: bool = True,
         close_loop: bool = True,
         close_passed_executor: bool = False,
-        coroutine_tracking_depth: typing.Optional[int] = None,
-        enable_signal_handlers: typing.Optional[bool] = None,
-        host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
-        path: typing.Optional[str] = None,
-        port: typing.Optional[int] = None,
+        coroutine_tracking_depth: int | None = None,
+        enable_signal_handlers: bool | None = None,
+        host: str | typing.Sequence[str] | None = None,
+        path: str | None = None,
+        port: int | None = None,
         propagate_interrupts: bool = False,
-        reuse_address: typing.Optional[bool] = None,
-        reuse_port: typing.Optional[bool] = None,
+        reuse_address: bool | None = None,
+        reuse_port: bool | None = None,
         shutdown_timeout: float = 60.0,
-        socket: typing.Optional[socket_.socket] = None,
-        ssl_context: typing.Optional[ssl.SSLContext] = None,
+        socket: socket_.socket | None = None,
+        ssl_context: ssl.SSLContext | None = None,
     ) -> None:
         """Open this REST server and block until it closes.
 
@@ -532,6 +549,15 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             TCP/IP host or a sequence of hosts for the HTTP server.
         port
             TCP/IP port for the HTTP server.
+        propagate_interrupts
+            If [`True`][], then any internal [`hikari.errors.HikariInterrupt`][]
+            that is raises as a result of catching an OS level signal will
+            result in the exception being rethrown once the application has
+            closed. This can allow you to use hikari signal handlers and
+            still be able to determine what kind of interrupt the
+            application received after it closes. When [`False`][], nothing
+            is raised and the call will terminate cleanly and silently
+            where possible instead.
         path
             File system path for HTTP server unix domain socket.
         reuse_address
@@ -549,7 +575,8 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self.is_alive:
-            raise errors.ComponentStateConflictError("Cannot start a bot that's already active")
+            msg = "Cannot start a bot that's already active"
+            raise errors.ComponentStateConflictError(msg)
 
         loop = aio.get_or_make_loop()
         if asyncio_debug:
@@ -604,18 +631,20 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
                     _LOGGER.warning("forcefully terminated")
                     raise
 
+    @typing_extensions.override
     async def start(
         self,
+        *,
         backlog: int = 128,
         check_for_updates: bool = True,
-        host: typing.Optional[typing.Union[str, typing.Sequence[str]]] = None,
-        port: typing.Optional[int] = None,
-        path: typing.Optional[str] = None,
-        reuse_address: typing.Optional[bool] = None,
-        reuse_port: typing.Optional[bool] = None,
-        socket: typing.Optional[socket_.socket] = None,
+        host: str | typing.Sequence[str] | None = None,
+        port: int | None = None,
+        path: str | None = None,
+        reuse_address: bool | None = None,
+        reuse_port: bool | None = None,
+        socket: socket_.socket | None = None,
         shutdown_timeout: float = 60.0,
-        ssl_context: typing.Optional[ssl.SSLContext] = None,
+        ssl_context: ssl.SSLContext | None = None,
     ) -> None:
         """Start the bot and wait for the internal server to startup then return.
 
@@ -652,13 +681,14 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             SSL context for HTTPS servers.
         """
         if self.is_alive:
-            raise errors.ComponentStateConflictError("Cannot start an already active interaction server")
+            msg = "Cannot start an already active interaction server"
+            raise errors.ComponentStateConflictError(msg)
 
         self._is_closing = False
         self._close_event = asyncio.Event()
 
         if check_for_updates:
-            asyncio.create_task(
+            asyncio.create_task(  # noqa: RUF006 - We want this to be a dangling asyncio task
                 ux.check_for_updates(self._http_settings, self._proxy_settings), name="check for package updates"
             )
 
@@ -683,18 +713,20 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
             ssl_context=ssl_context,
         )
 
+    @typing_extensions.override
     def get_listener(
         self, interaction_type: type[_InteractionT_co], /
-    ) -> typing.Optional[interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
+    ) -> interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None:
         return self._server.get_listener(interaction_type)
 
     @typing.overload
     def set_listener(
         self,
         interaction_type: type[command_interactions.CommandInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT]
-        ],
+        listener: interaction_server_.ListenerT[
+            command_interactions.CommandInteraction, _ModalOrMessageResponseBuilderT
+        ]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -704,9 +736,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[component_interactions.ComponentInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT]
-        ],
+        listener: interaction_server_.ListenerT[
+            component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilderT
+        ]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -716,11 +749,10 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[command_interactions.AutocompleteInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[
-                command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
-            ]
-        ],
+        listener: interaction_server_.ListenerT[
+            command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+        ]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -730,22 +762,29 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def set_listener(
         self,
         interaction_type: type[modal_interactions.ModalInteraction],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]
-        ],
+        listener: interaction_server_.ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT] | None,
         /,
         *,
         replace: bool = False,
     ) -> None: ...
 
+    @typing.overload
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],
-        listener: typing.Optional[
-            interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]
-        ],
+        listener: interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None,
+        /,
+        *,
+        replace: bool = False,
+    ) -> None: ...
+
+    @typing_extensions.override
+    def set_listener(
+        self,
+        interaction_type: type[_InteractionT_co],
+        listener: interaction_server_.ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None,
         /,
         *,
         replace: bool = False,
     ) -> None:
-        self._server.set_listener(interaction_type, listener, replace=replace)  # type: ignore
+        self._server.set_listener(interaction_type, listener, replace=replace)

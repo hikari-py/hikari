@@ -34,6 +34,7 @@ from hikari import files
 from hikari import locales
 from hikari import messages
 from hikari import permissions
+from hikari import polls
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints as special_endpoints_api
@@ -85,7 +86,9 @@ class TestOwnGuildIterator:
         mock_request = mock.AsyncMock(
             side_effect=[[mock_payload_1, mock_payload_2, mock_payload_3], [mock_payload_4, mock_payload_5], []]
         )
-        iterator = special_endpoints.OwnGuildIterator(mock_entity_factory, mock_request, False, first_id="123321")
+        iterator = special_endpoints.OwnGuildIterator(
+            mock_entity_factory, mock_request, newest_first=False, first_id="123321"
+        )
 
         result = await iterator
 
@@ -132,7 +135,7 @@ class TestOwnGuildIterator:
             side_effect=[[mock_payload_3, mock_payload_4, mock_payload_5], [mock_payload_1, mock_payload_2], []]
         )
         iterator = special_endpoints.OwnGuildIterator(
-            mock_entity_factory, mock_request, True, first_id="55555555555555555"
+            mock_entity_factory, mock_request, newest_first=True, first_id="55555555555555555"
         )
 
         result = await iterator
@@ -162,7 +165,7 @@ class TestOwnGuildIterator:
         mock_entity_factory = mock.Mock()
         mock_request = mock.AsyncMock(return_value=[])
         iterator = special_endpoints.OwnGuildIterator(
-            mock_entity_factory, mock_request, newest_first, first_id="123321"
+            mock_entity_factory, mock_request, newest_first=newest_first, first_id="123321"
         )
 
         result = await iterator
@@ -1862,3 +1865,60 @@ class TestModalActionRow:
         }
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+
+class TestPollBuilder:
+    def test_add_answer(self):
+        poll_builder = special_endpoints.PollBuilder(question_text="A cool question", allow_multiselect=False)
+
+        assert poll_builder.answers == []
+
+        poll_builder.add_answer(text="Beanos", emoji=emojis.UnicodeEmoji("👌"))
+
+        assert len(poll_builder.answers) == 1
+
+        assert poll_builder.answers[0].text == "Beanos"
+        assert poll_builder.answers[0].emoji == emojis.UnicodeEmoji("👌")
+
+    def test_build(self):
+        poll_builder = special_endpoints.PollBuilder(
+            question_text="question_text",
+            answers=[
+                special_endpoints.PollAnswerBuilder(
+                    text="answer_1_text",
+                    emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(456), name="question_emoji", is_animated=False),
+                ),
+                special_endpoints.PollAnswerBuilder(text="answer_2_text"),
+                special_endpoints.PollAnswerBuilder(emoji=emojis.UnicodeEmoji("👀")),
+            ],
+            duration=9,
+            allow_multiselect=True,
+            layout_type=polls.PollLayoutType.DEFAULT,
+        )
+
+        assert poll_builder.build() == {
+            "question": {"text": "question_text"},
+            "answers": [
+                {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456"}}},
+                {"poll_media": {"text": "answer_2_text"}},
+                {"poll_media": {"emoji": {"name": "👀"}}},
+            ],
+            "duration": 9,
+            "allow_multiselect": True,
+            "layout_type": polls.PollLayoutType.DEFAULT,
+        }
+
+    def test_build_without_optional_fields(self):
+        poll_builder = special_endpoints.PollBuilder(question_text="question_text", allow_multiselect=True)
+
+        assert poll_builder.build() == {"question": {"text": "question_text"}, "answers": [], "allow_multiselect": True}
+
+
+class TestPollAnswerBuilder:
+    def test_build(self):
+        poll_answer = special_endpoints.PollAnswerBuilder(
+            text="answer_1_text",
+            emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(456), name="question_emoji", is_animated=False),
+        )
+
+        assert poll_answer.build() == {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456"}}}

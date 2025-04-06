@@ -18,27 +18,34 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Provides the `python -m hikari` and `hikari` commands to the shell."""
+"""A typing shim to provide parts of `typing_extensions` without depending on it."""
 
 from __future__ import annotations
 
-import pathlib
-import platform
-import sys
+import typing
+import warnings
 
-from hikari import _about
+if hasattr(typing, "override"):  # 3.12+
+    override = typing.override
+else:  # <=3.11
+    _F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])
+
+    def override(arg: _F, /) -> _F:
+        """Mark a method as overridden for type-checkers.
+
+        This has no runtime side-effects.
+        """
+        return arg
 
 
-def main() -> None:
-    """Print package info and exit."""
-    path = str(pathlib.Path(_about.__file__).resolve().parent)
-    sha1 = _about.__git_sha1__[:8]
-    version = _about.__version__
-    py_impl = platform.python_implementation()
-    py_ver = platform.python_version()
-    py_compiler = platform.python_compiler()
+if hasattr(warnings, "deprecated"):  # 3.13+
+    deprecated = warnings.deprecated
 
-    sys.stderr.write(f"hikari ({version}) [{sha1}]\n")
-    sys.stderr.write(f"located at {path}\n")
-    sys.stderr.write(f"{py_impl} {py_ver} {py_compiler}\n")
-    sys.stderr.write(" ".join(frag.strip() for frag in platform.uname() if frag and frag.strip()) + "\n")
+else:  # <=3.11
+
+    def deprecated(*args, **kwargs):  # noqa: ARG001 - Unused arguments
+        """Mark a function, overload, or class as deprecated for type-checkers.
+
+        This has no runtime side-effects.
+        """
+        return lambda value: value

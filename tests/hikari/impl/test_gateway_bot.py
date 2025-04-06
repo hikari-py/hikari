@@ -225,9 +225,9 @@ class TestGatewayBot:
             token_type=applications.TokenType.BOT,
         )
 
-        init_logging.assert_called_once_with("DEBUG", False, True)
-        print_banner.assert_called_once_with("testing", False, True)
-        warn_if_not_optimized.assert_called_once_with(True)
+        init_logging.assert_called_once_with("DEBUG", allow_color=False, force_color=True)
+        print_banner.assert_called_once_with("testing", allow_color=False, force_color=True)
+        warn_if_not_optimized.assert_called_once_with(suppress=True)
 
     def test_init_when_no_settings(self):
         stack = contextlib.ExitStack()
@@ -488,9 +488,11 @@ class TestGatewayBot:
 
     def test_print_banner(self, bot):
         with mock.patch.object(ux, "print_banner") as print_banner:
-            bot.print_banner("testing", False, True, extra_args={"test_key": "test_value"})
+            bot.print_banner("testing", allow_color=True, force_color=False, extra_args={"test_key": "test_value"})
 
-        print_banner.assert_called_once_with("testing", False, True, extra_args={"test_key": "test_value"})
+        print_banner.assert_called_once_with(
+            "testing", allow_color=True, force_color=False, extra_args={"test_key": "test_value"}
+        )
 
     def test_run_when_already_running(self, bot):
         bot._closed_event = object()

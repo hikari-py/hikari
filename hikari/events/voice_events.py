@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("VoiceEvent", "VoiceStateUpdateEvent", "VoiceServerUpdateEvent")
+__all__: typing.Sequence[str] = ("VoiceEvent", "VoiceServerUpdateEvent", "VoiceStateUpdateEvent")
 
 import abc
 import typing
@@ -34,6 +33,7 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import snowflakes
@@ -68,7 +68,7 @@ class VoiceStateUpdateEvent(VoiceEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring>>.
 
-    old_state: typing.Optional[voices.VoiceState] = attrs.field(repr=True)
+    old_state: voices.VoiceState | None = attrs.field(repr=True)
     """The old voice state.
 
     This will be [`None`][] if the voice state missing from the cache.
@@ -78,11 +78,13 @@ class VoiceStateUpdateEvent(VoiceEvent):
     """Voice state that this update contained."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.state.app
 
     @property
+    @typing_extensions.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from VoiceEvent>>
         return self.state.guild_id
@@ -109,7 +111,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
     token: str = attrs.field(repr=False)
     """Token that should be used to authenticate with the voice gateway."""
 
-    raw_endpoint: typing.Optional[str] = attrs.field(repr=True)
+    raw_endpoint: str | None = attrs.field(repr=True)
     """Raw endpoint URI that Discord sent.
 
     If this is [`None`][], it means that the server has been deallocated
@@ -123,7 +125,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
     """
 
     @property
-    def endpoint(self) -> typing.Optional[str]:
+    def endpoint(self) -> str | None:
         """URI for this voice server host, with the correct scheme prepended.
 
         If this is [`None`][], it means that the server has been deallocated
