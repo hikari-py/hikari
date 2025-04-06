@@ -42,6 +42,8 @@ if not typing.TYPE_CHECKING:
     from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     import typing_extensions  # noqa: TC004
 
     from hikari import channels
@@ -127,6 +129,48 @@ class PremiumType(int, enums.Enum):
     """Premium tier including basic perks (e.g. animated emojis and avatars)."""
 
 
+@attrs.define(kw_only=True, weakref_slot=False)
+class AvatarDecoration:
+    """Data for an avatar decoration."""
+
+    asset_hash: str = attrs.field(repr=True)
+    """The hash of the asset."""
+
+    sku_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """The ID of the asset's SKU."""
+
+    expires_at: datetime.datetime | None = attrs.field(repr=True)
+    """The datetime at which the user will no longer have access to the avatar decoration."""
+
+    @property
+    def url(self) -> files.URL:
+        """Return the URL for this avatar decoration."""
+        return self.make_url()
+
+    def make_url(self, size: int = 4096) -> files.URL:
+        """Generate the url for this avatar decoration.
+
+        Parameters
+        ----------
+        size
+            The size to set for the URL.
+            Can be any power of two between `16` and `4096`.
+
+        Returns
+        -------
+        hikari.files.URL
+            The URL to the avatar decoration.
+
+        Raises
+        ------
+        ValueError
+            If `size` is not a power of two or not between 16 and 4096.
+        """
+        return routes.CDN_AVATAR_DECORATION.compile_to_file(
+            urls.CDN_URL, hash=self.asset_hash, size=size, file_format="png"
+        )
+
+
 class PartialUser(snowflakes.Unique, abc.ABC):
     """A partial interface for a user.
 
@@ -146,6 +190,11 @@ class PartialUser(snowflakes.Unique, abc.ABC):
     @abc.abstractmethod
     def app(self) -> traits.RESTAware:
         """Client application that models may use for procedures."""
+
+    @property
+    @abc.abstractmethod
+    def avatar_decoration(self) -> undefined.UndefinedNoneOr[AvatarDecoration]:
+        """Avatar decoration for the user, if they have one, otherwise [`None`][]."""
 
     @property
     @abc.abstractmethod
@@ -481,6 +530,12 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     @typing_extensions.override
+    def avatar_decoration(self) -> AvatarDecoration | None:
+        """Avatar decoration for the user, if they have one, otherwise [`None`][]."""
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
     def avatar_hash(self) -> str | None:
         """Avatar hash for the user, if they have one, otherwise [`None`][]."""
 
@@ -488,7 +543,7 @@ class User(PartialUser, abc.ABC):
     def avatar_url(self) -> files.URL | None:
         """Avatar URL for the user, if they have one set.
 
-        May be [`None`][] if no custom avatar is set. In this case, you
+        Will be [`None`][] if no custom avatar is set. In this case, you
         should use [`hikari.User.default_avatar_url`][] instead.
         """
         return self.make_avatar_url()
@@ -503,7 +558,7 @@ class User(PartialUser, abc.ABC):
     def banner_url(self) -> files.URL | None:
         """Banner URL for the user, if they have one set.
 
-        May be [`None`][] if no custom banner is set.
+        Will be [`None`][] if no custom banner is set.
         """
         return self.make_banner_url()
 
@@ -520,13 +575,24 @@ class User(PartialUser, abc.ABC):
         )
 
     @property
+    def display_avatar_decoration(self) -> AvatarDecoration | None:
+        """Display avatar decoration for the user, if they have one set.
+
+        Will be [`None`][] if no avatar decoration is set.
+        """
+        return self.avatar_decoration
+
+    @property
     def display_avatar_url(self) -> files.URL:
         """Display avatar URL for this user."""
         return self.make_avatar_url() or self.default_avatar_url
 
     @property
     def display_banner_url(self) -> files.URL | None:
-        """Display banner URL for this user."""
+        """Display banner URL for this user, if they have one set.
+
+        Will be [`None`][] if no custom banner is set.
+        """
         return self.make_banner_url()
 
     @property
@@ -698,6 +764,9 @@ class PartialUserImpl(PartialUser):
     global_name: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=True)
     """Global name of the user."""
 
+    avatar_decoration: undefined.UndefinedNoneOr[AvatarDecoration] = attrs.field(eq=False, hash=False, repr=False)
+    """Avatar decoration of the user, if an avatar decoration is set."""
+
     avatar_hash: undefined.UndefinedNoneOr[str] = attrs.field(eq=False, hash=False, repr=False)
     """Avatar hash of the user, if a custom avatar is set."""
 
@@ -760,6 +829,9 @@ class UserImpl(PartialUserImpl, User):
 
     global_name: str | None = attrs.field(eq=False, hash=False, repr=True)
     """The user's global name."""
+
+    avatar_decoration: AvatarDecoration | None = attrs.field(eq=False, hash=False, repr=False)
+    """Avatar decoration of the user, if they have one."""
 
     avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The user's avatar hash, if they have one, otherwise [`None`][]."""

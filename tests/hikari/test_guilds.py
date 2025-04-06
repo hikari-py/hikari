@@ -225,6 +225,11 @@ class TestMember:
             is_pending=False,
             joined_at=datetime.datetime.now().astimezone(),
             nickname="davb",
+            guild_avatar_decoration=users.AvatarDecoration(
+                asset_hash="dimmadab",
+                sku_id=snowflakes.Snowflake(123456789),
+                expires_at=datetime.datetime(2025, 4, 4, 1, 1, 1),
+            ),
             guild_avatar_hash="dab",
             guild_banner_hash="dimma",
             premium_since=None,
@@ -260,6 +265,13 @@ class TestMember:
 
     def test_flags_property(self, model, mock_user):
         assert model.flags is mock_user.flags
+
+    def test_display_avatar_decoration_property_when_guild_avatar_decoration_is_set(self, model, mock_user):
+        assert model.display_avatar_decoration is model.guild_avatar_decoration
+
+    def test_display_avatar_decoration_property_when_guild_avatar_decoration_is_None(self, model, mock_user):
+        model.guild_avatar_decoration = None
+        assert model.display_avatar_decoration is mock_user.avatar_decoration
 
     def test_avatar_url_property(self, model, mock_user):
         assert model.avatar_url is mock_user.avatar_url
