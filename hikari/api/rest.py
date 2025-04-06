@@ -1221,7 +1221,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a voice message in the given channel.
 
@@ -2141,18 +2141,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def execute_webhook_voice_message(
         self,
         # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
-        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
+        webhook: webhooks.ExecutableWebhook | snowflakes.Snowflakeish,
         token: str,
         attachment: files.Resourceish,
         waveform: str,
         duration: float,
         *,
-        thread: typing.Union[
-            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
-        ] = undefined.UNDEFINED,
+        thread: undefined.UndefinedType | snowflakes.SnowflakeishOr[channels_.GuildThreadChannel] = undefined.UNDEFINED,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        avatar_url: undefined.UndefinedType | str | files.URL = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute a webhook, by sending a voice message.
 
@@ -7874,7 +7872,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         waveform: str,
         duration: float,
         *,
-        flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
+        flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> None:
         """Create the a initial voice message response for a interaction.
 
@@ -8069,7 +8067,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         token: str,
-        attachment: typing.Union[files.Resourceish, messages_.Attachment],
+        attachment: files.Resourceish | messages_.Attachment,
         waveform: str,
         duration: float,
     ) -> messages_.Message:

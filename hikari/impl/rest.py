@@ -1553,18 +1553,17 @@ class RESTClientImpl(rest_api.RESTClient):
 
         return body, form_builder
 
-
     def _build_voice_message_payload(
         self,
         /,
         *,
-        attachment: typing.Union[files.Resourceish, messages_.Attachment],
+        attachment: files.Resourceish | messages_.Attachment,
         waveform: str,
         duration: float,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> tuple[data_binding.JSONObjectBuilder, data_binding.URLEncodedFormBuilder]:
         if not flags:
             flags = messages_.MessageFlag.IS_VOICE_MESSAGE
@@ -1602,7 +1601,6 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("attachments", [attachment_payload])
 
         return body, form_builder
-
 
     @typing_extensions.override
     async def create_message(
@@ -1681,7 +1679,7 @@ class RESTClientImpl(rest_api.RESTClient):
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
 
@@ -2029,18 +2027,16 @@ class RESTClientImpl(rest_api.RESTClient):
     async def execute_webhook_voice_message(
         self,
         # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
-        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
+        webhook: webhooks.ExecutableWebhook | snowflakes.Snowflakeish,
         token: str,
         attachment: files.Resourceish,
         waveform: str,
         duration: float,
         *,
-        thread: typing.Union[
-            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
-        ] = undefined.UNDEFINED,
+        thread: undefined.UndefinedType | snowflakes.SnowflakeishOr[channels_.GuildThreadChannel] = undefined.UNDEFINED,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        avatar_url: undefined.UndefinedType | str | files.URL = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook_id, token=token)
@@ -2059,7 +2055,6 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, form_builder=form_builder, query=query, auth=None)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
-
 
     @typing_extensions.override
     async def execute_webhook(
@@ -4433,7 +4428,7 @@ class RESTClientImpl(rest_api.RESTClient):
         waveform: str,
         duration: float,
         *,
-        flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
+        flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> None:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
@@ -4499,7 +4494,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         token: str,
-        attachment: typing.Union[files.Resourceish, messages_.Attachment],
+        attachment: files.Resourceish | messages_.Attachment,
         waveform: str,
         duration: float,
     ) -> messages_.Message:

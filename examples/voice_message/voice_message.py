@@ -73,7 +73,7 @@ def calculate_waveform(audio_file_path: str) -> tuple[str, float]:
 
 
 @bot.listen()
-async def register_commands(event: hikari.StartingEvent) -> None:
+async def register_commands(_: hikari.StartingEvent) -> None:
     """Register /audio command."""
     application = await bot.rest.fetch_application()
 
