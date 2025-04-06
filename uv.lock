@@ -1212,10 +1212,6 @@ codespell = [
 coverage = [
     { name = "coverage", extra = ["toml"] },
 ]
-example-voice-message = [
-    { name = "pydub" },
-    { name = "pydub-stubs" },
-]
 flake8 = [
     { name = "flake8" },
     { name = "flake8-bandit" },
@@ -1247,11 +1243,15 @@ mkdocs = [
 ]
 mypy = [
     { name = "mypy", extra = ["faster-cache"] },
+    { name = "pydub" },
+    { name = "pydub-stubs" },
 ]
 nox = [
     { name = "nox", extra = ["uv"] },
 ]
 pyright = [
+    { name = "pydub" },
+    { name = "pydub-stubs" },
     { name = "pyright" },
 ]
 pytest = [
@@ -1275,6 +1275,10 @@ slotscheck = [
 towncrier = [
     { name = "towncrier" },
 ]
+types = [
+    { name = "pydub" },
+    { name = "pydub-stubs" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -1293,10 +1297,6 @@ provides-extras = ["server", "speedups"]
 audit = [{ name = "uv-secure" }]
 codespell = [{ name = "codespell", specifier = "==2.4.1" }]
 coverage = [{ name = "coverage", extras = ["toml"], specifier = "==7.7.1" }]
-example-voice-message = [
-    { name = "pydub", specifier = "~=0.25" },
-    { name = "pydub-stubs", specifier = "~=0.25.1.5" },
-]
 flake8 = [
     { name = "flake8", specifier = "==7.1.2" },
     { name = "flake8-bandit", specifier = "~=4.1.1" },
@@ -1326,9 +1326,17 @@ mkdocs = [
     { name = "mkdocs-towncrier", specifier = "==0.1.4" },
     { name = "mkdocstrings", extras = ["python"], specifier = "==0.29.0" },
 ]
-mypy = [{ name = "mypy", extras = ["faster-cache"], specifier = "==1.15.0" }]
+mypy = [
+    { name = "mypy", extras = ["faster-cache"], specifier = "==1.15.0" },
+    { name = "pydub" },
+    { name = "pydub-stubs", specifier = "~=0.25.1.5" },
+]
 nox = [{ name = "nox", extras = ["uv"], specifier = "==2025.2.9" }]
-pyright = [{ name = "pyright", specifier = "==1.1.397" }]
+pyright = [
+    { name = "pydub" },
+    { name = "pydub-stubs", specifier = "~=0.25.1.5" },
+    { name = "pyright", specifier = "==1.1.397" },
+]
 pytest = [
     { name = "async-timeout", specifier = "==5.0.1" },
     { name = "coverage", extras = ["toml"], specifier = "==7.7.1" },
@@ -1342,6 +1350,10 @@ release = [{ name = "twine", specifier = "==6.1.0" }]
 ruff = [{ name = "ruff", specifier = "==0.11.2" }]
 slotscheck = [{ name = "slotscheck", specifier = "==0.19.1" }]
 towncrier = [{ name = "towncrier", specifier = "==24.8.0" }]
+types = [
+    { name = "pydub" },
+    { name = "pydub-stubs", specifier = "~=0.25.1.5" },
+]
 
 [[package]]
 name = "hishel"
