@@ -2360,7 +2360,7 @@ class PollBuilder(abc.ABC):
     @property
     @abc.abstractmethod
     def duration(self) -> undefined.UndefinedOr[int]:
-        """The duration of the poll."""
+        """The duration of the poll in hours."""
 
     @property
     @abc.abstractmethod
@@ -2379,7 +2379,7 @@ class PollBuilder(abc.ABC):
         text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
     ) -> Self:
-        """Add a answer to the poll.
+        """Add an answer to the poll.
 
         Parameters
         ----------
