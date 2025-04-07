@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -29,9 +28,9 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "BaseRateLimiter",
     "BurstRateLimiter",
+    "ExponentialBackOff",
     "ManualRateLimiter",
     "WindowedBurstRateLimiter",
-    "ExponentialBackOff",
 )
 
 import abc
@@ -42,9 +41,12 @@ import random
 import typing
 
 from hikari.internal import time
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import types
+
+    from typing_extensions import Self
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ratelimits")
 
@@ -66,14 +68,11 @@ class BaseRateLimiter(abc.ABC):
     def close(self) -> None:
         """Close the rate limiter, cancelling any internal tasks that are executing."""
 
-    def __enter__(self) -> BaseRateLimiter:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
-        self,
-        exc_type: typing.Optional[type[Exception]],
-        exc_val: typing.Optional[Exception],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         self.close()
 
@@ -85,12 +84,12 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
     complete logic for safely aborting any pending tasks when being shut down.
     """
 
-    __slots__: typing.Sequence[str] = ("name", "throttle_task", "queue")
+    __slots__: typing.Sequence[str] = ("name", "queue", "throttle_task")
 
     name: str
     """The name of the rate limiter."""
 
-    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    throttle_task: asyncio.Task[typing.Any] | None
     """The throttling task, or [`None`][] if it is not running."""
 
     queue: list[asyncio.Future[typing.Any]]
@@ -102,6 +101,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         self.queue = []
 
     @abc.abstractmethod
+    @typing_extensions.override
     async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
@@ -109,6 +109,7 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         being rate limited.
         """
 
+    @typing_extensions.override
     def close(self) -> None:
         """Close the rate limiter, and shut down any pending tasks."""
         if self.throttle_task is not None:
@@ -156,16 +157,17 @@ class ManualRateLimiter(BurstRateLimiter):
 
     __slots__: typing.Sequence[str] = ("reset_at",)
 
-    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    throttle_task: asyncio.Task[typing.Any] | None
     # <<inherited docstring from BurstRateLimiter>>.
 
-    reset_at: typing.Optional[float]
+    reset_at: float | None
     """The monotonic [`time.monotonic`][] timestamp at which the ratelimit gets lifted."""
 
     def __init__(self) -> None:
         super().__init__("global")
         self.reset_at = None
 
+    @typing_extensions.override
     async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
@@ -291,9 +293,9 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     that a unit has been placed into the bucket.
     """
 
-    __slots__: typing.Sequence[str] = ("reset_at", "remaining", "limit", "period")
+    __slots__: typing.Sequence[str] = ("limit", "period", "remaining", "reset_at")
 
-    throttle_task: typing.Optional[asyncio.Task[typing.Any]]
+    throttle_task: asyncio.Task[typing.Any] | None
     # <<inherited docstring from BurstRateLimiter>>.
 
     reset_at: float
@@ -317,6 +319,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.limit = limit
         self.period = period
 
+    @typing_extensions.override
     async def acquire(self) -> None:
         """Acquire time on this rate limiter.
 
@@ -458,7 +461,7 @@ class ExponentialBackOff:
         that's annotated as [`float`][].
     """
 
-    __slots__: typing.Sequence[str] = ("base", "increment", "maximum", "jitter_multiplier")
+    __slots__: typing.Sequence[str] = ("base", "increment", "jitter_multiplier", "maximum")
 
     base: typing.Final[float]
     """The base to use."""
@@ -485,16 +488,20 @@ class ExponentialBackOff:
             self.maximum = float(maximum)
             self.jitter_multiplier = float(jitter_multiplier)
         except OverflowError:
-            raise ValueError("int too large to be represented as a float") from None
+            msg = "int too large to be represented as a float"
+            raise ValueError(msg) from None
 
         if not math.isfinite(self.base):
-            raise ValueError("base must be a finite number") from None
+            msg = "base must be a finite number"
+            raise ValueError(msg) from None
 
         if not math.isfinite(self.maximum):
-            raise ValueError("maximum must be a finite number") from None
+            msg = "maximum must be a finite number"
+            raise ValueError(msg) from None
 
         if not math.isfinite(self.jitter_multiplier):
-            raise ValueError("jitter_multiplier must be a finite number") from None
+            msg = "jitter_multiplier must be a finite number"
+            raise ValueError(msg) from None
 
         self.increment = initial_increment
 

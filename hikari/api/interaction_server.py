@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("ListenerT", "Response", "InteractionServer")
+__all__: typing.Sequence[str] = ("InteractionServer", "ListenerT", "Response")
 
 import abc
 import typing
@@ -47,8 +46,8 @@ if typing.TYPE_CHECKING:
 
 
 ListenerT = typing.Union[
-    typing.Callable[["_InteractionT_co"], typing.Awaitable["_ResponseT_co"]],
-    typing.Callable[["_InteractionT_co"], typing.AsyncGenerator["_ResponseT_co", None]],
+    typing.Callable[["_InteractionT_co"], typing.Awaitable[typing.Union["_ResponseT_co", None]]],
+    typing.Callable[["_InteractionT_co"], typing.AsyncGenerator[typing.Union["_ResponseT_co", None], None]],
 ]
 """Type hint of a Interaction server's listener callback.
 
@@ -57,6 +56,9 @@ subclasses [`hikari.interactions.base_interactions.PartialInteraction`][] and ma
 instance of the relevant [`hikari.api.special_endpoints.InteractionResponseBuilder`][]
 subclass for the provided interaction type which will instruct the server on how
 to respond.
+
+If the callback returns [`None`][], an HTTP no-content response will be returned. In this case
+you should respond to the interaction using the appropriate REST method instead.
 
 !!! note
     For the standard implementations of
@@ -75,12 +77,12 @@ class Response(typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
     @property
-    def content_type(self) -> typing.Optional[str]:
+    def content_type(self) -> str | None:
         """Content type of the response's payload, if applicable."""
         raise NotImplementedError
 
     @property
-    def charset(self) -> typing.Optional[str]:
+    def charset(self) -> str | None:
         """Charset of the response's payload, if applicable."""
         raise NotImplementedError
 
@@ -90,12 +92,12 @@ class Response(typing.Protocol):
         raise NotImplementedError
 
     @property
-    def headers(self) -> typing.Optional[typing.MutableMapping[str, str]]:
+    def headers(self) -> typing.MutableMapping[str, str] | None:
         """Headers that should be added to the response if applicable."""
         raise NotImplementedError
 
     @property
-    def payload(self) -> typing.Optional[bytes]:
+    def payload(self) -> bytes | None:
         """Payload to provide in the response."""
         raise NotImplementedError
 
@@ -136,7 +138,7 @@ class InteractionServer(abc.ABC):
     @abc.abstractmethod
     def get_listener(
         self, interaction_type: type[_InteractionT_co], /
-    ) -> typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]]:
+    ) -> ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None:
         """Get the listener registered for an interaction.
 
         Parameters
@@ -156,7 +158,7 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: type[command_interactions.CommandInteraction],
-        listener: typing.Optional[ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder]],
+        listener: ListenerT[command_interactions.CommandInteraction, _ModalOrMessageResponseBuilder] | None,
         /,
         *,
         replace: bool = False,
@@ -167,9 +169,7 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: type[component_interactions.ComponentInteraction],
-        listener: typing.Optional[
-            ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder]
-        ],
+        listener: ListenerT[component_interactions.ComponentInteraction, _ModalOrMessageResponseBuilder] | None,
         /,
         *,
         replace: bool = False,
@@ -180,9 +180,10 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: type[command_interactions.AutocompleteInteraction],
-        listener: typing.Optional[
-            ListenerT[command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder]
-        ],
+        listener: ListenerT[
+            command_interactions.AutocompleteInteraction, special_endpoints.InteractionAutocompleteBuilder
+        ]
+        | None,
         /,
         *,
         replace: bool = False,
@@ -193,7 +194,7 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: type[modal_interactions.ModalInteraction],
-        listener: typing.Optional[ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT]],
+        listener: ListenerT[modal_interactions.ModalInteraction, _MessageResponseBuilderT] | None,
         /,
         *,
         replace: bool = False,
@@ -203,7 +204,7 @@ class InteractionServer(abc.ABC):
     def set_listener(
         self,
         interaction_type: type[_InteractionT_co],
-        listener: typing.Optional[ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder]],
+        listener: ListenerT[_InteractionT_co, special_endpoints.InteractionResponseBuilder] | None,
         /,
         *,
         replace: bool = False,

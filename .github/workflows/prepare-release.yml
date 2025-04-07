@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@af35edadc00be37caa72ed9f3e6d5f7801bfdf09 # v1.11.7
+        uses: actions/create-github-app-token@3ff1caaa28b64c9cc276ce0a02e2ff584f3900c5 # v2.0.2
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.PRIVATE_KEY }}
@@ -33,7 +33,7 @@ jobs:
           git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@f94ec6bedd8674c4426838e6b50417d36b6ab231 # v5.3.1
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
         with:
           python-version: 3.9
 
@@ -46,11 +46,12 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
           AUTHOR: ${{ github.event.sender.login }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
         run: |
           title="Prepare for release of ${VERSION}"
-          body="Release preparation triggered by ${AUTHOR}.
+          body="Release preparation triggered by @${AUTHOR}.
 
-          Once the pull request is merged, you can trigger a PyPI release by creating a GitHub release for `${VERSION}` in the repository."
+          Once the pull request is merged, you can trigger a PyPI release by creating a GitHub release for \`${VERSION}\` in the repository."
 
           gh pr create \
             --title "${title}" \

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,9 +23,9 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ScheduledEventEvent",
     "ScheduledEventCreateEvent",
     "ScheduledEventDeleteEvent",
+    "ScheduledEventEvent",
     "ScheduledEventUpdateEvent",
     "ScheduledEventUserAddEvent",
     "ScheduledEventUserRemoveEvent",
@@ -41,6 +40,7 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import scheduled_events
@@ -74,11 +74,13 @@ class ScheduledEventCreateEvent(ScheduledEventEvent):
     """The scheduled event that was created."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.event.app
 
     @property
+    @typing_extensions.override
     def event_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id
@@ -97,11 +99,13 @@ class ScheduledEventDeleteEvent(ScheduledEventEvent):
     """The scheduled event that was deleted."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.event.app
 
     @property
+    @typing_extensions.override
     def event_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id
@@ -120,11 +124,13 @@ class ScheduledEventUpdateEvent(ScheduledEventEvent):
     """The scheduled event that was updated."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.event.app
 
     @property
+    @typing_extensions.override
     def event_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ScheduledEventEvent>>.
         return self.event.id

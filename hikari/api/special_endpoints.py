@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -26,34 +25,37 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "AutocompleteChoiceBuilder",
     "ButtonBuilder",
+    "ChannelSelectMenuBuilder",
     "CommandBuilder",
-    "SlashCommandBuilder",
-    "ContextMenuCommandBuilder",
     "ComponentBuilder",
-    "TypingIndicator",
+    "ContextMenuCommandBuilder",
     "GuildBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
-    "InteractionResponseBuilder",
     "InteractionMessageBuilder",
+    "InteractionModalBuilder",
+    "InteractionResponseBuilder",
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
-    "SelectMenuBuilder",
-    "TextSelectMenuBuilder",
-    "ChannelSelectMenuBuilder",
-    "SelectOptionBuilder",
-    "TextInputBuilder",
-    "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
-    "ChannelRepositioner",
+    "PollAnswerBuilder",
+    "PollBuilder",
+    "SelectMenuBuilder",
+    "SelectOptionBuilder",
+    "SlashCommandBuilder",
+    "TextInputBuilder",
+    "TextSelectMenuBuilder",
+    "TypingIndicator",
 )
 
 import abc
 import typing
 
 from hikari import components as components_
+from hikari import polls
 from hikari import undefined
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import types
@@ -120,7 +122,10 @@ class TypingIndicator(abc.ABC):
 
     @abc.abstractmethod
     async def __aexit__(
-        self, exception_type: type[BaseException], exception: BaseException, exception_traceback: types.TracebackType
+        self,
+        exception_type: type[BaseException] | None,
+        exception: BaseException | None,
+        exception_traceback: types.TracebackType | None,
     ) -> None: ...
 
 
@@ -267,12 +272,12 @@ class GuildBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def verification_level(self) -> undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]]:
+    def verification_level(self) -> undefined.UndefinedOr[guilds.GuildVerificationLevel | int]:
         """Verification level required to join the guild."""
 
     @verification_level.setter
     def verification_level(
-        self, verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]], /
+        self, verification_level: undefined.UndefinedOr[guilds.GuildVerificationLevel | int], /
     ) -> None:
         raise NotImplementedError
 
@@ -443,12 +448,12 @@ class GuildBuilder(abc.ABC):
         *,
         parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[typing.Union[channels.VideoQualityMode, int]] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels.VideoQualityMode | int] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
+        region: undefined.UndefinedNoneOr[voices.VoiceRegion | str],
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         """Create a voice channel.
@@ -501,7 +506,7 @@ class GuildBuilder(abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Collection[channels.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
+        region: undefined.UndefinedNoneOr[voices.VoiceRegion | str],
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> snowflakes.Snowflake:
         """Create a stage channel.
@@ -548,7 +553,7 @@ class InteractionResponseBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> typing.Union[int, base_interactions.ResponseType]:
+    def type(self) -> int | base_interactions.ResponseType:
         """Type of this response."""
 
     @abc.abstractmethod
@@ -577,12 +582,13 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> base_interactions.DeferredResponseTypesT:
         """Type of this response."""
 
     @property
     @abc.abstractmethod
-    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
         """Message flags this response should have.
 
         !!! note
@@ -592,7 +598,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
         """Set message flags for this response.
 
         !!! note
@@ -624,7 +630,7 @@ class AutocompleteChoiceBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def value(self) -> typing.Union[int, str, float]:
+    def value(self) -> int | str | float:
         """The choice's value."""
 
     @abc.abstractmethod
@@ -638,7 +644,7 @@ class AutocompleteChoiceBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_value(self, value: typing.Union[int, float, str], /) -> Self:
+    def set_value(self, value: float | str, /) -> Self:
         """Set this choice's value.
 
         Returns
@@ -698,6 +704,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> base_interactions.MessageResponseTypesT:
         """Type of this response."""
 
@@ -727,7 +734,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
         """Message flags this response should have.
 
         !!! note
@@ -749,9 +756,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def role_mentions(
-        self,
-    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]]:
+    def role_mentions(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool]:
         """Whether and what role mentions should be enabled for this response.
 
         Either a sequence of object/IDs of the roles mentions should be enabled
@@ -761,15 +766,18 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def user_mentions(
-        self,
-    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
+    def user_mentions(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users.PartialUser] | bool]:
         """Whether and what user mentions should be enabled for this response.
 
         Either a sequence of object/IDs of the users mentions should be enabled
         for, [`False`][] or [`hikari.undefined.UNDEFINED`][] to disallow any
         user mentions or [`True`][] to allow all user mentions.
         """
+
+    @property
+    @abc.abstractmethod
+    def poll(self) -> undefined.UndefinedOr[PollBuilder]:
+        """The poll to include with this response."""
 
     @abc.abstractmethod
     def clear_attachments(self, /) -> Self:
@@ -815,6 +823,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
+    def clear_components(self, /) -> Self:
+        """Clear the components set for this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
     def add_embed(self, embed: embeds_.Embed, /) -> Self:
         """Add an embed to this response.
 
@@ -822,6 +840,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         embed
             Object of the embed to add to this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def clear_embeds(self, /) -> Self:
+        """Clear the embeds set for this embed.
 
         Returns
         -------
@@ -845,7 +873,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
         """Set message flags for this response.
 
         !!! note
@@ -897,7 +925,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     def set_role_mentions(
         self,
         mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
         /,
     ) -> Self:
@@ -920,7 +948,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     def set_user_mentions(
         self,
         mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         /,
     ) -> Self:
@@ -932,6 +960,22 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             Either a sequence of object/IDs of the users mentions should be enabled for,
             [`False`][] or [`hikari.undefined.UNDEFINED`][] to disallow any user
             mentions or [`True`][] to allow all user mentions.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_poll(self, poll: undefined.UndefinedOr[PollBuilder], /) -> Self:
+        """Set the poll to include with this response.
+
+        Parameters
+        ----------
+        poll
+            The poll to include with this response, or [`hikari.undefined.UNDEFINED`][]
+            to remove a previously added poll.
 
         Returns
         -------
@@ -952,6 +996,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
         """Type of this response."""
 
@@ -1013,6 +1058,7 @@ class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
         """Type of this response."""
 
@@ -1044,7 +1090,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
+    def default_member_permissions(self) -> undefined.UndefinedType | permissions_.Permissions | int:
         """Member permissions necessary to utilize this command by default.
 
         If `0`, then it will be available for all members. Note that this doesn't affect
@@ -1058,7 +1104,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def name_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
         """Name localizations set for this command."""
 
     @property
@@ -1103,7 +1149,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_default_member_permissions(
-        self, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
+        self, default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions, /
     ) -> Self:
         """Set the member permissions necessary to utilize this command by default.
 
@@ -1137,9 +1183,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_name_localizations(
-        self, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
-    ) -> Self:
+    def set_name_localizations(self, name_localizations: typing.Mapping[locales.Locale | str, str], /) -> Self:
         """Set the name localizations for this command.
 
         Parameters
@@ -1247,7 +1291,7 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def description_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
         """Command's localised descriptions."""
 
     @property
@@ -1272,7 +1316,7 @@ class SlashCommandBuilder(CommandBuilder):
 
     @abc.abstractmethod
     def set_description_localizations(
-        self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
+        self, description_localizations: typing.Mapping[locales.Locale | str, str], /
     ) -> Self:
         """Set the localised descriptions for this command.
 
@@ -1306,6 +1350,7 @@ class SlashCommandBuilder(CommandBuilder):
         """
 
     @abc.abstractmethod
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1343,6 +1388,7 @@ class ContextMenuCommandBuilder(CommandBuilder):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1382,7 +1428,7 @@ class ComponentBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> typing.Union[int, components_.ComponentType]:
+    def type(self) -> int | components_.ComponentType:
         """Type of component this builder represents."""
 
     @abc.abstractmethod
@@ -1403,17 +1449,18 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.BUTTON]:
         """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
-    def style(self) -> typing.Union[components_.ButtonStyle, int]:
+    def style(self) -> components_.ButtonStyle | int:
         """Button's style."""
 
     @property
     @abc.abstractmethod
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
         """Emoji which should appear on this button."""
 
     @property
@@ -1432,9 +1479,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
         """Whether the button should be marked as disabled."""
 
     @abc.abstractmethod
-    def set_emoji(
-        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> Self:
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
         """Set the emoji to display on this button.
 
         Parameters
@@ -1467,7 +1512,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this button should be disabled.
 
         Parameters
@@ -1541,7 +1586,7 @@ class SelectOptionBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
         """Emoji which should appear on this option."""
 
     @property
@@ -1598,9 +1643,7 @@ class SelectOptionBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_emoji(
-        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> Self:
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
         """Set the emoji to display on this option.
 
         Parameters
@@ -1616,7 +1659,7 @@ class SelectOptionBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_default(self, state: bool, /) -> Self:
+    def set_is_default(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this option should be selected by default.
 
         Parameters
@@ -1697,7 +1740,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this option is disabled.
 
         Parameters
@@ -1789,7 +1832,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT]
         /,
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         is_default: bool = False,
     ) -> Self:
         """Add an option to this menu.
@@ -1849,6 +1892,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.TEXT_INPUT]:
         """Type of component this builder represents."""
 
@@ -1898,7 +1942,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """Maximum length the text should have."""
 
     @abc.abstractmethod
-    def set_style(self, style: typing.Union[components_.TextInputStyle, int], /) -> Self:
+    def set_style(self, style: components_.TextInputStyle | int, /) -> Self:
         """Set the style to use for the text input.
 
         Parameters
@@ -1973,7 +2017,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_required(self, required: bool, /) -> Self:
+    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this text input is required to be filled-in.
 
         Parameters
@@ -2025,6 +2069,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
@@ -2061,7 +2106,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         custom_id: str,
         /,
         *,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
     ) -> Self:
@@ -2096,7 +2141,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         url: str,
         /,
         *,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
     ) -> Self:
@@ -2125,7 +2170,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_select_menu(
         self,
-        type_: typing.Union[components_.ComponentType, int],
+        type_: components_.ComponentType | int,
         custom_id: str,
         /,
         *,
@@ -2262,6 +2307,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
@@ -2334,4 +2380,93 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         -------
         ModalActionRowBuilder
             The modal action row builder to enable call chaining.
+        """
+
+
+class PollBuilder(abc.ABC):
+    """Builder class for polls."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def question_text(self) -> str:
+        """The question text for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def answers(self) -> typing.Sequence[PollAnswerBuilder]:
+        """The answers for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def duration(self) -> undefined.UndefinedOr[int]:
+        """The duration of the poll in hours."""
+
+    @property
+    @abc.abstractmethod
+    def allow_multiselect(self) -> bool:
+        """Whether a user can select multiple answers."""
+
+    @property
+    @abc.abstractmethod
+    def layout_type(self) -> undefined.UndefinedOr[polls.PollLayoutType]:
+        """The layout type for the poll."""
+
+    @abc.abstractmethod
+    def add_answer(
+        self,
+        *,
+        text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add an answer to the poll.
+
+        Parameters
+        ----------
+        text
+            The text for the answer.
+        emoji
+            The emoji for the answer.
+
+        Returns
+        -------
+        PollAnswerBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class PollAnswerBuilder(abc.ABC):
+    """Builder class for poll answers."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def text(self) -> undefined.UndefinedOr[str]:
+        """The text for the media object."""
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> undefined.UndefinedOr[emojis.Emoji]:
+        """The emoji for the media object."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
         """

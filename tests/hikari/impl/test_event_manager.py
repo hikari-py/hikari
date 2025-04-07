@@ -1761,3 +1761,35 @@ class TestEventManagerImpl:
         event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_stage_instance_delete_event.return_value
         )
+
+    @pytest.mark.asyncio
+    async def test_on_message_poll_vote_create(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager_impl.on_message_poll_vote_add(shard, mock_payload)
+
+        event_factory.deserialize_poll_vote_create_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_poll_vote_create_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_message_poll_vote_delete(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager_impl.on_message_poll_vote_remove(shard, mock_payload)
+
+        event_factory.deserialize_poll_vote_delete_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_poll_vote_delete_event.return_value
+        )

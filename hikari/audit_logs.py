@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -39,7 +38,6 @@ __all__: typing.Sequence[str] = (
     "MessagePinEntryInfo",
 )
 
-import abc
 import typing
 
 import attrs
@@ -49,6 +47,7 @@ from hikari import snowflakes
 from hikari.internal import attrs_extensions
 from hikari.internal import collections
 from hikari.internal import enums
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -280,13 +279,13 @@ class AuditLogChangeKey(str, enums.Enum):
 class AuditLogChange:
     """Represents a change made to an audit log entry's target entity."""
 
-    new_value: typing.Optional[typing.Any] = attrs.field(repr=True)
+    new_value: typing.Any | None = attrs.field(repr=True)
     """The new value of the key, if something was added or changed."""
 
-    old_value: typing.Optional[typing.Any] = attrs.field(repr=True)
+    old_value: typing.Any | None = attrs.field(repr=True)
     """The old value of the key, if something was removed or changed."""
 
-    key: typing.Union[AuditLogChangeKey, str] = attrs.field(repr=True)
+    key: AuditLogChangeKey | str = attrs.field(repr=True)
     """The name of the audit log change's key."""
 
 
@@ -354,7 +353,7 @@ class AuditLogEventType(int, enums.Enum):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class BaseAuditLogEntryInfo(abc.ABC):
+class BaseAuditLogEntryInfo:
     """A base object that all audit log entry info objects will inherit from."""
 
     app: traits.RESTAware = attrs.field(repr=False, eq=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -373,10 +372,10 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[channels.PermissionOverwriteType, int] = attrs.field(repr=True)
+    type: channels.PermissionOverwriteType | int = attrs.field(repr=True)
     """The type of entity this overwrite targets."""
 
-    role_name: typing.Optional[str] = attrs.field(repr=True)
+    role_name: str | None = attrs.field(repr=True)
     """The name of the role this overwrite targets, if it targets a role."""
 
 
@@ -562,25 +561,25 @@ class AuditLogEntry(snowflakes.Unique):
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this audit log entry is for."""
 
-    target_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    target_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the entity affected by this change, if applicable."""
 
     changes: typing.Sequence[AuditLogChange] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of the changes made to [`hikari.audit_logs.AuditLogEntry.target_id`][]."""
 
-    user_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    user_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the user who made this change."""
 
-    action_type: typing.Union[AuditLogEventType, int] = attrs.field(eq=False, hash=False, repr=True)
+    action_type: AuditLogEventType | int = attrs.field(eq=False, hash=False, repr=True)
     """The type of action this entry represents."""
 
-    options: typing.Optional[BaseAuditLogEntryInfo] = attrs.field(eq=False, hash=False, repr=False)
+    options: BaseAuditLogEntryInfo | None = attrs.field(eq=False, hash=False, repr=False)
     """Extra information about this entry. Only be provided for certain `event_type`."""
 
-    reason: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    reason: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The reason for this change, if set (between 0-512 characters)."""
 
-    async def fetch_user(self) -> typing.Optional[users_.User]:
+    async def fetch_user(self) -> users_.User | None:
         """Fetch the user who made this change.
 
         Returns
@@ -631,13 +630,14 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     @typing.overload
     def __getitem__(self, slice_: slice, /) -> typing.Sequence[AuditLogEntry]: ...
 
-    def __getitem__(
-        self, index_or_slice: typing.Union[int, slice], /
-    ) -> typing.Union[AuditLogEntry, typing.Sequence[AuditLogEntry]]:
+    @typing_extensions.override
+    def __getitem__(self, index_or_slice: int | slice, /) -> AuditLogEntry | typing.Sequence[AuditLogEntry]:
         return collections.get_index_or_slice(self.entries, index_or_slice)
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[AuditLogEntry]:
         return iter(self.entries.values())
 
+    @typing_extensions.override
     def __len__(self) -> int:
         return len(self.entries)
