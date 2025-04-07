@@ -88,12 +88,12 @@ if typing.TYPE_CHECKING:
             self,
             compiled_route: routes.CompiledRoute,
             *,
-            query: typing.Optional[data_binding.StringMapBuilder] = None,
-            form_builder: typing.Optional[data_binding.URLEncodedFormBuilder] = None,
-            json: typing.Union[data_binding.JSONObjectBuilder, data_binding.JSONArray, None] = None,
+            query: data_binding.StringMapBuilder | None = None,
+            form_builder: data_binding.URLEncodedFormBuilder | None = None,
+            json: data_binding.JSONObjectBuilder | data_binding.JSONArray | None = None,
             reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        ) -> typing.Union[None, data_binding.JSONObject, data_binding.JSONArray]: ...
+        ) -> None | data_binding.JSONObject | data_binding.JSONArray: ...
 
 
 _ParentT = typing.TypeVar("_ParentT")
@@ -139,7 +139,7 @@ class ChannelRepositioner(abc.ABC):
         request_call: _RequestCallSig,
         *,
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]] = {},
-    ): ...
+    ) -> None: ...
 
     @abc.abstractmethod
     def reposition(
@@ -152,7 +152,7 @@ class ChannelRepositioner(abc.ABC):
     ) -> Self: ...
 
     @abc.abstractmethod
-    def __await__(self) -> None: ...
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]: ...
 
 
 class GuildBuilder(abc.ABC):

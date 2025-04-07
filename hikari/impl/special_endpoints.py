@@ -212,7 +212,7 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
 
 class ChannelRepositioner(special_endpoints.ChannelRepositioner):
-    __slots__: typing.Sequence[str] = ("_guild", "_request_call", "_channels")
+    __slots__: typing.Sequence[str] = ("_channels", "_guild", "_request_call")
 
     def __init__(
         self,
@@ -220,11 +220,12 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
         request_call: _RequestCallSig,
         *,
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]] = {},
-    ):
+    ) -> None:
         self._guild = guild
         self._request_call = request_call
         self._channels = [RepositionChannelHelper(channel=channel, position=pos) for pos, channel in positions.items()]
 
+    @typing_extensions.override
     def reposition(
         self,
         position: int,
@@ -240,6 +241,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
         )
         return self
 
+    @typing_extensions.override
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
         route = routes.PATCH_GUILD_CHANNELS.compile(guild=self._guild)
         body = []

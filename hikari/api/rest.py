@@ -5366,8 +5366,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     def reposition_channels(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> special_endpoints.ChannelRepositioner:
-        """Test"""
+    ) -> special_endpoints.ChannelRepositioner: ...
 
     @typing.overload
     @abc.abstractmethod
@@ -5375,8 +5374,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
-    ) -> special_endpoints.ChannelRepositioner:
-        """Test"""
+    ) -> special_endpoints.ChannelRepositioner: ...
 
     @abc.abstractmethod
     def reposition_channels(
