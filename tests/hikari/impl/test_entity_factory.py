@@ -1040,6 +1040,7 @@ class TestEntityFactoryImpl:
         assert application.tags == ["i", "like", "hikari"]
         assert application.icon_hash == "iwiwiwiwiw"
         assert application.approximate_guild_count == 10000
+        assert application.approximate_user_install_count == 10001
         # Install Parameters
         assert application.install_parameters.scopes == [
             application_models.OAuth2Scope.BOT,
