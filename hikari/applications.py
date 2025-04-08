@@ -660,7 +660,7 @@ class Application(guilds.PartialApplication):
     """Settings for the application's default in-app authorization link, if enabled."""
 
     approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
-     """The approximate number of guilds this application is part of."""
+    """The approximate number of guilds this application is part of."""
  
     approximate_user_install_count: int = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of users that have installed this application."""
