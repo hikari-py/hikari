@@ -132,11 +132,11 @@ def test_parse_unix_epoch_to_datetime():
 
 
 def test_unix_epoch_to_datetime_with_out_of_range_positive_timestamp():
-    assert time.unix_epoch_to_datetime(996877846784536) == datetime.datetime.max
+    assert time.unix_epoch_to_datetime(996877846784536) == datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
 
 
 def test_unix_epoch_to_datetime_with_out_of_range_negative_timestamp():
-    assert time.unix_epoch_to_datetime(-996877846784536) == datetime.datetime.min
+    assert time.unix_epoch_to_datetime(-996877846784536) == datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
 
 
 @pytest.mark.parametrize(

@@ -108,6 +108,7 @@ def message(hikari_app: traits.RESTAware) -> messages.Message:
         mentions_everyone=False,
         attachments=(),
         embeds=(),
+        poll=object(),
         reactions=(),
         is_pinned=True,
         webhook_id=None,
@@ -226,10 +227,13 @@ class TestAsyncMessage:
         component = mock.Mock()
         components = mock.Mock(), mock.Mock()
         reference_messsage = mock.Mock()
+        poll = mock.Mock()
+
         await message.respond(
             content="test content",
             embed=embed,
             embeds=embeds,
+            poll=poll,
             attachment=attachment,
             attachments=attachments,
             component=component,
@@ -245,11 +249,13 @@ class TestAsyncMessage:
             mentions_reply=True,
             flags=321123,
         )
+
         message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
             content="test content",
             embed=embed,
             embeds=embeds,
+            poll=poll,
             attachment=attachment,
             attachments=attachments,
             component=component,
@@ -276,6 +282,7 @@ class TestAsyncMessage:
             content=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
+            poll=undefined.UNDEFINED,
             attachment=undefined.UNDEFINED,
             attachments=undefined.UNDEFINED,
             component=undefined.UNDEFINED,
@@ -302,6 +309,7 @@ class TestAsyncMessage:
             content=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
+            poll=undefined.UNDEFINED,
             attachment=undefined.UNDEFINED,
             attachments=undefined.UNDEFINED,
             component=undefined.UNDEFINED,

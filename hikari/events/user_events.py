@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -31,6 +30,7 @@ import attrs
 
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import traits
@@ -46,7 +46,7 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_user: typing.Optional[users.OwnUser] = attrs.field()
+    old_user: users.OwnUser | None = attrs.field()
     """The old application user.
 
     This will be [`None`][] if the user missing from the cache.
@@ -56,6 +56,7 @@ class OwnUserUpdateEvent(shard_events.ShardEvent):
     """This application user."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.user.app

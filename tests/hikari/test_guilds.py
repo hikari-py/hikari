@@ -236,7 +236,13 @@ class TestMember:
             is_pending=False,
             joined_at=datetime.datetime.now().astimezone(),
             nickname="davb",
+            guild_avatar_decoration=users.AvatarDecoration(
+                asset_hash="dimmadab",
+                sku_id=snowflakes.Snowflake(123456789),
+                expires_at=datetime.datetime(2025, 4, 4, 1, 1, 1),
+            ),
             guild_avatar_hash="dab",
+            guild_banner_hash="dimma",
             premium_since=None,
             role_ids=[snowflakes.Snowflake(456), snowflakes.Snowflake(1234)],
             user=mock_user,
@@ -271,6 +277,17 @@ class TestMember:
     def test_flags_property(self, member: guilds.Member, mock_user: users.User):
         assert member.flags is mock_user.flags
 
+    def test_display_avatar_decoration_property_when_guild_avatar_decoration_is_set(
+        self, member: guilds.Member, mock_user: users.User
+    ):
+        assert member.display_avatar_decoration is member.guild_avatar_decoration
+
+    def test_display_avatar_decoration_property_when_guild_avatar_decoration_is_None(
+        self, member: guilds.Member, mock_user: users.User
+    ):
+        member.guild_avatar_decoration = None
+        assert member.display_avatar_decoration is mock_user.avatar_decoration
+
     def test_avatar_url_property(self, member: guilds.Member, mock_user: users.User):
         assert member.avatar_url is mock_user.avatar_url
 
@@ -282,6 +299,15 @@ class TestMember:
         with mock.patch.object(guilds.Member, "make_guild_avatar_url", return_value=None):
             with mock.patch.object(users.User, "display_avatar_url") as mock_display_avatar_url:
                 assert member.display_avatar_url is mock_display_avatar_url
+
+    def test_display_banner_url_when_guild_hash_is_None(self, member: guilds.Member, mock_user: users.User):
+        with mock.patch.object(guilds.Member, "make_guild_banner_url") as mock_make_guild_banner_url:
+            assert member.display_banner_url is mock_make_guild_banner_url.return_value
+
+    def test_display_banner_url_when_guild_hash_is_not_None(self, member: guilds.Member, mock_user: users.User):
+        with mock.patch.object(guilds.Member, "make_guild_banner_url", return_value=None):
+            with mock.patch.object(users.User, "display_banner_url") as mock_display_banner_url:
+                assert member.display_banner_url is mock_display_banner_url
 
     def test_banner_hash_property(self, member: guilds.Member, mock_user: users.User):
         assert member.banner_hash is mock_user.banner_hash
@@ -296,7 +322,11 @@ class TestMember:
         with mock.patch.object(guilds.Member, "make_guild_avatar_url") as make_guild_avatar_url:
             assert member.guild_avatar_url is make_guild_avatar_url.return_value
 
-    def test_communication_disabled_until(self, member: guilds.Member):
+    def test_guild_banner_url_property(self, member: guilds.member):
+        with mock.patch.object(guilds.Member, "make_guild_banner_url") as make_guild_banner_url:
+            assert member.guild_banner_url is make_guild_banner_url.return_value
+
+    def test_communication_disabled_until(self, member: guilds.member):
         member.raw_communication_disabled_until = datetime.datetime(2021, 11, 22)
 
         with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
@@ -373,6 +403,66 @@ class TestMember:
             guild_id=member.guild_id,
             user_id=member.id,
             hash=member.guild_avatar_hash,
+            size=4096,
+            file_format="url",
+        )
+
+    def test_make_banner_url(self, model, mock_user):
+        result = model.make_banner_url(ext="png", size=4096)
+        mock_user.make_banner_url.assert_called_once_with(ext="png", size=4096)
+        assert result is mock_user.make_banner_url.return_value
+
+    def test_make_guild_banner_url_when_no_hash(self, model):
+        model.guild_banner_hash = None
+        assert model.make_guild_banner_url(ext="png", size=1024) is None
+
+    def test_make_guild_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model):
+        model.guild_banner_hash = "a_18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=model.id,
+            guild_id=model.guild_id,
+            hash=model.guild_banner_hash,
+            size=4096,
+            file_format="gif",
+        )
+
+    def test_make_guild_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model):
+        model.guild_banner_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_banner_url(ext=None, size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=model.id,
+            guild_id=model.guild_id,
+            hash=model.guild_banner_hash,
+            size=4096,
+            file_format="png",
+        )
+
+    def test_make_guild_banner_url_with_all_args(self, model):
+        model.guild_banner_hash = "18dnf8dfbakfdh"
+
+        with mock.patch.object(
+            routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_guild_banner_url(ext="url", size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            guild_id=model.guild_id,
+            user_id=model.id,
+            hash=model.guild_banner_hash,
             size=4096,
             file_format="url",
         )
@@ -692,6 +782,21 @@ class TestPartialGuild:
         assert edited_guild is partial_guild.app.rest.edit_guild.return_value
 
     @pytest.mark.asyncio
+    async def test_set_incident_actions(self, partial_guild: guilds.PartialGuild):
+        partial_guild.app.rest.set_guild_incident_actions = mock.AsyncMock()
+
+        updated_incident_data = await partial_guild.set_incident_actions(
+            invites_disabled_until=datetime.datetime(2021, 11, 17), dms_disabled_until=datetime.datetime(2021, 11, 18)
+        )
+
+        assert updated_incident_data is partial_guild.app.rest.set_guild_incident_actions.return_value
+        partial_guild.app.rest.set_guild_incident_actions.assert_awaited_once_with(
+            90210,
+            invites_disabled_until=datetime.datetime(2021, 11, 17),
+            dms_disabled_until=datetime.datetime(2021, 11, 18),
+        )
+
+    @pytest.mark.asyncio
     async def test_fetch_emojis(self, partial_guild: guilds.PartialGuild):
         partial_guild.app.rest.fetch_guild_emojis = mock.AsyncMock()
 
@@ -996,6 +1101,12 @@ class TestGuild:
             banner_hash="banner_hash",
             icon_hash="icon_hash",
             features=[guilds.GuildFeature.ANIMATED_ICON],
+            incidents=guilds.GuildIncidents(
+                invites_disabled_until=None,
+                dms_disabled_until=None,
+                dm_spam_detected_at=datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc),
+                raid_detected_at=None,
+            ),
             name="some guild",
             application_id=snowflakes.Snowflake(9876),
             afk_channel_id=snowflakes.Snowflake(1234),
@@ -1181,6 +1292,25 @@ class TestGuild:
     def test_get_role_when_no_cache_trait(self, guild: guilds.Guild):
         guild.app = mock.Mock()
         assert guild.get_role(456) is None
+
+    @pytest.mark.asyncio
+    async def test_invites_disabled_default(self, guild: guilds.Guild):
+        assert guild.invites_disabled is False
+
+    @pytest.mark.asyncio
+    async def test_invites_disabled_via_incidents(self, model):
+        model.incidents = guilds.GuildIncidents(
+            invites_disabled_until=datetime.datetime(2021, 11, 17),
+            dms_disabled_until=None,
+            dm_spam_detected_at=None,
+            raid_detected_at=None,
+        )
+        assert model.invites_disabled is True
+
+    @pytest.mark.asyncio
+    async def test_invites_disabled_via_feature(self, guild: guilds.Guild):
+        guild.features.append(guilds.GuildFeature.INVITES_DISABLED)
+        assert guild.invites_disabled is True
 
     def test_splash_url(self, guild: guilds.Guild):
         splash = mock.Mock()
@@ -1438,6 +1568,12 @@ class TestRestGuild:
             banner_hash="banner_hash",
             icon_hash="icon_hash",
             features=[guilds.GuildFeature.ANIMATED_ICON],
+            incidents=guilds.GuildIncidents(
+                invites_disabled_until=None,
+                dms_disabled_until=None,
+                dm_spam_detected_at=datetime.datetime(2015, 5, 13, 1, 1, 1, 1, tzinfo=datetime.timezone.utc),
+                raid_detected_at=None,
+            ),
             name="some guild",
             application_id=snowflakes.Snowflake(9876),
             afk_channel_id=snowflakes.Snowflake(1234),

@@ -603,7 +603,7 @@ class TestInteractionServer:
         mock_runner.cleanup.assert_awaited_once()
         mock_event.set.assert_called_once()
         assert mock_interaction_server._is_closing is False
-        assert mock_interaction_server._running_generator_listeners == []
+        assert mock_interaction_server._running_generator_listeners == set()
         gather.assert_awaited_once_with(
             generator_listener_1, generator_listener_2, generator_listener_3, generator_listener_4
         )
@@ -668,6 +668,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         mock_listener = mock.AsyncMock(return_value=mock_builder)
@@ -716,6 +724,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         g_called = False
@@ -741,6 +757,45 @@ class TestInteractionServer:
 
         assert g_complete is True
         assert len(mock_interaction_server._running_generator_listeners) == 0
+
+    @pytest.mark.asyncio
+    async def test_on_interaction_returns_no_content(
+        self,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        public_key: bytes,
+        valid_edd25519: bytes,
+        valid_payload: bytes,
+    ):
+        mock_interaction_server._public_key = nacl.signing.VerifyKey(public_key)
+        mock_file_1 = mock.Mock()
+        mock_file_2 = mock.Mock()
+        mock_entity_factory.deserialize_interaction.return_value = base_interactions.PartialInteraction(
+            app=None,
+            id=123,
+            application_id=541324,
+            type=2,
+            token="ok",
+            version=1,
+            authorizing_integration_owners={},
+            context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
+        )
+
+        mock_listener = mock.AsyncMock(return_value=None)
+        mock_interaction_server.set_listener(base_interactions.PartialInteraction, mock_listener)
+
+        result = await mock_interaction_server.on_interaction(*valid_edd25519)
+        assert result.payload is None
+        assert len(result.files) == 0
+        assert result.status_code == 204
 
     @pytest.mark.asyncio
     async def test_on_interaction_calls__fetch_public_key(
@@ -891,6 +946,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_exception = TypeError("OK")
         mock_interaction_server.set_listener(
@@ -927,6 +990,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_exception = TypeError("OK")
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
@@ -964,6 +1035,14 @@ class TestInteractionServer:
             version=1,
             authorizing_integration_owners={},
             context=applications.ApplicationContextType.GUILD,
+            app_permissions=123123123,
+            user=mock.Mock(),
+            member=mock.Mock(),
+            channel=mock.Mock(),
+            guild_id=123123,
+            guild_locale="en-GB",
+            locale="es-ES",
+            entitlements=[],
         )
         mock_exception = TypeError("OK")
         mock_interaction_server._dumps = mock.Mock(side_effect=mock_exception)

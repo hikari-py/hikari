@@ -141,7 +141,9 @@ class TestFastProtocolChecking:
 
         class Class: ...
 
-        with mock.patch.object(type(typing.Protocol), "__subclasscheck__", return_value=True) as subclass_check:
+        with mock.patch.object(
+            fast_protocol._FastProtocolChecking, "__subclasscheck__", return_value=True
+        ) as subclass_check:
             assert issubclass(Class, MyProtocol) is True
 
             subclass_check.assert_called_once_with(Class)

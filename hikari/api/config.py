@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -104,7 +103,7 @@ class ProxySettings(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def url(self) -> typing.Union[None, str]:
+    def url(self) -> None | str:
         """Proxy URL to use.
 
         If this is [`None`][] then no explicit proxy is being used.
@@ -134,7 +133,7 @@ class HTTPSettings(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def max_redirects(self) -> typing.Optional[int]:
+    def max_redirects(self) -> int | None:
         """Behavior for handling redirect HTTP responses.
 
         If a [`int`][], allow following redirects from `3xx` HTTP responses

@@ -58,7 +58,7 @@ class TestHandleInterrupt:
             mock.patch.object(signal, "SIGTERM", new=15, create=True),
             mock.patch.object(signals, "_INTERRUPT_SIGNALS", ("SIGINT", "SIGTERM", "UNIMPLEMENTED")),
         ):
-            with signals.handle_interrupts(True, loop, True):
+            with signals.handle_interrupts(loop, propagate_interrupts=True, enabled=True):
                 interrupt_handler.assert_called_once_with(loop)
 
                 assert register_signal_handler.call_count == 2
@@ -75,18 +75,18 @@ class TestHandleInterrupt:
 
     def test_when_disabled(self):
         with mock.patch.object(signal, "signal") as register_signal_handler:
-            with signals.handle_interrupts(False, mock.Mock(), True):
+            with signals.handle_interrupts(mock.Mock(), enabled=False, propagate_interrupts=True):
                 register_signal_handler.assert_not_called()
 
         register_signal_handler.assert_not_called()
 
     def test_when_propagate_interrupt(self):
         with mock.patch.object(signal, "signal"):
-            with pytest.raises(errors.HikariInterrupt):  # noqa: PT012 - raises block should contain a single statement
-                with signals.handle_interrupts(True, mock.Mock(), True):
+            with pytest.raises(errors.HikariInterrupt):
+                with signals.handle_interrupts(mock.Mock(), enabled=True, propagate_interrupts=True):
                     raise errors.HikariInterrupt(1, "t")
 
     def test_when_not_propagate_interrupt(self):
         with mock.patch.object(signal, "signal"):
-            with signals.handle_interrupts(True, mock.Mock(), False):
+            with signals.handle_interrupts(mock.Mock(), enabled=True, propagate_interrupts=False):
                 raise errors.HikariInterrupt(1, "t")

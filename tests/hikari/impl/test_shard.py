@@ -126,7 +126,7 @@ class TestGatewayTransport:
             exit_stack=mock.AsyncMock(),
             logger=mock.Mock(),
             log_filterer=mock.Mock(),
-            loads=mock.Mock(),
+            loads=mock.Mock(return_value={}),
             dumps=mock.Mock(),
             transport_compression=True,
         )

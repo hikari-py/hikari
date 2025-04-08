@@ -73,6 +73,7 @@ class TestExecutableWebhook:
         mock_components = mock.Mock(), mock.Mock()
         mock_embed = mock.Mock()
         mock_embeds = mock.Mock(), mock.Mock()
+        mock_poll = mock.Mock()
 
         with mock.patch.object(
             executable_webhook.app.rest, "execute_webhook", new_callable=mock.AsyncMock
@@ -88,31 +89,33 @@ class TestExecutableWebhook:
                 components=mock_components,
                 embed=mock_embed,
                 embeds=mock_embeds,
+                poll=mock_poll,
                 mentions_everyone=False,
                 user_mentions=[1235432],
                 role_mentions=[65234123],
                 flags=64,
             )
 
-            assert result is patched_execute_webhook.return_value
-            patched_execute_webhook.assert_awaited_once_with(
-                webhook=executable_webhook.webhook_id,
-                token=executable_webhook.token,
-                content="coooo",
-                username="oopp",
-                avatar_url="urlurlurl",
-                tts=True,
-                attachment=mock_attachment_1,
-                attachments=mock_attachment_2,
-                component=mock_component,
-                components=mock_components,
-                embed=mock_embed,
-                embeds=mock_embeds,
-                mentions_everyone=False,
-                user_mentions=[1235432],
-                role_mentions=[65234123],
-                flags=64,
-            )
+        assert result is patched_execute_webhook.return_value
+        patched_execute_webhook.assert_awaited_once_with(
+            webhook=executable_webhook.webhook_id,
+            token=executable_webhook.token,
+            content="coooo",
+            username="oopp",
+            avatar_url="urlurlurl",
+            tts=True,
+            attachment=mock_attachment_1,
+            attachments=mock_attachment_2,
+            component=mock_component,
+            components=mock_components,
+            embed=mock_embed,
+            embeds=mock_embeds,
+            poll=mock_poll,
+            mentions_everyone=False,
+            user_mentions=[1235432],
+            role_mentions=[65234123],
+            flags=64,
+        )
 
     @pytest.mark.asyncio
     async def test_execute_without_optionals(self, executable_webhook: webhooks.ExecutableWebhook):
@@ -121,25 +124,26 @@ class TestExecutableWebhook:
         ) as patched_execute_webhook:
             result = await executable_webhook.execute()
 
-            assert result is patched_execute_webhook.return_value
-            patched_execute_webhook.assert_awaited_once_with(
-                webhook=executable_webhook.webhook_id,
-                token=executable_webhook.token,
-                content=undefined.UNDEFINED,
-                username=undefined.UNDEFINED,
-                avatar_url=undefined.UNDEFINED,
-                tts=undefined.UNDEFINED,
-                attachment=undefined.UNDEFINED,
-                attachments=undefined.UNDEFINED,
-                component=undefined.UNDEFINED,
-                components=undefined.UNDEFINED,
-                embed=undefined.UNDEFINED,
-                embeds=undefined.UNDEFINED,
-                mentions_everyone=undefined.UNDEFINED,
-                user_mentions=undefined.UNDEFINED,
-                role_mentions=undefined.UNDEFINED,
-                flags=undefined.UNDEFINED,
-            )
+        assert result is patched_execute_webhook.return_value
+        patched_execute_webhook.assert_awaited_once_with(
+            webhook=executable_webhook.webhook_id,
+            token=executable_webhook.token,
+            content=undefined.UNDEFINED,
+            username=undefined.UNDEFINED,
+            avatar_url=undefined.UNDEFINED,
+            tts=undefined.UNDEFINED,
+            attachment=undefined.UNDEFINED,
+            attachments=undefined.UNDEFINED,
+            component=undefined.UNDEFINED,
+            components=undefined.UNDEFINED,
+            embed=undefined.UNDEFINED,
+            embeds=undefined.UNDEFINED,
+            poll=undefined.UNDEFINED,
+            mentions_everyone=undefined.UNDEFINED,
+            user_mentions=undefined.UNDEFINED,
+            role_mentions=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
+        )
 
     @pytest.mark.asyncio
     async def test_fetch_message(self, executable_webhook: webhooks.ExecutableWebhook):

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,12 +23,12 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "KeyT",
-    "ValueT",
-    "SnowflakeSet",
     "ExtendedMutableMapping",
     "FreezableDict",
+    "KeyT",
     "LimitedCapacityCacheMap",
+    "SnowflakeSet",
+    "ValueT",
     "get_index_or_slice",
 )
 
@@ -41,6 +40,7 @@ import sys
 import typing
 
 from hikari import snowflakes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
@@ -106,31 +106,39 @@ class FreezableDict(ExtendedMutableMapping[KeyT, ValueT]):
 
     __slots__: typing.Sequence[str] = ("_data",)
 
-    def __init__(self, source: typing.Optional[dict[KeyT, ValueT]] = None, /) -> None:
+    def __init__(self, source: dict[KeyT, ValueT] | None = None, /) -> None:
         self._data = source or {}
 
+    @typing_extensions.override
     def clear(self) -> None:
         self._data.clear()
 
+    @typing_extensions.override
     def copy(self) -> FreezableDict[KeyT, ValueT]:
         return FreezableDict(self._data.copy())
 
     # TODO: name this something different if it is not physically frozen.
+    @typing_extensions.override
     def freeze(self) -> dict[KeyT, ValueT]:
         return self._data.copy()
 
+    @typing_extensions.override
     def __delitem__(self, key: KeyT) -> None:
         del self._data[key]
 
+    @typing_extensions.override
     def __getitem__(self, key: KeyT) -> ValueT:
         return self._data[key]
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[KeyT]:
         return iter(self._data)
 
+    @typing_extensions.override
     def __len__(self) -> int:
         return len(self._data)
 
+    @typing_extensions.override
     def __setitem__(self, key: KeyT, value: ValueT) -> None:
         self._data[key] = value
 
@@ -160,23 +168,26 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
 
     def __init__(
         self,
-        source: typing.Optional[dict[KeyT, ValueT]] = None,
+        source: dict[KeyT, ValueT] | None = None,
         /,
         *,
         limit: int,
-        on_expire: typing.Optional[typing.Callable[[ValueT], None]] = None,
+        on_expire: typing.Callable[[ValueT], None] | None = None,
     ) -> None:
         self._data: dict[KeyT, ValueT] = source or {}
         self._limit = limit
         self._on_expire = on_expire
         self._garbage_collect()
 
+    @typing_extensions.override
     def clear(self) -> None:
         self._data.clear()
 
+    @typing_extensions.override
     def copy(self) -> LimitedCapacityCacheMap[KeyT, ValueT]:
         return LimitedCapacityCacheMap(self._data.copy(), limit=self._limit, on_expire=self._on_expire)
 
+    @typing_extensions.override
     def freeze(self) -> dict[KeyT, ValueT]:
         return self._data.copy()
 
@@ -187,18 +198,23 @@ class LimitedCapacityCacheMap(ExtendedMutableMapping[KeyT, ValueT]):
             if self._on_expire:
                 self._on_expire(value)
 
+    @typing_extensions.override
     def __delitem__(self, key: KeyT) -> None:
         del self._data[key]
 
+    @typing_extensions.override
     def __getitem__(self, key: KeyT) -> ValueT:
         return self._data[key]
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[KeyT]:
         return iter(self._data)
 
+    @typing_extensions.override
     def __len__(self) -> int:
         return len(self._data)
 
+    @typing_extensions.override
     def __setitem__(self, key: KeyT, value: ValueT) -> None:
         self._data[key] = value
         self._garbage_collect()
@@ -247,6 +263,7 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         if ids:
             self.add_all(ids)
 
+    @typing_extensions.override
     def add(self, value: int, /) -> None:
         """Add a snowflake to this set."""
         # Always append the first item, as we cannot compare with nothing.
@@ -272,11 +289,13 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
             elif self._ids[index] != sf:
                 self._ids.insert(index, sf)
 
+    @typing_extensions.override
     def clear(self) -> None:
         """Clear all items from this collection."""
         # Arrays lack a "clear" method.
         self._ids = array.array(_LONG_LONG_UNSIGNED)
 
+    @typing_extensions.override
     def discard(self, value: int, /) -> None:
         """Remove a snowflake from this set if it's present."""
         if not self._ids:
@@ -287,7 +306,8 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
         if index < len(self) and self._ids[index] == value:
             del self._ids[index]
 
-    def __contains__(self, value: typing.Any) -> bool:
+    @typing_extensions.override
+    def __contains__(self, value: object) -> bool:
         if not isinstance(value, int):
             return False
 
@@ -297,25 +317,30 @@ class SnowflakeSet(typing.MutableSet[snowflakes.Snowflake]):
             return self._ids[index] == value
         return False
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[snowflakes.Snowflake]:
         return map(snowflakes.Snowflake, self._ids)
 
+    @typing_extensions.override
     def __len__(self) -> int:
         return len(self._ids)
 
+    @typing_extensions.override
     def __repr__(self) -> str:
         return type(self).__name__ + "(" + ", ".join(map(repr, self._ids)) + ")"
 
+    @typing_extensions.override
     def __sizeof__(self) -> int:
         return super().__sizeof__() + sys.getsizeof(self._ids)
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return "{" + ", ".join(map(repr, self._ids)) + "}"
 
 
 def get_index_or_slice(
-    mapping: typing.Mapping[KeyT, ValueT], index_or_slice: typing.Union[int, slice]
-) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
+    mapping: typing.Mapping[KeyT, ValueT], index_or_slice: int | slice
+) -> ValueT | typing.Sequence[ValueT]:
     """Get a mapping's entry at a given index as if it's a sequence of it's values.
 
     Parameters

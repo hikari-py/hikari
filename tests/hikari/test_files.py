@@ -50,7 +50,6 @@ class TestAsyncReaderContextManager:
         return hikari_test_helpers.mock_class_namespace(files.AsyncReaderContextManager)
 
     def test___enter__(self, reader: files.AsyncReaderContextManager[files.AsyncReader]):
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             reader().__enter__()
 
@@ -115,7 +114,9 @@ class TestToWritePath:
         joinpath = mock_path.joinpath.return_value = mock.Mock(exists=mock.Mock(return_value=False))
 
         with mock.patch.object(files, "ensure_path", return_value=mock_path) as ensure_path:
-            assert files._to_write_path("test_path", "some_filename.png", False) is joinpath.expanduser.return_value
+            assert (
+                files._to_write_path("test_path", "some_filename.png", force=False) is joinpath.expanduser.return_value
+            )
 
         mock_path.joinpath.assert_called_once_with("some_filename.png")
         ensure_path.assert_called_once_with("test_path")
@@ -125,7 +126,7 @@ class TestToWritePath:
 
         with mock.patch.object(files, "ensure_path", return_value=mock_path) as ensure_path:
             with pytest.raises(FileExistsError):
-                files._to_write_path("test_path", "some_filename.png", False)
+                files._to_write_path("test_path", "some_filename.png", force=False)
 
         ensure_path.assert_called_once_with("test_path")
 
@@ -133,7 +134,9 @@ class TestToWritePath:
         mock_path = mock.Mock(is_dir=mock.Mock(return_value=False), exists=mock.Mock(return_value=True))
 
         with mock.patch.object(files, "ensure_path", return_value=mock_path) as ensure_path:
-            assert files._to_write_path("test_path", "some_filename.png", True) is mock_path.expanduser.return_value
+            assert (
+                files._to_write_path("test_path", "some_filename.png", force=True) is mock_path.expanduser.return_value
+            )
 
         ensure_path.assert_called_once_with("test_path")
 
@@ -144,7 +147,7 @@ def test_open_write_path():
             files._open_write_path("path", "some_filename.png", False) is to_write_path.return_value.open.return_value
         )
 
-    to_write_path.assert_called_once_with("path", "some_filename.png", False)
+    to_write_path.assert_called_once_with("path", "some_filename.png", force=False)
     to_write_path.return_value.open.assert_called_once_with("wb")
 
 
@@ -211,7 +214,7 @@ def test_copy_to_path():
         with mock.patch.object(shutil, "copy2") as copy2:
             files._copy_to_path("original_path", "path", "some_filename.png", False)
 
-    to_write_path.assert_called_once_with("path", "some_filename.png", False)
+    to_write_path.assert_called_once_with("path", "some_filename.png", force=False)
     copy2.assert_called_once_with("original_path", to_write_path.return_value)
 
 
@@ -242,9 +245,9 @@ class TestFile:
 
 def test_write_bytes():
     with mock.patch.object(files, "_to_write_path") as to_write_path:
-        files._write_bytes("path", "some_filename.png", False, b"some bytes")
+        files._write_bytes("path", "some_filename.png", b"some bytes", force=False)
 
-    to_write_path.assert_called_once_with("path", "some_filename.png", False)
+    to_write_path.assert_called_once_with("path", "some_filename.png", force=False)
     to_write_path.return_value.write_bytes.assert_called_once_with(b"some bytes")
 
 
@@ -268,7 +271,7 @@ class TestBytes:
 
         super_save.assert_not_called()
         loop.run_in_executor.assert_awaited_once_with(
-            mock_executor, files._write_bytes, "some_path/", "something.txt", True, bytes_obj.data
+            mock_executor, files._write_bytes, "some_path/", "something.txt", bytes_obj.data, True
         )
 
     @pytest.mark.asyncio

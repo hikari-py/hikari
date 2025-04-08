@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,21 +23,22 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "SearchableSnowflakeish",
+    "SearchableSnowflakeishOr",
     "Snowflake",
+    "Snowflakeish",
+    "SnowflakeishIterable",
+    "SnowflakeishOr",
+    "SnowflakeishSequence",
     "Unique",
     "calculate_shard_id",
-    "Snowflakeish",
-    "SearchableSnowflakeish",
-    "SnowflakeishOr",
-    "SearchableSnowflakeishOr",
-    "SnowflakeishIterable",
-    "SnowflakeishSequence",
 )
 
 import abc
 import typing
 
 from hikari.internal import time
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -123,16 +123,16 @@ class Unique(abc.ABC):
     def __int__(self) -> int:
         return int(self.id)
 
+    @typing_extensions.override
     def __hash__(self) -> int:
         return hash(self.id)
 
-    def __eq__(self, other: typing.Any) -> bool:
-        return type(self) is type(other) and self.id == other.id
+    @typing_extensions.override
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, type(self)) and self.id == other.id
 
 
-def calculate_shard_id(
-    app_or_count: typing.Union[traits.ShardAware, int], guild: SnowflakeishOr[guilds.PartialGuild]
-) -> int:
+def calculate_shard_id(app_or_count: traits.ShardAware | int, guild: SnowflakeishOr[guilds.PartialGuild]) -> int:
     """Calculate the shard ID for a guild based on it's shard aware app or shard count.
 
     Parameters
@@ -180,9 +180,9 @@ The valid types for this type hint are:
 - [`datetime.datetime`][]
 """
 
-T = typing.TypeVar("T", covariant=True, bound=Unique)
+T_co = typing.TypeVar("T_co", covariant=True, bound=Unique)
 
-SnowflakeishOr = typing.Union[T, Snowflakeish]
+SnowflakeishOr = typing.Union[T_co, Snowflakeish]
 """Type hint representing a unique object entity.
 
 This is a value that is [`hikari.snowflakes.Snowflake`][]-ish or a specific type covariant.
@@ -202,7 +202,7 @@ The valid types for this type hint are:
 - [`hikari.snowflakes.Snowflake`][]
 """
 
-SearchableSnowflakeishOr = typing.Union[T, SearchableSnowflakeish]
+SearchableSnowflakeishOr = typing.Union[T_co, SearchableSnowflakeish]
 """Type hint for a unique object entity that can be searched for.
 
 This is a variant of [`hikari.snowflakes.SnowflakeishOr`][] that also allows an alternative value
@@ -220,9 +220,9 @@ The valid types for this type hint are:
 - [`datetime.datetime`][]
 """
 
-SnowflakeishIterable = typing.Iterable[SnowflakeishOr[T]]
+SnowflakeishIterable = typing.Iterable[SnowflakeishOr[T_co]]
 """Type hint representing an iterable of unique object entities."""
 
 
-SnowflakeishSequence = typing.Sequence[SnowflakeishOr[T]]
+SnowflakeishSequence = typing.Sequence[SnowflakeishOr[T_co]]
 """Type hint representing a collection of unique object entities."""

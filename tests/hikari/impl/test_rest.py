@@ -77,15 +77,10 @@ from tests.hikari import hikari_test_helpers
 #################
 
 
-class StubRestClient:
-    http_settings = mock.Mock()
-    proxy_settings = mock.Mock()
-
-
 class TestRestProvider:
     @pytest.fixture
-    def rest_client(self) -> StubRestClient:
-        return StubRestClient()
+    def rest_client(self) -> rest.RESTClientImpl:
+        return mock.Mock()
 
     @pytest.fixture
     def executor(self) -> concurrent.futures.Executor:
@@ -98,11 +93,15 @@ class TestRestProvider:
     @pytest.fixture
     def rest_provider(
         self,
-        rest_client: StubRestClient,
+        rest_client: rest.RESTClientImpl,
         executor: concurrent.futures.Executor,
         entity_factory: entity_factory.EntityFactoryImpl,
     ):
-        return rest._RESTProvider(lambda: entity_factory, executor, lambda: rest_client)
+        provider = rest._RESTProvider(executor)
+
+        provider.update(rest_client, entity_factory)
+
+        return provider
 
     def test_rest_property(self, rest_provider: rest._RESTProvider, rest_client: StubRestClient):
         assert rest_provider.rest == rest_client
@@ -654,6 +653,7 @@ def make_user(id: int) -> users.User:
         global_name="user_global_name",
         avatar_hash="user_avatar_hash",
         banner_hash="user_banner_hash",
+        avatar_decoration=None,
         accent_color=None,
         is_bot=False,
         is_system=False,
@@ -873,18 +873,21 @@ def mock_scheduled_event(mock_partial_guild: guilds.PartialGuild) -> scheduled_e
 
 
 class TestStringifyHttpMessage:
-    def test_when_body_is_None(self):
+    def test_when_body_is_str(self, rest_client: rest.RESTClientImpl):
         headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
-        expected_return = "    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**"
-        assert rest._stringify_http_message(headers, None) == expected_return
 
-    @pytest.mark.parametrize(("body", "expected"), [(bytes("hello :)", "ascii"), "hello :)"), (123, "123")])
-    def test_when_body_is_not_None(self, body: int | tuple[str, str], expected: str):
+        returned = rest._stringify_http_message(headers, None)
+
+        assert returned == "    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**"
+
+    def test_when_body_is_not_None(self, rest_client: rest.RESTClientImpl):
         headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
-        expected_return = (
-            f"    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**\n\n    {expected}"
+
+        returned = rest._stringify_http_message(headers, bytes("hello :)", "ascii"))
+
+        assert returned == (
+            f"    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**\n\n    hello :)"
         )
-        assert rest._stringify_http_message(headers, body) == expected_return
 
 
 class TestTransformEmojiToUrlFormat:
@@ -1556,7 +1559,9 @@ class TestRESTClientImpl:
         with mock.patch.object(special_endpoints, "GuildBanIterator") as iterator_cls:
             iterator = rest_client.fetch_bans(123, newest_first=True, start_at=mock_user)
 
-        iterator_cls.assert_called_once_with(rest_client._entity_factory, rest_client._request, 123, True, "789")
+        iterator_cls.assert_called_once_with(
+            rest_client._entity_factory, rest_client._request, 123, newest_first=True, first_id="789"
+        )
         assert iterator is iterator_cls.return_value
 
     def test_fetch_bans_when_datetime_for_start_at(self, rest_client: rest.RESTClientImpl):
@@ -1565,7 +1570,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(9000, newest_first=True, start_at=start_at)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, 9000, True, "950000286338908160"
+            rest_client._entity_factory, rest_client._request, 9000, newest_first=True, first_id="950000286338908160"
         )
         assert iterator is iterator_cls.return_value
 
@@ -1574,7 +1579,11 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(8844)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, 8844, False, str(snowflakes.Snowflake.min())
+            rest_client._entity_factory,
+            rest_client._request,
+            8844,
+            newest_first=False,
+            first_id=str(snowflakes.Snowflake.min()),
         )
         assert iterator is iterator_cls.return_value
 
@@ -1583,7 +1592,11 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_bans(3848, newest_first=True)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, 3848, True, str(snowflakes.Snowflake.max())
+            rest_client._entity_factory,
+            rest_client._request,
+            3848,
+            newest_first=True,
+            first_id=str(snowflakes.Snowflake.max()),
         )
         assert iterator is iterator_cls.return_value
 
@@ -2043,7 +2056,7 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_scheduled_event_users(123, 6666655555, newest_first=True, start_at=mock_user)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, True, "789", 123, 6666655555
+            rest_client._entity_factory, rest_client._request, 123, 6666655555, first_id="789", newest_first=True
         )
         assert iterator is iterator_cls.return_value
 
@@ -2053,7 +2066,12 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_scheduled_event_users(54123, 656324, newest_first=True, start_at=start_at)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, True, "950000286338908160", 54123, 656324
+            rest_client._entity_factory,
+            rest_client._request,
+            54123,
+            656324,
+            newest_first=True,
+            first_id="950000286338908160",
         )
         assert iterator is iterator_cls.return_value
 
@@ -2064,10 +2082,10 @@ class TestRESTClientImpl:
         iterator_cls.assert_called_once_with(
             rest_client._entity_factory,
             rest_client._request,
-            False,
-            str(snowflakes.Snowflake.min()),
             54563245,
             123321123,
+            newest_first=False,
+            first_id=str(snowflakes.Snowflake.min()),
         )
         assert iterator is iterator_cls.return_value
 
@@ -2078,7 +2096,12 @@ class TestRESTClientImpl:
             iterator = rest_client.fetch_scheduled_event_users(6423, 65456234, newest_first=True)
 
         iterator_cls.assert_called_once_with(
-            rest_client._entity_factory, rest_client._request, True, str(snowflakes.Snowflake.max()), 6423, 65456234
+            rest_client._entity_factory,
+            rest_client._request,
+            6423,
+            65456234,
+            newest_first=True,
+            first_id=str(snowflakes.Snowflake.max()),
         )
         assert iterator is iterator_cls.return_value
 
@@ -3183,8 +3206,8 @@ class TestRESTClientImplAsync:
         ):
             assert await rest_client.fetch_message(mock_guild_text_channel, mock_message) is message_obj
 
-            patched__request.assert_awaited_once_with(expected_route)
-            patched_deserialize_message.assert_called_once_with({"id": "456"})
+        patched__request.assert_awaited_once_with(expected_route)
+        patched_deserialize_message.assert_called_once_with({"id": "456"})
 
     async def test_create_message_when_form(
         self,
@@ -3198,6 +3221,7 @@ class TestRESTClientImplAsync:
         component_obj2 = mock.Mock()
         embed_obj = mock.Mock()
         embed_obj2 = mock.Mock()
+        poll_obj = mock.Mock()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -3221,6 +3245,7 @@ class TestRESTClientImplAsync:
                 components=[component_obj2],
                 embed=embed_obj,
                 embeds=[embed_obj2],
+                poll=poll_obj,
                 sticker=54234,
                 stickers=[564123, 431123],
                 tts=True,
@@ -3233,30 +3258,31 @@ class TestRESTClientImplAsync:
             )
             assert returned is patched_deserialize_message.return_value
 
-            patched__build_message_payload.assert_called_once_with(
-                content="new content",
-                attachment=attachment_obj,
-                attachments=[attachment_obj2],
-                component=component_obj,
-                components=[component_obj2],
-                embed=embed_obj,
-                embeds=[embed_obj2],
-                sticker=54234,
-                stickers=[564123, 431123],
-                tts=True,
-                mentions_everyone=False,
-                mentions_reply=undefined.UNDEFINED,
-                user_mentions=[9876],
-                role_mentions=[1234],
-                flags=54123,
-            )
-            mock_form.add_field.assert_called_once_with(
-                "payload_json",
-                b'{"testing":"ensure_in_test","message_reference":{"message_id":"101","fail_if_not_exists":false}}',
-                content_type="application/json",
-            )
-            patched__request.assert_awaited_once_with(expected_route, form_builder=mock_form)
-            patched_deserialize_message.assert_called_once_with({"message_id": 987654321})
+        patched__build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            poll=poll_obj,
+            sticker=54234,
+            stickers=[564123, 431123],
+            tts=True,
+            mentions_everyone=False,
+            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=54123,
+        )
+        mock_form.add_field.assert_called_once_with(
+            "payload_json",
+            b'{"testing":"ensure_in_test","message_reference":{"message_id":"101","fail_if_not_exists":false}}',
+            content_type="application/json",
+        )
+        patched__request.assert_awaited_once_with(expected_route, form_builder=mock_form)
+        patched_deserialize_message.assert_called_once_with({"message_id": 987654321})
 
     async def test_create_message_when_no_form(
         self,
@@ -3270,6 +3296,7 @@ class TestRESTClientImplAsync:
         component_obj2 = mock.Mock()
         embed_obj = mock.Mock()
         embed_obj2 = mock.Mock()
+        poll_obj = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=4560)
@@ -3292,6 +3319,7 @@ class TestRESTClientImplAsync:
                 components=[component_obj2],
                 embed=embed_obj,
                 embeds=[embed_obj2],
+                poll=poll_obj,
                 sticker=543345,
                 stickers=[123321, 6572345],
                 tts=True,
@@ -3304,31 +3332,29 @@ class TestRESTClientImplAsync:
             )
             assert returned is patched_deserialize_message.return_value
 
-            patched__build_message_payload.assert_called_once_with(
-                content="new content",
-                attachment=attachment_obj,
-                attachments=[attachment_obj2],
-                component=component_obj,
-                components=[component_obj2],
-                embed=embed_obj,
-                embeds=[embed_obj2],
-                sticker=543345,
-                stickers=[123321, 6572345],
-                tts=True,
-                mentions_everyone=False,
-                mentions_reply=undefined.UNDEFINED,
-                user_mentions=[9876],
-                role_mentions=[1234],
-                flags=6643,
-            )
-            patched__request.assert_awaited_once_with(
-                expected_route,
-                json={
-                    "testing": "ensure_in_test",
-                    "message_reference": {"message_id": "101", "fail_if_not_exists": False},
-                },
-            )
-            patched_deserialize_message.assert_called_once_with({"message_id": 987654321})
+        patched__build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            poll=poll_obj,
+            sticker=543345,
+            stickers=[123321, 6572345],
+            tts=True,
+            mentions_everyone=False,
+            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=6643,
+        )
+        patched__request.assert_awaited_once_with(
+            expected_route,
+            json={"testing": "ensure_in_test", "message_reference": {"message_id": "101", "fail_if_not_exists": False}},
+        )
+        patched_deserialize_message.assert_called_once_with({"message_id": 987654321})
 
     async def test_crosspost_message(
         self,
@@ -4041,6 +4067,7 @@ class TestRESTClientImplAsync:
         component_obj2 = mock.Mock()
         embed_obj = mock.Mock()
         embed_obj2 = mock.Mock()
+        poll_obj = mock.Mock()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
@@ -4067,6 +4094,7 @@ class TestRESTClientImplAsync:
                 components=[component_obj2],
                 embed=embed_obj,
                 embeds=[embed_obj2],
+                poll=poll_obj,
                 tts=True,
                 mentions_everyone=False,
                 user_mentions=[9876],
@@ -4075,29 +4103,30 @@ class TestRESTClientImplAsync:
             )
             assert returned is patched_deserialize_message.return_value
 
-            patched__build_message_payload.assert_called_once_with(
-                content="new content",
-                attachment=attachment_obj,
-                attachments=[attachment_obj2],
-                component=component_obj,
-                components=[component_obj2],
-                embed=embed_obj,
-                embeds=[embed_obj2],
-                tts=True,
-                flags=120,
-                mentions_everyone=False,
-                user_mentions=[9876],
-                role_mentions=[1234],
-            )
-            mock_form.add_field.assert_called_once_with(
-                "payload_json",
-                b'{"testing":"ensure_in_test","username":"davfsa","avatar_url":"https://website.com/davfsa_logo"}',
-                content_type="application/json",
-            )
-            patched__request.assert_awaited_once_with(
-                expected_route, form_builder=mock_form, query={"wait": "true"}, auth=None
-            )
-            patched_deserialize_message.assert_called_once_with({"message_id": 123})
+        patched__build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            poll=poll_obj,
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+        mock_form.add_field.assert_called_once_with(
+            "payload_json",
+            b'{"testing":"ensure_in_test","username":"davfsa","avatar_url":"https://website.com/davfsa_logo"}',
+            content_type="application/json",
+        )
+        patched__request.assert_awaited_once_with(
+            expected_route, form_builder=mock_form, query={"wait": "true"}, auth=None
+        )
+        patched_deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_execute_webhook_when_form_and_thread(
         self, rest_client: rest.RESTClientImpl, mock_guild_public_thread_channel: channels.GuildThreadChannel
@@ -4121,27 +4150,28 @@ class TestRESTClientImplAsync:
             )
             assert returned is patched_deserialize_message.return_value
 
-            patched__build_message_payload.assert_called_once_with(
-                content="new content",
-                attachment=undefined.UNDEFINED,
-                attachments=undefined.UNDEFINED,
-                component=undefined.UNDEFINED,
-                components=undefined.UNDEFINED,
-                embed=undefined.UNDEFINED,
-                embeds=undefined.UNDEFINED,
-                tts=undefined.UNDEFINED,
-                flags=undefined.UNDEFINED,
-                mentions_everyone=undefined.UNDEFINED,
-                user_mentions=undefined.UNDEFINED,
-                role_mentions=undefined.UNDEFINED,
-            )
-            mock_form.add_field.assert_called_once_with(
-                "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
-            )
-            patched__request.assert_awaited_once_with(
-                expected_route, form_builder=mock_form, query={"wait": "true", "thread_id": "45611"}, auth=None
-            )
-            patched_deserialize_message.assert_called_once_with({"message_id": 123})
+        patched__build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=undefined.UNDEFINED,
+            attachments=undefined.UNDEFINED,
+            component=undefined.UNDEFINED,
+            components=undefined.UNDEFINED,
+            embed=undefined.UNDEFINED,
+            embeds=undefined.UNDEFINED,
+            poll=undefined.UNDEFINED,
+            tts=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
+            mentions_everyone=undefined.UNDEFINED,
+            user_mentions=undefined.UNDEFINED,
+            role_mentions=undefined.UNDEFINED,
+        )
+        mock_form.add_field.assert_called_once_with(
+            "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
+        )
+        patched__request.assert_awaited_once_with(
+            expected_route, form_builder=mock_form, query={"wait": "true", "thread_id": "45611"}, auth=None
+        )
+        patched_deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_execute_webhook_when_no_form(
         self, rest_client: rest.RESTClientImpl, mock_guild_public_thread_channel: channels.GuildThreadChannel
@@ -4164,27 +4194,25 @@ class TestRESTClientImplAsync:
             )
             assert returned is patched_deserialize_message.return_value
 
-            patched__build_message_payload.assert_called_once_with(
-                content="new content",
-                attachment=undefined.UNDEFINED,
-                attachments=undefined.UNDEFINED,
-                component=undefined.UNDEFINED,
-                components=undefined.UNDEFINED,
-                embed=undefined.UNDEFINED,
-                embeds=undefined.UNDEFINED,
-                tts=undefined.UNDEFINED,
-                flags=undefined.UNDEFINED,
-                mentions_everyone=undefined.UNDEFINED,
-                user_mentions=undefined.UNDEFINED,
-                role_mentions=undefined.UNDEFINED,
-            )
-            patched__request.assert_awaited_once_with(
-                expected_route,
-                json={"testing": "ensure_in_test"},
-                query={"wait": "true", "thread_id": "45611"},
-                auth=None,
-            )
-            patched_deserialize_message.assert_called_once_with({"message_id": 123})
+        patched__build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=undefined.UNDEFINED,
+            attachments=undefined.UNDEFINED,
+            component=undefined.UNDEFINED,
+            components=undefined.UNDEFINED,
+            embed=undefined.UNDEFINED,
+            embeds=undefined.UNDEFINED,
+            polls=undefined.UNDEFINED,
+            tts=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
+            mentions_everyone=undefined.UNDEFINED,
+            user_mentions=undefined.UNDEFINED,
+            role_mentions=undefined.UNDEFINED,
+        )
+        patched__request.assert_awaited_once_with(
+            expected_route, json={"testing": "ensure_in_test"}, query={"wait": "true", "thread_id": "45611"}, auth=None
+        )
+        patched_deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_execute_webhook_when_thread_and_no_form(self, rest_client: rest.RESTClientImpl):
         attachment_obj = mock.Mock()
@@ -4193,6 +4221,7 @@ class TestRESTClientImplAsync:
         component_obj2 = mock.Mock()
         embed_obj = mock.Mock()
         embed_obj2 = mock.Mock()
+        poll_obj = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=432, token="hi, im a token")
@@ -4226,31 +4255,28 @@ class TestRESTClientImplAsync:
             )
             assert returned is patched_deserialize_message.return_value
 
-            patched__build_message_payload.assert_called_once_with(
-                content="new content",
-                attachment=attachment_obj,
-                attachments=[attachment_obj2],
-                component=component_obj,
-                components=[component_obj2],
-                embed=embed_obj,
-                embeds=[embed_obj2],
-                tts=True,
-                flags=120,
-                mentions_everyone=False,
-                user_mentions=[9876],
-                role_mentions=[1234],
-            )
-            patched__request.assert_awaited_once_with(
-                expected_route,
-                json={
-                    "testing": "ensure_in_test",
-                    "username": "davfsa",
-                    "avatar_url": "https://website.com/davfsa_logo",
-                },
-                query={"wait": "true"},
-                auth=None,
-            )
-            patched_deserialize_message.assert_called_once_with({"message_id": 123})
+        patched__build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            poll=poll_obj,
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+        patched__request.assert_awaited_once_with(
+            expected_route,
+            json={"testing": "ensure_in_test", "username": "davfsa", "avatar_url": "https://website.com/davfsa_logo"},
+            query={"wait": "true"},
+            auth=None,
+        )
+        patched_deserialize_message.assert_called_once_with({"message_id": 123})
 
     @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
     async def test_fetch_webhook_message(
@@ -4577,13 +4603,10 @@ class TestRESTClientImplAsync:
                 rest_client.entity_factory, "deserialize_invite", return_value=return_invite
             ) as patched_deserialize_invite,
         ):
-            assert (
-                await rest_client.fetch_invite(input_invite, with_counts=True, with_expiration=False) == return_invite
-            )
-            patched__request.assert_awaited_once_with(
-                expected_route, query={"with_counts": "true", "with_expiration": "false"}
-            )
-            patched_deserialize_invite.assert_called_once_with({"code": "Jx4cNGG"})
+            assert await rest_client.fetch_invite(input_invite, with_counts=True) == return_invite
+
+        patched__request.assert_awaited_once_with(expected_route, query={"with_counts": "true"})
+        patched_deserialize_invite.assert_called_once_with({"code": "Jx4cNGG"})
 
     async def test_delete_invite(self, rest_client: rest.RESTClientImpl):
         input_invite = mock.Mock(invites.InviteCode, code="Jx4cNGG")
@@ -5635,6 +5658,21 @@ class TestRESTClientImplAsync:
             patched_deserialize_rest_guild.assert_called_once_with(patched__request.return_value)
             patched__request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
+    async def test_set_guild_incident_actions(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.PUT_GUILD_INCIDENT_ACTIONS.compile(guild=123)
+        expected_json = {"invites_disabled_until": "2023-09-01T14:48:02.222000+00:00", "dms_disabled_until": None}
+        rest_client._request = mock.AsyncMock(return_value={"testing": "data"})
+
+        result = await rest_client.set_guild_incident_actions(
+            123, invites_disabled_until=datetime.datetime(2023, 9, 1, 14, 48, 2, 222000, tzinfo=datetime.timezone.utc)
+        )
+        assert result is rest_client._entity_factory.deserialize_guild_incidents.return_value
+
+        rest_client._entity_factory.deserialize_guild_incidents.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+
     async def test_fetch_guild_channels(
         self, rest_client: rest.RESTClientImpl, mock_partial_guild: guilds.PartialGuild
     ):
@@ -6262,6 +6300,7 @@ class TestRESTClientImplAsync:
         component_obj2 = mock.Mock()
         embed_obj = mock.Mock()
         embed_obj2 = mock.Mock()
+        poll_obj = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
 
         expected_route = routes.POST_CHANNEL_THREADS.compile(channel=4560)
@@ -6294,6 +6333,7 @@ class TestRESTClientImplAsync:
                 components=[component_obj2],
                 embed=embed_obj,
                 embeds=[embed_obj2],
+                poll=poll_obj,
                 sticker=132543,
                 stickers=[654234, 123321],
                 tts=True,
@@ -6307,27 +6347,28 @@ class TestRESTClientImplAsync:
                 reason="Secrets!!",
             )
 
-            patched__build_message_payload.assert_called_once_with(
-                content="new content",
-                attachment=attachment_obj,
-                attachments=[attachment_obj2],
-                component=component_obj,
-                components=[component_obj2],
-                embed=embed_obj,
-                embeds=[embed_obj2],
-                sticker=132543,
-                stickers=[654234, 123321],
-                tts=True,
-                mentions_everyone=False,
-                mentions_reply=undefined.UNDEFINED,
-                user_mentions=[9876],
-                role_mentions=[1234],
-                flags=54123,
-            )
+        patched__build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            poll=poll_obj,
+            sticker=132543,
+            stickers=[654234, 123321],
+            tts=True,
+            mentions_everyone=False,
+            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=54123,
+        )
 
-            assert result is patched_deserialize_guild_public_thread.return_value
-            patched__request.assert_awaited_once_with(expected_route, json=expected_payload, reason="Secrets!!")
-            patched_deserialize_guild_public_thread.assert_called_once_with(patched__request.return_value)
+        assert result is patched_deserialize_guild_public_thread.return_value
+        patched__request.assert_awaited_once_with(expected_route, json=expected_payload, reason="Secrets!!")
+        patched_deserialize_guild_public_thread.assert_called_once_with(patched__request.return_value)
 
     @pytest.mark.parametrize(
         ("auto_archive_duration", "rate_limit_per_user"),
@@ -6346,6 +6387,7 @@ class TestRESTClientImplAsync:
         component_obj2 = mock.Mock()
         embed_obj = mock.Mock()
         embed_obj2 = mock.Mock()
+        poll_obj = mock.Mock()
         mock_body = {"mock": "message body"}
         mock_form = mock.Mock()
 
@@ -6372,6 +6414,7 @@ class TestRESTClientImplAsync:
                 components=[component_obj2],
                 embed=embed_obj,
                 embeds=[embed_obj2],
+                poll=poll_obj,
                 sticker=314542,
                 stickers=[56234, 123312],
                 tts=True,
@@ -6384,35 +6427,35 @@ class TestRESTClientImplAsync:
                 tags=[snowflakes.Snowflake(12220), snowflakes.Snowflake(12201)],
                 reason="Secrets!!",
             )
-
-            patched__build_message_payload.assert_called_once_with(
-                content="new content",
-                attachment=attachment_obj,
-                attachments=[attachment_obj2],
-                component=component_obj,
-                components=[component_obj2],
-                embed=embed_obj,
-                embeds=[embed_obj2],
-                sticker=314542,
-                stickers=[56234, 123312],
-                tts=True,
-                mentions_everyone=False,
-                mentions_reply=undefined.UNDEFINED,
-                user_mentions=[9876],
-                role_mentions=[1234],
-                flags=54123,
-            )
-
-            mock_form.add_field.assert_called_once_with(
-                "payload_json",
-                b'{"name":"Post with secret content!","auto_archive_duration":54123,"rate_limit_per_user":101,'
-                b'"applied_tags":["12220","12201"],"message":{"mock":"message body"}}',
-                content_type="application/json",
-            )
-
             assert result is patched_deserialize_guild_public_thread.return_value
-            patched__request.assert_awaited_once_with(expected_route, form_builder=mock_form, reason="Secrets!!")
-            patched_deserialize_guild_public_thread.assert_called_once_with(patched__request.return_value)
+
+        patched__build_message_payload.assert_called_once_with(
+            content="new content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            poll=poll_obj,
+            sticker=314542,
+            stickers=[56234, 123312],
+            tts=True,
+            mentions_everyone=False,
+            mentions_reply=undefined.UNDEFINED,
+            user_mentions=[9876],
+            role_mentions=[1234],
+            flags=54123,
+        )
+
+        mock_form.add_field.assert_called_once_with(
+            "payload_json",
+            b'{"name":"Post with secret content!","auto_archive_duration":54123,"rate_limit_per_user":101,'
+            b'"applied_tags":["12220","12201"],"message":{"mock":"message body"}}',
+            content_type="application/json",
+        )
+        patched__request.assert_awaited_once_with(expected_route, form_builder=mock_form, reason="Secrets!!")
+        patched_deserialize_guild_public_thread.assert_called_once_with(patched__request.return_value)
 
     async def test_join_thread(
         self, rest_client: rest.RESTClientImpl, mock_guild_text_channel: channels.GuildTextChannel
@@ -8042,9 +8085,13 @@ class TestRESTClientImplAsync:
         component_obj2 = mock.Mock()
         embed_obj = mock.Mock()
         embed_obj2 = mock.Mock()
+        poll_obj = mock.Mock()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
         mock_body.put("testing", "ensure_in_test")
+        mock_form.add_field.assert_called_once_with(
+            "payload_json", b'{"type":1,"data":{"testing":"ensure_in_test"}}', content_type="application/json"
+        )
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=777, token="some token")
 
         with (
@@ -8065,6 +8112,7 @@ class TestRESTClientImplAsync:
                 components=[component_obj2],
                 embed=embed_obj,
                 embeds=[embed_obj2],
+                poll=poll_obj,
                 tts=True,
                 flags=120,
                 mentions_everyone=False,
@@ -8072,24 +8120,22 @@ class TestRESTClientImplAsync:
                 role_mentions=[1234],
             )
 
-            patched__build_message_payload.assert_called_once_with(
-                content="some content",
-                attachment=attachment_obj,
-                attachments=[attachment_obj2],
-                component=component_obj,
-                components=[component_obj2],
-                embed=embed_obj,
-                embeds=[embed_obj2],
-                tts=True,
-                flags=120,
-                mentions_everyone=False,
-                user_mentions=[9876],
-                role_mentions=[1234],
-            )
-            mock_form.add_field.assert_called_once_with(
-                "payload_json", b'{"type":1,"data":{"testing":"ensure_in_test"}}', content_type="application/json"
-            )
-            patched__request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
+        patched__build_message_payload.assert_called_once_with(
+            content="some content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            poll=poll_obj,
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+        patched__request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
 
     async def test_create_interaction_response_when_no_form(
         self, rest_client: rest.RESTClientImpl, mock_partial_interaction: interactions.PartialInteraction
@@ -8100,9 +8146,7 @@ class TestRESTClientImplAsync:
         component_obj2 = mock.Mock()
         embed_obj = mock.Mock()
         embed_obj2 = mock.Mock()
-        mock_body = data_binding.JSONObjectBuilder()
-        mock_body.put("testing", "ensure_in_test")
-        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=777, token="some token")
+        poll_obj = mock.Mock()
 
         with (
             mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request,
@@ -8122,6 +8166,7 @@ class TestRESTClientImplAsync:
                 components=[component_obj2],
                 embed=embed_obj,
                 embeds=[embed_obj2],
+                poll=poll_obj,
                 tts=True,
                 flags=120,
                 mentions_everyone=False,
@@ -8129,23 +8174,24 @@ class TestRESTClientImplAsync:
                 role_mentions=[1234],
             )
 
-            patched__build_message_payload.assert_called_once_with(
-                content="some content",
-                attachment=attachment_obj,
-                attachments=[attachment_obj2],
-                component=component_obj,
-                components=[component_obj2],
-                embed=embed_obj,
-                embeds=[embed_obj2],
-                tts=True,
-                flags=120,
-                mentions_everyone=False,
-                user_mentions=[9876],
-                role_mentions=[1234],
-            )
-            patched__request.assert_awaited_once_with(
-                expected_route, json={"type": 1, "data": {"testing": "ensure_in_test"}}, auth=None
-            )
+        patched__build_message_payload.assert_called_once_with(
+            content="some content",
+            attachment=attachment_obj,
+            attachments=[attachment_obj2],
+            component=component_obj,
+            components=[component_obj2],
+            embed=embed_obj,
+            embeds=[embed_obj2],
+            poll=poll_obj,
+            tts=True,
+            flags=120,
+            mentions_everyone=False,
+            user_mentions=[9876],
+            role_mentions=[1234],
+        )
+        patched__request.assert_awaited_once_with(
+            expected_route, json={"type": 1, "data": {"testing": "ensure_in_test"}}, auth=None
+        )
 
     async def test_edit_interaction_response_when_form(
         self, rest_client: rest.RESTClientImpl, mock_application: applications.Application
@@ -8971,4 +9017,39 @@ class TestRESTClientImplAsync:
         ):
             await rest_client.delete_stage_instance(channel=mock_guild_stage_channel)
 
-            patched__request.assert_called_once_with(expected_route)
+        patched__request.assert_called_once_with(expected_route)
+
+    async def test_fetch_poll_voters(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.GET_POLL_ANSWER.compile(
+            channel=StubModel(45874392), message=StubModel(398475938475), answer=StubModel(4)
+        )
+
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "1234"}])
+
+        with mock.patch.object(
+            rest_client._entity_factory, "deserialize_user", return_value=mock.Mock()
+        ) as patched_deserialize_user:
+            await rest_client.fetch_poll_voters(
+                StubModel(45874392), StubModel(398475938475), StubModel(4), after=StubModel(43587935), limit=6
+            )
+
+            patched_deserialize_user.assert_called_once_with({"id": "1234"})
+
+        rest_client._request.assert_awaited_once_with(expected_route, query={"after": "43587935", "limit": "6"})
+
+    async def test_end_poll(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.POST_EXPIRE_POLL.compile(
+            channel=StubModel(45874392), message=StubModel(398475938475), answer=StubModel(4)
+        )
+
+        message_obj = mock.Mock()
+
+        rest_client._request = mock.AsyncMock(return_value={"id": "398475938475"})
+
+        rest_client._entity_factory.deserialize_message = mock.Mock(return_value=message_obj)
+
+        response = await rest_client.end_poll(StubModel(45874392), StubModel(398475938475))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+        assert response is message_obj

@@ -16,14 +16,15 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: tibdex/github-app-token@v2
+        uses: actions/create-github-app-token@3ff1caaa28b64c9cc276ce0a02e2ff584f3900c5 # v2.0.2
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.PRIVATE_KEY }}
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          # We need to use a bot token to be able to trigger workflows that listen to pull_request calls
           token: ${{ steps.generate_token.outputs.token }}
 
       - name: Setup git config
@@ -32,7 +33,7 @@ jobs:
           git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
         with:
           python-version: 3.9
 
@@ -42,15 +43,17 @@ jobs:
         run: bash scripts/ci/prepare-release.sh
 
       - name: Create pull request
-        uses: repo-sync/pull-request@v2
-        with:
-          # We need to use a bot token to be able to trigger workflows that listen to pull_request calls
-          github_token: ${{ steps.generate_token.outputs.token }}
-          source_branch: task/prepare-release-${{ github.event.inputs.version }}
-          destination_branch: master
-          pr_assignee: ${{ github.event.sender.login }}
-          pr_title: Prepare for release of ${{ github.event.inputs.version }}
-          pr_body: |
-            Release preparation triggered by @${{ github.event.sender.login }}.
+        env:
+          VERSION: ${{ inputs.version }}
+          AUTHOR: ${{ github.event.sender.login }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+        run: |
+          title="Prepare for release of ${VERSION}"
+          body="Release preparation triggered by @${AUTHOR}.
 
-            Once the pull request is merged, you can trigger a PyPI release by creating a GitHub release for \`${{ github.event.inputs.version }}\` in the repository.
+          Once the pull request is merged, you can trigger a PyPI release by creating a GitHub release for \`${VERSION}\` in the repository."
+
+          gh pr create \
+            --title "${title}" \
+            --body "${body}" \
+            --assignee "${AUTHOR}"

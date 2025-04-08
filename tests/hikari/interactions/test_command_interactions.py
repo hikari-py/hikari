@@ -26,7 +26,6 @@ import mock
 import pytest
 
 from hikari import applications
-from hikari import channels
 from hikari import monetization
 from hikari import permissions
 from hikari import snowflakes
@@ -43,7 +42,7 @@ class TestCommandInteraction:
             app=hikari_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
-            channel_id=snowflakes.Snowflake(3123123),
+            channel=mock.Mock(id=3123123),
             guild_id=snowflakes.Snowflake(5412231),
             member=mock.Mock(),
             user=mock.Mock(),
@@ -101,44 +100,6 @@ class TestCommandInteraction:
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         )
 
-    @pytest.mark.asyncio
-    async def test_fetch_channel(self, mock_command_interaction: command_interactions.CommandInteraction):
-        with mock.patch.object(
-            mock_command_interaction.app.rest,
-            "fetch_channel",
-            new_callable=mock.AsyncMock,
-            return_value=mock.Mock(channels.TextableGuildChannel),
-        ) as patched_fetch_channel:
-            assert await mock_command_interaction.fetch_channel() is patched_fetch_channel.return_value
-            patched_fetch_channel.assert_awaited_once_with(3123123)
-
-    def test_get_channel(self, mock_command_interaction: command_interactions.CommandInteraction):
-        with (
-            mock.patch.object(mock_command_interaction, "app", mock.Mock(traits.CacheAware)) as patched_app,
-            mock.patch.object(patched_app, "cache") as patched_cache,
-            mock.patch.object(
-                patched_cache, "get_guild_channel", return_value=mock.Mock(channels.TextableGuildChannel)
-            ) as patched_get_guild_channel,
-        ):
-            assert mock_command_interaction.get_channel() is patched_get_guild_channel.return_value
-            patched_get_guild_channel.assert_called_once_with(3123123)
-
-    def test_get_channel_when_not_cached(
-        self, mock_command_interaction: command_interactions.CommandInteraction, hikari_app: traits.RESTAware
-    ):
-        with (
-            mock.patch.object(mock_command_interaction, "app", mock.Mock(traits.CacheAware)) as patched_app,
-            mock.patch.object(patched_app, "cache") as patched_cache,
-            mock.patch.object(patched_cache, "get_guild_channel", return_value=None) as patched_get_guild_channel,
-        ):
-            assert mock_command_interaction.get_channel() is None
-            patched_get_guild_channel.assert_called_once_with(3123123)
-
-    def test_get_channel_without_cache(self, mock_command_interaction: command_interactions.CommandInteraction):
-        mock_command_interaction.app = mock.Mock(traits.RESTAware)
-
-        assert mock_command_interaction.get_channel() is None
-
 
 class TestAutocompleteInteraction:
     @pytest.fixture
@@ -149,10 +110,11 @@ class TestAutocompleteInteraction:
             app=hikari_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
-            channel_id=snowflakes.Snowflake(3123123),
+            channel=mock.Mock(3123123),
             guild_id=snowflakes.Snowflake(5412231),
             guild_locale="en-US",
             locale="en-US",
+            app_permissions=123321,
             member=mock.Mock(),
             user=mock.Mock(),
             token="httptptptptptptptp",
