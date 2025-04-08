@@ -661,7 +661,7 @@ class Application(guilds.PartialApplication):
 
     approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of guilds this application is part of."""
- 
+
     approximate_user_install_count: int = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of users that have installed this application."""
 
