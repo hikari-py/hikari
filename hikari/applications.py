@@ -659,10 +659,10 @@ class Application(guilds.PartialApplication):
     install_parameters: ApplicationInstallParameters | None = attrs.field(eq=False, hash=False, repr=False)
     """Settings for the application's default in-app authorization link, if enabled."""
 
-    approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
+    approximate_guild_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of guilds this application is part of."""
 
-    approximate_user_install_count: int = attrs.field(eq=False, hash=False, repr=False)
+    approximate_user_install_count: int | None = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of users that have installed this application."""
 
     integration_types_config: typing.Mapping[ApplicationIntegrationType, ApplicationIntegrationConfiguration] = (
