@@ -455,7 +455,7 @@ class TestEventFactoryImpl:
         hikari_app: traits.RESTAware,
         mock_shard: shard.GatewayShard,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = {"guild_id": "123321", "threads": [], "members": []}
+        mock_payload: dict[str, typing.Any] = {"guild_id": "123321", "threads": [], "members": []}
 
         event = event_factory.deserialize_thread_list_sync_event(mock_shard, mock_payload)
 

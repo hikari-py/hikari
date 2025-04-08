@@ -1636,7 +1636,7 @@ class TestRESTClientImpl:
 
     @pytest.mark.parametrize("args", [("embeds", "components", "attachments"), ("embed", "component", "attachment")])
     def test__build_message_payload_with_None_args(self, rest_client: rest.RESTClientImpl, args: tuple[str, str, str]):
-        kwargs: typing.MutableMapping[str, typing.Any] = {}
+        kwargs: dict[str, typing.Any] = {}
         for arg in args:
             kwargs[arg] = None
 

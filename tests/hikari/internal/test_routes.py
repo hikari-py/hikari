@@ -288,7 +288,7 @@ class TestCDNRoute:
         base_url: str,
         template: str,
         format: str,
-        size_kwds: typing.Mapping[str, typing.Any],
+        size_kwds: dict[str, typing.Any],
         foo: str,
         bar: str,
         expected_url: str,

@@ -166,7 +166,7 @@ async def test_generate_bad_request_error_without_json_response():
 )
 @pytest.mark.asyncio
 async def test_generate_bad_request_error_with_json_response(
-    data: str, expected_errors: typing.Optional[typing.Mapping[str, typing.Any]]
+    data: str, expected_errors: typing.Optional[dict[str, typing.Any]]
 ):
     class StubResponse:
         real_url = "https://some.url"

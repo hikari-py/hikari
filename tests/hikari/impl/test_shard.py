@@ -820,7 +820,7 @@ class TestGatewayShardImplAsync:
 
     @pytest.mark.parametrize("kwargs", [{"query": "some query"}, {"limit": 1}])
     async def test_request_guild_members_when_specifiying_users_with_limit_or_query(
-        self, client: shard.GatewayShardImpl, kwargs: typing.Mapping[str, typing.Any]
+        self, client: shard.GatewayShardImpl, kwargs: dict[str, typing.Any]
     ):
         client._intents = intents.Intents.GUILD_INTEGRATIONS
 

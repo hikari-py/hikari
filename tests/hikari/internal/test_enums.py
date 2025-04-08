@@ -64,7 +64,7 @@ class TestEnum:
         [([str], {"metaclass": enums._EnumMeta}), ([enums.Enum], {"metaclass": enums._EnumMeta}), ([enums.Enum], {})],
     )
     def test_init_enum_type_with_one_base_is_TypeError(
-        self, args: typing.Sequence[type], kwargs: typing.Mapping[str, typing.Any]
+        self, args: typing.Sequence[type], kwargs: dict[str, typing.Any]
     ):
         with pytest.raises(TypeError):
 
@@ -75,7 +75,7 @@ class TestEnum:
         ("args", "kwargs"), [([enums.Enum, str], {"metaclass": enums._EnumMeta}), ([enums.Enum, str], {})]
     )
     def test_init_enum_type_with_bases_in_wrong_order_is_TypeError(
-        self, args: typing.Sequence[type], kwargs: typing.Mapping[str, typing.Any]
+        self, args: typing.Sequence[type], kwargs: dict[str, typing.Any]
     ):
         with pytest.raises(TypeError):
 

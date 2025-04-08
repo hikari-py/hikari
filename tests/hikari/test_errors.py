@@ -108,7 +108,7 @@ class TestHTTPResponseError:
 class TestBadRequestError:
     @pytest.fixture
     def error(self) -> errors.BadRequestError:
-        errors_payload: typing.Mapping[str, typing.Any] = {
+        errors_payload: dict[str, typing.Any] = {
             "": [{"code": "012", "message": "test error"}],
             "components": {
                 "0": {

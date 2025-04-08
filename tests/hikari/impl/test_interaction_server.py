@@ -169,7 +169,7 @@ def valid_edd25519():
 
 
 @pytest.fixture
-def valid_payload() -> typing.Mapping[str, typing.Any]:
+def valid_payload() -> dict[str, typing.Any]:
     return {
         "application_id": "658822586720976907",
         "channel_id": "938391701561679903",
