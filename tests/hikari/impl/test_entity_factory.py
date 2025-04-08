@@ -1098,6 +1098,7 @@ class TestEntityFactoryImpl:
                 "flags": 0,
                 "owner": owner_payload,
                 "approximate_guild_count": 10000,
+                "approximate_user_install_count": 10001,
             }
         )
 
@@ -1123,6 +1124,7 @@ class TestEntityFactoryImpl:
                 "verify_key": "1232313223",
                 "flags": 0,
                 "approximate_guild_count": 10000,
+                "approximate_user_install_count": 10001,
             }
         )
 
