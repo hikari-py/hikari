@@ -1008,6 +1008,7 @@ class TestEntityFactoryImpl:
             "tags": ["i", "like", "hikari"],
             "install_params": {"scopes": ["bot", "applications.commands"], "permissions": 8},
             "approximate_guild_count": 10000,
+            "approximate_user_install_count": 10001,
             "integration_types_config": {
                 "0": {"oauth2_install_params": {"scopes": ["applications.commands", "bot"], "permissions": "0"}},
                 "1": {},
