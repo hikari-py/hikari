@@ -700,8 +700,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             custom_install_url=payload.get("custom_install_url"),
             tags=payload.get("tags") or [],
             install_parameters=install_parameters,
-            approximate_guild_count=payload.get("approximate_guild_count"),
-            approximate_user_install_count=payload.get("approximate_user_install_count"),
+            approximate_guild_count=payload["approximate_guild_count"],
+            approximate_user_install_count=payload["approximate_user_install_count"],
             integration_types_config=integration_types_config,
         )
 
