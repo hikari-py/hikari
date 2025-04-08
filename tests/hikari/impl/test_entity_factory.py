@@ -1008,6 +1008,7 @@ class TestEntityFactoryImpl:
             "tags": ["i", "like", "hikari"],
             "install_params": {"scopes": ["bot", "applications.commands"], "permissions": 8},
             "approximate_guild_count": 10000,
+            "approximate_user_install_count": 10001,
             "integration_types_config": {
                 "0": {"oauth2_install_params": {"scopes": ["applications.commands", "bot"], "permissions": "0"}},
                 "1": {},
@@ -1039,6 +1040,7 @@ class TestEntityFactoryImpl:
         assert application.tags == ["i", "like", "hikari"]
         assert application.icon_hash == "iwiwiwiwiw"
         assert application.approximate_guild_count == 10000
+        assert application.approximate_user_install_count == 10001
         # Install Parameters
         assert application.install_parameters.scopes == [
             application_models.OAuth2Scope.BOT,
@@ -1096,6 +1098,7 @@ class TestEntityFactoryImpl:
                 "flags": 0,
                 "owner": owner_payload,
                 "approximate_guild_count": 10000,
+                "approximate_user_install_count": 10001,
             }
         )
 
@@ -1121,6 +1124,7 @@ class TestEntityFactoryImpl:
                 "verify_key": "1232313223",
                 "flags": 0,
                 "approximate_guild_count": 10000,
+                "approximate_user_install_count": 10001,
             }
         )
 
