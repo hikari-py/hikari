@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
-import contextlib
 import sys
 
 import mock
@@ -42,52 +41,47 @@ from tests.hikari import hikari_test_helpers
 
 class TestRESTBot:
     @pytest.fixture
-    def mock_interaction_server(self):
+    def mock_interaction_server(self) -> interaction_server_impl.InteractionServer:
         return mock.Mock(interaction_server_impl.InteractionServer)
 
     @pytest.fixture
-    def mock_rest_client(self):
+    def mock_rest_client(self) -> rest_impl.RESTClientImpl:
         return mock.Mock(rest_impl.RESTClientImpl)
 
     @pytest.fixture
-    def mock_entity_factory(self):
+    def mock_entity_factory(self) -> entity_factory_impl.EntityFactoryImpl:
         return mock.Mock(entity_factory_impl.EntityFactoryImpl)
 
     @pytest.fixture
-    def mock_http_settings(self):
+    def mock_http_settings(self) -> config.HTTPSettings:
         return mock.Mock(config.HTTPSettings)
 
     @pytest.fixture
-    def mock_proxy_settings(self):
+    def mock_proxy_settings(self) -> config.ProxySettings:
         return mock.Mock(config.ProxySettings)
 
     @pytest.fixture
-    def mock_executor(self):
+    def mock_executor(self) -> concurrent.futures.Executor:
         return mock.Mock(concurrent.futures.Executor)
 
     @pytest.fixture
     def mock_rest_bot(
         self,
-        mock_interaction_server,
-        mock_rest_client,
-        mock_entity_factory,
-        mock_http_settings,
-        mock_proxy_settings,
-        mock_executor,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
+        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        mock_http_settings: config.HTTPSettings,
+        mock_proxy_settings: config.ProxySettings,
+        mock_executor: concurrent.futures.Executor,
     ):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-        stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
-        stack.enter_context(
-            mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=mock_entity_factory)
-        )
-        stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client))
-        stack.enter_context(
-            mock.patch.object(interaction_server_impl, "InteractionServer", return_value=mock_interaction_server)
-        )
-
-        with stack:
+        with (
+            mock.patch.object(ux, "init_logging"),
+            mock.patch.object(ux, "warn_if_not_optimized"),
+            mock.patch.object(rest_bot_impl.RESTBot, "print_banner"),
+            mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=mock_entity_factory),
+            mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client),
+            mock.patch.object(interaction_server_impl, "InteractionServer", return_value=mock_interaction_server),
+        ):
             return hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, slots_=False)(
                 "token",
                 http_settings=mock_http_settings,
@@ -97,25 +91,27 @@ class TestRESTBot:
             )
 
     def test___init__(
-        self, mock_http_settings, mock_proxy_settings, mock_entity_factory, mock_rest_client, mock_interaction_server
+        self,
+        mock_http_settings: config.HTTPSettings,
+        mock_proxy_settings: config.ProxySettings,
+        mock_entity_factory: entity_factory_impl.EntityFactoryImpl,
+        mock_rest_client: rest_impl.RESTClientImpl,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
     ):
         mock_executor = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        patched_init_logging = stack.enter_context(mock.patch.object(ux, "init_logging"))
-        patched_warn_if_not_optimized = stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-        patched_print_banner = stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
-        patched_entity_factory = stack.enter_context(
-            mock.patch.object(entity_factory_impl, "EntityFactoryImpl", return_value=mock_entity_factory)
-        )
-        patched_rest_client = stack.enter_context(
-            mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client)
-        )
-        patched_interaction_server = stack.enter_context(
-            mock.patch.object(interaction_server_impl, "InteractionServer", return_value=mock_interaction_server)
-        )
-
-        with stack:
+        with (
+            mock.patch.object(ux, "init_logging") as patched_init_logging,
+            mock.patch.object(ux, "warn_if_not_optimized") as patched_warn_if_not_optimized,
+            mock.patch.object(rest_bot_impl.RESTBot, "print_banner") as patched_print_banner,
+            mock.patch.object(
+                entity_factory_impl, "EntityFactoryImpl", return_value=mock_entity_factory
+            ) as patched_entity_factory,
+            mock.patch.object(rest_impl, "RESTClientImpl", return_value=mock_rest_client) as patched_rest_client,
+            mock.patch.object(
+                interaction_server_impl, "InteractionServer", return_value=mock_interaction_server
+            ) as patched_interaction_server,
+        ):
             result = rest_bot_impl.RESTBot(
                 "token",
                 "token_type",
@@ -160,34 +156,28 @@ class TestRESTBot:
         assert result.executor is mock_executor
 
     def test___init___parses_string_public_key(self):
-        cls = hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, print_banner=mock.Mock())
+        with (
+            mock.patch.object(ux, "init_logging"),
+            mock.patch.object(ux, "warn_if_not_optimized"),
+            mock.patch.object(rest_bot_impl.RESTBot, "print_banner"),
+            mock.patch.object(interaction_server_impl, "InteractionServer") as interaction_server,
+        ):
+            result = rest_bot_impl.RESTBot(mock.Mock(), "token_type", "6f66646f646f646f6f")
 
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-        stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
-        stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
-
-        with stack:
-            result = cls(object(), "token_type", "6f66646f646f646f6f")
-
-            interaction_server_impl.InteractionServer.assert_called_once_with(
-                entity_factory=result.entity_factory, public_key=b"ofdododoo", rest_client=result.rest
-            )
+        interaction_server.assert_called_once_with(
+            entity_factory=result.entity_factory, public_key=b"ofdododoo", rest_client=result.rest
+        )
 
     def test___init___strips_token(self):
-        cls = hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, print_banner=mock.Mock())
-
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-        rest_client = stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
-        http_settings = stack.enter_context(mock.patch.object(config, "HTTPSettings"))
-        proxy_settings = stack.enter_context(mock.patch.object(config, "ProxySettings"))
-        stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
-
-        with stack:
-            result = cls("\n\r sddsa tokenoken \n", "token_type")
+        with (
+            mock.patch.object(ux, "init_logging"),
+            mock.patch.object(ux, "warn_if_not_optimized"),
+            mock.patch.object(rest_impl, "RESTClientImpl") as rest_client,
+            mock.patch.object(config, "HTTPSettings") as http_settings,
+            mock.patch.object(config, "ProxySettings") as proxy_settings,
+            mock.patch.object(interaction_server_impl, "InteractionServer"),
+        ):
+            result = rest_bot_impl.RESTBot("\n\r sddsa tokenoken \n", "token_type")
 
         rest_client.assert_called_once_with(
             cache=None,
@@ -203,43 +193,42 @@ class TestRESTBot:
         )
 
     def test___init___generates_default_settings(self):
-        cls = hikari_test_helpers.mock_class_namespace(rest_bot_impl.RESTBot, print_banner=mock.Mock())
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(ux, "init_logging"))
-        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
-        stack.enter_context(mock.patch.object(rest_bot_impl.RESTBot, "print_banner"))
-        stack.enter_context(mock.patch.object(rest_impl, "RESTClientImpl"))
-        stack.enter_context(mock.patch.object(config, "HTTPSettings"))
-        stack.enter_context(mock.patch.object(config, "ProxySettings"))
-        stack.enter_context(mock.patch.object(interaction_server_impl, "InteractionServer"))
+        with (
+            mock.patch.object(ux, "init_logging"),
+            mock.patch.object(ux, "warn_if_not_optimized"),
+            mock.patch.object(rest_bot_impl.RESTBot, "print_banner"),
+            mock.patch.object(rest_impl, "RESTClientImpl") as rest_client,
+            mock.patch.object(config, "HTTPSettings") as http_settings,
+            mock.patch.object(config, "ProxySettings") as proxy_settings,
+            mock.patch.object(interaction_server_impl, "InteractionServer"),
+        ):
+            result = rest_bot_impl.RESTBot("token")
 
-        with stack:
-            result = cls("token")
+        rest_client.assert_called_once_with(
+            cache=None,
+            entity_factory=result.entity_factory,
+            executor=None,
+            http_settings=http_settings.return_value,
+            max_rate_limit=300.0,
+            max_retries=3,
+            proxy_settings=proxy_settings.return_value,
+            rest_url=None,
+            token="token",
+            token_type="Bot",
+        )
+        http_settings.assert_called_once_with()
+        proxy_settings.assert_called_once_with()
+        assert result.http_settings is http_settings.return_value
+        assert result.proxy_settings is proxy_settings.return_value
 
-            rest_impl.RESTClientImpl.assert_called_once_with(
-                cache=None,
-                entity_factory=result.entity_factory,
-                executor=None,
-                http_settings=config.HTTPSettings.return_value,
-                max_rate_limit=300.0,
-                max_retries=3,
-                proxy_settings=config.ProxySettings.return_value,
-                rest_url=None,
-                token="token",
-                token_type="Bot",
-            )
-
-            config.HTTPSettings.assert_called_once()
-            config.ProxySettings.assert_called_once()
-            assert result.http_settings is config.HTTPSettings.return_value
-            assert result.proxy_settings is config.ProxySettings.return_value
-
-    @pytest.mark.parametrize(("close_event", "expected"), [(object(), True), (None, False)])
-    def test_is_alive_property(self, mock_rest_bot, close_event, expected):
+    @pytest.mark.parametrize(("close_event", "expected"), [(mock.Mock(), True), (None, False)])
+    def test_is_alive_property(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, close_event: asyncio.Event | None, expected: bool
+    ):
         mock_rest_bot._close_event = close_event
         assert mock_rest_bot.is_alive is expected
 
-    def test_print_banner(self, mock_rest_bot):
+    def test_print_banner(self, mock_rest_bot: rest_bot_impl.RESTBot):
         with mock.patch.object(ux, "print_banner") as print_banner:
             mock_rest_bot.print_banner(
                 "okokok", allow_color=True, force_color=False, extra_args={"test_key": "test_value"}
@@ -291,7 +280,10 @@ class TestRESTBot:
 
     @pytest.mark.asyncio
     async def test_close(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
         mock_shutdown_1 = mock.AsyncMock()
         mock_shutdown_2 = mock.AsyncMock()
@@ -312,7 +304,10 @@ class TestRESTBot:
 
     @pytest.mark.asyncio
     async def test_close_when_shutdown_callback_raises(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
         mock_error = KeyError("Too many catgirls")
         mock_shutdown_1 = mock.AsyncMock(side_effect=mock_error)
@@ -336,7 +331,10 @@ class TestRESTBot:
 
     @pytest.mark.asyncio
     async def test_close_when_is_closing(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
         mock_shutdown_1 = mock.AsyncMock()
         mock_shutdown_2 = mock.AsyncMock()
@@ -358,12 +356,12 @@ class TestRESTBot:
         mock_shutdown_2.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_close_when_inactive(self, mock_rest_bot):
+    async def test_close_when_inactive(self, mock_rest_bot: rest_bot_impl.RESTBot):
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_rest_bot.close()
 
     @pytest.mark.asyncio
-    async def test_join(self, mock_rest_bot):
+    async def test_join(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot._close_event = mock.AsyncMock()
 
         await mock_rest_bot.join()
@@ -371,12 +369,14 @@ class TestRESTBot:
         mock_rest_bot._close_event.wait.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_join_when_not_alive(self, mock_rest_bot):
+    async def test_join_when_not_alive(self, mock_rest_bot: rest_bot_impl.RESTBot):
         with pytest.raises(errors.ComponentStateConflictError):
             await mock_rest_bot.join()
 
     @pytest.mark.asyncio
-    async def test_on_interaction(self, mock_rest_bot, mock_interaction_server):
+    async def test_on_interaction(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: interaction_server_impl.InteractionServer
+    ):
         mock_interaction_server.on_interaction = mock.AsyncMock()
 
         result = await mock_rest_bot.on_interaction(b"1", b"2", b"3")
@@ -384,21 +384,20 @@ class TestRESTBot:
         assert result is mock_interaction_server.on_interaction.return_value
         mock_interaction_server.on_interaction.assert_awaited_once_with(b"1", b"2", b"3")
 
-    def test_run(self, mock_rest_bot):
-        mock_socket = object()
-        mock_context = object()
+    def test_run(self, mock_rest_bot: rest_bot_impl.RESTBot):
+        mock_socket = mock.Mock()
+        mock_context = mock.Mock()
         mock_rest_bot._executor = None
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        check_for_updates = stack.enter_context(mock.patch.object(ux, "check_for_updates"))
-        handle_interrupts = stack.enter_context(
-            mock.patch.object(signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock())
-        )
-        get_or_make_loop = stack.enter_context(mock.patch.object(aio, "get_or_make_loop"))
-
-        with stack:
+        with (
+            mock.patch.object(ux, "check_for_updates") as check_for_updates,
+            mock.patch.object(
+                signals, "handle_interrupts", return_value=hikari_test_helpers.ContextManagerMock()
+            ) as handle_interrupts,
+            mock.patch.object(aio, "get_or_make_loop") as get_or_make_loop,
+        ):
             mock_rest_bot.run(
                 asyncio_debug=False,
                 backlog=321,
@@ -444,7 +443,7 @@ class TestRESTBot:
         )
         get_or_make_loop.return_value.close.assert_not_called()
 
-    def test_run_when_close_loop(self, mock_rest_bot):
+    def test_run_when_close_loop(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
@@ -454,7 +453,7 @@ class TestRESTBot:
 
         destroy_loop.assert_called_once_with(get_or_make_loop.return_value, rest_bot_impl._LOGGER)
 
-    def test_run_when_asyncio_debug(self, mock_rest_bot):
+    def test_run_when_asyncio_debug(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
@@ -463,7 +462,7 @@ class TestRESTBot:
 
         get_or_make_loop.return_value.set_debug.assert_called_once_with(True)
 
-    def test_run_with_coroutine_tracking_depth(self, mock_rest_bot):
+    def test_run_with_coroutine_tracking_depth(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
@@ -475,13 +474,15 @@ class TestRESTBot:
 
         set_tracking_depth.assert_called_once_with(42)
 
-    def test_run_when_already_running(self, mock_rest_bot):
-        mock_rest_bot._close_event = object()
+    def test_run_when_already_running(self, mock_rest_bot: rest_bot_impl.RESTBot):
+        mock_rest_bot._close_event = mock.Mock()
 
         with pytest.raises(errors.ComponentStateConflictError):
             mock_rest_bot.run()
 
-    def test_run_closes_executor_when_present(self, mock_rest_bot, mock_executor):
+    def test_run_closes_executor_when_present(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_executor: concurrent.futures.Executor
+    ):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
 
@@ -500,14 +501,14 @@ class TestRESTBot:
                 reuse_address=True,
                 reuse_port=False,
                 shutdown_timeout=534.534,
-                socket=object(),
-                ssl_context=object(),
+                socket=mock.Mock(),
+                ssl_context=mock.Mock(),
             )
 
         mock_executor.shutdown.assert_called_once_with(wait=True)
         assert mock_rest_bot.executor is None
 
-    def test_run_ignores_close_executor_when_not_present(self, mock_rest_bot):
+    def test_run_ignores_close_executor_when_not_present(self, mock_rest_bot: rest_bot_impl.RESTBot):
         mock_rest_bot.start = mock.Mock()
         mock_rest_bot.join = mock.Mock()
         mock_rest_bot._executor = None
@@ -527,25 +528,33 @@ class TestRESTBot:
                 reuse_address=True,
                 reuse_port=False,
                 shutdown_timeout=534.534,
-                socket=object(),
-                ssl_context=object(),
+                socket=mock.Mock(),
+                ssl_context=mock.Mock(),
             )
 
         assert mock_rest_bot.executor is None
 
     @pytest.mark.asyncio
     async def test_start(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
-        mock_socket = object()
-        mock_ssl_context = object()
+        mock_socket = mock.Mock()
+        mock_ssl_context = mock.Mock()
         mock_callback_1 = mock.AsyncMock()
         mock_callback_2 = mock.AsyncMock()
         mock_rest_bot.add_startup_callback(mock_callback_1)
         mock_rest_bot.add_startup_callback(mock_callback_2)
         mock_rest_bot._is_closing = True
 
-        with mock.patch.object(ux, "check_for_updates"):
+        with (
+            mock.patch.object(mock_rest_client, "start") as patched_start,
+            mock.patch.object(mock_rest_client, "close") as patched_close,
+            mock.patch.object(mock_interaction_server, "start") as patched_interaction_server_start,
+            mock.patch.object(ux, "check_for_updates") as patched_check_for_updates,
+        ):
             await mock_rest_bot.start(
                 backlog=34123,
                 check_for_updates=False,
@@ -559,9 +568,9 @@ class TestRESTBot:
                 ssl_context=mock_ssl_context,
             )
 
-            ux.check_for_updates.assert_not_called()
+            patched_check_for_updates.assert_not_called()
 
-        mock_interaction_server.start.assert_awaited_once_with(
+        patched_interaction_server_start.assert_awaited_once_with(
             backlog=34123,
             host="hostostosot",
             port=123123123,
@@ -572,18 +581,21 @@ class TestRESTBot:
             shutdown_timeout=4312312.3132132,
             ssl_context=mock_ssl_context,
         )
-        mock_rest_client.start.assert_called_once_with()
-        mock_rest_client.close.assert_not_called()
+        patched_start.assert_called_once_with()
+        patched_close.assert_not_called()
         assert mock_rest_bot._is_closing is False
         mock_callback_1.assert_awaited_once_with(mock_rest_bot)
         mock_callback_2.assert_awaited_once_with(mock_rest_bot)
 
     @pytest.mark.asyncio
     async def test_start_when_startup_callback_raises(
-        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: mock.Mock, mock_rest_client: mock.Mock
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_interaction_server: interaction_server_impl.InteractionServer,
+        mock_rest_client: rest_impl.RESTClientImpl,
     ):
-        mock_socket = object()
-        mock_ssl_context = object()
+        mock_socket = mock.Mock()
+        mock_ssl_context = mock.Mock()
         mock_rest_bot._is_closing = True
         mock_error = TypeError("Not a real catgirl")
         mock_callback_1 = mock.AsyncMock(side_effect=mock_error)
@@ -591,7 +603,12 @@ class TestRESTBot:
         mock_rest_bot.add_startup_callback(mock_callback_1)
         mock_rest_bot.add_startup_callback(mock_callback_2)
 
-        with mock.patch.object(ux, "check_for_updates"):
+        with (
+            mock.patch.object(mock_rest_client, "start") as patched_start,
+            mock.patch.object(mock_rest_client, "close") as patched_close,
+            mock.patch.object(mock_interaction_server, "start") as patched_interaction_server_start,
+            mock.patch.object(ux, "check_for_updates") as patched_check_for_updates,
+        ):
             with pytest.raises(TypeError) as exc_info:
                 await mock_rest_bot.start(
                     backlog=34123,
@@ -607,22 +624,26 @@ class TestRESTBot:
                 )
 
             assert exc_info.value is mock_error
-            ux.check_for_updates.assert_not_called()
+            patched_check_for_updates.assert_not_called()
 
-        mock_interaction_server.start.assert_not_called()
-        mock_rest_client.start.assert_called_once_with()
-        mock_rest_client.close.assert_awaited_once_with()
+        patched_interaction_server_start.assert_not_called()
+        patched_start.assert_called_once_with()
+        patched_close.assert_awaited_once_with()
         assert mock_rest_bot._is_closing is False
         mock_callback_1.assert_awaited_once_with(mock_rest_bot)
         mock_callback_2.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_start_checks_for_update(self, mock_rest_bot, mock_http_settings, mock_proxy_settings):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(asyncio, "create_task"))
-        stack.enter_context(mock.patch.object(ux, "check_for_updates", new=mock.Mock()))
-
-        with stack:
+    async def test_start_checks_for_update(
+        self,
+        mock_rest_bot: rest_bot_impl.RESTBot,
+        mock_http_settings: config.HTTPSettings,
+        mock_proxy_settings: config.ProxySettings,
+    ):
+        with (
+            mock.patch.object(asyncio, "create_task") as patched_create_task,
+            mock.patch.object(ux, "check_for_updates", new=mock.Mock()),
+        ):
             await mock_rest_bot.start(
                 backlog=34123,
                 check_for_updates=True,
@@ -631,19 +652,19 @@ class TestRESTBot:
                 path="patpatpapt",
                 reuse_address=True,
                 reuse_port=False,
-                socket=object(),
+                socket=mock.Mock(),
                 shutdown_timeout=4312312.3132132,
-                ssl_context=object(),
+                ssl_context=mock.Mock(),
             )
 
-            asyncio.create_task.assert_called_once_with(
+            patched_create_task.assert_called_once_with(
                 ux.check_for_updates.return_value, name="check for package updates"
             )
             ux.check_for_updates.assert_called_once_with(mock_http_settings, mock_proxy_settings)
 
     @pytest.mark.asyncio
-    async def test_start_when_is_alive(self, mock_rest_bot):
-        mock_rest_bot._close_event = object()
+    async def test_start_when_is_alive(self, mock_rest_bot: rest_bot_impl.RESTBot):
+        mock_rest_bot._close_event = mock.Mock()
 
         with mock.patch.object(ux, "check_for_updates", new=mock.Mock()) as check_for_updates:
             with pytest.raises(errors.ComponentStateConflictError):
@@ -651,17 +672,21 @@ class TestRESTBot:
 
             check_for_updates.assert_not_called()
 
-    def test_get_listener(self, mock_rest_bot, mock_interaction_server):
-        mock_type = object()
+    def test_get_listener(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: interaction_server_impl.InteractionServer
+    ):
+        mock_type = mock.Mock()
 
         result = mock_rest_bot.get_listener(mock_type)
 
         assert result is mock_interaction_server.get_listener.return_value
         mock_interaction_server.get_listener.assert_called_once_with(mock_type)
 
-    def test_set_listener(self, mock_rest_bot, mock_interaction_server):
-        mock_type = object()
-        mock_listener = object()
+    def test_set_listener(
+        self, mock_rest_bot: rest_bot_impl.RESTBot, mock_interaction_server: interaction_server_impl.InteractionServer
+    ):
+        mock_type = mock.Mock()
+        mock_listener = mock.Mock()
 
         mock_rest_bot.set_listener(mock_type, mock_listener, replace=True)
 

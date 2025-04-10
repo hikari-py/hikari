@@ -46,15 +46,15 @@ from tests.hikari import hikari_test_helpers
 
 class TestTypingIndicator:
     @pytest.fixture
-    def typing_indicator(self):
+    def typing_indicator(self) -> special_endpoints.TypingIndicator:
         return hikari_test_helpers.mock_class_namespace(special_endpoints.TypingIndicator, init_=False)
 
-    def test___enter__(self, typing_indicator):
+    def test___enter__(self, typing_indicator: special_endpoints.TypingIndicator):
         # flake8 gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             typing_indicator().__enter__()
 
-    def test___exit__(self, typing_indicator):
+    def test___exit__(self, typing_indicator: special_endpoints.TypingIndicator):
         try:
             typing_indicator().__exit__(None, None, None)
         except AttributeError as exc:
@@ -773,7 +773,7 @@ class TestInteractionDeferredBuilder:
     def test_build(self):
         builder = special_endpoints.InteractionDeferredBuilder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
-        result, attachments = builder.build(object())
+        result, attachments = builder.build(mock.Mock())
 
         assert result == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE}
         assert attachments == ()
@@ -783,7 +783,7 @@ class TestInteractionDeferredBuilder:
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         ).set_flags(64)
 
-        result, attachments = builder.build(object())
+        result, attachments = builder.build(mock.Mock())
 
         assert result == {"type": base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, "data": {"flags": 64}}
         assert attachments == ()
@@ -818,7 +818,7 @@ class TestInteractionMessageBuilder:
         assert builder.attachments is undefined.UNDEFINED
 
     def test_components_property(self):
-        mock_component = object()
+        mock_component = mock.Mock()
         builder = special_endpoints.InteractionMessageBuilder(4).add_component(mock_component)
 
         assert builder.components == [mock_component]
@@ -829,7 +829,7 @@ class TestInteractionMessageBuilder:
         assert builder.components is undefined.UNDEFINED
 
     def test_embeds_property(self):
-        mock_embed = object()
+        mock_embed = mock.Mock()
         builder = special_endpoints.InteractionMessageBuilder(4).add_embed(mock_embed)
 
         assert builder.embeds == [mock_embed]
@@ -850,9 +850,9 @@ class TestInteractionMessageBuilder:
         assert builder.is_tts is False
 
     def test_mentions_everyone_property(self):
-        builder = special_endpoints.InteractionMessageBuilder(4).set_mentions_everyone([123, 453])
+        builder = special_endpoints.InteractionMessageBuilder(4).set_mentions_everyone(True)
 
-        assert builder.mentions_everyone == [123, 453]
+        assert builder.mentions_everyone is True
 
     def test_role_mentions_property(self):
         builder = special_endpoints.InteractionMessageBuilder(4).set_role_mentions([999])
@@ -867,8 +867,8 @@ class TestInteractionMessageBuilder:
     def test_build(self):
         mock_entity_factory = mock.Mock()
         mock_component = mock.Mock()
-        mock_embed = object()
-        mock_serialized_embed = object()
+        mock_embed = mock.Mock()
+        mock_serialized_embed = mock.Mock()
         mock_entity_factory.serialize_embed.return_value = (mock_serialized_embed, [])
         builder = (
             special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
@@ -937,15 +937,15 @@ class TestInteractionMessageBuilder:
     def test_build_handles_attachments(self):
         mock_entity_factory = mock.Mock()
         mock_message_attachment = mock.Mock(messages.Attachment, id=123, filename="testing")
-        mock_file_attachment = object()
-        mock_embed = object()
-        mock_embed_attachment = object()
+        mock_file_attachment = mock.Mock()
+        mock_embed = mock.Mock()
+        mock_embed_attachment = mock.Mock()
         mock_entity_factory.serialize_embed.return_value = (mock_embed, [mock_embed_attachment])
         builder = (
             special_endpoints.InteractionMessageBuilder(base_interactions.ResponseType.MESSAGE_CREATE)
             .add_attachment(mock_file_attachment)
             .add_attachment(mock_message_attachment)
-            .add_embed(object())
+            .add_embed(mock.Mock())
         )
 
         with mock.patch.object(files, "ensure_resource") as ensure_resource:
@@ -1011,27 +1011,27 @@ class TestCommandBuilder:
     def stub_command(self) -> type[special_endpoints.CommandBuilder]:
         return hikari_test_helpers.mock_class_namespace(special_endpoints.CommandBuilder)
 
-    def test_name_property(self, stub_command):
+    def test_name_property(self, stub_command: type[special_endpoints.CommandBuilder]):
         builder = stub_command("NOOOOO").set_name("aaaaa")
 
         assert builder.name == "aaaaa"
 
-    def test_id_property(self, stub_command):
+    def test_id_property(self, stub_command: type[special_endpoints.CommandBuilder]):
         builder = stub_command("OKSKDKSDK").set_id(3212123)
 
         assert builder.id == 3212123
 
-    def test_default_member_permissions(self, stub_command):
+    def test_default_member_permissions(self, stub_command: type[special_endpoints.CommandBuilder]):
         builder = stub_command("oksksksk").set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
 
         assert builder.default_member_permissions == permissions.Permissions.ADMINISTRATOR
 
-    def test_is_nsfw_property(self, stub_command):
+    def test_is_nsfw_property(self, stub_command: type[special_endpoints.CommandBuilder]):
         builder = stub_command("oksksksk").set_is_nsfw(True)
 
         assert builder.is_nsfw is True
 
-    def test_name_localizations_property(self, stub_command):
+    def test_name_localizations_property(self, stub_command: type[special_endpoints.CommandBuilder]):
         builder = stub_command("oksksksk").set_name_localizations({"aaa": "bbb", "ccc": "DDd"})
 
         assert builder.name_localizations == {"aaa": "bbb", "ccc": "DDd"}
@@ -1045,7 +1045,7 @@ class TestSlashCommandBuilder:
 
     def test_options_property(self):
         builder = special_endpoints.SlashCommandBuilder("OKSKDKSDK", "inmjfdsmjiooikjsa")
-        mock_option = object()
+        mock_option = mock.Mock()
 
         assert builder.options == []
 
@@ -1055,7 +1055,7 @@ class TestSlashCommandBuilder:
 
     def test_build_with_optional_data(self):
         mock_entity_factory = mock.Mock()
-        mock_option = object()
+        mock_option = mock.Mock()
         builder = (
             special_endpoints.SlashCommandBuilder(
                 "we are number",
@@ -1161,7 +1161,7 @@ class TestSlashCommandBuilder:
 class TestContextMenuBuilder:
     def test_build_with_optional_data(self):
         builder = (
-            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            special_endpoints.ContextMenuCommandBuilder(name="we are number", type=commands.CommandType.USER)
             .set_id(3412312)
             .set_name_localizations({locales.Locale.TR: "merhaba"})
             .set_default_member_permissions(permissions.Permissions.ADMINISTRATOR)
@@ -1184,7 +1184,7 @@ class TestContextMenuBuilder:
         }
 
     def test_build_without_optional_data(self):
-        builder = special_endpoints.ContextMenuCommandBuilder(commands.CommandType.MESSAGE, "nameeeee")
+        builder = special_endpoints.ContextMenuCommandBuilder(name="nameeeee", type=commands.CommandType.MESSAGE)
 
         result = builder.build(mock.Mock())
 
@@ -1193,7 +1193,7 @@ class TestContextMenuBuilder:
     @pytest.mark.asyncio
     async def test_create(self):
         builder = (
-            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            special_endpoints.ContextMenuCommandBuilder(name="we are number", type=commands.CommandType.USER)
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"meow": "nyan"})
             .set_is_nsfw(True)
@@ -1216,7 +1216,7 @@ class TestContextMenuBuilder:
     @pytest.mark.asyncio
     async def test_create_with_guild(self):
         builder = (
-            special_endpoints.ContextMenuCommandBuilder(commands.CommandType.USER, "we are number")
+            special_endpoints.ContextMenuCommandBuilder(name="we are number", type=commands.CommandType.USER)
             .set_default_member_permissions(permissions.Permissions.BAN_MEMBERS)
             .set_name_localizations({"en-ghibli": "meow"})
             .set_is_nsfw(True)
@@ -1238,16 +1238,21 @@ class TestContextMenuBuilder:
 
 
 @pytest.mark.parametrize("emoji", ["UNICORN", emojis.UnicodeEmoji("UNICORN")])
-def test__build_emoji_with_unicode_emoji(emoji):
+def test__build_emoji_with_unicode_emoji(emoji: str | emojis.UnicodeEmoji):
     result = special_endpoints._build_emoji(emoji)
 
     assert result == (undefined.UNDEFINED, "UNICORN")
 
 
 @pytest.mark.parametrize(
-    "emoji", [snowflakes.Snowflake(54123123), 54123123, emojis.CustomEmoji(id=54123123, name=None, is_animated=None)]
+    "emoji",
+    [
+        snowflakes.Snowflake(54123123),
+        54123123,
+        emojis.CustomEmoji(id=snowflakes.Snowflake(54123123), name="", is_animated=False),
+    ],
 )
-def test__build_emoji_with_custom_emoji(emoji):
+def test__build_emoji_with_custom_emoji(emoji: int | snowflakes.Snowflake | emojis.CustomEmoji):
     result = special_endpoints._build_emoji(emoji)
 
     assert result == ("54123123", undefined.UNDEFINED)
@@ -1259,7 +1264,7 @@ def test__build_emoji_when_undefined():
 
 class Test_ButtonBuilder:
     @pytest.fixture
-    def button(self):
+    def button(self) -> special_endpoints._ButtonBuilder:
         return special_endpoints._ButtonBuilder(
             style=components.ButtonStyle.DANGER,
             custom_id="sfdasdasd",
@@ -1269,17 +1274,19 @@ class Test_ButtonBuilder:
             is_disabled=True,
         )
 
-    def test_type_property(self, button):
+    def test_type_property(self, button: special_endpoints._ButtonBuilder):
         assert button.type is components.ComponentType.BUTTON
 
-    def test_style_property(self, button):
+    def test_style_property(self, button: special_endpoints._ButtonBuilder):
         assert button.style is components.ButtonStyle.DANGER
 
-    def test_emoji_property(self, button):
+    def test_emoji_property(self, button: special_endpoints._ButtonBuilder):
         assert button.emoji == 543123
 
     @pytest.mark.parametrize("emoji", ["unicode", emojis.UnicodeEmoji("unicode")])
-    def test_set_emoji_with_unicode_emoji(self, button, emoji):
+    def test_set_emoji_with_unicode_emoji(
+        self, button: special_endpoints._ButtonBuilder, emoji: str | emojis.UnicodeEmoji
+    ):
         result = button.set_emoji(emoji)
 
         assert result is button
@@ -1287,8 +1294,12 @@ class Test_ButtonBuilder:
         assert button._emoji_id is undefined.UNDEFINED
         assert button._emoji_name == "unicode"
 
-    @pytest.mark.parametrize("emoji", [emojis.CustomEmoji(name="ok", id=34123123, is_animated=False), 34123123])
-    def test_set_emoji_with_custom_emoji(self, button, emoji):
+    @pytest.mark.parametrize(
+        "emoji", [emojis.CustomEmoji(name="ok", id=snowflakes.Snowflake(34123123), is_animated=False), 34123123]
+    )
+    def test_set_emoji_with_custom_emoji(
+        self, button: special_endpoints._ButtonBuilder, emoji: int | emojis.CustomEmoji
+    ):
         result = button.set_emoji(emoji)
 
         assert result is button
@@ -1296,7 +1307,7 @@ class Test_ButtonBuilder:
         assert button._emoji_id == "34123123"
         assert button._emoji_name is undefined.UNDEFINED
 
-    def test_set_emoji_with_undefined(self, button):
+    def test_set_emoji_with_undefined(self, button: special_endpoints._ButtonBuilder):
         result = button.set_emoji(undefined.UNDEFINED)
 
         assert result is button
@@ -1304,11 +1315,11 @@ class Test_ButtonBuilder:
         assert button._emoji_name is undefined.UNDEFINED
         assert button._emoji is undefined.UNDEFINED
 
-    def test_set_label(self, button):
+    def test_set_label(self, button: special_endpoints._ButtonBuilder):
         assert button.set_label("hi hi") is button
         assert button.label == "hi hi"
 
-    def test_set_is_disabled(self, button):
+    def test_set_is_disabled(self, button: special_endpoints._ButtonBuilder):
         assert button.set_is_disabled(False)
         assert button.is_disabled is False
 
@@ -1332,7 +1343,9 @@ class Test_ButtonBuilder:
             "disabled": True,
         }
 
-    @pytest.mark.parametrize("emoji", [123321, emojis.CustomEmoji(id=123321, name="", is_animated=True)])
+    @pytest.mark.parametrize(
+        "emoji", [123321, emojis.CustomEmoji(id=snowflakes.Snowflake(123321), name="", is_animated=True)]
+    )
     def test_build_with_custom_emoji(self, emoji: typing.Union[int, emojis.Emoji]):
         button = special_endpoints._ButtonBuilder(
             style=components.ButtonStyle.DANGER, emoji=emoji, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
@@ -1375,29 +1388,31 @@ class TestInteractiveButtonBuilder:
 
 class TestSelectOptionBuilder:
     @pytest.fixture
-    def option(self):
+    def option(self) -> special_endpoints.SelectOptionBuilder:
         return special_endpoints.SelectOptionBuilder(label="ok", value="ok2")
 
-    def test_label_property(self, option):
+    def test_label_property(self, option: special_endpoints.SelectOptionBuilder):
         option.set_label("new_label")
 
         assert option.label == "new_label"
 
-    def test_value_property(self, option):
+    def test_value_property(self, option: special_endpoints.SelectOptionBuilder):
         option.set_value("aaaaaaaaaaaa")
 
         assert option.value == "aaaaaaaaaaaa"
 
-    def test_emoji_property(self, option):
+    def test_emoji_property(self, option: special_endpoints.SelectOptionBuilder):
         option._emoji = 123321
         assert option.emoji == 123321
 
-    def test_set_description(self, option):
+    def test_set_description(self, option: special_endpoints.SelectOptionBuilder):
         assert option.set_description("a desk") is option
         assert option.description == "a desk"
 
     @pytest.mark.parametrize("emoji", ["unicode", emojis.UnicodeEmoji("unicode")])
-    def test_set_emoji_with_unicode_emoji(self, option, emoji):
+    def test_set_emoji_with_unicode_emoji(
+        self, option: special_endpoints.SelectOptionBuilder, emoji: str | emojis.UnicodeEmoji
+    ):
         result = option.set_emoji(emoji)
 
         assert result is option
@@ -1405,8 +1420,12 @@ class TestSelectOptionBuilder:
         assert option._emoji_id is undefined.UNDEFINED
         assert option._emoji_name == "unicode"
 
-    @pytest.mark.parametrize("emoji", [emojis.CustomEmoji(name="ok", id=34123123, is_animated=False), 34123123])
-    def test_set_emoji_with_custom_emoji(self, option, emoji):
+    @pytest.mark.parametrize(
+        "emoji", [emojis.CustomEmoji(name="ok", id=snowflakes.Snowflake(34123123), is_animated=False), 34123123]
+    )
+    def test_set_emoji_with_custom_emoji(
+        self, option: special_endpoints.SelectOptionBuilder, emoji: int | emojis.CustomEmoji
+    ):
         result = option.set_emoji(emoji)
 
         assert result is option
@@ -1414,7 +1433,7 @@ class TestSelectOptionBuilder:
         assert option._emoji_id == "34123123"
         assert option._emoji_name is undefined.UNDEFINED
 
-    def test_set_emoji_with_undefined(self, option):
+    def test_set_emoji_with_undefined(self, option: special_endpoints.SelectOptionBuilder):
         result = option.set_emoji(undefined.UNDEFINED)
 
         assert result is option
@@ -1422,7 +1441,7 @@ class TestSelectOptionBuilder:
         assert option._emoji_name is undefined.UNDEFINED
         assert option._emoji is undefined.UNDEFINED
 
-    def test_set_is_default(self, option):
+    def test_set_is_default(self, option: special_endpoints.SelectOptionBuilder):
         assert option.set_is_default(True) is option
         assert option.is_default is True
 
@@ -1468,24 +1487,24 @@ class TestSelectMenuBuilder:
 
         assert menu.type == 123
 
-    def test_custom_id_property(self, menu):
+    def test_custom_id_property(self, menu: special_endpoints.SelectMenuBuilder):
         menu.set_custom_id("ooooo")
 
         assert menu.custom_id == "ooooo"
 
-    def test_set_is_disabled(self, menu):
+    def test_set_is_disabled(self, menu: special_endpoints.SelectMenuBuilder):
         assert menu.set_is_disabled(True) is menu
         assert menu.is_disabled is True
 
-    def test_set_placeholder(self, menu):
+    def test_set_placeholder(self, menu: special_endpoints.SelectMenuBuilder):
         assert menu.set_placeholder("place") is menu
         assert menu.placeholder == "place"
 
-    def test_set_min_values(self, menu):
+    def test_set_min_values(self, menu: special_endpoints.SelectMenuBuilder):
         assert menu.set_min_values(1) is menu
         assert menu.min_values == 1
 
-    def test_set_max_values(self, menu):
+    def test_set_max_values(self, menu: special_endpoints.SelectMenuBuilder):
         assert menu.set_max_values(25) is menu
         assert menu.max_values == 25
 
@@ -1522,11 +1541,11 @@ class TestSelectMenuBuilder:
 
 class TestTextSelectMenuBuilder:
     @pytest.fixture
-    def menu(self):
+    def menu(self) -> special_endpoints.TextSelectMenuBuilder[typing.NoReturn]:
         return special_endpoints.TextSelectMenuBuilder(custom_id="o2o2o2")
 
     def test_parent_property(self):
-        mock_parent = object()
+        mock_parent = mock.Mock()
         menu = special_endpoints.TextSelectMenuBuilder(custom_id="o2o2o2", parent=mock_parent)
 
         assert menu.parent is mock_parent
@@ -1551,8 +1570,8 @@ class TestTextSelectMenuBuilder:
         assert option.emoji == "e"
         assert option.is_default is True
 
-    def test_add_raw_option(self, menu):
-        mock_option = object()
+    def test_add_raw_option(self, menu: special_endpoints.TextSelectMenuBuilder[typing.NoReturn]):
+        mock_option = mock.Mock()
 
         menu.add_raw_option(mock_option)
 
@@ -1638,41 +1657,41 @@ class TestChannelSelectMenuBuilder:
 
 class TestTextInput:
     @pytest.fixture
-    def text_input(self):
+    def text_input(self) -> special_endpoints.TextInputBuilder:
         return special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
 
-    def test_type_property(self, text_input):
+    def test_type_property(self, text_input: special_endpoints.TextInputBuilder):
         assert text_input.type is components.ComponentType.TEXT_INPUT
 
-    def test_set_style(self, text_input):
+    def test_set_style(self, text_input: special_endpoints.TextInputBuilder):
         assert text_input.set_style(components.TextInputStyle.PARAGRAPH) is text_input
         assert text_input.style == components.TextInputStyle.PARAGRAPH
 
-    def test_set_custom_id(self, text_input):
+    def test_set_custom_id(self, text_input: special_endpoints.TextInputBuilder):
         assert text_input.set_custom_id("custooom") is text_input
         assert text_input.custom_id == "custooom"
 
-    def test_set_label(self, text_input):
+    def test_set_label(self, text_input: special_endpoints.TextInputBuilder):
         assert text_input.set_label("labeeeel") is text_input
         assert text_input.label == "labeeeel"
 
-    def test_set_placeholder(self, text_input):
+    def test_set_placeholder(self, text_input: special_endpoints.TextInputBuilder):
         assert text_input.set_placeholder("place") is text_input
         assert text_input.placeholder == "place"
 
-    def test_set_required(self, text_input):
+    def test_set_required(self, text_input: special_endpoints.TextInputBuilder):
         assert text_input.set_required(True) is text_input
         assert text_input.is_required is True
 
-    def test_set_value(self, text_input):
+    def test_set_value(self, text_input: special_endpoints.TextInputBuilder):
         assert text_input.set_value("valueeeee") is text_input
         assert text_input.value == "valueeeee"
 
-    def test_set_min_length_(self, text_input):
+    def test_set_min_length_(self, text_input: special_endpoints.TextInputBuilder):
         assert text_input.set_min_length(10) is text_input
         assert text_input.min_length == 10
 
-    def test_set_max_length(self, text_input):
+    def test_set_max_length(self, text_input: special_endpoints.TextInputBuilder):
         assert text_input.set_max_length(250) is text_input
         assert text_input.max_length == 250
 

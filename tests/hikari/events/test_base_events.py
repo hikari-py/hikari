@@ -91,18 +91,18 @@ class TestExceptionEvent:
             return ex
 
     @pytest.fixture
-    def event(self, error):
+    def event(self, error: RuntimeError) -> base_events.ExceptionEvent[mock.Mock]:
         return base_events.ExceptionEvent(
             exception=error, failed_event=mock.Mock(base_events.Event), failed_callback=mock.AsyncMock()
         )
 
-    def test_app_property(self, event):
+    def test_app_property(self, event: base_events.ExceptionEvent[mock.Mock]):
         app = mock.Mock()
         event.failed_event.app = app
         assert event.app is app
 
     @pytest.mark.parametrize("has_shard", [True, False])
-    def test_shard_property(self, has_shard, event):
+    def test_shard_property(self, has_shard: bool, event: base_events.ExceptionEvent[mock.Mock]):
         shard = mock.Mock(spec_set=gateway_shard.GatewayShard)
         if has_shard:
             event.failed_event.shard = shard
@@ -110,10 +110,11 @@ class TestExceptionEvent:
         else:
             assert event.shard is None
 
-    def test_exc_info_property(self, event, error):
+    def test_exc_info_property(self, event: base_events.ExceptionEvent[mock.Mock], error: RuntimeError):
         assert event.exc_info == (type(error), error, error.__traceback__)
 
     @pytest.mark.asyncio
-    async def test_retry(self, event):
-        await event.retry()
-        event.failed_callback.assert_awaited_once_with(event.failed_event)
+    async def test_retry(self, event: base_events.ExceptionEvent[mock.Mock]):
+        with mock.patch.object(event, "failed_callback") as patched_failed_callback:
+            await event.retry()
+            patched_failed_callback.assert_awaited_once_with(event.failed_event)

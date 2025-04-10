@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import contextlib
 import copy as stdlib_copy
+import typing
 
 import attrs
 import mock
@@ -30,13 +31,13 @@ from hikari.internal import attrs_extensions
 
 
 def test_invalidate_shallow_copy_cache():
-    attrs_extensions._SHALLOW_COPIERS = {int: object(), str: object()}
+    attrs_extensions._SHALLOW_COPIERS = {int: mock.Mock(), str: mock.Mock()}
     assert attrs_extensions.invalidate_shallow_copy_cache() is None
     assert attrs_extensions._SHALLOW_COPIERS == {}
 
 
 def test_invalidate_deep_copy_cache():
-    attrs_extensions._DEEP_COPIERS = {str: object(), int: object(), object: object()}
+    attrs_extensions._DEEP_COPIERS = {str: mock.Mock(), int: mock.Mock(), object: mock.Mock()}
     assert attrs_extensions.invalidate_deep_copy_cache() is None
     assert attrs_extensions._DEEP_COPIERS == {}
 
@@ -139,36 +140,38 @@ def test_generate_shallow_copier_with_no_attributes():
 
 
 def test_get_or_generate_shallow_copier_for_cached_copier():
-    mock_copier = object()
+    mock_copier = mock.Mock()
 
     @attrs.define()
     class StubModel: ...
 
     attrs_extensions._SHALLOW_COPIERS = {
-        type("b", (), {}): object(),
+        type("b", (), {}): mock.Mock(),
         StubModel: mock_copier,
-        type("a", (), {}): object(),
+        type("a", (), {}): mock.Mock(),
     }
 
     assert attrs_extensions.get_or_generate_shallow_copier(StubModel) is mock_copier
 
 
 def test_get_or_generate_shallow_copier_for_uncached_copier():
-    mock_copier = object()
+    mock_copier = mock.Mock()
 
     @attrs.define()
     class StubModel: ...
 
-    with mock.patch.object(attrs_extensions, "generate_shallow_copier", return_value=mock_copier):
+    with mock.patch.object(
+        attrs_extensions, "generate_shallow_copier", return_value=mock_copier
+    ) as patched_generate_shallow_copier:
         assert attrs_extensions.get_or_generate_shallow_copier(StubModel) is mock_copier
 
-        attrs_extensions.generate_shallow_copier.assert_called_once_with(StubModel)
+        patched_generate_shallow_copier.assert_called_once_with(StubModel)
 
     assert attrs_extensions._SHALLOW_COPIERS[StubModel] is mock_copier
 
 
 def test_copy_attrs():
-    mock_result = object()
+    mock_result = mock.Mock()
     mock_copier = mock.Mock(return_value=mock_result)
 
     @attrs.define()
@@ -176,10 +179,12 @@ def test_copy_attrs():
 
     model = StubModel()
 
-    with mock.patch.object(attrs_extensions, "get_or_generate_shallow_copier", return_value=mock_copier):
+    with mock.patch.object(
+        attrs_extensions, "get_or_generate_shallow_copier", return_value=mock_copier
+    ) as patched_get_or_generate_shallow_copier:
         assert attrs_extensions.copy_attrs(model) is mock_result
 
-        attrs_extensions.get_or_generate_shallow_copier.assert_called_once_with(StubModel)
+        patched_get_or_generate_shallow_copier.assert_called_once_with(StubModel)
 
     mock_copier.assert_called_once_with(model)
 
@@ -195,21 +200,21 @@ def test_generate_deep_copier():
 
     model = StubBaseClass(recursor=431, field=True, foo="blam")
     model.end = "the way"
-    model._blam = "555555"
+    model._blam = True
     old_model_fields = stdlib_copy.copy(model)
-    copied_recursor = object()
-    copied_field = object()
-    copied_foo = object()
-    copied_end = object()
-    copied_blam = object()
-    memo = {123: object()}
+    copied_recursor = mock.Mock()
+    copied_field = mock.Mock()
+    copied_foo = mock.Mock()
+    copied_end = mock.Mock()
+    copied_blam = mock.Mock()
+    memo = {123: mock.Mock()}
 
     with mock.patch.object(
         stdlib_copy, "deepcopy", side_effect=[copied_recursor, copied_field, copied_foo, copied_end, copied_blam]
-    ):
+    ) as patched_deepcopy:
         attrs_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
-        stdlib_copy.deepcopy.assert_has_calls(
+        patched_deepcopy.assert_has_calls(
             [
                 mock.call(old_model_fields.recursor, memo),
                 mock.call(old_model_fields._field, memo),
@@ -235,15 +240,17 @@ def test_generate_deep_copier_with_only_init_attributes():
 
     model = StubBaseClass(recursor=431, field=True, foo="blam")
     old_model_fields = stdlib_copy.copy(model)
-    copied_recursor = object()
-    copied_field = object()
-    copied_foo = object()
-    memo = {123: object()}
+    copied_recursor = mock.Mock()
+    copied_field = mock.Mock()
+    copied_foo = mock.Mock()
+    memo = {123: mock.Mock()}
 
-    with mock.patch.object(stdlib_copy, "deepcopy", side_effect=[copied_recursor, copied_field, copied_foo]):
+    with mock.patch.object(
+        stdlib_copy, "deepcopy", side_effect=[copied_recursor, copied_field, copied_foo]
+    ) as patched_deepcopy:
         attrs_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
-        stdlib_copy.deepcopy.assert_has_calls(
+        patched_deepcopy.assert_has_calls(
             [
                 mock.call(old_model_fields.recursor, memo),
                 mock.call(old_model_fields._field, memo),
@@ -264,16 +271,16 @@ def test_generate_deep_copier_with_only_non_init_attributes():
 
     model = StubBaseClass()
     model.end = "the way"
-    model._blam = "555555"
+    model._blam = False
     old_model_fields = stdlib_copy.copy(model)
-    copied_end = object()
-    copied_blam = object()
-    memo = {123: object()}
+    copied_end = mock.Mock()
+    copied_blam = mock.Mock()
+    memo = {123: mock.Mock()}
 
-    with mock.patch.object(stdlib_copy, "deepcopy", side_effect=[copied_end, copied_blam]):
+    with mock.patch.object(stdlib_copy, "deepcopy", side_effect=[copied_end, copied_blam]) as patched_deepcopy:
         attrs_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
-        stdlib_copy.deepcopy.assert_has_calls(
+        patched_deepcopy.assert_has_calls(
             [mock.call(old_model_fields.end, memo), mock.call(old_model_fields._blam, memo)]
         )
 
@@ -286,24 +293,26 @@ def test_generate_deep_copier_with_no_attributes():
     class StubBaseClass: ...
 
     model = StubBaseClass()
-    memo = {123: object()}
+    memo = {123: mock.Mock()}
 
-    with mock.patch.object(stdlib_copy, "deepcopy", side_effect=NotImplementedError):
+    with mock.patch.object(stdlib_copy, "deepcopy", side_effect=NotImplementedError) as patched_deepcopy:
         attrs_extensions.generate_deep_copier(StubBaseClass)(model, memo)
 
-        stdlib_copy.deepcopy.assert_not_called()
+        patched_deepcopy.assert_not_called()
 
 
 def test_get_or_generate_deep_copier_for_cached_function():
     class StubClass: ...
 
-    mock_copier = object()
+    mock_copier = mock.Mock()
     attrs_extensions._DEEP_COPIERS = {}
 
-    with mock.patch.object(attrs_extensions, "generate_deep_copier", return_value=mock_copier):
+    with mock.patch.object(
+        attrs_extensions, "generate_deep_copier", return_value=mock_copier
+    ) as patched_generate_deep_copier:
         assert attrs_extensions.get_or_generate_deep_copier(StubClass) is mock_copier
 
-        attrs_extensions.generate_deep_copier.assert_called_once_with(StubClass)
+        patched_generate_deep_copier.assert_called_once_with(StubClass)
 
     assert attrs_extensions._DEEP_COPIERS[StubClass] is mock_copier
 
@@ -311,13 +320,13 @@ def test_get_or_generate_deep_copier_for_cached_function():
 def test_get_or_generate_deep_copier_for_uncached_function():
     class StubClass: ...
 
-    mock_copier = object()
+    mock_copier = mock.Mock()
     attrs_extensions._DEEP_COPIERS = {StubClass: mock_copier}
 
-    with mock.patch.object(attrs_extensions, "generate_deep_copier"):
+    with mock.patch.object(attrs_extensions, "generate_deep_copier") as patched_generate_deep_copier:
         assert attrs_extensions.get_or_generate_deep_copier(StubClass) is mock_copier
 
-        attrs_extensions.generate_deep_copier.assert_not_called()
+        patched_generate_deep_copier.assert_not_called()
 
 
 def test_deep_copy_attrs_without_memo():
@@ -346,7 +355,7 @@ def test_deep_copy_attrs_with_memo():
     mock_object = StubClass()
     mock_result = object()
     mock_copier = mock.Mock(mock_result)
-    mock_other_object = object()
+    mock_other_object = mock.Mock()
 
     stack = contextlib.ExitStack()
     stack.enter_context(mock.patch.object(attrs_extensions, "get_or_generate_deep_copier", return_value=mock_copier))
@@ -363,7 +372,7 @@ def test_deep_copy_attrs_with_memo():
 
 class TestCopyDecorator:
     def test___copy__(self):
-        mock_result = object()
+        mock_result = mock.Mock()
         mock_copier = mock.Mock(return_value=mock_result)
 
         @attrs.define()
@@ -372,21 +381,23 @@ class TestCopyDecorator:
 
         model = StubClass()
 
-        with mock.patch.object(attrs_extensions, "get_or_generate_shallow_copier", return_value=mock_copier):
+        with mock.patch.object(
+            attrs_extensions, "get_or_generate_shallow_copier", return_value=mock_copier
+        ) as patched_get_or_generate_shallow_copier:
             assert stdlib_copy.copy(model) is mock_result
 
-            attrs_extensions.get_or_generate_shallow_copier.assert_called_once_with(StubClass)
+            patched_get_or_generate_shallow_copier.assert_called_once_with(StubClass)
 
         mock_copier.assert_called_once_with(model)
 
     def test___deep__copy(self):
         class CopyingMock(mock.Mock):
-            def __call__(self, /, *args, **kwargs):
-                args = list(args)
-                args[1] = dict(args[1])
-                return super().__call__(*args, **kwargs)
+            def __call__(self, /, *args: typing.Any, **kwargs: typing.Any):
+                new_args = list(args)
+                new_args[1] = dict(args[1])
+                return super().__call__(*new_args, **kwargs)
 
-        mock_result = object()
+        mock_result = mock.Mock()
         mock_copier = CopyingMock(return_value=mock_result)
 
         @attrs.define()

@@ -41,9 +41,9 @@ class TestResolveSignatureOldStrategy:
         assert signature.return_annotation is str
 
     def test_handles_normal_no_annotations(self):
-        def foo(bar, bat): ...
+        def foo(bar, bat): ...  # pyright: ignore [reportMissingParameterType, reportUnknownParameterType]
 
-        signature = reflect.resolve_signature(foo)
+        signature = reflect.resolve_signature(foo)  # pyright: ignore [reportUnknownArgumentType]
         assert signature.parameters["bar"].annotation is reflect.EMPTY
         assert signature.parameters["bat"].annotation is reflect.EMPTY
         assert signature.return_annotation is reflect.EMPTY
@@ -90,14 +90,14 @@ class TestResolveSignatureOldStrategy:
     def test_handles_NoneType(self):
         def foo(bar: type(None)) -> type(None): ...
 
-        signature = reflect.resolve_signature(foo)
+        signature = reflect.resolve_signature(foo)  # pyright: ignore [reportUnknownArgumentType]
         assert signature.parameters["bar"].annotation is None
         assert signature.return_annotation is None
 
     def test_handles_only_return_annotated(self):
-        def foo(bar, bat) -> str: ...
+        def foo(bar, bat) -> str: ...  # pyright: ignore [reportMissingParameterType, reportUnknownParameterType]
 
-        signature = reflect.resolve_signature(foo)
+        signature = reflect.resolve_signature(foo)  # pyright: ignore [reportUnknownArgumentType]
         assert signature.parameters["bar"].annotation is reflect.EMPTY
         assert signature.parameters["bat"].annotation is reflect.EMPTY
         assert signature.return_annotation is str
@@ -111,7 +111,7 @@ class TestResolveSignatureOldStrategy:
 
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="This strategy is specific to 3.10 >= versions")
 def test_resolve_signature():
-    foo = object()
+    foo = mock.Mock()
 
     with mock.patch.object(inspect, "signature") as signature:
         sig = reflect.resolve_signature(foo)
