@@ -1062,7 +1062,10 @@ mypy = [
     { name = "pydub-stubs", specifier = "~=0.25.1.5" },
 ]
 nox = [{ name = "nox", extras = ["uv"], specifier = "==2025.2.9" }]
-pyright = [{ name = "pyright", specifier = "==1.1.399" }]
+pyright = [
+    { name = "pydub-stubs", specifier = "~=0.25.1.5" },
+    { name = "pyright", specifier = "==1.1.399" },
+]
 pytest = [
     { name = "async-timeout", specifier = "==5.0.1" },
     { name = "coverage", extras = ["toml"], specifier = "==7.8.0" },
