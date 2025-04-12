@@ -100,7 +100,7 @@ mkdocs = [
     # "mkdocs-glightbox==0.3.7",
 ]
 mypy = ["mypy[faster-cache]==1.15.0", { include-group = "types" }]
-pyright = ["pyright==1.1.398", { include-group = "types" }]
+pyright = ["pyright==1.1.399", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==8.3.5",
@@ -111,7 +111,7 @@ pytest = [
     { include-group = "coverage" },
 ]
 release = ["twine==6.1.0"]
-ruff = ["ruff==0.11.4"]
+ruff = ["ruff==0.11.5"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
 types = [

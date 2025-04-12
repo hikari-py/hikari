@@ -701,6 +701,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             tags=payload.get("tags") or [],
             install_parameters=install_parameters,
             approximate_guild_count=payload["approximate_guild_count"],
+            approximate_user_install_count=payload["approximate_user_install_count"],
             integration_types_config=integration_types_config,
         )
 
