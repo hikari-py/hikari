@@ -2676,12 +2676,6 @@ class RESTClientImpl(rest_api.RESTClient):
         await self._request(route, reason=reason)
 
     @typing_extensions.override
-    def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
-        return special_endpoints_impl.GuildBuilder(
-            entity_factory=self._entity_factory, executor=self._executor, request_call=self._request, name=name
-        )
-
-    @typing_extensions.override
     async def fetch_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
         route = routes.GET_GUILD.compile(guild=guild)
         query = data_binding.StringMapBuilder()

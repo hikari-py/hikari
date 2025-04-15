@@ -909,19 +909,6 @@ class TestRESTClientImpl:
                 first_id="123",
             )
 
-    def test_guild_builder(self, rest_client):
-        stub_iterator = mock.Mock()
-
-        with mock.patch.object(special_endpoints, "GuildBuilder", return_value=stub_iterator) as iterator:
-            assert rest_client.guild_builder("hikari") == stub_iterator
-
-            iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory,
-                executor=rest_client._executor,
-                request_call=rest_client._request,
-                name="hikari",
-            )
-
     def test_fetch_audit_log_when_before_is_undefined(self, rest_client):
         guild = StubModel(123)
         stub_iterator = mock.Mock()

@@ -3914,49 +3914,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
-        """Make a guild builder to create a guild with.
-
-        !!! note
-            This endpoint can only be used by bots in less than 10 guilds.
-
-        !!! note
-            This call is not a coroutine function, it returns a special type of
-            lazy iterator that will perform API calls as you iterate across it,
-            thus any errors documented below will happen then.
-
-            See [`hikari.iterators`][] for the full API for this iterator type.
-
-        Parameters
-        ----------
-        name
-            The new guilds name.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.GuildBuilder
-            The guild builder to use. This will allow to create a guild
-            later with [`hikari.api.special_endpoints.GuildBuilder.create`][].
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value or if you
-            call this as a bot that's in more than 10 guilds.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-
-        See Also
-        --------
-        GuildBuilder : [`hikari.api.special_endpoints.GuildBuilder`][].
-        """
-
-    @abc.abstractmethod
     async def fetch_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
         """Fetch a guild.
 
