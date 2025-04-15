@@ -281,39 +281,6 @@ class Template:
         """
         return await self.app.rest.sync_guild_template(self.source_guild.id, self.code)
 
-    async def create_guild(self, name: str, *, icon: undefined.UndefinedOr[str]) -> guilds.RESTGuild:
-        """Make a guild from a template.
-
-        !!! note
-            This endpoint can only be used by bots in less than 10 guilds.
-
-        Parameters
-        ----------
-        name
-            The new guilds name.
-        icon
-            If provided, the guild icon to set.
-            Must be a 1024x1024 image or can be an animated gif when the guild has the ANIMATED_ICON feature.
-
-        Returns
-        -------
-        hikari.guilds.RESTGuild
-            Object of the created guild.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value or if you call this as a bot that's
-            in more than 10 guilds.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is longer than max_rate_limit when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        return await self.app.rest.create_guild_from_template(self, name, icon=icon)
-
     @typing_extensions.override
     def __str__(self) -> str:
         return f"https://discord.new/{self.code}"
