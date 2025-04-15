@@ -79,7 +79,22 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
+    from hikari.internal import data_binding
+    from hikari.internal import routes
     from hikari.internal import time
+
+    class _RequestCallSig(typing.Protocol):
+        async def __call__(
+            self,
+            compiled_route: routes.CompiledRoute,
+            *,
+            query: data_binding.StringMapBuilder | None = None,
+            form_builder: data_binding.URLEncodedFormBuilder | None = None,
+            json: data_binding.JSONObjectBuilder | data_binding.JSONArray | None = None,
+            reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+            auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        ) -> None | data_binding.JSONObject | data_binding.JSONArray: ...
+
 
 _ParentT = typing.TypeVar("_ParentT")
 
@@ -112,6 +127,32 @@ class TypingIndicator(abc.ABC):
         exception: BaseException | None,
         exception_traceback: types.TracebackType | None,
     ) -> None: ...
+
+
+class ChannelRepositioner(abc.ABC):
+    __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    def __init__(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        request_call: _RequestCallSig,
+        *,
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]] = {},
+    ) -> None: ...
+
+    @abc.abstractmethod
+    def reposition(
+        self,
+        position: int,
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        *,
+        lock_permissions: bool,
+        parent: snowflakes.SnowflakeishOr[channels.GuildCategory],
+    ) -> Self: ...
+
+    @abc.abstractmethod
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]: ...
 
 
 class GuildBuilder(abc.ABC):
