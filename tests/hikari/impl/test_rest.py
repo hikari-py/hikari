@@ -5587,28 +5587,6 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_template.assert_called_once_with({"code": "ldsaosdokskdoa"})
 
-    async def test_create_guild_from_template_without_icon(self, rest_client):
-        expected_route = routes.POST_TEMPLATE.compile(template="odkkdkdkd")
-        rest_client._request = mock.AsyncMock(return_value={"id": "543123123"})
-
-        result = await rest_client.create_guild_from_template("odkkdkdkd", "ok a name")
-        assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
-
-        rest_client._request.assert_awaited_once_with(expected_route, json={"name": "ok a name"})
-        rest_client._entity_factory.deserialize_rest_guild.assert_called_once_with({"id": "543123123"})
-
-    async def test_create_guild_from_template_with_icon(self, rest_client, file_resource):
-        expected_route = routes.POST_TEMPLATE.compile(template="odkkdkdkd")
-        rest_client._request = mock.AsyncMock(return_value={"id": "543123123"})
-        icon_resource = file_resource("icon data")
-
-        with mock.patch.object(files, "ensure_resource", return_value=icon_resource):
-            result = await rest_client.create_guild_from_template("odkkdkdkd", "ok a name", icon="icon.png")
-            assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
-
-        rest_client._request.assert_awaited_once_with(expected_route, json={"name": "ok a name", "icon": "icon data"})
-        rest_client._entity_factory.deserialize_rest_guild.assert_called_once_with({"id": "543123123"})
-
     async def test_create_template_without_description(self, rest_client):
         expected_routes = routes.POST_GUILD_TEMPLATES.compile(guild=1235432)
         rest_client._request = mock.AsyncMock(return_value={"code": "94949sdfkds"})

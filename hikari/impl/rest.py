@@ -3874,28 +3874,6 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_template(response)
 
     @typing_extensions.override
-    async def create_guild_from_template(
-        self,
-        template: str | templates.Template,
-        name: str,
-        *,
-        icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-    ) -> guilds.RESTGuild:
-        template = template if isinstance(template, str) else template.code
-        route = routes.POST_TEMPLATE.compile(template=template)
-        body = data_binding.JSONObjectBuilder()
-        body.put("name", name)
-
-        if icon is not undefined.UNDEFINED:
-            icon_resource = files.ensure_resource(icon)
-            async with icon_resource.stream(executor=self._executor) as stream:
-                body.put("icon", await stream.data_uri())
-
-        response = await self._request(route, json=body)
-        assert isinstance(response, dict)
-        return self._entity_factory.deserialize_rest_guild(response)
-
-    @typing_extensions.override
     async def create_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
