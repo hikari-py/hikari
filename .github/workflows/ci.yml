@@ -106,7 +106,7 @@ jobs:
           coverage report
 
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        uses: codecov/codecov-action@ad3126e916f78f00edff4ed0317cf185271ccc2d # v5.4.2
 
   linting:
     runs-on: ubuntu-latest
@@ -118,7 +118,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
         with:
-          python-version: 3.9
+          python-version: "3.10"
 
       - name: Install nox
         run: |
