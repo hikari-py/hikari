@@ -302,6 +302,17 @@ class Permissions(enums.Flag):
     SEND_VOICE_MESSAGES = 1 << 46
     """Allows sending voice messages."""
 
+    SEND_POLLS = 1 << 49
+    """Allows sending polls."""
+
+    USE_EXTERNAL_APPS = 1 << 50
+    """Allows user-installed apps to send public responses.
+
+    When disabled, users will still be allowed to use their apps but the responses will be ephemeral.
+
+    This only applies to apps not also installed to the server.
+    """
+
     @classmethod
     def all_permissions(cls) -> Permissions:
         """Get an instance of [`hikari.permissions.Permissions`][] with all the known permissions.
