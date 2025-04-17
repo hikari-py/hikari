@@ -75,20 +75,6 @@ class UserFlag(enums.Flag):
     BUG_HUNTER_LEVEL_1 = 1 << 3
     """User participated in the Discord Testers community."""
 
-    MFA_SMS = 1 << 4
-    """User has SMS enabled as a two-factor authentication method for their account.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    PREMIUM_PROMO_DISMISSED = 1 << 5
-    """User has dismissed the current Nitro promotion.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
     HYPESQUAD_BRAVERY = 1 << 6
     """User was sorted into the HypeSquad House of Bravery."""
 
@@ -99,181 +85,43 @@ class UserFlag(enums.Flag):
     """User was sorted into the HypeSquad House of Balance."""
 
     EARLY_SUPPORTER = 1 << 9
-    """User purchased Discord Nitro before Wednesday, October 10th, 2018."""
+    """User was an early premium supporter of Discord."""
 
     TEAM_USER = 1 << 10
     """Account is a pseudo-user for an app's development team."""
 
-    PARTNER_APPLICANT = 1 << 11
-    """User previously applied for the Discord Partner program.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    SYSTEM = 1 << 12
-    """Account is a system user used to send official Discord messages.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    HAS_UNREAD_URGENT_MESSAGES = 1 << 13
-    """User has unread urgent system messages from Trust & Safety.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
     BUG_HUNTER_LEVEL_2 = 1 << 14
     """User went above and beyond in the Discord Testers community."""
 
-    UNDERAGE_DELETED = 1 << 15
-    """User's account is pending deletion due to being underage.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
     VERIFIED_BOT = 1 << 16
-    """App is owned by a team which has a user that has verified their identity with
-    Discord's identity verification provider Stripe. App must also meet a list of
-    metric requirements.
-    """
+    """Bot is verified."""
 
     EARLY_VERIFIED_DEVELOPER = 1 << 17
-    """User owned a verified bot before Tuesday, August 20th, 2019."""
+    """User was an early verified bot developer."""
 
     DISCORD_CERTIFIED_MODERATOR = 1 << 18
-    """User passed the Discord Moderator Academy courses and was an active participant in the
-    moderator program ecosystem before Thursday, December 1st, 2022."""
+    """User is an alumni of the moderator program."""
 
     BOT_HTTP_INTERACTIONS = 1 << 19
     """Bot uses only HTTP interactions and is shown in the active member list."""
 
     SPAMMER = 1 << 20
-    """User is suspected of being a spammer and has their messages automatically collapsed from view.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    DISABLE_PREMIUM = 1 << 21
-    """User's Nitro features have been disabled.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
+    """User is suspected of being a spammer and has their messages automatically collapsed from view."""
 
     ACTIVE_DEVELOPER = 1 << 22
-    """User is a developer or team member that owns an app which has had an application command
-    executed in the last 30 days.
-    """
+    """User is an active developer of a Discord app."""
 
     PROVISIONAL_ACCOUNT = 1 << 23
-    """User is a provisional account used with the social layer integration.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    HIGH_GLOBAL_RATE_LIMIT = 1 << 33
-    """User has their global ratelimit raised to 1,200 requests per second.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    DELETED = 1 << 34
-    """User's account is deleted.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    DISABLED_SUSPICIOUS_ACTIVITY = 1 << 35
-    """User's account is disabled due to suspicious activity and must reset their password.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    SELF_DELETED = 1 << 36
-    """User's account was deleted by the user.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    PREMIUM_DISCRIMINATOR = 1 << 37
-    """User's account has a custom Nitro discriminator.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    USED_DESKTOP_CLIENT = 1 << 38
-    """User has used the desktop client.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    USED_WEB_CLIENT = 1 << 39
-    """User has used the web client.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    USED_MOBILE_CLIENT = 1 << 40
-    """User has used the mobile client.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    DISABLED = 1 << 41
-    """User's account is disabled.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    VERIFIED_EMAIL = 1 << 43
-    """User has verified their email address.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
+    """User is a provisional account used with the social layer integration."""
 
     QUARANTINED = 1 << 44
-    """User's account is quarantined and can't create DMs or join servers.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
-
-    ELIGIBLE_FOR_POMELO_USERNAME_MIGRATION = 1 << 47
-    """User is eligible to migrate their account from using discriminators to using the unique username system.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
+    """User's account is quarantined and can't create DMs or join servers."""
 
     COLLABORATOR = 1 << 50
-    """User is a Discord Collaborator and has permissions roughly equivalent to Employee accounts.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
+    """User is a Discord Collaborator and and is considered Staff."""
 
     RESTRICTED_COLLABORATOR = 1 << 51
-    """User is a restricted Discord Collaborator and has permissions lesser than Employee accounts.
-
-    !!! note
-        This flag is not documented, but appears stable and consistent.
-    """
+    """User is a restricted Discord Collaborator and is considered Staff."""
 
 
 @typing.final
