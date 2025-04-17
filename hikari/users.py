@@ -64,64 +64,64 @@ class UserFlag(enums.Flag):
     """None."""
 
     DISCORD_EMPLOYEE = 1 << 0
-    """User is a Discord Employee."""
+    """Discord Employee."""
 
     PARTNERED_SERVER_OWNER = 1 << 1
-    """User owns a partnered Discord server."""
+    """Partnered Discord server owner."""
 
     HYPESQUAD_EVENTS = 1 << 2
-    """User participated in HypeSquad Events."""
+    """Participated in HypeSquad Events."""
 
     BUG_HUNTER_LEVEL_1 = 1 << 3
-    """User participated in the Discord Testers community."""
+    """Participated in the Discord Testers community."""
 
     HYPESQUAD_BRAVERY = 1 << 6
-    """User was sorted into the HypeSquad House of Bravery."""
+    """Member of the HypeSquad House of Bravery."""
 
     HYPESQUAD_BRILLIANCE = 1 << 7
-    """User was sorted into the HypeSquad House of Brilliance."""
+    """Member of the HypeSquad House of Brilliance."""
 
     HYPESQUAD_BALANCE = 1 << 8
-    """User was sorted into the HypeSquad House of Balance."""
+    """Member of the HypeSquad House of Balance."""
 
     EARLY_SUPPORTER = 1 << 9
-    """User was an early premium supporter of Discord."""
+    """Early premium supporter of Discord."""
 
     TEAM_USER = 1 << 10
-    """Account is a pseudo-user for an app's development team."""
+    """Pseudo-user for an app's development team."""
 
     BUG_HUNTER_LEVEL_2 = 1 << 14
-    """User went above and beyond in the Discord Testers community."""
+    """Vastly participated in the Discord Testers community."""
 
     VERIFIED_BOT = 1 << 16
-    """Bot is verified."""
+    """Verified bot."""
 
     EARLY_VERIFIED_DEVELOPER = 1 << 17
-    """User was an early verified bot developer."""
+    """Early verified bot developer."""
 
     DISCORD_CERTIFIED_MODERATOR = 1 << 18
-    """User is an alumni of the moderator program."""
+    """Alumni of the moderator program."""
 
     BOT_HTTP_INTERACTIONS = 1 << 19
-    """Bot uses only HTTP interactions and is shown in the active member list."""
+    """Uses only HTTP interactions and is shown in the active member list."""
 
     SPAMMER = 1 << 20
-    """User is suspected of being a spammer and has their messages automatically collapsed from view."""
+    """Suspected of being a spammer."""
 
     ACTIVE_DEVELOPER = 1 << 22
-    """User is an active developer of a Discord app."""
+    """Active developer of a Discord app."""
 
     PROVISIONAL_ACCOUNT = 1 << 23
-    """User is a provisional account used with the social layer integration."""
+    """Provisional account used with the social layer integration."""
 
     QUARANTINED = 1 << 44
-    """User's account is quarantined and can't create DMs or join servers."""
+    """Account is quarantined."""
 
     COLLABORATOR = 1 << 50
-    """User is a Discord Collaborator and and is considered Staff."""
+    """Discord Collaborator, considered Staff."""
 
     RESTRICTED_COLLABORATOR = 1 << 51
-    """User is a restricted Discord Collaborator and is considered Staff."""
+    """Restricted Discord Collaborator, considered Staff."""
 
 
 @typing.final
