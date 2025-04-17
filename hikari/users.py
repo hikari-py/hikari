@@ -199,7 +199,7 @@ class UserFlag(enums.Flag):
     """
 
     SELF_DELETED = 1 << 36
-    """User's account is deleted by the user.
+    """User's account was deleted by the user.
 
     !!! note
         This flag is not documented, but appears stable and consistent.
