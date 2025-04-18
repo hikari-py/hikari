@@ -81,6 +81,10 @@ from hikari.internal import mentions
 from hikari.internal import routes
 from hikari.internal import time
 
+if not typing.TYPE_CHECKING:
+    # This is insanely hacky, but it is needed for ruff to not complain until it gets type inference
+    from hikari.internal import typing_extensions
+
 if typing.TYPE_CHECKING:
     import types
 
