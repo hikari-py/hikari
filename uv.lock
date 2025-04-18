@@ -996,11 +996,13 @@ mkdocs = [
 ]
 mypy = [
     { name = "mypy", extra = ["faster-cache"] },
+    { name = "pydub-stubs" },
 ]
 nox = [
     { name = "nox", extra = ["uv"] },
 ]
 pyright = [
+    { name = "pydub-stubs" },
     { name = "pyright" },
 ]
 pytest = [
@@ -1023,6 +1025,9 @@ slotscheck = [
 ]
 towncrier = [
     { name = "towncrier" },
+]
+types = [
+    { name = "pydub-stubs" },
 ]
 
 [package.metadata]
@@ -1052,9 +1057,15 @@ mkdocs = [
     { name = "mkdocs-towncrier", specifier = "==0.1.4" },
     { name = "mkdocstrings", extras = ["python"], specifier = "==0.29.1" },
 ]
-mypy = [{ name = "mypy", extras = ["faster-cache"], specifier = "==1.15.0" }]
+mypy = [
+    { name = "mypy", extras = ["faster-cache"], specifier = "==1.15.0" },
+    { name = "pydub-stubs", specifier = "~=0.25.1.5" },
+]
 nox = [{ name = "nox", extras = ["uv"], specifier = "==2025.2.9" }]
-pyright = [{ name = "pyright", specifier = "==1.1.399" }]
+pyright = [
+    { name = "pydub-stubs", specifier = "~=0.25.1.5" },
+    { name = "pyright", specifier = "==1.1.399" },
+]
 pytest = [
     { name = "async-timeout", specifier = "==5.0.1" },
     { name = "coverage", extras = ["toml"], specifier = "==7.8.0" },
@@ -1068,6 +1079,7 @@ release = [{ name = "twine", specifier = "==6.1.0" }]
 ruff = [{ name = "ruff", specifier = "==0.11.6" }]
 slotscheck = [{ name = "slotscheck", specifier = "==0.19.1" }]
 towncrier = [{ name = "towncrier", specifier = "==24.8.0" }]
+types = [{ name = "pydub-stubs", specifier = "~=0.25.1.5" }]
 
 [[package]]
 name = "hishel"
@@ -2327,6 +2339,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/bd/0c/3391bd5d6ff62ea998db94732528d9bc32c560b0ed861c39119759461946/pydantic_core-2.33.1-pp39-pypy39_pp73-musllinux_1_1_armv7l.whl", hash = "sha256:8ab581d3530611897d863d1a649fb0644b860286b4718db919bfd51ece41f10b", size = 2249388 },
     { url = "https://files.pythonhosted.org/packages/d3/5f/3e4feb042998d7886a9b523b372d83955cbc192a07013dcd24276db078ee/pydantic_core-2.33.1-pp39-pypy39_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:0483847fa9ad5e3412265c1bd72aad35235512d9ce9d27d81a56d935ef489672", size = 2255226 },
     { url = "https://files.pythonhosted.org/packages/25/f2/1647933efaaad61846109a27619f3704929e758a09e6431b8f932a053d40/pydantic_core-2.33.1-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:de9e06abe3cc5ec6a2d5f75bc99b0bdca4f5c719a5b34026f8c57efbdecd2ee3", size = 2081073 },
+]
+
+[[package]]
+name = "pydub-stubs"
+version = "0.25.1.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c1/f5/0482df00f87e95295888007c4dc94bf33bed74daf910f0587bcb9a2b6cf5/pydub_stubs-0.25.1.5.tar.gz", hash = "sha256:fa5e98441e7de3be3b8329c02c8a34c7900a2712d49cf52e47cd58c722c779e6", size = 8413 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/9c/7c6fffba2b87dfda8248701d4fc28bc662562d5687123084fe63aa330b1c/pydub_stubs-0.25.1.5-py3-none-any.whl", hash = "sha256:a463a81c832e4b720478c5e2e8f6c76000765c821797457b253aa695a352c414", size = 9326 },
 ]
 
 [[package]]
