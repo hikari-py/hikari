@@ -49,6 +49,7 @@ from hikari import applications
 from hikari import channels as channels_
 from hikari import colors
 from hikari import commands
+from hikari import components as components_
 from hikari import embeds as embeds_
 from hikari import emojis
 from hikari import errors
@@ -117,6 +118,17 @@ _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Res
 _X_RATELIMIT_SCOPE_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Scope")
 _RETRY_ERROR_CODES: typing.Final[frozenset[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
+_V2_COMPONENT_TYPES: typing.Final[frozenset[components_.ComponentType]] = frozenset(
+    (
+        components_.ComponentType.SECTION,
+        components_.ComponentType.TEXT_DISPLAY,
+        components_.ComponentType.THUMBNAIL,
+        components_.ComponentType.MEDIA_GALLERY,
+        components_.ComponentType.FILE,
+        components_.ComponentType.SEPARATOR,
+        components_.ComponentType.CONTAINER,
+    )
+)
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
@@ -1489,10 +1501,30 @@ class RESTClientImpl(rest_api.RESTClient):
 
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
-            serialized_components = [component.build()] if component is not None else []
+            if component is not None:
+                component_payload, component_attachments = component.build()
+                serialized_components = [component_payload]
+                final_attachments.extend(component_attachments)
+
+                if component.type in _V2_COMPONENT_TYPES:
+                    if flags is undefined.UNDEFINED:
+                        flags = 0
+                    flags |= messages_.MessageFlag.IS_COMPONENTS_V2
+            else:
+                serialized_components = []
 
         elif components is not undefined.UNDEFINED:
-            serialized_components = [component.build() for component in components] if components is not None else []
+            serialized_components = []
+            if components is not None:
+                for comp in components:
+                    component_payload, component_attachments = comp.build()
+                    serialized_components.append(component_payload)
+                    final_attachments.extend(component_attachments)
+
+                    if comp.type in _V2_COMPONENT_TYPES:
+                        if flags is undefined.UNDEFINED:
+                            flags = 0
+                        flags |= messages_.MessageFlag.IS_COMPONENTS_V2
 
         serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
         if embed is not undefined.UNDEFINED:
@@ -1977,6 +2009,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
+        query.put("with_components", True)
         query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
@@ -2055,6 +2088,7 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         query = data_binding.StringMapBuilder()
+        query.put("with_components", True)
         query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(

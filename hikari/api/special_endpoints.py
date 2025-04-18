@@ -28,7 +28,9 @@ __all__: typing.Sequence[str] = (
     "ChannelSelectMenuBuilder",
     "CommandBuilder",
     "ComponentBuilder",
+    "ContainerComponentBuilder",
     "ContextMenuCommandBuilder",
+    "FileComponentBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
@@ -36,15 +38,21 @@ __all__: typing.Sequence[str] = (
     "InteractionResponseBuilder",
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
+    "MediaGalleryComponentBuilder",
+    "MediaGalleryItemBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
     "PollAnswerBuilder",
     "PollBuilder",
+    "SectionComponentBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
+    "SeparatorComponentBuilder",
     "SlashCommandBuilder",
+    "TextDisplayComponentBuilder",
     "TextInputBuilder",
     "TextSelectMenuBuilder",
+    "ThumbnailComponentBuilder",
     "TypingIndicator",
 )
 
@@ -63,6 +71,7 @@ if typing.TYPE_CHECKING:
 
     from hikari import applications
     from hikari import channels
+    from hikari import colors
     from hikari import commands
     from hikari import embeds as embeds_
     from hikari import emojis
@@ -995,14 +1004,26 @@ class ComponentBuilder(abc.ABC):
     def type(self) -> int | components_.ComponentType:
         """Type of component this builder represents."""
 
+    @property
     @abc.abstractmethod
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        """Build a JSON object from this builder.
+    def id(self) -> undefined.UndefinedOr[int]:
+        """ID of the component.
+
+        It will be used to order components in the layout.
+
+        If not provided, it will be auto populated through increment.
+        """
+
+    @abc.abstractmethod
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        """Build a JSON object from this builder and collects all attachments added as components.
 
         Returns
         -------
-        typing.MutableMapping[str, typing.Any]
-            The built json object representation of this builder.
+        tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]
+            The built json object representation of this builder, and the attachments added.
         """
 
 
@@ -1639,11 +1660,11 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def components(self) -> typing.Sequence[MessageActionRowBuilderComponentsT]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(self, component: ComponentBuilder, /) -> Self:
+    def add_component(self, component: MessageActionRowBuilderComponentsT, /) -> Self:
         """Add a component to this action row builder.
 
         !!! warning
@@ -1673,6 +1694,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add an interactive button component to this action row builder.
 
@@ -1692,6 +1714,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -1708,6 +1734,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a link button component to this action row builder.
 
@@ -1724,6 +1751,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -1742,6 +1773,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a select menu component to this action row builder.
 
@@ -1764,6 +1796,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -1787,6 +1823,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a channel select menu component to this action row builder.
 
@@ -1808,6 +1845,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -1830,6 +1871,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> TextSelectMenuBuilder[Self]:
         """Add a select menu component to this action row builder.
 
@@ -1846,6 +1888,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -1877,11 +1923,11 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def components(self) -> typing.Sequence[ModalActionRowBuilderComponentsT]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(self, component: ComponentBuilder, /) -> Self:
+    def add_component(self, component: ModalActionRowBuilderComponentsT, /) -> Self:
         """Add a component to this action row builder.
 
         !!! warning
@@ -1944,6 +1990,416 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         -------
         ModalActionRowBuilder
             The modal action row builder to enable call chaining.
+        """
+
+
+class SectionComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for section components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.SECTION]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[SectionBuilderComponentsT]:
+        """The components attached to the section."""
+
+    @property
+    @abc.abstractmethod
+    def accessory(self) -> SectionBuilderAccessoriesT:
+        """The accessory attached to the section."""
+
+    @abc.abstractmethod
+    def add_component(self, component: SectionBuilderComponentsT) -> Self:
+        """Add a component to this section builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageSectionBuilder.add_text_display`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component
+            The component builder to add to the section.
+
+        Returns
+        -------
+        SectionComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a text display component to this section builder.
+
+        Parameters
+        ----------
+        content
+            The content for the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        SectionComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class TextDisplayComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for text display components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.TEXT_DISPLAY]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def content(self) -> str:
+        """The content for the text display."""
+
+
+class ThumbnailComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for thumbnail components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.THUMBNAIL]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def media(self) -> files.Resourceish:
+        """The media of this thumbnail."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The description for the thumbnails media."""
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the media is marked as a spoiler."""
+
+
+class MediaGalleryComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for media gallery components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.MEDIA_GALLERY]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def items(self) -> typing.Sequence[MediaGalleryItemBuilder]:
+        """The items in the media gallery."""
+
+    @abc.abstractmethod
+    def add_item(self, item: MediaGalleryItemBuilder) -> Self:
+        """Add a component to this media gallery builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageMediaGalleryBuilder.add_media_gallery_item`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        item
+            The media gallery item builder to add to the section.
+
+        Returns
+        -------
+        MediaGalleryComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_media_gallery_item(
+        self,
+        media: files.Resourceish,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        spoiler: bool = False,
+    ) -> Self:
+        """Add a media gallery item component to this media gallery builder.
+
+        Parameters
+        ----------
+        media
+            The media for the gallery item.
+        description
+            The description for the media gallery item.
+        spoiler
+            Whether the media has a spoiler.
+
+        Returns
+        -------
+        MediaGalleryComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class MediaGalleryItemBuilder(abc.ABC):
+    """Builder class for a media gallery item."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def media(self) -> files.Resourceish:
+        """The media for the gallery item."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The description for the media gallery item."""
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the media is marked as a spoiler."""
+
+    @abc.abstractmethod
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        """Build a JSON object from this builder and collects all attachments added as components.
+
+        Returns
+        -------
+        tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]
+            The built json object representation of this builder, and the attachments added.
+        """
+
+
+class SeparatorComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for separator components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.SEPARATOR]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def spacing(self) -> undefined.UndefinedOr[components_.SpacingType]:
+        """The spacing for the separator."""
+
+    @property
+    @abc.abstractmethod
+    def divider(self) -> undefined.UndefinedOr[bool]:
+        """Whether the separator has a divider."""
+
+
+class FileComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for file components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.FILE]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def file(self) -> files.Resourceish:
+        """The file to attach."""
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the file has a spoiler."""
+
+
+class ContainerComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for container components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.CONTAINER]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def accent_color(self) -> undefined.UndefinedOr[colors.Color]:
+        """The accent color for the container.
+
+        If undefined, the accent colour is hidden, if None, then no colour is set.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the container has a spoiler."""
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[ContainerBuilderComponentsT]:
+        """The components attached to the container."""
+
+    @abc.abstractmethod
+    def add_component(self, component: ContainerBuilderComponentsT) -> Self:
+        """Add a component to this container builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageContainerBuilder.add_action_row`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_text_display`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_media_gallery`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_separator`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_file`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component
+            The component builder to add to the container.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_action_row(
+        self,
+        components: typing.Sequence[MessageActionRowBuilderComponentsT],
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a action row component to this container builder.
+
+        Parameters
+        ----------
+        components
+            The components to add to the action row.
+        id
+            The ID to give to the action row.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a text display component to this container builder.
+
+        Parameters
+        ----------
+        content
+            The content of the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_media_gallery(
+        self, items: typing.Sequence[MediaGalleryItemBuilder], *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED
+    ) -> Self:
+        """Add a media gallery component to this container builder.
+
+        Parameters
+        ----------
+        items
+            The gallery media items to add to the media gallery.
+        id
+            The ID to give to the media gallery.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_separator(
+        self,
+        *,
+        spacing: components_.SpacingType = components_.SpacingType.SMALL,
+        divider: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a separator component to this container builder.
+
+        Parameters
+        ----------
+        spacing
+            The spacing for the separator.
+        divider
+            Whether the separator has a divider.
+        id
+            The ID to give to the separator.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+        """
+
+    @abc.abstractmethod
+    def add_file(
+        self, file: files.Resourceish, *, spoiler: bool = False, id: undefined.UndefinedOr[int] = undefined.UNDEFINED
+    ) -> Self:
+        """Add a spoiler component to this container builder.
+
+        Parameters
+        ----------
+        file
+            The file.
+        spoiler
+            Whether the file has a spoiler.
+        id
+            The ID to give to the file.
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
         """
 
 
@@ -2034,3 +2490,21 @@ class PollAnswerBuilder(abc.ABC):
         typing.MutableMapping[str, typing.Any]
             The built json object representation of this builder.
         """
+
+
+if typing.TYPE_CHECKING:
+    MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
+
+    ModalActionRowBuilderComponentsT = TextInputBuilder
+
+    ContainerBuilderComponentsT = typing.Union[
+        MessageActionRowBuilder,
+        TextDisplayComponentBuilder,
+        SectionComponentBuilder,
+        MediaGalleryComponentBuilder,
+        SeparatorComponentBuilder,
+        FileComponentBuilder,
+    ]
+
+    SectionBuilderAccessoriesT = typing.Union[ButtonBuilder, ThumbnailComponentBuilder]
+    SectionBuilderComponentsT = typing.Union[TextDisplayComponentBuilder]

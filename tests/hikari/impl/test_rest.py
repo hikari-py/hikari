@@ -1260,7 +1260,7 @@ class TestRESTClientImpl:
         attachment = object()
         resource_attachment1 = mock.Mock(filename="attachment.png")
         resource_attachment2 = mock.Mock(filename="attachment2.png")
-        component = mock.Mock(build=mock.Mock(return_value={"component": 1}))
+        component = mock.Mock(build=mock.Mock(return_value=({"component": 1}, ())))
         embed = object()
         embed_attachment = object()
         mentions_everyone = object()
@@ -1337,8 +1337,8 @@ class TestRESTClientImpl:
         resource_attachment4 = mock.Mock(filename="attachment4.png")
         resource_attachment5 = mock.Mock(filename="attachment5.png")
         resource_attachment6 = mock.Mock(filename="attachment6.png")
-        component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
-        component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
+        component1 = mock.Mock(build=mock.Mock(return_value=({"component": 1}, ())))
+        component2 = mock.Mock(build=mock.Mock(return_value=({"component": 2}, ())))
         embed1 = object()
         embed2 = object()
         embed_attachment1 = object()
@@ -1457,8 +1457,8 @@ class TestRESTClientImpl:
         resource_attachment3 = mock.Mock(filename="attachment3.png")
         resource_attachment4 = mock.Mock(filename="attachment4.png")
         resource_attachment5 = mock.Mock(filename="attachment5.png")
-        component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
-        component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
+        component1 = mock.Mock(build=mock.Mock(return_value=({"component": 1}, ())))
+        component2 = mock.Mock(build=mock.Mock(return_value=({"component": 2}, ())))
         embed1 = object()
         embed2 = object()
         embed_attachment1 = object()
@@ -3219,7 +3219,7 @@ class TestRESTClientImplAsync:
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_form, query={"wait": "true"}, auth=None
+            expected_route, form_builder=mock_form, query={"wait": "true", "with_components": "true"}, auth=None
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3255,7 +3255,10 @@ class TestRESTClientImplAsync:
             "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_form, query={"wait": "true", "thread_id": "1234543123"}, auth=None
+            expected_route,
+            form_builder=mock_form,
+            query={"wait": "true", "with_components": "true", "thread_id": "1234543123"},
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3289,7 +3292,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"testing": "ensure_in_test"},
-            query={"wait": "true", "thread_id": "2134312123"},
+            query={"wait": "true", "with_components": "true", "thread_id": "2134312123"},
             auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3347,7 +3350,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"testing": "ensure_in_test", "username": "davfsa", "avatar_url": "https://website.com/davfsa_logo"},
-            query={"wait": "true"},
+            query={"wait": "true", "with_components": "true"},
             auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3426,7 +3429,9 @@ class TestRESTClientImplAsync:
         mock_form.add_field.assert_called_once_with(
             "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
-        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, query={}, auth=None)
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form_builder=mock_form, query={"with_components": "true"}, auth=None
+        )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_edit_webhook_message_when_form_and_thread(self, rest_client):
@@ -3459,7 +3464,10 @@ class TestRESTClientImplAsync:
             "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_form, query={"thread_id": "123543123"}, auth=None
+            expected_route,
+            form_builder=mock_form,
+            query={"with_components": "true", "thread_id": "123543123"},
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3507,7 +3515,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"testing": "ensure_in_test"}, query={}, auth=None
+            expected_route, json={"testing": "ensure_in_test"}, query={"with_components": "true"}, auth=None
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3537,7 +3545,10 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"testing": "ensure_in_test"}, query={"thread_id": "2346523432"}, auth=None
+            expected_route,
+            json={"testing": "ensure_in_test"},
+            query={"with_components": "true", "thread_id": "2346523432"},
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 

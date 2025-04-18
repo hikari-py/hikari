@@ -28,29 +28,50 @@ __all__: typing.Sequence[str] = (
     "ButtonStyle",
     "ChannelSelectMenuComponent",
     "ComponentType",
+    "ContainerComponent",
+    "ContainerTypesT",
+    "FileComponent",
     "InteractiveButtonTypes",
     "InteractiveButtonTypesT",
+    "MediaGalleryComponent",
+    "MediaGalleryItem",
+    "MediaLoadingType",
+    "MediaResource",
     "MessageActionRowComponent",
     "MessageComponentTypesT",
     "ModalActionRowComponent",
     "ModalComponentTypesT",
     "PartialComponent",
+    "SectionComponent",
     "SelectMenuComponent",
     "SelectMenuOption",
+    "SeparatorComponent",
+    "SpacingType",
+    "TextDisplayComponent",
     "TextInputComponent",
     "TextInputStyle",
     "TextSelectMenuComponent",
+    "ThumbnailComponent",
+    "TopLevelComponentTypesT",
 )
 
 import typing
 
 import attrs
 
+from hikari import channels
+from hikari import emojis
+from hikari import files
 from hikari.internal import enums
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
+    import concurrent.futures
+
     from hikari import channels
+    from hikari import colors
     from hikari import emojis
+    from hikari import undefined
 
 
 @typing.final
@@ -59,10 +80,6 @@ class ComponentType(int, enums.Enum):
 
     ACTION_ROW = 1
     """A non-interactive container component for other types of components.
-
-    !!! note
-        As this is a container component it can never be contained within another
-        component and therefore will always be top-level.
 
     !!! note
         As of writing this can only contain one component type.
@@ -127,6 +144,42 @@ class ComponentType(int, enums.Enum):
         as [`hikari.components.ComponentType.ACTION_ROW`][].
     """
 
+    SECTION = 9
+    """A section component.
+
+    !!! note
+        As this is a container component it can never be contained within another
+        component and therefore will always be top-level.
+    """
+
+    TEXT_DISPLAY = 10
+    """A text display component."""
+
+    THUMBNAIL = 11
+    """A thumbnail component.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as [`hikari.components.ComponentType.SECTION`][].
+    """
+
+    MEDIA_GALLERY = 12
+    """A media gallery component."""
+
+    FILE = 13
+    """A file component."""
+
+    SEPARATOR = 14
+    """A separator component."""
+
+    CONTAINER = 17
+    """A container component.
+
+    !!! note
+        As this is a container component it can never be contained within another
+        component and therefore will always be top-level.
+    """
+
 
 @typing.final
 class ButtonStyle(int, enums.Enum):
@@ -168,12 +221,46 @@ class TextInputStyle(int, enums.Enum):
     """Intended for much longer inputs."""
 
 
+@typing.final
+class SpacingType(int, enums.Enum):
+    """Spacing Type.
+
+    The type of spacing for a [SeparatorComponent][]
+    """
+
+    SMALL = 1
+    """A small separator."""
+
+    LARGE = 2
+    """A large separator."""
+
+
+@typing.final
+class MediaLoadingType(int, enums.Enum):
+    """Media loading type."""
+
+    UNKNOWN = 0
+    """Media is in an unknown loading state."""
+
+    LOADING = 1
+    """Media is loading."""
+
+    LOADED_SUCCESS = 2
+    """Media has successfully loaded."""
+
+    LOADED_NOT_FOUND = 3
+    """Media was not found."""
+
+
 @attrs.define(kw_only=True, weakref_slot=False)
 class PartialComponent:
     """Base class for all component entities."""
 
     type: ComponentType | int = attrs.field()
     """The type of component this is."""
+
+    id: int = attrs.field()
+    """The ID of the interaction."""
 
 
 AllowedComponentsT = typing.TypeVar("AllowedComponentsT", bound="PartialComponent")
@@ -308,6 +395,226 @@ class TextInputComponent(PartialComponent):
     value: str = attrs.field(repr=True)
     """Value provided for this text input."""
 
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MediaResource(files.Resource[files.AsyncReader]):
+    """Represents a media resource."""
+
+    resource: files.Resource[files.AsyncReader] = attrs.field(repr=True)
+    """The resource this object wraps around."""
+
+    proxy_resource: files.Resource[files.AsyncReader] | None = attrs.field(default=None, repr=False)
+    """The proxied version of the resource, or [`None`][] if not present.
+
+    !!! note
+        This field cannot be set by bots or webhooks while sending an embed
+        and will be ignored during serialization. Expect this to be
+        populated on any received embed attached to a message event.
+    """
+
+    width: undefined.UndefinedNoneOr[int] = attrs.field(repr=True)
+    """The width of media item."""
+
+    height: undefined.UndefinedNoneOr[int] = attrs.field(repr=True)
+    """The height of the media item."""
+
+    content_type: undefined.UndefinedNoneOr[str] = attrs.field(repr=True)
+    """The content type of the media item."""
+
+    loading_state: undefined.UndefinedNoneOr[MediaLoadingType] = attrs.field(repr=True)
+    """The loading state of the media item."""
+
+    @property
+    @typing_extensions.override
+    def url(self) -> str:
+        """URL of this embed resource."""
+        return self.resource.url
+
+    @property
+    @typing_extensions.override
+    def filename(self) -> str:
+        """File name of this embed resource."""
+        return self.resource.filename
+
+    @property
+    def proxy_url(self) -> str | None:
+        """Proxied URL of this embed resource if applicable, else [`None`][]."""
+        return self.proxy_resource.url if self.proxy_resource else None
+
+    @property
+    def proxy_filename(self) -> str | None:
+        """File name of the proxied version of this embed resource if applicable, else [`None`][]."""
+        return self.proxy_resource.filename if self.proxy_resource else None
+
+    @typing_extensions.override
+    def stream(
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
+    ) -> files.AsyncReaderContextManager[files.AsyncReader]:
+        """Produce a stream of data for the resource.
+
+        Parameters
+        ----------
+        executor
+            The executor to run in for blocking operations.
+            If [`None`][], then the default executor is used for the
+            current event loop.
+        head_only
+            If [`True`][], then the implementation may only retrieve
+            HEAD information if supported. This currently only has
+            any effect for web requests.
+        """
+        return self.resource.stream(executor=executor, head_only=head_only)
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class SectionComponent(PartialComponent):
+    """Represents a section component."""
+
+    components: typing.Sequence[SectionComponentTypesT] = attrs.field()
+    """The sections components."""
+
+    accessory: SectionAccessoryTypesT = attrs.field()
+    """The sections accessory."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class ThumbnailComponent(PartialComponent):
+    """Represents a thumbnail component."""
+
+    media: MediaResource = attrs.field()
+    """The media for the thumbnail."""
+
+    description: str | None = attrs.field()
+    """The description of the thumbnail."""
+
+    is_spoiler: bool = attrs.field()
+    """Whether the thumbnail is marked as a spoiler."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class TextDisplayComponent(PartialComponent):
+    """Represents a text display component."""
+
+    content: str = attrs.field()
+    """The content of the text display."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MediaGalleryComponent(PartialComponent):
+    """Represents a media gallery component."""
+
+    items: typing.Sequence[MediaGalleryItem] = attrs.field()
+    """The media gallery's items."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MediaGalleryItem:
+    """Represents a media gallery item."""
+
+    media: MediaResource = attrs.field()
+    """The media for the gallery item."""
+
+    description: str | None = attrs.field()
+    """The description of the gallery item."""
+
+    is_spoiler: bool = attrs.field()
+    """Whether the gallery item is marked as a spoiler."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class SeparatorComponent(PartialComponent):
+    """Represents the separator component."""
+
+    spacing: SpacingType = attrs.field()
+    """The spacing for the separator."""
+
+    divider: bool = attrs.field()
+    """If there is a divider for the separator."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class FileComponent(PartialComponent):
+    """Represents a file component."""
+
+    file: MediaResource = attrs.field()
+    """The media for the file."""
+
+    is_spoiler: bool = attrs.field()
+    """If the file has a spoiler."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class ContainerComponent(PartialComponent):
+    """Represents a container component."""
+
+    accent_color: colors.Color | None = attrs.field()
+    """The accent colour for the container."""
+
+    is_spoiler: bool = attrs.field()
+    """Whether the container is marked as a spoiler."""
+
+    components: typing.Sequence[ContainerTypesT] = attrs.field()
+    """The components within the container."""
+
+
+TopLevelComponentTypesT = typing.Union[
+    ActionRowComponent[PartialComponent],
+    TextDisplayComponent,
+    SectionComponent,
+    MediaGalleryComponent,
+    SeparatorComponent,
+    FileComponent,
+    ContainerComponent,
+]
+"""Type hints of the values which are valid for top level components.
+
+The following values are valid for this:
+
+* [`hikari.components.ActionRowComponent`][]
+* [`hikari.components.TextDisplayComponent`][]
+* [`hikari.components.SectionComponent`][]
+* [`hikari.components.MediaGalleryComponent`][]
+* [`hikari.components.SeparatorComponent`][]
+* [`hikari.components.FileComponent`][]
+* [`hikari.components.ContainerComponent`][]
+"""
+
+ContainerTypesT = typing.Union[
+    ActionRowComponent[PartialComponent],
+    TextDisplayComponent,
+    SectionComponent,
+    MediaGalleryComponent,
+    SeparatorComponent,
+    FileComponent,
+]
+"""Type hints of the values which are valid for container components.
+
+The following values are valid for this:
+
+* [`hikari.components.ActionRowComponent`][]
+* [`hikari.components.TextDisplayComponent`][]
+* [`hikari.components.SectionComponent`][]
+* [`hikari.components.MediaGalleryComponent`][]
+* [`hikari.components.SeparatorComponent`][]
+* [`hikari.components.FileComponent`][]
+"""
+
+SectionComponentTypesT = TextDisplayComponent
+"""Type hints of the values which are valid for section components.
+
+The following values are valid for this:
+
+* [`hikari.components.TextDisplayComponent`][]
+"""
+
+SectionAccessoryTypesT = typing.Union[ButtonComponent, ThumbnailComponent]
+"""Type hints of the values which are valid for section accessories.
+
+The following values are valid for this:
+
+* [`hikari.components.ButtonComponent`][]
+* [`hikari.components.ThumbnailComponent`][]
+"""
 
 SelectMenuTypesT = typing.Literal[
     ComponentType.TEXT_SELECT_MENU,
