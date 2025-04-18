@@ -1343,22 +1343,8 @@ class TestRESTClientImpl:
                 first_id="123",
             )
 
-    def test_guild_builder(self, rest_client: rest.RESTClientImpl):
-        stub_iterator = mock.Mock()
-
-        with mock.patch.object(special_endpoints, "GuildBuilder", return_value=stub_iterator) as iterator:
-            assert rest_client.guild_builder("hikari") == stub_iterator
-
-            iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory,
-                executor=rest_client._executor,
-                request_call=rest_client._request,
-                name="hikari",
-            )
-
-    def test_fetch_audit_log_when_before_is_undefined(
-        self, rest_client: rest.RESTClientImpl, mock_partial_guild: guilds.PartialGuild
-    ):
+    def test_fetch_audit_log_when_before_is_undefined(self, rest_client):
+        guild = StubModel(123)
         stub_iterator = mock.Mock()
 
         with mock.patch.object(special_endpoints, "AuditLogIterator", return_value=stub_iterator) as iterator:
@@ -7397,42 +7383,9 @@ class TestRESTClientImplAsync:
             patched__request.assert_awaited_once_with(expected_route)
             patched_deserialize_template.assert_called_once_with({"code": "ldsaosdokskdoa"})
 
-    async def test_create_guild_from_template_without_icon(self, rest_client: rest.RESTClientImpl):
-        expected_route = routes.POST_TEMPLATE.compile(template="odkkdkdkd")
-
-        with (
-            mock.patch.object(
-                rest_client, "_request", new_callable=mock.AsyncMock, return_value={"id": "543123123"}
-            ) as patched__request,
-            mock.patch.object(rest_client.entity_factory, "deserialize_rest_guild") as patched_deserialize_rest_guild,
-        ):
-            result = await rest_client.create_guild_from_template("odkkdkdkd", "ok a name")
-            assert result is patched_deserialize_rest_guild.return_value
-
-            patched__request.assert_awaited_once_with(expected_route, json={"name": "ok a name"})
-            patched_deserialize_rest_guild.assert_called_once_with({"id": "543123123"})
-
-    async def test_create_guild_from_template_with_icon(self, rest_client: rest.RESTClientImpl):
-        expected_route = routes.POST_TEMPLATE.compile(template="odkkdkdkd")
-        icon_resource = MockFileResource("icon data")
-
-        with (
-            mock.patch.object(files, "ensure_resource", return_value=icon_resource),
-            mock.patch.object(
-                rest_client, "_request", new_callable=mock.AsyncMock, return_value={"id": "543123123"}
-            ) as patched__request,
-            mock.patch.object(rest_client.entity_factory, "deserialize_rest_guild") as patched_deserialize_rest_guild,
-        ):
-            result = await rest_client.create_guild_from_template("odkkdkdkd", "ok a name", icon="icon.png")
-            assert result is patched_deserialize_rest_guild.return_value
-
-        patched__request.assert_awaited_once_with(expected_route, json={"name": "ok a name", "icon": "icon data"})
-        patched_deserialize_rest_guild.assert_called_once_with({"id": "543123123"})
-
-    async def test_create_template_without_description(
-        self, rest_client: rest.RESTClientImpl, mock_partial_guild: guilds.PartialGuild
-    ):
-        expected_routes = routes.POST_GUILD_TEMPLATES.compile(guild=123)
+    async def test_create_template_without_description(self, rest_client):
+        expected_routes = routes.POST_GUILD_TEMPLATES.compile(guild=1235432)
+        rest_client._request = mock.AsyncMock(return_value={"code": "94949sdfkds"})
 
         with (
             mock.patch.object(

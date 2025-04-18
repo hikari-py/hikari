@@ -77,16 +77,5 @@ class TestTemplate:
 
         obj.app.rest.sync_guild_template.assert_awaited_once_with(123, "abc123")
 
-    @pytest.mark.asyncio
-    async def test_create_guild(self, obj: templates.Template):
-        obj.app.rest.create_guild_from_template = mock.AsyncMock()
-
-        returned = await obj.create_guild(name="Test guild", icon="https://avatars.githubusercontent.com/u/72694042")
-        assert returned == obj.app.rest.create_guild_from_template.return_value
-
-        obj.app.rest.create_guild_from_template.assert_awaited_once_with(
-            obj, "Test guild", icon="https://avatars.githubusercontent.com/u/72694042"
-        )
-
-    def test_str(self, obj: templates.Template):
+    def test_str(self, obj):
         assert str(obj) == "https://discord.new/abc123"

@@ -85,7 +85,7 @@ coverage = ["coverage[toml]==7.8.0"]
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
-    "mkdocs-material[imaging]==9.6.11",
+    "mkdocs-material[imaging]==9.6.12",
     # Docstring parsing for API reference
     "mkdocstrings[python]==0.29.1",
     "griffe-inherited-docstrings==1.1.1",
@@ -100,7 +100,7 @@ mkdocs = [
     # "mkdocs-glightbox==0.3.7",
 ]
 mypy = ["mypy[faster-cache]==1.15.0"]
-pyright = ["pyright==1.1.398"]
+pyright = ["pyright==1.1.399"]
 pytest = [
     "mock==5.2.0",
     "pytest==8.3.5",
@@ -111,7 +111,7 @@ pytest = [
     { include-group = "coverage" },
 ]
 release = ["twine==6.1.0"]
-ruff = ["ruff==0.11.4"]
+ruff = ["ruff==0.11.6"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
 
