@@ -456,8 +456,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_guild_channel_type_mapping",
         "_interaction_metadata_mapping",
         "_interaction_type_mapping",
-        "_message_component_type_mapping",
-        "_modal_component_type_mapping",
         "_modal_component_type_mapping",
         "_scheduled_event_type_mapping",
         "_section_accessory_mapping",
