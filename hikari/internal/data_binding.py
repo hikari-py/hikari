@@ -40,12 +40,14 @@ import datetime
 import typing
 
 import aiohttp
+import msgspec.json
 import multidict
 
 from hikari import errors
 from hikari import files
 from hikari import snowflakes
 from hikari import undefined
+from hikari.internal import enums
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
@@ -97,38 +99,25 @@ _APPLICATION_OCTET_STREAM: typing.Final[str] = "application/octet-stream"
 _JSON_CONTENT_TYPE: typing.Final[str] = "application/json"
 _UTF_8: typing.Final[str] = "utf-8"
 
-default_json_dumps: JSONEncoder
-"""Default JSON encoder to use."""
+def encode_hook(value: object) -> object:
+    # https://github.com/jcrist/msgspec/issues/834
+    if isinstance(value, enums.Enum):
+        return value.__objtype__(value) # type: ignore[attr-defined]
+    if isinstance(value, enums.Flag):
+        return int(value)
 
-default_json_loads: JSONDecoder
-"""Default JSON decoder to use."""
+    raise NotImplementedError
 
-try:
-    import orjson
-
-    def default_json_dumps(obj: JSONArray | JSONObject) -> bytes:
-        """Encode a JSON object to [`bytes`][]."""
-        return orjson.dumps(obj, option=orjson.OPT_NON_STR_KEYS)
-
-    default_json_loads = orjson.loads
-except ModuleNotFoundError:
-    import json
-
-    _json_separators = (",", ":")
-
-    def default_json_dumps(obj: JSONArray | JSONObject) -> bytes:
-        """Encode a JSON object to [`bytes`][]."""
-        return json.dumps(obj, separators=_json_separators).encode(_UTF_8)
-
-    default_json_loads = json.loads
+default_json_dumps: JSONEncoder = msgspec.json.Encoder(enc_hook=encode_hook).encode
+default_json_loads: JSONDecoder = msgspec.json.Decoder().decode
 
 
 @typing.final
 class JSONPayload(aiohttp.BytesPayload):
     """A JSON payload to use in an aiohttp request."""
 
-    def __init__(self, value: JSONArray | JSONObject, dumps: JSONEncoder = default_json_dumps) -> None:
-        super().__init__(dumps(value), content_type=_JSON_CONTENT_TYPE, encoding=_UTF_8)
+    def __init__(self, value: JSONArray | JSONObject) -> None:
+        super().__init__(default_json_dumps(value), content_type=_JSON_CONTENT_TYPE, encoding=_UTF_8)
 
 
 @typing.final

@@ -271,10 +271,6 @@ class RESTApp(traits.ExecutorAware):
     http_settings
         HTTP settings to use. Sane defaults are used if this is
         [`None`][].
-    dumps
-        The JSON encoder this application should use.
-    loads
-        The JSON decoder this application should use.
     max_rate_limit
         Maximum number of seconds to sleep for when rate limited. If a rate
         limit occurs that is longer than this value, then a
@@ -300,10 +296,8 @@ class RESTApp(traits.ExecutorAware):
     __slots__: typing.Sequence[str] = (
         "_bucket_manager",
         "_client_session",
-        "_dumps",
         "_executor",
         "_http_settings",
-        "_loads",
         "_max_retries",
         "_proxy_settings",
         "_url",
@@ -314,8 +308,6 @@ class RESTApp(traits.ExecutorAware):
         *,
         executor: concurrent.futures.Executor | None = None,
         http_settings: config_impl.HTTPSettings | None = None,
-        dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
-        loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: config_impl.ProxySettings | None = None,
@@ -323,8 +315,6 @@ class RESTApp(traits.ExecutorAware):
     ) -> None:
         self._http_settings = config_impl.HTTPSettings() if http_settings is None else http_settings
         self._proxy_settings = config_impl.ProxySettings() if proxy_settings is None else proxy_settings
-        self._loads = loads
-        self._dumps = dumps
         self._executor = executor
         self._max_retries = max_retries
         self._url = url
@@ -445,8 +435,6 @@ class RESTApp(traits.ExecutorAware):
             http_settings=self._http_settings,
             max_retries=self._max_retries,
             proxy_settings=self._proxy_settings,
-            loads=self._loads,
-            dumps=self._dumps,
             token=token,
             token_type=token_type,
             rest_url=self._url,
@@ -510,10 +498,6 @@ class RESTClientImpl(rest_api.RESTClient):
         it fails with a `5xx` status.
 
         Defaults to 3 if set to [`None`][].
-    dumps
-        The JSON encoder this application should use.
-    loads
-        The JSON decoder this application should use.
     token
         The bot or bearer token. If no token is to be used,
         this can be undefined.
@@ -543,11 +527,9 @@ class RESTClientImpl(rest_api.RESTClient):
         "_client_session",
         "_client_session_owner",
         "_close_event",
-        "_dumps",
         "_entity_factory",
         "_executor",
         "_http_settings",
-        "_loads",
         "_max_retries",
         "_proxy_settings",
         "_rest_url",
@@ -569,8 +551,6 @@ class RESTClientImpl(rest_api.RESTClient):
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: config_impl.ProxySettings,
-        dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
-        loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         token: str | None | rest_api.TokenStrategy,
         token_type: applications.TokenType | str | None,
         rest_url: str | None,
@@ -596,8 +576,6 @@ class RESTClientImpl(rest_api.RESTClient):
         self._http_settings = http_settings
         self._max_retries = max_retries
         self._proxy_settings = proxy_settings
-        self._dumps = dumps
-        self._loads = loads
         self._bucket_manager = (
             buckets_impl.RESTBucketManager(max_rate_limit) if bucket_manager is None else bucket_manager
         )
@@ -802,7 +780,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 msg = "Can only provide one of 'json' or 'form_builder', not both"
                 raise ValueError(msg)
 
-            data = data_binding.JSONPayload(json, dumps=self._dumps)
+            data = data_binding.JSONPayload(json)
 
         url = compiled_route.create_url(self._rest_url)
 
@@ -829,7 +807,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         uuid,
                         compiled_route.method,
                         url,
-                        _stringify_http_message(headers, self._dumps(json)) if json else None,
+                        _stringify_http_message(headers, data_binding.default_json_dumps(json)) if json else None,
                     )
                     start = time.monotonic()
 
@@ -896,7 +874,7 @@ class RESTClientImpl(rest_api.RESTClient):
             if 200 <= response.status < 300:
                 if response.content_type == _APPLICATION_JSON:
                     # Only deserializing here stops Cloudflare shenanigans messing us around.
-                    return self._loads(await response.read())
+                    return data_binding.default_json_loads(await response.read())
 
                 real_url = str(response.real_url)
                 msg = f"Expected JSON [{response.content_type=}, {real_url=}]"
@@ -1009,7 +987,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 f"received rate limited response with unexpected response type {response.content_type}",
             )
 
-        body = self._loads(await response.read())
+        body = data_binding.default_json_loads(await response.read())
         assert isinstance(body, dict)
         if "retry_after" not in body:
             # This is most probably a Cloudflare ban, so just output the entire
@@ -1611,7 +1589,9 @@ class RESTClientImpl(rest_api.RESTClient):
             body.put("message_reference", message_reference)
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.default_json_dumps(body), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder)
         else:
             response = await self._request(route, json=body)
@@ -1677,7 +1657,9 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.default_json_dumps(body), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder)
         else:
             response = await self._request(route, json=body)
@@ -1998,7 +1980,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("avatar_url", avatar_url, conversion=str)
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.default_json_dumps(body), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder, query=query, auth=None)
         else:
             response = await self._request(route, json=body, query=query, auth=None)
@@ -2072,7 +2056,9 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.default_json_dumps(body), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder, query=query, auth=None)
         else:
             response = await self._request(route, json=body, query=query, auth=None)
@@ -3208,7 +3194,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("message", message_body)
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.default_json_dumps(body), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder, reason=reason)
         else:
             response = await self._request(route, json=body, reason=reason)
@@ -4274,7 +4262,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("data", data)
 
         if form is not None:
-            form.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            form.add_field("payload_json", data_binding.default_json_dumps(body), content_type=_APPLICATION_JSON)
             await self._request(route, form_builder=form, auth=None)
         else:
             await self._request(route, json=body, auth=None)
@@ -4321,7 +4309,9 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
         if form_builder is not None:
-            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            form_builder.add_field(
+                "payload_json", data_binding.default_json_dumps(body), content_type=_APPLICATION_JSON
+            )
             response = await self._request(route, form_builder=form_builder, auth=None)
         else:
             response = await self._request(route, json=body, auth=None)
