@@ -1,3 +1,59 @@
+## 2.2.1 (2025-04-06)
+
+### Features
+
+- Add polls support:
+    - New rest endpoints: `RESTClient.fetch_poll_voters`, `RESTClient.end_poll`
+    - New objects: `Poll`, `PollLayoutType`, `PollResult`, `PollAnswer`, `PollMedia`
+    - New builders: `PollBuilder`, `PollAnswerBuilder`
+    - New events: `BasePollVoteEvent`, `PollVoteCreateEvent`, `PollVoteDeleteEvent` ([#2219](https://github.com/hikari-py/hikari/issues/2219))
+- Added more specialized interaction events `CommandInteractionCreateEvent`, `ComponentInteractionCreateEvent`, `AutocompleteInteractionCreateEvent` and `ModalInteractionCreateEvent` to improve developer experience ([#2241](https://github.com/hikari-py/hikari/issues/2241))
+- Added support for guild specific member banners. ([#2271](https://github.com/hikari-py/hikari/issues/2271))
+- HTTP interaction handlers can return `None` to indicate a response was/will be sent using REST instead. ([#2280](https://github.com/hikari-py/hikari/issues/2280))
+- Added support for guild incidents.
+    - New object `GuildIncidents` as an attribute on `Guild`.
+    - New property `invites_disabled` added to `Guild` to ease the confusion on the independent `invites_disabled_until` incident action and `INVITES_DISABLED` guild feature.
+    - New guild function `set_incident_actions` and rest function `set_guild_incident_actions`. ([#2289](https://github.com/hikari-py/hikari/issues/2289))
+- Added support for global and guild specific avatar decorations.
+    - New `AvatarDecoration` class.
+    - New optional `avatar_decoration`, `display_avatar_decoration`, and `guild_avatar_decoration` attributes on `User` and `Member` as applicable. ([#2295](https://github.com/hikari-py/hikari/issues/2295))
+
+### Optimizations
+
+- Improve protocol checking speed. ([#2252](https://github.com/hikari-py/hikari/issues/2252))
+
+### Bugfixes
+
+- Add in the missing `hikari.api.InteractionMessageBuilder.clear_components`, `hikari.api.InteractionMessageBuilder.clear_embeds` and abstract methods + enforce using `@typing_extensions.override` within the library. ([#2244](https://github.com/hikari-py/hikari/issues/2244))
+
+### Documentation Improvements
+
+- Fix TOC jumping around when scrolling ([#2255](https://github.com/hikari-py/hikari/issues/2255))
+
+---
+## 2.2.0 (2025-03-21)
+
+### Breaking Changes
+
+- Remove `PartialInteraction.get_channel` and `PartialInteraction.fetch_channel`. You can directly use `PartialInteraction.channel` instead ([#1621](https://github.com/hikari-py/hikari/issues/1621))
+- User commands breaking changes:
+    - Remove previously deprecated `command_interactions.InteractionChannel` and `command_interactions.ResolvedOptionData`
+    - `CommandInteraction.app_permissions` is no longer optional
+    - Removal of `Commands.dm_permissions` and `Message.interaction`. Use `Commands.contexts` and `Message.interaction_metadata` respectively ([#2195](https://github.com/hikari-py/hikari/issues/2195))
+- Remove `with_expiration` parameter from REST client's `fetch_invite` method.
+    - The parameter has been a noop for a while as Discord removed it ([#2224](https://github.com/hikari-py/hikari/issues/2224))
+
+### Features
+
+- Several new `PartialInteraction` features:
+    - Add new `PartialInteraction.channel` attribute
+    - Moved common interaction fields to `PartialInteraction`
+    - `app_permissions` is now available for all interaction types
+    - Add missing fields to `InteractionChannel` ([#1621](https://github.com/hikari-py/hikari/issues/1621))
+- Add missing fields to `AuditLogEventType` ([#1991](https://github.com/hikari-py/hikari/issues/1991))
+- Add user installations support ([#2177](https://github.com/hikari-py/hikari/issues/2177))
+
+---
 ## 2.1.1 (2025-02-26)
 
 ### Features

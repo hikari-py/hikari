@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,14 +23,14 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ShardEvent",
-    "ShardPayloadEvent",
-    "ShardStateEvent",
+    "MemberChunkEvent",
     "ShardConnectedEvent",
     "ShardDisconnectedEvent",
+    "ShardEvent",
+    "ShardPayloadEvent",
     "ShardReadyEvent",
     "ShardResumedEvent",
-    "MemberChunkEvent",
+    "ShardStateEvent",
 )
 
 import abc
@@ -42,6 +41,7 @@ import attrs
 from hikari.events import base_events
 from hikari.internal import attrs_extensions
 from hikari.internal import collections
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import applications
@@ -154,6 +154,7 @@ class ShardReadyEvent(ShardStateEvent):
     """Flags of the application this ready event is for."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.my_user.app
@@ -209,7 +210,7 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     not passed as [`True`][] while requesting the member chunks.
     """
 
-    nonce: typing.Optional[str] = attrs.field(repr=True)
+    nonce: str | None = attrs.field(repr=True)
     """String nonce used to identify the request member chunks are associated with.
 
     This is the nonce value passed while requesting member chunks or [`None`][]
@@ -222,13 +223,14 @@ class MemberChunkEvent(ShardEvent, typing.Sequence["guilds.Member"]):
     @typing.overload
     def __getitem__(self, index_or_slice: slice, /) -> typing.Sequence[guilds.Member]: ...
 
-    def __getitem__(
-        self, index_or_slice: typing.Union[int, slice], /
-    ) -> typing.Union[guilds.Member, typing.Sequence[guilds.Member]]:
+    @typing_extensions.override
+    def __getitem__(self, index_or_slice: int | slice, /) -> guilds.Member | typing.Sequence[guilds.Member]:
         return collections.get_index_or_slice(self.members, index_or_slice)
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[guilds.Member]:
         return iter(self.members.values())
 
+    @typing_extensions.override
     def __len__(self) -> int:
         return len(self.members)

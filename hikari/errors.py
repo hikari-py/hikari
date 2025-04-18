@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,28 +23,28 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "HikariError",
-    "HikariWarning",
-    "HikariInterrupt",
-    "ComponentStateConflictError",
-    "UnrecognisedEntityError",
-    "NotFoundError",
-    "RateLimitTooLongError",
-    "UnauthorizedError",
-    "ForbiddenError",
     "BadRequestError",
+    "BulkDeleteError",
+    "ClientHTTPResponseError",
+    "ComponentStateConflictError",
+    "ForbiddenError",
+    "GatewayConnectionError",
+    "GatewayError",
+    "GatewayServerClosedConnectionError",
+    "GatewayTransportError",
     "HTTPError",
     "HTTPResponseError",
-    "ClientHTTPResponseError",
+    "HikariError",
+    "HikariInterrupt",
+    "HikariWarning",
     "InternalServerError",
-    "ShardCloseCode",
-    "GatewayConnectionError",
-    "GatewayTransportError",
-    "GatewayServerClosedConnectionError",
-    "GatewayError",
-    "MissingIntentWarning",
     "MissingIntentError",
-    "BulkDeleteError",
+    "MissingIntentWarning",
+    "NotFoundError",
+    "RateLimitTooLongError",
+    "ShardCloseCode",
+    "UnauthorizedError",
+    "UnrecognisedEntityError",
     "VoiceError",
 )
 
@@ -58,6 +57,7 @@ import attrs
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import enums
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import intents as intents_
@@ -93,7 +93,7 @@ class HikariWarning(RuntimeWarning):
 
 
 @attrs.define(auto_exc=True, repr=False, slots=False)
-class HikariInterrupt(KeyboardInterrupt, HikariError):
+class HikariInterrupt(KeyboardInterrupt):
     """Exception raised when a kill signal is handled internally."""
 
     signum: int = attrs.field()
@@ -102,6 +102,7 @@ class HikariInterrupt(KeyboardInterrupt, HikariError):
     signame: str = attrs.field()
     """The signal name that was raised."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Signal {self.signum} ({self.signame}) received"
 
@@ -117,6 +118,7 @@ class ComponentStateConflictError(HikariError):
     reason: str = attrs.field()
     """A string to explain the issue."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.reason
 
@@ -128,6 +130,7 @@ class UnrecognisedEntityError(HikariError):
     reason: str = attrs.field()
     """A string to explain the issue."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.reason
 
@@ -139,6 +142,7 @@ class GatewayError(HikariError):
     reason: str = attrs.field()
     """A string to explain the issue."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.reason
 
@@ -180,6 +184,7 @@ class ShardCloseCode(int, enums.Enum):
 class GatewayTransportError(GatewayError):
     """An exception thrown if an issue occurs at the transport layer."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Gateway transport error: {self.reason}"
 
@@ -188,6 +193,7 @@ class GatewayTransportError(GatewayError):
 class GatewayConnectionError(GatewayError):
     """An exception thrown if a connection issue occurs."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Failed to connect to server: {self.reason!r}"
 
@@ -196,7 +202,7 @@ class GatewayConnectionError(GatewayError):
 class GatewayServerClosedConnectionError(GatewayError):
     """An exception raised when the server closes the connection."""
 
-    code: typing.Union[ShardCloseCode, int, None] = attrs.field(default=None)
+    code: ShardCloseCode | int | None = attrs.field(default=None)
     """Return the close code that was received, if there is one."""
 
     can_reconnect: bool = attrs.field(default=False)
@@ -208,6 +214,7 @@ class GatewayServerClosedConnectionError(GatewayError):
     user.
     """
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Server closed connection with code {self.code} ({self.reason})"
 
@@ -227,7 +234,7 @@ class HTTPResponseError(HTTPError):
     url: str = attrs.field()
     """The URL that produced this error message."""
 
-    status: typing.Union[http.HTTPStatus, int] = attrs.field()
+    status: http.HTTPStatus | int = attrs.field()
     """The HTTP status code for the response.
 
     This will be [`int`][] if it's outside the range of status codes in the HTTP
@@ -246,6 +253,7 @@ class HTTPResponseError(HTTPError):
     code: int = attrs.field(default=0)
     """The error code."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         if isinstance(self.status, http.HTTPStatus):
             name = self.status.name.replace("_", " ").title()
@@ -254,10 +262,7 @@ class HTTPResponseError(HTTPError):
         else:
             name_value = f"Unknown Status {self.status}"
 
-        if self.code:
-            code_str = f" ({self.code})"
-        else:
-            code_str = ""
+        code_str = f" ({self.code})" if self.code else ""
 
         if self.message:
             body = self.message
@@ -307,7 +312,7 @@ class BadRequestError(ClientHTTPResponseError):
     status: http.HTTPStatus = attrs.field(default=http.HTTPStatus.BAD_REQUEST, init=False)
     """The HTTP status code for the response."""
 
-    errors: typing.Optional[typing.Mapping[str, data_binding.JSONObject]] = attrs.field(default=None, kw_only=True)
+    errors: typing.Mapping[str, data_binding.JSONObject] | None = attrs.field(default=None, kw_only=True)
     """Dict of top level field names to field specific error paths.
 
     For more information, this error format is loosely defined at
@@ -317,6 +322,7 @@ class BadRequestError(ClientHTTPResponseError):
 
     _cached_str: str = attrs.field(default=None, init=False)
 
+    @typing_extensions.override
     def __str__(self) -> str:
         if self._cached_str:
             return self._cached_str
@@ -392,10 +398,10 @@ class RateLimitTooLongError(HTTPError):
     reset_at: float = attrs.field()
     """UNIX timestamp of when this limit will be lifted."""
 
-    limit: typing.Optional[int] = attrs.field()
+    limit: int | None = attrs.field()
     """The maximum number of calls per window for this rate limit, if known."""
 
-    period: typing.Optional[float] = attrs.field()
+    period: float | None = attrs.field()
     """How long the rate limit window lasts for from start to end, if known."""
 
     message: str = attrs.field(init=False)
@@ -420,6 +426,7 @@ class RateLimitTooLongError(HTTPError):
         """
         return 0
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.message
 
@@ -452,6 +459,7 @@ class BulkDeleteError(HikariError):
     deleted_messages: snowflakes.SnowflakeishSequence[messages.PartialMessage] = attrs.field()
     """Any message objects that were deleted before an exception occurred."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Error encountered when bulk deleting messages ({len(self.deleted_messages)} messages deleted)"
 
@@ -472,5 +480,6 @@ class MissingIntentError(HikariError, ValueError):
     intents: intents_.Intents = attrs.field()
     """The combination of intents that are missing."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return "You are missing the following intent(s): " + ", ".join(map(str, self.intents.split()))

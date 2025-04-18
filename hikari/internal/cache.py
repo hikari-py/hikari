@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,29 +23,28 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "BaseData",
+    "Cache3DMappingView",
     "CacheMappingView",
+    "DataT",
     "EmptyCacheView",
     "GuildRecord",
-    "BaseData",
     "InviteData",
-    "MemberData",
+    "KeyT",
     "KnownCustomEmojiData",
-    "RichActivityData",
+    "MemberData",
     "MemberPresenceData",
     "MessageData",
-    "VoiceStateData",
     "RefCell",
-    "unwrap_ref_cell",
-    "copy_guild_channel",
-    "Cache3DMappingView",
-    "DataT",
-    "KeyT",
+    "RichActivityData",
     "ValueT",
+    "VoiceStateData",
+    "copy_guild_channel",
+    "unwrap_ref_cell",
 )
 
 import abc
 import copy
-import datetime
 import typing
 
 import attrs
@@ -65,12 +63,21 @@ from hikari.api import cache
 from hikari.internal import attrs_extensions
 from hikari.internal import collections
 
+if not typing.TYPE_CHECKING:
+    # This is insanely hacky, but it is needed for ruff to not complain until it gets type inference
+    from hikari.internal import typing_extensions
+
+
 if typing.TYPE_CHECKING:
+    import datetime
+
+    import typing_extensions  # noqa: TC004
     from typing_extensions import Self
 
     from hikari import applications
     from hikari import channels as channels_
     from hikari import components as components_
+    from hikari import polls as polls_
     from hikari import traits
     from hikari import users as users_
     from hikari.interactions import base_interactions
@@ -97,7 +104,7 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
         mapping. This is used to cover the case when items stores [`DataT`][] objects.
     """
 
-    __slots__: typing.Sequence[str] = ("_data", "_builder")
+    __slots__: typing.Sequence[str] = ("_builder", "_data")
 
     @typing.overload
     def __init__(self, items: typing.Mapping[KeyT, ValueT]) -> None: ...
@@ -107,9 +114,9 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
 
     def __init__(
         self,
-        items: typing.Union[typing.Mapping[KeyT, ValueT], typing.Mapping[KeyT, DataT]],
+        items: typing.Mapping[KeyT, ValueT] | typing.Mapping[KeyT, DataT],
         *,
-        builder: typing.Optional[typing.Callable[[DataT], ValueT]] = None,
+        builder: typing.Callable[[DataT], ValueT] | None = None,
     ) -> None:
         self._builder = builder
         self._data = items
@@ -118,9 +125,11 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     def _copy(value: ValueT) -> ValueT:
         return copy.copy(value)
 
-    def __contains__(self, key: typing.Any) -> bool:
+    @typing_extensions.override
+    def __contains__(self, key: object) -> bool:
         return key in self._data
 
+    @typing_extensions.override
     def __getitem__(self, key: KeyT) -> ValueT:
         entry = self._data[key]
 
@@ -129,9 +138,11 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
 
         return self._copy(entry)  # type: ignore[arg-type]
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[KeyT]:
         return iter(self._data)
 
+    @typing_extensions.override
     def __len__(self) -> int:
         return len(self._data)
 
@@ -141,7 +152,8 @@ class CacheMappingView(cache.CacheView[KeyT, ValueT]):
     @typing.overload
     def get_item_at(self, index: slice, /) -> typing.Sequence[ValueT]: ...
 
-    def get_item_at(self, index: typing.Union[slice, int], /) -> typing.Union[ValueT, typing.Sequence[ValueT]]:
+    @typing_extensions.override
+    def get_item_at(self, index: slice | int, /) -> ValueT | typing.Sequence[ValueT]:
         return collections.get_index_or_slice(self, index)
 
 
@@ -150,19 +162,24 @@ class EmptyCacheView(cache.CacheView[typing.Any, typing.Any]):
 
     __slots__: typing.Sequence[str] = ()
 
-    def __contains__(self, _: typing.Any) -> typing.Literal[False]:
+    @typing_extensions.override
+    def __contains__(self, _: object) -> typing.Literal[False]:
         return False
 
-    def __getitem__(self, key: typing.Any) -> typing.NoReturn:
+    @typing_extensions.override
+    def __getitem__(self, key: object) -> typing.NoReturn:
         raise KeyError(key)
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[typing.Any]:
         yield from ()
 
+    @typing_extensions.override
     def __len__(self) -> typing.Literal[0]:
         return 0
 
-    def get_item_at(self, index: typing.Union[slice, int]) -> typing.NoReturn:
+    @typing_extensions.override
+    def get_item_at(self, index: slice | int) -> typing.NoReturn:
         raise IndexError(index)
 
 
@@ -176,73 +193,73 @@ class GuildRecord:
     guild.
     """
 
-    is_available: typing.Optional[bool] = attrs.field(default=None)
+    is_available: bool | None = attrs.field(default=None)
     """Whether the cached guild is available or not.
 
     This will be [`None`][] when no `guild` is also
     [`None`][] else [`bool`][].
     """
 
-    guild: typing.Optional[guilds.GatewayGuild] = attrs.field(default=None)
+    guild: guilds.GatewayGuild | None = attrs.field(default=None)
     """A cached guild object.
 
     This will be [`None`][] if not cached.
     """
 
-    channels: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
+    channels: typing.MutableSet[snowflakes.Snowflake] | None = attrs.field(default=None)
     """A set of the IDs of the guild channels cached for this guild.
 
     This will be [`None`][] if no channels are cached for this guild.
     """
 
-    threads: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
+    threads: typing.MutableSet[snowflakes.Snowflake] | None = attrs.field(default=None)
     """A set of the IDs of the guild threads cached for this guild.
 
     This will be [`None`][] if no threads are cached for this guild.
     """
 
-    emojis: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
+    emojis: typing.MutableSet[snowflakes.Snowflake] | None = attrs.field(default=None)
     """A set of the IDs of the emojis cached for this guild.
 
     This will be [`None`][] if no emojis are cached for this guild.
     """
 
-    stickers: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
+    stickers: typing.MutableSet[snowflakes.Snowflake] | None = attrs.field(default=None)
     """A sequence of sticker IDs cached for this guild.
 
     This will be [`None`][] if no stickers are cached for this guild.
     """
 
-    invites: typing.Optional[typing.MutableSequence[str]] = attrs.field(default=None)
+    invites: typing.MutableSequence[str] | None = attrs.field(default=None)
     """A set of the [`str`][] codes of the invites cached for this guild.
 
     This will be [`None`][] if no invites are cached for this guild.
     """
 
-    members: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, RefCell[MemberData]]] = (
-        attrs.field(default=None)
+    members: collections.ExtendedMutableMapping[snowflakes.Snowflake, RefCell[MemberData]] | None = attrs.field(
+        default=None
     )
     """A mapping of user IDs to the objects of members cached for this guild.
 
     This will be [`None`][] if no members are cached for this guild.
     """
 
-    presences: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData]] = (
-        attrs.field(default=None)
+    presences: collections.ExtendedMutableMapping[snowflakes.Snowflake, MemberPresenceData] | None = attrs.field(
+        default=None
     )
     """A mapping of user IDs to objects of the presences cached for this guild.
 
     This will be [`None`][] if no presences are cached for this guild.
     """
 
-    roles: typing.Optional[typing.MutableSet[snowflakes.Snowflake]] = attrs.field(default=None)
+    roles: typing.MutableSet[snowflakes.Snowflake] | None = attrs.field(default=None)
     """A set of the IDs of the roles cached for this guild.
 
     This will be [`None`][] if no roles are cached for this guild.
     """
 
-    voice_states: typing.Optional[collections.ExtendedMutableMapping[snowflakes.Snowflake, VoiceStateData]] = (
-        attrs.field(default=None)
+    voice_states: collections.ExtendedMutableMapping[snowflakes.Snowflake, VoiceStateData] | None = attrs.field(
+        default=None
     )
     """A mapping of user IDs to objects of the voice states cached for this guild.
 
@@ -321,18 +338,19 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     """A data model for storing invite data in an in-memory cache."""
 
     code: str = attrs.field()
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    guild_id: snowflakes.Snowflake | None = attrs.field()
     channel_id: snowflakes.Snowflake = attrs.field()
-    inviter: typing.Optional[RefCell[users_.User]] = attrs.field()
-    target_type: typing.Union[invites.TargetType, int, None] = attrs.field()
-    target_user: typing.Optional[RefCell[users_.User]] = attrs.field()
-    target_application: typing.Optional[applications.InviteApplication] = attrs.field()
+    inviter: RefCell[users_.User] | None = attrs.field()
+    target_type: invites.TargetType | int | None = attrs.field()
+    target_user: RefCell[users_.User] | None = attrs.field()
+    target_application: applications.InviteApplication | None = attrs.field()
     uses: int = attrs.field()
-    max_uses: typing.Optional[int] = attrs.field()
-    max_age: typing.Optional[datetime.timedelta] = attrs.field()
+    max_uses: int | None = attrs.field()
+    max_age: datetime.timedelta | None = attrs.field()
     is_temporary: bool = attrs.field()
     created_at: datetime.datetime = attrs.field()
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> invites.InviteWithMetadata:
         return invites.InviteWithMetadata(
             code=self.code,
@@ -356,13 +374,14 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
         )
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls,
         invite: invites.InviteWithMetadata,
         /,
         *,
-        inviter: typing.Optional[RefCell[users_.User]] = None,
-        target_user: typing.Optional[RefCell[users_.User]] = None,
+        inviter: RefCell[users_.User] | None = None,
+        target_user: RefCell[users_.User] | None = None,
     ) -> InviteData:
         if not inviter and invite.inviter:
             inviter = RefCell(copy.copy(invite.inviter))
@@ -393,46 +412,53 @@ class MemberData(BaseData[guilds.Member]):
 
     user: RefCell[users_.User] = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
-    nickname: typing.Optional[str] = attrs.field()
-    guild_avatar_hash: typing.Optional[str] = attrs.field()
+    nickname: str | None = attrs.field()
+    guild_avatar_decoration: users_.AvatarDecoration | None = attrs.field()
+    guild_avatar_hash: str | None = attrs.field()
+    guild_banner_hash: str | None = attrs.field()
     role_ids: tuple[snowflakes.Snowflake, ...] = attrs.field()
-    joined_at: typing.Optional[datetime.datetime] = attrs.field()
-    premium_since: typing.Optional[datetime.datetime] = attrs.field()
+    joined_at: datetime.datetime | None = attrs.field()
+    premium_since: datetime.datetime | None = attrs.field()
     is_deaf: undefined.UndefinedOr[bool] = attrs.field()
     is_mute: undefined.UndefinedOr[bool] = attrs.field()
     is_pending: undefined.UndefinedOr[bool] = attrs.field()
-    raw_communication_disabled_until: typing.Optional[datetime.datetime] = attrs.field()
-    guild_flags: typing.Union[guilds.GuildMemberFlags, int] = attrs.field()
+    raw_communication_disabled_until: datetime.datetime | None = attrs.field()
+    guild_flags: guilds.GuildMemberFlags | int = attrs.field()
     # meta-attribute
     has_been_deleted: bool = attrs.field(default=False, init=False)
 
     @classmethod
-    def build_from_entity(
-        cls, member: guilds.Member, /, *, user: typing.Optional[RefCell[users_.User]] = None
-    ) -> MemberData:
+    @typing_extensions.override
+    def build_from_entity(cls, member: guilds.Member, /, *, user: RefCell[users_.User] | None = None) -> MemberData:
         return cls(
             guild_id=member.guild_id,
             nickname=member.nickname,
             joined_at=member.joined_at,
             premium_since=member.premium_since,
+            guild_avatar_decoration=member.guild_avatar_decoration,
             guild_avatar_hash=member.guild_avatar_hash,
+            guild_banner_hash=member.guild_banner_hash,
             is_deaf=member.is_deaf,
             is_mute=member.is_mute,
             is_pending=member.is_pending,
             user=user or RefCell(copy.copy(member.user)),
             raw_communication_disabled_until=member.raw_communication_disabled_until,
             guild_flags=member.guild_flags,
-            # role_ids is a special case as it may be mutable so we want to ensure it's immutable when cached.
+            # role_ids is a special case as it may be mutable so we want to ensure it's
+            # immutable when cached.
             role_ids=tuple(member.role_ids),
         )
 
+    @typing_extensions.override
     def build_entity(self, _: traits.RESTAware, /) -> guilds.Member:
         return guilds.Member(
             guild_id=self.guild_id,
             nickname=self.nickname,
             role_ids=self.role_ids,
             joined_at=self.joined_at,
+            guild_avatar_decoration=self.guild_avatar_decoration,
             guild_avatar_hash=self.guild_avatar_hash,
+            guild_banner_hash=self.guild_banner_hash,
             premium_since=self.premium_since,
             is_deaf=self.is_deaf,
             is_mute=self.is_mute,
@@ -453,14 +479,15 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
     is_animated: bool = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
     role_ids: tuple[snowflakes.Snowflake, ...] = attrs.field()
-    user: typing.Optional[RefCell[users_.User]] = attrs.field()
+    user: RefCell[users_.User] | None = attrs.field()
     is_colons_required: bool = attrs.field()
     is_managed: bool = attrs.field()
     is_available: bool = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
-        cls, emoji: emojis.KnownCustomEmoji, /, *, user: typing.Optional[RefCell[users_.User]] = None
+        cls, emoji: emojis.KnownCustomEmoji, /, *, user: RefCell[users_.User] | None = None
     ) -> KnownCustomEmojiData:
         if not user and emoji.user:
             user = RefCell(copy.copy(emoji.user))
@@ -477,10 +504,12 @@ class KnownCustomEmojiData(BaseData[emojis.KnownCustomEmoji]):
             is_managed=emoji.is_managed,
             is_available=emoji.is_available,
             user=user,
-            # role_ids is a special case as it may be a mutable sequence so we want to ensure it's immutable when cached.
+            # role_ids is a special case as it may be a mutable sequence so we want to ensure it's
+            # immutable when cached.
             role_ids=tuple(emoji.role_ids),
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> emojis.KnownCustomEmoji:
         return emojis.KnownCustomEmoji(
             id=self.id,
@@ -503,16 +532,17 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
 
     id: snowflakes.Snowflake = attrs.field()
     name: str = attrs.field()
-    description: typing.Optional[str] = attrs.field()
+    description: str | None = attrs.field()
     tag: str = attrs.field()
-    format_type: typing.Union[stickers_.StickerFormatType, int] = attrs.field()
+    format_type: stickers_.StickerFormatType | int = attrs.field()
     is_available: bool = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
-    user: typing.Optional[RefCell[users_.User]] = attrs.field()
+    user: RefCell[users_.User] | None = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
-        cls, sticker: stickers_.GuildSticker, /, *, user: typing.Optional[RefCell[users_.User]] = None
+        cls, sticker: stickers_.GuildSticker, /, *, user: RefCell[users_.User] | None = None
     ) -> GuildStickerData:
         if not user and sticker.user:
             user = RefCell(copy.copy(sticker.user))
@@ -528,6 +558,7 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
             user=user,
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> stickers_.GuildSticker:
         return stickers_.GuildSticker(
             id=self.id,
@@ -547,24 +578,25 @@ class RichActivityData(BaseData[presences.RichActivity]):
     """A data model for storing rich activity data in an in-memory cache."""
 
     name: str = attrs.field()
-    url: typing.Optional[str] = attrs.field()
-    type: typing.Union[presences.ActivityType, int] = attrs.field()
+    url: str | None = attrs.field()
+    type: presences.ActivityType | int = attrs.field()
     created_at: datetime.datetime = attrs.field()
-    timestamps: typing.Optional[presences.ActivityTimestamps] = attrs.field()
-    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
-    details: typing.Optional[str] = attrs.field()
-    state: typing.Optional[str] = attrs.field()
-    emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = attrs.field()
-    party: typing.Optional[presences.ActivityParty] = attrs.field()
-    assets: typing.Optional[presences.ActivityAssets] = attrs.field()
-    secrets: typing.Optional[presences.ActivitySecret] = attrs.field()
-    is_instance: typing.Optional[bool] = attrs.field()
-    flags: typing.Optional[presences.ActivityFlag] = attrs.field()
+    timestamps: presences.ActivityTimestamps | None = attrs.field()
+    application_id: snowflakes.Snowflake | None = attrs.field()
+    details: str | None = attrs.field()
+    state: str | None = attrs.field()
+    emoji: RefCell[emojis.CustomEmoji] | str | None = attrs.field()
+    party: presences.ActivityParty | None = attrs.field()
+    assets: presences.ActivityAssets | None = attrs.field()
+    secrets: presences.ActivitySecret | None = attrs.field()
+    is_instance: bool | None = attrs.field()
+    flags: presences.ActivityFlag | None = attrs.field()
     buttons: tuple[str, ...] = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
-        cls, activity: presences.RichActivity, /, *, emoji: typing.Union[RefCell[emojis.CustomEmoji], str, None] = None
+        cls, activity: presences.RichActivity, /, *, emoji: RefCell[emojis.CustomEmoji] | str | None = None
     ) -> RichActivityData:
         if emoji:
             pass
@@ -597,8 +629,9 @@ class RichActivityData(BaseData[presences.RichActivity]):
             buttons=tuple(activity.buttons),
         )
 
+    @typing_extensions.override
     def build_entity(self, _: traits.RESTAware, /) -> presences.RichActivity:
-        emoji: typing.Optional[emojis.Emoji] = None
+        emoji: emojis.Emoji | None = None
         if isinstance(self.emoji, RefCell):
             emoji = self.emoji.copy()
 
@@ -631,11 +664,12 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
 
     user_id: snowflakes.Snowflake = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
-    visible_status: typing.Union[presences.Status, str] = attrs.field()
+    visible_status: presences.Status | str = attrs.field()
     activities: tuple[RichActivityData, ...] = attrs.field()
     client_status: presences.ClientStatus = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(cls, presence: presences.MemberPresence, /) -> MemberPresenceData:
         # role_ids and activities are special cases as may be mutable sequences, therefore we want to ensure they're
         # stored in immutable sequences (tuples). Plus activities need to be converted to Data objects.
@@ -647,6 +681,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
             client_status=copy.copy(presence.client_status),
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> presences.MemberPresence:
         return presences.MemberPresence(
             user_id=self.user_id,
@@ -682,12 +717,12 @@ class MessageData(BaseData[messages.Message]):
 
     id: snowflakes.Snowflake = attrs.field()
     channel_id: snowflakes.Snowflake = attrs.field()
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    guild_id: snowflakes.Snowflake | None = attrs.field()
     author: RefCell[users_.User] = attrs.field()
-    member: typing.Optional[RefCell[MemberData]] = attrs.field()
-    content: typing.Optional[str] = attrs.field()
+    member: RefCell[MemberData] | None = attrs.field()
+    content: str | None = attrs.field()
     timestamp: datetime.datetime = attrs.field()
-    edited_timestamp: typing.Optional[datetime.datetime] = attrs.field()
+    edited_timestamp: datetime.datetime | None = attrs.field()
     is_tts: bool = attrs.field()
     user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]] = attrs.field()
     role_mention_ids: undefined.UndefinedOr[tuple[snowflakes.Snowflake, ...]] = attrs.field()
@@ -698,34 +733,35 @@ class MessageData(BaseData[messages.Message]):
     attachments: tuple[messages.Attachment, ...] = attrs.field()
     embeds: tuple[embeds_.Embed, ...] = attrs.field()
     reactions: tuple[messages.Reaction, ...] = attrs.field()
+    poll: polls_.Poll | None = attrs.field()
     is_pinned: bool = attrs.field()
-    webhook_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
-    type: typing.Union[messages.MessageType, int] = attrs.field()
-    activity: typing.Optional[messages.MessageActivity] = attrs.field()
-    application: typing.Optional[messages.MessageApplication] = attrs.field()
-    message_reference: typing.Optional[messages.MessageReference] = attrs.field()
+    webhook_id: snowflakes.Snowflake | None = attrs.field()
+    type: messages.MessageType | int = attrs.field()
+    activity: messages.MessageActivity | None = attrs.field()
+    application: messages.MessageApplication | None = attrs.field()
+    message_reference: messages.MessageReference | None = attrs.field()
     flags: messages.MessageFlag = attrs.field()
     stickers: tuple[stickers_.PartialSticker, ...] = attrs.field()
-    nonce: typing.Optional[str] = attrs.field()
-    referenced_message: typing.Optional[RefCell[MessageData]] = attrs.field()
-    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    nonce: str | None = attrs.field()
+    referenced_message: RefCell[MessageData] | None = attrs.field()
+    application_id: snowflakes.Snowflake | None = attrs.field()
     components: tuple[components_.TopLevelComponentTypesT, ...] = attrs.field()
-    thread: typing.Optional[channels_.GuildThreadChannel] = attrs.field()
-    interaction_metadata: typing.Optional[base_interactions.PartialInteractionMetadata] = attrs.field()
+    thread: channels_.GuildThreadChannel | None = attrs.field()
+    interaction_metadata: base_interactions.PartialInteractionMetadata | None = attrs.field()
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
         cls,
         message: messages.Message,
         /,
         *,
-        author: typing.Optional[RefCell[users_.User]] = None,
-        member: typing.Optional[RefCell[MemberData]] = None,
+        author: RefCell[users_.User] | None = None,
+        member: RefCell[MemberData] | None = None,
         user_mentions: undefined.UndefinedOr[
             typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]
         ] = undefined.UNDEFINED,
-        referenced_message: typing.Optional[RefCell[MessageData]] = None,
-        interaction_user: typing.Optional[RefCell[users_.User]] = None,
+        referenced_message: RefCell[MessageData] | None = None,
     ) -> MessageData:
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))
@@ -760,6 +796,7 @@ class MessageData(BaseData[messages.Message]):
             mentions_everyone=message.mentions_everyone,
             attachments=tuple(map(copy.copy, message.attachments)),
             embeds=tuple(map(_copy_embed, message.embeds)),
+            poll=message.poll,
             reactions=tuple(map(copy.copy, message.reactions)),
             is_pinned=message.is_pinned,
             webhook_id=message.webhook_id,
@@ -777,6 +814,7 @@ class MessageData(BaseData[messages.Message]):
             interaction_metadata=message.interaction_metadata,
         )
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> messages.Message:
         channel_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, channels_.PartialChannel]] = (
             {channel_id: copy.copy(channel) for channel_id, channel in self.channel_mentions.items()}
@@ -806,6 +844,7 @@ class MessageData(BaseData[messages.Message]):
             mentions_everyone=self.mentions_everyone,
             attachments=tuple(map(copy.copy, self.attachments)),
             embeds=tuple(map(_copy_embed, self.embeds)),
+            poll=self.poll,
             reactions=tuple(map(copy.copy, self.reactions)),
             is_pinned=self.is_pinned,
             webhook_id=self.webhook_id,
@@ -872,7 +911,7 @@ class MessageData(BaseData[messages.Message]):
 class VoiceStateData(BaseData[voices.VoiceState]):
     """A data model for storing voice state data in an in-memory cache."""
 
-    channel_id: typing.Optional[snowflakes.Snowflake] = attrs.field()
+    channel_id: snowflakes.Snowflake | None = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
     user_id: snowflakes.Snowflake = attrs.field()
     is_guild_deafened: bool = attrs.field()
@@ -882,10 +921,11 @@ class VoiceStateData(BaseData[voices.VoiceState]):
     is_streaming: bool = attrs.field()
     is_suppressed: bool = attrs.field()
     is_video_enabled: bool = attrs.field()
-    member: typing.Optional[RefCell[MemberData]] = attrs.field()
+    member: RefCell[MemberData] | None = attrs.field()
     session_id: str = attrs.field()
-    requested_to_speak_at: typing.Optional[datetime.datetime] = attrs.field()
+    requested_to_speak_at: datetime.datetime | None = attrs.field()
 
+    @typing_extensions.override
     def build_entity(self, app: traits.RESTAware, /) -> voices.VoiceState:
         member = self.member.object.build_entity(app) if self.member else None
         return voices.VoiceState(
@@ -906,8 +946,9 @@ class VoiceStateData(BaseData[voices.VoiceState]):
         )
 
     @classmethod
+    @typing_extensions.override
     def build_from_entity(
-        cls, voice_state: voices.VoiceState, /, *, member: typing.Optional[RefCell[MemberData]] = None
+        cls, voice_state: voices.VoiceState, /, *, member: RefCell[MemberData] | None = None
     ) -> VoiceStateData:
         return cls(
             channel_id=voice_state.channel_id,
@@ -1004,5 +1045,6 @@ class Cache3DMappingView(CacheMappingView[snowflakes.Snowflake, cache.CacheView[
     __slots__: typing.Sequence[str] = ()
 
     @staticmethod
+    @typing_extensions.override
     def _copy(value: cache.CacheView[KeyT, ValueT]) -> cache.CacheView[KeyT, ValueT]:
         return value

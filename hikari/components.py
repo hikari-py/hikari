@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,36 +23,36 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "ComponentType",
-    "PartialComponent",
     "ActionRowComponent",
-    "ButtonStyle",
     "ButtonComponent",
-    "SelectMenuOption",
-    "SelectMenuComponent",
-    "TextSelectMenuComponent",
+    "ButtonStyle",
     "ChannelSelectMenuComponent",
-    "TextInputStyle",
-    "TextInputComponent",
+    "ComponentType",
+    "ContainerComponent",
+    "ContainerTypesT",
+    "FileComponent",
     "InteractiveButtonTypes",
     "InteractiveButtonTypesT",
-    "MessageComponentTypesT",
-    "ModalComponentTypesT",
-    "MessageActionRowComponent",
-    "ModalActionRowComponent",
-    "MediaResource",
-    "MediaLoadingType",
-    "SectionComponent",
-    "ThumbnailComponent",
-    "TextDisplayComponent",
     "MediaGalleryComponent",
     "MediaGalleryItem",
+    "MediaLoadingType",
+    "MediaResource",
+    "MessageActionRowComponent",
+    "MessageComponentTypesT",
+    "ModalActionRowComponent",
+    "ModalComponentTypesT",
+    "PartialComponent",
+    "SectionComponent",
+    "SelectMenuComponent",
+    "SelectMenuOption",
     "SeparatorComponent",
     "SpacingType",
-    "FileComponent",
-    "ContainerComponent",
+    "TextDisplayComponent",
+    "TextInputComponent",
+    "TextInputStyle",
+    "TextSelectMenuComponent",
+    "ThumbnailComponent",
     "TopLevelComponentTypesT",
-    "ContainerTypesT",
 )
 
 import typing
@@ -64,11 +63,14 @@ from hikari import channels
 from hikari import emojis
 from hikari import files
 from hikari.internal import enums
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import concurrent.futures
 
+    from hikari import channels
     from hikari import colors
+    from hikari import emojis
     from hikari import undefined
 
 
@@ -254,7 +256,7 @@ class MediaLoadingType(int, enums.Enum):
 class PartialComponent:
     """Base class for all component entities."""
 
-    type: typing.Union[ComponentType, int] = attrs.field()
+    type: ComponentType | int = attrs.field()
     """The type of component this is."""
 
     id: int = attrs.field()
@@ -277,9 +279,7 @@ class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
     @typing.overload
     def __getitem__(self, slice_: slice, /) -> typing.Sequence[AllowedComponentsT]: ...
 
-    def __getitem__(
-        self, index_or_slice: typing.Union[int, slice], /
-    ) -> typing.Union[PartialComponent, typing.Sequence[AllowedComponentsT]]:
+    def __getitem__(self, index_or_slice: int | slice, /) -> PartialComponent | typing.Sequence[AllowedComponentsT]:
         return self.components[index_or_slice]
 
     def __iter__(self) -> typing.Iterator[AllowedComponentsT]:
@@ -293,16 +293,16 @@ class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
 class ButtonComponent(PartialComponent):
     """Represents a button component."""
 
-    style: typing.Union[ButtonStyle, int] = attrs.field(eq=False)
+    style: ButtonStyle | int = attrs.field(eq=False)
     """The button's style."""
 
-    label: typing.Optional[str] = attrs.field(eq=False)
+    label: str | None = attrs.field(eq=False)
     """Text label which appears on the button."""
 
-    emoji: typing.Optional[emojis.Emoji] = attrs.field(eq=False)
+    emoji: emojis.Emoji | None = attrs.field(eq=False)
     """Custom or unicode emoji which appears on the button."""
 
-    custom_id: typing.Optional[str] = attrs.field(hash=True)
+    custom_id: str | None = attrs.field(hash=True)
     """Developer defined identifier for this button (will be <= 100 characters).
 
     !!! note
@@ -314,7 +314,7 @@ class ButtonComponent(PartialComponent):
         * [`hikari.components.ButtonStyle.DANGER`][]
     """
 
-    url: typing.Optional[str] = attrs.field(eq=False)
+    url: str | None = attrs.field(eq=False)
     """Url for [`hikari.components.ButtonStyle.LINK`][] style buttons."""
 
     is_disabled: bool = attrs.field(eq=False)
@@ -331,10 +331,10 @@ class SelectMenuOption:
     value: str = attrs.field()
     """Dev-defined value of the option, max 100 characters."""
 
-    description: typing.Optional[str] = attrs.field()
+    description: str | None = attrs.field()
     """Optional description of the option, max 100 characters."""
 
-    emoji: typing.Optional[emojis.Emoji] = attrs.field(eq=False)
+    emoji: emojis.Emoji | None = attrs.field(eq=False)
     """Custom or unicode emoji which appears on the button."""
 
     is_default: bool = attrs.field()
@@ -348,7 +348,7 @@ class SelectMenuComponent(PartialComponent):
     custom_id: str = attrs.field(hash=True)
     """Developer defined identifier for this menu (will be <= 100 characters)."""
 
-    placeholder: typing.Optional[str] = attrs.field(eq=False)
+    placeholder: str | None = attrs.field(eq=False)
     """Custom placeholder text shown if nothing is selected, max 100 characters."""
 
     min_values: int = attrs.field(eq=False)
@@ -381,7 +381,7 @@ class TextSelectMenuComponent(SelectMenuComponent):
 class ChannelSelectMenuComponent(SelectMenuComponent):
     """Represents a channel select menu component."""
 
-    channel_types: typing.Sequence[typing.Union[int, channels.ChannelType]] = attrs.field(eq=False)
+    channel_types: typing.Sequence[int | channels.ChannelType] = attrs.field(eq=False)
     """The valid channel types for this menu."""
 
 
@@ -403,7 +403,7 @@ class MediaResource(files.Resource[files.AsyncReader]):
     resource: files.Resource[files.AsyncReader] = attrs.field(repr=True)
     """The resource this object wraps around."""
 
-    proxy_resource: typing.Optional[files.Resource[files.AsyncReader]] = attrs.field(default=None, repr=False)
+    proxy_resource: files.Resource[files.AsyncReader] | None = attrs.field(default=None, repr=False)
     """The proxied version of the resource, or [`None`][] if not present.
 
     !!! note
@@ -425,30 +425,30 @@ class MediaResource(files.Resource[files.AsyncReader]):
     """The loading state of the media item."""
 
     @property
-    @typing.final
+    @typing_extensions.override
     def url(self) -> str:
         """URL of this embed resource."""
         return self.resource.url
 
     @property
+    @typing_extensions.override
     def filename(self) -> str:
         """File name of this embed resource."""
         return self.resource.filename
 
     @property
-    @typing.final
-    def proxy_url(self) -> typing.Optional[str]:
+    def proxy_url(self) -> str | None:
         """Proxied URL of this embed resource if applicable, else [`None`][]."""
         return self.proxy_resource.url if self.proxy_resource else None
 
     @property
-    @typing.final
-    def proxy_filename(self) -> typing.Optional[str]:
+    def proxy_filename(self) -> str | None:
         """File name of the proxied version of this embed resource if applicable, else [`None`][]."""
         return self.proxy_resource.filename if self.proxy_resource else None
 
+    @typing_extensions.override
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> files.AsyncReaderContextManager[files.AsyncReader]:
         """Produce a stream of data for the resource.
 
@@ -484,7 +484,7 @@ class ThumbnailComponent(PartialComponent):
     media: MediaResource = attrs.field()
     """The media for the thumbnail."""
 
-    description: typing.Optional[str] = attrs.field()
+    description: str | None = attrs.field()
     """The description of the thumbnail."""
 
     is_spoiler: bool = attrs.field()
@@ -514,7 +514,7 @@ class MediaGalleryItem:
     media: MediaResource = attrs.field()
     """The media for the gallery item."""
 
-    description: typing.Optional[str] = attrs.field()
+    description: str | None = attrs.field()
     """The description of the gallery item."""
 
     is_spoiler: bool = attrs.field()
@@ -547,7 +547,7 @@ class FileComponent(PartialComponent):
 class ContainerComponent(PartialComponent):
     """Represents a container component."""
 
-    accent_color: typing.Optional[colors.Color] = attrs.field()
+    accent_color: colors.Color | None = attrs.field()
     """The accent colour for the container."""
 
     is_spoiler: bool = attrs.field()
@@ -616,17 +616,17 @@ The following values are valid for this:
 * [`hikari.components.ThumbnailComponent`][]
 """
 
-SelectMenuTypesT = typing.Union[
-    typing.Literal[ComponentType.TEXT_SELECT_MENU],
-    typing.Literal[3],
-    typing.Literal[ComponentType.USER_SELECT_MENU],
-    typing.Literal[5],
-    typing.Literal[ComponentType.ROLE_SELECT_MENU],
-    typing.Literal[6],
-    typing.Literal[ComponentType.MENTIONABLE_SELECT_MENU],
-    typing.Literal[7],
-    typing.Literal[ComponentType.CHANNEL_SELECT_MENU],
-    typing.Literal[8],
+SelectMenuTypesT = typing.Literal[
+    ComponentType.TEXT_SELECT_MENU,
+    3,
+    ComponentType.USER_SELECT_MENU,
+    5,
+    ComponentType.ROLE_SELECT_MENU,
+    6,
+    ComponentType.MENTIONABLE_SELECT_MENU,
+    7,
+    ComponentType.CHANNEL_SELECT_MENU,
+    8,
 ]
 """Type hints of the [`hikari.components.ComponentType`][] values which are valid for select menus.
 
@@ -659,15 +659,8 @@ The following values are included in this:
 * [`hikari.components.ComponentType.CHANNEL_SELECT_MENU`][]
 """
 
-InteractiveButtonTypesT = typing.Union[
-    typing.Literal[ButtonStyle.PRIMARY],
-    typing.Literal[1],
-    typing.Literal[ButtonStyle.SECONDARY],
-    typing.Literal[2],
-    typing.Literal[ButtonStyle.SUCCESS],
-    typing.Literal[3],
-    typing.Literal[ButtonStyle.DANGER],
-    typing.Literal[4],
+InteractiveButtonTypesT = typing.Literal[
+    ButtonStyle.PRIMARY, 1, ButtonStyle.SECONDARY, 2, ButtonStyle.SUCCESS, 3, ButtonStyle.DANGER, 4
 ]
 """Type hints of the [`hikari.components.ButtonStyle`][] values which are valid for interactive buttons.
 
@@ -699,14 +692,14 @@ The following values are valid for this:
 
 * [`hikari.components.ButtonComponent`][]
 * [`hikari.components.SelectMenuComponent`][]
-"""
+"""  # noqa: E501
 ModalComponentTypesT = TextInputComponent
 """Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:
 
 * [`hikari.components.TextInputComponent`][]
-"""
+"""  # noqa: E501
 
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""

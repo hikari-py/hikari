@@ -6,7 +6,7 @@
 <a href="https://github.com/hikari-py/hikari/actions"><img height="20" alt="CI status" src="https://github.com/hikari-py/hikari/actions/workflows/ci.yml/badge.svg?branch=master&event=push"></a>
 <a href="https://pypi.org/project/mypy/"><img height="20" alt="Mypy badge" src="https://img.shields.io/badge/mypy-checked-blue"></a>
 <a href="https://pypi.org/project/ruff"><img height="20" alt="Ruff badge" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json"></a>
-<a href="https://codeclimate.com/github/hikari-py/hikari/test_coverage"><img height="20" alt="Test coverage" src="https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/test_coverage"></a>
+<a href="https://codecov.io/github/hikari-py/hikari"><img src="https://codecov.io/github/hikari-py/hikari/graph/badge.svg?token=FPNSBOP2VG"/></a>
 <br>
 <a href="https://discord.gg/Jx4cNGG"><img height="20" alt="Discord invite" src="https://discord.com/api/guilds/574921006817476608/widget.png"></a>
 <a href="https://docs.hikari-py.dev/en/stable"><img height="20" alt="Documentation Status" src="https://readthedocs.org/projects/hikari-py/badge/?version=latest"></a>
@@ -318,16 +318,19 @@ Currently, this functionality does not yet exist.
 
 ## Developing hikari
 
-To familiarize yourself a bit with the project, we recommend reading our
+To familiarize yourself with the project, you should read our
 [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
 
 If you wish to contribute something, you should first start by cloning the repository.
 
-In the repository, make a virtual environment (`python -m venv .venv`) and enter it (`source .venv/bin/activate` on
-Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
+> [!NOTE]
+> We are using the package manager `uv` here. If you don't know how to use `uv`, we have a more detailed
+> section about that in the [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
+In the repository, make a virtual environment (`uv venv`) and enter it (`source .venv/bin/activate` on
+Linux or macOS, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
 `source .venv/Scripts/activate`).
 
-The first thing you should run is `pip install --group nox` to install nox.
+The first thing you should run is `uv sync --group nox` to install nox.
 This handles running predefined tasks and pipelines.
 
 Once this is complete, you can run `nox` without any arguments to ensure everything builds and is correct.

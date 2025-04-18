@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -29,6 +28,8 @@ from hikari.internal import enums as hikari_enum
 
 
 class BasicPyEnum(str, py_enum.Enum):
+    __slots__ = ()
+
     a = "0"
     b = "1"
     c = "2"
@@ -40,7 +41,6 @@ class BasicPyEnum(str, py_enum.Enum):
     i = "8"
     j = "9"
     k = "10"
-    l = "11"
     m = "12"
     n = "13"
     o = "14"
@@ -58,6 +58,8 @@ class BasicPyEnum(str, py_enum.Enum):
 
 
 class BasicHikariEnum(str, hikari_enum.Enum):
+    __slots__ = ()
+
     a = "0"
     b = "1"
     c = "2"
@@ -69,7 +71,6 @@ class BasicHikariEnum(str, hikari_enum.Enum):
     i = "8"
     j = "9"
     k = "10"
-    l = "11"
     m = "12"
     n = "13"
     o = "14"

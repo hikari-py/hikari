@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,11 +24,11 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "Event",
-    "ExceptionEvent",
     "EventT",
+    "ExceptionEvent",
+    "get_required_intents_for",
     "is_no_recursive_throw_event",
     "no_recursive_throw",
-    "get_required_intents_for",
     "requires_intents",
 )
 
@@ -39,13 +38,15 @@ import typing
 
 import attrs
 
-from hikari import intents
-from hikari import traits
 from hikari.api import shard as gateway_shard
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import types
+
+    from hikari import intents
+    from hikari import traits
 
     _T = typing.TypeVar("_T")
 
@@ -63,18 +64,14 @@ class Event(abc.ABC):
     __dispatches: typing.ClassVar[tuple[type[Event], ...]]
     __bitmask: typing.ClassVar[int]
 
+    @typing_extensions.override
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
-        # hasattr doesn't work with private variables in this case so we use a try except.
-        # We need to set Event's __dispatches when the first subclass is made as Event cannot
-        # be included in a tuple literal on itself due to not existing yet.
-        try:
-            Event.__dispatches
-        except AttributeError:
+        if not hasattr(Event, "__dispatches"):
             Event.__dispatches = (Event,)
             Event.__bitmask = 1 << 0
 
-        global _id_counter
+        global _id_counter  # noqa: PLW0603 - Do use use global
 
         mro = cls.mro()
         # We don't have to explicitly include Event here as issubclass(Event, Event) returns True.
@@ -173,7 +170,7 @@ def no_recursive_throw() -> typing.Callable[[_T], _T]:
     return decorator
 
 
-def is_no_recursive_throw_event(obj: typing.Union[_T, type[_T]]) -> bool:
+def is_no_recursive_throw_event(obj: _T | type[_T]) -> bool:
     """Whether the event is marked as `___norecursivethrow___`."""
     result = getattr(obj, NO_RECURSIVE_THROW_attrs, False)
     assert isinstance(result, bool)
@@ -208,12 +205,13 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
     """Event callback that threw an exception."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.failed_event.app
 
     @property
-    def shard(self) -> typing.Optional[gateway_shard.GatewayShard]:
+    def shard(self) -> gateway_shard.GatewayShard | None:
         """Shard that received the event, if there was one associated.
 
         This may be [`None`][] if no specific shard was the cause of this
@@ -225,7 +223,7 @@ class ExceptionEvent(Event, typing.Generic[EventT]):
         return None
 
     @property
-    def exc_info(self) -> tuple[type[Exception], Exception, typing.Optional[types.TracebackType]]:
+    def exc_info(self) -> tuple[type[Exception], Exception, types.TracebackType | None]:
         """Exception triplet that follows the same format as [`sys.exc_info`][].
 
         The [`sys.exc_info`][] triplet consists of the exception type, the exception

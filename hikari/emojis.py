@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Emoji", "UnicodeEmoji", "CustomEmoji", "KnownCustomEmoji")
+__all__: typing.Sequence[str] = ("CustomEmoji", "Emoji", "KnownCustomEmoji", "UnicodeEmoji")
 
 import abc
 import re
@@ -36,9 +35,7 @@ from hikari import snowflakes
 from hikari import urls
 from hikari.internal import attrs_extensions
 from hikari.internal import routes
-
-# import unicodedata
-
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import traits
@@ -66,6 +63,7 @@ class Emoji(files.WebResource, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def url(self) -> str:
         """URL of the emoji image to display in clients."""
 
@@ -80,7 +78,7 @@ class Emoji(files.WebResource, abc.ABC):
         """Mention string to use to mention the emoji with."""
 
     @classmethod
-    def parse(cls, string: str, /) -> typing.Union[UnicodeEmoji, CustomEmoji]:
+    def parse(cls, string: str, /) -> UnicodeEmoji | CustomEmoji:
         """Parse a given string into an emoji object.
 
         Parameters
@@ -126,16 +124,19 @@ class UnicodeEmoji(str, Emoji):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @typing_extensions.override
     def name(self) -> str:
         """Return the code points which form the emoji."""
         return self
 
     @property
     @typing.final
+    @typing_extensions.override
     def url_name(self) -> str:
         return self
 
     @property
+    @typing_extensions.override
     def mention(self) -> str:
         return self
 
@@ -146,6 +147,7 @@ class UnicodeEmoji(str, Emoji):
         return [ord(c) for c in self]
 
     @property
+    @typing_extensions.override
     def filename(self) -> str:
         """Filename to use if re-uploading this emoji's PNG."""
         codepoints = self.codepoints
@@ -164,6 +166,7 @@ class UnicodeEmoji(str, Emoji):
         return "-".join(hex(c)[2:] for c in codepoints) + ".png"
 
     @property
+    @typing_extensions.override
     def url(self) -> str:
         """Get the URL of the PNG rendition of this emoji.
 
@@ -185,16 +188,6 @@ class UnicodeEmoji(str, Emoji):
         """
         return _TWEMOJI_PNG_BASE_URL + self.filename
 
-    # @property
-    # @typing.final
-    # def unicode_names(self) -> typing.Sequence[str]:
-    #     """Get the unicode name of the emoji as a sequence.
-    #
-    #     This returns the name of each codepoint. If only one codepoint exists,
-    #     then this will only have one item in the resulting sequence.
-    #     """
-    #     return [unicodedata.name(c) for c in self]
-
     @property
     @typing.final
     def unicode_escape(self) -> str:
@@ -215,6 +208,7 @@ class UnicodeEmoji(str, Emoji):
 
     @classmethod
     @typing.final
+    @typing_extensions.override
     def parse(cls, string: str, /) -> UnicodeEmoji:
         """Parse a given string into a unicode emoji object.
 
@@ -228,10 +222,7 @@ class UnicodeEmoji(str, Emoji):
         UnicodeEmoji
             The parsed UnicodeEmoji object.
         """
-        # TODO: Re-add validity
-        # Ensure validity.
-        # for i, codepoint in enumerate(string, start=1):
-        #     unicodedata.name(codepoint)
+        # TODO: Add validity check here (maybe use optional discord_emojis package)
 
         return cls(string)
 
@@ -271,9 +262,11 @@ class CustomEmoji(snowflakes.Unique, Emoji):
     is_animated: bool = attrs.field(eq=False, hash=False, repr=True)
     """Whether the emoji is animated."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.mention
 
+    @typing_extensions.override
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CustomEmoji):
             return self.id == other.id
@@ -281,27 +274,32 @@ class CustomEmoji(snowflakes.Unique, Emoji):
         return False
 
     @property
+    @typing_extensions.override
     def filename(self) -> str:
         return str(self.id) + (".gif" if self.is_animated else ".png")
 
     @property
     @typing.final
+    @typing_extensions.override
     def url_name(self) -> str:
         return f"{self.name}:{self.id}"
 
     @property
     @typing.final
+    @typing_extensions.override
     def mention(self) -> str:
         return f"<{'a' if self.is_animated else ''}:{self.url_name}>"
 
     @property
     @typing.final
+    @typing_extensions.override
     def url(self) -> str:
         ext = "gif" if self.is_animated else "png"
 
         return routes.CDN_CUSTOM_EMOJI.compile(urls.CDN_URL, emoji_id=self.id, file_format=ext)
 
     @classmethod
+    @typing_extensions.override
     def parse(cls, string: str, /) -> CustomEmoji:
         """Parse a given emoji mention string into a custom emoji object.
 
@@ -327,7 +325,8 @@ class CustomEmoji(snowflakes.Unique, Emoji):
                 is_animated=emoji_match.group("flags").lower() == "a",
             )
 
-        raise ValueError("Expected an emoji mention")
+        msg = "Expected an emoji mention"
+        raise ValueError(msg)
 
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
@@ -346,7 +345,7 @@ class KnownCustomEmoji(CustomEmoji):
     )
     """Client application that models may use for procedures."""
 
-    guild_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the guild this emoji belongs to, if applicable.
 
     This will be [`None`][] if the emoji is an application emoji.
@@ -358,7 +357,7 @@ class KnownCustomEmoji(CustomEmoji):
     If this is empty then any user can use this emoji regardless of their roles.
     """
 
-    user: typing.Optional[users.User] = attrs.field(eq=False, hash=False, repr=False)
+    user: users.User | None = attrs.field(eq=False, hash=False, repr=False)
     """The user that created the emoji.
 
     !!! note
