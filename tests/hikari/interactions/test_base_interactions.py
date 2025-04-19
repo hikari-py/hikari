@@ -74,42 +74,56 @@ class TestPartialInteraction:
         assert mock_partial_interaction.webhook_id is mock_partial_interaction.application_id
 
     @pytest.mark.asyncio
-    async def test_fetch_guild(self, mock_partial_interaction, mock_app):
-        mock_partial_interaction.guild_id = 43123123
+    async def test_fetch_guild(
+        self, mock_partial_interaction: base_interactions.PartialInteraction, hikari_app: traits.RESTAware
+    ):
+        mock_partial_interaction.guild_id = snowflakes.Snowflake(43123123)
 
-        assert await mock_partial_interaction.fetch_guild() is mock_app.rest.fetch_guild.return_value
+        with mock.patch.object(
+            mock_partial_interaction, "app", mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
+        ) as patched_hikari_app:
+            assert await mock_partial_interaction.fetch_guild() is patched_hikari_app.rest.fetch_guild.return_value
 
-        mock_app.rest.fetch_guild.assert_awaited_once_with(43123123)
+            patched_hikari_app.rest.fetch_guild.assert_awaited_once_with(43123123)
 
     @pytest.mark.asyncio
-    async def test_fetch_guild_for_dm_interaction(self, mock_partial_interaction, mock_app):
+    async def test_fetch_guild_for_dm_interaction(
+        self, mock_partial_interaction: base_interactions.PartialInteraction, hikari_app: traits.RESTAware
+    ):
         mock_partial_interaction.guild_id = None
 
         assert await mock_partial_interaction.fetch_guild() is None
 
-        mock_app.rest.fetch_guild.assert_not_called()
+        hikari_app.rest.fetch_guild.assert_not_called()
 
-    def test_get_guild(self, mock_partial_interaction, mock_app):
-        mock_partial_interaction.guild_id = 874356
+    def test_get_guild(self, mock_partial_interaction: base_interactions.PartialInteraction):
+        mock_partial_interaction.guild_id = snowflakes.Snowflake(874356)
 
-        assert mock_partial_interaction.get_guild() is mock_app.cache.get_guild.return_value
+        with mock.patch.object(
+            mock_partial_interaction, "app", mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
+        ) as patched_hikari_app:
+            assert mock_partial_interaction.get_guild() is patched_hikari_app.cache.get_guild.return_value
 
-        mock_app.cache.get_guild.assert_called_once_with(874356)
+            patched_hikari_app.cache.get_guild.assert_called_once_with(874356)
 
-    def test_get_guild_for_dm_interaction(self, mock_partial_interaction, mock_app):
+    def test_get_guild_for_dm_interaction(self, mock_partial_interaction: base_interactions.PartialInteraction):
         mock_partial_interaction.guild_id = None
 
+        with mock.patch.object(
+            mock_partial_interaction, "app", mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
+        ) as patched_hikari_app:
+            assert mock_partial_interaction.get_guild() is None
+
+            patched_hikari_app.cache.get_guild.assert_not_called()
+
+    def test_get_guild_when_cacheless(
+        self, mock_partial_interaction: base_interactions.PartialInteraction, hikari_app: traits.RESTAware
+    ):
+        mock_partial_interaction.guild_id = snowflakes.Snowflake(321123)
+
         assert mock_partial_interaction.get_guild() is None
 
-        mock_app.cache.get_guild.assert_not_called()
-
-    def test_get_guild_when_cacheless(self, mock_partial_interaction, mock_app):
-        mock_partial_interaction.guild_id = 321123
-        mock_partial_interaction.app = mock.Mock(traits.RESTAware)
-
-        assert mock_partial_interaction.get_guild() is None
-
-        mock_app.cache.get_guild.assert_not_called()
+        hikari_app.cache.get_guild.assert_not_called()
 
 
 class TestMessageResponseMixin:

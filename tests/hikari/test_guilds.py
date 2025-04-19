@@ -322,11 +322,11 @@ class TestMember:
         with mock.patch.object(guilds.Member, "make_guild_avatar_url") as make_guild_avatar_url:
             assert member.guild_avatar_url is make_guild_avatar_url.return_value
 
-    def test_guild_banner_url_property(self, member: guilds.member):
+    def test_guild_banner_url_property(self, member: guilds.Member):
         with mock.patch.object(guilds.Member, "make_guild_banner_url") as make_guild_banner_url:
             assert member.guild_banner_url is make_guild_banner_url.return_value
 
-    def test_communication_disabled_until(self, member: guilds.member):
+    def test_communication_disabled_until(self, member: guilds.Member):
         member.raw_communication_disabled_until = datetime.datetime(2021, 11, 22)
 
         with mock.patch.object(time, "utc_datetime", return_value=datetime.datetime(2021, 10, 18)):
@@ -407,62 +407,63 @@ class TestMember:
             file_format="url",
         )
 
-    def test_make_banner_url(self, model, mock_user):
-        result = model.make_banner_url(ext="png", size=4096)
-        mock_user.make_banner_url.assert_called_once_with(ext="png", size=4096)
-        assert result is mock_user.make_banner_url.return_value
+    def test_make_banner_url(self, member: guilds.Member, mock_user: users.User):
+        with mock.patch.object(mock_user, "make_banner_url") as patched_make_banner_url:
+            result = member.make_banner_url(ext="png", size=4096)
+            patched_make_banner_url.assert_called_once_with(ext="png", size=4096)
+            assert result is patched_make_banner_url.return_value
 
-    def test_make_guild_banner_url_when_no_hash(self, model):
-        model.guild_banner_hash = None
-        assert model.make_guild_banner_url(ext="png", size=1024) is None
+    def test_make_guild_banner_url_when_no_hash(self, member: guilds.Member):
+        member.guild_banner_hash = None
+        assert member.make_guild_banner_url(ext="png", size=1024) is None
 
-    def test_make_guild_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model):
-        model.guild_banner_hash = "a_18dnf8dfbakfdh"
+    def test_make_guild_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, member: guilds.Member):
+        member.guild_banner_hash = "a_18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_guild_banner_url(ext=None, size=4096) == "file"
+            assert member.make_guild_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
-            user_id=model.id,
-            guild_id=model.guild_id,
-            hash=model.guild_banner_hash,
+            user_id=member.id,
+            guild_id=member.guild_id,
+            hash=member.guild_banner_hash,
             size=4096,
             file_format="gif",
         )
 
-    def test_make_guild_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model):
-        model.guild_banner_hash = "18dnf8dfbakfdh"
+    def test_make_guild_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, member: guilds.Member):
+        member.guild_banner_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_guild_banner_url(ext=None, size=4096) == "file"
+            assert member.make_guild_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
-            user_id=model.id,
-            guild_id=model.guild_id,
-            hash=model.guild_banner_hash,
+            user_id=member.id,
+            guild_id=member.guild_id,
+            hash=member.guild_banner_hash,
             size=4096,
             file_format="png",
         )
 
-    def test_make_guild_banner_url_with_all_args(self, model):
-        model.guild_banner_hash = "18dnf8dfbakfdh"
+    def test_make_guild_banner_url_with_all_args(self, member: guilds.Member):
+        member.guild_banner_hash = "18dnf8dfbakfdh"
 
         with mock.patch.object(
             routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_guild_banner_url(ext="url", size=4096) == "file"
+            assert member.make_guild_banner_url(ext="url", size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
-            guild_id=model.guild_id,
-            user_id=model.id,
-            hash=model.guild_banner_hash,
+            guild_id=member.guild_id,
+            user_id=member.id,
+            hash=member.guild_banner_hash,
             size=4096,
             file_format="url",
         )
@@ -1298,14 +1299,14 @@ class TestGuild:
         assert guild.invites_disabled is False
 
     @pytest.mark.asyncio
-    async def test_invites_disabled_via_incidents(self, model):
-        model.incidents = guilds.GuildIncidents(
+    async def test_invites_disabled_via_incidents(self, guild: guilds.Guild):
+        guild.incidents = guilds.GuildIncidents(
             invites_disabled_until=datetime.datetime(2021, 11, 17),
             dms_disabled_until=None,
             dm_spam_detected_at=None,
             raid_detected_at=None,
         )
-        assert model.invites_disabled is True
+        assert guild.invites_disabled is True
 
     @pytest.mark.asyncio
     async def test_invites_disabled_via_feature(self, guild: guilds.Guild):

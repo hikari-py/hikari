@@ -55,6 +55,9 @@ def hikari_user() -> users.User:
         discriminator="0",
         username="user_username",
         global_name="user_global_name",
+        avatar_decoration=users.AvatarDecoration(
+            asset_hash="avatar_decoration_asset_hash", sku_id=snowflakes.Snowflake(999), expires_at=None
+        ),
         avatar_hash="user_avatar_hash",
         banner_hash="user_banner_hash",
         accent_color=None,
@@ -83,6 +86,7 @@ def hikari_message() -> messages.Message:
         mentions_everyone=False,
         attachments=[],
         embeds=[],
+        poll=None,
         reactions=[],
         is_pinned=False,
         webhook_id=snowflakes.Snowflake(432),

@@ -160,6 +160,7 @@ class TestApplication:
             tags=[],
             install_parameters=mock.Mock(),
             approximate_guild_count=1,
+            approximate_user_install_count=1,
             integration_types_config={},
         )
 

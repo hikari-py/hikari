@@ -44,6 +44,9 @@ class TestPartialUser:
             self._username = "username"
             self._global_name = "global_name"
             self._display_name = "display_name"
+            self._avatar_decoration = users.AvatarDecoration(
+                asset_hash="avatar_decoration_asset_hash", sku_id=snowflakes.Snowflake(999), expires_at=None
+            )
             self._is_bot = False
             self._is_system = False
             self._flags = users.UserFlag.NONE
@@ -84,6 +87,10 @@ class TestPartialUser:
         @property
         def display_name(self) -> undefined.UndefinedNoneOr[str]:
             return self._display_name
+
+        @property
+        def avatar_decoration(self) -> users.AvatarDecoration | None:
+            return self._avatar_decoration
 
         @property
         def is_bot(self) -> undefined.UndefinedOr[bool]:
@@ -280,6 +287,9 @@ class TestUser:
             self._username = "username"
             self._global_name = "global_name"
             self._display_name = "display_name"
+            self._avatar_decoration = users.AvatarDecoration(
+                asset_hash="avatar_decoration_asset_hash", sku_id=snowflakes.Snowflake(999), expires_at=None
+            )
             self._is_bot = False
             self._is_system = False
             self._flags = users.UserFlag.NONE
@@ -322,6 +332,10 @@ class TestUser:
             return self._display_name
 
         @property
+        def avatar_decoration(self) -> users.AvatarDecoration | None:
+            return self._avatar_decoration
+
+        @property
         def is_bot(self) -> undefined.UndefinedOr[bool]:
             return self._is_bot
 
@@ -345,26 +359,20 @@ class TestUser:
     def test_accent_colour_alias_property(self, user: users.User):
         assert user.accent_colour is user.accent_color
 
-    def test_avatar_decoration_property(self, obj):
-        obj.avatar_decoration = users.AvatarDecoration(
-            asset_hash="18dnf8dfbakfdh", sku_id=snowflakes.Snowflake(123), expires_at=None
-        )
-
+    def test_avatar_decoration_property(self, user: users.User):
         with mock.patch.object(users.AvatarDecoration, "make_url") as make_url:
-            assert obj.avatar_decoration.url is make_url.return_value
+            assert user.avatar_decoration is not None
+            assert user.avatar_decoration.url is make_url.return_value
 
-    def test_avatar_decoration_make_url_with_all_args(self, obj):
-        obj.avatar_decoration = users.AvatarDecoration(
-            asset_hash="18dnf8dfbakfdh", sku_id=snowflakes.Snowflake(123), expires_at=None
-        )
-
+    def test_avatar_decoration_make_url_with_all_args(self, user: users.User):
         with mock.patch.object(
             routes, "CDN_AVATAR_DECORATION", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.avatar_decoration.make_url(size=4096) == "file"
+            assert user.avatar_decoration is not None
+            assert user.avatar_decoration.make_url(size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, hash=obj.avatar_decoration.asset_hash, size=4096, file_format="png"
+            urls.CDN_URL, hash=user.avatar_decoration.asset_hash, size=4096, file_format="png"
         )
 
     def test_avatar_url_property(self, user: users.User):
