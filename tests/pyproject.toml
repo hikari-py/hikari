@@ -1,7 +1,0 @@
-[tool.pyright]
-pythonVersion = "3.9"
-typeCheckingMode = "strict"
-
-reportUnnecessaryTypeIgnoreComment = "error"
-# We need to be able to do this for tests
-reportPrivateUsage = "none"
