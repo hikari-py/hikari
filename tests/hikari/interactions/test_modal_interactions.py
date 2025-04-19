@@ -29,6 +29,7 @@ from hikari import monetization
 from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
+from hikari.impl import special_endpoints
 from hikari.interactions import base_interactions
 from hikari.interactions import modal_interactions
 
@@ -51,13 +52,13 @@ class TestModalInteraction:
             message=mock.Mock(),
             locale="es-ES",
             guild_locale="en-US",
-            app_permissions=permissions.Permissions.NONE,
+            app_permissions=543123,
             components=[
-                components.ModalActionRowComponent(
-                    type=components.ComponentType.ACTION_ROW,
+                special_endpoints.ModalActionRowBuilder(
+                    id=9817398,
                     components=[
-                        components.TextInputComponent(
-                            type=components.ComponentType.TEXT_INPUT, custom_id="le id", value="le value"
+                        special_endpoints.TextInputBuilder(
+                            id=9817398, custom_id="le id", label="le label", value="le value"
                         )
                     ],
                 )
