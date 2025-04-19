@@ -35,6 +35,7 @@ from hikari import applications
 from hikari import audit_logs
 from hikari import channels
 from hikari import colors
+from hikari import components
 from hikari import commands
 from hikari import embeds
 from hikari import emojis
@@ -1556,6 +1557,90 @@ class TestRESTClientImpl:
             ValueError, match=rf"You may only specify one of '{singular_arg}' or '{plural_arg}', not both"
         ):
             rest_client._build_message_payload(**{singular_arg: object(), plural_arg: object()})
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.ACTION_ROW,
+            components.ComponentType.BUTTON,
+            components.ComponentType.TEXT_SELECT_MENU,
+            components.ComponentType.USER_SELECT_MENU,
+            components.ComponentType.ROLE_SELECT_MENU,
+            components.ComponentType.MENTIONABLE_SELECT_MENU,
+            components.ComponentType.CHANNEL_SELECT_MENU,
+        ),
+    )
+    def test__build_message_payload_with_singular_components_v1(self, rest_client, type):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(component=component)
+
+        assert payload.get("flags") is None
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.SECTION,
+            components.ComponentType.TEXT_DISPLAY,
+            components.ComponentType.THUMBNAIL,
+            components.ComponentType.MEDIA_GALLERY,
+            components.ComponentType.FILE,
+            components.ComponentType.SEPARATOR,
+            components.ComponentType.CONTAINER,
+        ),
+    )
+    def test__build_message_payload_with_singular_components_v2(self, rest_client, type):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(component=component)
+
+        assert payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.ACTION_ROW,
+            components.ComponentType.BUTTON,
+            components.ComponentType.TEXT_SELECT_MENU,
+            components.ComponentType.USER_SELECT_MENU,
+            components.ComponentType.ROLE_SELECT_MENU,
+            components.ComponentType.MENTIONABLE_SELECT_MENU,
+            components.ComponentType.CHANNEL_SELECT_MENU,
+        ),
+    )
+    def test__build_message_payload_with_multiple_components_v1(self, rest_client, type):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(component=component)
+
+        assert payload.get("flags") is None
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.SECTION,
+            components.ComponentType.TEXT_DISPLAY,
+            components.ComponentType.THUMBNAIL,
+            components.ComponentType.MEDIA_GALLERY,
+            components.ComponentType.FILE,
+            components.ComponentType.SEPARATOR,
+            components.ComponentType.CONTAINER,
+        ),
+    )
+    def test__build_message_payload_with_multiple_components_v2(self, rest_client, type):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(components=[component])
+
+        assert payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2
+
+    def test__build_message_payload_with_mixed_components(self, rest_client):
+        component_1 = mock.Mock(type=components.ComponentType.ACTION_ROW, build=mock.Mock(return_value=({}, ())))
+        component_2 = mock.Mock(type=components.ComponentType.CONTAINER, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(components=[component_1, component_2])
+
+        assert payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2
 
     def test_interaction_deferred_builder(self, rest_client):
         result = rest_client.interaction_deferred_builder(5)
