@@ -1642,6 +1642,18 @@ class TestRESTClientImpl:
 
         assert payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2
 
+    def test__build_message_payload_with_components_v2_and_flags(self, rest_client):
+        component_1 = mock.Mock(type=components.ComponentType.ACTION_ROW, build=mock.Mock(return_value=({}, ())))
+        component_2 = mock.Mock(type=components.ComponentType.CONTAINER, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(
+            components=[component_1, component_2], flags=message_models.MessageFlag.EPHEMERAL
+        )
+
+        assert (
+            payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2 | message_models.MessageFlag.EPHEMERAL
+        )
+
     def test_interaction_deferred_builder(self, rest_client):
         result = rest_client.interaction_deferred_builder(5)
 
