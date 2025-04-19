@@ -1,4 +1,7 @@
 [tool.pyright]
-extends = "../pyproject.toml"
+pythonVersion = "3.9"
+typeCheckingMode = "strict"
 
-reportPrivateUsage = "none" # We need to be able to do this for tests
+reportUnnecessaryTypeIgnoreComment = "error"
+reportPrivateUsage = "none"                  # We need to be able to do this for tests
+reportIncompatibleMethodOverride = "none"    # This relies on ordering for keyword-only arguments
