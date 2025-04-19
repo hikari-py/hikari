@@ -1,0 +1,4 @@
+[tool.pyright]
+extends = "../pyproject.toml"
+
+reportPrivateUsage = "none" # We need to be able to do this for tests
