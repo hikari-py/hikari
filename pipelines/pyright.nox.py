@@ -41,7 +41,7 @@ def pyright(session: nox.Session) -> None:
 @nox.session()
 def pyright_tests(session: nox.Session) -> None:
     """Perform type analysis on the tests using Pyright."""
-    nox.sync(session, self=True, extras=["speedups", "server"], groups=["pyright"])
+    nox.sync(session, self=True, extras=["speedups", "server"], groups=["pyright", "pytest"])
     session.run("pyright", config.TEST_PACKAGE)
 
 
