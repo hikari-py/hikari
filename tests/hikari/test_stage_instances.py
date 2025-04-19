@@ -20,23 +20,18 @@
 # SOFTWARE.
 from __future__ import annotations
 
-import mock
 import pytest
 
 from hikari import snowflakes
 from hikari import stage_instances
-
-
-@pytest.fixture
-def mock_app():
-    return mock.Mock()
+from hikari import traits
 
 
 class TestStageInstance:
     @pytest.fixture
-    def stage_instance(self, mock_app):
+    def stage_instance(self, hikari_app: traits.RESTAware) -> stage_instances.StageInstance:
         return stage_instances.StageInstance(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(123),
             channel_id=snowflakes.Snowflake(6969),
             guild_id=snowflakes.Snowflake(420),
@@ -46,26 +41,26 @@ class TestStageInstance:
             scheduled_event_id=snowflakes.Snowflake(1337),
         )
 
-    def test_id_property(self, stage_instance):
+    def test_id_property(self, stage_instance: stage_instances.StageInstance):
         assert stage_instance.id == 123
 
-    def test_app_property(self, stage_instance, mock_app):
-        assert stage_instance.app is mock_app
+    def test_app_property(self, stage_instance: stage_instances.StageInstance, hikari_app: traits.RESTAware):
+        assert stage_instance.app is hikari_app
 
-    def test_channel_id_property(self, stage_instance):
+    def test_channel_id_property(self, stage_instance: stage_instances.StageInstance):
         assert stage_instance.channel_id == 6969
 
-    def test_guild_id_property(self, stage_instance):
+    def test_guild_id_property(self, stage_instance: stage_instances.StageInstance):
         assert stage_instance.guild_id == 420
 
-    def test_topic_property(self, stage_instance):
+    def test_topic_property(self, stage_instance: stage_instances.StageInstance):
         assert stage_instance.topic == "beanos"
 
-    def test_privacy_level_property(self, stage_instance):
+    def test_privacy_level_property(self, stage_instance: stage_instances.StageInstance):
         assert stage_instance.privacy_level == stage_instances.StageInstancePrivacyLevel.GUILD_ONLY
 
-    def test_discoverable_disabled_property(self, stage_instance):
+    def test_discoverable_disabled_property(self, stage_instance: stage_instances.StageInstance):
         assert stage_instance.discoverable_disabled is True
 
-    def test_guild_scheduled_event_id_property(self, stage_instance):
+    def test_guild_scheduled_event_id_property(self, stage_instance: stage_instances.StageInstance):
         assert stage_instance.scheduled_event_id == 1337
