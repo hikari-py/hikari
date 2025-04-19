@@ -3,5 +3,5 @@ pythonVersion = "3.9"
 typeCheckingMode = "strict"
 
 reportUnnecessaryTypeIgnoreComment = "error"
-reportPrivateUsage = "none"                  # We need to be able to do this for tests
-reportIncompatibleMethodOverride = "none"    # This relies on ordering for keyword-only arguments
+# We need to be able to do this for tests
+reportPrivateUsage = "none"
