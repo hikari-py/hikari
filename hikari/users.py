@@ -521,12 +521,6 @@ class User(PartialUser, abc.ABC):
     @property
     @abc.abstractmethod
     @typing_extensions.override
-    def app(self) -> traits.RESTAware:
-        """Client application that models may use for procedures."""
-
-    @property
-    @abc.abstractmethod
-    @typing_extensions.override
     def accent_color(self) -> colors.Color | None:
         """The custom banner color for the user, if set else [`None`][].
 

@@ -279,6 +279,22 @@ class TestUser:
     class MockedUser(users.User):
         def __init__(self, app: traits.RESTAware):
             self._app = app
+            self._id = snowflakes.Snowflake(12)
+            self._avatar_hash = "avatar_hash"
+            self._banner_hash = "banner_hash"
+            self._accent_color = colors.Color.from_hex_code("FFB123")
+            self._discriminator = "discriminator"
+            self._username = "username"
+            self._global_name = "global_name"
+            self._global_name = "global_name"
+            self._display_name = "display_name"
+            self._avatar_decoration = users.AvatarDecoration(
+                asset_hash="avatar_decoration_asset_hash", sku_id=snowflakes.Snowflake(999), expires_at=None
+            )
+            self._is_bot = False
+            self._is_system = False
+            self._flags = users.UserFlag.NONE
+            self._mention = "mention"
 
         @property
         def app(self) -> traits.RESTAware:
@@ -286,31 +302,31 @@ class TestUser:
 
         @property
         def id(self) -> snowflakes.Snowflake:
-            return snowflakes.Snowflake(12)
+            return self._id
 
         @property
         def avatar_hash(self) -> str:
-            return "avatar_hash"
+            return self._avatar_hash
 
         @property
         def banner_hash(self) -> str:
-            return "banner_hash"
+            return self._banner_hash
 
         @property
         def accent_color(self) -> colors.Color:
-            return colors.Color.from_hex_code("FFB123")
+            return self._accent_color
 
         @property
         def discriminator(self) -> str:
-            return "discriminator"
+            return self._discriminator
 
         @property
         def username(self) -> str:
-            return "username"
+            return self._username
 
         @property
         def global_name(self) -> str:
-            return "global_name"
+            return self._global_name
 
         @property
         def display_name(self) -> str:
@@ -318,25 +334,23 @@ class TestUser:
 
         @property
         def avatar_decoration(self) -> users.AvatarDecoration | None:
-            return users.AvatarDecoration(
-                asset_hash="avatar_decoration_asset_hash", sku_id=snowflakes.Snowflake(999), expires_at=None
-            )
+            return self._avatar_decoration
 
         @property
         def is_bot(self) -> bool:
-            return False
+            return self._is_bot
 
         @property
         def is_system(self) -> bool:
-            return False
+            return self._is_system
 
         @property
         def flags(self) -> users.UserFlag:
-            return users.UserFlag.NONE
+            return self._flags
 
         @property
         def mention(self) -> str:
-            return "mention"
+            return self._mention
 
     @pytest.fixture
     def user(self, hikari_app: traits.RESTAware) -> users.User:
@@ -372,7 +386,7 @@ class TestUser:
 
     def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_for_gif(self, user: users.User):
         with (
-            mock.patch.object(user, "avatar_hash", "a_avatar_hash"),
+            mock.patch.object(user, "_avatar_hash", "a_avatar_hash"),
             mock.patch.object(routes, "CDN_USER_AVATAR") as patched_route,
             mock.patch.object(
                 patched_route, "compile_to_file", new=mock.Mock(return_value="file")
@@ -399,7 +413,7 @@ class TestUser:
 
     def test_make_avatar_url_with_all_args(self, user: users.User):
         with (
-            mock.patch.object(user, "discriminator", "1234"),
+            mock.patch.object(user, "_discriminator", "1234"),
             mock.patch.object(routes, "CDN_USER_AVATAR") as patched_route,
             mock.patch.object(
                 patched_route, "compile_to_file", new=mock.Mock(return_value="file")
@@ -432,8 +446,8 @@ class TestUser:
 
     def test_default_avatar(self, user: users.User):
         with (
-            mock.patch.object(user, "id", 377812572784820226),
-            mock.patch.object(user, "discriminator", "1234"),
+            mock.patch.object(user, "_id", 377812572784820226),
+            mock.patch.object(user, "_discriminator", "1234"),
             mock.patch.object(routes, "CDN_DEFAULT_USER_AVATAR") as patched_route,
             mock.patch.object(
                 patched_route, "compile_to_file", new=mock.Mock(return_value="file")
@@ -445,8 +459,8 @@ class TestUser:
 
     def test_default_avatar_for_migrated_users(self, user: users.User):
         with (
-            mock.patch.object(user, "id", 377812572784820226),
-            mock.patch.object(user, "discriminator", "0"),
+            mock.patch.object(user, "_id", 377812572784820226),
+            mock.patch.object(user, "_discriminator", "0"),
             mock.patch.object(routes, "CDN_DEFAULT_USER_AVATAR") as patched_route,
             mock.patch.object(
                 patched_route, "compile_to_file", new=mock.Mock(return_value="file")
@@ -462,7 +476,7 @@ class TestUser:
 
     def test_make_banner_url_when_no_hash(self, user: users.User):
         with (
-            mock.patch.object(user, "banner_hash", None),
+            mock.patch.object(user, "_banner_hash", None),
             mock.patch.object(routes, "CDN_USER_BANNER") as patched_route,
             mock.patch.object(
                 patched_route, "compile_to_file", new=mock.Mock(return_value="file")
@@ -474,7 +488,7 @@ class TestUser:
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, user: users.User):
         with (
-            mock.patch.object(user, "banner_hash", "a_banner_hash"),
+            mock.patch.object(user, "_banner_hash", "a_banner_hash"),
             mock.patch.object(routes, "CDN_USER_BANNER") as patched_route,
             mock.patch.object(
                 patched_route, "compile_to_file", new=mock.Mock(return_value="file")
