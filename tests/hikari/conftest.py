@@ -17,7 +17,7 @@ from hikari import users
 
 @pytest.fixture
 def hikari_app() -> traits.RESTAware:
-    return mock.Mock(spec=traits.RESTAware)
+    return mock.Mock(spec=traits.RESTAware, rest=mock.AsyncMock())
 
 
 @pytest.fixture

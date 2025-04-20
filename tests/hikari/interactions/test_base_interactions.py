@@ -80,7 +80,7 @@ class TestPartialInteraction:
     ):
         mock_partial_interaction.guild_id = snowflakes.Snowflake(43123123)
 
-        assert await mock_partial_interaction.fetch_guild() is patched_hikari_app.rest.fetch_guild.return_value
+        assert await mock_partial_interaction.fetch_guild() is hikari_app.rest.fetch_guild.return_value
 
         hikari_app.rest.fetch_guild.assert_awaited_once_with(43123123)
 
@@ -114,17 +114,10 @@ class TestPartialInteraction:
 
         patched_hikari_app.cache.get_guild.assert_not_called()
 
-    def test_get_guild_when_cacheless(
-        self, mock_partial_interaction: base_interactions.PartialInteraction, hikari_app: traits.RESTAware
-    ):
+    def test_get_guild_when_cacheless(self, mock_partial_interaction: base_interactions.PartialInteraction):
         mock_partial_interaction.guild_id = snowflakes.Snowflake(321123)
 
-        with mock.patch.object(
-            mock_partial_interaction, "app", mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
-        ) as patched_hikari_app:
-            assert mock_partial_interaction.get_guild() is None
-
-        patched_hikari_app.get_guild.assert_not_called()
+        assert mock_partial_interaction.get_guild() is None
 
 
 class TestMessageResponseMixin:
@@ -132,7 +125,7 @@ class TestMessageResponseMixin:
     def mock_message_response_mixin(
         self, hikari_app: traits.RESTAware
     ) -> base_interactions.MessageResponseMixin[typing.Any]:
-        return base_interactions.MessageResponseMixin(
+        return base_interactions.MessageResponseMixin[typing.Any](
             app=hikari_app,
             id=snowflakes.Snowflake(34123),
             application_id=snowflakes.Snowflake(651231),
@@ -142,11 +135,11 @@ class TestMessageResponseMixin:
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
             guild_id=snowflakes.Snowflake(5412231),
             channel=mock.Mock(id=3123123),
-            member=object(),
-            user=object(),
+            member=mock.Mock(),
+            user=mock.Mock(),
             locale="es-ES",
             guild_locale="en-US",
-            app_permissions=123321,
+            app_permissions=permissions.Permissions.NONE,
             authorizing_integration_owners={
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
