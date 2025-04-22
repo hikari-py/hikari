@@ -22,6 +22,8 @@ from __future__ import annotations
 
 import datetime
 
+import mock
+
 from hikari import sessions
 
 
@@ -36,6 +38,8 @@ def test_SessionStartLimit_reset_at_property():
     obj = sessions.SessionStartLimit(
         total=100, remaining=2, reset_after=datetime.timedelta(hours=1, days=10), max_concurrency=1
     )
-    obj._created_at = datetime.datetime(2020, 7, 22, 22, 22, 36, 988017, tzinfo=datetime.timezone.utc)
 
-    assert obj.reset_at == datetime.datetime(2020, 8, 1, 23, 22, 36, 988017, tzinfo=datetime.timezone.utc)
+    with mock.patch.object(
+        obj, "_created_at", datetime.datetime(2020, 7, 22, 22, 22, 36, 988017, tzinfo=datetime.timezone.utc)
+    ):
+        assert obj.reset_at == datetime.datetime(2020, 8, 1, 23, 22, 36, 988017, tzinfo=datetime.timezone.utc)
