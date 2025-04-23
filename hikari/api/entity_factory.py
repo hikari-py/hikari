@@ -2016,21 +2016,6 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def serialize_auto_mod_action(self, action: auto_mod_models.PartialAutoModAction) -> data_binding.JSONObject:
-        """Serialize an auto-moderation action object to a json serializable dict.
-
-        Parameters
-        ----------
-        action : hikari.auto_mod.PartialAutoModAction
-            The auto-moderation action object to serialize.
-
-        Returns
-        -------
-        hikari.internal.data_binding.JSONObject
-            The serialized representation of the auto-moderation action object.
-        """
-
-    @abc.abstractmethod
     def deserialize_auto_mod_rule(self, payload: data_binding.JSONObject) -> auto_mod_models.AutoModRule:
         """Parse a raw payload from Discord into an auto-moderation rule object.
 

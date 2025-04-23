@@ -6696,7 +6696,7 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
 
     async def test_create_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
-        mock_action = {"type": "58585858"}
+        mock_action = mock.Mock(special_endpoints.AutoModBlockMessageActionBuilder)
         expected_route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=123321)
         rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
 
@@ -6704,11 +6704,8 @@ class TestRESTClientImplAsync:
             StubModel(123321),
             name="meow",
             event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
-            trigger_type=auto_mod.AutoModTriggerType.HARMFUL_LINK,
+            trigger=special_endpoints.AutoModKeywordTriggerBuilder(keyword_filter=["hello", "world"]),
             actions=[mock_action],
-            allow_list=["bye", "meeeeeeow"],
-            keyword_filter=["okokok", "no", "bye"],
-            presets=[auto_mod.AutoModKeywordPresetType.PROFANITY, auto_mod.AutoModKeywordPresetType.SEXUAL_CONTENT],
             enabled=False,
             exempt_roles=[StubModel(4212), StubModel(43123)],
             exempt_channels=[StubModel(566), StubModel(333), StubModel(222)],
@@ -6722,23 +6719,19 @@ class TestRESTClientImplAsync:
             json={
                 "name": "meow",
                 "event_type": 1,
-                "trigger_type": 2,
-                "trigger_metadata": {
-                    "keyword_filter": ["okokok", "no", "bye"],
-                    "presets": [1, 2],
-                    "allow_list": ["bye", "meeeeeeow"],
-                },
-                "actions": [rest_client._entity_factory.serialize_auto_mod_action.return_value],
+                "trigger_type": 1,
+                "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
+                "actions": [mock_action.build.return_value],
                 "enabled": False,
                 "exempt_roles": ["4212", "43123"],
                 "exempt_channels": ["566", "333", "222"],
             },
             reason="a reason meow",
         )
-        rest_client._entity_factory.serialize_auto_mod_action.assert_called_once_with(mock_action)
+        mock_action.build.assert_called_once_with()
 
     async def test_create_auto_mod_rule_partial(self, rest_client: rest.RESTClientImpl):
-        mock_action = {"type": "58585858"}
+        mock_action = mock.Mock(special_endpoints.AutoModBlockMessageActionBuilder)
         expected_route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=123321)
         rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
 
@@ -6746,7 +6739,7 @@ class TestRESTClientImplAsync:
             StubModel(123321),
             name="meow",
             event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
-            trigger_type=auto_mod.AutoModTriggerType.HARMFUL_LINK,
+            trigger=special_endpoints.AutoModKeywordTriggerBuilder(keyword_filter=["hello", "world"]),
             actions=[mock_action],
         )
 
@@ -6757,16 +6750,17 @@ class TestRESTClientImplAsync:
             json={
                 "name": "meow",
                 "event_type": 1,
-                "trigger_type": 2,
-                "actions": [rest_client._entity_factory.serialize_auto_mod_action.return_value],
+                "trigger_type": 1,
+                "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
+                "actions": [mock_action.build.return_value],
                 "enabled": True,
             },
             reason=undefined.UNDEFINED,
         )
-        rest_client._entity_factory.serialize_auto_mod_action.assert_called_once_with(mock_action)
+        mock_action.build.assert_called_once_with()
 
     async def test_edit_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
-        mock_action = {"type": "58585858"}
+        mock_action = mock.Mock(special_endpoints.AutoModBlockMessageActionBuilder)
         expected_route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=123321, rule=5412123)
         rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
 
@@ -6775,10 +6769,8 @@ class TestRESTClientImplAsync:
             StubModel(5412123),
             name="meow",
             event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+            trigger=special_endpoints.AutoModKeywordTriggerBuilder(keyword_filter=["hello", "world"]),
             actions=[mock_action],
-            allow_list=["bye", "beep"],
-            keyword_filter=["sdsdsd", "eee", "bye"],
-            presets=[auto_mod.AutoModKeywordPresetType.SEXUAL_CONTENT, auto_mod.AutoModKeywordPresetType.PROFANITY],
             enabled=False,
             exempt_roles=[StubModel(4545), StubModel(5656)],
             exempt_channels=[StubModel(555), StubModel(666), StubModel(777)],
@@ -6792,19 +6784,15 @@ class TestRESTClientImplAsync:
             json={
                 "name": "meow",
                 "event_type": 1,
-                "trigger_metadata": {
-                    "keyword_filter": ["sdsdsd", "eee", "bye"],
-                    "presets": [2, 1],
-                    "allow_list": ["bye", "beep"],
-                },
-                "actions": [rest_client._entity_factory.serialize_auto_mod_action.return_value],
+                "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
+                "actions": [mock_action.build.return_value],
                 "enabled": False,
                 "exempt_roles": ["4545", "5656"],
                 "exempt_channels": ["555", "666", "777"],
             },
             reason="nyaa nyaa",
         )
-        rest_client._entity_factory.serialize_auto_mod_action.assert_called_once_with(mock_action)
+        mock_action.build.assert_called_once_with()
 
     async def test_edit_auto_mod_rule_partial(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=123321, rule=44332222)

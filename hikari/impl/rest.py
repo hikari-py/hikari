@@ -68,6 +68,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
+from hikari.api import special_endpoints
 from hikari.impl import buckets as buckets_impl
 from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
@@ -96,7 +97,6 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks
     from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import special_endpoints
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
@@ -4634,37 +4634,25 @@ class RESTClientImpl(rest_api.RESTClient):
         /,
         name: str,
         event_type: typing.Union[int, auto_mod.AutoModEventType],
-        trigger_type: typing.Union[int, auto_mod.AutoModTriggerType],
-        actions: typing.Sequence[auto_mod.PartialAutoModAction],
-        allow_list: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
-        keyword_filter: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
-        presets: undefined.UndefinedOr[
-            typing.Sequence[typing.Union[int, auto_mod.AutoModKeywordPresetType]]
-        ] = undefined.UNDEFINED,
+        trigger: special_endpoints.AutoModTriggerBuilder,
+        actions: typing.Sequence[special_endpoints.AutoModActionBuilder],
         enabled: undefined.UndefinedOr[bool] = True,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         exempt_channels: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[channels_.PartialChannel]
         ] = undefined.UNDEFINED,
-        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> auto_mod.AutoModRule:
         route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=guild)
         payload = data_binding.JSONObjectBuilder()
         payload.put("name", name)
         payload.put("event_type", event_type)
-        payload.put("trigger_type", trigger_type)
+        payload.put("trigger_type", trigger.type)
+        payload.put("trigger_metadata", trigger.build())
         payload.put("enabled", enabled)
         payload.put_snowflake_array("exempt_channels", exempt_channels)
         payload.put_snowflake_array("exempt_roles", exempt_roles)
-
-        payload.put_array("actions", actions, conversion=self._entity_factory.serialize_auto_mod_action)
-
-        if not undefined.all_undefined(allow_list, keyword_filter, presets):
-            trigger_metadata = data_binding.JSONObjectBuilder()
-            trigger_metadata.put("allow_list", allow_list)
-            trigger_metadata.put("keyword_filter", keyword_filter)
-            trigger_metadata.put("presets", presets)
-            payload.put("trigger_metadata", trigger_metadata)
+        payload.put("actions", [action.build() for action in actions])
 
         result = await self._request(route, json=payload, reason=reason)
         assert isinstance(result, dict)
@@ -4677,34 +4665,26 @@ class RESTClientImpl(rest_api.RESTClient):
         /,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[typing.Union[int, auto_mod.AutoModEventType]] = undefined.UNDEFINED,
-        actions: undefined.UndefinedOr[typing.Sequence[auto_mod.PartialAutoModAction]] = undefined.UNDEFINED,
-        allow_list: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
-        keyword_filter: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
-        presets: undefined.UndefinedOr[
-            typing.Sequence[typing.Union[int, auto_mod.AutoModKeywordPresetType]]
-        ] = undefined.UNDEFINED,
+        trigger: undefined.UndefinedOr[special_endpoints.AutoModTriggerBuilder] = undefined.UNDEFINED,
+        actions: undefined.UndefinedOr[typing.Sequence[special_endpoints.AutoModActionBuilder]] = undefined.UNDEFINED,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         exempt_channels: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[channels_.PartialChannel]
         ] = undefined.UNDEFINED,
-        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> auto_mod.AutoModRule:
         route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule)
         payload = data_binding.JSONObjectBuilder()
         payload.put("name", name)
         payload.put("event_type", event_type)
+        if trigger is not undefined.UNDEFINED:
+            payload.put("trigger_metadata", trigger.build())
         payload.put("enabled", enabled)
         payload.put_snowflake_array("exempt_channels", exempt_channels)
         payload.put_snowflake_array("exempt_roles", exempt_roles)
-        payload.put_array("actions", actions, conversion=self._entity_factory.serialize_auto_mod_action)
-
-        if not undefined.all_undefined(allow_list, keyword_filter, presets):
-            trigger_metadata = data_binding.JSONObjectBuilder()
-            trigger_metadata.put("allow_list", allow_list)
-            trigger_metadata.put("keyword_filter", keyword_filter)
-            trigger_metadata.put("presets", presets)
-            payload.put("trigger_metadata", trigger_metadata)
+        if actions is not undefined.UNDEFINED:
+            payload.put("actions", [action.build() for action in actions])
 
         result = await self._request(route, json=payload, reason=reason)
         assert isinstance(result, dict)

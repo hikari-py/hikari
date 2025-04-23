@@ -26,6 +26,7 @@ import mock
 import pytest
 
 from hikari import applications
+from hikari import auto_mod
 from hikari import channels
 from hikari import commands
 from hikari import components
@@ -1862,3 +1863,169 @@ class TestModalActionRow:
         }
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+
+class TestAutoModBlockMessageActionBuilder:
+    def test_type_property(self):
+        block_message_action = special_endpoints.AutoModBlockMessageActionBuilder(custom_message="beanos")
+
+        assert block_message_action.type == auto_mod.AutoModActionType.BLOCK_MESSAGE
+        assert block_message_action.custom_message == "beanos"
+
+    def test_build(self):
+        block_message_action = special_endpoints.AutoModBlockMessageActionBuilder(custom_message="hello world!")
+
+        assert block_message_action.build() == {
+            "type": auto_mod.AutoModActionType.BLOCK_MESSAGE,
+            "metadata": {"custom_message": "hello world!"},
+        }
+
+
+class TestAutoModSendAlertMessageActionBuilder:
+    def test_type_property(self):
+        send_alert_message_action = special_endpoints.AutoModSendAlertMessageActionBuilder(
+            channel_id=snowflakes.Snowflake(123)
+        )
+
+        assert send_alert_message_action.type == auto_mod.AutoModActionType.SEND_ALERT_MESSAGE
+        assert send_alert_message_action.channel_id == snowflakes.Snowflake(123)
+
+    def test_build(self):
+        send_alert_message_action = special_endpoints.AutoModSendAlertMessageActionBuilder(
+            channel_id=snowflakes.Snowflake(456)
+        )
+
+        assert send_alert_message_action.build() == {
+            "type": auto_mod.AutoModActionType.SEND_ALERT_MESSAGE,
+            "metadata": {"channel_id": 456},
+        }
+
+
+class TestAutoModTimeoutActionBuilder:
+    def test_type_property(self):
+        timeout_action = special_endpoints.AutoModTimeoutActionBuilder(duration_seconds=3)
+
+        assert timeout_action.type == auto_mod.AutoModActionType.TIMEOUT
+        assert timeout_action.duration_seconds == 3
+
+    def test_build(self):
+        timeout_action = special_endpoints.AutoModTimeoutActionBuilder(duration_seconds=5)
+
+        assert timeout_action.build() == {
+            "type": auto_mod.AutoModActionType.TIMEOUT,
+            "metadata": {"duration_seconds": 5},
+        }
+
+
+class TestAutoModBlockMemberInteractionActionBuilder:
+    def test_type_property(self):
+        block_member_interaction_action = special_endpoints.AutoModBlockMemberInteractionActionBuilder()
+
+        assert block_member_interaction_action.type == auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION
+
+    def test_build(self):
+        block_member_interaction_action = special_endpoints.AutoModBlockMemberInteractionActionBuilder()
+
+        assert block_member_interaction_action.build() == {
+            "type": auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION,
+            "metadata": {},
+        }
+
+
+class TestAutoModKeywordTriggerBuilder:
+    def test_type_property(self):
+        keyword_trigger = special_endpoints.AutoModKeywordTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert keyword_trigger.type == auto_mod.AutoModTriggerType.KEYWORD
+        assert keyword_trigger.keyword_filter == ["keyword", "filter"]
+        assert keyword_trigger.regex_patterns == ["regex", "patterns"]
+        assert keyword_trigger.allow_list == ["allow", "list"]
+
+    def test_build(self):
+        keyword_trigger = special_endpoints.AutoModKeywordTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert keyword_trigger.build() == {
+            "keyword_filter": ["keyword", "filter"],
+            "regex_patterns": ["regex", "patterns"],
+            "allow_list": ["allow", "list"],
+        }
+
+
+class TestAutoModSpamTriggerBuilder:
+    def test_type_property(self):
+        spam_trigger = special_endpoints.AutoModSpamTriggerBuilder()
+
+        assert spam_trigger.type == auto_mod.AutoModTriggerType.SPAM
+
+    def test_build(self):
+        spam_trigger = special_endpoints.AutoModSpamTriggerBuilder()
+
+        assert spam_trigger.build() == {}
+
+
+class TestAutoModKeywordPresetTriggerBuilder:
+    def test_type_property(self):
+        keyword_preset_trigger = special_endpoints.AutoModKeywordPresetTriggerBuilder(
+            presets=[auto_mod.AutoModKeywordPresetType.PROFANITY, auto_mod.AutoModKeywordPresetType.SLURS],
+            allow_list=["allow", "list"],
+        )
+
+        assert keyword_preset_trigger.type == auto_mod.AutoModTriggerType.KEYWORD_PRESET
+        assert keyword_preset_trigger.presets == [
+            auto_mod.AutoModKeywordPresetType.PROFANITY,
+            auto_mod.AutoModKeywordPresetType.SLURS,
+        ]
+        assert keyword_preset_trigger.allow_list == ["allow", "list"]
+
+    def test_build(self):
+        keyword_preset_trigger = special_endpoints.AutoModKeywordPresetTriggerBuilder(
+            presets=[auto_mod.AutoModKeywordPresetType.PROFANITY, auto_mod.AutoModKeywordPresetType.SLURS],
+            allow_list=["allow", "list"],
+        )
+
+        assert keyword_preset_trigger.build() == {"presets": [1, 3], "allow_list": ["allow", "list"]}
+
+
+class TestAutoModMentionSpamTriggerBuilder:
+    def test_type_property(self):
+        mention_spam_trigger = special_endpoints.AutoModMentionSpamTriggerBuilder(
+            mention_total_limit=3, mention_raid_protection_enabled=True
+        )
+
+        assert mention_spam_trigger.type == auto_mod.AutoModTriggerType.MENTION_SPAM
+        assert mention_spam_trigger.mention_total_limit == 3
+        assert mention_spam_trigger.mention_raid_protection_enabled is True
+
+    def test_build(self):
+        mention_spam_trigger = special_endpoints.AutoModMentionSpamTriggerBuilder(
+            mention_total_limit=5, mention_raid_protection_enabled=False
+        )
+
+        assert mention_spam_trigger.build() == {"mention_total_limit": 5, "mention_raid_protection_enabled": False}
+
+
+class TestAutoModMemberProfileTriggerBuilder:
+    def test_type_property(self):
+        member_profile_trigger = special_endpoints.AutoModMemberProfileTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert member_profile_trigger.type == auto_mod.AutoModTriggerType.MEMBER_PROFILE
+        assert member_profile_trigger.keyword_filter == ["keyword", "filter"]
+        assert member_profile_trigger.regex_patterns == ["regex", "patterns"]
+        assert member_profile_trigger.allow_list == ["allow", "list"]
+
+    def test_build(self):
+        member_profile_trigger = special_endpoints.AutoModMemberProfileTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert member_profile_trigger.build() == {
+            "keyword_filter": ["keyword", "filter"],
+            "regex_patterns": ["regex", "patterns"],
+            "allow_list": ["allow", "list"],
+        }

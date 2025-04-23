@@ -506,15 +506,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
         }
         self._auto_mod_action_mapping = {
-            auto_mod_models.AutoModActionType.BLOCK_MESSAGES: self._deserialize_auto_mod_block_message,
+            auto_mod_models.AutoModActionType.BLOCK_MESSAGE: self._deserialize_auto_mod_block_message,
             auto_mod_models.AutoModActionType.SEND_ALERT_MESSAGE: self._deserialize_auto_mod_block_send_alert_message,
             auto_mod_models.AutoModActionType.TIMEOUT: self._deserialize_auto_mod_timeout,
         }
         self._auto_mod_trigger_mapping = {
-            auto_mod_models.AutoModTriggerType.HARMFUL_LINK: self._deserialize_auto_mod_harmful_link_trigger,
             auto_mod_models.AutoModTriggerType.KEYWORD: self._deserialize_auto_mod_keyword_trigger,
-            auto_mod_models.AutoModTriggerType.KEYWORD_PRESET: self._deserialize_auto_mod_keyword_preset_trigger,
             auto_mod_models.AutoModTriggerType.SPAM: self._deserialize_auto_mod_spam_trigger,
+            auto_mod_models.AutoModTriggerType.KEYWORD_PRESET: self._deserialize_auto_mod_keyword_preset_trigger,
+            auto_mod_models.AutoModTriggerType.MENTION_SPAM: self._deserialize_auto_mod_mention_spam_trigger,
+            auto_mod_models.AutoModTriggerType.MEMBER_PROFILE: self._deserialize_auto_mod_member_profile_trigger,
         }
         self._command_mapping = {
             commands.CommandType.SLASH: self.deserialize_slash_command,
@@ -3990,30 +3991,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         _LOGGER.debug(f"Unrecognised auto-moderation action type {action_type}")
         raise errors.UnrecognisedEntityError(f"Unrecognised auto-moderation action type {action_type}")
 
-    def serialize_auto_mod_action(self, action: auto_mod_models.PartialAutoModAction) -> data_binding.JSONObject:
-        payload: typing.Dict[str, typing.Any] = {"type": action.type}
-
-        # TODO: can we switch to using the type attribute here for efficiency?
-        if isinstance(action, auto_mod_models.AutoModSendAlertMessage):
-            payload["metadata"] = {"channel_id": str(action.channel_id)}
-
-        elif isinstance(action, auto_mod_models.AutoModTimeout):
-            payload["metadata"] = {"duration_seconds": int(action.duration.total_seconds())}
-
-        return payload
-
-    def _deserialize_auto_mod_harmful_link_trigger(
-        self, _: typing.Optional[data_binding.JSONObject], /
-    ) -> auto_mod_models.HarmfulLinkTrigger:
-        return auto_mod_models.HarmfulLinkTrigger(type=auto_mod_models.AutoModTriggerType.HARMFUL_LINK)
-
     def _deserialize_auto_mod_keyword_trigger(
         self, payload: typing.Optional[data_binding.JSONObject], /
     ) -> auto_mod_models.KeywordTrigger:
         assert payload is not None
         return auto_mod_models.KeywordTrigger(
-            type=auto_mod_models.AutoModTriggerType.KEYWORD, keyword_filter=payload["keyword_filter"]
+            type=auto_mod_models.AutoModTriggerType.KEYWORD,
+            keyword_filter=payload["keyword_filter"],
+            regex_patterns=payload["regex_patterns"],
+            allow_list=payload["allow_list"],
         )
+
+    def _deserialize_auto_mod_spam_trigger(
+        self, _: typing.Optional[data_binding.JSONObject], /
+    ) -> auto_mod_models.SpamTrigger:
+        return auto_mod_models.SpamTrigger(type=auto_mod_models.AutoModTriggerType.SPAM)
 
     def _deserialize_auto_mod_keyword_preset_trigger(
         self, payload: typing.Optional[data_binding.JSONObject], /
@@ -4025,10 +4017,26 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             presets=[auto_mod_models.AutoModKeywordPresetType(preset) for preset in payload["presets"]],
         )
 
-    def _deserialize_auto_mod_spam_trigger(
-        self, _: typing.Optional[data_binding.JSONObject], /
-    ) -> auto_mod_models.SpamTrigger:
-        return auto_mod_models.SpamTrigger(type=auto_mod_models.AutoModTriggerType.SPAM)
+    def _deserialize_auto_mod_mention_spam_trigger(
+        self, payload: typing.Optional[data_binding.JSONObject], /
+    ) -> auto_mod_models.MentionSpamTrigger:
+        assert payload is not None
+        return auto_mod_models.MentionSpamTrigger(
+            type=auto_mod_models.AutoModTriggerType.MENTION_SPAM,
+            mention_total_limit=payload["mention_total_limit"],
+            mention_raid_protection_enabled=payload["mention_raid_protection_enabled"],
+        )
+
+    def _deserialize_auto_mod_member_profile_trigger(
+        self, payload: typing.Optional[data_binding.JSONObject], /
+    ) -> auto_mod_models.MemberProfileTrigger:
+        assert payload is not None
+        return auto_mod_models.MemberProfileTrigger(
+            type=auto_mod_models.AutoModTriggerType.MEMBER_PROFILE,
+            keyword_filter=payload["keyword_filter"],
+            regex_patterns=payload["regex_patterns"],
+            allow_list=payload["allow_list"],
+        )
 
     def deserialize_auto_mod_rule(self, payload: data_binding.JSONObject) -> auto_mod_models.AutoModRule:
         trigger_type = auto_mod_models.AutoModTriggerType(payload["trigger_type"])

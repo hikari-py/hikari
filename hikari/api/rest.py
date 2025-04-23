@@ -8733,57 +8733,38 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         /,
         name: str,
         event_type: typing.Union[int, auto_mod.AutoModEventType],
-        trigger_type: typing.Union[int, auto_mod.AutoModTriggerType],
-        actions: typing.Sequence[auto_mod.PartialAutoModAction],
-        allow_list: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
-        keyword_filter: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
-        presets: undefined.UndefinedOr[
-            typing.Sequence[typing.Union[int, auto_mod.AutoModKeywordPresetType]]
-        ] = undefined.UNDEFINED,
+        trigger: special_endpoints.AutoModTriggerBuilder,
+        actions: typing.Sequence[special_endpoints.AutoModActionBuilder],
         enabled: undefined.UndefinedOr[bool] = True,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         exempt_channels: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[channels_.PartialChannel]
         ] = undefined.UNDEFINED,
-        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> auto_mod.AutoModRule:
         """Create an auto-moderation rule.
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to create the auto-moderation rules in.
-        name : builtins.str
+        name
             The rule's name.
-        event_type : typing.Union[builtins.int, hikari.auto_mod.AutoModEventType]
+        event_type
             The type of user content creation event this rule should trigger on.
-        trigger_type : typing.Union[builtins.int, hikari.auto_mod.AutoModTriggerType]
-            The type of user content creation this should trigger on.
-            Note that the required fields very dependent on what this is set to.
-        actions : typing.Sequence[hikari.auto_mod.PartialAutoModAction]
+        trigger
+            The trigger builder to create the rule from.
+        actions
             Sequence of the actions to execute when this rule is triggered.
-        allow_list : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
-            A sequence of filters which will be exempt from triggering the preset trigger.
-            This supports a wildcard matching strategy which is documented at
-            https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
-            This can only be set for KEYWORD_PRESET triggers.
-        keyword_filter : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
-            A sequence of filter strings this trigger checks for.
-            This supports a wildcard matching strategy which is documented at
-            https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
-            This is required for and can only be set for KEYWORD triggers.
-        presets : hikari.undefined.UndefinedOr[typing.Sequence[typing.Union[builtins.int, hikari.auto_mod.AutoModKeywordPresetType]]]
-            Sequence of Discord's presets to match for.
-            This is required for and can only be set for KEYWORD_PRESET triggers.
-        enabled : hikari.undefined.UndefinedOr[builtins.bool]
+        enabled
             Whether this auto-moderation rule should be enabled.
-        exempt_channels : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.PartialChannel]]
+        exempt_channels
             Sequence of up to 50 objects and IDs of channels which are not
             effected by the rule.
-        exempt_roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
+        exempt_roles
             Sequence of up to 20 objects and IDs of roles which are not
             effected by the rule.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -8808,7 +8789,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def edit_auto_mod_rule(
@@ -8818,58 +8799,55 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         /,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[typing.Union[int, auto_mod.AutoModEventType]] = undefined.UNDEFINED,
-        actions: undefined.UndefinedOr[typing.Sequence[auto_mod.PartialAutoModAction]] = undefined.UNDEFINED,
-        allow_list: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
-        keyword_filter: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
-        presets: undefined.UndefinedOr[
-            typing.Sequence[typing.Union[int, auto_mod.AutoModKeywordPresetType]]
-        ] = undefined.UNDEFINED,
+        trigger: undefined.UndefinedOr[special_endpoints.AutoModTriggerBuilder] = undefined.UNDEFINED,
+        actions: undefined.UndefinedOr[typing.Sequence[special_endpoints.AutoModActionBuilder]] = undefined.UNDEFINED,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         exempt_channels: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[channels_.PartialChannel]
         ] = undefined.UNDEFINED,
-        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> auto_mod.AutoModRule:
         """Edit an auto-moderation rule.
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to edit an auto-moderation rule in.
-        rule : hikari.snowflakes.SnowflakeishOr[hikari.auto_mod.AutoModRule]
+        rule
             Object or ID of the auto-moderation rule to edit.
-        name : hikari.undefined.UndefinedOr[builtins.str]
+        name
             If specified, the rule's new name.
-        event_type : hikari.undefined.UndefinedOr[typing.Union[builtins.int, hikari.auto_mod.AutoModEventType]]
-            If specified, the type of user content creation event this rule
-            should trigger on.
-        actions : hikari.undefined.UndefinedOr[typing.Sequence[hikari.auto_mod.PartialAutoModAction]]
+        event_type
+            The type of user content creation event this rule should trigger on.
+        trigger
+            The trigger builder to edit the trigger from.
+        actions
             If specified, a sequence of the actions to execute when this rule
             is triggered.
-        allow_list : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
+        allow_list
             If specified, a sequence of filters which will be exempt from
             triggering the preset trigger.
             This supports a wildcard matching strategy which is documented at
             https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
             This can only be set for KEYWORD_PRESET triggers.
-        keyword_filter : hikari.undefined.UndefinedOr[typing.Sequence[builtins.str]]
+        keyword_filter
             If specified, a sequence of filter strings this trigger checks for.
             This supports a wildcard matching strategy which is documented at
             https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
             This is required for and can only be set for KEYWORD triggers.
-        presets : hikari.undefined.UndefinedOr[typing.Sequence[typing.Union[builtins.int, hikari.auto_mod.AutoModKeywordPresetType]]]
+        presets
             If specified, a sequence of Discord's presets to match for.
             This is required for and can only be set for KEYWORD_PRESET triggers.
-        enabled : hikari.undefined.UndefinedOr[builtins.bool]
+        enabled
             If specified, whether this auto-moderation rule should be enabled.
-        exempt_channels : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.channels.PartialChannel]]
+        exempt_channels
             If specified, a sequence of up to 50 objects and IDs of channels
             which are not effected by the rule.
-        exempt_roles : hikari.undefined.UndefinedOr[hikari.snowflakes.SnowflakeishSequence[hikari.guilds.PartialRole]]
+        exempt_roles
             If specified, a sequence of up to 20 objects and IDs of roles which
             are not effected by the rule.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
@@ -8894,7 +8872,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
-        """  # noqa: E501 - Line too long
+        """
 
     @abc.abstractmethod
     async def delete_auto_mod_rule(

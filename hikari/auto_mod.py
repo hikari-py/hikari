@@ -34,9 +34,10 @@ __all__: typing.Sequence[str] = (
     "AutoModKeywordPresetType",
     "PartialAutoModTrigger",
     "KeywordTrigger",
-    "HarmfulLinkTrigger",
     "SpamTrigger",
     "KeywordPresetTrigger",
+    "MentionSpamTrigger",
+    "MemberProfileTrigger",
     "AutoModRule",
 )
 
@@ -57,7 +58,7 @@ if typing.TYPE_CHECKING:
 class AutoModActionType(int, enums.Enum):
     """The type of an auto-moderation rule action."""
 
-    BLOCK_MESSAGES = 1
+    BLOCK_MESSAGE = 1
     """Block the content of the triggering message."""
 
     SEND_ALERT_MESSAGE = 2
@@ -66,9 +67,13 @@ class AutoModActionType(int, enums.Enum):
     TIMEOUT = 3
     """Timeout the triggering message's author for a specified duration.
 
-    This type can only be set for `KEYWORD` rules and requires the `MODERATE_MEMBERS`
-    permission to use.
+    This type can only be set for `KEYWORD` and `MENTION_SPAM` rules.
+
+    Requires the `MODERATE_MEMBERS` permission to use.
     """
+
+    BLOCK_MEMBER_INTERACTION = 4
+    """Prevents a member from using text, voice, or other interactions."""
 
 
 @attrs_extensions.with_copy
@@ -97,12 +102,18 @@ class AutoModSendAlertMessage(PartialAutoModAction):
 class AutoModTimeout(PartialAutoModAction):
     """Timeout the triggering message's author for a specified duration.
 
-    This type can only be set for `KEYWORD` rules and requires the `MODERATE_MEMBERS`
-    permission to use.
+    This type can only be set for `KEYWORD` and `MENTION_SPAM` rules.
+
+    Requires the `MODERATE_MEMBERS` permission to use.
     """
 
     duration: datetime.timedelta = attrs.field()
     """The total seconds to timeout the user for (max 2419200 seconds/4 weeks)."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModBlockMemberAction(PartialAutoModAction):
+    """Prevents a member from using text, voice, or other interactions."""
 
 
 class AutoModEventType(int, enums.Enum):
@@ -111,21 +122,27 @@ class AutoModEventType(int, enums.Enum):
     MESSAGE_SEND = 1
     """When a member sends or edits a message in the guild."""
 
+    MEMBER_UPDATE = 2
+    """When a member updates their guild or user profile."""
+
 
 class AutoModTriggerType(int, enums.Enum):
     """Type of trigger for an auto-moderation rule."""
 
     KEYWORD = 1
-    """Match message content against a list of keywords."""
-
-    HARMFUL_LINK = 2
-    """Scan messages for links which are deemed "harmful" by Discord."""
+    """Match message content against a list of keywords and regexs."""
 
     SPAM = 3
     """Discord's guild anti-spam system."""
 
     KEYWORD_PRESET = 4
     """Discord's preset keyword triggers."""
+
+    MENTION_SPAM = 5
+    """Match messages that exceed the allowed limit of role or user mentions."""
+
+    MEMBER_PROFILE = 6
+    """Match user profiles against a list of keywords and regexs."""
 
 
 class AutoModKeywordPresetType(int, enums.Enum):
@@ -160,24 +177,30 @@ class KeywordTrigger(PartialAutoModTrigger):
     https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
     """
 
+    regex_patterns: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
+    """The filter regexs this trigger checks for.
+    Currently, this only supports rust flavored regular expressions.
+    https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata
+    """
 
-class HarmfulLinkTrigger(PartialAutoModTrigger):
-    """A trigger based on Discord's own list of links deemed "harmful"."""
+    allow_list: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
+    """A sequence of filters which will be exempt from triggering the preset trigger.
 
-    __slots__: typing.Sequence[str] = []
+    This supports a wildcard matching strategy which is documented at
+    https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+    """
 
 
+@attrs.define(kw_only=True, weakref_slot=False)
 class SpamTrigger(PartialAutoModTrigger):
     """A trigger based on Discord's spam detection."""
-
-    __slots__: typing.Sequence[str] = []
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class KeywordPresetTrigger(PartialAutoModTrigger):
     """A trigger based on a predefined set of presets provided by Discord."""
 
-    allow_list: typing.Sequence[str] = attrs.field(eq=False, factory=list, hash=False, repr=False)
+    allow_list: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of filters which will be exempt from triggering the preset trigger.
 
     This supports a wildcard matching strategy which is documented at
@@ -188,6 +211,41 @@ class KeywordPresetTrigger(PartialAutoModTrigger):
         eq=False, hash=False, repr=False
     )
     """The predefined presets provided by Discord to match against."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MentionSpamTrigger(PartialAutoModTrigger):
+    """A trigger based on matching mention spams in message content."""
+
+    mention_total_limit: int = attrs.field(eq=False, hash=False, repr=False)
+    """Total number of unique role and user mentions allowed per message."""
+
+    mention_raid_protection_enabled: bool = attrs.field(eq=False, hash=False, repr=False)
+    """Whether to automatically detect mention raids."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class MemberProfileTrigger(PartialAutoModTrigger):
+    """A trigger based on matching user profile content against a list of keywords."""
+
+    keyword_filter: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
+    """The filter strings this trigger checks for.
+    This supports a wildcard matching strategy which is documented at
+    https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+    """
+
+    regex_patterns: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
+    """The filter regexs this trigger checks for.
+    Currently, this only supports rust flavored regular expressions.
+    https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata
+    """
+
+    allow_list: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
+    """A sequence of filters which will be exempt from triggering the preset trigger.
+
+    This supports a wildcard matching strategy which is documented at
+    https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+    """
 
 
 @attrs_extensions.with_copy
@@ -224,8 +282,8 @@ class AutoModRule(snowflakes.Unique):
     is_enabled: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether this rule is enabled."""
 
-    exempt_channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
-    """A sequence of IDs of (up to 20) channels which aren't effected by this rule."""
-
     exempt_role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of IDs of (up to 50) roles which aren't effected by this rule."""
+
+    exempt_channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    """A sequence of IDs of (up to 20) channels which aren't effected by this rule."""

@@ -46,6 +46,15 @@ __all__: typing.Sequence[str] = (
     "InteractionModalBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "AutoModBlockMessageActionBuilder",
+    "AutoModSendAlertMessageActionBuilder",
+    "AutoModTimeoutActionBuilder",
+    "AutoModBlockMemberInteractionActionBuilder",
+    "AutoModKeywordTriggerBuilder",
+    "AutoModSpamTriggerBuilder",
+    "AutoModKeywordPresetTriggerBuilder",
+    "AutoModMentionSpamTriggerBuilder",
+    "AutoModMemberProfileTriggerBuilder",
 )
 
 import asyncio
@@ -53,6 +62,7 @@ import typing
 
 import attrs
 
+from hikari import auto_mod
 from hikari import channels
 from hikari import commands
 from hikari import components as component_models
@@ -2167,4 +2177,201 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
         return {
             "type": component_models.ComponentType.ACTION_ROW,
             "components": [component.build() for component in self._components],
+        }
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModBlockMessageActionBuilder(special_endpoints.AutoModBlockMessageActionBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.AutoModBlockMessageActionBuilder`][]."""
+
+    _custom_message: str | None = attrs.field(alias="custom_message", default=None)
+
+    @property
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.BLOCK_MESSAGE]:
+        return auto_mod.AutoModActionType.BLOCK_MESSAGE
+
+    @property
+    def custom_message(self) -> str | None:
+        return self._custom_message
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {"type": self.type, "metadata": {"custom_message": self.custom_message}}
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModSendAlertMessageActionBuilder(special_endpoints.AutoModSendAlertMessageActionBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.AutoModSendAlertMessageActionBuilder`][]."""
+
+    _channel_id: snowflakes.Snowflake = attrs.field(alias="channel_id")
+
+    @property
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.SEND_ALERT_MESSAGE]:
+        return auto_mod.AutoModActionType.SEND_ALERT_MESSAGE
+
+    @property
+    def channel_id(self) -> snowflakes.Snowflake:
+        return self._channel_id
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {"type": self.type, "metadata": {"channel_id": self.channel_id}}
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModTimeoutActionBuilder(special_endpoints.AutoModTimeoutActionBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.AutoModTimeoutActionBuilder`][]."""
+
+    _duration_seconds: int = attrs.field(alias="duration_seconds")
+
+    @property
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.TIMEOUT]:
+        return auto_mod.AutoModActionType.TIMEOUT
+
+    @property
+    def duration_seconds(self) -> int:
+        return self._duration_seconds
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {"type": self.type, "metadata": {"duration_seconds": self.duration_seconds}}
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModBlockMemberInteractionActionBuilder(special_endpoints.AutoModBlockMemberInteractionActionBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.AutoModBlockMemberInteractionActionBuilder`][]."""
+
+    @property
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION]:
+        return auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {"type": self.type, "metadata": {}}
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModKeywordTriggerBuilder(special_endpoints.AutoModKeywordTriggerBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.AutoModKeywordTriggerBuilder`][]."""
+
+    _keyword_filter: list[str] = attrs.field(alias="keyword_filter", factory=list)
+
+    _regex_patterns: list[str] = attrs.field(alias="regex_patterns", factory=list)
+
+    _allow_list: list[str] = attrs.field(alias="allow_list", factory=list)
+
+    @property
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.KEYWORD]:
+        return auto_mod.AutoModTriggerType.KEYWORD
+
+    @property
+    def keyword_filter(self) -> typing.Sequence[str]:
+        return self._keyword_filter
+
+    @property
+    def regex_patterns(self) -> typing.Sequence[str]:
+        return self._regex_patterns
+
+    @property
+    def allow_list(self) -> typing.Sequence[str]:
+        return self._allow_list
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "keyword_filter": self.keyword_filter,
+            "regex_patterns": self.regex_patterns,
+            "allow_list": self.allow_list,
+        }
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModSpamTriggerBuilder(special_endpoints.AutoModSpamTriggerBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.AutoModSpamTriggerBuilder`][]."""
+
+    @property
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.SPAM]:
+        return auto_mod.AutoModTriggerType.SPAM
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {}
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModKeywordPresetTriggerBuilder(special_endpoints.AutoModKeywordPresetTriggerBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.AutoModKeywordPresetTriggerBuilder`][]."""
+
+    _presets: list[auto_mod.AutoModKeywordPresetType] = attrs.field(alias="presets", factory=list)
+
+    _allow_list: list[str] = attrs.field(alias="allow_list", factory=list)
+
+    @property
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.KEYWORD_PRESET]:
+        return auto_mod.AutoModTriggerType.KEYWORD_PRESET
+
+    @property
+    def presets(self) -> typing.Sequence[auto_mod.AutoModKeywordPresetType]:
+        return self._presets
+
+    @property
+    def allow_list(self) -> typing.Sequence[str]:
+        return self._allow_list
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {"presets": self.presets, "allow_list": self.allow_list}
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModMentionSpamTriggerBuilder(special_endpoints.AutoModMentionSpamTriggerBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.AutoModSpamTriggerBuilder`][]."""
+
+    _mention_total_limit: int = attrs.field(alias="mention_total_limit")
+
+    _mention_raid_protection_enabled: bool = attrs.field(alias="mention_raid_protection_enabled")
+
+    @property
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.MENTION_SPAM]:
+        return auto_mod.AutoModTriggerType.MENTION_SPAM
+
+    @property
+    def mention_total_limit(self) -> int:
+        return self._mention_total_limit
+
+    @property
+    def mention_raid_protection_enabled(self) -> bool:
+        return self._mention_raid_protection_enabled
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "mention_total_limit": self.mention_total_limit,
+            "mention_raid_protection_enabled": self.mention_raid_protection_enabled,
+        }
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class AutoModMemberProfileTriggerBuilder(special_endpoints.AutoModMemberProfileTriggerBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.AutoModMemberProfileTriggerBuilder`][]."""
+
+    _keyword_filter: list[str] = attrs.field(alias="keyword_filter", factory=list)
+
+    _regex_patterns: list[str] = attrs.field(alias="regex_patterns", factory=list)
+
+    _allow_list: list[str] = attrs.field(alias="allow_list", factory=list)
+
+    @property
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.MEMBER_PROFILE]:
+        return auto_mod.AutoModTriggerType.MEMBER_PROFILE
+
+    @property
+    def keyword_filter(self) -> typing.Sequence[str]:
+        return self._keyword_filter
+
+    @property
+    def regex_patterns(self) -> typing.Sequence[str]:
+        return self._regex_patterns
+
+    @property
+    def allow_list(self) -> typing.Sequence[str]:
+        return self._allow_list
+
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "keyword_filter": self.keyword_filter,
+            "regex_patterns": self.regex_patterns,
+            "allow_list": self.allow_list,
         }

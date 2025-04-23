@@ -7500,10 +7500,10 @@ class TestEntityFactoryImpl:
         assert stage_instance.privacy_level == stage_instance_models.StageInstancePrivacyLevel.GUILD_ONLY
         assert stage_instance.discoverable_disabled is False
 
-    def test_deserialize_auto_mod_action_for_block_messages(self, entity_factory_impl):
+    def test_deserialize_auto_mod_action_for_block_message(self, entity_factory_impl):
         result = entity_factory_impl.deserialize_auto_mod_action({"type": 1})
 
-        assert result.type is auto_mod_models.AutoModActionType.BLOCK_MESSAGES
+        assert result.type is auto_mod_models.AutoModActionType.BLOCK_MESSAGE
         assert isinstance(result, auto_mod_models.AutoModBlockMessage)
 
     def test_deserialize_auto_mod_action_for_send_alert_message(self, entity_factory_impl):
@@ -7524,31 +7524,6 @@ class TestEntityFactoryImpl:
         with pytest.raises(errors.UnrecognisedEntityError):
             entity_factory_impl.deserialize_auto_mod_action({"type": -696969})
 
-    def test_serialize_auto_mod_action(self, entity_factory_impl):
-        result = entity_factory_impl.serialize_auto_mod_action(
-            auto_mod_models.AutoModBlockMessage(type=auto_mod_models.AutoModActionType.BLOCK_MESSAGES)
-        )
-
-        assert result == {"type": 1}
-
-    def test_serialize_auto_mod_action_for_send_alert_message(self, entity_factory_impl):
-        result = entity_factory_impl.serialize_auto_mod_action(
-            auto_mod_models.AutoModSendAlertMessage(
-                type=auto_mod_models.AutoModActionType.SEND_ALERT_MESSAGE, channel_id=534123321
-            )
-        )
-
-        assert result == {"type": 2, "metadata": {"channel_id": "534123321"}}
-
-    def test_serialize_auto_mod_action_for_timeout(self, entity_factory_impl):
-        result = entity_factory_impl.serialize_auto_mod_action(
-            auto_mod_models.AutoModTimeout(
-                type=auto_mod_models.AutoModActionType.TIMEOUT, duration=datetime.timedelta(seconds=123321)
-            )
-        )
-
-        assert result == {"type": 3, "metadata": {"duration_seconds": 123321}}
-
     @pytest.fixture
     def auto_mod_rule_payload(self):
         return {
@@ -7556,7 +7531,7 @@ class TestEntityFactoryImpl:
             "guild_id": "9595939234",
             "name": "hihihihi",
             "creator_id": "595684849",
-            "event_type": 1,
+            "event_type": 2,
             "trigger_type": 4,
             "trigger_metadata": {"presets": [1, 2, 3], "allow_list": ["okokok", "No"]},
             "actions": [
@@ -7576,7 +7551,7 @@ class TestEntityFactoryImpl:
         assert result.guild_id == 9595939234
         assert result.name == "hihihihi"
         assert result.creator_id == 595684849
-        assert result.event_type is auto_mod_models.AutoModEventType.MESSAGE_SEND
+        assert result.event_type is auto_mod_models.AutoModEventType.MEMBER_UPDATE
         assert isinstance(result.trigger, auto_mod_models.KeywordPresetTrigger)
         assert result.trigger.type is auto_mod_models.AutoModTriggerType.KEYWORD_PRESET
         assert result.actions == [
@@ -7597,7 +7572,11 @@ class TestEntityFactoryImpl:
                 "creator_id": "595684849",
                 "event_type": 1,
                 "trigger_type": 1,
-                "trigger_metadata": {"keyword_filter": ["ok", "no", "bye"]},
+                "trigger_metadata": {
+                    "keyword_filter": ["ok", "no", "bye"],
+                    "regex_patterns": ["some", "regex", "patterns"],
+                    "allow_list": ["allowed", "stuff"],
+                },
                 "actions": [],
                 "enabled": True,
                 "exempt_roles": [],
@@ -7608,25 +7587,8 @@ class TestEntityFactoryImpl:
         assert isinstance(result.trigger, auto_mod_models.KeywordTrigger)
         assert result.trigger.type is auto_mod_models.AutoModTriggerType.KEYWORD
         assert result.trigger.keyword_filter == ["ok", "no", "bye"]
-
-    def test_deserialize_auto_mod_rule_for_harmful_link_trigger(self, entity_factory_impl, auto_mod_rule_payload):
-        result = entity_factory_impl.deserialize_auto_mod_rule(
-            {
-                "id": "94594949494",
-                "guild_id": "9595939234",
-                "name": "hihihihi",
-                "creator_id": "595684849",
-                "event_type": 1,
-                "trigger_type": 2,
-                "actions": [],
-                "enabled": True,
-                "exempt_roles": [],
-                "exempt_channels": [],
-            }
-        )
-
-        assert isinstance(result.trigger, auto_mod_models.HarmfulLinkTrigger)
-        assert result.trigger.type is auto_mod_models.AutoModTriggerType.HARMFUL_LINK
+        assert result.trigger.regex_patterns == ["some", "regex", "patterns"]
+        assert result.trigger.allow_list == ["allowed", "stuff"]
 
     def test_deserialize_auto_mod_rule_for_spam_trigger(self, entity_factory_impl, auto_mod_rule_payload):
         result = entity_factory_impl.deserialize_auto_mod_rule(
@@ -7646,3 +7608,77 @@ class TestEntityFactoryImpl:
 
         assert isinstance(result.trigger, auto_mod_models.SpamTrigger)
         assert result.trigger.type is auto_mod_models.AutoModTriggerType.SPAM
+
+    def test_deserialize_auto_mod_rule_for_keyword_preset_trigger(self, entity_factory_impl, auto_mod_rule_payload):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 4,
+                "trigger_metadata": {"presets": [1, 3], "allow_list": ["allowed", "stuff"]},
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.KeywordPresetTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.KEYWORD_PRESET
+        assert result.trigger.presets == [
+            auto_mod_models.AutoModKeywordPresetType.PROFANITY,
+            auto_mod_models.AutoModKeywordPresetType.SLURS,
+        ]
+        assert result.trigger.allow_list == ["allowed", "stuff"]
+
+    def test_deserialize_auto_mod_rule_for_mention_spam_trigger(self, entity_factory_impl, auto_mod_rule_payload):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 5,
+                "trigger_metadata": {"mention_total_limit": 5, "mention_raid_protection_enabled": False},
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.MentionSpamTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.MENTION_SPAM
+        assert result.trigger.mention_total_limit == 5
+        assert result.trigger.mention_raid_protection_enabled is False
+
+    def test_deserialize_auto_mod_rule_for_member_profile_trigger(self, entity_factory_impl, auto_mod_rule_payload):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 6,
+                "trigger_metadata": {
+                    "keyword_filter": ["ok", "no", "bye"],
+                    "regex_patterns": ["some", "regex", "patterns"],
+                    "allow_list": ["allowed", "stuff"],
+                },
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.MemberProfileTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.MEMBER_PROFILE
+        assert result.trigger.keyword_filter == ["ok", "no", "bye"]
+        assert result.trigger.regex_patterns == ["some", "regex", "patterns"]
+        assert result.trigger.allow_list == ["allowed", "stuff"]
