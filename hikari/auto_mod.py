@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,20 +24,20 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "AutoModActionType",
-    "PartialAutoModAction",
     "AutoModBlockMessage",
+    "AutoModEventType",
+    "AutoModKeywordPresetType",
+    "AutoModRule",
     "AutoModSendAlertMessage",
     "AutoModTimeout",
-    "AutoModEventType",
     "AutoModTriggerType",
-    "AutoModKeywordPresetType",
-    "PartialAutoModTrigger",
-    "KeywordTrigger",
-    "SpamTrigger",
     "KeywordPresetTrigger",
-    "MentionSpamTrigger",
+    "KeywordTrigger",
     "MemberProfileTrigger",
-    "AutoModRule",
+    "MentionSpamTrigger",
+    "PartialAutoModAction",
+    "PartialAutoModTrigger",
+    "SpamTrigger",
 )
 
 import typing
@@ -207,9 +206,7 @@ class KeywordPresetTrigger(PartialAutoModTrigger):
     https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
     """
 
-    presets: typing.Sequence[typing.Union[int, AutoModKeywordPresetType]] = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    presets: typing.Sequence[AutoModKeywordPresetType | int] = attrs.field(eq=False, hash=False, repr=False)
     """The predefined presets provided by Discord to match against."""
 
 

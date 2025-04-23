@@ -107,6 +107,7 @@ def message():
         mentions_everyone=False,
         attachments=(),
         embeds=(),
+        poll=object(),
         reactions=(),
         is_pinned=True,
         webhook_id=None,
@@ -216,6 +217,7 @@ class TestAsyncMessage:
         message.channel_id = 456
         embed = object()
         embeds = [object(), object()]
+        poll = object()
         roles = [object()]
         attachment = object()
         attachments = [object()]
@@ -226,6 +228,7 @@ class TestAsyncMessage:
             content="test content",
             embed=embed,
             embeds=embeds,
+            poll=poll,
             attachment=attachment,
             attachments=attachments,
             component=component,
@@ -246,6 +249,7 @@ class TestAsyncMessage:
             content="test content",
             embed=embed,
             embeds=embeds,
+            poll=poll,
             attachment=attachment,
             attachments=attachments,
             component=component,
@@ -272,6 +276,7 @@ class TestAsyncMessage:
             content=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
+            poll=undefined.UNDEFINED,
             attachment=undefined.UNDEFINED,
             attachments=undefined.UNDEFINED,
             component=undefined.UNDEFINED,
@@ -298,6 +303,7 @@ class TestAsyncMessage:
             content=undefined.UNDEFINED,
             embed=undefined.UNDEFINED,
             embeds=undefined.UNDEFINED,
+            poll=undefined.UNDEFINED,
             attachment=undefined.UNDEFINED,
             attachments=undefined.UNDEFINED,
             component=undefined.UNDEFINED,

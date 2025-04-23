@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,11 +23,11 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "AutoModActionExecutionEvent",
     "AutoModEvent",
     "AutoModRuleCreateEvent",
-    "AutoModRuleUpdateEvent",
     "AutoModRuleDeleteEvent",
-    "AutoModActionExecutionEvent",
+    "AutoModRuleUpdateEvent",
 )
 
 import abc
@@ -40,6 +39,7 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import auto_mod
@@ -68,6 +68,7 @@ class AutoModRuleCreateEvent(AutoModEvent):
     """Object of the auto-moderation rule which was created."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from BaseEvent>>.
         return self.rule.app
@@ -86,6 +87,7 @@ class AutoModRuleUpdateEvent(AutoModEvent):
     """Object of the auto-moderation rule which was updated."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from BaseEvent>>.
         return self.rule.app
@@ -104,6 +106,7 @@ class AutoModRuleDeleteEvent(AutoModEvent):
     """Object of the auto-moderation rule which was deleted."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from BaseEvent>>.
         return self.rule.app
@@ -130,42 +133,42 @@ class AutoModActionExecutionEvent(AutoModEvent):
     rule_id: snowflakes.Snowflake = attr.field()
     """ID of the rule which was triggered."""
 
-    rule_trigger_type: typing.Union[int, auto_mod.AutoModTriggerType] = attr.field(repr=False)
+    rule_trigger_type: int | auto_mod.AutoModTriggerType | None = attr.field(repr=False)
     """Type of the rule which was triggered."""
 
     user_id: snowflakes.Snowflake = attr.field(repr=False)
     """ID of the user who generated the context which triggered this."""
 
-    channel_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
+    channel_id: snowflakes.Snowflake | None = attr.field(repr=False)
     """ID of the channel the matching context was sent to.
 
     This will be [`None`][] if the message was blocked by auto-moderation
     of the matched content wasn't in a channel.
     """
 
-    message_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
+    message_id: snowflakes.Snowflake | None = attr.field(repr=False)
     """ID of the message the matching context was sent in.
 
     This will be [`None`][] if the message was blocked by auto-moderation
     or the matched content wasn't in a message.
     """
 
-    alert_system_message_id: typing.Optional[snowflakes.Snowflake] = attr.field(repr=False)
+    alert_system_message_id: snowflakes.Snowflake | None = attr.field(repr=False)
     """ID of any system auto-moderation messages posted as a result of this action.
     This will only be provided for `SEND_ALERT_MESSAGE` actions.
     """
 
-    content: typing.Optional[str] = attr.field(repr=False)
+    content: str | None = attr.field(repr=False)
     """The user generated content which matched this rule.
 
     This will only be provided if the `MESSAGE_CONTENT` intent has
     been declared.
     """
 
-    matched_keyword: typing.Optional[str] = attr.field(repr=False)
+    matched_keyword: str | None = attr.field(repr=False)
     """The word or phrase configured in the rule which was triggered, if it's a keyword trigger."""
 
-    matched_content: typing.Optional[str] = attr.field(repr=False)
+    matched_content: str | None = attr.field(repr=False)
     """The substring in content which triggered the rule.
 
     This will only be provided if the `MESSAGE_CONTENT` intent has

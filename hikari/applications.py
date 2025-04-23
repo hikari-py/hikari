@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,29 +23,29 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "InviteApplication",
     "Application",
+    "ApplicationContextType",
     "ApplicationFlags",
+    "ApplicationIntegrationConfiguration",
+    "ApplicationIntegrationType",
+    "ApplicationRoleConnectionMetadataRecord",
+    "ApplicationRoleConnectionMetadataRecordType",
     "AuthorizationApplication",
     "AuthorizationInformation",
     "ConnectionVisibility",
+    "InviteApplication",
     "OAuth2AuthorizationToken",
     "OAuth2ImplicitToken",
+    "OAuth2InstallParameters",
     "OAuth2Scope",
+    "OwnApplicationRoleConnection",
     "OwnConnection",
     "OwnGuild",
-    "OwnApplicationRoleConnection",
     "PartialOAuth2Token",
     "Team",
     "TeamMember",
     "TeamMembershipState",
     "TokenType",
-    "ApplicationRoleConnectionMetadataRecordType",
-    "ApplicationRoleConnectionMetadataRecord",
-    "OAuth2InstallParameters",
-    "ApplicationContextType",
-    "ApplicationIntegrationType",
-    "ApplicationIntegrationConfiguration",
     "get_token_id",
 )
 
@@ -63,6 +62,7 @@ from hikari import users
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -294,7 +294,7 @@ class OwnConnection:
     is_activity_visible: bool = attrs.field(eq=False, hash=False, repr=False)
     """[`True`][] if this connection's activities are shown in the user's presence."""
 
-    visibility: typing.Union[ConnectionVisibility, int] = attrs.field(eq=False, hash=False, repr=True)
+    visibility: ConnectionVisibility | int = attrs.field(eq=False, hash=False, repr=True)
     """The visibility of the connection."""
 
 
@@ -302,7 +302,7 @@ class OwnConnection:
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
-    features: typing.Sequence[typing.Union[str, guilds.GuildFeature]] = attrs.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[str | guilds.GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     is_owner: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -322,10 +322,10 @@ class OwnGuild(guilds.PartialGuild):
 class OwnApplicationRoleConnection:
     """Represents an own application role connection."""
 
-    platform_name: typing.Optional[str] = attrs.field(eq=True, hash=True, repr=True)
+    platform_name: str | None = attrs.field(eq=True, hash=True, repr=True)
     """The name of the platform."""
 
-    platform_username: typing.Optional[str] = attrs.field(eq=True, hash=True, repr=True)
+    platform_username: str | None = attrs.field(eq=True, hash=True, repr=True)
     """The users name in the platform."""
 
     metadata: typing.Mapping[str, str] = attrs.field(eq=False, hash=False, repr=False)
@@ -358,7 +358,7 @@ class TeamMembershipState(int, enums.Enum):
 class TeamMember(users.User):
     """Represents a member of a Team."""
 
-    membership_state: typing.Union[TeamMembershipState, int] = attrs.field(repr=False)
+    membership_state: TeamMembershipState | int = attrs.field(repr=False)
     """The state of this user's membership."""
 
     permissions: typing.Sequence[str] = attrs.field(repr=False)
@@ -375,72 +375,95 @@ class TeamMember(users.User):
     """The user representation of this team member."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
 
     @property
-    def avatar_hash(self) -> typing.Optional[str]:
+    @typing_extensions.override
+    def avatar_decoration(self) -> users.AvatarDecoration | None:
+        return self.user.avatar_decoration
+
+    @property
+    @typing_extensions.override
+    def avatar_hash(self) -> str | None:
         return self.user.avatar_hash
 
     @property
-    def avatar_url(self) -> typing.Optional[files.URL]:
+    @typing_extensions.override
+    def avatar_url(self) -> files.URL | None:
         return self.user.avatar_url
 
     @property
+    @typing_extensions.override
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
 
     @property
-    def banner_hash(self) -> typing.Optional[str]:
+    @typing_extensions.override
+    def banner_hash(self) -> str | None:
         return self.user.banner_hash
 
     @property
-    def banner_url(self) -> typing.Optional[files.URL]:
+    @typing_extensions.override
+    def banner_url(self) -> files.URL | None:
         return self.user.banner_url
 
     @property
-    def accent_color(self) -> typing.Optional[colors.Color]:
+    @typing_extensions.override
+    def accent_color(self) -> colors.Color | None:
         return self.user.accent_color
 
     @property
+    @typing_extensions.override
     def discriminator(self) -> str:
         return self.user.discriminator
 
     @property
+    @typing_extensions.override
     def flags(self) -> users.UserFlag:
         return self.user.flags
 
     @property
+    @typing_extensions.override
     def id(self) -> snowflakes.Snowflake:
         return self.user.id
 
     @property
+    @typing_extensions.override
     def is_bot(self) -> bool:
         return self.user.is_bot
 
     @property
+    @typing_extensions.override
     def is_system(self) -> bool:
         return self.user.is_system
 
     @property
+    @typing_extensions.override
     def mention(self) -> str:
         return self.user.mention
 
     @property
+    @typing_extensions.override
     def username(self) -> str:
         return self.user.username
 
     @property
-    def global_name(self) -> typing.Optional[str]:
+    @typing_extensions.override
+    def global_name(self) -> str | None:
         return self.user.global_name
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return str(self.user)
 
+    @typing_extensions.override
     def __hash__(self) -> int:
         return hash(self.user)
 
+    @typing_extensions.override
     def __eq__(self, other: object) -> bool:
         return self.user == other
 
@@ -461,7 +484,7 @@ class Team(snowflakes.Unique):
     name: str = attrs.field(hash=False, eq=False, repr=True)
     """The name of this team."""
 
-    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    icon_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN hash of this team's icon.
 
     If no icon is provided, this will be [`None`][].
@@ -477,15 +500,16 @@ class Team(snowflakes.Unique):
     owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Team {self.name} ({self.id})"
 
     @property
-    def icon_url(self) -> typing.Optional[files.URL]:
+    def icon_url(self) -> files.URL | None:
         """Icon URL, or [`None`][] if no icon exists."""
         return self.make_icon_url()
 
-    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the icon URL for this team if set.
 
         Parameters
@@ -526,18 +550,18 @@ class InviteApplication(guilds.PartialApplication):
     )
     """Client application that models may use for procedures."""
 
-    cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    cover_image_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
     public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     @property
-    def cover_image_url(self) -> typing.Optional[files.URL]:
+    def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
         return self.make_cover_image_url()
 
-    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
 
         Parameters
@@ -599,7 +623,7 @@ class Application(guilds.PartialApplication):
     owner: users.User = attrs.field(eq=False, hash=False, repr=True)
     """The application's owner."""
 
-    rpc_origins: typing.Optional[typing.Sequence[str]] = attrs.field(eq=False, hash=False, repr=False)
+    rpc_origins: typing.Sequence[str] | None = attrs.field(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
     flags: ApplicationFlags = attrs.field(eq=False, hash=False, repr=False)
@@ -608,35 +632,38 @@ class Application(guilds.PartialApplication):
     public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
-    team: typing.Optional[Team] = attrs.field(eq=False, hash=False, repr=False)
+    team: Team | None = attrs.field(eq=False, hash=False, repr=False)
     """The team this application belongs to.
 
     If the application is not part of a team, this will be [`None`][].
     """
 
-    cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    cover_image_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
-    terms_of_service_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    terms_of_service_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's terms of service."""
 
-    privacy_policy_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    privacy_policy_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's privacy policy."""
 
-    role_connections_verification_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    role_connections_verification_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's role connection verification entry point."""
 
-    custom_install_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    custom_install_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's custom authorization link."""
 
     tags: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of tags describing the content and functionality of the application."""
 
-    install_parameters: typing.Optional[ApplicationInstallParameters] = attrs.field(eq=False, hash=False, repr=False)
+    install_parameters: ApplicationInstallParameters | None = attrs.field(eq=False, hash=False, repr=False)
     """Settings for the application's default in-app authorization link, if enabled."""
 
     approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of guilds this application is part of."""
+
+    approximate_user_install_count: int = attrs.field(eq=False, hash=False, repr=False)
+    """The approximate number of users that have installed this application."""
 
     integration_types_config: typing.Mapping[ApplicationIntegrationType, ApplicationIntegrationConfiguration] = (
         attrs.field(eq=False, hash=False, repr=False)
@@ -644,11 +671,11 @@ class Application(guilds.PartialApplication):
     """The default scopes and permissions for each integration type."""
 
     @property
-    def cover_image_url(self) -> typing.Optional[files.URL]:
+    def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
         return self.make_cover_image_url()
 
-    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
 
         Parameters
@@ -687,22 +714,22 @@ class AuthorizationApplication(guilds.PartialApplication):
     public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
-    is_bot_public: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=True)
+    is_bot_public: bool | None = attrs.field(eq=False, hash=False, repr=True)
     """[`True`][] if the bot associated with this application is public.
 
     Will be [`None`][] if this application doesn't have an associated bot.
     """
 
-    is_bot_code_grant_required: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
+    is_bot_code_grant_required: bool | None = attrs.field(eq=False, hash=False, repr=False)
     """[`True`][] if this application's bot is requiring code grant for invites.
 
     Will be [`None`][] if this application doesn't have a bot.
     """
 
-    terms_of_service_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    terms_of_service_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's terms of service."""
 
-    privacy_policy_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    privacy_policy_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's privacy policy."""
 
 
@@ -717,10 +744,10 @@ class AuthorizationInformation:
     expires_at: datetime.datetime = attrs.field(hash=False, repr=True)
     """When the access token this data was retrieved with expires."""
 
-    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attrs.field(hash=False, repr=True)
+    scopes: typing.Sequence[OAuth2Scope | str] = attrs.field(hash=False, repr=True)
     """A sequence of the scopes the current user has authorized the application for."""
 
-    user: typing.Optional[users.User] = attrs.field(hash=False, repr=True)
+    user: users.User | None = attrs.field(hash=False, repr=True)
     """The user who has authorized this token.
 
     This will only be included if the token is authorized for the
@@ -740,15 +767,16 @@ class PartialOAuth2Token:
     access_token: str = attrs.field(hash=True, repr=False)
     """Access token issued by the authorization server."""
 
-    token_type: typing.Union[TokenType, str] = attrs.field(eq=False, hash=False, repr=True)
+    token_type: TokenType | str = attrs.field(eq=False, hash=False, repr=True)
     """Type of token issued by the authorization server."""
 
     expires_in: datetime.timedelta = attrs.field(eq=False, hash=False, repr=True)
     """Lifetime of this access token."""
 
-    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attrs.field(eq=False, hash=False, repr=True)
+    scopes: typing.Sequence[OAuth2Scope | str] = attrs.field(eq=False, hash=False, repr=True)
     """Scopes the access token has access to."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.access_token
 
@@ -761,14 +789,14 @@ class OAuth2AuthorizationToken(PartialOAuth2Token):
     refresh_token: int = attrs.field(eq=False, hash=False, repr=False)
     """Refresh token used to obtain new access tokens with the same grant."""
 
-    webhook: typing.Optional[webhooks.IncomingWebhook] = attrs.field(eq=False, hash=False, repr=True)
+    webhook: webhooks.IncomingWebhook | None = attrs.field(eq=False, hash=False, repr=True)
     """Object of the webhook that was created.
 
     This will only be present if this token was authorized with the
     [`hikari.applications.OAuth2Scope.WEBHOOK_INCOMING`][] scope, otherwise this will be [`None`][].
     """
 
-    guild: typing.Optional[guilds.RESTGuild] = attrs.field(eq=False, hash=False, repr=True)
+    guild: guilds.RESTGuild | None = attrs.field(eq=False, hash=False, repr=True)
     """Object of the guild the user was added to.
 
     This will only be present if this token was authorized with the
@@ -781,7 +809,7 @@ class OAuth2AuthorizationToken(PartialOAuth2Token):
 class OAuth2ImplicitToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the implicit grant flow."""
 
-    state: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    state: str | None = attrs.field(eq=False, hash=False, repr=False)
     """State parameter that was present in the authorization request if provided."""
 
 
@@ -832,7 +860,7 @@ class ApplicationRoleConnectionMetadataRecordType(int, enums.Enum):
 class ApplicationRoleConnectionMetadataRecord:
     """Represents a role connection metadata record."""
 
-    type: typing.Union[ApplicationRoleConnectionMetadataRecordType, int] = attrs.field(eq=False, hash=False, repr=False)
+    type: ApplicationRoleConnectionMetadataRecordType | int = attrs.field(eq=False, hash=False, repr=False)
     """The type of metadata value record."""
 
     key: str = attrs.field(eq=True, hash=True, repr=False)
@@ -844,12 +872,12 @@ class ApplicationRoleConnectionMetadataRecord:
     description: str = attrs.field(eq=False, hash=False, repr=True)
     """The metadata's field description."""
 
-    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
+    name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
         eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of name localizations for this metadata field."""
 
-    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
+    description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
         eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of description localizations for this metadata field."""
@@ -860,7 +888,7 @@ class ApplicationRoleConnectionMetadataRecord:
 class ApplicationIntegrationConfiguration:
     """The Application Integration Configuration for the related [ApplicationIntegrationType][]."""
 
-    oauth2_install_parameters: typing.Optional[OAuth2InstallParameters] = attrs.field(eq=False, hash=False, repr=True)
+    oauth2_install_parameters: OAuth2InstallParameters | None = attrs.field(eq=False, hash=False, repr=True)
     """The OAuth2 Install parameters for the Application Integration."""
 
 
@@ -923,4 +951,5 @@ def get_token_id(token: str) -> snowflakes.Snowflake:
         return snowflakes.Snowflake(base64.b64decode(segment))
 
     except (TypeError, ValueError, IndexError) as exc:
-        raise ValueError("Unexpected token format") from exc
+        msg = "Unexpected token format"
+        raise ValueError(msg) from exc

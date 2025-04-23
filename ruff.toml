@@ -1,0 +1,95 @@
+line-length = 120
+target-version = "py39"
+
+[format]
+docstring-code-format = true
+docstring-code-line-length = 80
+quote-style = "double"
+line-ending = "lf"
+skip-magic-trailing-comma = true
+
+[lint]
+# https://docs.astral.sh/ruff/rules/
+select = ["ALL"]
+ignore = [
+    "S101",    # Use of assert detected (we use it for typing and testing purposes)
+    "COM812",  # Missing trailing comma (interferes with the formatter)
+    "TRY003",  # Avoid specifying long messages outside the exception class (has false positives)
+    "D105",    # Missing docstring in magic method
+    "SLOT000", # Subclasses of X should define `__slots__` (too many false positives, we use slotscheck instead)
+    "PLR2004", # Usage of "magic value" (consider removing in the future)
+    "SIM105",  # Use `contextlib.suppress` (worst for performance)
+    "SIM110",  # Use `any`/`all` (worst for performance)
+    "TD002",   # Missing issue link for todo
+    "TD003",   # Line contains todo
+    "FIX002",  # Line contains todo
+    "A002",    # Function argument is shadowing a python builtin
+    "FBT003",  # Boolean positional argument in function call (more false positives than real ones)
+]
+
+[lint.per-file-ignores]
+"hikari/**/__init__.py" = [
+    "F401", # Name imported but unused
+    "F403", # Unable to detect undefined names when using `import *`
+]
+"hikari/**/__init__.pyi" = [
+    "F403", # Unable to detect undefined names when using `import *`
+]
+"tests/**/*.py" = [
+    "D",       # Docstrings missing
+    "S105",    # Possible hardcoded password assigned to string
+    "S106",    # Possible hardcoded password assigned to argument
+    "PLR2004", # Do not use magic values
+    "SLF001",  # Private member accessed
+
+    # Rules below here are temporarily disabled and will be enabled in the future
+    # when extra work is done
+    "ALL",
+    # "ANN",     # Annotations missing
+    # "DTZ001",  # `datetime.datetime()` called without a `tzinfo` argument
+    # "DTZ901",  # Use of datetime.datetime.min/max without timezone information
+    # "N802",    # Function name should be lowercase
+    # "UP026",   # `mock` is deprecated, use `unittest.mock` instead
+    # "SIM117",  # Use single `with` statement
+    # "ARG002",  # Unused method argument
+    # "FBT003",  # Boolean positional value in function call
+    # "A002",    # Function argument is shadowing a python builtin
+    # "RET501",  # Do not use `return None` if only possible return
+    # "B033",    # Sets should not contain duplicate items (ignore only where needed)
+]
+"scripts/**/*.py" = [
+    "D",      # Docstrings rules
+    "INP001", # File is part of an implicit namespace
+    "T201",   # Print used
+    "S602",   # `subprocess` call with `shell=True`
+]
+"pipelines/**/*.py" = [
+    "INP001", # File is part of an implicit namespace
+    "D100",   # Missing docstring in public module
+]
+
+# Disabling most of the docstring related checks as ruff doesn't
+# support inherited docstrings at the time of writing
+# see: https://github.com/astral-sh/ruff/issues/2413
+#
+# D102 - Missing docstring in public method
+"hikari/*.py" = ["D102"]
+"hikari/impl/**.py" = ["D102"]
+
+# Our typing shim just provides backported runtime functionality
+# for typing_extensions, so types will be provided by that package
+# at typecheck time
+"hikari/internal/typing_extensions.py" = ["ANN"]
+
+[lint.isort]
+required-imports = ["from __future__ import annotations"]
+force-single-line = true
+
+[lint.pydocstyle]
+convention = "numpy"
+
+[lint.pylint]
+max-args = 20
+
+[lint.mccabe]
+max-complexity = 20

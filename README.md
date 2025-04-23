@@ -6,7 +6,7 @@
 <a href="https://github.com/hikari-py/hikari/actions"><img height="20" alt="CI status" src="https://github.com/hikari-py/hikari/actions/workflows/ci.yml/badge.svg?branch=master&event=push"></a>
 <a href="https://pypi.org/project/mypy/"><img height="20" alt="Mypy badge" src="https://img.shields.io/badge/mypy-checked-blue"></a>
 <a href="https://pypi.org/project/ruff"><img height="20" alt="Ruff badge" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json"></a>
-<a href="https://codeclimate.com/github/hikari-py/hikari/test_coverage"><img height="20" alt="Test coverage" src="https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/test_coverage"></a>
+<a href="https://codecov.io/github/hikari-py/hikari"><img src="https://codecov.io/github/hikari-py/hikari/graph/badge.svg?token=FPNSBOP2VG"/></a>
 <br>
 <a href="https://discord.gg/Jx4cNGG"><img height="20" alt="Discord invite" src="https://discord.com/api/guilds/574921006817476608/widget.png"></a>
 <a href="https://docs.hikari-py.dev/en/stable"><img height="20" alt="Documentation Status" src="https://readthedocs.org/projects/hikari-py/badge/?version=latest"></a>
@@ -30,7 +30,7 @@ python -m pip install -U hikari
 py -3 -m pip install -U hikari
 ```
 
-----
+---
 
 ## Bots
 
@@ -215,7 +215,7 @@ rest = hikari.RESTApp()
 
 async def print_my_user(token):
     await rest.start()
-  
+
     # We acquire a client with a given token. This allows one REST app instance
     # with one internal connection pool to be reused.
     async with rest.acquire(token) as client:
@@ -223,7 +223,7 @@ async def print_my_user(token):
         print(my_user)
 
     await rest.close()
-        
+
 asyncio.run(print_my_user("user token acquired through OAuth here"))
 ```
 
@@ -233,8 +233,8 @@ asyncio.run(print_my_user("user token acquired through OAuth here"))
 
 Optional features can be specified when installing hikari:
 
-* `server` - Install dependencies required to enable Hikari's standard interaction server (RESTBot) functionality.
-* `speedups` - Detailed in [`hikari[speedups]`](#hikarispeedups).
+- `server` - Install dependencies required to enable Hikari's standard interaction server (RESTBot) functionality.
+- `speedups` - Detailed in [`hikari[speedups]`](#hikarispeedups).
 
 Example:
 
@@ -253,13 +253,14 @@ implementing your own command handler.
 
 Hikari does not include a command framework by default, so you will want to pick a third party library to do it:
 
-- [`arc`](https://github.com/hypergonial/hikari-arc) - a bot framework with a focus on type-safety and correctness.
-- [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for hikari that keeps your project neat and tidy.
 - [`lightbulb`](https://github.com/tandemdude/hikari-lightbulb) - a simple and easy to use command framework for hikari.
 - [`tanjun`](https://github.com/FasterSpeeding/Tanjun) - a flexible command framework designed to extend hikari.
+- [`crescent`](https://github.com/magpie-dev/hikari-crescent) - a command handler for hikari that keeps your project neat and tidy.
+- [`arc`](https://github.com/hypergonial/hikari-arc) - a bot framework with a focus on type-safety and correctness.
 
 There are also third party libraries to help you manage components:
 
+- [`yuyo`](https://github.com/FasterSpeeding/Yuyo) - A collection of utility classes and functions designed to expand Hikari.
 - [`miru`](https://github.com/hypergonial/hikari-miru) - A component handler for hikari, inspired by discord.py's views.
 - [`flare`](https://github.com/brazier-dev/hikari-flare/) - a component manager designed to write simple interactions with persistent data.
 
@@ -317,16 +318,19 @@ Currently, this functionality does not yet exist.
 
 ## Developing hikari
 
-To familiarize yourself a bit with the project, we recommend reading our
+To familiarize yourself with the project, you should read our
 [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
 
 If you wish to contribute something, you should first start by cloning the repository.
 
-In the repository, make a virtual environment (`python -m venv .venv`) and enter it (`source .venv/bin/activate` on
-Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
+> [!NOTE]
+> We are using the package manager `uv` here. If you don't know how to use `uv`, we have a more detailed
+> section about that in the [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
+In the repository, make a virtual environment (`uv venv`) and enter it (`source .venv/bin/activate` on
+Linux or macOS, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
 `source .venv/Scripts/activate`).
 
-The first thing you should run is `pip install --group nox` to install nox.
+The first thing you should run is `uv sync --group nox` to install nox.
 This handles running predefined tasks and pipelines.
 
 Once this is complete, you can run `nox` without any arguments to ensure everything builds and is correct.

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -43,6 +42,7 @@ if typing.TYPE_CHECKING:
     from hikari import invites as invite_models
     from hikari import messages as message_models
     from hikari import monetization as entitlement_models
+    from hikari import polls as poll_models
     from hikari import presences as presence_models
     from hikari import scheduled_events as scheduled_events_models
     from hikari import sessions as gateway_models
@@ -963,7 +963,7 @@ class EntityFactory(abc.ABC):
     @abc.abstractmethod
     def deserialize_emoji(
         self, payload: data_binding.JSONObject
-    ) -> typing.Union[emoji_models.UnicodeEmoji, emoji_models.CustomEmoji]:
+    ) -> emoji_models.UnicodeEmoji | emoji_models.CustomEmoji:
         """Parse a raw payload from Discord into an emoji object.
 
         Parameters
@@ -1180,6 +1180,21 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_incidents(self, payload: data_binding.JSONObject | None) -> guild_models.GuildIncidents:
+        """Parse a raw payload from Discord into a guild incidents object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.GuildIncidents
+            The deserialized guild incidents object.
+        """
+
+    @abc.abstractmethod
     def deserialize_rest_guild(self, payload: data_binding.JSONObject) -> guild_models.RESTGuild:
         """Parse a raw payload from Discord into a guild object.
 
@@ -1352,21 +1367,6 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
-    def deserialize_partial_interaction(self, payload: data_binding.JSONObject) -> base_interactions.PartialInteraction:
-        """Parse a raw payload from Discord into a partial interaction object.
-
-        Parameters
-        ----------
-        payload
-            The JSON payload to deserialize.
-
-        Returns
-        -------
-        hikari.interactions.base_interactions.PartialInteraction
-            The deserialized partial interaction object.
-        """
-
-    @abc.abstractmethod
     def deserialize_command_interaction(
         self, payload: data_binding.JSONObject
     ) -> command_interactions.CommandInteraction:
@@ -1421,8 +1421,7 @@ class EntityFactory(abc.ABC):
 
         !!! note
             This isn't required to implement logic for deserializing
-            PING interactions and if you want to unmarshal those
-            [`hikari.api.entity_factory.EntityFactory.deserialize_partial_interaction`][] should be compatible.
+            PING interactions.
 
         Parameters
         ----------
@@ -1994,6 +1993,25 @@ class EntityFactory(abc.ABC):
         -------
         hikari.stage_intances.StageInstance
             The deserialized stage instance object
+        """
+
+    ###############
+    # POLL MODELS #
+    ###############
+
+    @abc.abstractmethod
+    def deserialize_poll(self, payload: data_binding.JSONObject) -> poll_models.Poll:
+        """Parse a raw payload from Discord into a poll object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.polls.Poll
+            The deserialized poll object.
         """
 
     ###################

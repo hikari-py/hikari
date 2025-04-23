@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -29,6 +28,7 @@ import abc
 import datetime
 import typing
 
+from hikari import permissions as permissions_
 from hikari import scheduled_events
 from hikari import traits
 from hikari import undefined
@@ -49,7 +49,6 @@ if typing.TYPE_CHECKING:
     from hikari import locales
     from hikari import messages as messages_
     from hikari import monetization
-    from hikari import permissions as permissions_
     from hikari import sessions
     from hikari import snowflakes
     from hikari import stage_instances
@@ -71,7 +70,7 @@ class TokenStrategy(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def token_type(self) -> typing.Union[applications.TokenType, str]:
+    def token_type(self) -> applications.TokenType | str:
         """Type of token this strategy returns."""
 
     @abc.abstractmethod
@@ -91,7 +90,7 @@ class TokenStrategy(abc.ABC):
         """
 
     @abc.abstractmethod
-    def invalidate(self, token: typing.Optional[str]) -> None:
+    def invalidate(self, token: str | None) -> None:
         """Invalidate the cached token in this handler.
 
         !!! note
@@ -125,7 +124,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def token_type(self) -> typing.Union[str, applications.TokenType, None]:
+    def token_type(self) -> str | applications.TokenType | None:
         """Type of token this client is using for most requests.
 
         If this is [`None`][] then this client will likely only work
@@ -186,7 +185,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def edit_channel(
+    async def edit_channel(  # noqa: PLR0913 - Too many arguments
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         /,
@@ -197,10 +196,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode | int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
+        region: undefined.UndefinedNoneOr[voices.VoiceRegion | str] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -209,14 +208,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
-        default_sort_order: undefined.UndefinedOr[
-            typing.Union[channels_.ForumSortOrderType, int]
-        ] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
         available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
-        default_reaction_emoji: typing.Union[
-            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake, None
-        ] = undefined.UNDEFINED,
+        default_reaction_emoji: str
+        | emojis.Emoji
+        | undefined.UndefinedType
+        | snowflakes.Snowflake
+        | None = undefined.UNDEFINED,
         archived: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         locked: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         invitable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -477,7 +476,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        request_to_speak: typing.Union[undefined.UndefinedType, bool, datetime.datetime] = undefined.UNDEFINED,
+        request_to_speak: undefined.UndefinedType | bool | datetime.datetime = undefined.UNDEFINED,
     ) -> None:
         """Edit the current user's voice state in a stage channel.
 
@@ -570,13 +569,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: typing.Union[channels_.PermissionOverwrite, users.PartialUser, guilds.PartialRole],
+        target: channels_.PermissionOverwrite | users.PartialUser | guilds.PartialRole,
         *,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Edit permissions for a target entity."""
+        # Edit permissions for a target entity
+        ...
 
     @typing.overload
     @abc.abstractmethod
@@ -585,22 +585,21 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: snowflakes.Snowflakeish,
         *,
-        target_type: typing.Union[channels_.PermissionOverwriteType, int],
+        target_type: channels_.PermissionOverwriteType | int,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Edit permissions for a given entity ID and type."""
+        # Edit permissions for a given entity ID and type
+        ...
 
     @abc.abstractmethod
     async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: typing.Union[
-            snowflakes.Snowflakeish, users.PartialUser, guilds.PartialRole, channels_.PermissionOverwrite
-        ],
+        target: snowflakes.Snowflakeish | users.PartialUser | guilds.PartialRole | channels_.PermissionOverwrite,
         *,
-        target_type: undefined.UndefinedOr[typing.Union[channels_.PermissionOverwriteType, int]] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[channels_.PermissionOverwriteType | int] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -652,9 +651,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: typing.Union[
-            channels_.PermissionOverwrite, guilds.PartialRole, users.PartialUser, snowflakes.Snowflakeish
-        ],
+        target: channels_.PermissionOverwrite | guilds.PartialRole | users.PartialUser | snowflakes.Snowflakeish,
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
 
@@ -1049,6 +1046,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -1059,12 +1057,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in the given channel.
 
@@ -1126,6 +1124,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to create.
         sticker
             If provided, the object or ID of a sticker to send on the message.
 
@@ -1260,11 +1260,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedNoneOr[
-            typing.Union[files.Resourceish, messages_.Attachment]
-        ] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish | messages_.Attachment] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[
-            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+            typing.Sequence[files.Resourceish | messages_.Attachment]
         ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
@@ -1275,10 +1273,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[messages_.MessageFlag] = undefined.UNDEFINED,
     ) -> messages_.Message:
@@ -1471,11 +1469,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_messages(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
-        messages: typing.Union[
-            snowflakes.SnowflakeishOr[messages_.PartialMessage],
-            typing.Iterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
-            typing.AsyncIterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
-        ],
+        messages: snowflakes.SnowflakeishOr[messages_.PartialMessage]
+        | typing.Iterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]]
+        | typing.AsyncIterable[snowflakes.SnowflakeishOr[messages_.PartialMessage]],
         /,
         *other_messages: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1531,7 +1527,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: typing.Union[str, emojis.Emoji],
+        emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         """Add a reaction emoji to a message in a given channel.
@@ -1576,7 +1572,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: typing.Union[str, emojis.Emoji],
+        emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a reaction that your application user created.
@@ -1617,7 +1613,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: typing.Union[str, emojis.Emoji],
+        emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         """Delete all reactions for a single emoji on a given message.
@@ -1661,7 +1657,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
-        emoji: typing.Union[str, emojis.Emoji],
+        emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
         """Delete a reaction from a message.
@@ -1744,7 +1740,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        emoji: typing.Union[str, emojis.Emoji],
+        emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users.User]:
         """Fetch reactions for an emoji from a message.
@@ -2033,30 +2029,29 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def execute_webhook(
         self,
         # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
-        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
+        webhook: webhooks.ExecutableWebhook | snowflakes.Snowflakeish,
         token: str,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        thread: typing.Union[
-            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
-        ] = undefined.UNDEFINED,
+        thread: undefined.UndefinedType | snowflakes.SnowflakeishOr[channels_.GuildThreadChannel] = undefined.UNDEFINED,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
+        avatar_url: undefined.UndefinedType | str | files.URL = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute a webhook.
 
@@ -2144,6 +2139,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the message poll.
         tts
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
@@ -2201,13 +2198,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_webhook_message(
         self,
         # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
-        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
+        webhook: webhooks.ExecutableWebhook | snowflakes.Snowflakeish,
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         *,
-        thread: typing.Union[
-            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
-        ] = undefined.UNDEFINED,
+        thread: undefined.UndefinedType | snowflakes.SnowflakeishOr[channels_.GuildThreadChannel] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Fetch an old message sent by the webhook.
 
@@ -2250,19 +2245,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_webhook_message(
         self,
         # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
-        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
+        webhook: webhooks.ExecutableWebhook | snowflakes.Snowflakeish,
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        thread: typing.Union[
-            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
-        ] = undefined.UNDEFINED,
-        attachment: undefined.UndefinedNoneOr[
-            typing.Union[files.Resourceish, messages_.Attachment]
-        ] = undefined.UNDEFINED,
+        thread: undefined.UndefinedType | snowflakes.SnowflakeishOr[channels_.GuildThreadChannel] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish | messages_.Attachment] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[
-            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+            typing.Sequence[files.Resourceish | messages_.Attachment]
         ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
@@ -2272,10 +2263,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
@@ -2410,13 +2401,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_webhook_message(
         self,
         # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
-        webhook: typing.Union[webhooks.ExecutableWebhook, snowflakes.Snowflakeish],
+        webhook: webhooks.ExecutableWebhook | snowflakes.Snowflakeish,
         token: str,
         message: snowflakes.SnowflakeishOr[messages_.Message],
         *,
-        thread: typing.Union[
-            undefined.UndefinedType, snowflakes.SnowflakeishOr[channels_.GuildThreadChannel]
-        ] = undefined.UNDEFINED,
+        thread: undefined.UndefinedType | snowflakes.SnowflakeishOr[channels_.GuildThreadChannel] = undefined.UNDEFINED,
     ) -> None:
         """Delete a given message in a given channel.
 
@@ -2487,9 +2476,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_invite(
-        self, invite: typing.Union[invites.InviteCode, str], with_counts: bool = True, with_expiration: bool = True
-    ) -> invites.Invite:
+    async def fetch_invite(self, invite: invites.InviteCode | str, *, with_counts: bool = True) -> invites.Invite:
         """Fetch an existing invite.
 
         Parameters
@@ -2499,8 +2486,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the code of an existing invite.
         with_counts
             Whether the invite should contain the approximate member counts.
-        with_expiration
-            Whether the invite should contain the expiration date.
 
         Returns
         -------
@@ -2521,7 +2506,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_invite(self, invite: typing.Union[invites.InviteCode, str]) -> invites.Invite:
+    async def delete_invite(self, invite: invites.InviteCode | str) -> invites.Invite:
         """Delete an existing invite.
 
         Parameters
@@ -2738,7 +2723,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         platform_name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         platform_username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         metadata: undefined.UndefinedOr[
-            typing.Mapping[str, typing.Union[str, int, bool, datetime.datetime]]
+            typing.Mapping[str, str | int | bool | datetime.datetime]
         ] = undefined.UNDEFINED,
     ) -> applications.OwnApplicationRoleConnection:
         """Set the token's associated role connections.
@@ -2942,7 +2927,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         client_secret: str,
         # While according to the spec scopes are optional here, Discord requires that "valid" scopes are passed.
-        scopes: typing.Sequence[typing.Union[applications.OAuth2Scope, str]],
+        scopes: typing.Sequence[applications.OAuth2Scope | str],
     ) -> applications.PartialOAuth2Token:
         """Authorize a client credentials token for an application.
 
@@ -3019,9 +3004,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         client_secret: str,
         refresh_token: str,
         *,
-        scopes: undefined.UndefinedOr[
-            typing.Sequence[typing.Union[applications.OAuth2Scope, str]]
-        ] = undefined.UNDEFINED,
+        scopes: undefined.UndefinedOr[typing.Sequence[applications.OAuth2Scope | str]] = undefined.UNDEFINED,
     ) -> applications.OAuth2AuthorizationToken:
         """Refresh an access token.
 
@@ -3065,7 +3048,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         client_secret: str,
-        token: typing.Union[str, applications.PartialOAuth2Token],
+        token: str | applications.PartialOAuth2Token,
     ) -> None:
         """Revoke an OAuth2 token.
 
@@ -3093,7 +3076,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def add_user_to_guild(
         self,
-        access_token: typing.Union[str, applications.PartialOAuth2Token],
+        access_token: str | applications.PartialOAuth2Token,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         *,
@@ -3101,7 +3084,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> typing.Optional[guilds.Member]:
+    ) -> guilds.Member | None:
         """Add a user to a guild.
 
         !!! note
@@ -3220,7 +3203,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
-        event_type: undefined.UndefinedOr[typing.Union[audit_logs.AuditLogEventType, int]] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         """Fetch pages of the guild's audit log.
 
@@ -3684,7 +3667,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_sticker(
         self, sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker]
-    ) -> typing.Union[stickers_.GuildSticker, stickers_.StandardSticker]:
+    ) -> stickers_.GuildSticker | stickers_.StandardSticker:
         """Fetch a sticker.
 
         Parameters
@@ -3932,49 +3915,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def guild_builder(self, name: str, /) -> special_endpoints.GuildBuilder:
-        """Make a guild builder to create a guild with.
-
-        !!! note
-            This endpoint can only be used by bots in less than 10 guilds.
-
-        !!! note
-            This call is not a coroutine function, it returns a special type of
-            lazy iterator that will perform API calls as you iterate across it,
-            thus any errors documented below will happen then.
-
-            See [`hikari.iterators`][] for the full API for this iterator type.
-
-        Parameters
-        ----------
-        name
-            The new guilds name.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.GuildBuilder
-            The guild builder to use. This will allow to create a guild
-            later with [`hikari.api.special_endpoints.GuildBuilder.create`][].
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value or if you
-            call this as a bot that's in more than 10 guilds.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-
-        See Also
-        --------
-        GuildBuilder : [`hikari.api.special_endpoints.GuildBuilder`][].
-        """
-
-    @abc.abstractmethod
     async def fetch_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.RESTGuild:
         """Fetch a guild.
 
@@ -4065,7 +4005,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[typing.Union[str, locales.Locale]] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[str | locales.Locale] = undefined.UNDEFINED,
         features: undefined.UndefinedOr[typing.Sequence[guilds.GuildFeature]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
@@ -4137,6 +4077,65 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.ForbiddenError
             If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission or if you tried to
             pass ownership without being the server owner.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def set_guild_incident_actions(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        invites_disabled_until: datetime.datetime | None = None,
+        dms_disabled_until: datetime.datetime | None = None,
+    ) -> guilds.GuildIncidents:
+        """Set the incident actions for a guild.
+
+        !!! warning
+            This endpoint will reset any previous security measures if not specified.
+            This is a Discord limitation.
+
+        Parameters
+        ----------
+        guild
+            The guild to set the incident actions for. This may be the object
+            or the ID of an existing guild.
+        invites_disabled_until
+            The datetime when invites will be enabled again.
+
+            If [`None`][], invites will be enabled again immediately.
+
+            !!! note
+                If [`hikari.guilds.GuildFeature.INVITES_DISABLED`][] is active, this value will be ignored.
+        dms_disabled_until
+            The datetime when direct messages between non-friend guild
+            members will be enabled again.
+
+            If [`None`][], direct messages will be enabled again immediately.
+
+        Returns
+        -------
+        hikari.guilds.GuildIncidents
+            A guild incidents object with the updated incident actions.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you do not have at least one of the following permissions:
+            - [`hikari.permissions.Permissions.ADMINISTRATOR`][]
+            - [`hikari.permissions.Permissions.KICK_MEMBERS`][]
+            - [`hikari.permissions.Permissions.MODERATE_MEMBERS`][]
+            - [`hikari.permissions.Permissions.BAN_MEMBERS`][]
+            - [`hikari.permissions.Permissions.MANAGE_GUILD`][]
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -4369,14 +4368,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        default_forum_layout: undefined.UndefinedOr[typing.Union[channels_.ForumLayoutType, int]] = undefined.UNDEFINED,
-        default_sort_order: undefined.UndefinedOr[
-            typing.Union[channels_.ForumSortOrderType, int]
-        ] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
         available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
-        default_reaction_emoji: typing.Union[
-            str, emojis.Emoji, undefined.UndefinedType, snowflakes.Snowflake
-        ] = undefined.UNDEFINED,
+        default_reaction_emoji: str
+        | emojis.Emoji
+        | undefined.UndefinedType
+        | snowflakes.Snowflake = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildForumChannel:
         """Create a forum channel in a guild.
@@ -4456,11 +4454,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[typing.Union[channels_.VideoQualityMode, int]] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode | int] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices.VoiceRegion | str] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildVoiceChannel:
@@ -4533,7 +4531,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
-        region: undefined.UndefinedOr[typing.Union[voices.VoiceRegion, str]] = undefined.UNDEFINED,
+        region: undefined.UndefinedOr[voices.VoiceRegion | str] = undefined.UNDEFINED,
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildStageChannel:
@@ -4656,7 +4654,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> typing.Union[channels_.GuildPublicThread, channels_.GuildNewsThread]:
+    ) -> channels_.GuildPublicThread | channels_.GuildNewsThread:
         """Create a public or news thread on a message in a guild channel.
 
         !!! note
@@ -4710,7 +4708,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def create_thread(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
-        type: typing.Union[channels_.ChannelType, int],
+        type: channels_.ChannelType | int,
         name: str,
         /,
         *,
@@ -4775,7 +4773,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def create_forum_post(
+    async def create_forum_post(  # noqa: PLR0913
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
         name: str,
@@ -4789,6 +4787,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         sticker: undefined.UndefinedOr[snowflakes.SnowflakeishOr[stickers_.PartialSticker]] = undefined.UNDEFINED,
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
@@ -4797,12 +4796,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
         # Channel arguments
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
@@ -4871,6 +4870,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the message poll.
         sticker
             If provided, the object or ID of a sticker to send on the message.
 
@@ -5178,7 +5179,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         /,
         *,
         before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
-    ) -> iterators.LazyIterator[typing.Union[channels_.GuildNewsThread, channels_.GuildPublicThread]]:
+    ) -> iterators.LazyIterator[channels_.GuildNewsThread | channels_.GuildPublicThread]:
         """Fetch a channel's public archived threads.
 
         !!! note
@@ -6008,7 +6009,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
+        permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -6028,7 +6029,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the name for the role.
         permissions
             The permissions to give the role. This will default to setting
-            NO roles if left to the default value. This is in contrast to
+            NO permissions if left as the default value. This is in contrast to
             default behaviour on Discord where some random permissions will
             be set by default.
         color
@@ -6259,7 +6260,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         compute_prune_count: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         include_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> typing.Optional[int]:
+    ) -> int | None:
         """Begin the guild prune.
 
         Parameters
@@ -6629,50 +6630,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def create_guild_from_template(
-        self,
-        template: typing.Union[str, templates.Template],
-        name: str,
-        *,
-        icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-    ) -> guilds.RESTGuild:
-        """Make a guild from a template.
-
-        !!! note
-            This endpoint can only be used by bots in less than 10 guilds.
-
-        Parameters
-        ----------
-        template
-            The object or string code of the template to create a guild based on.
-        name
-            The new guilds name.
-        icon
-            If provided, the guild icon to set. Must be a 1024x1024 image or can
-            be an animated gif when the guild has the [`hikari.guilds.GuildFeature.ANIMATED_ICON`][] feature.
-
-        Returns
-        -------
-        hikari.guilds.RESTGuild
-            Object of the created guild.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any of the fields that are passed have an invalid value or if you
-            call this as a bot that's in more than 10 guilds.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
     async def delete_template(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: typing.Union[str, templates.Template]
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: str | templates.Template
     ) -> templates.Template:
         """Delete a guild template.
 
@@ -6708,7 +6667,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_template(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        template: typing.Union[templates.Template, str],
+        template: templates.Template | str,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -6748,7 +6707,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_template(self, template: typing.Union[str, templates.Template]) -> templates.Template:
+    async def fetch_template(self, template: str | templates.Template) -> templates.Template:
         """Fetch a guild template.
 
         Parameters
@@ -6808,7 +6767,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def sync_guild_template(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: typing.Union[str, templates.Template]
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], template: str | templates.Template
     ) -> templates.Template:
         """Create a guild template.
 
@@ -6861,7 +6820,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def context_menu_command_builder(
-        self, type: typing.Union[commands.CommandType, int], name: str
+        self, type: commands.CommandType | int, name: str
     ) -> special_endpoints.ContextMenuCommandBuilder:
         """Create a command builder to use in [`hikari.api.rest.RESTClient.set_application_commands`][].
 
@@ -6967,15 +6926,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale | str, str]] = undefined.UNDEFINED,
         description_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
+            typing.Mapping[locales.Locale | str, str]
         ] = undefined.UNDEFINED,
-        default_member_permissions: typing.Union[
-            undefined.UndefinedType, int, permissions_.Permissions
-        ] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         r"""Create an application slash command.
@@ -7035,16 +6990,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def create_context_menu_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: typing.Union[commands.CommandType, int],
+        type: commands.CommandType | int,
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[
-            typing.Mapping[typing.Union[locales.Locale, str], str]
-        ] = undefined.UNDEFINED,
-        default_member_permissions: typing.Union[
-            undefined.UndefinedType, int, permissions_.Permissions
-        ] = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale | str, str]] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         r"""Create an application context menu command.
@@ -7152,9 +7103,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        default_member_permissions: typing.Union[
-            undefined.UndefinedType, int, permissions_.Permissions
-        ] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         """Edit a registered application command.
 
@@ -7367,7 +7316,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def interaction_deferred_builder(
-        self, type: typing.Union[base_interactions.ResponseType, int], /
+        self, type: base_interactions.ResponseType | int, /
     ) -> special_endpoints.InteractionDeferredBuilder:
         """Create a builder for a deferred message interaction response.
 
@@ -7401,7 +7350,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def interaction_message_builder(
-        self, type: typing.Union[base_interactions.ResponseType, int], /
+        self, type: base_interactions.ResponseType | int, /
     ) -> special_endpoints.InteractionMessageBuilder:
         """Create a builder for a message interaction response.
 
@@ -7481,10 +7430,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
-        response_type: typing.Union[int, base_interactions.ResponseType],
+        response_type: int | base_interactions.ResponseType,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        flags: typing.Union[int, messages_.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
+        flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         attachment: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
@@ -7494,12 +7443,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
     ) -> None:
         """Create the initial response for a interaction.
@@ -7543,6 +7493,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to add to the message.
         flags
             If provided, the message flags this response should have.
 
@@ -7604,11 +7556,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token: str,
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedNoneOr[
-            typing.Union[files.Resourceish, messages_.Attachment]
-        ] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish | messages_.Attachment] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[
-            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+            typing.Sequence[files.Resourceish | messages_.Attachment]
         ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
@@ -7618,10 +7568,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Edit the initial response to a command interaction.
@@ -7692,6 +7642,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
+        poll
+            If provided, the poll to set on the message.
         mentions_everyone
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -7953,9 +7905,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: typing.Union[
-            int, scheduled_events.EventPrivacyLevel
-        ] = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         """Create a scheduled stage event.
@@ -8023,9 +7973,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: typing.Union[
-            int, scheduled_events.EventPrivacyLevel
-        ] = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         """Create a scheduled voice event.
@@ -8093,9 +8041,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: typing.Union[
-            int, scheduled_events.EventPrivacyLevel
-        ] = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         """Create a scheduled external event.
@@ -8155,18 +8101,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.PartialChannel]] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        entity_type: undefined.UndefinedOr[
-            typing.Union[int, scheduled_events.ScheduledEventType]
-        ] = undefined.UNDEFINED,
+        entity_type: undefined.UndefinedOr[int | scheduled_events.ScheduledEventType] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         location: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        privacy_level: undefined.UndefinedOr[
-            typing.Union[int, scheduled_events.EventPrivacyLevel]
-        ] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[int | scheduled_events.EventPrivacyLevel] = undefined.UNDEFINED,
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
-        status: undefined.UndefinedOr[typing.Union[int, scheduled_events.ScheduledEventStatus]] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledEvent:
         """Edit a scheduled event.
@@ -8529,7 +8471,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: str,
-        privacy_level: undefined.UndefinedOr[typing.Union[int, stage_instances.StageInstancePrivacyLevel]],
+        privacy_level: undefined.UndefinedOr[int | stage_instances.StageInstancePrivacyLevel],
         send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
@@ -8583,9 +8525,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        privacy_level: undefined.UndefinedOr[
-            typing.Union[int, stage_instances.StageInstancePrivacyLevel]
-        ] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[int | stage_instances.StageInstancePrivacyLevel] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         """Edit the stage instance in a guild stage channel.
 
@@ -8651,6 +8591,88 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             rate-limiting, such as limits per attribute. These cannot be
             detected or handled normally by Hikari due to their undocumented
             nature, and will trigger this exception if they occur.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_poll_voters(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        answer_id: int,
+        /,
+        *,
+        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> typing.Sequence[users.User]:
+        """Fetch users that voted for a specific answer.
+
+        Parameters
+        ----------
+        channel
+            The channel the poll is in.
+        message
+            The message the poll is in.
+        answer_id
+            The answers id.
+        after
+            The votes to collect, after this user voted.
+        limit
+            The amount of votes to collect. Maximum 100, default 25
+
+        Returns
+        -------
+        typing.Sequence[users.User]
+            An sequence of Users.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def end_poll(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        /,
+    ) -> messages_.Message:
+        """End a poll.
+
+        Parameters
+        ----------
+        channel
+            The channel the poll is in.
+        message
+            The message the poll is in.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The message that had its poll ended.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
@@ -8732,7 +8754,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         /,
         name: str,
-        event_type: typing.Union[int, auto_mod.AutoModEventType],
+        event_type: auto_mod.AutoModEventType | int,
         trigger: special_endpoints.AutoModTriggerBuilder,
         actions: typing.Sequence[special_endpoints.AutoModActionBuilder],
         enabled: undefined.UndefinedOr[bool] = True,
@@ -8798,7 +8820,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
         /,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        event_type: undefined.UndefinedOr[typing.Union[int, auto_mod.AutoModEventType]] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[auto_mod.AutoModEventType | int] = undefined.UNDEFINED,
         trigger: undefined.UndefinedOr[special_endpoints.AutoModTriggerBuilder] = undefined.UNDEFINED,
         actions: undefined.UndefinedOr[typing.Sequence[special_endpoints.AutoModActionBuilder]] = undefined.UNDEFINED,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,

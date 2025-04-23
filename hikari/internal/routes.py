@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("CompiledRoute", "Route", "CDNRoute")
+__all__: typing.Sequence[str] = ("CDNRoute", "CompiledRoute", "Route")
 
 import math
 import re
@@ -35,6 +34,7 @@ import attrs
 from hikari import files
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import typing_extensions
 
 HASH_SEPARATOR: typing.Final[str] = ";"
 PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")
@@ -109,6 +109,7 @@ class CompiledRoute:
         """
         return f"{initial_bucket_hash}{HASH_SEPARATOR}{authentication_hash}{HASH_SEPARATOR}{self.major_param_hash}"
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"{self.method} {self.compiled_path}"
 
@@ -136,7 +137,7 @@ class Route:
     path_template: str = attrs.field()
     """The template string used for the path."""
 
-    major_params: typing.Optional[frozenset[str]] = attrs.field(hash=False, eq=False, repr=False)
+    major_params: frozenset[str] | None = attrs.field(hash=False, eq=False, repr=False)
     """The optional major parameter name combination for this endpoint."""
 
     has_ratelimits: bool = attrs.field(hash=False, eq=False, repr=False)
@@ -154,12 +155,12 @@ class Route:
 
         self.major_params = None
         match = PARAM_REGEX.findall(path_template)
-        for major_param_combo in MAJOR_PARAM_COMBOS.keys():
+        for major_param_combo in MAJOR_PARAM_COMBOS:
             if major_param_combo.issubset(match):
                 self.major_params = major_param_combo
                 break
 
-    def compile(self, **kwargs: typing.Any) -> CompiledRoute:
+    def compile(self, **kwargs: data_binding.Stringish) -> CompiledRoute:
         """Generate a formatted [`CompiledRoute`][] for this route.
 
         This takes into account any URL parameters that have been passed.
@@ -184,6 +185,7 @@ class Route:
             major_param_hash=MAJOR_PARAM_COMBOS[self.major_params](data) if self.major_params else "-",
         )
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.method + " " + self.path_template
 
@@ -209,14 +211,13 @@ class CDNRoute:
     @valid_formats.validator
     def _(self, _: attrs.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
         if not values:
-            raise ValueError(f"{self.path_template} must have at least one valid format set")
+            msg = f"{self.path_template} must have at least one valid format set"
+            raise ValueError(msg)
 
     is_sizable: bool = attrs.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
     """Whether a `size` param can be specified."""
 
-    def compile(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
-    ) -> str:
+    def compile(self, base_url: str, *, file_format: str, size: int | None = None, **kwargs: object) -> str:
         """Generate a full CDN url from this endpoint.
 
         Parameters
@@ -255,8 +256,9 @@ class CDNRoute:
                 + ", ".join(self.valid_formats)
             )
 
-        if "hash" in kwargs and not kwargs["hash"].startswith("a_") and file_format == GIF:
-            raise TypeError("This asset is not animated, so cannot be retrieved as a GIF")
+        if "hash" in kwargs and not str(kwargs["hash"]).startswith("a_") and file_format == GIF:
+            msg = "This asset is not animated, so cannot be retrieved as a GIF"
+            raise TypeError(msg)
 
         # Make URL-safe first.
         kwargs = {k: urllib.parse.quote(str(v)) for k, v in kwargs.items()}
@@ -264,22 +266,25 @@ class CDNRoute:
 
         if size is not None:
             if not self.is_sizable:
-                raise TypeError("This asset cannot be resized.")
+                msg = "This asset cannot be resized."
+                raise TypeError(msg)
 
             if size < 0:
-                raise ValueError("size must be positive")
+                msg = "size must be positive"
+                raise ValueError(msg)
 
             size_power = math.log2(size)
             if size_power.is_integer() and 2 <= size_power <= 16:
                 url += "?"
                 url += urllib.parse.urlencode({"size": str(size)})
             else:
-                raise ValueError("size must be an integer power of 2 between 16 and 4096 inclusive")
+                msg = "size must be an integer power of 2 between 16 and 4096 inclusive"
+                raise ValueError(msg)
 
         return url
 
     def compile_to_file(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
+        self, base_url: str, *, file_format: str, size: int | None = None, **kwargs: object
     ) -> files.URL:
         """Perform the same as `compile`, but return the URL as a [`hikari.files.URL`][]."""
         return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))
@@ -345,6 +350,10 @@ GET_STAGE_INSTANCE: typing.Final[Route] = Route(GET, "/stage-instances/{channel}
 PATCH_STAGE_INSTANCE: typing.Final[Route] = Route(PATCH, "/stage-instances/{channel}")
 DELETE_STAGE_INSTANCE: typing.Final[Route] = Route(DELETE, "/stage-instances/{channel}")
 
+# Polls
+GET_POLL_ANSWER: typing.Final[Route] = Route(GET, "/channels/{channel}/polls/{message}/answer/{answer}")
+POST_EXPIRE_POLL: typing.Final[Route] = Route(POST, "/channels/{channel}/polls/{message}/expire")
+
 # Reactions
 GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
 DELETE_ALL_REACTIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions")
@@ -360,6 +369,8 @@ PATCH_GUILD: typing.Final[Route] = Route(PATCH, "/guilds/{guild}")
 DELETE_GUILD: typing.Final[Route] = Route(DELETE, "/guilds/{guild}")
 
 GET_GUILD_AUDIT_LOGS: typing.Final[Route] = Route(GET, "/guilds/{guild}/audit-logs")
+
+PUT_GUILD_INCIDENT_ACTIONS: typing.Final[Route] = Route(PUT, "/guilds/{guild}/incident-actions")
 
 GET_GUILD_BAN: typing.Final[Route] = Route(GET, "/guilds/{guild}/bans/{user}")
 PUT_GUILD_BAN: typing.Final[Route] = Route(PUT, "/guilds/{guild}/bans/{user}")
@@ -558,7 +569,7 @@ PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/role-connections/metadata"
 )
 
-# Entitlements (monetization)
+# Entitlements (also known as Monetization)
 GET_APPLICATION_SKUS: typing.Final[Route] = Route(GET, "/applications/{application}/skus")
 GET_APPLICATION_ENTITLEMENTS: typing.Final[Route] = Route(GET, "/applications/{application}/entitlements")
 POST_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(POST, "/applications/{application}/entitlements")
@@ -602,11 +613,15 @@ CDN_GUILD_DISCOVERY_SPLASH: typing.Final[CDNRoute] = CDNRoute(
 )
 CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 
+CDN_AVATAR_DECORATION: typing.Final[CDNRoute] = CDNRoute("/avatar-decoration-presets/{hash}", {PNG})
 CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{style}", {PNG}, is_sizable=False)
 CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
 CDN_MEMBER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
     "/guilds/{guild_id}/users/{user_id}/avatars/{hash}", {PNG, *JPEG_JPG, WEBP, GIF}
+)
+CDN_MEMBER_BANNER: typing.Final[CDNRoute] = CDNRoute(
+    "/guilds/{guild_id}/users/{user_id}/banners/{hash}", {PNG, *JPEG_JPG, WEBP, GIF}
 )
 CDN_ROLE_ICON: typing.Final[CDNRoute] = CDNRoute("/role-icons/{role_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 

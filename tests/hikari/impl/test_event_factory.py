@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import datetime
+import typing
 
 import mock
 import pytest
@@ -41,6 +42,7 @@ from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import monetization_events
+from hikari.events import poll_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
@@ -50,6 +52,7 @@ from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
 from hikari.impl import event_factory as event_factory_
+from hikari.interactions import base_interactions
 
 
 class TestEventFactoryImpl:
@@ -735,15 +738,37 @@ class TestEventFactoryImpl:
     # INTERACTION EVENTS #
     ######################
 
-    def test_deserialize_interaction_create_event(self, event_factory, mock_app, mock_shard):
+    @pytest.mark.parametrize(
+        ("interaction_type", "expected"),
+        [
+            (base_interactions.InteractionType.APPLICATION_COMMAND, interaction_events.CommandInteractionCreateEvent),
+            (base_interactions.InteractionType.MESSAGE_COMPONENT, interaction_events.ComponentInteractionCreateEvent),
+            (base_interactions.InteractionType.AUTOCOMPLETE, interaction_events.AutocompleteInteractionCreateEvent),
+            (base_interactions.InteractionType.MODAL_SUBMIT, interaction_events.ModalInteractionCreateEvent),
+        ],
+    )
+    def test_deserialize_interaction_create_event(
+        self,
+        event_factory,
+        mock_app,
+        mock_shard,
+        interaction_type: typing.Optional[base_interactions.InteractionType],
+        expected: interaction_events.InteractionCreateEvent,
+    ):
         payload = {"id": "1561232344"}
-
+        if interaction_type:
+            mock_app.entity_factory.deserialize_interaction.return_value = mock.Mock(type=interaction_type)
         result = event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
         mock_app.entity_factory.deserialize_interaction.assert_called_once_with(payload)
         assert result.shard is mock_shard
         assert result.interaction is mock_app.entity_factory.deserialize_interaction.return_value
-        assert isinstance(result, interaction_events.InteractionCreateEvent)
+        assert isinstance(result, expected)
+
+    def test_deserialize_interaction_create_event_error(self, event_factory, mock_app, mock_shard):
+        payload = {"id": "1561232344"}
+        with pytest.raises(KeyError):
+            event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
     #################
     # MEMBER EVENTS #
@@ -1573,6 +1598,36 @@ class TestEventFactoryImpl:
         assert event.shard is mock_shard
         assert event.app is event.stage_instance.app
         assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+
+    ###########
+    #  POLLS  #
+    ###########
+
+    def test_deserialize_poll_vote_create_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "user_id": "3847382",
+            "channel_id": "4598743",
+            "message_id": "458437954",
+            "guild_id": "3589273",
+            "answer_id": 1,
+        }
+
+        event = event_factory.deserialize_poll_vote_create_event(mock_shard, payload)
+
+        assert isinstance(event, poll_events.PollVoteCreateEvent)
+
+    def test_deserialize_poll_vote_delete_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "user_id": "3847382",
+            "channel_id": "4598743",
+            "message_id": "458437954",
+            "guild_id": "3589273",
+            "answer_id": 1,
+        }
+
+        event = event_factory.deserialize_poll_vote_delete_event(mock_shard, payload)
+
+        assert isinstance(event, poll_events.PollVoteDeleteEvent)
 
     def test_deserialize_auto_mod_rule_create_event(self, event_factory, mock_app, mock_shard):
         mock_payload = {"id": "49499494"}

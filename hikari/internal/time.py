@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,15 +24,15 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "DISCORD_EPOCH",
+    "Intervalish",
     "datetime_to_discord_epoch",
     "discord_epoch_to_datetime",
-    "unix_epoch_to_datetime",
-    "Intervalish",
-    "timespan_to_int",
     "local_datetime",
-    "utc_datetime",
     "monotonic",
     "monotonic_ns",
+    "timespan_to_int",
+    "unix_epoch_to_datetime",
+    "utc_datetime",
     "uuid",
 )
 
@@ -84,7 +83,7 @@ def slow_iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.date
     return datetime.datetime.fromisoformat(datetime_str)
 
 
-fast_iso8601_datetime_string_to_datetime: typing.Optional[typing.Callable[[str], datetime.datetime]]
+fast_iso8601_datetime_string_to_datetime: typing.Callable[[str], datetime.datetime] | None
 try:
     # CISO8601 is around 600x faster than modules like dateutil, which is
     # going to be noticeable on big bots where you are parsing hundreds of
@@ -136,7 +135,7 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
     return int((timestamp - DISCORD_EPOCH).timestamp() * 1_000)
 
 
-def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: bool = True) -> datetime.datetime:
+def unix_epoch_to_datetime(epoch: float, /, *, is_millis: bool = True) -> datetime.datetime:
     """Parse a UNIX epoch to a [`datetime.datetime`][] object.
 
     !!! note
@@ -164,9 +163,8 @@ def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: boo
         return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
     except (OSError, ValueError):
         if epoch > 0:
-            return datetime.datetime.max
-        else:
-            return datetime.datetime.min
+            return datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
+        return datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
 
 
 def timespan_to_int(value: Intervalish, /) -> int:

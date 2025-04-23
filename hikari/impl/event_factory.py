@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,7 +24,6 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("EventFactoryImpl",)
 
-import datetime
 import types
 import typing
 
@@ -47,6 +45,7 @@ from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import monetization_events
+from hikari.events import poll_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
@@ -55,11 +54,15 @@ from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
+from hikari.interactions import base_interactions
 from hikari.internal import collections
 from hikari.internal import data_binding
 from hikari.internal import time
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import guilds as guild_models
     from hikari import invites as invite_models
     from hikari import messages as messages_models
@@ -68,6 +71,13 @@ if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
+
+_INTERACTION_EVENTS_MAP: dict[base_interactions.InteractionType, type[interaction_events.InteractionCreateEvent]] = {
+    base_interactions.InteractionType.APPLICATION_COMMAND: interaction_events.CommandInteractionCreateEvent,
+    base_interactions.InteractionType.AUTOCOMPLETE: interaction_events.AutocompleteInteractionCreateEvent,
+    base_interactions.InteractionType.MESSAGE_COMPONENT: interaction_events.ComponentInteractionCreateEvent,
+    base_interactions.InteractionType.MODAL_SUBMIT: interaction_events.ModalInteractionCreateEvent,
+}
 
 
 class EventFactoryImpl(event_factory.EventFactory):
@@ -82,6 +92,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # APPLICATION EVENTS #
     ######################
 
+    @typing_extensions.override
     def deserialize_application_command_permission_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> application_events.ApplicationCommandPermissionsUpdateEvent:
@@ -94,6 +105,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # CHANNEL EVENTS #
     ##################
 
+    @typing_extensions.override
     def deserialize_guild_channel_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildChannelCreateEvent:
@@ -103,12 +115,13 @@ class EventFactoryImpl(event_factory.EventFactory):
         )
         return channel_events.GuildChannelCreateEvent(shard=shard, channel=channel)
 
+    @typing_extensions.override
     def deserialize_guild_channel_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_channel: typing.Optional[channel_models.PermissibleGuildChannel] = None,
+        old_channel: channel_models.PermissibleGuildChannel | None = None,
     ) -> channel_events.GuildChannelUpdateEvent:
         channel = self._app.entity_factory.deserialize_channel(payload)
         assert isinstance(channel, channel_models.PermissibleGuildChannel), (
@@ -116,6 +129,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         )
         return channel_events.GuildChannelUpdateEvent(shard=shard, channel=channel, old_channel=old_channel)
 
+    @typing_extensions.override
     def deserialize_guild_channel_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildChannelDeleteEvent:
@@ -125,6 +139,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         )
         return channel_events.GuildChannelDeleteEvent(shard=shard, channel=channel)
 
+    @typing_extensions.override
     def deserialize_channel_pins_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.PinsUpdateEvent:
@@ -132,7 +147,7 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         # Turns out this can be None or not present. Only set it if it is actually available.
         if (raw := payload.get("last_pin_timestamp")) is not None:
-            last_pin_timestamp: typing.Optional[datetime.datetime] = time.iso8601_datetime_string_to_datetime(raw)
+            last_pin_timestamp: datetime.datetime | None = time.iso8601_datetime_string_to_datetime(raw)
         else:
             last_pin_timestamp = None
 
@@ -149,24 +164,28 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, channel_id=channel_id, last_pin_timestamp=last_pin_timestamp
         )
 
+    @typing_extensions.override
     def deserialize_guild_thread_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildThreadCreateEvent:
         channel = self._app.entity_factory.deserialize_guild_thread(payload)
         return channel_events.GuildThreadCreateEvent(shard=shard, thread=channel)
 
+    @typing_extensions.override
     def deserialize_guild_thread_access_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildThreadAccessEvent:
         channel = self._app.entity_factory.deserialize_guild_thread(payload)
         return channel_events.GuildThreadAccessEvent(shard=shard, thread=channel)
 
+    @typing_extensions.override
     def deserialize_guild_thread_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildThreadUpdateEvent:
         channel = self._app.entity_factory.deserialize_guild_thread(payload)
         return channel_events.GuildThreadUpdateEvent(shard=shard, thread=channel)
 
+    @typing_extensions.override
     def deserialize_guild_thread_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildThreadDeleteEvent:
@@ -179,6 +198,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             type=channel_models.ChannelType(payload["type"]),
         )
 
+    @typing_extensions.override
     def deserialize_thread_members_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.ThreadMembersUpdateEvent:
@@ -219,11 +239,12 @@ class EventFactoryImpl(event_factory.EventFactory):
             guild_presences=guild_presences,
         )
 
+    @typing_extensions.override
     def deserialize_thread_list_sync_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.ThreadListSyncEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
-        channel_ids: typing.Optional[list[snowflakes.Snowflake]] = None
+        channel_ids: list[snowflakes.Snowflake] | None = None
         if raw_channel_ids := payload.get("channel_ids"):
             channel_ids = [snowflakes.Snowflake(x) for x in raw_channel_ids]
 
@@ -240,6 +261,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, guild_id=guild_id, channel_ids=channel_ids, threads=threads
         )
 
+    @typing_extensions.override
     def deserialize_webhook_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.WebhookUpdateEvent:
@@ -247,18 +269,20 @@ class EventFactoryImpl(event_factory.EventFactory):
         channel_id = snowflakes.Snowflake(payload["channel_id"])
         return channel_events.WebhookUpdateEvent(app=self._app, shard=shard, channel_id=channel_id, guild_id=guild_id)
 
+    @typing_extensions.override
     def deserialize_invite_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.InviteCreateEvent:
         invite = self._app.entity_factory.deserialize_invite_with_metadata(payload)
         return channel_events.InviteCreateEvent(shard=shard, invite=invite)
 
+    @typing_extensions.override
     def deserialize_invite_delete_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_invite: typing.Optional[invite_models.InviteWithMetadata] = None,
+        old_invite: invite_models.InviteWithMetadata | None = None,
     ) -> channel_events.InviteDeleteEvent:
         return channel_events.InviteDeleteEvent(
             app=self._app,
@@ -273,6 +297,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # TYPING EVENTS #
     ##################
 
+    @typing_extensions.override
     def deserialize_typing_start_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> typing_events.TypingEvent:
@@ -296,6 +321,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # GUILD EVENTS #
     ################
 
+    @typing_extensions.override
     def deserialize_guild_available_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildAvailableEvent:
@@ -313,6 +339,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             voice_states=guild_information.voice_states(),
         )
 
+    @typing_extensions.override
     def deserialize_guild_join_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildJoinEvent:
@@ -330,12 +357,13 @@ class EventFactoryImpl(event_factory.EventFactory):
             voice_states=guild_information.voice_states(),
         )
 
+    @typing_extensions.override
     def deserialize_guild_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_guild: typing.Optional[guild_models.GatewayGuild] = None,
+        old_guild: guild_models.GatewayGuild | None = None,
     ) -> guild_events.GuildUpdateEvent:
         guild_information = self._app.entity_factory.deserialize_gateway_guild(payload, user_id=shard.get_user_id())
         return guild_events.GuildUpdateEvent(
@@ -347,17 +375,19 @@ class EventFactoryImpl(event_factory.EventFactory):
             old_guild=old_guild,
         )
 
+    @typing_extensions.override
     def deserialize_guild_leave_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_guild: typing.Optional[guild_models.GatewayGuild] = None,
+        old_guild: guild_models.GatewayGuild | None = None,
     ) -> guild_events.GuildLeaveEvent:
         return guild_events.GuildLeaveEvent(
             app=self._app, shard=shard, guild_id=snowflakes.Snowflake(payload["id"]), old_guild=old_guild
         )
 
+    @typing_extensions.override
     def deserialize_guild_unavailable_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.GuildUnavailableEvent:
@@ -365,6 +395,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, guild_id=snowflakes.Snowflake(payload["id"])
         )
 
+    @typing_extensions.override
     def deserialize_guild_ban_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.BanCreateEvent:
@@ -374,6 +405,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             user=self._app.entity_factory.deserialize_user(payload["user"]),
         )
 
+    @typing_extensions.override
     def deserialize_guild_ban_remove_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.BanDeleteEvent:
@@ -383,12 +415,13 @@ class EventFactoryImpl(event_factory.EventFactory):
             user=self._app.entity_factory.deserialize_user(payload["user"]),
         )
 
+    @typing_extensions.override
     def deserialize_guild_emojis_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_emojis: typing.Optional[typing.Sequence[emojis_models.KnownCustomEmoji]] = None,
+        old_emojis: typing.Sequence[emojis_models.KnownCustomEmoji] | None = None,
     ) -> guild_events.EmojisUpdateEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
         emojis = [
@@ -399,12 +432,13 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, guild_id=guild_id, emojis=emojis, old_emojis=old_emojis
         )
 
+    @typing_extensions.override
     def deserialize_guild_stickers_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_stickers: typing.Optional[typing.Sequence[sticker_models.GuildSticker]] = None,
+        old_stickers: typing.Sequence[sticker_models.GuildSticker] | None = None,
     ) -> guild_events.StickersUpdateEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
         stickers = [self._app.entity_factory.deserialize_guild_sticker(sticker) for sticker in payload["stickers"]]
@@ -412,6 +446,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, guild_id=guild_id, stickers=stickers, old_stickers=old_stickers
         )
 
+    @typing_extensions.override
     def deserialize_integration_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationCreateEvent:
@@ -419,10 +454,11 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, integration=self._app.entity_factory.deserialize_integration(payload)
         )
 
+    @typing_extensions.override
     def deserialize_integration_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationDeleteEvent:
-        application_id: typing.Optional[snowflakes.Snowflake] = None
+        application_id: snowflakes.Snowflake | None = None
         if (raw_application_id := payload.get("application_id")) is not None:
             application_id = snowflakes.Snowflake(raw_application_id)
 
@@ -434,6 +470,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             application_id=application_id,
         )
 
+    @typing_extensions.override
     def deserialize_integration_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.IntegrationUpdateEvent:
@@ -441,17 +478,18 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, integration=self._app.entity_factory.deserialize_integration(payload)
         )
 
+    @typing_extensions.override
     def deserialize_presence_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_presence: typing.Optional[presences_models.MemberPresence] = None,
+        old_presence: presences_models.MemberPresence | None = None,
     ) -> guild_events.PresenceUpdateEvent:
         presence = self._app.entity_factory.deserialize_member_presence(payload)
 
         user_payload = payload["user"]
-        user: typing.Optional[user_models.PartialUser] = None
+        user: user_models.PartialUser | None = None
         # Here we're told that the only guaranteed field is "id", so if we only get 1 field in the user payload then
         # then we've only got an ID and there's no reason to form a user object.
         if len(user_payload) > 1:
@@ -472,6 +510,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 discriminator=discriminator,
                 username=user_payload.get("username", undefined.UNDEFINED),
                 global_name=user_payload.get("global_name", undefined.UNDEFINED),
+                avatar_decoration=None,
                 avatar_hash=user_payload.get("avatar", undefined.UNDEFINED),
                 banner_hash=user_payload.get("banner", undefined.UNDEFINED),
                 accent_color=accent_color,
@@ -481,6 +520,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             )
         return guild_events.PresenceUpdateEvent(shard=shard, presence=presence, user=user, old_presence=old_presence)
 
+    @typing_extensions.override
     def deserialize_audit_log_entry_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> guild_events.AuditLogEntryCreateEvent:
@@ -492,39 +532,43 @@ class EventFactoryImpl(event_factory.EventFactory):
     # INTERACTION EVENTS #
     ######################
 
+    @typing_extensions.override
     def deserialize_interaction_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> interaction_events.InteractionCreateEvent:
-        return interaction_events.InteractionCreateEvent(
-            shard=shard, interaction=self._app.entity_factory.deserialize_interaction(payload)
-        )
+        interaction = self._app.entity_factory.deserialize_interaction(payload)
+
+        return _INTERACTION_EVENTS_MAP[interaction.type](shard=shard, interaction=interaction)
 
     #################
     # MEMBER EVENTS #
     #################
 
+    @typing_extensions.override
     def deserialize_guild_member_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> member_events.MemberCreateEvent:
         member = self._app.entity_factory.deserialize_member(payload)
         return member_events.MemberCreateEvent(shard=shard, member=member)
 
+    @typing_extensions.override
     def deserialize_guild_member_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_member: typing.Optional[guild_models.Member] = None,
+        old_member: guild_models.Member | None = None,
     ) -> member_events.MemberUpdateEvent:
         member = self._app.entity_factory.deserialize_member(payload)
         return member_events.MemberUpdateEvent(shard=shard, member=member, old_member=old_member)
 
+    @typing_extensions.override
     def deserialize_guild_member_remove_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_member: typing.Optional[guild_models.Member] = None,
+        old_member: guild_models.Member | None = None,
     ) -> member_events.MemberDeleteEvent:
         guild_id = snowflakes.Snowflake(payload["guild_id"])
         user = self._app.entity_factory.deserialize_user(payload["user"])
@@ -534,6 +578,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # ROLE EVENTS #
     ###############
 
+    @typing_extensions.override
     def deserialize_guild_role_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> role_events.RoleCreateEvent:
@@ -542,24 +587,26 @@ class EventFactoryImpl(event_factory.EventFactory):
         )
         return role_events.RoleCreateEvent(shard=shard, role=role)
 
+    @typing_extensions.override
     def deserialize_guild_role_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_role: typing.Optional[guild_models.Role] = None,
+        old_role: guild_models.Role | None = None,
     ) -> role_events.RoleUpdateEvent:
         role = self._app.entity_factory.deserialize_role(
             payload["role"], guild_id=snowflakes.Snowflake(payload["guild_id"])
         )
         return role_events.RoleUpdateEvent(shard=shard, role=role, old_role=old_role)
 
+    @typing_extensions.override
     def deserialize_guild_role_delete_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_role: typing.Optional[guild_models.Role] = None,
+        old_role: guild_models.Role | None = None,
     ) -> role_events.RoleDeleteEvent:
         return role_events.RoleDeleteEvent(
             app=self._app,
@@ -573,6 +620,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # SCHEDULED EVENT EVENTS #
     ##########################
 
+    @typing_extensions.override
     def deserialize_scheduled_event_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> scheduled_events.ScheduledEventCreateEvent:
@@ -580,6 +628,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             shard=shard, event=self._app.entity_factory.deserialize_scheduled_event(payload)
         )
 
+    @typing_extensions.override
     def deserialize_scheduled_event_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> scheduled_events.ScheduledEventUpdateEvent:
@@ -587,6 +636,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             shard=shard, event=self._app.entity_factory.deserialize_scheduled_event(payload)
         )
 
+    @typing_extensions.override
     def deserialize_scheduled_event_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> scheduled_events.ScheduledEventDeleteEvent:
@@ -594,6 +644,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             shard=shard, event=self._app.entity_factory.deserialize_scheduled_event(payload)
         )
 
+    @typing_extensions.override
     def deserialize_scheduled_event_user_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> scheduled_events.ScheduledEventUserAddEvent:
@@ -605,6 +656,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
         )
 
+    @typing_extensions.override
     def deserialize_scheduled_event_user_remove_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> scheduled_events.ScheduledEventUserRemoveEvent:
@@ -620,15 +672,19 @@ class EventFactoryImpl(event_factory.EventFactory):
     # LIFETIME EVENTS #
     ###################
 
+    @typing_extensions.override
     def deserialize_starting_event(self) -> lifetime_events.StartingEvent:
         return lifetime_events.StartingEvent(app=self._app)
 
+    @typing_extensions.override
     def deserialize_started_event(self) -> lifetime_events.StartedEvent:
         return lifetime_events.StartedEvent(app=self._app)
 
+    @typing_extensions.override
     def deserialize_stopping_event(self) -> lifetime_events.StoppingEvent:
         return lifetime_events.StoppingEvent(app=self._app)
 
+    @typing_extensions.override
     def deserialize_stopped_event(self) -> lifetime_events.StoppedEvent:
         return lifetime_events.StoppedEvent(app=self._app)
 
@@ -636,6 +692,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # MESSAGE EVENTS #
     ##################
 
+    @typing_extensions.override
     def deserialize_message_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> message_events.MessageCreateEvent:
@@ -646,12 +703,13 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         return message_events.GuildMessageCreateEvent(shard=shard, message=message)
 
+    @typing_extensions.override
     def deserialize_message_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_message: typing.Optional[messages_models.PartialMessage] = None,
+        old_message: messages_models.PartialMessage | None = None,
     ) -> message_events.MessageUpdateEvent:
         message = self._app.entity_factory.deserialize_partial_message(payload)
 
@@ -660,12 +718,13 @@ class EventFactoryImpl(event_factory.EventFactory):
 
         return message_events.GuildMessageUpdateEvent(shard=shard, message=message, old_message=old_message)
 
+    @typing_extensions.override
     def deserialize_message_delete_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_message: typing.Optional[messages_models.Message] = None,
+        old_message: messages_models.Message | None = None,
     ) -> message_events.MessageDeleteEvent:
         channel_id = snowflakes.Snowflake(payload["channel_id"])
         message_id = snowflakes.Snowflake(payload["id"])
@@ -684,12 +743,13 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, channel_id=channel_id, message_id=message_id, old_message=old_message
         )
 
+    @typing_extensions.override
     def deserialize_guild_message_delete_bulk_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_messages: typing.Optional[typing.Mapping[snowflakes.Snowflake, messages_models.Message]] = None,
+        old_messages: typing.Mapping[snowflakes.Snowflake, messages_models.Message] | None = None,
     ) -> message_events.GuildBulkMessageDeleteEvent:
         return message_events.GuildBulkMessageDeleteEvent(
             app=self._app,
@@ -704,6 +764,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # REACTION EVENTS #
     ###################
 
+    @typing_extensions.override
     def deserialize_message_reaction_add_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> reaction_events.ReactionAddEvent:
@@ -743,12 +804,13 @@ class EventFactoryImpl(event_factory.EventFactory):
 
     def _split_reaction_emoji(
         self, emoji_payload: data_binding.JSONObject, /
-    ) -> tuple[typing.Optional[snowflakes.Snowflake], typing.Union[str, emojis_models.UnicodeEmoji, None]]:
+    ) -> tuple[snowflakes.Snowflake | None, str | emojis_models.UnicodeEmoji | None]:
         if (emoji_id := emoji_payload.get("id")) is not None:
             return snowflakes.Snowflake(emoji_id), emoji_payload["name"]
 
         return None, emojis_models.UnicodeEmoji(emoji_payload["name"])
 
+    @typing_extensions.override
     def deserialize_message_reaction_remove_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> reaction_events.ReactionDeleteEvent:
@@ -779,6 +841,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             emoji_name=emoji_name,
         )
 
+    @typing_extensions.override
     def deserialize_message_reaction_remove_all_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> reaction_events.ReactionDeleteAllEvent:
@@ -798,6 +861,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, channel_id=channel_id, message_id=message_id
         )
 
+    @typing_extensions.override
     def deserialize_message_reaction_remove_emoji_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> reaction_events.ReactionDeleteEmojiEvent:
@@ -829,12 +893,14 @@ class EventFactoryImpl(event_factory.EventFactory):
     # SHARD EVENTS #
     ################
 
+    @typing_extensions.override
     def deserialize_shard_payload_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject, *, name: str
     ) -> shard_events.ShardPayloadEvent:
         payload = types.MappingProxyType(payload)
         return shard_events.ShardPayloadEvent(app=self._app, shard=shard, payload=payload, name=name)
 
+    @typing_extensions.override
     def deserialize_ready_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> shard_events.ShardReadyEvent:
@@ -849,15 +915,19 @@ class EventFactoryImpl(event_factory.EventFactory):
             application_flags=application_models.ApplicationFlags(int(payload["application"]["flags"])),
         )
 
+    @typing_extensions.override
     def deserialize_connected_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardConnectedEvent:
         return shard_events.ShardConnectedEvent(app=self._app, shard=shard)
 
+    @typing_extensions.override
     def deserialize_disconnected_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardDisconnectedEvent:
         return shard_events.ShardDisconnectedEvent(app=self._app, shard=shard)
 
+    @typing_extensions.override
     def deserialize_resumed_event(self, shard: gateway_shard.GatewayShard) -> shard_events.ShardResumedEvent:
         return shard_events.ShardResumedEvent(app=self._app, shard=shard)
 
+    @typing_extensions.override
     def deserialize_guild_member_chunk_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> shard_events.MemberChunkEvent:
@@ -897,12 +967,13 @@ class EventFactoryImpl(event_factory.EventFactory):
     # USER EVENTS #
     ###############
 
+    @typing_extensions.override
     def deserialize_own_user_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_user: typing.Optional[user_models.OwnUser] = None,
+        old_user: user_models.OwnUser | None = None,
     ) -> user_events.OwnUserUpdateEvent:
         return user_events.OwnUserUpdateEvent(
             shard=shard, user=self._app.entity_factory.deserialize_my_user(payload), old_user=old_user
@@ -912,16 +983,18 @@ class EventFactoryImpl(event_factory.EventFactory):
     # VOICE EVENTS #
     ################
 
+    @typing_extensions.override
     def deserialize_voice_state_update_event(
         self,
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_state: typing.Optional[voices_models.VoiceState] = None,
+        old_state: voices_models.VoiceState | None = None,
     ) -> voice_events.VoiceStateUpdateEvent:
         state = self._app.entity_factory.deserialize_voice_state(payload)
         return voice_events.VoiceStateUpdateEvent(shard=shard, state=state, old_state=old_state)
 
+    @typing_extensions.override
     def deserialize_voice_server_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> voice_events.VoiceServerUpdateEvent:
@@ -936,6 +1009,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # MONETIZATION #
     ################
 
+    @typing_extensions.override
     def deserialize_entitlement_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> monetization_events.EntitlementCreateEvent:
@@ -943,6 +1017,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, entitlement=self._app.entity_factory.deserialize_entitlement(payload)
         )
 
+    @typing_extensions.override
     def deserialize_entitlement_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> monetization_events.EntitlementUpdateEvent:
@@ -950,6 +1025,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, entitlement=self._app.entity_factory.deserialize_entitlement(payload)
         )
 
+    @typing_extensions.override
     def deserialize_entitlement_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> monetization_events.EntitlementDeleteEvent:
@@ -961,6 +1037,7 @@ class EventFactoryImpl(event_factory.EventFactory):
     # STAGE INSTANCE EVENTS #
     #########################
 
+    @typing_extensions.override
     def deserialize_stage_instance_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_events.StageInstanceCreateEvent:
@@ -968,6 +1045,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
         )
 
+    @typing_extensions.override
     def deserialize_stage_instance_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_events.StageInstanceUpdateEvent:
@@ -975,6 +1053,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
         )
 
+    @typing_extensions.override
     def deserialize_stage_instance_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> stage_events.StageInstanceDeleteEvent:
@@ -982,6 +1061,39 @@ class EventFactoryImpl(event_factory.EventFactory):
             shard=shard, stage_instance=self._app.entity_factory.deserialize_stage_instance(payload)
         )
 
+    ################
+    #  POLL EVENTS #
+    ################
+
+    @typing_extensions.override
+    def deserialize_poll_vote_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteCreateEvent:
+        return poll_events.PollVoteCreateEvent(
+            app=self._app,
+            shard=shard,
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            message_id=snowflakes.Snowflake(payload["message_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
+            answer_id=payload["answer_id"],
+        )
+
+    @typing_extensions.override
+    def deserialize_poll_vote_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteDeleteEvent:
+        return poll_events.PollVoteDeleteEvent(
+            app=self._app,
+            shard=shard,
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            message_id=snowflakes.Snowflake(payload["message_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
+            answer_id=payload["answer_id"],
+        )
+
+    @typing_extensions.override
     def deserialize_auto_mod_rule_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModRuleCreateEvent:
@@ -989,6 +1101,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             shard=shard, rule=self._app.entity_factory.deserialize_auto_mod_rule(payload)
         )
 
+    @typing_extensions.override
     def deserialize_auto_mod_rule_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModRuleUpdateEvent:
@@ -996,6 +1109,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             shard=shard, rule=self._app.entity_factory.deserialize_auto_mod_rule(payload)
         )
 
+    @typing_extensions.override
     def deserialize_auto_mod_rule_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModRuleDeleteEvent:
@@ -1003,6 +1117,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             shard=shard, rule=self._app.entity_factory.deserialize_auto_mod_rule(payload)
         )
 
+    @typing_extensions.override
     def deserialize_auto_mod_action_execution_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModActionExecutionEvent:
