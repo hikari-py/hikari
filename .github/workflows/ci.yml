@@ -31,6 +31,7 @@ jobs:
         uses: astral-sh/setup-uv@c7f87aa956e4c323abf06d5dec078e358f6b4d04 # v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
+          activate-environment: true
           # TODO(https://github.com/astral-sh/setup-uv/issues/226): Remove this.
           prune-cache: ${{ matrix.os != 'windows-latest' }}
 
@@ -74,6 +75,7 @@ jobs:
         uses: astral-sh/setup-uv@c7f87aa956e4c323abf06d5dec078e358f6b4d04 # v6.0.0
         with:
           python-version: "3.10"
+          activate-environment: true
 
       - name: Download coverage
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
@@ -119,6 +121,7 @@ jobs:
         uses: astral-sh/setup-uv@c7f87aa956e4c323abf06d5dec078e358f6b4d04 # v6.0.0
         with:
           python-version: "3.10"
+          activate-environment: true
 
       - name: Install nox
         run: |
@@ -179,6 +182,7 @@ jobs:
         uses: astral-sh/setup-uv@c7f87aa956e4c323abf06d5dec078e358f6b4d04 # v6.0.0
         with:
           python-version: 3.9
+          activate-environment: true
 
       - name: Test twemoji mapping
         run: |
@@ -198,6 +202,7 @@ jobs:
         with:
           # NOTE: This should be kept up to date with .readthedocs.yaml
           python-version: 3.11
+          activate-environment: true
 
       - name: Build documentation
         run: |
