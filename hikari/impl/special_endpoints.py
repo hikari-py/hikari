@@ -1319,7 +1319,6 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
     _style: int | component_models.ButtonStyle = attrs.field(alias="style")
     _custom_id: undefined.UndefinedOr[str] = attrs.field()
-    _url: undefined.UndefinedOr[str] = attrs.field()
     _emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = attrs.field(
         alias="emoji", default=undefined.UNDEFINED
     )
@@ -1396,7 +1395,6 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
             data["emoji"] = {"name": self._emoji_name}
 
         data.put("custom_id", self._custom_id)
-        data.put("url", self._url)
 
         return data, []
 
@@ -1416,13 +1414,22 @@ class LinkButtonBuilder(_ButtonBuilder, special_endpoints.LinkButtonBuilder):
     def url(self) -> str:
         return self._url
 
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        data, attachments = super().build()
+
+        data["url"] = self._url
+
+        return data, attachments
+
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class InteractiveButtonBuilder(_ButtonBuilder, special_endpoints.InteractiveButtonBuilder):
     """Builder class for interactive buttons."""
 
     _custom_id: str = attrs.field(alias="custom_id")
-    _url: undefined.UndefinedType = attrs.field(init=False, default=undefined.UNDEFINED)
 
     @property
     @typing_extensions.override
