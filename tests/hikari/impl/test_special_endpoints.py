@@ -1259,16 +1259,14 @@ def test__build_emoji_when_undefined():
 
 
 class Test_ButtonBuilder:
+    class ButtonBuilder(special_endpoints._ButtonBuilder):
+        @property
+        def style(self) -> components.ButtonStyle:
+            return components.ButtonStyle.DANGER
+
     @pytest.fixture
     def button(self):
-        return special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.DANGER,
-            custom_id="sfdasdasd",
-            url="hi there",
-            emoji=543123,
-            label="a lebel",
-            is_disabled=True,
-        )
+        return Test_ButtonBuilder.ButtonBuilder(id=5855932, emoji=543123, label="a lebel", is_disabled=True)
 
     def test_type_property(self, button):
         assert button.type is components.ComponentType.BUTTON
@@ -1313,27 +1311,15 @@ class Test_ButtonBuilder:
         assert button.set_is_disabled(False)
         assert button.is_disabled is False
 
-    def test_build(self):
-        button = special_endpoints._ButtonBuilder(
-            id=5855932,
-            style=components.ButtonStyle.DANGER,
-            url="https://example.com",
-            label="no u",
-            custom_id="ooga booga",
-            emoji="emoji_name",
-            is_disabled=True,
-        )
-
+    def test_build(self, button):
         payload, attachments = button.build()
 
         assert payload == {
             "id": 5855932,
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.DANGER,
-            "url": "https://example.com",
-            "emoji": {"name": "emoji_name"},
-            "label": "no u",
-            "custom_id": "ooga booga",
+            "emoji": {"id": "543123"},
+            "label": "a lebel",
             "disabled": True,
         }
 
@@ -1341,9 +1327,7 @@ class Test_ButtonBuilder:
 
     @pytest.mark.parametrize("emoji", [123321, emojis.CustomEmoji(id=123321, name="", is_animated=True)])
     def test_build_with_custom_emoji(self, emoji: typing.Union[int, emojis.Emoji]):
-        button = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.DANGER, emoji=emoji, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
-        )
+        button = Test_ButtonBuilder.ButtonBuilder(emoji=emoji)
 
         payload, attachments = button.build()
 
@@ -1357,15 +1341,13 @@ class Test_ButtonBuilder:
         assert attachments == []
 
     def test_build_without_optional_fields(self):
-        button = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.LINK, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
-        )
+        button = Test_ButtonBuilder.ButtonBuilder()
 
         payload, attachments = button.build()
 
         assert payload == {
             "type": components.ComponentType.BUTTON,
-            "style": components.ButtonStyle.LINK,
+            "style": components.ButtonStyle.DANGER,
             "disabled": False,
         }
 
@@ -1378,6 +1360,24 @@ class TestLinkButtonBuilder:
 
         assert button.url == "hihihihi"
 
+    def test_build(self):
+        button = special_endpoints.LinkButtonBuilder(
+            id=5855932, url="hihihihi", label="no u", emoji="emoji_name", is_disabled=True
+        )
+
+        payload, attachments = button.build()
+
+        assert payload == {
+            "id": 5855932,
+            "style": components.ButtonStyle.LINK,
+            "type": components.ComponentType.BUTTON,
+            "disabled": True,
+            "emoji": {"name": "emoji_name"},
+            "label": "no u",
+            "url": "hihihihi",
+        }
+        assert attachments == []
+
 
 class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
@@ -1386,6 +1386,29 @@ class TestInteractiveButtonBuilder:
         ).set_custom_id("eeeeee")
 
         assert button.custom_id == "eeeeee"
+
+    def test_build(self):
+        button = special_endpoints.InteractiveButtonBuilder(
+            id=5855932,
+            style=components.ButtonStyle.PRIMARY,
+            label="no u",
+            emoji="emoji_name",
+            is_disabled=True,
+            custom_id="oogie",
+        )
+
+        payload, attachments = button.build()
+
+        assert payload == {
+            "id": 5855932,
+            "style": components.ButtonStyle.PRIMARY,
+            "type": components.ComponentType.BUTTON,
+            "custom_id": "oogie",
+            "disabled": True,
+            "emoji": {"name": "emoji_name"},
+            "label": "no u",
+        }
+        assert attachments == []
 
 
 class TestSelectOptionBuilder:
