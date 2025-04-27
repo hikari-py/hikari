@@ -6350,7 +6350,9 @@ class TestRESTClientImplAsync:
     async def test_create_modal_response(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
         rest_client._request = mock.AsyncMock()
-        component = mock.Mock()
+        mock_payload = mock.Mock()
+        mock_files = mock.Mock()
+        component = mock.Mock(build=mock.Mock(return_value=(mock_payload, mock_files)))
 
         await rest_client.create_modal_response(
             StubModel(1235431), "snek", title="title", custom_id="idd", component=component
@@ -6358,17 +6360,16 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={
-                "type": 9,
-                "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
-            },
+            json={"type": 9, "data": {"title": "title", "custom_id": "idd", "components": [mock_payload]}},
             auth=None,
         )
 
     async def test_create_modal_response_with_plural_args(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
         rest_client._request = mock.AsyncMock()
-        component = mock.Mock()
+        mock_payload = mock.Mock()
+        mock_files = mock.Mock()
+        component = mock.Mock(build=mock.Mock(return_value=(mock_payload, mock_files)))
 
         await rest_client.create_modal_response(
             StubModel(1235431), "snek", title="title", custom_id="idd", components=[component]
@@ -6376,10 +6377,7 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={
-                "type": 9,
-                "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
-            },
+            json={"type": 9, "data": {"title": "title", "custom_id": "idd", "components": [mock_payload]}},
             auth=None,
         )
 

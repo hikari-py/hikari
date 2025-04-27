@@ -4403,20 +4403,20 @@ class RESTClientImpl(rest_api.RESTClient):
             msg = "Must specify exactly only one of 'component' or 'components'"
             raise ValueError(msg)
 
-        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+        if component:
+            components = (component,)
 
-        body = data_binding.JSONObjectBuilder()
-        body.put("type", base_interactions.ResponseType.MODAL)
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
         data = data_binding.JSONObjectBuilder()
         data.put("title", title)
         data.put("custom_id", custom_id)
+        # Component builders return a tuple of (payload, files), but we only care about
+        # the payload, as there is no way to upload anything to a modal
+        data.put_array("components", components, conversion=lambda c: c.build()[0])
 
-        if component:
-            components = (component,)
-
-        data.put_array("components", components, conversion=lambda c: c.build())
-
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.MODAL)
         body.put("data", data)
 
         await self._request(route, json=body, auth=None)
