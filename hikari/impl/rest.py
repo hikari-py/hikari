@@ -68,6 +68,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
+from hikari.api import special_endpoints
 from hikari.impl import buckets as buckets_impl
 from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
@@ -90,6 +91,7 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from hikari import audit_logs
+    from hikari import auto_mod
     from hikari import invites
     from hikari import sessions
     from hikari import stickers as stickers_
@@ -98,7 +100,6 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks
     from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import special_endpoints
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
@@ -4833,3 +4834,94 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
+
+    @typing_extensions.override
+    async def fetch_auto_mod_rules(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Sequence[auto_mod.AutoModRule]:
+        results = await self._request(routes.GET_GUILD_AUTO_MODERATION_RULES.compile(guild=guild))
+        assert isinstance(results, list)
+        return [self._entity_factory.deserialize_auto_mod_rule(rule) for rule in results]
+
+    @typing_extensions.override
+    async def fetch_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+    ) -> auto_mod.AutoModRule:
+        result = await self._request(routes.GET_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule))
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    @typing_extensions.override
+    async def create_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
+        name: str,
+        event_type: auto_mod.AutoModEventType | int,
+        trigger: special_endpoints.AutoModTriggerBuilder,
+        actions: typing.Sequence[special_endpoints.AutoModActionBuilder],
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=guild)
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("name", name)
+        payload.put("event_type", event_type)
+        payload.put("trigger_type", trigger.type)
+        payload.put("trigger_metadata", trigger.build())
+        payload.put("enabled", enabled)
+        payload.put_snowflake_array("exempt_channels", exempt_channels)
+        payload.put_snowflake_array("exempt_roles", exempt_roles)
+        payload.put_array("actions", actions, conversion=lambda a: a.build())
+
+        result = await self._request(route, json=payload, reason=reason)
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    @typing_extensions.override
+    async def edit_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[auto_mod.AutoModEventType | int] = undefined.UNDEFINED,
+        trigger: undefined.UndefinedOr[special_endpoints.AutoModTriggerBuilder] = undefined.UNDEFINED,
+        actions: undefined.UndefinedOr[typing.Sequence[special_endpoints.AutoModActionBuilder]] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule)
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("name", name)
+        payload.put("event_type", event_type)
+        payload.put("enabled", enabled)
+        payload.put_snowflake_array("exempt_channels", exempt_channels)
+        payload.put_snowflake_array("exempt_roles", exempt_roles)
+        payload.put("trigger_metadata", trigger, conversion=lambda m: m.build())
+        payload.put_array("actions", actions, conversion=lambda a: a.build())
+
+        result = await self._request(route, json=payload, reason=reason)
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    @typing_extensions.override
+    async def delete_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        await self._request(routes.DELETE_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule), reason=reason)

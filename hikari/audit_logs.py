@@ -52,6 +52,7 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import auto_mod
     from hikari import guilds
     from hikari import messages
     from hikari import traits
@@ -341,6 +342,12 @@ class AuditLogEventType(int, enums.Enum):
     THREAD_UPDATE = 111
     THREAD_DELETE = 112
     APPLICATION_COMMAND_PERMISSION_UPDATE = 121
+    AUTO_MODERATION_RULE_CREATE = 140
+    AUTO_MODERATION_RULE_UPDATE = 141
+    AUTO_MODERATION_RULE_DELETE = 142
+    AUTO_MODERATION_BLOCK_MESSAGE = 143
+    AUTO_MODERATION_FLAG_TO_CHANNEL = 144
+    AUTO_MODERATION_USER_COMMUNICATION_DISABLED = 145
     CREATOR_MONETIZATION_REQUEST_CREATED = 150
     CREATOR_MONETIZATION_TERMS_ACCEPTED = 151
     ONBOARDING_PROMPT_CREATE = 163
@@ -608,6 +615,9 @@ class AuditLogEntry(snowflakes.Unique):
 @attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class AuditLog(typing.Sequence[AuditLogEntry]):
     """Represents a guilds audit log's page."""
+
+    auto_mod_rules: typing.Mapping[snowflakes.Snowflake, auto_mod.AutoModRule] = attrs.field(repr=False)
+    """A mapping of auto-moderation rule objects referenced in this audit log."""
 
     entries: typing.Mapping[snowflakes.Snowflake, AuditLogEntry] = attrs.field(repr=False)
     """A mapping of snowflake IDs to the audit log's entries."""
