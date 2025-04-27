@@ -8717,7 +8717,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
         /,
     ) -> auto_mod.AutoModRule:
-        """Fetch a auto-moderation rule.
+        """Fetch an auto-moderation rule.
 
         Parameters
         ----------
