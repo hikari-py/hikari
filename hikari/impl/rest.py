@@ -4879,7 +4879,7 @@ class RESTClientImpl(rest_api.RESTClient):
         payload.put("enabled", enabled)
         payload.put_snowflake_array("exempt_channels", exempt_channels)
         payload.put_snowflake_array("exempt_roles", exempt_roles)
-        payload.put("actions", [action.build() for action in actions])
+        payload.put_array("actions", actions, conversion=lambda a: a.build())
 
         result = await self._request(route, json=payload, reason=reason)
         assert isinstance(result, dict)
@@ -4906,13 +4906,11 @@ class RESTClientImpl(rest_api.RESTClient):
         payload = data_binding.JSONObjectBuilder()
         payload.put("name", name)
         payload.put("event_type", event_type)
-        if trigger is not undefined.UNDEFINED:
-            payload.put("trigger_metadata", trigger.build())
         payload.put("enabled", enabled)
         payload.put_snowflake_array("exempt_channels", exempt_channels)
         payload.put_snowflake_array("exempt_roles", exempt_roles)
-        if actions is not undefined.UNDEFINED:
-            payload.put("actions", [action.build() for action in actions])
+        payload.put("trigger_metadata", trigger, conversion=lambda m: m.build())
+        payload.put_array("actions", actions, conversion=lambda a: a.build())
 
         result = await self._request(route, json=payload, reason=reason)
         assert isinstance(result, dict)

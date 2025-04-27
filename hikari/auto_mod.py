@@ -172,7 +172,7 @@ class KeywordTrigger(PartialAutoModTrigger):
     """The filter strings this trigger checks for."""
 
     regex_patterns: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
-    """The filter regexs this trigger checks for. """
+    """The filter regexes this trigger checks for."""
 
     allow_list: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of filters which will be exempt from triggering the preset trigger."""
@@ -211,12 +211,13 @@ class MemberProfileTrigger(PartialAutoModTrigger):
 
     keyword_filter: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """The filter strings this trigger checks for.
+
     This supports a wildcard matching strategy which is documented at
     <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
     """
 
     regex_patterns: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
-    """A sequence of filters which will be exempt from triggering the preset trigger."""
+    """The filter regexs this trigger checks for."""
 
     allow_list: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of filters which will be exempt from triggering the preset trigger."""

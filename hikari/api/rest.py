@@ -8890,7 +8890,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
-        """Create an auto-moderation rule.
+        """Delete an auto-moderation rule.
 
         Parameters
         ----------
