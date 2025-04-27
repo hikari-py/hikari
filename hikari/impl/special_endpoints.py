@@ -65,6 +65,7 @@ __all__: typing.Sequence[str] = (
     "TypingIndicator",
 )
 
+import abc
 import asyncio
 import typing
 
@@ -1325,11 +1326,8 @@ def _build_emoji(
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-class _ButtonBuilder(special_endpoints.ButtonBuilder):
+class _ButtonBuilder(special_endpoints.ButtonBuilder, abc.ABC):
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
-    _style: int | component_models.ButtonStyle = attrs.field(alias="style")
-    _custom_id: undefined.UndefinedOr[str] = attrs.field()
-    _url: undefined.UndefinedOr[str] = attrs.field()
     _emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = attrs.field(
         alias="emoji", default=undefined.UNDEFINED
     )
@@ -1350,11 +1348,6 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
     @typing_extensions.override
     def id(self) -> undefined.UndefinedOr[int]:
         return self._id
-
-    @property
-    @typing_extensions.override
-    def style(self) -> int | component_models.ButtonStyle:
-        return self._style
 
     @property
     @typing_extensions.override
@@ -1394,7 +1387,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         data = data_binding.JSONObjectBuilder()
 
         data["type"] = component_models.ComponentType.BUTTON
-        data["style"] = self._style
+        data["style"] = self.style
         data["disabled"] = self._is_disabled
         data.put("id", self._id)
         data.put("label", self._label)
@@ -1405,9 +1398,6 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder):
         elif self._emoji_name is not undefined.UNDEFINED:
             data["emoji"] = {"name": self._emoji_name}
 
-        data.put("custom_id", self._custom_id)
-        data.put("url", self._url)
-
         return data, []
 
 
@@ -1416,9 +1406,6 @@ class LinkButtonBuilder(_ButtonBuilder, special_endpoints.LinkButtonBuilder):
     """Builder class for link buttons."""
 
     _custom_id: undefined.UndefinedType = attrs.field(init=False, default=undefined.UNDEFINED)
-    _style: typing.Literal[component_models.ButtonStyle.LINK] = attrs.field(
-        init=False, default=component_models.ButtonStyle.LINK
-    )
     _url: str = attrs.field(alias="url")
 
     @property
@@ -1426,13 +1413,33 @@ class LinkButtonBuilder(_ButtonBuilder, special_endpoints.LinkButtonBuilder):
     def url(self) -> str:
         return self._url
 
+    @property
+    @typing_extensions.override
+    def style(self) -> typing.Literal[component_models.ButtonStyle.LINK]:
+        return component_models.ButtonStyle.LINK
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        data, attachments = super().build()
+
+        data["url"] = self._url
+
+        return data, attachments
+
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class InteractiveButtonBuilder(_ButtonBuilder, special_endpoints.InteractiveButtonBuilder):
     """Builder class for interactive buttons."""
 
+    _style: int | component_models.ButtonStyle = attrs.field(alias="style")
     _custom_id: str = attrs.field(alias="custom_id")
-    _url: undefined.UndefinedType = attrs.field(init=False, default=undefined.UNDEFINED)
+
+    @property
+    @typing_extensions.override
+    def style(self) -> int | component_models.ButtonStyle:
+        return self._style
 
     @property
     @typing_extensions.override
@@ -1443,6 +1450,16 @@ class InteractiveButtonBuilder(_ButtonBuilder, special_endpoints.InteractiveButt
     def set_custom_id(self, custom_id: str, /) -> Self:
         self._custom_id = custom_id
         return self
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        data, attachments = super().build()
+
+        data["custom_id"] = self._custom_id
+
+        return data, attachments
 
 
 @attrs_extensions.with_copy
