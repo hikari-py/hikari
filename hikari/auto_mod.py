@@ -89,7 +89,7 @@ class AutoModTriggerType(int, enums.Enum):
     """Type of trigger for an auto-moderation rule."""
 
     KEYWORD = 1
-    """Match message content against a list of keywords and regexs."""
+    """Match message content against a list of keywords and regexes."""
 
     SPAM = 3
     """Discord's guild anti-spam system."""
@@ -101,7 +101,7 @@ class AutoModTriggerType(int, enums.Enum):
     """Match messages that exceed the allowed limit of role or user mentions."""
 
     MEMBER_PROFILE = 6
-    """Match user profiles against a list of keywords and regexs."""
+    """Match user profiles against a list of keywords and regexes."""
 
 
 class AutoModKeywordPresetType(int, enums.Enum):
@@ -217,7 +217,7 @@ class MemberProfileTrigger(PartialAutoModTrigger):
     """
 
     regex_patterns: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
-    """The filter regexs this trigger checks for."""
+    """The filter regexes this trigger checks for."""
 
     allow_list: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of filters which will be exempt from triggering the preset trigger."""
