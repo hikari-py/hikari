@@ -6928,7 +6928,6 @@ class TestRESTClientImplAsync:
                 "trigger_type": 1,
                 "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
                 "actions": [mock_action.build.return_value],
-                "enabled": True,
             },
             reason=undefined.UNDEFINED,
         )

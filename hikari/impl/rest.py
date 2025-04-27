@@ -4863,7 +4863,7 @@ class RESTClientImpl(rest_api.RESTClient):
         event_type: auto_mod.AutoModEventType | int,
         trigger: special_endpoints.AutoModTriggerBuilder,
         actions: typing.Sequence[special_endpoints.AutoModActionBuilder],
-        enabled: undefined.UndefinedOr[bool] = True,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         exempt_channels: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[channels_.PartialChannel]
