@@ -155,6 +155,7 @@ class AutoModActionExecutionEvent(AutoModEvent):
 
     alert_system_message_id: snowflakes.Snowflake | None = attr.field(repr=False)
     """ID of any system auto-moderation messages posted as a result of this action.
+
     This will only be provided for `SEND_ALERT_MESSAGE` actions.
     """
 

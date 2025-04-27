@@ -2639,7 +2639,7 @@ class AutoModKeywordTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
         """The filter strings this trigger checks for.
 
         This supports a wildcard matching strategy which is documented at
-        https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
         """
 
     @property
@@ -2648,7 +2648,7 @@ class AutoModKeywordTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
         """The filter regexs this trigger checks for.
 
         Currently, this only supports rust flavored regular expressions.
-        https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata>
         """
 
     @property
@@ -2657,7 +2657,7 @@ class AutoModKeywordTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
         """A sequence of filters which will be exempt from triggering the preset trigger.
 
         This supports a wildcard matching strategy which is documented at
-        https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
         """
 
 
@@ -2693,7 +2693,7 @@ class AutoModKeywordPresetTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
         """A sequence of filters which will be exempt from triggering the preset trigger.
 
         This supports a wildcard matching strategy which is documented at
-        https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
         """
 
 
@@ -2734,7 +2734,7 @@ class AutoModMemberProfileTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
         """The filter strings this trigger checks for.
 
         This supports a wildcard matching strategy which is documented at
-        https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
         """
 
     @property
@@ -2743,7 +2743,7 @@ class AutoModMemberProfileTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
         """The filter regexs this trigger checks for.
 
         Currently, this only supports rust flavored regular expressions.
-        https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata>.
         """
 
     @property
@@ -2752,5 +2752,5 @@ class AutoModMemberProfileTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
         """A sequence of filters which will be exempt from triggering the preset trigger.
 
         This supports a wildcard matching strategy which is documented at
-        https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
         """

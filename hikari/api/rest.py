@@ -8685,7 +8685,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to fetch the auto-moderation rules of.
 
         Returns
@@ -8721,9 +8721,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to fetch the auto-moderation rules of.
-        rule : hikari.snowflakes.SnowflakeishOr[hikari.auto_mod.AutoModRule]
+        rule
             Object or ID of the auto-moderation rule to fetch.
 
         Returns
@@ -8752,7 +8752,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def create_auto_mod_rule(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        /,
+        *,
         name: str,
         event_type: auto_mod.AutoModEventType | int,
         trigger: special_endpoints.AutoModTriggerBuilder,
@@ -8818,7 +8818,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
-        /,
+        *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[auto_mod.AutoModEventType | int] = undefined.UNDEFINED,
         trigger: undefined.UndefinedOr[special_endpoints.AutoModTriggerBuilder] = undefined.UNDEFINED,
@@ -8847,20 +8847,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         actions
             If specified, a sequence of the actions to execute when this rule
             is triggered.
-        allow_list
-            If specified, a sequence of filters which will be exempt from
-            triggering the preset trigger.
-            This supports a wildcard matching strategy which is documented at
-            https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
-            This can only be set for KEYWORD_PRESET triggers.
-        keyword_filter
-            If specified, a sequence of filter strings this trigger checks for.
-            This supports a wildcard matching strategy which is documented at
-            https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies.
-            This is required for and can only be set for KEYWORD triggers.
-        presets
-            If specified, a sequence of Discord's presets to match for.
-            This is required for and can only be set for KEYWORD_PRESET triggers.
         enabled
             If specified, whether this auto-moderation rule should be enabled.
         exempt_channels
@@ -8901,18 +8887,18 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
-        /,
+        *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Create an auto-moderation rule.
 
         Parameters
         ----------
-        guild : hikari.snowflakes.SnowflakeishOr[hikari.guilds.PartialGuild]
+        guild
             Object or ID of the guild to delete the auto-moderation rules of.
-        rule : hikari.snowflakes.SnowflakeishOr[hikari.auto_mod.AutoModRule]
+        rule
             Object or ID of the auto-moderation rule to delete.
-        reason : hikari.undefined.UndefinedOr[builtins.str]
+        reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
