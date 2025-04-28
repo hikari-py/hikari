@@ -6578,10 +6578,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         hikari.errors.NotFoundError
-            If the guild is not found or the onboarding has never been set
-            for this guild (if the welcome screen has been set for a guild
-            before and then disabled you should still be able to fetch it).
-            TODO check this
+            If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
