@@ -203,6 +203,198 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
+class GuildOnboardingPromptOptionBuilder(abc.ABC):
+    """Interface of a guild onboarding prompt option used to respond to edit guild onboardings."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_title(self, title: str, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def role_ids(self) -> typing.Sequence[snowflakes.Snowflake]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_role_ids(self, role_ids: typing.Sequence[snowflakes.Snowflake], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def channel_ids(self) -> typing.Sequence[snowflakes.Snowflake]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_channel_ids(self, channel_ids: typing.Sequence[snowflakes.Snowflake], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> str | None:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_description(self, title: str | None, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> emojis.Emoji | None:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_emoji(self, title: emojis.Emoji | None, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build it goddamit."""
+
+
+class GuildOnboardingPromptBuilder(abc.ABC):
+    """Interface of a guild onboarding prompt used to respond to edit guild onboardings.
+
+    !!! Note
+        You cannot set the type of the prompt. Discord will automatically do that
+        based on how many options the prompt has.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_title(self, title: str, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def single_select(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_single_select(self, single_select: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def required(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def in_onboarding(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_in_onboarding(self, in_onboarding: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[GuildOnboardingPromptOptionBuilder]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_options(self, options: typing.Sequence[GuildOnboardingPromptOptionBuilder], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def add_option(
+        self,
+        title: str,
+        role_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
+        channel_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedNoneOr[emojis.Emoji] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build it goddamit."""
+
+
 class AutocompleteChoiceBuilder(abc.ABC):
     """Interface of an autocomplete choice used to respond to interactions."""
 

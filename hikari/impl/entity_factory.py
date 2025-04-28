@@ -1955,7 +1955,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_ids: list[snowflakes.Snowflake] = [
                 snowflakes.Snowflake(channel_id) for channel_id in option_payload["channel_ids"]
             ]
-            role_ids: list[snowflakes.Snowflake] = [snowflakes.Snowflake(role_id) for role_id in option_payload["role_ids"]]
+            role_ids: list[snowflakes.Snowflake] = [
+                snowflakes.Snowflake(role_id) for role_id in option_payload["role_ids"]
+            ]
             options.append(
                 guild_models.GuildOnboardingPromptOption(
                     id=option_payload["id"],
