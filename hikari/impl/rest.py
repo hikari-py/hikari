@@ -1494,6 +1494,7 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment = content
             content = undefined.UNDEFINED
 
+        resources: list[files.Resource[typing.Any]] = []
         final_attachments: list[files.Resourceish | messages_.Attachment] = []
         if attachment:
             final_attachments.append(attachment)
@@ -1505,7 +1506,7 @@ class RESTClientImpl(rest_api.RESTClient):
             if component is not None:
                 component_payload, component_attachments = component.build()
                 serialized_components = [component_payload]
-                final_attachments.extend(component_attachments)
+                resources.extend(component_attachments)
 
                 if component.type in _V2_COMPONENT_TYPES:
                     if flags is undefined.UNDEFINED:
@@ -1520,7 +1521,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 for comp in components:
                     component_payload, component_attachments = comp.build()
                     serialized_components.append(component_payload)
-                    final_attachments.extend(component_attachments)
+                    resources.extend(component_attachments)
 
                     if comp.type in _V2_COMPONENT_TYPES:
                         if flags is undefined.UNDEFINED:
@@ -1531,7 +1532,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if embed is not undefined.UNDEFINED:
             if embed is not None:
                 embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-                final_attachments.extend(embed_attachments)
+                resources.extend(embed_attachments)
                 serialized_embeds = [embed_payload]
 
             else:
@@ -1542,7 +1543,7 @@ class RESTClientImpl(rest_api.RESTClient):
             if embeds is not None:
                 for e in embeds:
                     embed_payload, embed_attachments = self._entity_factory.serialize_embed(e)
-                    final_attachments.extend(embed_attachments)
+                    resources.extend(embed_attachments)
                     serialized_embeds.append(embed_payload)
 
         body = data_binding.JSONObjectBuilder()
@@ -1562,12 +1563,15 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         form_builder: data_binding.URLEncodedFormBuilder | None = None
-        if final_attachments:
+        if resources or final_attachments:
             attachments_payload = []
             attachment_id = 0
 
-            # Deduplicate resources, but keep the order
-            final_attachments = list(dict.fromkeys(final_attachments))
+            # The rationale behind this large (and probably confusing) piece of code
+            # is to always upload all attachments specified as `attachments=[]`, no
+            # matter if they are the same, but for other resources spread across
+            # all the other components/embeds, deduplicate them and only upload them once.
+            final_attachments.extend(list(dict.fromkeys(resources)))
 
             for f in final_attachments:
                 if edit and isinstance(f, messages_.Attachment):

@@ -1547,6 +1547,109 @@ class TestRESTClientImpl:
             ]
         )
 
+    def test__build_message_payload_with_duplicated_resources(self, rest_client):
+        attachment1 = mock.Mock()
+        attachment2 = mock.Mock(message_models.Attachment, id=123, filename="attachment123.png")
+        component_attachment = mock.Mock(filename="component.png")
+        component_attachment2 = mock.Mock(filename="component2.png")
+        component1 = mock.Mock(
+            build=mock.Mock(return_value=({"component": 1}, (component_attachment, component_attachment)))
+        )
+        component2 = mock.Mock(
+            build=mock.Mock(return_value=({"component": 2}, (component_attachment2, component_attachment2)))
+        )
+        embed1 = mock.Mock()
+        embed2 = mock.Mock()
+        embed_attachment1 = mock.Mock()
+        embed_attachment2 = mock.Mock()
+        resource_attachment1 = mock.Mock(filename="attachment.png")
+        resource_attachment2 = mock.Mock(filename="attachment2.png")
+        resource_attachment3 = mock.Mock(filename="attachment3.png")
+        resource_attachment4 = mock.Mock(filename="attachment4.png")
+        resource_attachment5 = mock.Mock(filename="attachment5.png")
+        resource_attachment6 = mock.Mock(filename="attachment6.png")
+
+        rest_client._entity_factory.serialize_embed.side_effect = [
+            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
+            ({"embed": 2}, [embed_attachment2, embed_attachment1]),
+        ]
+
+        with (
+            mock.patch.object(
+                files,
+                "ensure_resource",
+                side_effect=[
+                    resource_attachment1,
+                    resource_attachment2,
+                    resource_attachment3,
+                    resource_attachment4,
+                    resource_attachment5,
+                    resource_attachment6,
+                ],
+            ) as ensure_resource,
+            mock.patch.object(data_binding, "URLEncodedFormBuilder") as url_encoded_form,
+        ):
+            body, form = rest_client._build_message_payload(
+                content=987654321,
+                attachments=[attachment1, attachment1, attachment2],
+                components=[component1, component2],
+                embeds=[embed1, embed2],
+                flags=120,
+                tts=True,
+                mentions_everyone=None,
+                mentions_reply=None,
+                user_mentions=None,
+                role_mentions=None,
+                edit=True,
+            )
+
+        # Returned
+        assert body == {
+            "content": "987654321",
+            "tts": True,
+            "flags": 120,
+            "embeds": [{"embed": 1}, {"embed": 2}],
+            "components": [{"component": 1}, {"component": 2}],
+            "attachments": [
+                {"id": 0, "filename": "attachment.png"},
+                {"id": 1, "filename": "attachment2.png"},
+                {"id": 123, "filename": "attachment123.png"},
+                {"id": 2, "filename": "attachment3.png"},
+                {"id": 3, "filename": "attachment4.png"},
+                {"id": 4, "filename": "attachment5.png"},
+                {"id": 5, "filename": "attachment6.png"},
+            ],
+            "allowed_mentions": {"parse": []},
+        }
+        assert form is url_encoded_form.return_value
+
+        # Attachments
+        assert ensure_resource.call_count == 6
+        ensure_resource.assert_has_calls(
+            [
+                mock.call(attachment1),
+                mock.call(attachment1),
+                mock.call(component_attachment),
+                mock.call(component_attachment2),
+                mock.call(embed_attachment1),
+                mock.call(embed_attachment2),
+            ]
+        )
+
+        # Form builder
+        url_encoded_form.assert_called_once_with()
+        assert url_encoded_form.return_value.add_resource.call_count == 6
+        url_encoded_form.return_value.add_resource.assert_has_calls(
+            [
+                mock.call("files[0]", resource_attachment1),
+                mock.call("files[1]", resource_attachment2),
+                mock.call("files[2]", resource_attachment3),
+                mock.call("files[3]", resource_attachment4),
+                mock.call("files[4]", resource_attachment5),
+                mock.call("files[5]", resource_attachment6),
+            ]
+        )
+
     @pytest.mark.parametrize(
         ("singular_arg", "plural_arg"),
         [("attachment", "attachments"), ("component", "components"), ("embed", "embeds"), ("sticker", "stickers")],
