@@ -1953,16 +1953,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         for option_payload in payload["options"]:
             emoji = self.deserialize_emoji(option_payload["emoji"])
             channel_ids: list[snowflakes.Snowflake] = [
-                snowflakes.Snowflake(channel_id) for channel_id in payload["channel_ids"]
+                snowflakes.Snowflake(channel_id) for channel_id in option_payload["channel_ids"]
             ]
-            role_ids: list[snowflakes.Snowflake] = [snowflakes.Snowflake(role_id) for role_id in payload["role_ids"]]
+            role_ids: list[snowflakes.Snowflake] = [snowflakes.Snowflake(role_id) for role_id in option_payload["role_ids"]]
             options.append(
                 guild_models.GuildOnboardingPromptOption(
                     id=option_payload["id"],
                     channel_ids=channel_ids,
                     role_ids=role_ids,
-                    title=payload["title"],
-                    description=payload.get("description"),
+                    title=option_payload["title"],
+                    description=option_payload.get("description"),
                     emoji=emoji,
                 )
             )
