@@ -1566,6 +1566,9 @@ class RESTClientImpl(rest_api.RESTClient):
             attachments_payload = []
             attachment_id = 0
 
+            # Deduplicate resources, but keep the order
+            final_attachments = list(dict.fromkeys(final_attachments))
+
             for f in final_attachments:
                 if edit and isinstance(f, messages_.Attachment):
                     attachments_payload.append({"id": f.id, "filename": f.filename})
