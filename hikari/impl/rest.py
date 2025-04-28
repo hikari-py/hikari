@@ -3875,6 +3875,15 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_welcome_screen(response)
 
     @typing_extensions.override
+    async def fetch_guild_onboarding(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.GuildOnboarding:
+        route = routes.GET_GUILD_ONBOARDING.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_onboarding(response)
+
+    @typing_extensions.override
     async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
         response = await self._request(route)

@@ -388,6 +388,9 @@ PATCH_GUILD_WIDGET: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/widget")
 GET_GUILD_WELCOME_SCREEN: typing.Final[Route] = Route(GET, "/guilds/{guild}/welcome-screen")
 PATCH_GUILD_WELCOME_SCREEN: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/welcome-screen")
 
+GET_GUILD_ONBOARDING: typing.Final[Route] = Route(GET, "/guilds/{guild}/onboarding")
+PUT_GUILD_ONBOARDING: typing.Final[Route] = Route(PUT, "/guilds/{guild}/onboarding")
+
 GET_GUILD_MEMBER_VERIFICATION: typing.Final[Route] = Route(GET, "/guilds/{guild}/member-verification")
 PATCH_GUILD_MEMBER_VERIFICATION: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/member-verification")
 
