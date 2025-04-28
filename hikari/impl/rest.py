@@ -1494,18 +1494,18 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment = content
             content = undefined.UNDEFINED
 
-        final_attachments: list[files.Resourceish | messages_.Attachment] = []
+        final_attachments: set[files.Resourceish | messages_.Attachment] = set()
         if attachment:
-            final_attachments.append(attachment)
+            final_attachments.add(attachment)
         elif attachments:
-            final_attachments.extend(attachments)
+            final_attachments.update(attachments)
 
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
             if component is not None:
                 component_payload, component_attachments = component.build()
                 serialized_components = [component_payload]
-                final_attachments.extend(component_attachments)
+                final_attachments.update(component_attachments)
 
                 if component.type in _V2_COMPONENT_TYPES:
                     if flags is undefined.UNDEFINED:
@@ -1520,7 +1520,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 for comp in components:
                     component_payload, component_attachments = comp.build()
                     serialized_components.append(component_payload)
-                    final_attachments.extend(component_attachments)
+                    final_attachments.update(component_attachments)
 
                     if comp.type in _V2_COMPONENT_TYPES:
                         if flags is undefined.UNDEFINED:
@@ -1531,7 +1531,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if embed is not undefined.UNDEFINED:
             if embed is not None:
                 embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-                final_attachments.extend(embed_attachments)
+                final_attachments.update(embed_attachments)
                 serialized_embeds = [embed_payload]
 
             else:
@@ -1542,7 +1542,7 @@ class RESTClientImpl(rest_api.RESTClient):
             if embeds is not None:
                 for e in embeds:
                     embed_payload, embed_attachments = self._entity_factory.serialize_embed(e)
-                    final_attachments.extend(embed_attachments)
+                    final_attachments.update(embed_attachments)
                     serialized_embeds.append(embed_payload)
 
         body = data_binding.JSONObjectBuilder()
