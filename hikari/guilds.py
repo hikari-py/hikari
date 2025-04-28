@@ -99,6 +99,28 @@ class GuildExplicitContentFilterLevel(int, enums.Enum):
 
 
 @typing.final
+class GuildOnboardingMode(int, enums.Enum):
+    """Defines the criteria used to satisfy Onboarding constraints that are required for enabling."""
+
+    ONBOARDING_DEFAULT = 0
+    """Counts only Default Channels towards constraints."""
+
+    ONBOARDING_ADVANCED = 1
+    """Counts Default Channels and Questions towards constraints."""
+
+
+@typing.final
+class GuildOnboardingPromptType(int, enums.Enum):
+    """Guild Onboarding Prompt Type. This is automatically decided by discord."""
+
+    MULTIPLE_CHOICE = 0
+    """Multiple fields you can click at."""
+
+    DROPDOWN = 1
+    """Similar to a select menu component."""
+
+
+@typing.final
 class GuildFeature(str, enums.Enum):
     """Features that a guild can provide."""
 
@@ -1468,6 +1490,81 @@ class WelcomeScreen:
 
     channels: typing.Sequence[WelcomeChannel] = attrs.field(hash=False, repr=True)
     """An array of up to 5 of the channels shown in the welcome screen."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildOnboarding:
+    """Used to represent the Guild Onboarding Object."""
+
+    guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    """The ID of the Guild this Onboarding belongs to."""
+
+    default_channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(hash=False, repr=True)
+    """Channel IDs that members get opted into automatically."""
+
+    enabled: bool = attrs.field(hash=False, repr=True)
+    """Whether onboarding is enabled in the guild."""
+
+    mode: GuildOnboardingMode = attrs.field(hash=False, repr=True)
+    """Current mode of onboarding."""
+
+    prompts: typing.Sequence[GuildOnboardingPrompt] = attrs.field(hash=False, repr=True)
+    """Prompts shown during onboarding and in customize community."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildOnboardingPromptOption:
+    """Used to represent a Guild Onboarding Prompt Option."""
+
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    """The ID of the option"""
+
+    channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(hash=False, repr=True)
+    """The IDs of the channels a user is opted into when selecting this option."""
+
+    role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(hash=False, repr=True)
+    """The IDs of the roles a user will get assigned when selecting this option."""
+
+    title: str = attrs.field(hash=False, repr=True)
+    """The title of the option."""
+
+    description: str | None = attrs.field(hash=False, repr=True)
+    """The description of the option."""
+
+    emoji: emojis_.Emoji = attrs.field(hash=False, repr=False)
+    """Emoji of the option."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildOnboardingPrompt:
+    """Used to represent a Guild Onboarding Prompt."""
+
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    """The ID of the prompt."""
+
+    type: GuildOnboardingPromptType = attrs.field(hash=False, repr=True)
+    """The type of the prompt."""
+
+    options: typing.Sequence[GuildOnboardingPromptOption] = attrs.field(hash=False, repr=True)
+    """The options of the prompt."""
+
+    title: str = attrs.field(hash=False, repr=True)
+    """The title of the prompt."""
+
+    single_select: bool = attrs.field(hash=False, repr=True)
+    """Indicates whether users are limited to selecting one option for the prompt."""
+
+    required: bool = attrs.field(hash=False, repr=True)
+    """Indicates whether the prompt is required before a user completes the onboarding flow."""
+
+    in_onboarding: bool = attrs.field(hash=False, repr=True)
+    """Indicates whether the prompt is present in the onboarding flow.
+
+    If `false`, the prompt will only appear in the Channels & Roles tab
+    """
 
 
 @attrs_extensions.with_copy
