@@ -1310,7 +1310,7 @@ class TestRESTClientImpl:
 
         # Attachments
         assert ensure_resource.call_count == 2
-        ensure_resource.assert_has_calls([mock.call(attachment), mock.call(embed_attachment)], any_order=True)
+        ensure_resource.assert_has_calls([mock.call(attachment), mock.call(embed_attachment)])
 
         # Embeds
         rest_client._entity_factory.serialize_embed.assert_called_once_with(embed)
@@ -1327,7 +1327,7 @@ class TestRESTClientImpl:
         url_encoded_form.assert_called_once_with()
         assert url_encoded_form.return_value.add_resource.call_count == 2
         url_encoded_form.return_value.add_resource.assert_has_calls(
-            [mock.call("files[0]", resource_attachment1), mock.call("files[1]", resource_attachment2)], any_order=True
+            [mock.call("files[0]", resource_attachment1), mock.call("files[1]", resource_attachment2)]
         )
 
     def test__build_message_payload_with_plural_args(self, rest_client):
@@ -1421,8 +1421,7 @@ class TestRESTClientImpl:
                 mock.call(embed_attachment2),
                 mock.call(embed_attachment3),
                 mock.call(embed_attachment4),
-            ],
-            any_order=True,
+            ]
         )
 
         # Embeds
@@ -1532,8 +1531,7 @@ class TestRESTClientImpl:
                 mock.call(embed_attachment2),
                 mock.call(embed_attachment3),
                 mock.call(embed_attachment4),
-            ],
-            any_order=True,
+            ]
         )
 
         # Form builder
@@ -1546,8 +1544,7 @@ class TestRESTClientImpl:
                 mock.call("files[2]", resource_attachment3),
                 mock.call("files[3]", resource_attachment4),
                 mock.call("files[4]", resource_attachment5),
-            ],
-            any_order=True,
+            ]
         )
 
     @pytest.mark.parametrize(

@@ -1826,6 +1826,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 field_payloads.append({"name": name, "value": value, "inline": field.is_inline})
             payload["fields"] = field_payloads
 
+        # Allow reusing resource objects in the same embed without duplicating them
+        # in the final message
+        uploads = list(dict.fromkeys(uploads))
+
         return payload, uploads
 
     ################
