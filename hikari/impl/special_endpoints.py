@@ -668,10 +668,20 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
     """Standard implementation of [`hikari.api.special_endpoints.GuildOnboardingPromptOptionBuilder`][]."""
 
     _title: str = attrs.field(alias="title")
-    _role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(alias="role_ids")
-    _channel_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(alias="channel_ids")
-    _description: str | None = attrs.field(alias="description")
-    _emoji: emojis.Emoji | None = attrs.field(alias="emoji")
+    _role_ids: snowflakes.SnowflakeishSequence[guilds.Role] = attrs.field(alias="role_ids", kw_only=True, factory=tuple)
+    _channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel] = attrs.field(
+        alias="channel_ids", kw_only=True, factory=tuple
+    )
+    _description: str | None = attrs.field(alias="description", kw_only=True, default=None)
+    _emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = attrs.field(
+        alias="emoji", default=undefined.UNDEFINED, kw_only=True
+    )
+    _emoji_id: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
+    _emoji_name: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
+    _emoji_animated: undefined.UndefinedOr[bool] = attrs.field(init=False, default=undefined.UNDEFINED)
+
+    def __attrs_post_init__(self) -> None:
+        self._emoji_id, self._emoji_name, self._emoji_animated = _build_emoji(self._emoji)
 
     @property
     @typing_extensions.override
@@ -715,11 +725,12 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
 
     @property
     @typing_extensions.override
-    def emoji(self) -> emojis.Emoji | None:
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
         return self._emoji
 
     @typing_extensions.override
-    def set_emoji(self, emoji: emojis.Emoji | None, /) -> Self:
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
+        self._emoji_id, self._emoji_name, self._emoji_animated = _build_emoji(emoji)
         self._emoji = emoji
         return self
 
@@ -730,11 +741,10 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
         body.put("description", self._description)
         body.put_snowflake_array("channel_ids", self._channel_ids)
         body.put_snowflake_array("role_ids", self._role_ids)
-        if self._emoji:
-            body.put("emoji_name", self._emoji.name)
-            if isinstance(self._emoji, emojis.CustomEmoji):
-                body.put("emoji_id", self._emoji.id)
-                body.put("emoji_animated", self._emoji.is_animated)
+
+        body.put("emoji_name", self._emoji_name)
+        body.put("emoji_id", self._emoji_id)
+        body.put("emoji_animated", self._emoji_animated)
 
         return body
 
@@ -808,7 +818,7 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
         role_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
         channel_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        emoji: undefined.UndefinedNoneOr[emojis.Emoji] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
     ) -> Self:
         self._options.append(
             GuildOnboardingPromptOptionBuilder(
@@ -816,7 +826,7 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
                 role_ids=role_ids or [],
                 channel_ids=channel_ids or [],
                 description=description or None,
-                emoji=emoji or None,
+                emoji=emoji,
             )
         )
         return self

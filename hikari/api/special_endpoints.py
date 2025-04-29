@@ -270,12 +270,18 @@ class GuildOnboardingPromptOptionBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji(self) -> emojis.Emoji | None:
-        """The prompt's title."""
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
+        """Emoji which should appear on this option."""
 
     @abc.abstractmethod
-    def set_emoji(self, title: emojis.Emoji | None, /) -> Self:
-        """Set this prompt's title.
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
+        """Set the emoji to display on this option.
+
+        Parameters
+        ----------
+        emoji
+            Object, ID or raw string of the emoji which should be displayed on
+            this option.
 
         Returns
         -------
@@ -380,7 +386,7 @@ class GuildOnboardingPromptBuilder(abc.ABC):
         role_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
         channel_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        emoji: undefined.UndefinedNoneOr[emojis.Emoji] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
     ) -> Self:
         """Set this prompt's title.
 
