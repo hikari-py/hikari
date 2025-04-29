@@ -3884,6 +3884,31 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_guild_onboarding(response)
 
     @typing_extensions.override
+    async def edit_guild_onboarding(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        default_channel_ids: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.GuildChannel]
+        ] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mode: undefined.UndefinedOr[guilds.GuildOnboardingMode] = undefined.UNDEFINED,
+        prompts: undefined.UndefinedOr[
+            typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder]
+        ] = undefined.UNDEFINED,
+    ) -> guilds.GuildOnboarding:
+        route = routes.PUT_GUILD_ONBOARDING.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake_array("default_channel_ids", default_channel_ids)
+        body.put("enabled", enabled)
+        body.put("mode", mode, conversion=int)
+        body.put_array("prompts", prompts, conversion=lambda prompt_builder: prompt_builder.build())
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_onboarding(response)
+
+    @typing_extensions.override
     async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
         response = await self._request(route)
