@@ -590,7 +590,9 @@ class Team(snowflakes.Unique):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -678,7 +680,9 @@ class InviteApplication(guilds.PartialApplication):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -828,7 +832,9 @@ class Application(guilds.PartialApplication):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:

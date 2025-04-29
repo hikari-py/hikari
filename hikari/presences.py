@@ -154,7 +154,9 @@ class ActivityAssets:
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         try:

@@ -765,7 +765,9 @@ class Member(users.User):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -848,7 +850,9 @@ class Member(users.User):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -1340,7 +1344,9 @@ class Role(PartialRole):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -1476,7 +1482,9 @@ class PartialApplication(snowflakes.Unique):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -1719,7 +1727,9 @@ class PartialGuild(snowflakes.Unique):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -2901,7 +2911,9 @@ class GuildPreview(PartialGuild):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -2963,7 +2975,9 @@ class GuildPreview(PartialGuild):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -3300,7 +3314,9 @@ class Guild(PartialGuild):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -3365,7 +3381,9 @@ class Guild(PartialGuild):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
@@ -3427,7 +3445,9 @@ class Guild(PartialGuild):
             return None
 
         if ext:
-            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+            )
             image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
