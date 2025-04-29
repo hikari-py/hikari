@@ -153,35 +153,20 @@ class ScheduledEvent(snowflakes.Unique):
     """Hash of the image used for the scheduled event, if set."""
 
     @property
-    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
+    @deprecation.deprecated("Use 'make_image_url' instead.")
     def image_url(self) -> files.URL | None:
         """Cover image for this scheduled event, if set."""
         deprecation.warn_deprecated(
-            "image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
+            "image_url", removal_version="2.4.0", additional_info="Use 'make_image_url' instead."
         )
-        return self.make_cover_image_url()
+        return self.make_image_url()
 
-    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
     def make_image_url(
         self,
         *,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
-    ) -> files.URL | None:
-        """Cover image for this scheduled event, if set."""
-        deprecation.warn_deprecated(
-            "make_image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
-        )
-        return self.make_cover_image_url(image_format=image_format, size=size, lossless=lossless, ext=ext)
-
-    def make_cover_image_url(
-        self,
-        *,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the cover image URL for this scheduled event, if set.
@@ -190,7 +175,7 @@ class ScheduledEvent(snowflakes.Unique):
 
         Parameters
         ----------
-        image_format
+        format
             The format to use for this URL;
             Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
             If not specified, the format will be `PNG`.
@@ -199,13 +184,13 @@ class ScheduledEvent(snowflakes.Unique):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `image_format` is not `WEBP`.
+            This is ignored if `format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `image_format` argument.
+                This has been replaced with the `format` argument.
 
         Returns
         -------
@@ -215,7 +200,7 @@ class ScheduledEvent(snowflakes.Unique):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `image_format`.
+            If an invalid format is passed for `format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -224,20 +209,17 @@ class ScheduledEvent(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
             )
-            image_format = ext.upper()  # type: ignore[assignment]
-
-        if image_format is None:
-            image_format = "PNG"
+            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
 
         return routes.SCHEDULED_EVENT_COVER.compile_to_file(
             urls.CDN_URL,
             scheduled_event_id=self.id,
             hash=self.image_hash,
             size=size,
-            file_format=image_format,
-            settings={"lossless": lossless if image_format == "WEBP" else None},
+            file_format=format,
+            settings={"lossless": lossless if format == "WEBP" else None},
         )
 
 

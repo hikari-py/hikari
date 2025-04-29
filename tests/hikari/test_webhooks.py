@@ -23,7 +23,7 @@ from __future__ import annotations
 import mock
 import pytest
 
-from hikari import channels
+from hikari import channels, urls
 from hikari import undefined
 from hikari import webhooks
 from tests.hikari import hikari_test_helpers
@@ -221,6 +221,24 @@ class TestPartialWebhook:
 
     def test_mention_property(self, webhook):
         assert webhook.mention == "<@987654321>"
+
+    def test_make_avatar_url_format_set_to_deprecated_ext_argument_if_provided(self, webhook):
+        with mock.patch.object(
+            channels.routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert webhook.make_avatar_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            user_id=987654321,
+            hash="hook",
+            size=4096,
+            file_format="JPEG",
+            settings={"animated": None, "lossless": None},
+        )
+
+    def test_avatar_url_property(self, webhook):
+        assert webhook.avatar_url == webhook.make_avatar_url()
 
     def test_default_avatar_url(self, webhook):
         assert webhook.default_avatar_url.url == "https://cdn.discordapp.com/embed/avatars/0.png"

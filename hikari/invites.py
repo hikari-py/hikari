@@ -140,9 +140,9 @@ class InviteGuild(guilds.PartialGuild):
     def make_splash_url(
         self,
         *,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the splash URL for this guild, if set.
@@ -151,7 +151,7 @@ class InviteGuild(guilds.PartialGuild):
 
         Parameters
         ----------
-        image_format
+        format
             The format to use for this URL;
             Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
             If not specified, the format will be `PNG`.
@@ -160,13 +160,13 @@ class InviteGuild(guilds.PartialGuild):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `image_format` is not `WEBP`.
+            This is ignored if `format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `image_format` argument.
+                This has been replaced with the `format` argument.
 
         Returns
         -------
@@ -176,7 +176,7 @@ class InviteGuild(guilds.PartialGuild):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `image_format`.
+            If an invalid format is passed for `format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -185,20 +185,17 @@ class InviteGuild(guilds.PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
             )
-            image_format = ext.upper()  # type: ignore[assignment]
-
-        if image_format is None:
-            image_format = "PNG"
+            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
             urls.CDN_URL,
             guild_id=self.id,
             hash=self.splash_hash,
             size=size,
-            file_format=image_format,
-            settings={"lossless": lossless if image_format == "WEBP" else None},
+            file_format=format,
+            settings={"lossless": lossless if format == "WEBP" else None},
         )
 
     @property
@@ -213,9 +210,11 @@ class InviteGuild(guilds.PartialGuild):
     def make_banner_url(
         self,
         *,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the banner URL for this guild, if set.
@@ -224,7 +223,7 @@ class InviteGuild(guilds.PartialGuild):
 
         Parameters
         ----------
-        image_format
+        format
             The format to use for this URL;
             Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
             If not specified, the format will be determined based on
@@ -234,7 +233,7 @@ class InviteGuild(guilds.PartialGuild):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `image_format` is not `WEBP` or `AWEBP`.
+            This is ignored if `format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -244,7 +243,7 @@ class InviteGuild(guilds.PartialGuild):
             determined based on whether the banner is animated or not.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `image_format` argument.
+                This has been replaced with the `format` argument.
 
         Returns
         -------
@@ -254,7 +253,7 @@ class InviteGuild(guilds.PartialGuild):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `image_format`;
+            If an invalid format is passed for `format`;
             If an animated format is requested for a static banner.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
@@ -264,22 +263,22 @@ class InviteGuild(guilds.PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
             )
-            image_format = ext.upper()  # type: ignore[assignment]
+            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
 
-        if image_format is None:
-            image_format = "GIF" if self.banner_hash.startswith("a_") else "PNG"
+        if not format:
+            format = "GIF" if self.banner_hash.startswith("a_") else "PNG"  # noqa: A001
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
             urls.CDN_URL,
             guild_id=self.id,
             hash=self.banner_hash,
             size=size,
-            file_format=image_format,
+            file_format=format,
             settings={
-                "animated": True if image_format == "AWEBP" else None,
-                "lossless": lossless if image_format in ("WEBP", "AWEBP") else None,
+                "animated": True if format == "AWEBP" else None,
+                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
             },
         )
 

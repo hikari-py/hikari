@@ -904,16 +904,16 @@ class GroupDMChannel(PrivateChannel):
     def make_icon_url(
         self,
         *,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the icon URL for this group, if set.
 
         Parameters
         ----------
-        image_format
+        format
             The format to use for this URL;
             Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
             If not specified, the format will be `PNG`.
@@ -922,13 +922,13 @@ class GroupDMChannel(PrivateChannel):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `image_format` is not `WEBP`.
+            This is ignored if `format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `image_format` argument.
+                This has been replaced with the `format` argument.
 
         Returns
         -------
@@ -938,7 +938,7 @@ class GroupDMChannel(PrivateChannel):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `image_format`.
+            If an invalid format is passed for `format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -947,20 +947,17 @@ class GroupDMChannel(PrivateChannel):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
             )
-            image_format = ext.upper()  # type: ignore[assignment]
-
-        if image_format is None:
-            image_format = "PNG"
+            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
 
         return routes.CDN_CHANNEL_ICON.compile_to_file(
             urls.CDN_URL,
             channel_id=self.id,
             hash=self.icon_hash,
             size=size,
-            file_format=image_format,
-            settings={"lossless": lossless if image_format == "WEBP" else None},
+            file_format=format,
+            settings={"lossless": lossless if format == "WEBP" else None},
         )
 
 

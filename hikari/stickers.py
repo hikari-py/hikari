@@ -116,9 +116,9 @@ class StickerPack(snowflakes.Unique):
     def make_banner_url(
         self,
         *,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the pack's banner image URL, if set.
@@ -127,7 +127,7 @@ class StickerPack(snowflakes.Unique):
 
         Parameters
         ----------
-        image_format
+        format
             The format to use for this URL;
             Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
             If not specified, the format will be `PNG`.
@@ -136,13 +136,13 @@ class StickerPack(snowflakes.Unique):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `image_format` is not `WEBP`.
+            This is ignored if `format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `image_format` argument.
+                This has been replaced with the `format` argument.
 
         Returns
         -------
@@ -152,7 +152,7 @@ class StickerPack(snowflakes.Unique):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `image_format`.
+            If an invalid format is passed for `format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -161,18 +161,16 @@ class StickerPack(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
             )
-
-        if image_format is None:
-            image_format = "PNG"
+            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
 
         return routes.CDN_STICKER_PACK_BANNER.compile_to_file(
             urls.CDN_URL,
             hash=self.banner_asset_id,
             size=size,
-            file_format=image_format,
-            settings={"lossless": lossless if image_format == "WEBP" else None},
+            file_format=format,
+            settings={"lossless": lossless if format == "WEBP" else None},
         )
 
 
@@ -210,15 +208,17 @@ class PartialSticker(snowflakes.Unique):
     def make_url(
         self,
         *,
-        image_format: typing.Literal["LOTTIE", "PNG", "JPEG", "JPG", "WEBP", "APNG", "AWEBP", "GIF"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: undefined.UndefinedOr[
+            typing.Literal["LOTTIE", "PNG", "JPEG", "JPG", "WEBP", "APNG", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
     ) -> files.URL:
         """Generate the image URL for this sticker.
 
         Parameters
         ----------
-        image_format
+        format
             The format to use for this URL;
             Supports `LOTTIE`, `PNG`, `JPEG`, `JPG`, `WEBP`, `APNG`, `AWEBP` and `GIF`;
             LOTTIE is only available for [`hikari.stickers.StickerFormatType.LOTTIE`][] stickers;
@@ -229,7 +229,7 @@ class PartialSticker(snowflakes.Unique):
             Can be any power of two between `16` and `4096`.
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `image_format` is not `WEBP` or `AWEBP`.
+            This is ignored if `format` is not `WEBP` or `AWEBP`.
 
         Returns
         -------
@@ -239,7 +239,7 @@ class PartialSticker(snowflakes.Unique):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `image_format`;
+            If an invalid format is passed for `format`;
             If an animated format is requested for a static sticker;
             If an APNG sticker is requested as AWEBP or GIF;
             If a GIF sticker is requested as an APNG;
@@ -254,9 +254,9 @@ class PartialSticker(snowflakes.Unique):
             else StickerFormatType(self.format_type).name
         )
 
-        if image_format is None:
+        if not format:
             # mypy fails to infer sticker_format when used directly
-            image_format = (
+            format = (  # noqa: A001
                 (
                     "LOTTIE"
                     if sticker_format == "LOTTIE"
@@ -270,31 +270,31 @@ class PartialSticker(snowflakes.Unique):
                 else "PNG"
             )
 
-        if sticker_format == "GIF" and image_format == "APNG":
+        if sticker_format == "GIF" and format == "APNG":
             msg = "This asset is a GIF, which is not available as APNG."
             raise TypeError(msg)
-        if sticker_format == "APNG" and image_format in ("AWEBP", "GIF"):
+        if sticker_format == "APNG" and format in ("AWEBP", "GIF"):
             msg = "This asset is an APNG, which is not available as AWEBP or GIF."
             raise TypeError(msg)
-        if sticker_format == "PNG" and image_format in ("APNG", "AWEBP", "GIF"):
-            msg = f"This asset is not animated, so it cannot be retrieved as {image_format}."
+        if sticker_format == "PNG" and format in ("APNG", "AWEBP", "GIF"):
+            msg = f"This asset is not animated, so it cannot be retrieved as {format}."
             raise TypeError(msg)
-        if sticker_format == "LOTTIE" and image_format != "LOTTIE":
+        if sticker_format == "LOTTIE" and format != "LOTTIE":
             msg = "This asset is a LOTTIE, which is not available in alternative formats."
             raise TypeError(msg)
-        if sticker_format != "LOTTIE" and image_format == "LOTTIE":
+        if sticker_format != "LOTTIE" and format == "LOTTIE":
             msg = "This asset is not a LOTTIE, so it cannot be retrieved in the LOTTIE format."
             raise TypeError(msg)
 
         return routes.CDN_STICKER.compile_to_file(
             urls.MEDIA_PROXY_URL if self.format_type != StickerFormatType.LOTTIE else urls.CDN_URL,
             sticker_id=self.id,
-            file_format=image_format,
+            file_format=format,
             size=size,
             settings={
-                "passthrough": False if image_format == "PNG" and self.format_type == StickerFormatType.APNG else None,
-                "animated": True if image_format == "AWEBP" else None,
-                "lossless": lossless if image_format in ("WEBP", "AWEBP") else None,
+                "passthrough": False if format == "PNG" and self.format_type == StickerFormatType.APNG else None,
+                "animated": True if format == "AWEBP" else None,
+                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
             },
         )
 

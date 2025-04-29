@@ -536,9 +536,11 @@ class PartialWebhook(snowflakes.Unique):
     def make_avatar_url(
         self,
         *,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the avatar URL for this webhook, if set.
@@ -547,7 +549,7 @@ class PartialWebhook(snowflakes.Unique):
 
         Parameters
         ----------
-        image_format
+        format
             The format to use for this URL;
             Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
             If not specified, the format will be determined based on
@@ -557,7 +559,7 @@ class PartialWebhook(snowflakes.Unique):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `image_format` is not `WEBP` or `AWEBP`.
+            This is ignored if `format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -567,7 +569,7 @@ class PartialWebhook(snowflakes.Unique):
             determined based on whether the avatar is animated or not.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `image_format` argument.
+                This has been replaced with the `format` argument.
 
         Returns
         -------
@@ -577,7 +579,7 @@ class PartialWebhook(snowflakes.Unique):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `image_format`;
+            If an invalid format is passed for `format`;
             If an animated format is requested for a static avatar.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
@@ -587,22 +589,22 @@ class PartialWebhook(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
             )
-            image_format = ext.upper()  # type: ignore[assignment]
+            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
 
-        if image_format is None:
-            image_format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"
+        if not format:
+            format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"  # noqa: A001
 
         return routes.CDN_USER_AVATAR.compile_to_file(
             urls.CDN_URL,
             user_id=self.id,
             hash=self.avatar_hash,
             size=size,
-            file_format=image_format,
+            file_format=format,
             settings={
-                "animated": True if image_format == "AWEBP" else None,
-                "lossless": lossless if image_format in ("WEBP", "AWEBP") else None,
+                "animated": True if format == "AWEBP" else None,
+                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
             },
         )
 

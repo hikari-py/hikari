@@ -25,12 +25,13 @@ import datetime
 import mock
 import pytest
 
-from hikari import channels
+from hikari import channels, urls
 from hikari import files
 from hikari import permissions
 from hikari import snowflakes
 from hikari import users
 from hikari import webhooks
+from hikari.internal import routes
 from tests.hikari import hikari_test_helpers
 
 
@@ -167,8 +168,25 @@ class TestGroupDMChannel:
         model.name = None
         assert str(model) == "GroupDMChannel with: snoop#0420, yeet#1012, nice#6969"
 
+    def test_make_icon_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
+        with mock.patch.object(
+            routes, "CDN_CHANNEL_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_icon_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, channel_id=136134, hash="1a2b3c", size=4096, file_format="JPEG", settings={"lossless": None}
+        )
+
+    def test_icon_url(self):
+        channel = hikari_test_helpers.mock_class_namespace(
+            channels.GroupDMChannel, init_=False, make_icon_url=mock.Mock(return_value="icon-url-here.com")
+        )()
+        assert channel.icon_url == "icon-url-here.com"
+        channel.make_icon_url.assert_called_once()
+
     def test_make_icon_url(self, model):
-        assert model.make_icon_url(image_format="JPEG", size=16) == files.URL(
+        assert model.make_icon_url(format="JPEG", size=16) == files.URL(
             "https://cdn.discordapp.com/channel-icons/136134/1a2b3c.jpeg?size=16"
         )
 

@@ -145,9 +145,9 @@ class ActivityAssets:
         self,
         *,
         asset: str | None,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         if asset is None:
@@ -155,9 +155,9 @@ class ActivityAssets:
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'image_format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
             )
-            image_format = ext.upper()  # type: ignore[assignment]
+            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
 
         try:
             resource, identifier = asset.split(":", 1)
@@ -170,16 +170,13 @@ class ActivityAssets:
         except ValueError:
             assert self._application_id is not None
 
-            if image_format is None:
-                image_format = "PNG"
-
             return routes.CDN_APPLICATION_ASSET.compile_to_file(
                 urls.CDN_URL,
                 application_id=self._application_id,
                 hash=asset,
                 size=size,
-                file_format=image_format,
-                settings={"lossless": lossless if image_format == "WEBP" else None},
+                file_format=format,
+                settings={"lossless": lossless if format == "WEBP" else None},
             )
 
     @property
@@ -202,9 +199,9 @@ class ActivityAssets:
     def make_large_image_url(
         self,
         *,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the large image asset URL for this application, if set.
@@ -213,12 +210,12 @@ class ActivityAssets:
         is not known, this returns [`None`][].
 
         !!! note
-            `image_format`, `size`, and `lossless` are ignored for images
+            `format`, `size`, and `lossless` are ignored for images
             hosted outside of Discord or Discord's media proxy.
 
         Parameters
         ----------
-        image_format
+        format
             The format to use for this URL;
             Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
             If not specified, the format will be `PNG`.
@@ -227,13 +224,13 @@ class ActivityAssets:
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `image_format` is not `WEBP`.
+            This is ignored if `format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `image_format` argument.
+                This has been replaced with the `format` argument.
 
         Returns
         -------
@@ -243,15 +240,13 @@ class ActivityAssets:
         Raises
         ------
         TypeError
-            If an invalid format is passed for `image_format`.
+            If an invalid format is passed for `format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         RuntimeError
             If [`hikari.presences.ActivityAssets.large_image`][] points towards an unknown asset type.
         """
-        return self._make_asset_url(
-            asset=self.large_image, image_format=image_format, size=size, lossless=lossless, ext=ext
-        )
+        return self._make_asset_url(asset=self.large_image, format=format, size=size, lossless=lossless, ext=ext)
 
     @property
     @deprecation.deprecated("Use 'make_small_image_url' instead.")
@@ -273,9 +268,9 @@ class ActivityAssets:
     def make_small_image_url(
         self,
         *,
-        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
-        size: int | None = 4096,
-        lossless: bool | None = True,
+        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the small image asset URL for this application, if set.
@@ -284,12 +279,12 @@ class ActivityAssets:
         is not known, this returns [`None`][].
 
         !!! note
-            `image_format`, `size`, and `lossless` are ignored for images
+            `format`, `size`, and `lossless` are ignored for images
             hosted outside of Discord or Discord's media proxy.
 
         Parameters
         ----------
-        image_format
+        format
             The format to use for this URL;
             Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
             If not specified, the format will be `PNG`.
@@ -298,13 +293,13 @@ class ActivityAssets:
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `image_format` is not `WEBP`.
+            This is ignored if `format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `image_format` argument.
+                This has been replaced with the `format` argument.
 
         Returns
         -------
@@ -314,15 +309,13 @@ class ActivityAssets:
         Raises
         ------
         TypeError
-            If an invalid format is passed for `image_format`.
+            If an invalid format is passed for `format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         RuntimeError
             If [`hikari.presences.ActivityAssets.small_image`][] points towards an unknown asset type.
         """
-        return self._make_asset_url(
-            asset=self.small_image, image_format=image_format, size=size, lossless=lossless, ext=ext
-        )
+        return self._make_asset_url(asset=self.small_image, format=format, size=size, lossless=lossless, ext=ext)
 
 
 @attrs_extensions.with_copy

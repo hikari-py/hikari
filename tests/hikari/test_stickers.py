@@ -42,11 +42,27 @@ class TestStickerPack:
             banner_asset_id=snowflakes.Snowflake(541231),
         )
 
+    def test_make_banner_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
+        with mock.patch.object(
+            routes, "CDN_STICKER_PACK_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_banner_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, hash=541231, size=4096, file_format="JPEG", settings={"lossless": None}
+        )
+
+    def test_banner_url(self, model):
+        banner = object()
+
+        with mock.patch.object(stickers.StickerPack, "make_banner_url", return_value=banner):
+            assert model.banner_url is banner
+
     def test_make_banner_url(self, model):
         with mock.patch.object(
             routes, "CDN_STICKER_PACK_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_banner_url(image_format="URL", size=512) == "file"
+            assert model.make_banner_url(format="URL", size=512) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, hash=541231, size=512, file_format="URL", settings={"lossless": None}
@@ -55,7 +71,7 @@ class TestStickerPack:
     def test_make_banner_url_when_no_banner_asset(self, model):
         model.banner_asset_id = None
 
-        assert model.make_banner_url(image_format="URL", size=512) is None
+        assert model.make_banner_url(format="URL", size=512) is None
 
 
 class TestPartialSticker:
@@ -99,40 +115,40 @@ class TestPartialSticker:
         model.format_type = stickers.StickerFormatType.GIF
 
         with pytest.raises(TypeError):
-            model.make_url(image_format="APNG")
+            model.make_url(format="APNG")
 
     def test_make_url_raises_TypeError_when_APNG_sticker_requested_as_AWEBP_or_GIF(self, model):
         model.format_type = stickers.StickerFormatType.APNG
 
         with pytest.raises(TypeError):
-            model.make_url(image_format="AWEBP")
+            model.make_url(format="AWEBP")
 
         with pytest.raises(TypeError):
-            model.make_url(image_format="GIF")
+            model.make_url(format="GIF")
 
     def test_make_url_raises_TypeError_when_PNG_sticker_requested_as_animated_format(self, model):
         model.format_type = stickers.StickerFormatType.PNG
 
         with pytest.raises(TypeError):
-            model.make_url(image_format="APNG")
+            model.make_url(format="APNG")
 
         with pytest.raises(TypeError):
-            model.make_url(image_format="AWEBP")
+            model.make_url(format="AWEBP")
 
         with pytest.raises(TypeError):
-            model.make_url(image_format="GIF")
+            model.make_url(format="GIF")
 
     def test_make_url_raises_TypeError_when_LOTTIE_sticker_requested_as_non_LOTTIE_format(self, model):
         model.format_type = stickers.StickerFormatType.LOTTIE
 
         with pytest.raises(TypeError):
-            model.make_url(image_format="PNG")
+            model.make_url(format="PNG")
 
     def test_make_url_raises_TypeError_when_non_LOTTIE_sticker_requested_as_LOTTIE(self, model):
         model.format_type = stickers.StickerFormatType.PNG
 
         with pytest.raises(TypeError):
-            model.make_url(image_format="LOTTIE")
+            model.make_url(format="LOTTIE")
 
     def test_make_url_applies_correct_settings_for_APNG(self, model):
         model.format_type = stickers.StickerFormatType.APNG
@@ -140,7 +156,7 @@ class TestPartialSticker:
         with mock.patch.object(
             routes, "CDN_STICKER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_url(image_format="PNG") == "file"
+            assert model.make_url(format="PNG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.MEDIA_PROXY_URL,
@@ -156,7 +172,7 @@ class TestPartialSticker:
         with mock.patch.object(
             routes, "CDN_STICKER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_url(image_format="AWEBP") == "file"
+            assert model.make_url(format="AWEBP") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.MEDIA_PROXY_URL,
@@ -172,7 +188,7 @@ class TestPartialSticker:
         with mock.patch.object(
             routes, "CDN_STICKER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_url(image_format="WEBP", lossless=True) == "file"
+            assert model.make_url(format="WEBP", lossless=True) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.MEDIA_PROXY_URL,
@@ -188,7 +204,7 @@ class TestPartialSticker:
         with mock.patch.object(
             routes, "CDN_STICKER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_url(image_format="WEBP", lossless=False) == "file"
+            assert model.make_url(format="WEBP", lossless=False) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.MEDIA_PROXY_URL,
@@ -204,7 +220,7 @@ class TestPartialSticker:
         with mock.patch.object(
             routes, "CDN_STICKER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_url(image_format="JPEG") == "file"
+            assert model.make_url(format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.MEDIA_PROXY_URL,

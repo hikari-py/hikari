@@ -68,6 +68,20 @@ class TestMessageApplication:
             id=123, name="test app", description="", icon_hash="123abc", cover_image_hash="abc123"
         )
 
+    def test_make_cover_url_format_set_to_deprecated_ext_argument_if_provided(self, message_application):
+        with mock.patch.object(
+            routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert message_application.make_cover_image_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, application_id=123, hash="abc123", size=4096, file_format="JPEG", settings={"lossless": None}
+        )
+
+    def test_cover_image_url(self, message_application):
+        with mock.patch.object(messages.MessageApplication, "make_cover_image_url") as mock_cover_image:
+            assert message_application.cover_image_url is mock_cover_image()
+
     def test_make_cover_image_url_when_hash_is_none(self, message_application):
         message_application.cover_image_hash = None
 
@@ -77,7 +91,7 @@ class TestMessageApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert message_application.make_cover_image_url(image_format="JPEG", size=1000) == "file"
+            assert message_application.make_cover_image_url(format="JPEG", size=1000) == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="abc123", size=1000, file_format="JPEG", settings={"lossless": None}

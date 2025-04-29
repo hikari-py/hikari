@@ -55,6 +55,22 @@ class TestInviteGuild:
             nsfw_level=2,
         )
 
+    def test_make_splash_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
+        with mock.patch.object(
+            routes, "CDN_GUILD_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_splash_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, guild_id=123321, hash="4o4o4o", size=4096, file_format="JPEG", settings={"lossless": None}
+        )
+
+    def test_splash_url(self, model: invites.InviteGuild):
+        splash = object()
+
+        with mock.patch.object(invites.InviteGuild, "make_splash_url", return_value=splash):
+            assert model.splash_url is splash
+
     def test_make_splash_url_when_hash(self, model: invites.InviteGuild):
         model.splash_hash = "18dnf8dfbakfdh"
 
@@ -70,6 +86,27 @@ class TestInviteGuild:
     def test_make_splash_url_when_no_hash(self, model: invites.InviteGuild):
         model.splash_hash = None
         assert model.make_splash_url(ext="png", size=1024) is None
+
+    def test_make_banner_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
+        with mock.patch.object(
+            routes, "CDN_GUILD_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_banner_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL,
+            guild_id=123321,
+            hash="fofoof",
+            size=4096,
+            file_format="JPEG",
+            settings={"animated": None, "lossless": None},
+        )
+
+    def test_banner_url(self, model: invites.InviteGuild):
+        banner = object()
+
+        with mock.patch.object(invites.InviteGuild, "make_banner_url", return_value=banner):
+            assert model.banner_url is banner
 
     def test_make_banner_url_when_hash(self, model: invites.InviteGuild):
         with mock.patch.object(
