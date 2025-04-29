@@ -225,11 +225,11 @@ class GuildOnboardingPromptOptionBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def role_ids(self) -> typing.Sequence[snowflakes.Snowflake]:
+    def role_ids(self) -> snowflakes.SnowflakeishSequence[guilds.Role]:
         """The prompt's title."""
 
     @abc.abstractmethod
-    def set_role_ids(self, role_ids: typing.Sequence[snowflakes.Snowflake], /) -> Self:
+    def set_role_ids(self, role_ids: snowflakes.SnowflakeishSequence[guilds.Role], /) -> Self:
         """Set this prompt's title.
 
         Returns
@@ -240,11 +240,11 @@ class GuildOnboardingPromptOptionBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def channel_ids(self) -> typing.Sequence[snowflakes.Snowflake]:
+    def channel_ids(self) -> snowflakes.SnowflakeishSequence[channels.GuildChannel]:
         """The prompt's title."""
 
     @abc.abstractmethod
-    def set_channel_ids(self, channel_ids: typing.Sequence[snowflakes.Snowflake], /) -> Self:
+    def set_channel_ids(self, channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel], /) -> Self:
         """Set this prompt's title.
 
         Returns
@@ -383,8 +383,10 @@ class GuildOnboardingPromptBuilder(abc.ABC):
     def add_option(
         self,
         title: str,
-        role_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
-        channel_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
+        role_ids: undefined.UndefinedNoneOr[snowflakes.SnowflakeishSequence[guilds.Role]] = undefined.UNDEFINED,
+        channel_ids: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishSequence[channels.GuildChannel]
+        ] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
     ) -> Self:

@@ -695,22 +695,22 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
 
     @property
     @typing_extensions.override
-    def role_ids(self) -> typing.Sequence[snowflakes.Snowflake]:
+    def role_ids(self) -> snowflakes.SnowflakeishSequence[guilds.Role]:
         return self._role_ids
 
     @typing_extensions.override
-    def set_role_ids(self, role_ids: typing.Sequence[snowflakes.Snowflake], /) -> Self:
+    def set_role_ids(self, role_ids: snowflakes.SnowflakeishSequence[guilds.Role], /) -> Self:
         self._role_ids = role_ids
         return self
 
     @typing_extensions.override
-    def set_channel_ids(self, channel_ids: typing.Sequence[snowflakes.Snowflake], /) -> Self:
+    def set_channel_ids(self, channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel], /) -> Self:
         self._channel_ids = channel_ids
         return self
 
     @property
     @typing_extensions.override
-    def channel_ids(self) -> typing.Sequence[snowflakes.Snowflake]:
+    def channel_ids(self) -> snowflakes.SnowflakeishSequence[channels.GuildChannel]:
         return self._channel_ids
 
     @property
@@ -815,8 +815,10 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
     def add_option(
         self,
         title: str,
-        role_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
-        channel_ids: undefined.UndefinedNoneOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
+        role_ids: undefined.UndefinedNoneOr[snowflakes.SnowflakeishSequence[guilds.Role]] = undefined.UNDEFINED,
+        channel_ids: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishSequence[channels.GuildChannel]
+        ] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
     ) -> Self:
