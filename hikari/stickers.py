@@ -42,7 +42,6 @@ from hikari.internal import attrs_extensions
 from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
-from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import files
@@ -106,7 +105,7 @@ class StickerPack(snowflakes.Unique):
     """ID of the sticker pack's banner image, if set."""
 
     @property
-    @typing_extensions.deprecated("Use 'make_banner_url' instead.")
+    @deprecations.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         """Banner URL for the pack, if set."""
         deprecation.warn_deprecated(
@@ -190,7 +189,7 @@ class PartialSticker(snowflakes.Unique):
     """The format of this sticker's asset."""
 
     @property
-    @typing_extensions.deprecated("Use 'make_url' instead.")
+    @deprecations.deprecated("Use 'make_url' instead.")
     def image_url(self) -> files.URL:
         """Default image URL for this sticker.
 

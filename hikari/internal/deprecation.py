@@ -22,13 +22,24 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("check_if_past_removal", "warn_deprecated")
+__all__: typing.Sequence[str] = ("check_if_past_removal", "deprecated", "warn_deprecated")
 
 import typing
 import warnings
 
 from hikari import _about as hikari_about
 from hikari.internal import ux
+
+if typing.TYPE_CHECKING:
+    from typing_extensions import deprecated
+else:
+
+    def deprecated(*args, **kwargs):  # noqa: ARG001 - Unused arguments
+        """Mark a function, overload, or class as deprecated for type-checkers.
+
+        This has no runtime side-effects, unlike [`warnings.deprecated`][]..
+        """
+        return lambda value: value
 
 
 def check_if_past_removal(what: str, /, *, removal_version: str) -> None:

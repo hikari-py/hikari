@@ -516,7 +516,7 @@ class PartialWebhook(snowflakes.Unique):
         return f"<@{self.id}>"
 
     @property
-    @typing_extensions.deprecated("Use 'make_avatar_url' instead")
+    @deprecations.deprecated("Use 'make_avatar_url' instead")
     def avatar_url(self) -> files_.URL | None:
         """URL for this webhook's avatar, if set.
 

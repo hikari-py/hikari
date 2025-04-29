@@ -44,7 +44,6 @@ from hikari.internal import attrs_extensions
 from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
-from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -154,7 +153,7 @@ class ScheduledEvent(snowflakes.Unique):
     """Hash of the image used for the scheduled event, if set."""
 
     @property
-    @typing_extensions.deprecated("Use 'make_cover_image_url' instead.")
+    @deprecations.deprecated("Use 'make_cover_image_url' instead.")
     def image_url(self) -> files.URL | None:
         """Cover image for this scheduled event, if set."""
         deprecation.warn_deprecated(
@@ -162,7 +161,7 @@ class ScheduledEvent(snowflakes.Unique):
         )
         return self.make_cover_image_url()
 
-    @typing_extensions.deprecated("Use 'make_cover_image_url' instead.")
+    @deprecations.deprecated("Use 'make_cover_image_url' instead.")
     def make_image_url(
         self,
         *,

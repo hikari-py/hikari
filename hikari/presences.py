@@ -181,7 +181,7 @@ class ActivityAssets:
             )
 
     @property
-    @typing_extensions.deprecated("Use 'make_large_image_url' instead.")
+    @deprecations.deprecated("Use 'make_large_image_url' instead.")
     def large_image_url(self) -> files.URL | None:
         """Large image asset URL.
 
@@ -252,7 +252,7 @@ class ActivityAssets:
         )
 
     @property
-    @typing_extensions.deprecated("Use 'make_small_image_url' instead.")
+    @deprecations.deprecated("Use 'make_small_image_url' instead.")
     def small_image_url(self) -> files.URL | None:
         """Small image asset URL.
 

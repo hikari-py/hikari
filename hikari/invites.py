@@ -129,7 +129,7 @@ class InviteGuild(guilds.PartialGuild):
     """The NSFW level of the guild."""
 
     @property
-    @typing_extensions.deprecated("Use 'make_splash_url' instead.")
+    @deprecations.deprecated("Use 'make_splash_url' instead.")
     def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         deprecation.warn_deprecated(
@@ -200,7 +200,7 @@ class InviteGuild(guilds.PartialGuild):
         )
 
     @property
-    @typing_extensions.deprecated("Use 'make_banner_url' instead.")
+    @deprecations.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         """Banner URL for the guild, if set."""
         deprecation.warn_deprecated(

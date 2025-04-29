@@ -156,7 +156,7 @@ class AvatarDecoration:
     """The datetime at which the user will no longer have access to the avatar decoration."""
 
     @property
-    @typing_extensions.deprecated("Use 'make_url' instead.")
+    @deprecations.deprecated("Use 'make_url' instead.")
     def url(self) -> files.URL:
         """Default image URL for this avatar decoration."""
         deprecation.warn_deprecated("url", removal_version="2.4.0", additional_info="Use 'make_url' instead.")
@@ -584,7 +584,7 @@ class User(PartialUser, abc.ABC):
         """Avatar hash for the user, if they have one, otherwise [`None`][]."""
 
     @property
-    @typing_extensions.deprecated("Use 'make_avatar_url' instead.")
+    @deprecations.deprecated("Use 'make_avatar_url' instead.")
     def avatar_url(self) -> files.URL | None:
         """Avatar URL for the user, if they have one set.
 
@@ -603,7 +603,7 @@ class User(PartialUser, abc.ABC):
         """Banner hash for the user, if they have one, otherwise [`None`][]."""
 
     @property
-    @typing_extensions.deprecated("Use 'make_banner_url' instead.")
+    @deprecations.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         """Banner URL for the user, if they have one set.
 
