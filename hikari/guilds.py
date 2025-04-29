@@ -504,7 +504,7 @@ class Member(users.User):
 
     @property
     @typing_extensions.override
-    @deprecations.deprecated("Use 'make_avatar_url' instead.")
+    @deprecation.deprecated("Use 'make_avatar_url' instead.")
     def avatar_url(self) -> files.URL | None:
         deprecation.warn_deprecated(
             "avatar_url", removal_version="2.4.0", additional_info="Use 'make_avatar_url' instead."
@@ -541,7 +541,7 @@ class Member(users.User):
 
     @property
     @typing_extensions.override
-    @deprecations.deprecated("Use 'make_banner_url' instead.")
+    @deprecation.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         deprecation.warn_deprecated(
             "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead."
@@ -1274,7 +1274,7 @@ class Role(PartialRole):
         return self.color
 
     @property
-    @deprecations.deprecated("Use 'make_icon_url' instead.")
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """Role icon URL, if there is one."""
         deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead.")
@@ -1423,7 +1423,7 @@ class PartialApplication(snowflakes.Unique):
         return self.name
 
     @property
-    @deprecations.deprecated("Use 'make_icon_url' instead.")
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """App icon URL, if there is one."""
         deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead")
@@ -1664,7 +1664,7 @@ class PartialGuild(snowflakes.Unique):
         return snowflakes.calculate_shard_id(shard_count, self.id)
 
     @property
-    @deprecations.deprecated("Use 'make_icon_url' instead.")
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """Icon URL for the guild, if set; otherwise [`None`][]."""
         deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead.")
@@ -2837,7 +2837,7 @@ class GuildPreview(PartialGuild):
     """The guild's description, if set."""
 
     @property
-    @deprecations.deprecated("Use 'make_discovery_splash_url' instead")
+    @deprecation.deprecated("Use 'make_discovery_splash_url' instead")
     def discovery_splash_url(self) -> files.URL | None:
         """Discovery URL splash for the guild, if set."""
         deprecation.warn_deprecated(
@@ -2846,7 +2846,7 @@ class GuildPreview(PartialGuild):
         return self.make_discovery_splash_url()
 
     @property
-    @deprecations.deprecated("Use 'make_splash_url' instead")
+    @deprecation.deprecated("Use 'make_splash_url' instead")
     def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         deprecation.warn_deprecated(
@@ -3114,7 +3114,7 @@ class Guild(PartialGuild):
     """The NSFW level of the guild."""
 
     @property
-    @deprecations.deprecated("Use 'make_banner_url' instead")
+    @deprecation.deprecated("Use 'make_banner_url' instead")
     def banner_url(self) -> files.URL | None:
         """Banner URL for the guild, if set."""
         deprecation.warn_deprecated(
@@ -3123,7 +3123,7 @@ class Guild(PartialGuild):
         return self.make_banner_url()
 
     @property
-    @deprecations.deprecated("Use 'make_discovery_splash_url' instead")
+    @deprecation.deprecated("Use 'make_discovery_splash_url' instead")
     def discovery_splash_url(self) -> files.URL | None:
         """Discovery splash URL for the guild, if set."""
         deprecation.warn_deprecated(
@@ -3132,7 +3132,7 @@ class Guild(PartialGuild):
         return self.make_discovery_splash_url()
 
     @property
-    @deprecations.deprecated("Use 'make_splash_url' instead")
+    @deprecation.deprecated("Use 'make_splash_url' instead")
     def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         deprecation.warn_deprecated(

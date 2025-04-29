@@ -895,7 +895,7 @@ class GroupDMChannel(PrivateChannel):
         return self.name
 
     @property
-    @deprecations.deprecated("Use 'make_icon_url' instead.")
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """Icon for this group DM, if set."""
         deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead.")

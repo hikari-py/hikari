@@ -153,7 +153,7 @@ class ScheduledEvent(snowflakes.Unique):
     """Hash of the image used for the scheduled event, if set."""
 
     @property
-    @deprecations.deprecated("Use 'make_cover_image_url' instead.")
+    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
     def image_url(self) -> files.URL | None:
         """Cover image for this scheduled event, if set."""
         deprecation.warn_deprecated(
@@ -161,7 +161,7 @@ class ScheduledEvent(snowflakes.Unique):
         )
         return self.make_cover_image_url()
 
-    @deprecations.deprecated("Use 'make_cover_image_url' instead.")
+    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
     def make_image_url(
         self,
         *,
@@ -224,7 +224,7 @@ class ScheduledEvent(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore
 
         if image_format is None:
             image_format = "PNG"

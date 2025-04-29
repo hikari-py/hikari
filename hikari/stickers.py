@@ -105,7 +105,7 @@ class StickerPack(snowflakes.Unique):
     """ID of the sticker pack's banner image, if set."""
 
     @property
-    @deprecations.deprecated("Use 'make_banner_url' instead.")
+    @deprecation.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         """Banner URL for the pack, if set."""
         deprecation.warn_deprecated(
@@ -189,7 +189,7 @@ class PartialSticker(snowflakes.Unique):
     """The format of this sticker's asset."""
 
     @property
-    @deprecations.deprecated("Use 'make_url' instead.")
+    @deprecation.deprecated("Use 'make_url' instead.")
     def image_url(self) -> files.URL:
         """Default image URL for this sticker.
 

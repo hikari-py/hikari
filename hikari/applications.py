@@ -394,7 +394,7 @@ class TeamMember(users.User):
 
     @property
     @typing_extensions.override
-    @deprecations.deprecated("Use 'make_avatar_url' instead.")
+    @deprecation.deprecated("Use 'make_avatar_url' instead.")
     def avatar_url(self) -> files.URL | None:
         deprecation.warn_deprecated(
             "avatar_url", removal_version="2.4.0", additional_info="Use 'make_avatar_url' instead."
@@ -413,7 +413,7 @@ class TeamMember(users.User):
 
     @property
     @typing_extensions.override
-    @deprecations.deprecated("Use 'make_banner_url' instead.")
+    @deprecation.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         deprecation.warn_deprecated(
             "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead."
@@ -537,7 +537,7 @@ class Team(snowflakes.Unique):
         return f"Team {self.name} ({self.id})"
 
     @property
-    @deprecations.deprecated("Use 'make_icon_url' instead.")
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """Team icon URL, if there is one."""
         deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead.")
@@ -623,7 +623,7 @@ class InviteApplication(guilds.PartialApplication):
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     @property
-    @deprecations.deprecated("Use 'make_cover_image_url' instead.")
+    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
         deprecation.warn_deprecated(
@@ -773,7 +773,7 @@ class Application(guilds.PartialApplication):
     """The default scopes and permissions for each integration type."""
 
     @property
-    @deprecations.deprecated("Use 'make_cover_image_url' instead.")
+    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
         deprecation.warn_deprecated(

@@ -374,7 +374,7 @@ class MessageApplication(guilds.PartialApplication):
     """The CDN's hash of this application's default rich presence invite cover image."""
 
     @property
-    @deprecations.deprecated("Use 'make_cover_image_url' instead.")
+    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
         deprecation.warn_deprecated(
