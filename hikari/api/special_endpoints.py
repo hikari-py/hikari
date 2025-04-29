@@ -23,6 +23,17 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "AutoModActionBuilder",
+    "AutoModBlockMemberInteractionActionBuilder",
+    "AutoModBlockMessageActionBuilder",
+    "AutoModKeywordPresetTriggerBuilder",
+    "AutoModKeywordTriggerBuilder",
+    "AutoModMemberProfileTriggerBuilder",
+    "AutoModMentionSpamTriggerBuilder",
+    "AutoModSendAlertMessageActionBuilder",
+    "AutoModSpamTriggerBuilder",
+    "AutoModTimeoutActionBuilder",
+    "AutoModTriggerBuilder",
     "AutocompleteChoiceBuilder",
     "ButtonBuilder",
     "ChannelSelectMenuBuilder",
@@ -70,6 +81,7 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from hikari import applications
+    from hikari import auto_mod
     from hikari import channels
     from hikari import colors
     from hikari import commands
@@ -2508,3 +2520,237 @@ if typing.TYPE_CHECKING:
 
     SectionBuilderAccessoriesT = typing.Union[ButtonBuilder, ThumbnailComponentBuilder]
     SectionBuilderComponentsT = typing.Union[TextDisplayComponentBuilder]
+
+
+class AutoModActionBuilder(abc.ABC):
+    """Builder class for auto mod actions."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> auto_mod.AutoModActionType:
+        """Type of action this builder represents."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class AutoModBlockMessageActionBuilder(AutoModActionBuilder, abc.ABC):
+    """Builder class for auto mod block message action."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.BLOCK_MESSAGE]: ...
+
+    @property
+    @abc.abstractmethod
+    def custom_message(self) -> str | None:
+        """The custom message sent when a message is blocked."""
+
+
+class AutoModSendAlertMessageActionBuilder(AutoModActionBuilder, abc.ABC):
+    """Builder class for auto mod send alert message action."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.SEND_ALERT_MESSAGE]: ...
+
+    @property
+    @abc.abstractmethod
+    def channel_id(self) -> snowflakes.Snowflake:
+        """The channel to send the alert message to."""
+
+
+class AutoModTimeoutActionBuilder(AutoModActionBuilder, abc.ABC):
+    """Builder class for auto mod duration seconds action."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.TIMEOUT]: ...
+
+    @property
+    @abc.abstractmethod
+    def duration_seconds(self) -> int:
+        """The amount of seconds to time the user out for."""
+
+
+class AutoModBlockMemberInteractionActionBuilder(AutoModActionBuilder, abc.ABC):
+    """Builder class for auto mod block member interaction action."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION]: ...
+
+
+class AutoModTriggerBuilder(abc.ABC):
+    """Builder class for auto mod triggers."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> auto_mod.AutoModTriggerType:
+        """Type of trigger this builder represents."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class AutoModKeywordTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod keyword trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.KEYWORD]: ...
+
+    @property
+    @abc.abstractmethod
+    def keyword_filter(self) -> typing.Sequence[str]:
+        """The filter strings this trigger checks for.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
+        """
+
+    @property
+    @abc.abstractmethod
+    def regex_patterns(self) -> typing.Sequence[str]:
+        """The filter regexs this trigger checks for.
+
+        Currently, this only supports rust flavored regular expressions.
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata>
+        """
+
+    @property
+    @abc.abstractmethod
+    def allow_list(self) -> typing.Sequence[str]:
+        """A sequence of filters which will be exempt from triggering the preset trigger.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
+        """
+
+
+class AutoModSpamTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod spam trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.SPAM]: ...
+
+
+class AutoModKeywordPresetTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod keyword preset trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.KEYWORD_PRESET]: ...
+
+    @property
+    @abc.abstractmethod
+    def presets(self) -> typing.Sequence[auto_mod.AutoModKeywordPresetType]:
+        """The predefined presets provided by Discord to match against."""
+
+    @property
+    @abc.abstractmethod
+    def allow_list(self) -> typing.Sequence[str]:
+        """A sequence of filters which will be exempt from triggering the preset trigger.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
+        """
+
+
+class AutoModMentionSpamTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod mention spam trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.MENTION_SPAM]: ...
+
+    @property
+    @abc.abstractmethod
+    def mention_total_limit(self) -> int:
+        """Total number of unique role and user mentions allowed per message."""
+
+    @property
+    @abc.abstractmethod
+    def mention_raid_protection_enabled(self) -> bool:
+        """Whether to automatically detect mention raids."""
+
+
+class AutoModMemberProfileTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod member profile trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.MEMBER_PROFILE]: ...
+
+    @property
+    @abc.abstractmethod
+    def keyword_filter(self) -> typing.Sequence[str]:
+        """The filter strings this trigger checks for.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
+        """
+
+    @property
+    @abc.abstractmethod
+    def regex_patterns(self) -> typing.Sequence[str]:
+        """The filter regexs this trigger checks for.
+
+        Currently, this only supports rust flavored regular expressions.
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata>.
+        """
+
+    @property
+    @abc.abstractmethod
+    def allow_list(self) -> typing.Sequence[str]:
+        """A sequence of filters which will be exempt from triggering the preset trigger.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
+        """

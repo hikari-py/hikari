@@ -1,3 +1,14 @@
+## 2.3.1 (2025-04-27)
+
+### Features
+
+- Add support for the auto-moderation API. ([#2205](https://github.com/hikari-py/hikari/issues/2205))
+
+### Bugfixes
+
+- Fix modal creations through builders ([#2330](https://github.com/hikari-py/hikari/issues/2330))
+
+---
 ## 2.3.0 (2025-04-22)
 
 ### Breaking Changes
