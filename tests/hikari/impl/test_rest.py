@@ -643,7 +643,7 @@ class TestRESTClientImpl:
         assert obj._rest_url == "https://some.where/api/v2"
 
     def test___enter__(self, rest_client):
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        # ruff gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             rest_client.__enter__()
 
