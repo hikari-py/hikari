@@ -430,7 +430,7 @@ class MessageApplication(guilds.PartialApplication):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "PNG"

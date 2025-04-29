@@ -766,7 +766,7 @@ class Member(users.User):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "GIF" if self.guild_avatar_hash.startswith("a_") else "PNG"
@@ -849,7 +849,7 @@ class Member(users.User):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "GIF" if self.guild_banner_hash.startswith("a_") else "PNG"
@@ -1341,7 +1341,7 @@ class Role(PartialRole):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "PNG"
@@ -1477,7 +1477,7 @@ class PartialApplication(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "PNG"
@@ -1720,7 +1720,7 @@ class PartialGuild(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "GIF" if self.icon_hash.startswith("a_") else "PNG"
@@ -2902,7 +2902,7 @@ class GuildPreview(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "PNG"
@@ -2964,7 +2964,7 @@ class GuildPreview(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "PNG"
@@ -3301,7 +3301,7 @@ class Guild(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "GIF" if self.banner_hash.startswith("a_") else "PNG"
@@ -3366,7 +3366,7 @@ class Guild(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "PNG"
@@ -3428,7 +3428,7 @@ class Guild(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
-            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+            image_format = ext.upper()  # type: ignore[assignment]
 
         if image_format is None:
             image_format = "PNG"
