@@ -31,15 +31,18 @@ from hikari import _about as hikari_about
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
+    Func = typing.TypeVar("Func")
+
+if typing.TYPE_CHECKING:
     from typing_extensions import deprecated
 else:
 
-    def deprecated(*args, **kwargs):  # noqa: ARG001 - Unused arguments
+    def deprecated(*args: object, **kwargs: object) -> typing.Callable[[Func], Func]:  # noqa: ARG001
         """Mark a function, overload, or class as deprecated for type-checkers.
 
         This has no runtime side-effects, unlike [`warnings.deprecated`][]..
         """
-        return lambda value: value
+        return lambda func: func
 
 
 def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
