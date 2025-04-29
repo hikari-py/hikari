@@ -46,6 +46,7 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -370,21 +371,44 @@ class MessageApplication(guilds.PartialApplication):
     """The CDN's hash of this application's default rich presence invite cover image."""
 
     @property
+    @typing_extensions.deprecated("Use 'make_cover_image_url' instead.")
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
+        deprecation.warn_deprecated(
+            "cover_image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
+        )
         return self.make_cover_image_url()
 
-    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
+    def make_cover_image_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
+
+        If no cover image is set, this returns [`None`][].
 
         Parameters
         ----------
+        image_format
+            The format to use for this URL;
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `image_format` is not `WEBP`.
         ext
             The extension to use for this URL.
-            supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `image_format` argument.
 
         Returns
         -------
@@ -393,15 +417,28 @@ class MessageApplication(guilds.PartialApplication):
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `image_format`.
         ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+
+        if image_format is None:
+            image_format = "PNG"
+
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            urls.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            application_id=self.id,
+            hash=self.cover_image_hash,
+            size=size,
+            file_format=image_format,
+            settings={"lossless": lossless if image_format == "WEBP" else None},
         )
 
 

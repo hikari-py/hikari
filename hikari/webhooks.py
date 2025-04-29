@@ -41,6 +41,7 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -515,12 +516,16 @@ class PartialWebhook(snowflakes.Unique):
         return f"<@{self.id}>"
 
     @property
+    @typing_extensions.deprecated("Use 'make_avatar_url' instead")
     def avatar_url(self) -> files_.URL | None:
         """URL for this webhook's avatar, if set.
 
         May be [`None`][] if no avatar is set. In this case, you should use
         `default_avatar_url` instead.
         """
+        deprecation.warn_deprecated(
+            "avatar_url", removal_version="2.4.0", additional_info="Use 'make_avatar_url' instead."
+        )
         return self.make_avatar_url()
 
     @property
@@ -528,38 +533,75 @@ class PartialWebhook(snowflakes.Unique):
         """Default avatar URL for the user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(urls.CDN_URL, style=0, file_format="png")
 
-    def make_avatar_url(self, ext: str = "png", size: int = 4096) -> files_.URL | None:
-        """Generate the avatar URL for this webhook's custom avatar if set.
+    def make_avatar_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the avatar URL for this webhook, if set.
 
-        If no avatar is specified, return [`None`][]. In this case, you should
-        use `default_avatar` instead.
+        If no avatar is set, this returns [`None`][].
 
         Parameters
         ----------
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
+        image_format
+            The format to use for this URL;
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
+            If not specified, the format will be determined based on
+            whether the avatar is animated or not.
         size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
-            Will be ignored for default avatars.
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `image_format` is not `WEBP` or `AWEBP`.
+        ext
+            The ext to use for this URL.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated).
+
+            If [`None`][], then the correct default extension is
+            determined based on whether the avatar is animated or not.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `image_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the resource. [`None`][] if no avatar is set (in
-            this case, use the `default_avatar` instead).
+            The URL, or [`None`][] if no avatar is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `image_format`;
+            If an animated format is requested for a static avatar.
         ValueError
-            If `size` is not a power of two between 16 and 4096 (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.avatar_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+
+        if image_format is None:
+            image_format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"
+
         return routes.CDN_USER_AVATAR.compile_to_file(
-            urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            user_id=self.id,
+            hash=self.avatar_hash,
+            size=size,
+            file_format=image_format,
+            settings={
+                "animated": True if image_format == "AWEBP" else None,
+                "lossless": lossless if image_format in ("WEBP", "AWEBP") else None,
+            },
         )
 
 

@@ -191,7 +191,7 @@ class Route:
 
 
 def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> frozenset[str]:
-    return frozenset(v.lower() for v in values)
+    return frozenset(v.upper() for v in values)
 
 
 @attrs_extensions.with_copy
@@ -214,10 +214,15 @@ class CDNRoute:
             msg = f"{self.path_template} must have at least one valid format set"
             raise ValueError(msg)
 
-    is_sizable: bool = attrs.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
-    """Whether a `size` param can be specified."""
-
-    def compile(self, base_url: str, *, file_format: str, size: int | None = None, **kwargs: object) -> str:
+    def compile(
+        self,
+        base_url: str,
+        *,
+        file_format: str,
+        size: int | None = None,
+        settings: dict[str, str | bool | None] | None = None,
+        **kwargs: object,
+    ) -> str:
         """Generate a full CDN url from this endpoint.
 
         Parameters
@@ -230,6 +235,8 @@ class CDNRoute:
         size
             The custom size query parameter to set. If [`None`][],
             it is not passed.
+        settings
+            Specific additional query parameters to set for certain file formats.
         **kwargs
             Parameters to interpolate into the path template.
 
@@ -241,14 +248,12 @@ class CDNRoute:
         Raises
         ------
         TypeError
-            If a GIF is requested, but the asset is not animated;
-            if an invalid file format for the endpoint is passed; or if a `size`
-            is passed but the route is not sizable.
+            If an invalid file format for the endpoint is passed;
+            If an animated format is requested for a static asset.
         ValueError
-            If `size` is specified, but is not an integer power of `2` between
-            `16` and `4096` inclusive or is negative.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
-        file_format = file_format.lower()
+        file_format = file_format.upper()
 
         if file_format not in self.valid_formats:
             raise TypeError(
@@ -256,38 +261,55 @@ class CDNRoute:
                 + ", ".join(self.valid_formats)
             )
 
-        if "hash" in kwargs and not str(kwargs["hash"]).startswith("a_") and file_format == GIF:
-            msg = "This asset is not animated, so cannot be retrieved as a GIF"
+        if "hash" in kwargs and not str(kwargs["hash"]).startswith("a_") and file_format in [AWEBP, GIF, APNG]:
+            msg = f"This asset is not animated, so it cannot be retrieved as {file_format}."
             raise TypeError(msg)
 
-        # Make URL-safe first.
-        kwargs = {k: urllib.parse.quote(str(v)) for k, v in kwargs.items()}
-        url = base_url + self.path_template.format(**kwargs) + f".{file_format}"
+        ext = CDN_FORMAT_EXT[file_format]
+        query_params: dict[str, str] = {}
+
+        if file_format in ("APNG", "LOTTIE") and size:
+            size = None
 
         if size is not None:
-            if not self.is_sizable:
-                msg = "This asset cannot be resized."
-                raise TypeError(msg)
-
             if size < 0:
                 msg = "size must be positive"
                 raise ValueError(msg)
 
             size_power = math.log2(size)
-            if size_power.is_integer() and 2 <= size_power <= 16:
-                url += "?"
-                url += urllib.parse.urlencode({"size": str(size)})
-            else:
+            if not (size_power.is_integer() and 2 <= size_power <= 16):
                 msg = "size must be an integer power of 2 between 16 and 4096 inclusive"
                 raise ValueError(msg)
+
+            query_params["size"] = str(size)
+
+        if settings is not None:
+            if (passthrough := settings.get("passthrough")) is not None:
+                query_params["passthrough"] = str(passthrough).lower()
+            if (animated := settings.get("animated")) is not None:
+                query_params["animated"] = str(animated).lower()
+            if (lossless := settings.get("lossless")) is not None:
+                query_params["lossless"] = str(lossless).lower()
+
+        kwargs = {k: urllib.parse.quote(str(v)) for k, v in kwargs.items()}
+        url = base_url + self.path_template.format(**kwargs) + f".{ext}"
+
+        if query_params:
+            url += "?" + urllib.parse.urlencode(query_params)
 
         return url
 
     def compile_to_file(
-        self, base_url: str, *, file_format: str, size: int | None = None, **kwargs: object
+        self,
+        base_url: str,
+        *,
+        file_format: str,
+        size: int | None = None,
+        settings: dict[str, str | bool | None] | None = None,
+        **kwargs: object,
     ) -> files.URL:
         """Perform the same as `compile`, but return the URL as a [`hikari.files.URL`][]."""
-        return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))
+        return files.URL(self.compile(base_url, file_format=file_format, size=size, settings=settings, **kwargs))
 
 
 GET: typing.Final[str] = "GET"
@@ -591,51 +613,69 @@ POST_TOKEN_REVOKE: typing.Final[Route] = Route(POST, "/oauth2/token/revoke", has
 GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
 GET_GATEWAY_BOT: typing.Final[Route] = Route(GET, "/gateway/bot")
 
-PNG: typing.Final[str] = "png"
-JPEG_JPG: typing.Final[tuple[str, str]] = ("jpeg", "jpg")
-WEBP: typing.Final[str] = "webp"
-GIF: typing.Final[str] = "gif"
-LOTTIE: typing.Final[str] = "json"  # https://airbnb.io/lottie/
+PNG: typing.Final[str] = "PNG"
+JPEG: typing.Final[str] = "JPEG"
+JPG: typing.Final[str] = "JPG"
+WEBP: typing.Final[str] = "WEBP"
+APNG: typing.Final[str] = "APNG"
+AWEBP: typing.Final[str] = "AWEBP"
+GIF: typing.Final[str] = "GIF"
+LOTTIE: typing.Final[str] = "LOTTIE"  # https://airbnb.io/lottie/
+
+CDN_FORMAT_EXT: typing.Final[dict[str, str]] = {
+    PNG: "png",
+    JPEG: "jpeg",
+    JPG: "jpg",
+    WEBP: "webp",
+    APNG: "png",
+    AWEBP: "webp",
+    GIF: "gif",
+    LOTTIE: "json",
+}
 
 # CDN specific endpoints. These reside on a different server.
-CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute("/emojis/{emoji_id}", {PNG, GIF})
+CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute("/emojis/{emoji_id}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
 
-CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute("/icons/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
-CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute("/splashes/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute("/icons/{guild_id}/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
+CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute("/splashes/{guild_id}/{hash}", {PNG, JPEG, JPG, WEBP})
 CDN_GUILD_DISCOVERY_SPLASH: typing.Final[CDNRoute] = CDNRoute(
-    "/discovery-splashes/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
+    "/discovery-splashes/{guild_id}/{hash}", {PNG, JPEG, JPG, WEBP}
 )
-CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
+CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
 
-CDN_AVATAR_DECORATION: typing.Final[CDNRoute] = CDNRoute("/avatar-decoration-presets/{hash}", {PNG})
-CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{style}", {PNG}, is_sizable=False)
-CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
-CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
+CDN_AVATAR_DECORATION: typing.Final[CDNRoute] = CDNRoute(
+    "/avatar-decoration-presets/{hash}", {PNG, JPEG, JPG, WEBP, APNG}
+)
+CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{style}", {PNG})
+CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
+CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
 CDN_MEMBER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
-    "/guilds/{guild_id}/users/{user_id}/avatars/{hash}", {PNG, *JPEG_JPG, WEBP, GIF}
+    "/guilds/{guild_id}/users/{user_id}/avatars/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF}
 )
 CDN_MEMBER_BANNER: typing.Final[CDNRoute] = CDNRoute(
-    "/guilds/{guild_id}/users/{user_id}/banners/{hash}", {PNG, *JPEG_JPG, WEBP, GIF}
+    "/guilds/{guild_id}/users/{user_id}/banners/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF}
 )
-CDN_ROLE_ICON: typing.Final[CDNRoute] = CDNRoute("/role-icons/{role_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_ROLE_ICON: typing.Final[CDNRoute] = CDNRoute("/role-icons/{role_id}/{hash}", {PNG, JPEG, JPG, WEBP})
 
-CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute("/app-icons/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
-CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
-CDN_APPLICATION_ASSET: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute("/app-icons/{application_id}/{hash}", {PNG, JPEG, JPG, WEBP})
+CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, JPEG, JPG, WEBP})
+CDN_APPLICATION_ASSET: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, JPEG, JPG, WEBP})
 CDN_ACHIEVEMENT_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, *JPEG_JPG, WEBP}
+    "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, JPEG, JPG, WEBP}
 )
 
-CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}", {PNG, JPEG, JPG, WEBP})
 
 # undocumented on the Discord docs.
-CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, JPEG, JPG, WEBP})
 
-CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{sticker_id}", {PNG, LOTTIE, GIF}, is_sizable=False)
+CDN_STICKER: typing.Final[CDNRoute] = CDNRoute(
+    "/stickers/{sticker_id}", {PNG, JPEG, JPG, LOTTIE, WEBP, AWEBP, APNG, GIF}
+)
 CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
+    "/app-assets/710982414301790216/store/{hash}", {PNG, JPEG, JPG, WEBP}
 )
 
 SCHEDULED_EVENT_COVER: typing.Final[CDNRoute] = CDNRoute(
-    "/guild-events/{scheduled_event_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
+    "/guild-events/{scheduled_event_id}/{hash}", {PNG, JPEG, JPG, WEBP}
 )

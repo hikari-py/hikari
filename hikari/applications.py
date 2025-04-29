@@ -57,9 +57,11 @@ import attrs
 from hikari import guilds
 from hikari import locales
 from hikari import snowflakes
+from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -392,8 +394,12 @@ class TeamMember(users.User):
 
     @property
     @typing_extensions.override
+    @typing_extensions.deprecated("Use 'make_avatar_url' instead.")
     def avatar_url(self) -> files.URL | None:
-        return self.user.avatar_url
+        deprecation.warn_deprecated(
+            "avatar_url", removal_version="2.4.0", additional_info="Use 'make_avatar_url' instead."
+        )
+        return self.user.make_avatar_url()
 
     @property
     @typing_extensions.override
@@ -407,8 +413,12 @@ class TeamMember(users.User):
 
     @property
     @typing_extensions.override
+    @typing_extensions.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
-        return self.user.banner_url
+        deprecation.warn_deprecated(
+            "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead."
+        )
+        return self.user.make_banner_url()
 
     @property
     @typing_extensions.override
@@ -467,6 +477,28 @@ class TeamMember(users.User):
     def __eq__(self, other: object) -> bool:
         return self.user == other
 
+    @typing_extensions.override
+    def make_avatar_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        return self.user.make_avatar_url(image_format=image_format, size=size, lossless=lossless, ext=ext)
+
+    @typing_extensions.override
+    def make_banner_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        return self.user.make_banner_url(image_format=image_format, size=size, lossless=lossless, ext=ext)
+
 
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
@@ -505,38 +537,72 @@ class Team(snowflakes.Unique):
         return f"Team {self.name} ({self.id})"
 
     @property
+    @typing_extensions.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
-        """Icon URL, or [`None`][] if no icon exists."""
+        """Team icon URL, if there is one."""
+        deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead.")
         return self.make_icon_url()
 
-    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
-        """Generate the icon URL for this team if set.
+    def make_icon_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the icon URL for this team, if set.
+
+        If no icon is set, this returns [`None`][].
 
         Parameters
         ----------
+        image_format
+            The format to use for this URL;
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `image_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between 16 and 4096 inclusive.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `image_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [`None`][] if no icon exists.
+            The URL, or [`None`][] if no icon is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `image_format`.
         ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+
+        if image_format is None:
+            image_format = "PNG"
+
         return routes.CDN_TEAM_ICON.compile_to_file(
-            urls.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            team_id=self.id,
+            hash=self.icon_hash,
+            size=size,
+            file_format=image_format,
+            settings={"lossless": lossless if image_format == "WEBP" else None},
         )
 
 
@@ -557,38 +623,74 @@ class InviteApplication(guilds.PartialApplication):
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     @property
+    @typing_extensions.deprecated("Use 'make_cover_image_url' instead.")
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
+        deprecation.warn_deprecated(
+            "cover_image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
+        )
         return self.make_cover_image_url()
 
-    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
+    def make_cover_image_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
+
+        If no cover image is set, this returns [`None`][].
 
         Parameters
         ----------
+        image_format
+            The format to use for this URL;
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `image_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `image_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [`None`][] if no cover image exists.
+            The URL, or [`None`][] if no cover image is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `image_format`.
         ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+
+        if image_format is None:
+            image_format = "PNG"
+
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            urls.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            application_id=self.id,
+            hash=self.cover_image_hash,
+            size=size,
+            file_format=image_format,
+            settings={"lossless": lossless if image_format == "WEBP" else None},
         )
 
 
@@ -671,21 +773,44 @@ class Application(guilds.PartialApplication):
     """The default scopes and permissions for each integration type."""
 
     @property
+    @typing_extensions.deprecated("Use 'make_cover_image_url' instead.")
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
+        deprecation.warn_deprecated(
+            "cover_image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
+        )
         return self.make_cover_image_url()
 
-    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
+    def make_cover_image_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
+
+        If no cover image is set, this returns [`None`][].
 
         Parameters
         ----------
+        image_format
+            The format to use for this URL;
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `image_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `image_format` argument.
 
         Returns
         -------
@@ -694,15 +819,28 @@ class Application(guilds.PartialApplication):
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `image_format`.
         ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+
+        if image_format is None:
+            image_format = "PNG"
+
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            urls.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            application_id=self.id,
+            hash=self.cover_image_hash,
+            size=size,
+            file_format=image_format,
+            settings={"lossless": lossless if image_format == "WEBP" else None},
         )
 
 

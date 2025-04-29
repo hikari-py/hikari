@@ -36,10 +36,13 @@ import typing
 import attrs
 
 from hikari import snowflakes
+from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import files
@@ -77,12 +80,6 @@ class StickerFormatType(int, enums.Enum):
     """A GIF sticker."""
 
 
-_STICKER_EXTENSIONS: dict[StickerFormatType | int, str] = {
-    StickerFormatType.LOTTIE: "json",
-    StickerFormatType.GIF: "gif",
-}
-
-
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class StickerPack(snowflakes.Unique):
     """Represents a sticker pack on Discord."""
@@ -109,38 +106,73 @@ class StickerPack(snowflakes.Unique):
     """ID of the sticker pack's banner image, if set."""
 
     @property
+    @typing_extensions.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         """Banner URL for the pack, if set."""
+        deprecation.warn_deprecated(
+            "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead."
+        )
         return self.make_banner_url()
 
-    def make_banner_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
+    def make_banner_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the pack's banner image URL, if set.
+
+        If no banner image is set, this returns [`None`][].
 
         Parameters
         ----------
+        image_format
+            The format to use for this URL;
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `image_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `image_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the banner, if set.
+            The URL, or [`None`][] if no banner image is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `image_format`.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
-        if self.banner_asset_id is not None:
-            return routes.CDN_STICKER_PACK_BANNER.compile_to_file(
-                urls.CDN_URL, hash=self.banner_asset_id, file_format=ext, size=size
-            )
+        if self.banner_asset_id is None:
+            return None
 
-        return None
+        if ext:
+            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+
+        if image_format is None:
+            image_format = "PNG"
+
+        return routes.CDN_STICKER_PACK_BANNER.compile_to_file(
+            urls.CDN_URL,
+            hash=self.banner_asset_id,
+            size=size,
+            file_format=image_format,
+            settings={"lossless": lossless if image_format == "WEBP" else None},
+        )
 
 
 @attrs_extensions.with_copy
@@ -158,21 +190,112 @@ class PartialSticker(snowflakes.Unique):
     """The format of this sticker's asset."""
 
     @property
+    @typing_extensions.deprecated("Use 'make_url' instead.")
     def image_url(self) -> files.URL:
-        """URL for the image.
+        """Default image URL for this sticker.
 
-        The extension will be based on `format_type`. If `format_type` is
-        [`hikari.stickers.StickerFormatType.LOTTIE`][], then the extension will be `.json`,
-        if it's [`hikari.stickers.StickerFormatType.GIF`][] it will be `.gif`.
-        Otherwise, it will be `.png`.
+        The extension will be based on `format_type`.
+
+        If `format_type` is [`hikari.stickers.StickerFormatType.LOTTIE`][],
+        then the extension will be `.json`.
+
+        If it's [`hikari.stickers.StickerFormatType.APNG`][], then it will be `.png`.
+
+        Otherwise, it will be follow the format type as `.gif` or `.png`.
         """
-        ext = _STICKER_EXTENSIONS.get(self.format_type, "png")
+        deprecation.warn_deprecated("image_url", removal_version="2.4.0", additional_info="Use 'make_url' instead.")
+        return self.make_url()
 
-        # GIF Stickers have a different name under the CDN, so we need to use the Media Proxy instead
-        # see: https://github.com/discord/discord-api-docs/issues/6675
-        base_url = urls.MEDIA_PROXY_URL if ext == "gif" else urls.CDN_URL
+    def make_url(
+        self,
+        *,
+        image_format: typing.Literal["LOTTIE", "PNG", "JPEG", "JPG", "WEBP", "APNG", "AWEBP", "GIF"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+    ) -> files.URL:
+        """Generate the image URL for this sticker.
 
-        return routes.CDN_STICKER.compile_to_file(base_url, sticker_id=self.id, file_format=ext)
+        Parameters
+        ----------
+        image_format
+            The format to use for this URL;
+            Supports `LOTTIE`, `PNG`, `JPEG`, `JPG`, `WEBP`, `APNG`, `AWEBP` and `GIF`;
+            LOTTIE is only available for [`hikari.stickers.StickerFormatType.LOTTIE`][] stickers;
+            If not specified, the format will be based on the format type.
+        size
+            The size to set for the URL;
+            This is ignored for `APNG` and `LOTTIE` formats;
+            Can be any power of two between `16` and `4096`.
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `image_format` is not `WEBP` or `AWEBP`.
+
+        Returns
+        -------
+        hikari.files.URL
+            The URL of the sticker.
+
+        Raises
+        ------
+        TypeError
+            If an invalid format is passed for `image_format`;
+            If an animated format is requested for a static sticker;
+            If an APNG sticker is requested as AWEBP or GIF;
+            If a GIF sticker is requested as an APNG;
+            If a LOTTIE sticker is requested as anything other than LOTTIE;
+            If a non-LOTTIE sticker is requested in the LOTTIE format.
+        ValueError
+            If `size` is specified but is not a power of two or not between 16 and 4096.
+        """
+        sticker_format = (
+            self.format_type.name
+            if isinstance(self.format_type, StickerFormatType)
+            else StickerFormatType(self.format_type).name
+        )
+
+        if image_format is None:
+            # mypy fails to infer sticker_format when used directly
+            image_format = (
+                (
+                    "LOTTIE"
+                    if sticker_format == "LOTTIE"
+                    else "GIF"
+                    if sticker_format == "GIF"
+                    else "APNG"
+                    if sticker_format == "APNG"
+                    else "PNG"
+                )
+                if sticker_format
+                else "PNG"
+            )
+
+        if sticker_format == "GIF" and image_format == "APNG":
+            msg = "This asset is a GIF, which is not available as APNG."
+            raise TypeError(msg)
+        if sticker_format == "APNG" and image_format in ("AWEBP", "GIF"):
+            msg = "This asset is an APNG, which is not available as AWEBP or GIF."
+            raise TypeError(msg)
+        if sticker_format == "PNG" and image_format in ("APNG", "AWEBP", "GIF"):
+            msg = f"This asset is not animated, so it cannot be retrieved as {image_format}."
+            raise TypeError(msg)
+        if sticker_format == "LOTTIE" and image_format != "LOTTIE":
+            msg = "This asset is a LOTTIE, which is not available in alternative formats."
+            raise TypeError(msg)
+        if sticker_format != "LOTTIE" and image_format == "LOTTIE":
+            msg = "This asset is not a LOTTIE, so it cannot be retrieved in the LOTTIE format."
+            raise TypeError(msg)
+
+        return routes.CDN_STICKER.compile_to_file(
+            urls.MEDIA_PROXY_URL if self.format_type != StickerFormatType.LOTTIE else urls.CDN_URL,
+            sticker_id=self.id,
+            file_format=image_format,
+            size=size,
+            settings={
+                "passthrough": False if image_format == "PNG" and self.format_type == StickerFormatType.APNG else None,
+                "animated": True if image_format == "AWEBP" else None,
+                "lossless": lossless if image_format in ("WEBP", "AWEBP") else None,
+            },
+        )
 
 
 @attrs_extensions.with_copy

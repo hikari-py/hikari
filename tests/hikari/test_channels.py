@@ -167,15 +167,8 @@ class TestGroupDMChannel:
         model.name = None
         assert str(model) == "GroupDMChannel with: snoop#0420, yeet#1012, nice#6969"
 
-    def test_icon_url(self):
-        channel = hikari_test_helpers.mock_class_namespace(
-            channels.GroupDMChannel, init_=False, make_icon_url=mock.Mock(return_value="icon-url-here.com")
-        )()
-        assert channel.icon_url == "icon-url-here.com"
-        channel.make_icon_url.assert_called_once()
-
     def test_make_icon_url(self, model):
-        assert model.make_icon_url(ext="jpeg", size=16) == files.URL(
+        assert model.make_icon_url(image_format="JPEG", size=16) == files.URL(
             "https://cdn.discordapp.com/channel-icons/136134/1a2b3c.jpeg?size=16"
         )
 

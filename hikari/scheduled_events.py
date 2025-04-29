@@ -38,10 +38,13 @@ import typing
 import attrs
 
 from hikari import snowflakes
+from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -151,21 +154,59 @@ class ScheduledEvent(snowflakes.Unique):
     """Hash of the image used for the scheduled event, if set."""
 
     @property
+    @typing_extensions.deprecated("Use 'make_cover_image_url' instead.")
     def image_url(self) -> files.URL | None:
         """Cover image for this scheduled event, if set."""
-        return self.make_image_url()
+        deprecation.warn_deprecated(
+            "image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
+        )
+        return self.make_cover_image_url()
 
-    def make_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
-        """Generate the cover image for this scheduled event, if set.
+    @typing_extensions.deprecated("Use 'make_cover_image_url' instead.")
+    def make_image_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Cover image for this scheduled event, if set."""
+        deprecation.warn_deprecated(
+            "make_image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
+        )
+        return self.make_cover_image_url(image_format=image_format, size=size, lossless=lossless, ext=ext)
+
+    def make_cover_image_url(
+        self,
+        *,
+        image_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] | None = None,
+        size: int | None = 4096,
+        lossless: bool | None = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the cover image URL for this scheduled event, if set.
+
+        If no cover image is set, this returns [`None`][].
 
         Parameters
         ----------
+        image_format
+            The format to use for this URL;
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `image_format` is not `WEBP`.
         ext
             The extension to use for this URL.
-            supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `image_format` argument.
 
         Returns
         -------
@@ -174,14 +215,28 @@ class ScheduledEvent(snowflakes.Unique):
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `image_format`.
         ValueError
-            If `size` is not a power of two between 16 and 4096 (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.image_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated("ext", removal_version="2.4.0", additional_info="Use 'image_format' instead.")
+            image_format = ext.upper()  # type: ignore  # noqa: PGH003
+
+        if image_format is None:
+            image_format = "PNG"
+
         return routes.SCHEDULED_EVENT_COVER.compile_to_file(
-            urls.CDN_URL, scheduled_event_id=self.id, hash=self.image_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            scheduled_event_id=self.id,
+            hash=self.image_hash,
+            size=size,
+            file_format=image_format,
+            settings={"lossless": lossless if image_format == "WEBP" else None},
         )
 
 

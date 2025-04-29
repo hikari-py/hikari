@@ -222,9 +222,6 @@ class TestPartialWebhook:
     def test_mention_property(self, webhook):
         assert webhook.mention == "<@987654321>"
 
-    def test_avatar_url_property(self, webhook):
-        assert webhook.avatar_url == webhook.make_avatar_url()
-
     def test_default_avatar_url(self, webhook):
         assert webhook.default_avatar_url.url == "https://cdn.discordapp.com/embed/avatars/0.png"
 

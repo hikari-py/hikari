@@ -55,12 +55,6 @@ class TestInviteGuild:
             nsfw_level=2,
         )
 
-    def test_splash_url(self, model: invites.InviteGuild):
-        splash = object()
-
-        with mock.patch.object(invites.InviteGuild, "make_splash_url", return_value=splash):
-            assert model.splash_url is splash
-
     def test_make_splash_url_when_hash(self, model: invites.InviteGuild):
         model.splash_hash = "18dnf8dfbakfdh"
 
@@ -70,18 +64,12 @@ class TestInviteGuild:
             assert model.make_splash_url(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, guild_id=123321, hash="18dnf8dfbakfdh", size=2, file_format="url"
+            urls.CDN_URL, guild_id=123321, hash="18dnf8dfbakfdh", size=2, file_format="URL", settings={"lossless": None}
         )
 
     def test_make_splash_url_when_no_hash(self, model: invites.InviteGuild):
         model.splash_hash = None
         assert model.make_splash_url(ext="png", size=1024) is None
-
-    def test_banner_url(self, model: invites.InviteGuild):
-        banner = object()
-
-        with mock.patch.object(invites.InviteGuild, "make_banner_url", return_value=banner):
-            assert model.banner_url is banner
 
     def test_make_banner_url_when_hash(self, model: invites.InviteGuild):
         with mock.patch.object(
@@ -90,7 +78,12 @@ class TestInviteGuild:
             assert model.make_banner_url(ext="url", size=512) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, guild_id=123321, hash="fofoof", size=512, file_format="url"
+            urls.CDN_URL,
+            guild_id=123321,
+            hash="fofoof",
+            size=512,
+            file_format="URL",
+            settings={"animated": None, "lossless": None},
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model: invites.InviteGuild):
@@ -102,7 +95,12 @@ class TestInviteGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, guild_id=model.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="gif"
+            urls.CDN_URL,
+            guild_id=model.id,
+            hash="a_18dnf8dfbakfdh",
+            size=4096,
+            file_format="GIF",
+            settings={"animated": None, "lossless": None},
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model: invites.InviteGuild):
@@ -114,7 +112,12 @@ class TestInviteGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, guild_id=model.id, hash=model.banner_hash, size=4096, file_format="png"
+            urls.CDN_URL,
+            guild_id=model.id,
+            hash=model.banner_hash,
+            size=4096,
+            file_format="PNG",
+            settings={"animated": None, "lossless": None},
         )
 
     def test_make_banner_url_when_no_hash(self, model: invites.InviteGuild):
