@@ -1612,13 +1612,12 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("flags", flags)
-        if mentions_reply:
-            body.put(
-                "allowed_mentions",
-                mentions.generate_allowed_mentions(
-                    undefined.UNDEFINED, mentions_reply, undefined.UNDEFINED, undefined.UNDEFINED
-                ),
-            )
+        body.put(
+            "allowed_mentions",
+            mentions.generate_allowed_mentions(
+                undefined.UNDEFINED, mentions_reply, undefined.UNDEFINED, undefined.UNDEFINED
+            ),
+        )
 
         if reply:
             message_reference = data_binding.JSONObjectBuilder()
