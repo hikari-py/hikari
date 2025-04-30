@@ -4446,9 +4446,14 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> None:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
-        body, form_builder = self._build_voice_message_payload(
+        data, form_builder = self._build_voice_message_payload(
             attachment=attachment, waveform=waveform, duration=duration, flags=flags
         )
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.MESSAGE_CREATE)
+        body.put("data", data)
+
         form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
 
         await self._request(route, form_builder=form_builder, auth=None)

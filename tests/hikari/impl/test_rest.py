@@ -1662,7 +1662,6 @@ class TestRESTClientImpl:
         ):
             rest_client._build_message_payload(**{singular_arg: object(), plural_arg: object()})
 
-
     def test_build_voice_message_payload(self, rest_client):
         body, form_builder = rest_client._build_voice_message_payload(
             attachment=mock.Mock(message_models.Attachment, id=123, filename="attachment123.png"),
@@ -1787,7 +1786,6 @@ class TestRESTClientImpl:
         assert (
             payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2 | message_models.MessageFlag.EPHEMERAL
         )
-
 
     def test_interaction_deferred_builder(self, rest_client):
         result = rest_client.interaction_deferred_builder(5)
