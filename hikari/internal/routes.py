@@ -277,7 +277,7 @@ class CDNRoute:
                 raise ValueError(msg)
 
             size_power = math.log2(size)
-            if not (size_power.is_integer() and 2 <= size_power <= 16):
+            if not (size_power.is_integer() and 4 <= size_power <= 12):
                 msg = "size must be an integer power of 2 between 16 and 4096 inclusive"
                 raise ValueError(msg)
 
