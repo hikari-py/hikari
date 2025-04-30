@@ -745,7 +745,7 @@ class MessageData(BaseData[messages.Message]):
     nonce: str | None = attrs.field()
     referenced_message: RefCell[MessageData] | None = attrs.field()
     application_id: snowflakes.Snowflake | None = attrs.field()
-    components: tuple[components_.MessageActionRowComponent, ...] = attrs.field()
+    components: tuple[components_.TopLevelComponentTypesT, ...] = attrs.field()
     thread: channels_.GuildThreadChannel | None = attrs.field()
     interaction_metadata: base_interactions.PartialInteractionMetadata | None = attrs.field()
 

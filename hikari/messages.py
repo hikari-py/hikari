@@ -132,6 +132,9 @@ class MessageType(int, enums.Enum):
     CONTEXT_MENU_COMMAND = 23
     """A message sent to indicate a context menu has been executed."""
 
+    AUTO_MODERATION_ACTION = 24
+    """A message sent to indicate an auto-moderation action has been triggered."""
+
     ROLE_SUBSCRIPTION_PURCHASE = 25
     """A message sent to indicate a role subscription has been purchased."""
 
@@ -187,6 +190,9 @@ class MessageFlag(enums.Flag):
 
     IS_VOICE_MESSAGE = 1 << 13
     """This message is a voice message."""
+
+    IS_COMPONENTS_V2 = 1 << 15
+    """This message uses the new components system."""
 
 
 @typing.final
@@ -600,7 +606,7 @@ class PartialMessage(snowflakes.Unique):
         This will only be provided for interaction messages.
     """
 
-    components: undefined.UndefinedOr[typing.Sequence[component_models.MessageActionRowComponent]] = attrs.field(
+    components: undefined.UndefinedOr[typing.Sequence[component_models.TopLevelComponentTypesT]] = attrs.field(
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""
@@ -1432,7 +1438,7 @@ class Message(PartialMessage):
         This will only be provided for interaction messages.
     """
 
-    components: typing.Sequence[component_models.MessageActionRowComponent] = attrs.field(
+    components: typing.Sequence[component_models.TopLevelComponentTypesT] = attrs.field(
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""

@@ -49,6 +49,7 @@ from hikari import applications
 from hikari import channels as channels_
 from hikari import colors
 from hikari import commands
+from hikari import components as components_
 from hikari import embeds as embeds_
 from hikari import emojis
 from hikari import errors
@@ -67,6 +68,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
+from hikari.api import special_endpoints
 from hikari.impl import buckets as buckets_impl
 from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
@@ -89,6 +91,7 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from hikari import audit_logs
+    from hikari import auto_mod
     from hikari import invites
     from hikari import sessions
     from hikari import stickers as stickers_
@@ -97,7 +100,6 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks
     from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import special_endpoints
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
@@ -117,6 +119,17 @@ _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Res
 _X_RATELIMIT_SCOPE_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Scope")
 _RETRY_ERROR_CODES: typing.Final[frozenset[int]] = frozenset((500, 502, 503, 504))
 _MAX_BACKOFF_DURATION: typing.Final[int] = 16
+_V2_COMPONENT_TYPES: typing.Final[frozenset[components_.ComponentType]] = frozenset(
+    (
+        components_.ComponentType.SECTION,
+        components_.ComponentType.TEXT_DISPLAY,
+        components_.ComponentType.THUMBNAIL,
+        components_.ComponentType.MEDIA_GALLERY,
+        components_.ComponentType.FILE,
+        components_.ComponentType.SEPARATOR,
+        components_.ComponentType.CONTAINER,
+    )
+)
 
 
 class ClientCredentialsStrategy(rest_api.TokenStrategy):
@@ -1481,6 +1494,7 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment = content
             content = undefined.UNDEFINED
 
+        resources: list[files.Resource[typing.Any]] = []
         final_attachments: list[files.Resourceish | messages_.Attachment] = []
         if attachment:
             final_attachments.append(attachment)
@@ -1489,16 +1503,36 @@ class RESTClientImpl(rest_api.RESTClient):
 
         serialized_components: undefined.UndefinedOr[list[data_binding.JSONObject]] = undefined.UNDEFINED
         if component is not undefined.UNDEFINED:
-            serialized_components = [component.build()] if component is not None else []
+            if component is not None:
+                component_payload, component_attachments = component.build()
+                serialized_components = [component_payload]
+                resources.extend(component_attachments)
+
+                if component.type in _V2_COMPONENT_TYPES:
+                    if flags is undefined.UNDEFINED:
+                        flags = 0
+                    flags |= messages_.MessageFlag.IS_COMPONENTS_V2
+            else:
+                serialized_components = []
 
         elif components is not undefined.UNDEFINED:
-            serialized_components = [component.build() for component in components] if components is not None else []
+            serialized_components = []
+            if components is not None:
+                for comp in components:
+                    component_payload, component_attachments = comp.build()
+                    serialized_components.append(component_payload)
+                    resources.extend(component_attachments)
+
+                    if comp.type in _V2_COMPONENT_TYPES:
+                        if flags is undefined.UNDEFINED:
+                            flags = 0
+                        flags |= messages_.MessageFlag.IS_COMPONENTS_V2
 
         serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
         if embed is not undefined.UNDEFINED:
             if embed is not None:
                 embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-                final_attachments.extend(embed_attachments)
+                resources.extend(embed_attachments)
                 serialized_embeds = [embed_payload]
 
             else:
@@ -1509,7 +1543,7 @@ class RESTClientImpl(rest_api.RESTClient):
             if embeds is not None:
                 for e in embeds:
                     embed_payload, embed_attachments = self._entity_factory.serialize_embed(e)
-                    final_attachments.extend(embed_attachments)
+                    resources.extend(embed_attachments)
                     serialized_embeds.append(embed_payload)
 
         body = data_binding.JSONObjectBuilder()
@@ -1529,9 +1563,15 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         form_builder: data_binding.URLEncodedFormBuilder | None = None
-        if final_attachments:
+        if resources or final_attachments:
             attachments_payload = []
             attachment_id = 0
+
+            # The rationale behind this large (and probably confusing) piece of code
+            # is to always upload all attachments specified as `attachments=[]`, no
+            # matter if they are the same, but for other resources spread across
+            # all the other components/embeds, deduplicate them and only upload them once.
+            final_attachments.extend(list(dict.fromkeys(resources)))
 
             for f in final_attachments:
                 if edit and isinstance(f, messages_.Attachment):
@@ -2089,6 +2129,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         query = data_binding.StringMapBuilder()
         query.put("wait", True)
+        query.put("with_components", True)
         query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
@@ -2167,6 +2208,7 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.PATCH_WEBHOOK_MESSAGE.compile(webhook=webhook_id, token=token, message=message)
         query = data_binding.StringMapBuilder()
+        query.put("with_components", True)
         query.put("thread_id", thread)
 
         body, form_builder = self._build_message_payload(
@@ -4521,20 +4563,20 @@ class RESTClientImpl(rest_api.RESTClient):
             msg = "Must specify exactly only one of 'component' or 'components'"
             raise ValueError(msg)
 
-        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+        if component:
+            components = (component,)
 
-        body = data_binding.JSONObjectBuilder()
-        body.put("type", base_interactions.ResponseType.MODAL)
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
         data = data_binding.JSONObjectBuilder()
         data.put("title", title)
         data.put("custom_id", custom_id)
+        # Component builders return a tuple of (payload, files), but we only care about
+        # the payload, as there is no way to upload anything to a modal
+        data.put_array("components", components, conversion=lambda c: c.build()[0])
 
-        if component:
-            components = (component,)
-
-        data.put_array("components", components, conversion=lambda c: c.build())
-
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.MODAL)
         body.put("data", data)
 
         await self._request(route, json=body, auth=None)
@@ -4951,3 +4993,94 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
+
+    @typing_extensions.override
+    async def fetch_auto_mod_rules(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Sequence[auto_mod.AutoModRule]:
+        results = await self._request(routes.GET_GUILD_AUTO_MODERATION_RULES.compile(guild=guild))
+        assert isinstance(results, list)
+        return [self._entity_factory.deserialize_auto_mod_rule(rule) for rule in results]
+
+    @typing_extensions.override
+    async def fetch_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+    ) -> auto_mod.AutoModRule:
+        result = await self._request(routes.GET_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule))
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    @typing_extensions.override
+    async def create_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
+        name: str,
+        event_type: auto_mod.AutoModEventType | int,
+        trigger: special_endpoints.AutoModTriggerBuilder,
+        actions: typing.Sequence[special_endpoints.AutoModActionBuilder],
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=guild)
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("name", name)
+        payload.put("event_type", event_type)
+        payload.put("trigger_type", trigger.type)
+        payload.put("trigger_metadata", trigger.build())
+        payload.put("enabled", enabled)
+        payload.put_snowflake_array("exempt_channels", exempt_channels)
+        payload.put_snowflake_array("exempt_roles", exempt_roles)
+        payload.put_array("actions", actions, conversion=lambda a: a.build())
+
+        result = await self._request(route, json=payload, reason=reason)
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    @typing_extensions.override
+    async def edit_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[auto_mod.AutoModEventType | int] = undefined.UNDEFINED,
+        trigger: undefined.UndefinedOr[special_endpoints.AutoModTriggerBuilder] = undefined.UNDEFINED,
+        actions: undefined.UndefinedOr[typing.Sequence[special_endpoints.AutoModActionBuilder]] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule)
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("name", name)
+        payload.put("event_type", event_type)
+        payload.put("enabled", enabled)
+        payload.put_snowflake_array("exempt_channels", exempt_channels)
+        payload.put_snowflake_array("exempt_roles", exempt_roles)
+        payload.put("trigger_metadata", trigger, conversion=lambda m: m.build())
+        payload.put_array("actions", actions, conversion=lambda a: a.build())
+
+        result = await self._request(route, json=payload, reason=reason)
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    @typing_extensions.override
+    async def delete_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        await self._request(routes.DELETE_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule), reason=reason)

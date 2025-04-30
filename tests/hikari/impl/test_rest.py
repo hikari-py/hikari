@@ -33,8 +33,10 @@ import pytest
 
 from hikari import applications
 from hikari import audit_logs
+from hikari import auto_mod
 from hikari import channels
 from hikari import colors
+from hikari import components
 from hikari import commands
 from hikari import embeds
 from hikari import emojis
@@ -641,7 +643,7 @@ class TestRESTClientImpl:
         assert obj._rest_url == "https://some.where/api/v2"
 
     def test___enter__(self, rest_client):
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        # ruff gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             rest_client.__enter__()
 
@@ -1260,7 +1262,7 @@ class TestRESTClientImpl:
         attachment = object()
         resource_attachment1 = mock.Mock(filename="attachment.png")
         resource_attachment2 = mock.Mock(filename="attachment2.png")
-        component = mock.Mock(build=mock.Mock(return_value={"component": 1}))
+        component = mock.Mock(build=mock.Mock(return_value=({"component": 1}, ())))
         embed = object()
         embed_attachment = object()
         mentions_everyone = object()
@@ -1337,8 +1339,8 @@ class TestRESTClientImpl:
         resource_attachment4 = mock.Mock(filename="attachment4.png")
         resource_attachment5 = mock.Mock(filename="attachment5.png")
         resource_attachment6 = mock.Mock(filename="attachment6.png")
-        component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
-        component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
+        component1 = mock.Mock(build=mock.Mock(return_value=({"component": 1}, ())))
+        component2 = mock.Mock(build=mock.Mock(return_value=({"component": 2}, ())))
         embed1 = object()
         embed2 = object()
         embed_attachment1 = object()
@@ -1457,8 +1459,8 @@ class TestRESTClientImpl:
         resource_attachment3 = mock.Mock(filename="attachment3.png")
         resource_attachment4 = mock.Mock(filename="attachment4.png")
         resource_attachment5 = mock.Mock(filename="attachment5.png")
-        component1 = mock.Mock(build=mock.Mock(return_value={"component": 1}))
-        component2 = mock.Mock(build=mock.Mock(return_value={"component": 2}))
+        component1 = mock.Mock(build=mock.Mock(return_value=({"component": 1}, ())))
+        component2 = mock.Mock(build=mock.Mock(return_value=({"component": 2}, ())))
         embed1 = object()
         embed2 = object()
         embed_attachment1 = object()
@@ -1545,6 +1547,109 @@ class TestRESTClientImpl:
             ]
         )
 
+    def test__build_message_payload_with_duplicated_resources(self, rest_client):
+        attachment1 = mock.Mock()
+        attachment2 = mock.Mock(message_models.Attachment, id=123, filename="attachment123.png")
+        component_attachment = mock.Mock(filename="component.png")
+        component_attachment2 = mock.Mock(filename="component2.png")
+        component1 = mock.Mock(
+            build=mock.Mock(return_value=({"component": 1}, (component_attachment, component_attachment)))
+        )
+        component2 = mock.Mock(
+            build=mock.Mock(return_value=({"component": 2}, (component_attachment2, component_attachment2)))
+        )
+        embed1 = mock.Mock()
+        embed2 = mock.Mock()
+        embed_attachment1 = mock.Mock()
+        embed_attachment2 = mock.Mock()
+        resource_attachment1 = mock.Mock(filename="attachment.png")
+        resource_attachment2 = mock.Mock(filename="attachment2.png")
+        resource_attachment3 = mock.Mock(filename="attachment3.png")
+        resource_attachment4 = mock.Mock(filename="attachment4.png")
+        resource_attachment5 = mock.Mock(filename="attachment5.png")
+        resource_attachment6 = mock.Mock(filename="attachment6.png")
+
+        rest_client._entity_factory.serialize_embed.side_effect = [
+            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
+            ({"embed": 2}, [embed_attachment2, embed_attachment1]),
+        ]
+
+        with (
+            mock.patch.object(
+                files,
+                "ensure_resource",
+                side_effect=[
+                    resource_attachment1,
+                    resource_attachment2,
+                    resource_attachment3,
+                    resource_attachment4,
+                    resource_attachment5,
+                    resource_attachment6,
+                ],
+            ) as ensure_resource,
+            mock.patch.object(data_binding, "URLEncodedFormBuilder") as url_encoded_form,
+        ):
+            body, form = rest_client._build_message_payload(
+                content=987654321,
+                attachments=[attachment1, attachment1, attachment2],
+                components=[component1, component2],
+                embeds=[embed1, embed2],
+                flags=120,
+                tts=True,
+                mentions_everyone=None,
+                mentions_reply=None,
+                user_mentions=None,
+                role_mentions=None,
+                edit=True,
+            )
+
+        # Returned
+        assert body == {
+            "content": "987654321",
+            "tts": True,
+            "flags": 120,
+            "embeds": [{"embed": 1}, {"embed": 2}],
+            "components": [{"component": 1}, {"component": 2}],
+            "attachments": [
+                {"id": 0, "filename": "attachment.png"},
+                {"id": 1, "filename": "attachment2.png"},
+                {"id": 123, "filename": "attachment123.png"},
+                {"id": 2, "filename": "attachment3.png"},
+                {"id": 3, "filename": "attachment4.png"},
+                {"id": 4, "filename": "attachment5.png"},
+                {"id": 5, "filename": "attachment6.png"},
+            ],
+            "allowed_mentions": {"parse": []},
+        }
+        assert form is url_encoded_form.return_value
+
+        # Attachments
+        assert ensure_resource.call_count == 6
+        ensure_resource.assert_has_calls(
+            [
+                mock.call(attachment1),
+                mock.call(attachment1),
+                mock.call(component_attachment),
+                mock.call(component_attachment2),
+                mock.call(embed_attachment1),
+                mock.call(embed_attachment2),
+            ]
+        )
+
+        # Form builder
+        url_encoded_form.assert_called_once_with()
+        assert url_encoded_form.return_value.add_resource.call_count == 6
+        url_encoded_form.return_value.add_resource.assert_has_calls(
+            [
+                mock.call("files[0]", resource_attachment1),
+                mock.call("files[1]", resource_attachment2),
+                mock.call("files[2]", resource_attachment3),
+                mock.call("files[3]", resource_attachment4),
+                mock.call("files[4]", resource_attachment5),
+                mock.call("files[5]", resource_attachment6),
+            ]
+        )
+
     @pytest.mark.parametrize(
         ("singular_arg", "plural_arg"),
         [("attachment", "attachments"), ("component", "components"), ("embed", "embeds"), ("sticker", "stickers")],
@@ -1556,6 +1661,7 @@ class TestRESTClientImpl:
             ValueError, match=rf"You may only specify one of '{singular_arg}' or '{plural_arg}', not both"
         ):
             rest_client._build_message_payload(**{singular_arg: object(), plural_arg: object()})
+
 
     def test_build_voice_message_payload(self, rest_client):
         body, form_builder = rest_client._build_voice_message_payload(
@@ -1585,6 +1691,103 @@ class TestRESTClientImpl:
             "allowed_mentions": {"parse": [], "replied_user": True},
             "attachments": [{"duration_secs": 3, "waveform": "AAAA", "id": 0, "filename": "attachment123.png"}],
         }
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.ACTION_ROW,
+            components.ComponentType.BUTTON,
+            components.ComponentType.TEXT_SELECT_MENU,
+            components.ComponentType.USER_SELECT_MENU,
+            components.ComponentType.ROLE_SELECT_MENU,
+            components.ComponentType.MENTIONABLE_SELECT_MENU,
+            components.ComponentType.CHANNEL_SELECT_MENU,
+        ),
+    )
+    def test__build_message_payload_with_singular_components_v1(self, rest_client, type):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(component=component)
+
+        assert payload.get("flags") is None
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.SECTION,
+            components.ComponentType.TEXT_DISPLAY,
+            components.ComponentType.THUMBNAIL,
+            components.ComponentType.MEDIA_GALLERY,
+            components.ComponentType.FILE,
+            components.ComponentType.SEPARATOR,
+            components.ComponentType.CONTAINER,
+        ),
+    )
+    def test__build_message_payload_with_singular_components_v2(self, rest_client, type):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(component=component)
+
+        assert payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.ACTION_ROW,
+            components.ComponentType.BUTTON,
+            components.ComponentType.TEXT_SELECT_MENU,
+            components.ComponentType.USER_SELECT_MENU,
+            components.ComponentType.ROLE_SELECT_MENU,
+            components.ComponentType.MENTIONABLE_SELECT_MENU,
+            components.ComponentType.CHANNEL_SELECT_MENU,
+        ),
+    )
+    def test__build_message_payload_with_multiple_components_v1(self, rest_client, type):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(component=component)
+
+        assert payload.get("flags") is None
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.SECTION,
+            components.ComponentType.TEXT_DISPLAY,
+            components.ComponentType.THUMBNAIL,
+            components.ComponentType.MEDIA_GALLERY,
+            components.ComponentType.FILE,
+            components.ComponentType.SEPARATOR,
+            components.ComponentType.CONTAINER,
+        ),
+    )
+    def test__build_message_payload_with_multiple_components_v2(self, rest_client, type):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(components=[component])
+
+        assert payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2
+
+    def test__build_message_payload_with_mixed_components(self, rest_client):
+        component_1 = mock.Mock(type=components.ComponentType.ACTION_ROW, build=mock.Mock(return_value=({}, ())))
+        component_2 = mock.Mock(type=components.ComponentType.CONTAINER, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(components=[component_1, component_2])
+
+        assert payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2
+
+    def test__build_message_payload_with_components_v2_and_flags(self, rest_client):
+        component_1 = mock.Mock(type=components.ComponentType.ACTION_ROW, build=mock.Mock(return_value=({}, ())))
+        component_2 = mock.Mock(type=components.ComponentType.CONTAINER, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(
+            components=[component_1, component_2], flags=message_models.MessageFlag.EPHEMERAL
+        )
+
+        assert (
+            payload.get("flags") is message_models.MessageFlag.IS_COMPONENTS_V2 | message_models.MessageFlag.EPHEMERAL
+        )
+
 
     def test_interaction_deferred_builder(self, rest_client):
         result = rest_client.interaction_deferred_builder(5)
@@ -3291,7 +3494,7 @@ class TestRESTClientImplAsync:
             content_type="application/json",
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_form, query={"wait": "true"}, auth=None
+            expected_route, form_builder=mock_form, query={"wait": "true", "with_components": "true"}, auth=None
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3327,7 +3530,10 @@ class TestRESTClientImplAsync:
             "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_form, query={"wait": "true", "thread_id": "1234543123"}, auth=None
+            expected_route,
+            form_builder=mock_form,
+            query={"wait": "true", "with_components": "true", "thread_id": "1234543123"},
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3361,7 +3567,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"testing": "ensure_in_test"},
-            query={"wait": "true", "thread_id": "2134312123"},
+            query={"wait": "true", "with_components": "true", "thread_id": "2134312123"},
             auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3419,7 +3625,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"testing": "ensure_in_test", "username": "davfsa", "avatar_url": "https://website.com/davfsa_logo"},
-            query={"wait": "true"},
+            query={"wait": "true", "with_components": "true"},
             auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
@@ -3520,7 +3726,9 @@ class TestRESTClientImplAsync:
         mock_form.add_field.assert_called_once_with(
             "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
-        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, query={}, auth=None)
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form_builder=mock_form, query={"with_components": "true"}, auth=None
+        )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
     async def test_edit_webhook_message_when_form_and_thread(self, rest_client):
@@ -3553,7 +3761,10 @@ class TestRESTClientImplAsync:
             "payload_json", b'{"testing":"ensure_in_test"}', content_type="application/json"
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_form, query={"thread_id": "123543123"}, auth=None
+            expected_route,
+            form_builder=mock_form,
+            query={"with_components": "true", "thread_id": "123543123"},
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3601,7 +3812,7 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"testing": "ensure_in_test"}, query={}, auth=None
+            expected_route, json={"testing": "ensure_in_test"}, query={"with_components": "true"}, auth=None
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -3631,7 +3842,10 @@ class TestRESTClientImplAsync:
             edit=True,
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"testing": "ensure_in_test"}, query={"thread_id": "2346523432"}, auth=None
+            expected_route,
+            json={"testing": "ensure_in_test"},
+            query={"with_components": "true", "thread_id": "2346523432"},
+            auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
@@ -6376,7 +6590,9 @@ class TestRESTClientImplAsync:
     async def test_create_modal_response(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
         rest_client._request = mock.AsyncMock()
-        component = mock.Mock()
+        mock_payload = mock.Mock()
+        mock_files = mock.Mock()
+        component = mock.Mock(build=mock.Mock(return_value=(mock_payload, mock_files)))
 
         await rest_client.create_modal_response(
             StubModel(1235431), "snek", title="title", custom_id="idd", component=component
@@ -6384,17 +6600,16 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={
-                "type": 9,
-                "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
-            },
+            json={"type": 9, "data": {"title": "title", "custom_id": "idd", "components": [mock_payload]}},
             auth=None,
         )
 
     async def test_create_modal_response_with_plural_args(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
         rest_client._request = mock.AsyncMock()
-        component = mock.Mock()
+        mock_payload = mock.Mock()
+        mock_files = mock.Mock()
+        component = mock.Mock(build=mock.Mock(return_value=(mock_payload, mock_files)))
 
         await rest_client.create_modal_response(
             StubModel(1235431), "snek", title="title", custom_id="idd", components=[component]
@@ -6402,10 +6617,7 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={
-                "type": 9,
-                "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
-            },
+            json={"type": 9, "data": {"title": "title", "custom_id": "idd", "components": [mock_payload]}},
             auth=None,
         )
 
@@ -6867,3 +7079,148 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
 
         assert response is message_obj
+
+    async def test_fetch_auto_mod_rules(self, rest_client: rest.RESTClientImpl):
+        mock_payload_1 = {"id": "432123"}
+        mock_payload_2 = {"id": "949494994"}
+        mock_result_1 = mock.Mock()
+        mock_result_2 = mock.Mock()
+        rest_client._entity_factory.deserialize_auto_mod_rule.side_effect = [mock_result_1, mock_result_2]
+        expected_route = routes.GET_GUILD_AUTO_MODERATION_RULES.compile(guild=123321)
+        rest_client._request = mock.AsyncMock(return_value=[mock_payload_1, mock_payload_2])
+
+        result = await rest_client.fetch_auto_mod_rules(StubModel(123321))
+
+        assert result == [mock_result_1, mock_result_2]
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_has_calls(
+            [mock.call(mock_payload_1), mock.call(mock_payload_2)]
+        )
+
+    async def test_fetch_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.GET_GUILD_AUTO_MODERATION_RULE.compile(guild=123321, rule=5443123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "442123"})
+
+        result = await rest_client.fetch_auto_mod_rule(StubModel(123321), StubModel(5443123))
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_create_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
+        mock_action = mock.Mock(special_endpoints.AutoModBlockMessageActionBuilder)
+        expected_route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=123321)
+        rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
+
+        result = await rest_client.create_auto_mod_rule(
+            StubModel(123321),
+            name="meow",
+            event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+            trigger=special_endpoints.AutoModKeywordTriggerBuilder(keyword_filter=["hello", "world"]),
+            actions=[mock_action],
+            enabled=False,
+            exempt_roles=[StubModel(4212), StubModel(43123)],
+            exempt_channels=[StubModel(566), StubModel(333), StubModel(222)],
+            reason="a reason meow",
+        )
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "meow",
+                "event_type": 1,
+                "trigger_type": 1,
+                "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
+                "actions": [mock_action.build.return_value],
+                "enabled": False,
+                "exempt_roles": ["4212", "43123"],
+                "exempt_channels": ["566", "333", "222"],
+            },
+            reason="a reason meow",
+        )
+        mock_action.build.assert_called_once_with()
+
+    async def test_create_auto_mod_rule_partial(self, rest_client: rest.RESTClientImpl):
+        mock_action = mock.Mock(special_endpoints.AutoModBlockMessageActionBuilder)
+        expected_route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=123321)
+        rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
+
+        result = await rest_client.create_auto_mod_rule(
+            StubModel(123321),
+            name="meow",
+            event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+            trigger=special_endpoints.AutoModKeywordTriggerBuilder(keyword_filter=["hello", "world"]),
+            actions=[mock_action],
+        )
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "meow",
+                "event_type": 1,
+                "trigger_type": 1,
+                "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
+                "actions": [mock_action.build.return_value],
+            },
+            reason=undefined.UNDEFINED,
+        )
+        mock_action.build.assert_called_once_with()
+
+    async def test_edit_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
+        mock_action = mock.Mock(special_endpoints.AutoModBlockMessageActionBuilder)
+        expected_route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=123321, rule=5412123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
+
+        result = await rest_client.edit_auto_mod_rule(
+            StubModel(123321),
+            StubModel(5412123),
+            name="meow",
+            event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+            trigger=special_endpoints.AutoModKeywordTriggerBuilder(keyword_filter=["hello", "world"]),
+            actions=[mock_action],
+            enabled=False,
+            exempt_roles=[StubModel(4545), StubModel(5656)],
+            exempt_channels=[StubModel(555), StubModel(666), StubModel(777)],
+            reason="nyaa nyaa",
+        )
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "meow",
+                "event_type": 1,
+                "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
+                "actions": [mock_action.build.return_value],
+                "enabled": False,
+                "exempt_roles": ["4545", "5656"],
+                "exempt_channels": ["555", "666", "777"],
+            },
+            reason="nyaa nyaa",
+        )
+        mock_action.build.assert_called_once_with()
+
+    async def test_edit_auto_mod_rule_partial(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=123321, rule=44332222)
+        rest_client._request = mock.AsyncMock(return_value={"id": "494949494"})
+
+        result = await rest_client.edit_auto_mod_rule(StubModel(123321), StubModel(44332222))
+
+        assert result is rest_client._entity_factory.deserialize_auto_mod_rule.return_value
+        rest_client._entity_factory.deserialize_auto_mod_rule.assert_called_once_with(rest_client._request.return_value)
+        rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
+        rest_client._entity_factory.serialize_auto_mod_action.assert_not_called()
+
+    async def test_delete_auto_mod_rule(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.DELETE_GUILD_AUTO_MODERATION_RULE.compile(guild=54123, rule=651234)
+        rest_client._request = mock.AsyncMock()
+
+        result = await rest_client.delete_auto_mod_rule(StubModel(54123), StubModel(651234), reason="ok hi")
+
+        assert result is None
+        rest_client._request.assert_awaited_once_with(expected_route, reason="ok hi")

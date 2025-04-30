@@ -67,49 +67,61 @@ class UserFlag(enums.Flag):
     """Discord Employee."""
 
     PARTNERED_SERVER_OWNER = 1 << 1
-    """Owner of a partnered Discord server."""
+    """Partnered Discord server owner."""
 
     HYPESQUAD_EVENTS = 1 << 2
-    """HypeSquad Events."""
+    """Participated in HypeSquad Events."""
 
     BUG_HUNTER_LEVEL_1 = 1 << 3
-    """Bug Hunter Level 1."""
+    """Participated in the Discord Testers community."""
 
     HYPESQUAD_BRAVERY = 1 << 6
-    """House of Bravery."""
+    """Member of the HypeSquad House of Bravery."""
 
     HYPESQUAD_BRILLIANCE = 1 << 7
-    """House of Brilliance."""
+    """Member of the HypeSquad House of Brilliance."""
 
     HYPESQUAD_BALANCE = 1 << 8
-    """House of Balance."""
+    """Member of the HypeSquad House of Balance."""
 
     EARLY_SUPPORTER = 1 << 9
-    """Early Supporter."""
+    """Early premium supporter of Discord."""
 
     TEAM_USER = 1 << 10
-    """Team user."""
+    """Pseudo-user for an app's development team."""
 
     BUG_HUNTER_LEVEL_2 = 1 << 14
-    """Bug Hunter Level 2."""
+    """Vastly participated in the Discord Testers community."""
 
     VERIFIED_BOT = 1 << 16
-    """Verified Bot."""
+    """Verified bot."""
 
     EARLY_VERIFIED_DEVELOPER = 1 << 17
-    """Early verified Bot Developer.
-
-    Only applies to users that verified their account before 20th August 2019.
-    """
+    """Early verified bot developer."""
 
     DISCORD_CERTIFIED_MODERATOR = 1 << 18
-    """Discord Certified Moderator."""
+    """Alumni of the moderator program."""
 
     BOT_HTTP_INTERACTIONS = 1 << 19
-    """Bot uses only HTTP interactions and is shown in the active member list."""
+    """Uses only HTTP interactions and is shown in the active member list."""
+
+    SPAMMER = 1 << 20
+    """Suspected of being a spammer."""
 
     ACTIVE_DEVELOPER = 1 << 22
-    """User is an active bot developer."""
+    """Active developer of a Discord app."""
+
+    PROVISIONAL_ACCOUNT = 1 << 23
+    """Provisional account used with the social layer integration."""
+
+    QUARANTINED = 1 << 44
+    """Account is quarantined."""
+
+    COLLABORATOR = 1 << 50
+    """Discord Collaborator, considered Staff."""
+
+    RESTRICTED_COLLABORATOR = 1 << 51
+    """Restricted Discord Collaborator, considered Staff."""
 
 
 @typing.final
