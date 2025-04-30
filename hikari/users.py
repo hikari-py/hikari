@@ -211,7 +211,7 @@ class AvatarDecoration:
             file_format=format,
             settings={
                 "passthrough": False if format == "PNG" and animated else None,
-                "lossless": lossless if format in ("WEBP", "APNG") else None,
+                "lossless": lossless if format == "WEBP" else None,
             },
         )
 
