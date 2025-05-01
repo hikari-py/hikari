@@ -100,22 +100,22 @@ class TestCDNRoute:
             routes.CDNRoute("/foo/bar", set())
 
     def test_any_formats_results_in_no_error(self):
-        routes.CDNRoute("/foo/bar", {"do", "ray", "me"})
+        routes.CDNRoute("/foo/bar", {"DO", "RAY", "ME"})
 
     def test_formats_converted_to_frozenset(self):
-        route = routes.CDNRoute("/foo/bar", {"i", "really", "like", "cats"})
+        route = routes.CDNRoute("/foo/bar", {"I", "REALLY", "LIKE", "CATS"})
         assert isinstance(route.valid_formats, frozenset)
-        assert route.valid_formats == {"i", "really", "like", "cats"}
+        assert route.valid_formats == {"I", "REALLY", "LIKE", "CATS"}
 
-    def test_formats_converted_to_lower(self):
+    def test_formats_converted_to_upper(self):
         route = routes.CDNRoute("/foo/bar", {"FOO", "BaR", "bAz", "bork"})
-        assert route.valid_formats == {"foo", "bar", "baz", "bork"}
+        assert route.valid_formats == {"FOO", "BAR", "BAZ", "BORK"}
 
     def test_eq_operator__considers_path_template_only(self):
-        route1 = routes.CDNRoute("/foo/bar", {"hello", "world"}, is_sizable=False)
-        route2 = routes.CDNRoute("/foo/bar", {"i", "said", "meow"}, is_sizable=True)
-        route3 = routes.CDNRoute("/foo/bar", {"i", "said", "meow"}, is_sizable=False)
-        route4 = routes.CDNRoute("/foo/bar/baz", {"i", "said", "meow"}, is_sizable=True)
+        route1 = routes.CDNRoute("/foo/bar", {"HELLO", "WORLD"})
+        route2 = routes.CDNRoute("/foo/bar", {"I", "SAID", "MEOW"})
+        route3 = routes.CDNRoute("/foo/bar", {"I", "SAID", "MEOW"})
+        route4 = routes.CDNRoute("/foo/bar/baz", {"I", "SAID", "MEOW"})
         assert route1 == route2
         assert route1 == route3
         assert route1 != route4
@@ -124,10 +124,10 @@ class TestCDNRoute:
         assert route3 != route4
 
     def test_hash_operator_considers_path_template_only(self):
-        route1 = routes.CDNRoute("/foo/bar", {"hello", "world"}, is_sizable=False)
-        route2 = routes.CDNRoute("/foo/bar", {"i", "said", "meow"}, is_sizable=True)
-        route3 = routes.CDNRoute("/foo/bar", {"i", "said", "meow"}, is_sizable=False)
-        route4 = routes.CDNRoute("/foo/bar/baz", {"i", "said", "meow"}, is_sizable=True)
+        route1 = routes.CDNRoute("/foo/bar", {"HELLO", "WORLD"})
+        route2 = routes.CDNRoute("/foo/bar", {"I", "SAID", "MEOW"})
+        route3 = routes.CDNRoute("/foo/bar", {"I", "SAID", "MEOW"})
+        route4 = routes.CDNRoute("/foo/bar/baz", {"I", "SAID", "MEOW"})
         assert hash(route1) == hash(route2)
         assert hash(route1) == hash(route3)
         assert hash(route1) != hash(route4)
@@ -136,103 +136,109 @@ class TestCDNRoute:
         assert hash(route3) != hash(route4)
 
     @pytest.mark.parametrize(
-        ("input_file_format", "expected_file_format"), [("jpg", "jpg"), ("JPG", "jpg"), ("png", "png"), ("PNG", "png")]
+        ("input_file_format", "expected_file_format"),
+        [
+            ("PNG", "png"),
+            ("JPG", "jpg"),
+            ("JPEG", "jpeg"),
+            ("WEBP", "webp"),
+            ("AWEBP", "webp"),
+            ("APNG", "png"),
+            ("GIF", "gif"),
+            ("LOTTIE", "json"),
+        ],
+    )
+    def test_compile_uses_correct_extensions(self, input_file_format, expected_file_format):
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG", "JPEG", "WEBP", "AWEBP", "APNG", "GIF", "LOTTIE"})
+
+        compiled_url = route.compile("http://example.com", file_format=input_file_format)
+
+        assert f".{expected_file_format}" in compiled_url, f"compiled_url={compiled_url}"
+
+    def test_size_parameter_when_specified(self):
+        route = routes.CDNRoute("/foo/bar", {"APNG", "LOTTIE", "PNG", "JPG", "GIF"})
+
+        compiled_url = route.compile("http://example.com", file_format="PNG", size=128)
+
+        assert f"size=128" in compiled_url, f"compiled_url={compiled_url}"
+
+    def test_compile_includes_lossless_on_webp(self):
+        route = routes.CDNRoute("/foo/bar", {"WEBP", "AWEBP", "GIF"})
+
+        compiled_url = route.compile("http://example.com", file_format="WEBP", hash="a_boooob", lossless=False)
+
+        assert "lossless=false" in compiled_url, f"compiled_url={compiled_url}"
+
+    @pytest.mark.parametrize(
+        ("input_file_format", "expected_file_format"), [("JPG", "jpg"), ("jpg", "jpg"), ("PNG", "png"), ("PNG", "png")]
     )
     def test_compile_uses_lowercase_file_format_always(self, input_file_format, expected_file_format):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg"}, is_sizable=False)
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG"})
+
         compiled_url = route.compile("http://example.com", file_format=input_file_format)
+
         assert compiled_url.endswith(f".{expected_file_format}"), f"compiled_url={compiled_url}"
 
     def test_disallowed_file_format_raises_TypeError(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg"}, is_sizable=False)
-        with pytest.raises(TypeError):
-            route.compile("http://example.com", file_format="gif")
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG"})
+
+        with pytest.raises(TypeError, match="not a valid format for this asset"):
+            route.compile("http://example.com", file_format="GIF")
 
     def test_allowed_file_format_does_not_raise_TypeError(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg"}, is_sizable=False)
-        route.compile("http://example.com", file_format="png")
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG"})
 
-    def test_requesting_gif_on_non_animated_hash_raises_TypeError(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=False)
-        with pytest.raises(TypeError):
-            route.compile("http://example.com", file_format="gif", hash="boooob")
+        route.compile("http://example.com", file_format="PNG")
 
-    @pytest.mark.parametrize("format", ["png", "jpg", "webp"])
-    def test_requesting_non_gif_on_non_animated_hash_does_not_raise_TypeError(self, format):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "webp", "gif"}, is_sizable=False)
-        route.compile("http://example.com", file_format=format, hash="boooob")
+    def test_sets_animated_when_requesting_awebp(self):
+        route = routes.CDNRoute("/foo/bar", {"AWEBP"})
 
-    @pytest.mark.parametrize("format", ["png", "jpg", "webp"])
-    def test_requesting_non_gif_on_animated_hash_does_not_raise_TypeError(self, format):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "webp", "gif"}, is_sizable=False)
-        route.compile("http://example.com", file_format=format, hash="a_boooob")
+        compiled_url = route.compile("http://example.com", file_format="AWEBP", hash="a_boooob")
 
-    def test_requesting_gif_on_animated_hash_does_not_raise_TypeError(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=False)
-        route.compile("http://example.com", file_format="gif", hash="a_boooob")
+        assert "animated=true" in compiled_url, f"compiled_url={compiled_url}"
 
-    def test_requesting_gif_without_passing_hash_does_not_raise_TypeError(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=False)
-        route.compile("http://example.com", file_format="gif")
+    def test_sets_passthrough_when_requesting_png_on_apng_supporting_asset(self):
+        route = routes.CDNRoute("/foo/bar", {"PNG", "APNG"})
 
-    def test_passing_size_on_non_sizable_raises_TypeError(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=False)
-        with pytest.raises(TypeError):
-            route.compile("http://example.com", file_format="png", hash="boooob", size=128)
+        compiled_url = route.compile("http://example.com", file_format="PNG", hash="boooob")
 
-    def test_passing_size_on_sizable_does_not_raise_TypeError(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=True)
-        route.compile("http://example.com", file_format="png", hash="boooob", size=128)
+        assert "passthrough=false" in compiled_url, f"compiled_url={compiled_url}"
 
-    def test_passing_no_size_on_non_sizable_does_not_raise_TypeError(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=False)
-        route.compile("http://example.com", file_format="png", hash="boooob")
-
-    def test_passing_no_size_on_sizable_does_not_raise_TypeError(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=True)
-        route.compile("http://example.com", file_format="png", hash="boooob")
-
-    @pytest.mark.parametrize("size", [*range(17, 32)])
-    def test_passing_non_power_of_2_sizes_to_sizable_raises_ValueError(self, size):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=True)
+    def test_passing_non_power_of_2_sizes_to_sizable_raises_ValueError(self):
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG", "GIF"})
         with pytest.raises(ValueError, match="size must be an integer power of 2 between 16 and 4096 inclusive"):
-            route.compile("http://example.com", file_format="png", hash="boooob", size=size)
+            route.compile("http://example.com", file_format="PNG", hash="boooob", size=123)
 
-    @pytest.mark.parametrize("size", [int(2**size) for size in [1, *range(17, 25)]])
-    def test_passing_invalid_magnitude_sizes_to_sizable_raises_ValueError(self, size):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "png"}, is_sizable=True)
+    def test_passing_invalid_magnitude_sizes_to_sizable_raises_ValueError(self):
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG", "GIF"})
         with pytest.raises(ValueError, match="size must be an integer power of 2 between 16 and 4096 inclusive"):
-            route.compile("http://example.com", file_format="png", hash="boooob", size=size)
+            route.compile("http://example.com", file_format="PNG", hash="boooob", size=int(2**13))
 
-    @pytest.mark.parametrize("size", [*range(-10, 0)])
-    def test_passing_negative_sizes_to_sizable_raises_ValueError(self, size):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "png"}, is_sizable=True)
+    def test_passing_negative_sizes_to_sizable_raises_ValueError(self):
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG", "GIF"})
         with pytest.raises(ValueError, match="size must be positive"):
-            route.compile("http://example.com", file_format="png", hash="boooob", size=size)
+            route.compile("http://example.com", file_format="PNG", hash="boooob", size=-10)
 
     @pytest.mark.parametrize("size", [int(2**size) for size in range(4, 13)])
     def test_passing_valid_sizes_to_sizable_does_not_raise_ValueError(self, size):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=True)
-        route.compile("http://example.com", file_format="png", hash="boooob", size=size)
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG", "GIF"})
+        route.compile("http://example.com", file_format="PNG", hash="boooob", size=size)
 
     def test_passing_size_adds_query_string(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=True)
-        compiled_url = route.compile("http://example.com", file_format="png", hash="boooob", size=128)
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG", "GIF"})
+        compiled_url = route.compile("http://example.com", file_format="PNG", hash="boooob", size=128)
         assert compiled_url.endswith(".png?size=128"), f"compiled_url={compiled_url}"
 
-    def test_passing_None_size_does_not_add_query_string(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=True)
-        compiled_url = route.compile("http://example.com", file_format="png", hash="boooob", size=None)
-        assert "?size=" not in compiled_url, f"compiled_url={compiled_url}"
-
     def test_passing_no_size_does_not_add_query_string(self):
-        route = routes.CDNRoute("/foo/bar", {"png", "jpg", "gif"}, is_sizable=True)
-        compiled_url = route.compile("http://example.com", file_format="png", hash="boooob")
-        assert "?size=" not in compiled_url, f"compiled_url={compiled_url}"
+        route = routes.CDNRoute("/foo/bar", {"PNG", "JPG", "GIF"})
+        compiled_url = route.compile("http://example.com", file_format="PNG", hash="boooob")
+        assert "size=" not in compiled_url, f"compiled_url={compiled_url}"
 
     @pytest.mark.parametrize(
-        ("base_url", "template", "format", "size_kwds", "foo", "bar", "expected_url"),
+        ("base_url", "template", "file_format", "kwds", "foo", "bar", "expected_url"),
         [
+            ("http://example.com", "/{foo}/bar", "GIF", {}, "baz", "bork qux", "http://example.com/baz/bar.gif"),
+            ("http://example.com", "/{foo}/bar", "GIF", {}, "baz", "bork qux", "http://example.com/baz/bar.gif"),
             (
                 "http://example.com",
                 "/{foo}/{bar}",
@@ -240,12 +246,21 @@ class TestCDNRoute:
                 {"size": 128},
                 "baz",
                 "bork qux",
-                "http://example.com/baz/bork%20qux.png?size=128",
+                "http://example.com/baz/bork%20qux.png?size=128&passthrough=false",
+            ),
+            (
+                "http://example.com",
+                "/{foo}/{bar}",
+                "APNG",
+                {},
+                "baz",
+                "bork qux",
+                "http://example.com/baz/bork%20qux.png",
             ),
             (
                 "http://example.com",
                 "/{foo}/bar",
-                "jpg",
+                "JPG",
                 {"size": 128},
                 "baz",
                 "bork qux",
@@ -255,59 +270,46 @@ class TestCDNRoute:
                 "http://example.com",
                 "/{foo}/{bar}",
                 "WEBP",
-                {"size": None},
-                "baz",
-                123456,
-                "http://example.com/baz/123456.webp",
-            ),
-            (
-                "http://example.com",
-                "/{foo}/bar",
-                "GIF",
-                {"size": None},
+                {},
                 "baz",
                 "bork qux",
-                "http://example.com/baz/bar.gif",
+                "http://example.com/baz/bork%20qux.webp?lossless=true",
             ),
             (
                 "http://example.com",
                 "/{foo}/{bar}",
                 "WEBP",
-                {},
+                {"lossless": False},
                 "baz",
-                "bork qux",
-                "http://example.com/baz/bork%20qux.webp",
+                123456,
+                "http://example.com/baz/123456.webp?lossless=false",
             ),
-            ("http://example.com", "/{foo}/bar", "GIF", {}, "baz", "bork qux", "http://example.com/baz/bar.gif"),
         ],
     )
-    def test_compile_generates_expected_url(self, base_url, template, format, size_kwds, foo, bar, expected_url):
-        route = routes.CDNRoute(template, {"png", "gif", "jpg", "webp"}, is_sizable=True)
-        actual_url = route.compile(base_url=base_url, file_format=format, foo=foo, bar=bar, **size_kwds)
+    def test_compile_generates_expected_url(self, base_url, template, file_format, kwds, foo, bar, expected_url):
+        route = routes.CDNRoute(template, {"PNG", "GIF", "JPG", "WEBP", "APNG"})
+
+        actual_url = route.compile(base_url=base_url, file_format=file_format, foo=foo, bar=bar, **kwds)
+
         assert actual_url == expected_url
 
-    @pytest.mark.parametrize("format", ["png", "jpg"])
-    @pytest.mark.parametrize("size", [64, 256, 2048])
-    def test_compile_to_file_calls_compile(self, format, size):
-        with mock.patch.object(files, "URL", autospec=files.URL):
-            route = hikari_test_helpers.mock_class_namespace(routes.CDNRoute, slots_=False)(
-                "/hello/world", {"png", "jpg"}, is_sizable=True
+    def test_compile_to_file_calls_compile(self):
+        route = routes.CDNRoute("/hello/world", {"PNG", "JPG"})
+
+        with mock.patch.object(routes.CDNRoute, "compile") as patched_compile:
+            route.compile_to_file(
+                "https://blep.com", file_format="FORMAT", size=256, lossless=True, boop="oyy lumo", nya="weeb"
             )
-            route.compile = mock.Mock(spec_set=route.compile)
-            route.compile_to_file("https://blep.com", file_format=format, size=size, boop="oyy lumo", nya="weeb")
-            route.compile.assert_called_once_with(
-                "https://blep.com", file_format=format, size=size, boop="oyy lumo", nya="weeb"
-            )
+
+        patched_compile.assert_called_once_with(
+            "https://blep.com", file_format="FORMAT", size=256, lossless=True, boop="oyy lumo", nya="weeb"
+        )
 
     def test_compile_to_file_passes_compile_result_to_URL_and_returns_constructed_url(self):
         resultant_url_str = "http://blep.com/hello/world/weeb/oyy%20lumo"
-        resultant_url = files.URL("http://blep.com/hello/world/weeb/oyy%20lumo")
-        with mock.patch.object(files, "URL", autospec=files.URL, return_value=resultant_url) as URL:
-            route = hikari_test_helpers.mock_class_namespace(routes.CDNRoute, slots_=False)(
-                "/hello/world/{nya}/{boop}", {"png", "jpg"}, is_sizable=True
-            )
-            route.compile = mock.Mock(spec_set=route.compile, return_value=resultant_url_str)
-            result = route.compile_to_file("https://blep.com", file_format="png", size=64, boop="oyy lumo", nya="weeb")
+        route = routes.CDNRoute("/hello/world/{nya}/{boop}", {"PNG", "JPG"})
 
-        URL.assert_called_once_with(resultant_url_str)
-        assert result is resultant_url
+        with mock.patch.object(routes.CDNRoute, "compile", return_value=resultant_url_str):
+            result = route.compile_to_file("https://blep.com", file_format="PNG", size=64, boop="oyy lumo", nya="weeb")
+
+        assert result == files.URL(resultant_url_str)
