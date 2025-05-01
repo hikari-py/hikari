@@ -62,7 +62,7 @@ class TestInviteGuild:
             assert model.make_splash_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, guild_id=123321, hash="4o4o4o", size=4096, file_format="JPEG", settings={"lossless": None}
+            urls.CDN_URL, guild_id=123321, hash="4o4o4o", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_splash_url(self, model: invites.InviteGuild):
@@ -80,7 +80,7 @@ class TestInviteGuild:
             assert model.make_splash_url(ext="url", size=2) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, guild_id=123321, hash="18dnf8dfbakfdh", size=2, file_format="URL", settings={"lossless": None}
+            urls.CDN_URL, guild_id=123321, hash="18dnf8dfbakfdh", size=2, file_format="URL", lossless=True
         )
 
     def test_make_splash_url_when_no_hash(self, model: invites.InviteGuild):
@@ -99,7 +99,7 @@ class TestInviteGuild:
             hash="fofoof",
             size=4096,
             file_format="JPEG",
-            settings={"animated": None, "lossless": None},
+            lossless=True,
         )
 
     def test_banner_url(self, model: invites.InviteGuild):
@@ -120,7 +120,7 @@ class TestInviteGuild:
             hash="fofoof",
             size=512,
             file_format="URL",
-            settings={"animated": None, "lossless": None},
+            lossless=True,
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model: invites.InviteGuild):
@@ -137,7 +137,7 @@ class TestInviteGuild:
             hash="a_18dnf8dfbakfdh",
             size=4096,
             file_format="GIF",
-            settings={"animated": None, "lossless": None},
+            lossless=True,
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model: invites.InviteGuild):
@@ -154,7 +154,7 @@ class TestInviteGuild:
             hash=model.banner_hash,
             size=4096,
             file_format="PNG",
-            settings={"animated": None, "lossless": None},
+            lossless=True,
         )
 
     def test_make_banner_url_when_no_hash(self, model: invites.InviteGuild):

@@ -52,7 +52,7 @@ class TestActivityAssets:
             assert asset.make_large_image_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, application_id=1, hash="abc", size=4096, file_format="JPEG", settings={"lossless": None}
+            urls.CDN_URL, application_id=1, hash="abc", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_large_image_url_property(self):
@@ -88,12 +88,7 @@ class TestActivityAssets:
             assert asset.make_large_image_url(ext="FA", size=3121) is route.compile_to_file.return_value
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            application_id=45123123,
-            hash="541sdfasdasd",
-            size=3121,
-            file_format="FA",
-            settings={"lossless": None},
+            urls.CDN_URL, application_id=45123123, hash="541sdfasdasd", size=3121, file_format="FA", lossless=True
         )
 
     def test_make_large_image_url_when_no_hash(self):
@@ -136,7 +131,7 @@ class TestActivityAssets:
             assert asset.make_small_image_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, application_id=1, hash="ghi", size=4096, file_format="JPEG", settings={"lossless": None}
+            urls.CDN_URL, application_id=1, hash="ghi", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_small_image_url_property(self):
@@ -172,12 +167,7 @@ class TestActivityAssets:
             assert asset.make_small_image_url(ext="EAT", size=123312) is route.compile_to_file.return_value
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            application_id=123321,
-            hash="aseqwsdas",
-            size=123312,
-            file_format="EAT",
-            settings={"lossless": None},
+            urls.CDN_URL, application_id=123321, hash="aseqwsdas", size=123312, file_format="EAT", lossless=True
         )
 
     def test_make_small_image_url_when_no_hash(self):

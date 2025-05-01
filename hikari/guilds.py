@@ -786,7 +786,7 @@ class Member(users.User):
             hash=self.guild_avatar_hash,
             size=size,
             file_format=file_format,
-            losslss=lossless,
+            lossless=lossless,
         )
 
     @typing_extensions.override
@@ -874,7 +874,7 @@ class Member(users.User):
             hash=self.guild_banner_hash,
             size=size,
             file_format=file_format,
-            losslss=lossless,
+            lossless=lossless,
         )
 
     @typing_extensions.override

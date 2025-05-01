@@ -285,7 +285,7 @@ class CDNRoute:
 
         if file_format == AWEBP:
             query.put("animated", True)
-        elif file_format == PNG:
+        elif file_format == PNG and APNG in self.valid_formats:
             # We want to ensure that if a PNG is requested, then it will never be an APNG
             query.put("passthrough", False)
 

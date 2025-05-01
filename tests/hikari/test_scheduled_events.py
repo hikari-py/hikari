@@ -45,12 +45,7 @@ class TestScheduledEvent:
             assert model.make_image_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            scheduled_event_id=543123,
-            hash="ododododo",
-            size=4096,
-            file_format="JPEG",
-            settings={"lossless": None},
+            urls.CDN_URL, scheduled_event_id=543123, hash="ododododo", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_image_url_property(self, model: scheduled_events.ScheduledEvent):
@@ -64,15 +59,10 @@ class TestScheduledEvent:
         model.id = snowflakes.Snowflake(543123)
         model.image_hash = "ododododo"
         with mock.patch.object(routes, "SCHEDULED_EVENT_COVER") as route:
-            assert model.make_image_url(format="JPEG", size=1) is route.compile_to_file.return_value
+            assert model.make_image_url(file_format="JPEG", size=1) is route.compile_to_file.return_value
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            scheduled_event_id=543123,
-            hash="ododododo",
-            size=1,
-            file_format="JPEG",
-            settings={"lossless": None},
+            urls.CDN_URL, scheduled_event_id=543123, hash="ododododo", size=1, file_format="JPEG", lossless=True
         )
 
     def test_make_image_url_when_image_hash_is_none(self, model: scheduled_events.ScheduledEvent):

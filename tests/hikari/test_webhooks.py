@@ -234,7 +234,7 @@ class TestPartialWebhook:
             hash="hook",
             size=4096,
             file_format="JPEG",
-            settings={"animated": None, "lossless": None},
+            lossless=True,
         )
 
     def test_avatar_url_property(self, webhook):

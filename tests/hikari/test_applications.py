@@ -118,7 +118,7 @@ class TestTeam:
             assert model.make_icon_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, team_id=123, hash="ahashicon", size=4096, file_format="JPEG", settings={"lossless": None}
+            urls.CDN_URL, team_id=123, hash="ahashicon", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_icon_url_property(self, model):
@@ -134,7 +134,7 @@ class TestTeam:
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(format="JPEG", size=1) is None
+            assert model.make_icon_url(file_format="JPEG", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
@@ -142,10 +142,10 @@ class TestTeam:
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(format="JPEG", size=1) == "file"
+            assert model.make_icon_url(file_format="JPEG", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, team_id=123, hash="ahashicon", size=1, file_format="JPEG", settings={"lossless": None}
+            urls.CDN_URL, team_id=123, hash="ahashicon", size=1, file_format="JPEG", lossless=True
         )
 
 
@@ -168,12 +168,7 @@ class TestApplication:
             assert model.make_cover_image_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            application_id=123,
-            hash="ahashcover",
-            size=4096,
-            file_format="JPEG",
-            settings={"lossless": None},
+            urls.CDN_URL, application_id=123, hash="ahashcover", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_cover_image_url_property(self, model):
@@ -189,7 +184,7 @@ class TestApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_cover_image_url(format="JPEG", size=1) is None
+            assert model.make_cover_image_url(file_format="JPEG", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
@@ -197,10 +192,10 @@ class TestApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_cover_image_url(format="JPEG", size=1) == "file"
+            assert model.make_cover_image_url(file_format="JPEG", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="JPEG", settings={"lossless": None}
+            urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="JPEG", lossless=True
         )
 
     @pytest.mark.asyncio
