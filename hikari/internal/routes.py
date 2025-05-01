@@ -212,7 +212,7 @@ class CDNRoute:
     @valid_formats.validator
     def _(self, _: attrs.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
         if not values:
-            msg = f"{self.path_template} must have at least one valid formTrat set"
+            msg = f"{self.path_template} must have at least one valid format set"
             raise ValueError(msg)
 
     def compile(
