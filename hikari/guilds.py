@@ -705,19 +705,19 @@ class Member(users.User):
     def make_avatar_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
-        return self.user.make_avatar_url(format=format, size=size, lossless=lossless, ext=ext)
+        return self.user.make_avatar_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
 
     def make_guild_avatar_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
@@ -730,9 +730,11 @@ class Member(users.User):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
             If not specified, the format will be determined based on
             whether the avatar is animated or not.
         size
@@ -740,7 +742,7 @@ class Member(users.User):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP` or `AWEBP`.
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -750,7 +752,7 @@ class Member(users.User):
             determined based on whether the avatar is animated or not.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -760,7 +762,7 @@ class Member(users.User):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`;
+            If an invalid format is passed for `file_format`;
             If an animated format is requested for a static avatar.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
@@ -770,12 +772,12 @@ class Member(users.User):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
-        if not format:
-            format = "GIF" if self.guild_avatar_hash.startswith("a_") else "PNG"  # noqa: A001
+        if not file_format:
+            file_format = "GIF" if self.guild_avatar_hash.startswith("a_") else "PNG"
 
         return routes.CDN_MEMBER_AVATAR.compile_to_file(
             urls.CDN_URL,
@@ -783,30 +785,27 @@ class Member(users.User):
             user_id=self.id,
             hash=self.guild_avatar_hash,
             size=size,
-            file_format=format,
-            settings={
-                "animated": True if format == "AWEBP" else None,
-                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
-            },
+            file_format=file_format,
+            losslss=lossless,
         )
 
     @typing_extensions.override
     def make_banner_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
-        return self.user.make_banner_url(format=format, size=size, lossless=lossless, ext=ext)
+        return self.user.make_banner_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
 
     def make_guild_banner_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
@@ -819,9 +818,11 @@ class Member(users.User):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
             If not specified, the format will be determined based on
             whether the banner is animated or not.
         size
@@ -829,7 +830,7 @@ class Member(users.User):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP` or `AWEBP`.
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -839,7 +840,7 @@ class Member(users.User):
             determined based on whether the banner is animated or not.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -849,7 +850,7 @@ class Member(users.User):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`;
+            If an invalid format is passed for `file_format`;
             If an animated format is requested for a static banner.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
@@ -859,12 +860,12 @@ class Member(users.User):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
-        if not format:
-            format = "GIF" if self.guild_banner_hash.startswith("a_") else "PNG"  # noqa: A001
+        if not file_format:
+            file_format = "GIF" if self.guild_banner_hash.startswith("a_") else "PNG"
 
         return routes.CDN_MEMBER_BANNER.compile_to_file(
             urls.CDN_URL,
@@ -872,11 +873,8 @@ class Member(users.User):
             user_id=self.id,
             hash=self.guild_banner_hash,
             size=size,
-            file_format=format,
-            settings={
-                "animated": True if format == "AWEBP" else None,
-                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
-            },
+            file_format=file_format,
+            losslss=lossless,
         )
 
     @typing_extensions.override
@@ -1308,7 +1306,7 @@ class Role(PartialRole):
     def make_icon_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -1319,22 +1317,24 @@ class Role(PartialRole):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -1344,7 +1344,7 @@ class Role(PartialRole):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -1353,17 +1353,12 @@ class Role(PartialRole):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_ROLE_ICON.compile_to_file(
-            urls.CDN_URL,
-            role_id=self.id,
-            hash=self.icon_hash,
-            size=size,
-            file_format=format,
-            settings={"lossless": lossless if format == "WEBP" else None},
+            urls.CDN_URL, role_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
@@ -1443,7 +1438,7 @@ class PartialApplication(snowflakes.Unique):
     def make_icon_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -1454,22 +1449,24 @@ class PartialApplication(snowflakes.Unique):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -1479,7 +1476,7 @@ class PartialApplication(snowflakes.Unique):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -1488,17 +1485,17 @@ class PartialApplication(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_APPLICATION_ICON.compile_to_file(
             urls.CDN_URL,
             application_id=self.id,
             hash=self.icon_hash,
             size=size,
-            file_format=format,
-            settings={"lossless": lossless if format == "WEBP" else None},
+            file_format=file_format,
+            lossless=lossless,
         )
 
 
@@ -1683,7 +1680,7 @@ class PartialGuild(snowflakes.Unique):
     def make_icon_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
@@ -1696,9 +1693,11 @@ class PartialGuild(snowflakes.Unique):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
             If not specified, the format will be determined based on
             whether the icon is animated or not.
         size
@@ -1706,13 +1705,13 @@ class PartialGuild(snowflakes.Unique):
             Can be any power of two between `16` and `4096`.
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp`, and `gif` (when animated).
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -1722,7 +1721,7 @@ class PartialGuild(snowflakes.Unique):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`;
+            If an invalid format is passed for `file_format`;
             If an animated format is requested for a static icon.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
@@ -1732,23 +1731,15 @@ class PartialGuild(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
-        if not format:
-            format = "GIF" if self.icon_hash.startswith("a_") else "PNG"  # noqa: A001
+        if not file_format:
+            file_format = "GIF" if self.icon_hash.startswith("a_") else "PNG"
 
         return routes.CDN_GUILD_ICON.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.icon_hash,
-            size=size,
-            file_format=format,
-            settings={
-                "animated": True if format == "AWEBP" else None,
-                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
-            },
+            urls.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
         )
 
     async def ban(
@@ -2871,7 +2862,7 @@ class GuildPreview(PartialGuild):
     def make_discovery_splash_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -2882,22 +2873,24 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -2907,7 +2900,7 @@ class GuildPreview(PartialGuild):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -2916,23 +2909,23 @@ class GuildPreview(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
             urls.CDN_URL,
             guild_id=self.id,
             hash=self.discovery_splash_hash,
             size=size,
-            file_format=format,
-            settings={"lossless": lossless if format == "WEBP" else None},
+            file_format=file_format,
+            lossless=lossless,
         )
 
     def make_splash_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -2943,22 +2936,24 @@ class GuildPreview(PartialGuild):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -2968,7 +2963,7 @@ class GuildPreview(PartialGuild):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -2977,17 +2972,12 @@ class GuildPreview(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.splash_hash,
-            size=size,
-            file_format=format,
-            settings={"lossless": lossless if format == "WEBP" else None},
+            urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
@@ -3262,7 +3252,7 @@ class Guild(PartialGuild):
     def make_banner_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
@@ -3275,9 +3265,11 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
             If not specified, the format will be determined based on
             whether the banner is animated or not.
         size
@@ -3285,7 +3277,7 @@ class Guild(PartialGuild):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP` or `AWEBP`.
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -3295,7 +3287,7 @@ class Guild(PartialGuild):
             determined based on whether the banner is animated or not.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -3305,7 +3297,7 @@ class Guild(PartialGuild):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`;
+            If an invalid format is passed for `file_format`;
             If an animated format is requested for a static banner.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
@@ -3315,29 +3307,21 @@ class Guild(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
-        if not format:
-            format = "GIF" if self.banner_hash.startswith("a_") else "PNG"  # noqa: A001
+        if not file_format:
+            file_format = "GIF" if self.banner_hash.startswith("a_") else "PNG"
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.banner_hash,
-            size=size,
-            file_format=format,
-            settings={
-                "animated": True if format == "AWEBP" else None,
-                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
-            },
+            urls.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=file_format, lossless=lossless
         )
 
     def make_discovery_splash_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -3348,22 +3332,24 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -3373,7 +3359,7 @@ class Guild(PartialGuild):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -3382,23 +3368,23 @@ class Guild(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
             urls.CDN_URL,
             guild_id=self.id,
             hash=self.discovery_splash_hash,
             size=size,
-            file_format=format,
-            settings={"lossless": lossless if format == "WEBP" else None},
+            file_format=file_format,
+            lossless=lossless,
         )
 
     def make_splash_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -3409,22 +3395,24 @@ class Guild(PartialGuild):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -3434,7 +3422,7 @@ class Guild(PartialGuild):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -3443,17 +3431,12 @@ class Guild(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            urls.CDN_URL,
-            guild_id=self.id,
-            hash=self.splash_hash,
-            size=size,
-            file_format=format,
-            settings={"lossless": lossless if format == "WEBP" else None},
+            urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=file_format, lossless=lossless
         )
 
     def get_channel(

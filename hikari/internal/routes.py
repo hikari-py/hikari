@@ -32,6 +32,7 @@ import urllib.parse
 import attrs
 
 from hikari import files
+from hikari import undefined
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
 from hikari.internal import typing_extensions
@@ -211,7 +212,7 @@ class CDNRoute:
     @valid_formats.validator
     def _(self, _: attrs.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
         if not values:
-            msg = f"{self.path_template} must have at least one valid format set"
+            msg = f"{self.path_template} must have at least one valid formTrat set"
             raise ValueError(msg)
 
     def compile(
@@ -219,8 +220,8 @@ class CDNRoute:
         base_url: str,
         *,
         file_format: str,
-        size: int | None = None,
-        settings: dict[str, str | bool | None] | None = None,
+        lossless: bool = True,
+        size: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         **kwargs: object,
     ) -> str:
         """Generate a full CDN url from this endpoint.
@@ -232,11 +233,11 @@ class CDNRoute:
             this.
         file_format
             The file format to use for the asset.
+        lossless
+            Whether to request a lossless image. Defaults to [`True`][].
         size
-            The custom size query parameter to set. If [`None`][],
+            The custom size query parameter to set. If unspecified,
             it is not passed.
-        settings
-            Specific additional query parameters to set for certain file formats.
         **kwargs
             Parameters to interpolate into the path template.
 
@@ -261,17 +262,16 @@ class CDNRoute:
                 + ", ".join(self.valid_formats)
             )
 
-        if "hash" in kwargs and not str(kwargs["hash"]).startswith("a_") and file_format in [AWEBP, GIF, APNG]:
+        if "hash" in kwargs and not str(kwargs["hash"]).startswith("a_") and file_format in {AWEBP, GIF, APNG}:
             msg = f"This asset is not animated, so it cannot be retrieved as {file_format}."
             raise TypeError(msg)
 
-        ext = CDN_FORMAT_EXT[file_format]
-        query_params: dict[str, str] = {}
+        query = data_binding.StringMapBuilder()
 
-        if file_format in ("APNG", "LOTTIE") and size:
-            size = None
+        if file_format in {WEBP, AWEBP}:
+            query.put("lossless", lossless)
 
-        if size is not None:
+        if size is not undefined.UNDEFINED:
             if size < 0:
                 msg = "size must be positive"
                 raise ValueError(msg)
@@ -281,21 +281,21 @@ class CDNRoute:
                 msg = "size must be an integer power of 2 between 16 and 4096 inclusive"
                 raise ValueError(msg)
 
-            query_params["size"] = str(size)
+            query.put("size", size)
 
-        if settings is not None:
-            if (passthrough := settings.get("passthrough")) is not None:
-                query_params["passthrough"] = str(passthrough).lower()
-            if (animated := settings.get("animated")) is not None:
-                query_params["animated"] = str(animated).lower()
-            if (lossless := settings.get("lossless")) is not None:
-                query_params["lossless"] = str(lossless).lower()
+        if file_format == AWEBP:
+            query.put("animated", True)
+        elif file_format == PNG:
+            # We want to ensure that if a PNG is requested, then it will never be an APNG
+            query.put("passthrough", False)
 
+        # Make URL-safe first.
         kwargs = {k: urllib.parse.quote(str(v)) for k, v in kwargs.items()}
+        ext = CDN_FORMAT_TRANSFORM.get(file_format, file_format).lower()
         url = base_url + self.path_template.format(**kwargs) + f".{ext}"
 
-        if query_params:
-            url += "?" + urllib.parse.urlencode(query_params)
+        if query:
+            url += "?" + urllib.parse.urlencode(query)
 
         return url
 
@@ -304,12 +304,12 @@ class CDNRoute:
         base_url: str,
         *,
         file_format: str,
-        size: int | None = None,
-        settings: dict[str, str | bool | None] | None = None,
+        lossless: bool = True,
+        size: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         **kwargs: object,
     ) -> files.URL:
         """Perform the same as `compile`, but return the URL as a [`hikari.files.URL`][]."""
-        return files.URL(self.compile(base_url, file_format=file_format, size=size, settings=settings, **kwargs))
+        return files.URL(self.compile(base_url, file_format=file_format, size=size, lossless=lossless, **kwargs))
 
 
 GET: typing.Final[str] = "GET"
@@ -628,16 +628,7 @@ AWEBP: typing.Final[str] = "AWEBP"
 GIF: typing.Final[str] = "GIF"
 LOTTIE: typing.Final[str] = "LOTTIE"  # https://airbnb.io/lottie/
 
-CDN_FORMAT_EXT: typing.Final[dict[str, str]] = {
-    PNG: "png",
-    JPEG: "jpeg",
-    JPG: "jpg",
-    WEBP: "webp",
-    APNG: "png",
-    AWEBP: "webp",
-    GIF: "gif",
-    LOTTIE: "json",
-}
+CDN_FORMAT_TRANSFORM: typing.Final[dict[str, str]] = {APNG: "png", AWEBP: "webp", LOTTIE: "json"}
 
 # CDN specific endpoints. These reside on a different server.
 CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute("/emojis/{emoji_id}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})

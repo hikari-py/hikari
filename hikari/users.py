@@ -165,7 +165,7 @@ class AvatarDecoration:
     def make_url(
         self,
         *,
-        format: undefined.UndefinedOr[typing.Literal["PNG", "JPEG", "JPG", "WEBP", "APNG"]] = undefined.UNDEFINED,
+        file_format: undefined.UndefinedOr[typing.Literal["PNG", "JPEG", "JPG", "WEBP", "APNG"]] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
     ) -> files.URL:
@@ -173,9 +173,11 @@ class AvatarDecoration:
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, and `APNG`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, and `APNG`.
+
             If not specified, the format will be `PNG` or `APNG` based on
             whether the decoration is animated or not.
         size
@@ -184,7 +186,7 @@ class AvatarDecoration:
             Can be any power of two between `16` and `4096`.
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
 
         Returns
         -------
@@ -194,25 +196,18 @@ class AvatarDecoration:
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`;
+            If an invalid format is passed for `file_format`;
             If an animated format is requested for a static avatar decoration.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         animated = self.asset_hash.startswith("a_")
 
-        if not format:
-            format = "APNG" if animated else "PNG"  # noqa: A001
+        if not file_format:
+            file_format = "APNG" if animated else "PNG"
 
         return routes.CDN_AVATAR_DECORATION.compile_to_file(
-            urls.MEDIA_PROXY_URL,
-            hash=self.asset_hash,
-            size=size,
-            file_format=format,
-            settings={
-                "passthrough": False if format == "PNG" and animated else None,
-                "lossless": lossless if format == "WEBP" else None,
-            },
+            urls.MEDIA_PROXY_URL, hash=self.asset_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
@@ -707,7 +702,7 @@ class User(PartialUser, abc.ABC):
     def make_avatar_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
@@ -720,9 +715,11 @@ class User(PartialUser, abc.ABC):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
             If not specified, the format will be determined based on
             whether the avatar is animated or not.
         size
@@ -730,7 +727,7 @@ class User(PartialUser, abc.ABC):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP` or `AWEBP`.
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -740,7 +737,7 @@ class User(PartialUser, abc.ABC):
             determined based on whether the avatar is animated or not.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -750,7 +747,7 @@ class User(PartialUser, abc.ABC):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`;
+            If an invalid format is passed for `file_format`;
             If an animated format is requested for a static avatar.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
@@ -760,29 +757,21 @@ class User(PartialUser, abc.ABC):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
-        if not format:
-            format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"  # noqa: A001
+        if not file_format:
+            file_format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            urls.CDN_URL,
-            user_id=self.id,
-            hash=self.avatar_hash,
-            size=size,
-            file_format=format,
-            settings={
-                "animated": True if format == "AWEBP" else None,
-                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
-            },
+            urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=file_format, lossless=lossless
         )
 
     def make_banner_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
@@ -795,9 +784,11 @@ class User(PartialUser, abc.ABC):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
             If not specified, the format will be determined based on
             whether the banner is animated or not.
         size
@@ -805,7 +796,7 @@ class User(PartialUser, abc.ABC):
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP` or `AWEBP`.
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -815,7 +806,7 @@ class User(PartialUser, abc.ABC):
             determined based on whether the banner is animated or not.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -825,7 +816,7 @@ class User(PartialUser, abc.ABC):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`;
+            If an invalid format is passed for `file_format`;
             If an animated format is requested for a static banner.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
@@ -835,23 +826,15 @@ class User(PartialUser, abc.ABC):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
-        if not format:
-            format = "GIF" if self.banner_hash.startswith("a_") else "PNG"  # noqa: A001
+        if not file_format:
+            file_format = "GIF" if self.banner_hash.startswith("a_") else "PNG"
 
         return routes.CDN_USER_BANNER.compile_to_file(
-            urls.CDN_URL,
-            user_id=self.id,
-            hash=self.banner_hash,
-            size=size,
-            file_format=format,
-            settings={
-                "animated": True if format == "AWEBP" else None,
-                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
-            },
+            urls.CDN_URL, user_id=self.id, hash=self.banner_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 

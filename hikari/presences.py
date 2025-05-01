@@ -145,7 +145,7 @@ class ActivityAssets:
         self,
         *,
         asset: str | None,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -155,9 +155,9 @@ class ActivityAssets:
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         try:
             resource, identifier = asset.split(":", 1)
@@ -175,8 +175,8 @@ class ActivityAssets:
                 application_id=self._application_id,
                 hash=asset,
                 size=size,
-                file_format=format,
-                settings={"lossless": lossless if format == "WEBP" else None},
+                file_format=file_format,
+                lossless=lossless,
             )
 
     @property
@@ -199,7 +199,7 @@ class ActivityAssets:
     def make_large_image_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -210,27 +210,29 @@ class ActivityAssets:
         is not known, this returns [`None`][].
 
         !!! note
-            `format`, `size`, and `lossless` are ignored for images
+            `file_format`, `size`, and `lossless` are ignored for images
             hosted outside of Discord or Discord's media proxy.
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -240,13 +242,15 @@ class ActivityAssets:
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         RuntimeError
             If [`hikari.presences.ActivityAssets.large_image`][] points towards an unknown asset type.
         """
-        return self._make_asset_url(asset=self.large_image, format=format, size=size, lossless=lossless, ext=ext)
+        return self._make_asset_url(
+            asset=self.large_image, file_format=file_format, size=size, lossless=lossless, ext=ext
+        )
 
     @property
     @deprecation.deprecated("Use 'make_small_image_url' instead.")
@@ -268,7 +272,7 @@ class ActivityAssets:
     def make_small_image_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -279,27 +283,29 @@ class ActivityAssets:
         is not known, this returns [`None`][].
 
         !!! note
-            `format`, `size`, and `lossless` are ignored for images
+            `file_format`, `size`, and `lossless` are ignored for images
             hosted outside of Discord or Discord's media proxy.
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -309,13 +315,15 @@ class ActivityAssets:
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         RuntimeError
             If [`hikari.presences.ActivityAssets.small_image`][] points towards an unknown asset type.
         """
-        return self._make_asset_url(asset=self.small_image, format=format, size=size, lossless=lossless, ext=ext)
+        return self._make_asset_url(
+            asset=self.small_image, file_format=file_format, size=size, lossless=lossless, ext=ext
+        )
 
 
 @attrs_extensions.with_copy

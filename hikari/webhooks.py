@@ -536,7 +536,7 @@ class PartialWebhook(snowflakes.Unique):
     def make_avatar_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
@@ -549,17 +549,18 @@ class PartialWebhook(snowflakes.Unique):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
             If not specified, the format will be determined based on
             whether the avatar is animated or not.
         size
-            The size to set for the URL;
-            Can be any power of two between `16` and `4096`;
+            The size to set for the URL. Can be any power of two between `16` and `4096`.
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP` or `AWEBP`.
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -569,7 +570,7 @@ class PartialWebhook(snowflakes.Unique):
             determined based on whether the avatar is animated or not.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -579,7 +580,7 @@ class PartialWebhook(snowflakes.Unique):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`;
+            If an invalid format is passed for `file_format`;
             If an animated format is requested for a static avatar.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
@@ -589,23 +590,15 @@ class PartialWebhook(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
-        if not format:
-            format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"  # noqa: A001
+        if not file_format:
+            file_format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            urls.CDN_URL,
-            user_id=self.id,
-            hash=self.avatar_hash,
-            size=size,
-            file_format=format,
-            settings={
-                "animated": True if format == "AWEBP" else None,
-                "lossless": lossless if format in ("WEBP", "AWEBP") else None,
-            },
+            urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 

@@ -481,27 +481,27 @@ class TeamMember(users.User):
     def make_avatar_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
-        return self.user.make_avatar_url(format=format, size=size, lossless=lossless, ext=ext)
+        return self.user.make_avatar_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
 
     @typing_extensions.override
     def make_banner_url(
         self,
         *,
-        format: undefined.UndefinedOr[
+        file_format: undefined.UndefinedOr[
             typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
-        return self.user.make_banner_url(format=format, size=size, lossless=lossless, ext=ext)
+        return self.user.make_banner_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
 
 
 @attrs_extensions.with_copy
@@ -550,7 +550,7 @@ class Team(snowflakes.Unique):
     def make_icon_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -561,22 +561,24 @@ class Team(snowflakes.Unique):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -586,7 +588,7 @@ class Team(snowflakes.Unique):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -595,17 +597,12 @@ class Team(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_TEAM_ICON.compile_to_file(
-            urls.CDN_URL,
-            team_id=self.id,
-            hash=self.icon_hash,
-            size=size,
-            file_format=format,
-            settings={"lossless": lossless if format == "WEBP" else None},
+            urls.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
@@ -637,7 +634,7 @@ class InviteApplication(guilds.PartialApplication):
     def make_cover_image_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -648,22 +645,24 @@ class InviteApplication(guilds.PartialApplication):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -673,7 +672,7 @@ class InviteApplication(guilds.PartialApplication):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -682,17 +681,17 @@ class InviteApplication(guilds.PartialApplication):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
             urls.CDN_URL,
             application_id=self.id,
             hash=self.cover_image_hash,
             size=size,
-            file_format=format,
-            settings={"lossless": lossless if format == "WEBP" else None},
+            file_format=file_format,
+            lossless=lossless,
         )
 
 
@@ -786,7 +785,7 @@ class Application(guilds.PartialApplication):
     def make_cover_image_url(
         self,
         *,
-        format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
         ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
@@ -797,22 +796,24 @@ class Application(guilds.PartialApplication):
 
         Parameters
         ----------
-        format
-            The format to use for this URL;
-            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`;
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
             If not specified, the format will be `PNG`.
         size
             The size to set for the URL;
             Can be any power of two between `16` and `4096`;
         lossless
             Whether to return a lossless or compressed WEBP image;
-            This is ignored if `format` is not `WEBP`.
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
 
             !!! deprecated 2.4.0
-                This has been replaced with the `format` argument.
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -822,7 +823,7 @@ class Application(guilds.PartialApplication):
         Raises
         ------
         TypeError
-            If an invalid format is passed for `format`.
+            If an invalid format is passed for `file_format`.
         ValueError
             If `size` is specified but is not a power of two or not between 16 and 4096.
         """
@@ -831,17 +832,17 @@ class Application(guilds.PartialApplication):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'format' argument instead."
+                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
             )
-            format = ext.upper()  # type: ignore[assignment]  # noqa: A001
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
             urls.CDN_URL,
             application_id=self.id,
             hash=self.cover_image_hash,
             size=size,
-            file_format=format,
-            settings={"lossless": lossless if format == "WEBP" else None},
+            file_format=file_format,
+            lossless=lossless,
         )
 
 

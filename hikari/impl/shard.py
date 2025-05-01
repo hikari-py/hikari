@@ -487,7 +487,7 @@ class GatewayShardImpl(shard.GatewayShard):
         url: str,
     ) -> None:
         if data_format != shard.GatewayDataFormat.JSON:
-            msg = f"Unsupported gateway data format: {data_format}"
+            msg = f"Unsupported gateway data file_format: {data_format}"
             raise NotImplementedError(msg)
 
         if compression and compression != shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
