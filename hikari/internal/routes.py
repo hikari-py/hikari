@@ -620,8 +620,7 @@ GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
 GET_GATEWAY_BOT: typing.Final[Route] = Route(GET, "/gateway/bot")
 
 PNG: typing.Final[str] = "PNG"
-JPEG: typing.Final[str] = "JPEG"
-JPG: typing.Final[str] = "JPG"
+JPEG_JPG: typing.Final[tuple[str, str]] = ("JPEG", "JPG")
 WEBP: typing.Final[str] = "WEBP"
 APNG: typing.Final[str] = "APNG"
 AWEBP: typing.Final[str] = "AWEBP"
@@ -631,48 +630,48 @@ LOTTIE: typing.Final[str] = "LOTTIE"  # https://airbnb.io/lottie/
 CDN_FORMAT_TRANSFORM: typing.Final[dict[str, str]] = {APNG: "png", AWEBP: "webp", LOTTIE: "json"}
 
 # CDN specific endpoints. These reside on a different server.
-CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute("/emojis/{emoji_id}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
+CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute("/emojis/{emoji_id}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
 
-CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute("/icons/{guild_id}/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
-CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute("/splashes/{guild_id}/{hash}", {PNG, JPEG, JPG, WEBP})
+CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute("/icons/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
+CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute("/splashes/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 CDN_GUILD_DISCOVERY_SPLASH: typing.Final[CDNRoute] = CDNRoute(
-    "/discovery-splashes/{guild_id}/{hash}", {PNG, JPEG, JPG, WEBP}
+    "/discovery-splashes/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
-CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
+CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
 
 CDN_AVATAR_DECORATION: typing.Final[CDNRoute] = CDNRoute(
-    "/avatar-decoration-presets/{hash}", {PNG, JPEG, JPG, WEBP, APNG}
+    "/avatar-decoration-presets/{hash}", {PNG, *JPEG_JPG, WEBP, APNG}
 )
 CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{style}", {PNG})
-CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
-CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF})
+CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
+CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
 CDN_MEMBER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
-    "/guilds/{guild_id}/users/{user_id}/avatars/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF}
+    "/guilds/{guild_id}/users/{user_id}/avatars/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF}
 )
 CDN_MEMBER_BANNER: typing.Final[CDNRoute] = CDNRoute(
-    "/guilds/{guild_id}/users/{user_id}/banners/{hash}", {PNG, JPEG, JPG, WEBP, AWEBP, GIF}
+    "/guilds/{guild_id}/users/{user_id}/banners/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF}
 )
-CDN_ROLE_ICON: typing.Final[CDNRoute] = CDNRoute("/role-icons/{role_id}/{hash}", {PNG, JPEG, JPG, WEBP})
+CDN_ROLE_ICON: typing.Final[CDNRoute] = CDNRoute("/role-icons/{role_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 
-CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute("/app-icons/{application_id}/{hash}", {PNG, JPEG, JPG, WEBP})
-CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, JPEG, JPG, WEBP})
-CDN_APPLICATION_ASSET: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, JPEG, JPG, WEBP})
+CDN_APPLICATION_ICON: typing.Final[CDNRoute] = CDNRoute("/app-icons/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_APPLICATION_COVER: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
+CDN_APPLICATION_ASSET: typing.Final[CDNRoute] = CDNRoute("/app-assets/{application_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 CDN_ACHIEVEMENT_ICON: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, JPEG, JPG, WEBP}
+    "/app-assets/{application_id}/achievements/{achievement_id}/icons/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
 
-CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}", {PNG, JPEG, JPG, WEBP})
+CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 
 # undocumented on the Discord docs.
-CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, JPEG, JPG, WEBP})
+CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 
 CDN_STICKER: typing.Final[CDNRoute] = CDNRoute(
-    "/stickers/{sticker_id}", {PNG, JPEG, JPG, LOTTIE, WEBP, AWEBP, APNG, GIF}
+    "/stickers/{sticker_id}", {PNG, *JPEG_JPG, LOTTIE, WEBP, AWEBP, APNG, GIF}
 )
 CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
-    "/app-assets/710982414301790216/store/{hash}", {PNG, JPEG, JPG, WEBP}
+    "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
 
 SCHEDULED_EVENT_COVER: typing.Final[CDNRoute] = CDNRoute(
-    "/guild-events/{scheduled_event_id}/{hash}", {PNG, JPEG, JPG, WEBP}
+    "/guild-events/{scheduled_event_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
