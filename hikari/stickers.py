@@ -203,7 +203,7 @@ class PartialSticker(snowflakes.Unique):
         deprecation.warn_deprecated("image_url", removal_version="2.4.0", additional_info="Use 'make_url' instead.")
         return self.make_url()
 
-    def make_url(
+    def make_url(  # noqa: PLR0912 - Too many branches
         self,
         *,
         file_format: undefined.UndefinedOr[
