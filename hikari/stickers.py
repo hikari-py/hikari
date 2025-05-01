@@ -109,7 +109,7 @@ class StickerPack(snowflakes.Unique):
     def banner_url(self) -> files.URL | None:
         """Banner URL for the pack, if set."""
         deprecation.warn_deprecated(
-            "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead."
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
         )
         return self.make_banner_url()
 
@@ -163,7 +163,7 @@ class StickerPack(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -200,7 +200,7 @@ class PartialSticker(snowflakes.Unique):
 
         Otherwise, it will be follow the format type as `.gif` or `.png`.
         """
-        deprecation.warn_deprecated("image_url", removal_version="2.4.0", additional_info="Use 'make_url' instead.")
+        deprecation.warn_deprecated("image_url", removal_version="2.5.0", additional_info="Use 'make_url' instead.")
         return self.make_url()
 
     def make_url(  # noqa: PLR0912 - Too many branches

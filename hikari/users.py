@@ -159,7 +159,7 @@ class AvatarDecoration:
     @deprecation.deprecated("Use 'make_url' instead.")
     def url(self) -> files.URL:
         """Default image URL for this avatar decoration."""
-        deprecation.warn_deprecated("url", removal_version="2.4.0", additional_info="Use 'make_url' instead.")
+        deprecation.warn_deprecated("url", removal_version="2.5.0", additional_info="Use 'make_url' instead.")
         return self.make_url()
 
     def make_url(
@@ -588,7 +588,7 @@ class User(PartialUser, abc.ABC):
         should use [`hikari.User.default_avatar_url`][] instead.
         """
         deprecation.warn_deprecated(
-            "avatar_url", removal_version="2.4.0", additional_info="Use 'make_avatar_url' instead."
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
         )
         return self.make_avatar_url()
 
@@ -606,7 +606,7 @@ class User(PartialUser, abc.ABC):
         Will be [`None`][] if no banner is set.
         """
         deprecation.warn_deprecated(
-            "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead."
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
         )
         return self.make_banner_url()
 
@@ -757,7 +757,7 @@ class User(PartialUser, abc.ABC):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -826,7 +826,7 @@ class User(PartialUser, abc.ABC):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 

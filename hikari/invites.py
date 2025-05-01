@@ -133,7 +133,7 @@ class InviteGuild(guilds.PartialGuild):
     def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         deprecation.warn_deprecated(
-            "splash_url", removal_version="2.4.0", additional_info="Use 'make_splash_url' instead."
+            "splash_url", removal_version="2.5.0", additional_info="Use 'make_splash_url' instead."
         )
         return self.make_splash_url()
 
@@ -187,7 +187,7 @@ class InviteGuild(guilds.PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -200,7 +200,7 @@ class InviteGuild(guilds.PartialGuild):
     def banner_url(self) -> files.URL | None:
         """Banner URL for the guild, if set."""
         deprecation.warn_deprecated(
-            "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead."
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
         )
         return self.make_banner_url()
 
@@ -262,7 +262,7 @@ class InviteGuild(guilds.PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 

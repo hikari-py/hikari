@@ -397,7 +397,7 @@ class TeamMember(users.User):
     @deprecation.deprecated("Use 'make_avatar_url' instead.")
     def avatar_url(self) -> files.URL | None:
         deprecation.warn_deprecated(
-            "avatar_url", removal_version="2.4.0", additional_info="Use 'make_avatar_url' instead."
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
         )
         return self.user.make_avatar_url()
 
@@ -416,7 +416,7 @@ class TeamMember(users.User):
     @deprecation.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         deprecation.warn_deprecated(
-            "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead."
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
         )
         return self.user.make_banner_url()
 
@@ -544,7 +544,7 @@ class Team(snowflakes.Unique):
     @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """Team icon URL, if there is one."""
-        deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead.")
+        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
         return self.make_icon_url()
 
     def make_icon_url(
@@ -597,7 +597,7 @@ class Team(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -627,7 +627,7 @@ class InviteApplication(guilds.PartialApplication):
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
         deprecation.warn_deprecated(
-            "cover_image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
+            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
         )
         return self.make_cover_image_url()
 
@@ -681,7 +681,7 @@ class InviteApplication(guilds.PartialApplication):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -778,7 +778,7 @@ class Application(guilds.PartialApplication):
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
         deprecation.warn_deprecated(
-            "cover_image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
+            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
         )
         return self.make_cover_image_url()
 
@@ -832,7 +832,7 @@ class Application(guilds.PartialApplication):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 

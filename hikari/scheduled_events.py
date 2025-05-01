@@ -157,7 +157,7 @@ class ScheduledEvent(snowflakes.Unique):
     def image_url(self) -> files.URL | None:
         """Cover image for this scheduled event, if set."""
         deprecation.warn_deprecated(
-            "image_url", removal_version="2.4.0", additional_info="Use 'make_image_url' instead."
+            "image_url", removal_version="2.5.0", additional_info="Use 'make_image_url' instead."
         )
         return self.make_image_url()
 
@@ -211,7 +211,7 @@ class ScheduledEvent(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 

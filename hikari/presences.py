@@ -155,7 +155,7 @@ class ActivityAssets:
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -189,7 +189,7 @@ class ActivityAssets:
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         deprecation.warn_deprecated(
-            "large_image_url", removal_version="2.4.0", additional_info="Use 'make_large_image_url' instead."
+            "large_image_url", removal_version="2.5.0", additional_info="Use 'make_large_image_url' instead."
         )
         try:
             return self.make_large_image_url()
@@ -262,7 +262,7 @@ class ActivityAssets:
             asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
         """
         deprecation.warn_deprecated(
-            "small_image_url", removal_version="2.4.0", additional_info="Use 'make_small_image_url' instead."
+            "small_image_url", removal_version="2.5.0", additional_info="Use 'make_small_image_url' instead."
         )
         try:
             return self.make_small_image_url()

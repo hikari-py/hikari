@@ -507,7 +507,7 @@ class Member(users.User):
     @deprecation.deprecated("Use 'make_avatar_url' instead.")
     def avatar_url(self) -> files.URL | None:
         deprecation.warn_deprecated(
-            "avatar_url", removal_version="2.4.0", additional_info="Use 'make_avatar_url' instead."
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
         )
         return self.user.make_avatar_url()
 
@@ -515,7 +515,7 @@ class Member(users.User):
     def guild_avatar_url(self) -> files.URL | None:
         """Guild Avatar URL for the user, if they have one set."""
         deprecation.warn_deprecated(
-            "guild_avatar_url", removal_version="2.4.0", additional_info="Use 'make_guild_avatar_url' instead."
+            "guild_avatar_url", removal_version="2.5.0", additional_info="Use 'make_guild_avatar_url' instead."
         )
         return self.make_guild_avatar_url()
 
@@ -544,7 +544,7 @@ class Member(users.User):
     @deprecation.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         deprecation.warn_deprecated(
-            "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead."
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
         )
         return self.user.make_banner_url()
 
@@ -552,7 +552,7 @@ class Member(users.User):
     def guild_banner_url(self) -> files.URL | None:
         """Guild Banner URL for the user, if they have one set."""
         deprecation.warn_deprecated(
-            "guild_banner_url", removal_version="2.4.0", additional_info="Use 'make_guild_banner_url' instead."
+            "guild_banner_url", removal_version="2.5.0", additional_info="Use 'make_guild_banner_url' instead."
         )
         return self.make_guild_banner_url()
 
@@ -772,7 +772,7 @@ class Member(users.User):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -860,7 +860,7 @@ class Member(users.User):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -1287,7 +1287,7 @@ class Role(PartialRole):
     @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """Role icon URL, if there is one."""
-        deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead.")
+        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
         return self.make_icon_url()
 
     @property
@@ -1353,7 +1353,7 @@ class Role(PartialRole):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -1432,7 +1432,7 @@ class PartialApplication(snowflakes.Unique):
     @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """App icon URL, if there is one."""
-        deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead")
+        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead")
         return self.make_icon_url()
 
     def make_icon_url(
@@ -1485,7 +1485,7 @@ class PartialApplication(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -1674,7 +1674,7 @@ class PartialGuild(snowflakes.Unique):
     @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """Icon URL for the guild, if set; otherwise [`None`][]."""
-        deprecation.warn_deprecated("icon_url", removal_version="2.4.0", additional_info="Use 'make_icon_url' instead.")
+        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
         return self.make_icon_url()
 
     def make_icon_url(
@@ -1731,7 +1731,7 @@ class PartialGuild(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -2846,7 +2846,7 @@ class GuildPreview(PartialGuild):
     def discovery_splash_url(self) -> files.URL | None:
         """Discovery URL splash for the guild, if set."""
         deprecation.warn_deprecated(
-            "discovery_splash_url", removal_version="2.4.0", additional_info="Use 'make_discovery_splash_url' instead"
+            "discovery_splash_url", removal_version="2.5.0", additional_info="Use 'make_discovery_splash_url' instead"
         )
         return self.make_discovery_splash_url()
 
@@ -2855,7 +2855,7 @@ class GuildPreview(PartialGuild):
     def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         deprecation.warn_deprecated(
-            "splash_url", removal_version="2.4.0", additional_info="Use 'make_splash_url' instead"
+            "splash_url", removal_version="2.5.0", additional_info="Use 'make_splash_url' instead"
         )
         return self.make_splash_url()
 
@@ -2909,7 +2909,7 @@ class GuildPreview(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -2972,7 +2972,7 @@ class GuildPreview(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -3120,7 +3120,7 @@ class Guild(PartialGuild):
     def banner_url(self) -> files.URL | None:
         """Banner URL for the guild, if set."""
         deprecation.warn_deprecated(
-            "banner_url", removal_version="2.4.0", additional_info="Use 'make_banner_url' instead"
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead"
         )
         return self.make_banner_url()
 
@@ -3129,7 +3129,7 @@ class Guild(PartialGuild):
     def discovery_splash_url(self) -> files.URL | None:
         """Discovery splash URL for the guild, if set."""
         deprecation.warn_deprecated(
-            "discovery_splash_url", removal_version="2.4.0", additional_info="Use 'make_discovery_splash_url' instead"
+            "discovery_splash_url", removal_version="2.5.0", additional_info="Use 'make_discovery_splash_url' instead"
         )
         return self.make_discovery_splash_url()
 
@@ -3138,7 +3138,7 @@ class Guild(PartialGuild):
     def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
         deprecation.warn_deprecated(
-            "splash_url", removal_version="2.4.0", additional_info="Use 'make_splash_url' instead"
+            "splash_url", removal_version="2.5.0", additional_info="Use 'make_splash_url' instead"
         )
         return self.make_splash_url()
 
@@ -3307,7 +3307,7 @@ class Guild(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -3368,7 +3368,7 @@ class Guild(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
@@ -3431,7 +3431,7 @@ class Guild(PartialGuild):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 

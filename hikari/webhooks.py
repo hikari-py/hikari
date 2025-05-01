@@ -524,7 +524,7 @@ class PartialWebhook(snowflakes.Unique):
         `default_avatar_url` instead.
         """
         deprecation.warn_deprecated(
-            "avatar_url", removal_version="2.4.0", additional_info="Use 'make_avatar_url' instead."
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
         )
         return self.make_avatar_url()
 
@@ -590,7 +590,7 @@ class PartialWebhook(snowflakes.Unique):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 

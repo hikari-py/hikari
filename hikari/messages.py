@@ -378,7 +378,7 @@ class MessageApplication(guilds.PartialApplication):
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
         deprecation.warn_deprecated(
-            "cover_image_url", removal_version="2.4.0", additional_info="Use 'make_cover_image_url' instead."
+            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
         )
         return self.make_cover_image_url()
 
@@ -432,7 +432,7 @@ class MessageApplication(guilds.PartialApplication):
 
         if ext:
             deprecation.warn_deprecated(
-                "ext", removal_version="2.4.0", additional_info="Use 'file_format' argument instead."
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
             )
             file_format = ext.upper()  # type: ignore[assignment]
 
