@@ -3364,7 +3364,7 @@ class RESTClientImpl(rest_api.RESTClient):
             before=start,
             before_is_timestamp=False,
         )
-    
+
     @typing_extensions.override
     def reposition_channels(
         self,
@@ -3372,10 +3372,6 @@ class RESTClientImpl(rest_api.RESTClient):
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]] = {},
     ) -> special_endpoints.ChannelRepositioner:
         builder = special_endpoints_impl.ChannelRepositioner(guild=guild, request_call=self._request)
-        if positions:
-            deprecation.warn_deprecated(
-                "positions", removal_version="2.5.0", additional_info="Use the returned `ChannelRepositioner` instead."
-            )
         for pos, channel in positions.items():
             builder.reposition_channel(position=pos, channel=channel)
         return builder
