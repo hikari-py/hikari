@@ -131,8 +131,37 @@ class TypingIndicator(abc.ABC):
 
 class ChannelRepositioner(abc.ABC):
     __slots__: typing.Sequence[str] = ()
+    
+    
+    @property
+    @abc.abstractmethod
+    def guild(self) -> snowflakes.SnowflakeishOr[guilds.PartialGuild]:
+        """The guild"""
 
+    @abc.abstractmethod
+    def set_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> Self:
+        """Set the guild.
 
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @property
+    @abc.abstractmethod
+    def positions(self) -> typing.Sequence[RepositionChannelHelper]:
+        """The positions"""
+
+    @abc.abstractmethod
+    def set_positions(self, positions: typing.Sequence[RepositionChannelHelper]) -> Self:
+        """Set the positions.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
 
     @abc.abstractmethod
     def reposition_channel(
@@ -146,6 +175,70 @@ class ChannelRepositioner(abc.ABC):
 
     @abc.abstractmethod
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]: ...
+
+
+class RepositionChannelHelper(abc.ABC):
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def channel(self) -> snowflakes.SnowflakeishOr[channels.GuildChannel]:
+        """Channel property"""
+
+    @abc.abstractmethod
+    def set_channel(self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]) -> Self:
+        """Set the channel.
+
+        Returns
+        -------
+        RepositionChannelHelper
+            The reposition channel helper.
+        """
+
+    @property
+    @abc.abstractmethod
+    def position(self) -> int:
+        """Position property"""
+
+    @abc.abstractmethod
+    def set_position(self, position: int) -> Self:
+        """Set the position.
+
+        Returns
+        -------
+        RepositionChannelHelper
+            The reposition channel helper.
+        """
+
+    @property
+    @abc.abstractmethod
+    def lock_permissions(self) -> undefined.UndefinedOr[bool]:
+        """Position property"""
+
+    @abc.abstractmethod
+    def set_lock_permissions(self, lock: undefined.UndefinedOr[bool]) -> Self:
+        """Set the lock.
+
+        Returns
+        -------
+        RepositionChannelHelper
+            The reposition channel helper.
+        """
+
+    @property
+    @abc.abstractmethod
+    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+        """Position property"""
+
+    @abc.abstractmethod
+    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+        """Set the lock.
+
+        Returns
+        -------
+        RepositionChannelHelper
+            The reposition channel helper.
+        """
 
 
 class GuildBuilder(abc.ABC):

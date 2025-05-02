@@ -212,18 +212,31 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 
 
 class ChannelRepositioner(special_endpoints.ChannelRepositioner):
-    __slots__: typing.Sequence[str] = ("_channels", "_guild", "_request_call")
+    """Standard implementation of [`hikari.api.special_endpoints.ChannelRepositioner`][]."""
+    
+    _guild: snowflakes.SnowflakeishOr[guilds.PartialGuild] = attrs.field(repr=True, alias="guild")
+    _request_call: _RequestCallSig = attrs.field(alias="request_call", metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    _positions: list[special_endpoints.RepositionChannelHelper] = attrs.field(repr=True, alias="positions", factory=list)
 
-    def __init__(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        request_call: _RequestCallSig,
-        *,
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels.GuildChannel]] = {},
-    ) -> None:
+    @property
+    @typing_extensions.override
+    def guild(self) -> snowflakes.SnowflakeishOr[guilds.PartialGuild]:
+        return self._guild
+
+    @typing_extensions.override
+    def set_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> Self:
         self._guild = guild
-        self._request_call = request_call
-        self._channels = [RepositionChannelHelper(channel=channel, position=pos) for pos, channel in positions.items()]
+        return self
+
+    @property
+    @typing_extensions.override
+    def positions(self) -> typing.Sequence[RepositionChannelHelper]:
+        return self._positions
+
+    @typing_extensions.override
+    def set_positions(self, positions: typing.Sequence[RepositionChannelHelper]) -> Self:
+        self._positions = list(positions)
+        return self
 
     @typing_extensions.override
     def reposition_channel(
@@ -234,7 +247,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
         lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
-        self._channels.append(
+        self._positions.append(
             RepositionChannelHelper(
                 channel=channel, position=position, lock_permissions=lock_permissions, parent=parent
             )
@@ -245,7 +258,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
         route = routes.PATCH_GUILD_CHANNELS.compile(guild=self._guild)
         body = []
-        for channel in self._channels:
+        for channel in self._positions:
             channel_payload = data_binding.JSONObjectBuilder()
             channel_payload.put_snowflake("id", channel.channel)
             channel_payload.put("position", channel.position)
@@ -256,8 +269,9 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class RepositionChannelHelper:
-
+class RepositionChannelHelper(special_endpoints.RepositionChannelHelper):
+    """Standard implementation of [`hikari.api.special_endpoints.RepositionChannelHelper`][]."""
+    
     _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True)
     _position: int = attrs.field(repr=True)
     _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(repr=True, default=undefined.UNDEFINED)
@@ -266,8 +280,45 @@ class RepositionChannelHelper:
     )
 
     @property
+    @typing_extensions.override
     def channel(self) -> snowflakes.SnowflakeishOr[channels.GuildChannel]:
         return self._channel
+
+    @typing_extensions.override
+    def set_channel(self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]) -> Self:
+        self._channel = channel
+        return self
+
+    @property
+    @typing_extensions.override
+    def position(self) -> int:
+        return self._position
+
+    @typing_extensions.override
+    def set_position(self, position: int) -> Self:
+        self._position = position
+        return self
+
+    @property
+    @typing_extensions.override
+    def lock_permissions(self) -> undefined.UndefinedOr[bool]:
+        return self._lock_permissions
+
+    @typing_extensions.override
+    def set_lock_permissions(self, lock: undefined.UndefinedOr[bool]) -> Self:
+        self._lock_permissions = lock
+        return self
+
+    @property
+    @typing_extensions.override
+    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+        return self._parent
+
+    @typing_extensions.override
+    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+        self._parent = parent
+        return self
+
 
 
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
