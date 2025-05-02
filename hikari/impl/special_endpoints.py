@@ -258,7 +258,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
         return self
 
     @typing_extensions.override
-    def reposition_channel(
+    def add_reposition_channel(
         self,
         position: int,
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
@@ -272,6 +272,10 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
             )
         )
         return self
+
+    @typing_extensions.override
+    async def reposition(self) -> None:
+        await self
 
     @typing_extensions.override
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
