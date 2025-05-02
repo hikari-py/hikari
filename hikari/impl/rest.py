@@ -3364,19 +3364,7 @@ class RESTClientImpl(rest_api.RESTClient):
             before=start,
             before_is_timestamp=False,
         )
-
-    @typing.overload
-    def reposition_channels(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> special_endpoints.ChannelRepositioner: ...
-
-    @typing.overload
-    def reposition_channels(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
-    ) -> special_endpoints.ChannelRepositioner: ...
-
+    
     @typing_extensions.override
     def reposition_channels(
         self,
