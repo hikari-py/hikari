@@ -1671,7 +1671,6 @@ class TestRESTClientImpl:
             reply=123,
             reply_must_exist=True,
         )
-        print(body["allowed_mentions"])
         assert body == {
             "flags": 8312,
             "allowed_mentions": {"parse": []},
