@@ -131,7 +131,6 @@ class TypingIndicator(abc.ABC):
     ) -> None: ...
 
 
-
 class ChannelRepositioner(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 

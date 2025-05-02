@@ -294,7 +294,9 @@ class RepositionChannelHelper(special_endpoints.RepositionChannelHelper):
 
     _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True, alias="channel")
     _position: int = attrs.field(repr=True, alias="position")
-    _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(repr=True, default=undefined.UNDEFINED, alias="lock_permissions")
+    _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(
+        repr=True, default=undefined.UNDEFINED, alias="lock_permissions"
+    )
     _parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
         repr=True, default=undefined.UNDEFINED, alias="parent"
     )
@@ -339,7 +341,7 @@ class RepositionChannelHelper(special_endpoints.RepositionChannelHelper):
         self._parent = parent
         return self
 
-      
+
 # We use an explicit forward reference for this, since this breaks potential
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).

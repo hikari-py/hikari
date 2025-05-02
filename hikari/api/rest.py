@@ -5542,7 +5542,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]] = {},
     ) -> special_endpoints.ChannelRepositioner:
-        """Returns a [`hikari.api.special_endpoints.ChannelRepositioner`][], used to reposition channels in a guild.
+        """Return a [`hikari.api.special_endpoints.ChannelRepositioner`][], used to reposition channels in a guild.
 
         Parameters
         ----------
@@ -5558,7 +5558,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 use of the returned [`hikari.api.special_endpoints.ChannelRepositioner`][].
 
         Returns
-        ----------
+        -------
         hikari.api.special_endpoints.ChannelRepositioner
             The channel repositioner.
 
