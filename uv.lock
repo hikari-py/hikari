@@ -1080,7 +1080,7 @@ mkdocs = [
     { name = "mkdocstrings", extras = ["python"], specifier = "==0.29.1" },
 ]
 mypy = [{ name = "mypy", extras = ["faster-cache"], specifier = "==1.15.0" }]
-nox = [{ name = "nox", extras = ["uv"], specifier = "==2025.2.9" }]
+nox = [{ name = "nox", extras = ["uv"], specifier = "==2025.5.1" }]
 pyright = [{ name = "pyright", specifier = "==1.1.400" }]
 pytest = [
     { name = "async-timeout", specifier = "==5.0.1" },
@@ -1824,7 +1824,7 @@ wheels = [
 
 [[package]]
 name = "nox"
-version = "2025.2.9"
+version = "2025.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "argcomplete" },
@@ -1835,9 +1835,9 @@ dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "virtualenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0d/22/84a2d3442cb33e6fb1af18172a15deb1eea3f970417f1f4c5fa1600143e8/nox-2025.2.9.tar.gz", hash = "sha256:d50cd4ca568bd7621c2e6cbbc4845b3b7f7697f25d5fb0190ce8f4600be79768", size = 4021103, upload-time = "2025-02-09T19:02:06.556Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/80/47712208c410defec169992e57c179f0f4d92f5dd17ba8daca50a8077e23/nox-2025.5.1.tar.gz", hash = "sha256:2a571dfa7a58acc726521ac3cd8184455ebcdcbf26401c7b737b5bc6701427b2", size = 4023334, upload-time = "2025-05-01T16:35:48.056Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/57/ca/64e634c056cba463cac743735660a772ab78eb26ec9759e88de735f2cd27/nox-2025.2.9-py3-none-any.whl", hash = "sha256:7d1e92d1918c6980d70aee9cf1c1d19d16faa71c4afe338fffd39e8a460e2067", size = 71315, upload-time = "2025-02-09T19:02:04.624Z" },
+    { url = "https://files.pythonhosted.org/packages/a6/be/7b423b02b09eb856beffe76fe8c4121c99852db74dd12a422dcb72d1134e/nox-2025.5.1-py3-none-any.whl", hash = "sha256:56abd55cf37ff523c254fcec4d152ed51e5fe80e2ab8317221d8b828ac970a31", size = 71753, upload-time = "2025-05-01T16:35:46.037Z" },
 ]
 
 [package.optional-dependencies]
