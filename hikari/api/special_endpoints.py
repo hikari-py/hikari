@@ -145,7 +145,16 @@ class ChannelRepositioner(abc.ABC):
     Basic usage:
     ```py
     channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
-    channel_repositioner.add_reposition_channel(position=3, channel=CHANNEL_ID)
+    channel_repositioner.add_reposition_channel(position=2, channel=CHANNEL_ID)
+
+    await channel_repositioner
+    ```
+    Change parent:
+    ```py
+    channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
+    channel_repositioner.add_reposition_channel(
+        position=1, channel=CHANNEL_ID, lock_permissions=False, parent=CATEGORY_ID
+    )
 
     await channel_repositioner
     ```
