@@ -148,6 +148,7 @@ class ChannelRepositioner(abc.ABC):
     channel_repositioner.add_reposition_channel(position=3, channel=CHANNEL_ID)
     
     await channel_repositioner
+    ```
     
     Raises
     ------
@@ -162,7 +163,6 @@ class ChannelRepositioner(abc.ABC):
         longer than `max_rate_limit` when making a request.
     hikari.errors.InternalServerError
         If an internal error occurs on Discord while handling the request.
-    ```
         
     
     """
