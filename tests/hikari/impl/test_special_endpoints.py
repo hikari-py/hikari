@@ -60,6 +60,84 @@ class TestTypingIndicator:
         except AttributeError as exc:
             pytest.fail(exc)
 
+class TestChannelRepositioner:
+    """Test class for ChannelRepositioner.
+
+    We don't need to test any of the `reposition_channel` or `__await__` functions,
+    since they get called by the `RESTClient` tests, testing `RESTClient.reposition_channels`.
+    """
+
+
+    @pytest.fixture
+    def channel_repositioner(self) -> special_endpoints_api.ChannelRepositioner:
+        return special_endpoints.ChannelRepositioner(
+            guild=123,
+            request_call=mock.AsyncMock()
+        )
+
+    @pytest.fixture
+    def reposition_channel_helper(self) -> special_endpoints_api.RepositionChannelHelper:
+        return special_endpoints.RepositionChannelHelper(
+            channel=123,
+            position=1,
+            lock_permissions=False,
+            parent=321
+        )
+
+    def test_set_guild(self, channel_repositioner: special_endpoints_api.ChannelRepositioner) -> None:
+        channel_repositioner.set_guild(187)
+
+        assert channel_repositioner.guild == 187
+
+    def test_set_positions(self, channel_repositioner: special_endpoints_api.ChannelRepositioner, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+        channel_repositioner.set_positions((reposition_channel_helper,))
+        # also test if the Sequence gets correctly converted to list, that's why we pass a tuple and check for a list.
+        assert channel_repositioner.positions == [reposition_channel_helper]
+
+
+class TestRepositionChannelHelper:
+
+    @pytest.fixture
+    def reposition_channel_helper(self) -> special_endpoints_api.RepositionChannelHelper:
+        return special_endpoints.RepositionChannelHelper(
+            channel=123,
+            position=1,
+            lock_permissions=False,
+            parent=321
+        )
+
+    def test_set_channel(self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+        reposition_channel_helper.set_channel(187)
+
+        assert reposition_channel_helper.channel == 187
+
+    def test_set_position(self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+        reposition_channel_helper.set_position(187)
+
+        assert reposition_channel_helper.position == 187
+
+    def test_set_lock_permissions(self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+        reposition_channel_helper.set_lock_permissions(True)
+
+        assert reposition_channel_helper.lock_permissions == True
+
+    def test_set_lock_permissions_undefined(self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+        reposition_channel_helper.set_lock_permissions(undefined.UNDEFINED)
+
+        assert reposition_channel_helper.lock_permissions == undefined.UNDEFINED
+
+    def test_set_parent(self,
+                                  reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+        reposition_channel_helper.set_parent(187)
+
+        assert reposition_channel_helper.parent == 187
+
+    def test_set_parent_undefined(self,
+                                            reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+        reposition_channel_helper.set_parent(undefined.UNDEFINED)
+
+        assert reposition_channel_helper.parent == undefined.UNDEFINED
+
 
 class TestOwnGuildIterator:
     @pytest.mark.asyncio

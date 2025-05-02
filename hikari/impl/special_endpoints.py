@@ -219,7 +219,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     _guild: snowflakes.SnowflakeishOr[guilds.PartialGuild] = attrs.field(repr=True, alias="guild")
     _request_call: _RequestCallSig = attrs.field(alias="request_call", metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     _positions: list[special_endpoints.RepositionChannelHelper] = attrs.field(
-        repr=True, alias="positions", factory=list
+        repr=True, alias="positions", factory=list, init=False
     )
 
     @property
@@ -277,11 +277,11 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
 class RepositionChannelHelper(special_endpoints.RepositionChannelHelper):
     """Standard implementation of [`hikari.api.special_endpoints.RepositionChannelHelper`][]."""
 
-    _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True)
-    _position: int = attrs.field(repr=True)
-    _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(repr=True, default=undefined.UNDEFINED)
+    _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True, alias="channel")
+    _position: int = attrs.field(repr=True, alias="position")
+    _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(repr=True, default=undefined.UNDEFINED, alias="lock_permissions")
     _parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
-        repr=True, default=undefined.UNDEFINED
+        repr=True, default=undefined.UNDEFINED, alias="parent"
     )
 
     @property
