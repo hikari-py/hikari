@@ -133,9 +133,38 @@ class TypingIndicator(abc.ABC):
 
 class ChannelRepositioner(abc.ABC):
     """Helper class used for repositioning channels in a guild.
-
+    
+    This is an object that should be awaited to trigger the repositioning.
+    
     !!! note
         This class should only be initialized by [`hikari.api.rest.RESTClient.reposition_channels`][].
+    
+    Examples
+    --------
+    
+    Basic usage:
+    ```py
+    channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
+    channel_repositioner.add_reposition_channel(position=3, channel=CHANNEL_ID)
+    
+    await channel_repositioner
+    
+    Raises
+    ------
+    hikari.errors.UnauthorizedError
+        If you are unauthorized to make the request (invalid/missing token).
+    hikari.errors.ForbiddenError
+        If you cannot access the channel.
+    hikari.errors.NotFoundError
+        If the channel is not found.
+    hikari.errors.RateLimitTooLongError
+        Raised in the event that a rate limit occurs that is
+        longer than `max_rate_limit` when making a request.
+    hikari.errors.InternalServerError
+        If an internal error occurs on Discord while handling the request.
+    ```
+        
+    
     """
     __slots__: typing.Sequence[str] = ()
 
