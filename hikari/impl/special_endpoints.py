@@ -229,6 +229,8 @@ class TypingIndicator(special_endpoints.TypingIndicator):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=False, weakref_slot=False)
 class ChannelRepositioner(special_endpoints.ChannelRepositioner):
+    """Standard implementation of [`hikari.api.special_endpoints.ChannelRepositioner`][]."""
+
     _guild: snowflakes.SnowflakeishOr[guilds.PartialGuild] = attrs.field(repr=True, alias="guild")
     _request_call: _RequestCallSig = attrs.field(alias="request_call", metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     _positions: list[special_endpoints.RepositionChannelHelper] = attrs.field(

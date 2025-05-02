@@ -232,9 +232,6 @@ class ChannelRepositioner(abc.ABC):
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
         """Reposition the channels in a guild.
 
-        !!! note
-            Only channels to be modified are required.
-
         Raises
         ------
         hikari.errors.UnauthorizedError
