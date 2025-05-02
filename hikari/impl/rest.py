@@ -75,6 +75,7 @@ from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
 from hikari.internal import aio
 from hikari.internal import data_binding
+from hikari.internal import deprecation
 from hikari.internal import mentions
 from hikari.internal import net
 from hikari.internal import routes
@@ -3382,7 +3383,14 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]] = {},
     ) -> special_endpoints.ChannelRepositioner:
-        return special_endpoints_impl.ChannelRepositioner(guild=guild, request_call=self._request, positions=positions)
+        builder = special_endpoints_impl.ChannelRepositioner(guild=guild, request_call=self._request)
+        if positions:
+            deprecation.warn_deprecated(
+                "positions", removal_version="2.5.0", additional_info="Use the returned `ChannelRepositioner` instead."
+            )
+        for pos, channel in positions.items():
+            builder.reposition_channel(position=pos, channel=channel)
+        return builder
 
     @typing_extensions.override
     async def fetch_member(

@@ -79,22 +79,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
-    from hikari.internal import data_binding
-    from hikari.internal import routes
     from hikari.internal import time
-
-    class _RequestCallSig(typing.Protocol):
-        async def __call__(
-            self,
-            compiled_route: routes.CompiledRoute,
-            *,
-            query: data_binding.StringMapBuilder | None = None,
-            form_builder: data_binding.URLEncodedFormBuilder | None = None,
-            json: data_binding.JSONObjectBuilder | data_binding.JSONArray | None = None,
-            reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-            auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        ) -> None | data_binding.JSONObject | data_binding.JSONArray: ...
-
 
 _ParentT = typing.TypeVar("_ParentT")
 
@@ -131,12 +116,11 @@ class TypingIndicator(abc.ABC):
 
 class ChannelRepositioner(abc.ABC):
     __slots__: typing.Sequence[str] = ()
-    
-    
+
     @property
     @abc.abstractmethod
     def guild(self) -> snowflakes.SnowflakeishOr[guilds.PartialGuild]:
-        """The guild"""
+        """The guild."""
 
     @abc.abstractmethod
     def set_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> Self:
@@ -151,7 +135,7 @@ class ChannelRepositioner(abc.ABC):
     @property
     @abc.abstractmethod
     def positions(self) -> typing.Sequence[RepositionChannelHelper]:
-        """The positions"""
+        """The positions."""
 
     @abc.abstractmethod
     def set_positions(self, positions: typing.Sequence[RepositionChannelHelper]) -> Self:
@@ -183,7 +167,7 @@ class RepositionChannelHelper(abc.ABC):
     @property
     @abc.abstractmethod
     def channel(self) -> snowflakes.SnowflakeishOr[channels.GuildChannel]:
-        """Channel property"""
+        """Channel property."""
 
     @abc.abstractmethod
     def set_channel(self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]) -> Self:
@@ -198,7 +182,7 @@ class RepositionChannelHelper(abc.ABC):
     @property
     @abc.abstractmethod
     def position(self) -> int:
-        """Position property"""
+        """Position property."""
 
     @abc.abstractmethod
     def set_position(self, position: int) -> Self:
@@ -213,7 +197,7 @@ class RepositionChannelHelper(abc.ABC):
     @property
     @abc.abstractmethod
     def lock_permissions(self) -> undefined.UndefinedOr[bool]:
-        """Position property"""
+        """Lock permissions property."""
 
     @abc.abstractmethod
     def set_lock_permissions(self, lock: undefined.UndefinedOr[bool]) -> Self:
@@ -228,11 +212,11 @@ class RepositionChannelHelper(abc.ABC):
     @property
     @abc.abstractmethod
     def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
-        """Position property"""
+        """Parent property."""
 
     @abc.abstractmethod
     def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
-        """Set the lock.
+        """Set the parent.
 
         Returns
         -------
