@@ -37,6 +37,24 @@ def mock_app():
 
 
 class TestActivityAssets:
+    def test_make_large_asset_url_format_set_to_deprecated_ext_argument_if_provided(self):
+        asset = presences.ActivityAssets(
+            application_id=snowflakes.Snowflake(1),
+            large_image="abc",
+            large_text="def",
+            small_image="ghi",
+            small_text="jkl",
+        )
+
+        with mock.patch.object(
+            routes, "CDN_APPLICATION_ASSET", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert asset.make_large_image_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, application_id=1, hash="abc", size=4096, file_format="JPEG", lossless=True
+        )
+
     def test_large_image_url_property(self):
         asset = presences.ActivityAssets(
             application_id=None, large_image=None, large_text=None, small_image=None, small_text=None
@@ -67,10 +85,10 @@ class TestActivityAssets:
         )
 
         with mock.patch.object(routes, "CDN_APPLICATION_ASSET") as route:
-            assert asset.make_large_image_url(ext="fa", size=3121) is route.compile_to_file.return_value
+            assert asset.make_large_image_url(ext="FA", size=3121) is route.compile_to_file.return_value
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, application_id=45123123, hash="541sdfasdasd", size=3121, file_format="fa"
+            urls.CDN_URL, application_id=45123123, hash="541sdfasdasd", size=3121, file_format="FA", lossless=True
         )
 
     def test_make_large_image_url_when_no_hash(self):
@@ -97,6 +115,24 @@ class TestActivityAssets:
 
         with pytest.raises(RuntimeError, match="Unknown asset type"):
             asset.make_large_image_url()
+
+    def test_make_small_asset_url_format_set_to_deprecated_ext_argument_if_provided(self):
+        asset = presences.ActivityAssets(
+            application_id=snowflakes.Snowflake(1),
+            large_image="abc",
+            large_text="def",
+            small_image="ghi",
+            small_text="jkl",
+        )
+
+        with mock.patch.object(
+            routes, "CDN_APPLICATION_ASSET", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert asset.make_small_image_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, application_id=1, hash="ghi", size=4096, file_format="JPEG", lossless=True
+        )
 
     def test_small_image_url_property(self):
         asset = presences.ActivityAssets(
@@ -128,10 +164,10 @@ class TestActivityAssets:
         )
 
         with mock.patch.object(routes, "CDN_APPLICATION_ASSET") as route:
-            assert asset.make_small_image_url(ext="eat", size=123312) is route.compile_to_file.return_value
+            assert asset.make_small_image_url(ext="EAT", size=123312) is route.compile_to_file.return_value
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, application_id=123321, hash="aseqwsdas", size=123312, file_format="eat"
+            urls.CDN_URL, application_id=123321, hash="aseqwsdas", size=123312, file_format="EAT", lossless=True
         )
 
     def test_make_small_image_url_when_no_hash(self):
