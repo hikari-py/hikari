@@ -5534,7 +5534,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 This call is not a coroutine function, it returns a special type of
                 lazy iterator that will perform API calls as you iterate across it.
                 See [`hikari.iterators`][] for the full API for this iterator type.
-        
+
         Raises
         ------
         hikari.errors.UnauthorizedError
