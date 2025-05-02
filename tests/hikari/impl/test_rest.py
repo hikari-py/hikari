@@ -1671,8 +1671,10 @@ class TestRESTClientImpl:
             reply=123,
             reply_must_exist=True,
         )
+        print(body["allowed_mentions"])
         assert body == {
             "flags": 8312,
+            "allowed_mentions": {"parse": []},
             "message_reference": {"message_id": "123", "fail_if_not_exists": True},
             "attachments": [{"duration_secs": 3, "waveform": "AAAA", "id": 0, "filename": "attachment123.png"}],
         }
