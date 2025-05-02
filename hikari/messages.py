@@ -46,6 +46,7 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -132,6 +133,9 @@ class MessageType(int, enums.Enum):
     CONTEXT_MENU_COMMAND = 23
     """A message sent to indicate a context menu has been executed."""
 
+    AUTO_MODERATION_ACTION = 24
+    """A message sent to indicate an auto-moderation action has been triggered."""
+
     ROLE_SUBSCRIPTION_PURCHASE = 25
     """A message sent to indicate a role subscription has been purchased."""
 
@@ -187,6 +191,9 @@ class MessageFlag(enums.Flag):
 
     IS_VOICE_MESSAGE = 1 << 13
     """This message is a voice message."""
+
+    IS_COMPONENTS_V2 = 1 << 15
+    """This message uses the new components system."""
 
 
 @typing.final
@@ -367,21 +374,46 @@ class MessageApplication(guilds.PartialApplication):
     """The CDN's hash of this application's default rich presence invite cover image."""
 
     @property
+    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
     def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
+        deprecation.warn_deprecated(
+            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
+        )
         return self.make_cover_image_url()
 
-    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
+    def make_cover_image_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
+
+        If no cover image is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
-            supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -390,15 +422,27 @@ class MessageApplication(guilds.PartialApplication):
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            urls.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            application_id=self.id,
+            hash=self.cover_image_hash,
+            size=size,
+            file_format=file_format,
+            lossless=lossless,
         )
 
 
@@ -600,7 +644,7 @@ class PartialMessage(snowflakes.Unique):
         This will only be provided for interaction messages.
     """
 
-    components: undefined.UndefinedOr[typing.Sequence[component_models.MessageActionRowComponent]] = attrs.field(
+    components: undefined.UndefinedOr[typing.Sequence[component_models.TopLevelComponentTypesT]] = attrs.field(
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""
@@ -1432,7 +1476,7 @@ class Message(PartialMessage):
         This will only be provided for interaction messages.
     """
 
-    components: typing.Sequence[component_models.MessageActionRowComponent] = attrs.field(
+    components: typing.Sequence[component_models.TopLevelComponentTypesT] = attrs.field(
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""

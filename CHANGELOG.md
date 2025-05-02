@@ -1,3 +1,38 @@
+## 2.3.1 (2025-04-27)
+
+### Features
+
+- Add support for the auto-moderation API. ([#2205](https://github.com/hikari-py/hikari/issues/2205))
+
+### Bugfixes
+
+- Fix modal creations through builders ([#2330](https://github.com/hikari-py/hikari/issues/2330))
+
+---
+## 2.3.0 (2025-04-22)
+
+### Breaking Changes
+
+- Remove `GuildBuilder` class, `RestClient.guild_builder()` and `RestClient.create_guild_from_template()` due to Discord removing the feature for applications.
+    - For more information, please see: <https://discord.com/developers/docs/change-log#deprecating-guild-creation-by-apps> ([#2310](https://github.com/hikari-py/hikari/issues/2310))
+
+### Features
+
+- Add components V2 (UIKit) support
+    - For more information, please see <https://discord.com/developers/docs/components> ([#2196](https://github.com/hikari-py/hikari/issues/2196))
+- Add ``Permissions.SEND_POLLS`` and ``Permissions.USE_EXTERNAL_APPS``. ([#2311](https://github.com/hikari-py/hikari/issues/2311))
+- Add the following values to UserFlag:
+    - SPAMMER `1 << 20`
+    - PROVISIONAL_ACCOUNT `1 << 23`
+    - QUARANTINED `1 << 44`
+    - COLLABORATOR `1 << 50`
+    - RESTRICTED_COLLABORATOR `1 << 51` ([#2314](https://github.com/hikari-py/hikari/issues/2314))
+
+### Bugfixes
+
+- Add ``approximate_user_install_count`` attribute to ``Application``. ([#2303](https://github.com/hikari-py/hikari/issues/2303))
+
+---
 ## 2.2.1 (2025-04-06)
 
 ### Features

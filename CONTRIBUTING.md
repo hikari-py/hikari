@@ -81,7 +81,7 @@ pip install 'nox[uv]'
 
 Nox is similar to tox, but uses a pure Python configuration instead of an INI based configuration. Nox and tox are
 both tools for generating virtual environments and running commands in those environments. Examples of usage include
-installing, configuring, and running flake8, running pytest, etc.
+installing, configuring, and running ruff, running pytest, etc.
 
 You can check all the available nox commands by running `nox -l`.
 
@@ -98,7 +98,7 @@ This includes:
 - `test`
     - Run tests and installation of the package on different OS's and python versions.
 - `linting`
-    - Linting (`flake8`), type checking (`mypy`), audit (`pip-audit`) and spelling (`codespell`).
+    - Linting (`ruff`), type checking (`mypy`), audit (`pip-audit`) and spelling (`codespell`).
 - `twemoji`
     - Force test all discord emojis.
 - `pages`

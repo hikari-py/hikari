@@ -32,6 +32,7 @@ from hikari import undefined
 if typing.TYPE_CHECKING:
     from hikari import applications as application_models
     from hikari import audit_logs as audit_log_models
+    from hikari import auto_mod as auto_mod_models
     from hikari import channels as channel_models
     from hikari import commands
     from hikari import embeds as embed_models
@@ -1985,7 +1986,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        payload : hikari.internal.data_binding.JSONObject
+        payload
             The JSON payload to deserialize.
 
         Returns
@@ -2011,4 +2012,38 @@ class EntityFactory(abc.ABC):
         -------
         hikari.polls.Poll
             The deserialized poll object.
+        """
+
+    ###################
+    # AUTO-MOD MODELS #
+    ###################
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_action(self, payload: data_binding.JSONObject) -> auto_mod_models.PartialAutoModAction:
+        """Parse a raw payload from Discord into an auto-moderation action object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.auto_mod.PartialAutoModAction
+            The deserialized auto-moderation action object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_rule(self, payload: data_binding.JSONObject) -> auto_mod_models.AutoModRule:
+        """Parse a raw payload from Discord into an auto-moderation rule object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.auto_mod.AutoModRule
+            The deserialized auto-moderation rule object.
         """

@@ -34,6 +34,7 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -67,49 +68,61 @@ class UserFlag(enums.Flag):
     """Discord Employee."""
 
     PARTNERED_SERVER_OWNER = 1 << 1
-    """Owner of a partnered Discord server."""
+    """Partnered Discord server owner."""
 
     HYPESQUAD_EVENTS = 1 << 2
-    """HypeSquad Events."""
+    """Participated in HypeSquad Events."""
 
     BUG_HUNTER_LEVEL_1 = 1 << 3
-    """Bug Hunter Level 1."""
+    """Participated in the Discord Testers community."""
 
     HYPESQUAD_BRAVERY = 1 << 6
-    """House of Bravery."""
+    """Member of the HypeSquad House of Bravery."""
 
     HYPESQUAD_BRILLIANCE = 1 << 7
-    """House of Brilliance."""
+    """Member of the HypeSquad House of Brilliance."""
 
     HYPESQUAD_BALANCE = 1 << 8
-    """House of Balance."""
+    """Member of the HypeSquad House of Balance."""
 
     EARLY_SUPPORTER = 1 << 9
-    """Early Supporter."""
+    """Early premium supporter of Discord."""
 
     TEAM_USER = 1 << 10
-    """Team user."""
+    """Pseudo-user for an app's development team."""
 
     BUG_HUNTER_LEVEL_2 = 1 << 14
-    """Bug Hunter Level 2."""
+    """Vastly participated in the Discord Testers community."""
 
     VERIFIED_BOT = 1 << 16
-    """Verified Bot."""
+    """Verified bot."""
 
     EARLY_VERIFIED_DEVELOPER = 1 << 17
-    """Early verified Bot Developer.
-
-    Only applies to users that verified their account before 20th August 2019.
-    """
+    """Early verified bot developer."""
 
     DISCORD_CERTIFIED_MODERATOR = 1 << 18
-    """Discord Certified Moderator."""
+    """Alumni of the moderator program."""
 
     BOT_HTTP_INTERACTIONS = 1 << 19
-    """Bot uses only HTTP interactions and is shown in the active member list."""
+    """Uses only HTTP interactions and is shown in the active member list."""
+
+    SPAMMER = 1 << 20
+    """Suspected of being a spammer."""
 
     ACTIVE_DEVELOPER = 1 << 22
-    """User is an active bot developer."""
+    """Active developer of a Discord app."""
+
+    PROVISIONAL_ACCOUNT = 1 << 23
+    """Provisional account used with the social layer integration."""
+
+    QUARANTINED = 1 << 44
+    """Account is quarantined."""
+
+    COLLABORATOR = 1 << 50
+    """Discord Collaborator, considered Staff."""
+
+    RESTRICTED_COLLABORATOR = 1 << 51
+    """Restricted Discord Collaborator, considered Staff."""
 
 
 @typing.final
@@ -143,18 +156,37 @@ class AvatarDecoration:
     """The datetime at which the user will no longer have access to the avatar decoration."""
 
     @property
+    @deprecation.deprecated("Use 'make_url' instead.")
     def url(self) -> files.URL:
-        """Return the URL for this avatar decoration."""
+        """Default image URL for this avatar decoration."""
+        deprecation.warn_deprecated("url", removal_version="2.5.0", additional_info="Use 'make_url' instead.")
         return self.make_url()
 
-    def make_url(self, size: int = 4096) -> files.URL:
-        """Generate the url for this avatar decoration.
+    def make_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[typing.Literal["PNG", "JPEG", "JPG", "WEBP", "APNG"]] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+    ) -> files.URL:
+        """Generate the image URL for this avatar decoration.
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, and `APNG`.
+
+            If not specified, the format will be `PNG` or `APNG` based on
+            whether the decoration is animated or not.
         size
-            The size to set for the URL.
+            The size to set for the URL;
+            This is ignored for the `APNG` format;
             Can be any power of two between `16` and `4096`.
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
 
         Returns
         -------
@@ -163,11 +195,19 @@ class AvatarDecoration:
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`;
+            If an animated format is requested for a static avatar decoration.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
+        animated = self.asset_hash.startswith("a_")
+
+        if not file_format:
+            file_format = "APNG" if animated else "PNG"
+
         return routes.CDN_AVATAR_DECORATION.compile_to_file(
-            urls.CDN_URL, hash=self.asset_hash, size=size, file_format="png"
+            urls.MEDIA_PROXY_URL, hash=self.asset_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
@@ -540,12 +580,16 @@ class User(PartialUser, abc.ABC):
         """Avatar hash for the user, if they have one, otherwise [`None`][]."""
 
     @property
+    @deprecation.deprecated("Use 'make_avatar_url' instead.")
     def avatar_url(self) -> files.URL | None:
         """Avatar URL for the user, if they have one set.
 
-        Will be [`None`][] if no custom avatar is set. In this case, you
+        Will be [`None`][] if no avatar is set. In this case, you
         should use [`hikari.User.default_avatar_url`][] instead.
         """
+        deprecation.warn_deprecated(
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
+        )
         return self.make_avatar_url()
 
     @property
@@ -555,11 +599,15 @@ class User(PartialUser, abc.ABC):
         """Banner hash for the user, if they have one, otherwise [`None`][]."""
 
     @property
+    @deprecation.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
         """Banner URL for the user, if they have one set.
 
-        Will be [`None`][] if no custom banner is set.
+        Will be [`None`][] if no banner is set.
         """
+        deprecation.warn_deprecated(
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
+        )
         return self.make_banner_url()
 
     @property
@@ -567,11 +615,11 @@ class User(PartialUser, abc.ABC):
         """Default avatar URL for this user."""
         if self.discriminator == "0":  # migrated account
             return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-                urls.CDN_URL, style=(self.id >> 22) % 6, file_format="png"
+                urls.CDN_URL, style=(self.id >> 22) % 6, file_format="PNG"
             )
 
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(
-            urls.CDN_URL, style=int(self.discriminator) % 5, file_format="png"
+            urls.CDN_URL, style=int(self.discriminator) % 5, file_format="PNG"
         )
 
     @property
@@ -591,7 +639,7 @@ class User(PartialUser, abc.ABC):
     def display_banner_url(self) -> files.URL | None:
         """Display banner URL for this user, if they have one set.
 
-        Will be [`None`][] if no custom banner is set.
+        Will be [`None`][] if no banner is set.
         """
         return self.make_banner_url()
 
@@ -651,55 +699,104 @@ class User(PartialUser, abc.ABC):
     def global_name(self) -> str | None:
         """Global name for the user, if they have one, otherwise [`None`][]."""
 
-    def make_avatar_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
+    def make_avatar_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the avatar URL for this user, if set.
 
-        If no custom avatar is set, this returns [`None`][]. You can then
-        use the [`hikari.User.default_avatar_url`][] attribute instead to fetch
-        the displayed URL.
+        If no avatar is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
+            If not specified, the format will be determined based on
+            whether the avatar is animated or not.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated). Will be ignored for default avatars which can only be
-            `png`.
+            animated).
 
             If [`None`][], then the correct default extension is
-            determined based on whether the icon is animated or not.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
-            Will be ignored for default avatars.
+            determined based on whether the avatar is animated or not.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the avatar, or [`None`][] if not present.
+            The URL, or [`None`][] if no avatar is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`;
+            If an animated format is requested for a static avatar.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.avatar_hash is None:
             return None
 
-        if ext is None:
-            ext = "gif" if self.avatar_hash.startswith("a_") else "png"
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
+        if not file_format:
+            file_format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"
 
         return routes.CDN_USER_AVATAR.compile_to_file(
-            urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext
+            urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=file_format, lossless=lossless
         )
 
-    def make_banner_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
+    def make_banner_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the banner URL for this user, if set.
 
-        If no custom banner is set, this returns [`None`][].
+        If no banner is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
+            If not specified, the format will be determined based on
+            whether the banner is animated or not.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -707,28 +804,37 @@ class User(PartialUser, abc.ABC):
 
             If [`None`][], then the correct default extension is
             determined based on whether the banner is animated or not.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the banner, or [`None`][] if not present.
+            The URL, or [`None`][] if no banner is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`;
+            If an animated format is requested for a static banner.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash is None:
             return None
 
-        if ext is None:
-            ext = "gif" if self.banner_hash.startswith("a_") else "png"
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
+        if not file_format:
+            file_format = "GIF" if self.banner_hash.startswith("a_") else "PNG"
 
         return routes.CDN_USER_BANNER.compile_to_file(
-            urls.CDN_URL, user_id=self.id, hash=self.banner_hash, size=size, file_format=ext
+            urls.CDN_URL, user_id=self.id, hash=self.banner_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
