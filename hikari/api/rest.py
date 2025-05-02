@@ -5362,20 +5362,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
-    @typing.overload
-    @abc.abstractmethod
-    def reposition_channels(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> special_endpoints.ChannelRepositioner: ...
-
-    @typing.overload
-    @abc.abstractmethod
-    def reposition_channels(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
-    ) -> special_endpoints.ChannelRepositioner: ...
-
     @abc.abstractmethod
     def reposition_channels(
         self,
