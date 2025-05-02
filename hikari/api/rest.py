@@ -5346,20 +5346,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 This call is not a coroutine function, it returns a special type of
                 lazy iterator that will perform API calls as you iterate across it.
                 See [`hikari.iterators`][] for the full API for this iterator type.
-
-        Raises
-        ------
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you cannot access the channel.
-        hikari.errors.NotFoundError
-            If the channel is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
         """
 
     @abc.abstractmethod
@@ -5368,7 +5354,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]] = {},
     ) -> special_endpoints.ChannelRepositioner:
-        """Reposition the channels in a guild.
+        """Returns a [`hikari.api.special_endpoints.ChannelRepositioner`][], used to reposition channels in a guild.
 
         Parameters
         ----------
@@ -5378,6 +5364,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         positions
             A mapping of of the object or the ID of an existing channel to
             the new position, relative to their parent category, if any.
+
+            !!! note
+                Instead of using the `position` parameter, you should make 
+                use of the returned [`hikari.api.special_endpoints.ChannelRepositioner`][].
 
         Raises
         ------

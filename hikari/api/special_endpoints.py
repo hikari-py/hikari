@@ -155,10 +155,44 @@ class ChannelRepositioner(abc.ABC):
         *,
         lock_permissions: bool,
         parent: snowflakes.SnowflakeishOr[channels.GuildCategory],
-    ) -> Self: ...
+    ) -> Self:
+        """Add a channel that should be repositioned to the channel repositioner.
+
+        Parameters
+        ----------
+        position
+            The new position for the channel.
+        channel
+            The channel that should be repositioned. This can either be a
+            `[hikari.channels.GuildChannel`][] or the id of the channel.
+        lock_permissions
+            fuck this shit
+        parent
+            The id of the parent where this channel should be repositioned under.
+
+        """
 
     @abc.abstractmethod
-    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]: ...
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
+        """Reposition the channels in a guild.
+
+        !!! note
+            Only channels to be modified are required.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you cannot access the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
 
 
 class RepositionChannelHelper(abc.ABC):
