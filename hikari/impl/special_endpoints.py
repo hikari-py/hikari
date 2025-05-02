@@ -226,7 +226,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
         self._channels = [RepositionChannelHelper(channel=channel, position=pos) for pos, channel in positions.items()]
 
     @typing_extensions.override
-    def reposition(
+    def reposition_channel(
         self,
         position: int,
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
@@ -257,15 +257,17 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class RepositionChannelHelper:
-    channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True)
 
-    position: int = attrs.field(repr=True)
-
-    lock_permissions: undefined.UndefinedOr[bool] = attrs.field(repr=True, default=undefined.UNDEFINED)
-
-    parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
+    _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True)
+    _position: int = attrs.field(repr=True)
+    _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(repr=True, default=undefined.UNDEFINED)
+    _parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
         repr=True, default=undefined.UNDEFINED
     )
+
+    @property
+    def channel(self) -> snowflakes.SnowflakeishOr[channels.GuildChannel]:
+        return self._channel
 
 
 # As a note, slotting allows us to override the settable properties while staying within the interface's spec.
