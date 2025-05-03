@@ -3888,8 +3888,9 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> list[typing.MutableMapping[str, typing.Any]]:
         prompt_bodys: list[typing.MutableMapping[str, typing.Any]] = []
         for index, prompt in enumerate(prompts):
-            prompt_body = prompt.set_id(index).build()
-            prompt_bodys.append(prompt_body)
+            if prompt.id is undefined.UNDEFINED:
+                prompt.set_id(index)
+            prompt_bodys.append(prompt.build())
         return prompt_bodys
 
     @typing_extensions.override
