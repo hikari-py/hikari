@@ -71,11 +71,11 @@ class Cache(abc.ABC):
     This will be used by the gateway to cache specific types of
     objects that the application should attempt to remember for later, depending
     on how this is implemented. The requirement for this stems from the
-    assumption by Discord that bot applications will maintain some form of
+    assumption by Discord that gateway bot applications will maintain some form of
     "memory" of the events that occur.
 
     The implementation may choose to use a simple in-memory collection of
-    objects, or may decide to use a distributed system such as a Redis cache
+    objects, or may decide to use a distributed system such as a Redis or Valkey cache
     for cross-process bots.
     """
 
@@ -88,7 +88,7 @@ class Cache(abc.ABC):
 
     @abc.abstractmethod
     def get_dm_channel_id(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> snowflakes.Snowflake | None:
-        """Get the DM channel ID for a user.
+        """Get the DM channel ID for a user from the cache.
 
         Parameters
         ----------
@@ -98,18 +98,17 @@ class Cache(abc.ABC):
         Returns
         -------
         typing.Optional[hikari.snowflakes.Snowflake]
-            ID of the DM channel which was found cached for the supplied user or
-            [`None`][].
+            The DM channel ID for the specified user if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_dm_channel_ids_view(self) -> CacheView[snowflakes.Snowflake, snowflakes.Snowflake]:
-        """Get a view of the cached DM channel IDs.
+        """Get a view of the DM channel IDs in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.snowflakes.Snowflake]
-            Cache view of user IDs to DM channel IDs.
+            A view of user IDs to DM channel IDs.
         """
 
     @abc.abstractmethod
@@ -119,84 +118,81 @@ class Cache(abc.ABC):
         Parameters
         ----------
         emoji
-            Object or ID of the emoji to get from the cache.
+            Object or ID of the emoji to get.
 
         Returns
         -------
         typing.Optional[hikari.emojis.KnownCustomEmoji]
-            The object of the emoji that was found in the cache or [`None`][].
+            The known custom emoji object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_emojis_view(self) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
-        """Get a view of the known custom emoji objects in the cache.
+        """Get a view of the known custom emojis in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
-            A view of emoji IDs to objects of the known custom emojis found in
-            the cache.
+            A view of known custom emoji IDs to objects.
         """
 
     @abc.abstractmethod
     def get_emojis_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
-        """Get a view of the known custom emojis cached for a specific guild.
+        """Get a view of the known custom emojis in the cache for a specific guild.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get the cached emoji objects for.
+            Object or ID of the guild to get the emojis for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
-            A view of emoji IDs to objects of emojis found in the cache for the
-            specified guild.
+            A view of known custom emoji IDs to objects for the specified guild.
         """
 
     @abc.abstractmethod
     def get_sticker(self, sticker: snowflakes.SnowflakeishOr[stickers.GuildSticker], /) -> stickers.GuildSticker | None:
-        """Get a sticker from the cache.
+        """Get a guild sticker from the cache.
 
         Parameters
         ----------
         sticker
-            Object or ID of the sticker to get from the cache.
+            Object or ID of the sticker to get.
 
         Returns
         -------
         typing.Optional[hikari.stickers.GuildSticker]
-            The object of the sticker that was found in the cache or [`None`][].
+            The guild sticker object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_stickers_view(self) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
-        """Get a view of the sticker objects in the cache.
+        """Get a view of the guild stickers in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
-            A view of sticker IDs to objects of the stickers found in the cache.
+            A view of guild sticker IDs to objects.
         """
 
     @abc.abstractmethod
     def get_stickers_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
-        """Get a view of the known custom emojis cached for a specific guild.
+        """Get a view of the guild stickers in the cache for a specific guild.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get the cached sticker objects for.
+            Object or ID of the guild to get the stickers for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
-            A view of sticker IDs to objects of stickers found in the cache for the
-            specified guild.
+            A view of guild sticker IDs to objects for the specified guild.
         """
 
     @abc.abstractmethod
@@ -204,7 +200,7 @@ class Cache(abc.ABC):
         """Get a guild from the cache.
 
         !!! warning
-            This will return a guild regardless of whether it is available or
+            This may return a guild regardless of whether it is available or
             not. To only query available guilds, use [`hikari.api.cache.Cache.get_available_guild`][]
             instead. Likewise, to only query unavailable guilds, use
             [`hikari.api.cache.Cache.get_unavailable_guild`][].
@@ -212,39 +208,39 @@ class Cache(abc.ABC):
         Parameters
         ----------
         guild
-            Object or ID of the guild to get from the cache.
+            Object or ID of the guild to get.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else [`None`][].
+            The guild object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_available_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> guilds.GatewayGuild | None:
-        """Get the object of an available guild from the cache.
+        """Get an available guild from the cache.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get from the cache.
+            Object or ID of the guild to get.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else [`None`][].
+            The guild object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_unavailable_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> guilds.GatewayGuild | None:
-        """Get the object of an unavailable guild from the cache.
+        """Get an unavailable guild from the cache.
 
         !!! note
-            Unlike [`hikari.api.cache.Cache.get_available_guild`][], the objects returned by this
+            Unlike [`hikari.api.cache.Cache.get_available_guild`][], any object returned by this
             method will likely be out of date and inaccurate as they are
             considered unavailable, meaning that we are not receiving gateway
             events for this guild.
@@ -252,40 +248,40 @@ class Cache(abc.ABC):
         Parameters
         ----------
         guild
-            Object or ID of the guild to get from the cache.
+            Object or ID of the guild to get.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild if found, else [`None`][].
+            The guild object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
-        """Get a view of all the guild objects in the cache regardless if availability.
+        """Get a view of the guilds in the cache (regardless of availability).
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.GatewayGuild]
-            A view of guild IDs to the guild objects found in the cache.
+            A view of guild IDs to objects.
         """
 
     @abc.abstractmethod
     def get_available_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
-        """Get a view of the available guild objects in the cache.
+        """Get a view of the available guilds in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.GatewayGuild]
-            A view of guild IDs to the guild objects found in the cache.
+            A view of guild IDs to objects.
         """
 
     @abc.abstractmethod
     def get_unavailable_guilds_view(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
-        """Get a view of the unavailable guild objects in the cache.
+        """Get a view of the unavailable guilds in the cache.
 
         !!! note
-            Unlike [`hikari.api.cache.Cache.get_available_guilds_view`][], the objects returned by
+            Unlike [`hikari.api.cache.Cache.get_available_guilds_view`][], any objects returned by
             this method will likely be out of date and inaccurate as they are
             considered unavailable, meaning that we are not receiving gateway
             events for this guild.
@@ -293,7 +289,7 @@ class Cache(abc.ABC):
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.GatewayGuild]
-            A view of guild IDs to the guild objects found in the cache.
+            A view of guild IDs to objects.
         """
 
     @abc.abstractmethod
@@ -305,13 +301,12 @@ class Cache(abc.ABC):
         Parameters
         ----------
         channel
-            Object or ID of the guild channel to get from the cache.
+            Object or ID of the guild channel to get.
 
         Returns
         -------
         typing.Optional[hikari.channels.PermissibleGuildChannel]
-            The object of the guild channel that was found in the cache or
-            [`None`][].
+            The guild channel object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
@@ -321,8 +316,7 @@ class Cache(abc.ABC):
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.PermissibleGuildChannel]
-            A view of channel IDs to objects of the guild channels found in the
-            cache.
+            A view of guild channel IDs to objects.
         """
 
     @abc.abstractmethod
@@ -334,13 +328,12 @@ class Cache(abc.ABC):
         Parameters
         ----------
         guild
-            Object or ID of the guild to get the cached channels for.
+            Object or ID of the guild to get the channels for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.PermissibleGuildChannel]
-            A view of channel IDs to objects of the guild channels found in the
-            cache for the specified guild.
+            A view of guild channel IDs to objects for the specified guild.
         """
 
     @abc.abstractmethod
@@ -352,13 +345,12 @@ class Cache(abc.ABC):
         Parameters
         ----------
         thread
-            Object or ID of the thread to get from the cache.
+            Object or ID of the thread to get.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildThreadChannel]
-            The object of the thread that was found in the cache
-            or [`None`][].
+            The thread channel object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
@@ -368,8 +360,7 @@ class Cache(abc.ABC):
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
-            A view of channel IDs to objects of the thread channels found in the
-            cache.
+            A view of thread channel IDs to objects.
         """
 
     @abc.abstractmethod
@@ -379,20 +370,19 @@ class Cache(abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
         /,
     ) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
-        """Get a view of the thread channels in the cache for a specific guild.
+        """Get a view of the thread channels in the cache for a specific guild channel.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get the cached thread channels for.
+            Object or ID of the guild to get the thread channels for.
         channel
-            Object or ID of the channel to get the cached thread channels for.
+            Object or ID of the guild channel to get the thread channels for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
-            A view of channel IDs to objects of the thread channels found in the
-            cache for the specified channel.
+            A view of thread channel IDs to objects for the specified guild channel.
         """
 
     @abc.abstractmethod
@@ -404,57 +394,54 @@ class Cache(abc.ABC):
         Parameters
         ----------
         guild
-            Object or ID of the guild to get the cached thread channels for.
+            Object or ID of the guild to get the thread channels for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
-            A view of channel IDs to objects of the thread channels found in the
-            cache for the specified guild.
+            A view of thread channel IDs to objects for the specified guild.
         """
 
     @abc.abstractmethod
     def get_invite(self, code: invites.InviteCode | str, /) -> invites.InviteWithMetadata | None:
-        """Get an invite object from the cache.
+        """Get an invite from the cache.
 
         Parameters
         ----------
         code
-            The object or string code of the invite to get from the cache.
+            Object or string code of the invite to get.
 
         Returns
         -------
         typing.Optional[hikari.invites.InviteWithMetadata]
-            The object of the invite that was found in the cache or [`None`][].
+            The invite object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_invites_view(self) -> CacheView[str, invites.InviteWithMetadata]:
-        """Get a view of the invite objects in the cache.
+        """Get a view of the invites in the cache.
 
         Returns
         -------
         CacheView[str, hikari.invites.InviteWithMetadata]
-            A view of string codes to objects of the invites that were found in
-            the cache.
+            A view of invite string codes to objects.
         """
 
     @abc.abstractmethod
     def get_invites_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[str, invites.InviteWithMetadata]:
-        """Get a view of the invite objects in the cache for a specific guild.
+        """Get a view of the invites in the cache for a specific guild.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get invite objects for.
+            Object or ID of the guild to get the invites for.
 
         Returns
         -------
         CacheView[str, hikari.invites.InviteWithMetadata]
-            A view of string code to objects of the invites that were found in
-            the cache for the specified guild.
+            A view of invite string codes to objects for the specified guild.
         """
 
     @abc.abstractmethod
@@ -464,30 +451,29 @@ class Cache(abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
         /,
     ) -> CacheView[str, invites.InviteWithMetadata]:
-        """Get a view of the invite objects in the cache for a specified channel.
+        """Get a view of the invites in the cache for a specific channel.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get invite objects for.
+            Object or ID of the guild to get the invites for.
         channel
-            Object or ID of the channel to get invite objects for.
+            Object or ID of the channel to get the invites for.
 
         Returns
         -------
         CacheView[str, invites.InviteWithMetadata]
-            A view of string codes to objects of the invites there were found in
-            the cache for the specified channel.
+            A view of invite string codes to objects for the specified channel.
         """
 
     @abc.abstractmethod
     def get_me(self) -> users.OwnUser | None:
-        """Get the own user object from the cache.
+        """Get the own user from the cache.
 
         Returns
         -------
         typing.Optional[hikari.users.OwnUser]
-            The own user object that was found in the cache, else [`None`][].
+            The own user object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
@@ -497,72 +483,71 @@ class Cache(abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
     ) -> guilds.Member | None:
-        """Get a member object from the cache.
+        """Get a member from the cache.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get a cached member for.
+            Object or ID of the guild to get the member for.
         user
-            Object or ID of the user to get a cached member for.
+            Object or ID of the user to get the member for.
 
         Returns
         -------
         typing.Optional[hikari.guilds.Member]
-            The object of the member found in the cache, else [`None`][].
+            The member object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_members_view(self) -> CacheView[snowflakes.Snowflake, CacheView[snowflakes.Snowflake, guilds.Member]]:
-        """Get a view of all the members objects in the cache.
+        """Get a view of the members in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]]
-            A view of guild IDs to views of user IDs to objects of the members
-            that were found from the cache.
+            A view of guild IDs to views of user IDs to member objects.
         """
 
     @abc.abstractmethod
     def get_members_view_for_guild(
         self, guild_id: snowflakes.Snowflakeish, /
     ) -> CacheView[snowflakes.Snowflake, guilds.Member]:
-        """Get a view of the members cached for a specific guild.
+        """Get a view of the members in the cache for a specific guild.
 
         Parameters
         ----------
         guild_id
-            The ID of the guild to get the cached member view for.
+            The ID of the guild to get the members for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]
-            The view of user IDs to the members cached for the specified guild.
+            A view of user IDs to member objects for the specified guild.
         """
 
     @abc.abstractmethod
     def get_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /) -> messages.Message | None:
-        """Get a message object from the cache.
+        """Get a message from the cache.
 
         Parameters
         ----------
         message
-            Object or ID of the message to get from the cache.
+            Object or ID of the message to get.
 
         Returns
         -------
         typing.Optional[hikari.messages.Message]
-            The object of the message found in the cache or [`None`][].
+            The message object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_messages_view(self) -> CacheView[snowflakes.Snowflake, messages.Message]:
-        """Get a view of all the message objects in the cache.
+        """Get a view of the messages in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.messages.Message]
-            A view of message objects found in the cache.
+            A view of message IDs to objects.
         """
 
     @abc.abstractmethod
@@ -572,76 +557,73 @@ class Cache(abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
     ) -> presences.MemberPresence | None:
-        """Get a presence object from the cache.
+        """Get a presence from the cache.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get a presence for.
+            Object or ID of the guild to get the presence for.
         user
-            Object or ID of the user to get a presence for.
+            Object or ID of the user to get the presence for.
 
         Returns
         -------
         typing.Optional[hikari.presences.MemberPresence]
-            The object of the presence that was found in the cache or
-            [`None`][].
+            The presence object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_presences_view(
         self,
     ) -> CacheView[snowflakes.Snowflake, CacheView[snowflakes.Snowflake, presences.MemberPresence]]:
-        """Get a view of all the presence objects in the cache.
+        """Get a view of the presences in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake]]
-            A view of guild IDs to views of user IDs to objects of the presences
-            found in the cache.
+            A view of guild IDs to views of user IDs to presence objects.
         """
 
     @abc.abstractmethod
     def get_presences_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, presences.MemberPresence]:
-        """Get a view of the presence objects in the cache for a specific guild.
+        """Get a view of the presences in the cache for a specific guild.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get the cached presence objects for.
+            Object or ID of the guild to get the presences for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
-            A view of user IDs to objects of the presence found in the cache
-            for the specified guild.
+            A view of user IDs to presence objects for the specified guild.
         """
 
     @abc.abstractmethod
     def get_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> guilds.Role | None:
-        """Get a role object from the cache.
+        """Get a role from the cache.
 
         Parameters
         ----------
         role
-            Object or ID of the role to get from the cache.
+            Object or ID of the role to get.
 
         Returns
         -------
         typing.Optional[hikari.guilds.Role]
-            The object of the role found in the cache or [`None`][].
+            The role object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_roles_view(self) -> CacheView[snowflakes.Snowflake, guilds.Role]:
-        """Get a view of all the role objects in the cache.
+        """Get a view of the roles in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Role]
-            A view of role IDs to objects of the roles found in the cache.
+            A view of role IDs to objects.
         """
 
     @abc.abstractmethod
@@ -653,39 +635,37 @@ class Cache(abc.ABC):
         Parameters
         ----------
         guild
-            Object or ID of the guild to get the cached roles for.
+            Object or ID of the guild to get the roles for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Role]
-            A view of role IDs to objects of the roles that were found in the
-            cache for the specified guild.
+            A view of role IDs to objects for the specified guild.
         """
 
     @abc.abstractmethod
     def get_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> users.User | None:
-        """Get a user object from the cache.
+        """Get a user from the cache.
 
         Parameters
         ----------
         user
-            Object or ID of the user to get from the cache.
+            Object or ID of the user to get.
 
         Returns
         -------
         typing.Optional[hikari.users.User]
-            The object of the user that was found in the cache, else
-            [`None`][].
+            The user object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_users_view(self) -> CacheView[snowflakes.Snowflake, users.User]:
-        """Get a view of the user objects in the cache.
+        """Get a view of the users in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.users.User]
-            The view of user IDs to the users found in the cache.
+            A view of user IDs to objects.
         """
 
     @abc.abstractmethod
@@ -695,33 +675,31 @@ class Cache(abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
     ) -> voices.VoiceState | None:
-        """Get a voice state object from the cache.
+        """Get a voice state from the cache.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get a voice state for.
+            Object or ID of the guild to get the voice state for.
         user
-            Object or ID of the user to get a voice state for.
+            Object or ID of the user to get the voice state for.
 
         Returns
         -------
         typing.Optional[hikari.voices.VoiceState]
-            The object of the voice state that was found in the cache, or
-            [`None`][].
+            The voice state object if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def get_voice_states_view(
         self,
     ) -> CacheView[snowflakes.Snowflake, CacheView[snowflakes.Snowflake, voices.VoiceState]]:
-        """Get a view of all the voice state objects in the cache.
+        """Get a view of all voice states in the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
-            A view of guild IDs to views of user IDs to objects of the voice
-            states that were found in the cache.
+            A view of guild IDs to views of user IDs to voice state objects.
         """
 
     @abc.abstractmethod
@@ -731,38 +709,36 @@ class Cache(abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
         /,
     ) -> CacheView[snowflakes.Snowflake, voices.VoiceState]:
-        """Get a view of the voice states cached for a specific channel.
+        """Get a view of the voice states for a specific channel.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get the cached voice states for.
+            Object or ID of the guild to get the voice states for.
         channel
-            Object or ID of the channel to get the cached voice states for.
+            Object or ID of the channel to get the voice states for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
-            A view of user IDs to objects of the voice states found cached for
-            the specified channel.
+            A view of user IDs to voice state objects for the specified channel.
         """
 
     @abc.abstractmethod
     def get_voice_states_view_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, voices.VoiceState]:
-        """Get a view of the voice states cached for a specific guild.
+        """Get a view of the voice states for a specific guild.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to get the cached voice states for.
+            Object or ID of the guild to get the voice states for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
-            A view of user IDs to objects of the voice states found cached for
-            the specified guild.
+            A view of user IDs to voice state objects for the specified guild.
         """
 
 
@@ -777,17 +753,16 @@ class MutableCache(Cache, abc.ABC):
 
     @abc.abstractmethod
     def clear(self) -> None:
-        """Clear the full cache."""
+        """Clear the entire cache."""
 
     @abc.abstractmethod
     def clear_dm_channel_ids(self) -> CacheView[snowflakes.Snowflake, snowflakes.Snowflake]:
-        """Remove all the cached DM channel IDs.
+        """Remove all the DM channel IDs from the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.snowflakes.Snowflake]
-            Cache view of user IDs to DM channel IDs which were cleared from
-            the cache.
+            A view of user IDs to DM channel IDs that were removed.
         """
 
     @abc.abstractmethod
@@ -799,13 +774,12 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         user
-            Object or ID of the user to remove the cached DM channel ID for.
+            Object or ID of the user to remove the DM channel ID for.
 
         Returns
         -------
         typing.Optional[hikari.snowflakes.Snowflake]
-            The DM channel ID which was removed from the cache if found, else
-            [`None`][].
+            The DM channel ID that was removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
@@ -820,46 +794,44 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         user
-            Object or ID of the user to add a DM channel ID to the cache for.
+            Object or ID of the user to add a DM channel ID for.
         channel
-            Object or ID of the DM channel to add to the cache.
+            Object or ID of the DM channel to add.
         """
 
     @abc.abstractmethod
     def clear_emojis(self) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
-        """Remove all the known custom emoji objects from the cache.
+        """Remove all the known custom emojis from the cache.
 
         !!! note
-            This will skip emojis that are being kept alive by a reference
+            This will not remove emojis that are being kept alive by a reference
             on a presence entry.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
-            A cache view of emoji IDs to objects of the emojis that were
-            removed from the cache.
+            A view of known custom emoji IDs to objects that were removed.
         """
 
     @abc.abstractmethod
     def clear_emojis_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, emojis.KnownCustomEmoji]:
-        """Remove the known custom emoji objects cached for a specific guild.
+        """Remove all the known custom emojis from the cache for a specific guild.
 
         !!! note
-            This will skip emojis that are being kept alive by a reference
+            This will not remove emojis that are being kept alive by a reference
             on a presence entry.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove the cached emoji objects for.
+            Object or ID of the guild to remove the emojis for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.emojis.KnownCustomEmoji]
-            A view of emoji IDs to objects of the emojis that were removed
-            from the cache.
+            A view of known custom emoji IDs to objects that were removed.
         """
 
     @abc.abstractmethod
@@ -867,19 +839,18 @@ class MutableCache(Cache, abc.ABC):
         """Remove a known custom emoji from the cache.
 
         !!! note
-            This will not delete emojis that are being kept alive by a reference
+            This will not remove emojis that are being kept alive by a reference
             on a presence entry.
 
         Parameters
         ----------
         emoji
-            Object or ID of the emoji to remove from the cache.
+            Object or ID of the emoji to remove.
 
         Returns
         -------
         typing.Optional[hikari.emojis.KnownCustomEmoji]
-            The object of the emoji that was removed from the cache or
-            [`None`][].
+            The known custom emoji object that was removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
@@ -889,61 +860,58 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         emoji
-            The object of the known custom emoji to add to the cache.
+            The emoji object to add.
         """
 
     @abc.abstractmethod
     def update_emoji(
         self, emoji: emojis.KnownCustomEmoji, /
     ) -> tuple[emojis.KnownCustomEmoji | None, emojis.KnownCustomEmoji | None]:
-        """Update an emoji object in the cache.
+        """Update a known custom emoji in the cache.
 
         Parameters
         ----------
         emoji
-            The object of the emoji to update in the cache.
+            The emoji object to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.emojis.KnownCustomEmoji], typing.Optional[hikari.emojis.KnownCustomEmoji]]
-            A tuple of the old cached emoji object if found (else [`None`][])
-            and the new cached emoji object if it could be cached (else
-            [`None`][]).
+            A tuple of the old emoji object that was cached if found (otherwise [`None`][])
+            and the new emoji object if it could be cached (otherwise [`None`][]).
         """
 
     @abc.abstractmethod
     def clear_stickers(self) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
-        """Remove all the sticker objects from the cache.
+        """Remove all the stickers from the cache.
 
         !!! note
-            This will skip stickers that are being kept alive by a reference.
+            This will not remove stickers that are being kept alive by a reference.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
-            A cache view of sticker IDs to objects of the stickers that were
-            removed from the cache.
+            A view of sticker IDs to objects that were removed.
         """
 
     @abc.abstractmethod
     def clear_stickers_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, stickers.GuildSticker]:
-        """Remove the known custom emoji objects cached for a specific guild.
+        """Remove all the known custom emojis from the cache for a specific guild.
 
         !!! note
-            This will skip stickers that are being kept alive by a reference.
+            This will not remove stickers that are being kept alive by a reference.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove the cached sticker objects for.
+            Object or ID of the guild to remove the stickers for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.stickers.GuildSticker]
-            A view of sticker IDs to objects of the stickers that were removed
-            from the cache.
+            A view of sticker IDs to objects that were removed.
         """
 
     @abc.abstractmethod
@@ -953,18 +921,17 @@ class MutableCache(Cache, abc.ABC):
         """Remove a sticker from the cache.
 
         !!! note
-            This will not delete stickers that are being kept alive by a reference.
+            This will not remove stickers that are being kept alive by a reference.
 
         Parameters
         ----------
         sticker
-            Object or ID of the sticker to remove from the cache.
+            Object or ID of the sticker to remove.
 
         Returns
         -------
         typing.Optional[hikari.stickers.GuildSticker]
-            The object of the sticker that was removed from the cache or
-            [`None`][].
+            The sticker object that was removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
@@ -974,44 +941,42 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         sticker
-            The object of the sticker to add to the cache.
+            The sticker object to add.
         """
 
     @abc.abstractmethod
     def clear_guilds(self) -> CacheView[snowflakes.Snowflake, guilds.GatewayGuild]:
-        """Remove all the guild objects from the cache.
+        """Remove all the guilds from the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.GatewayGuild]
-            The cache view of guild IDs to guild objects that were removed from
-            the cache.
+            A view of guild IDs to objects that were removed.
         """
 
     @abc.abstractmethod
     def delete_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /) -> guilds.GatewayGuild | None:
-        """Remove a guild object from the cache.
+        """Remove a guild from the cache.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove from the cache.
+            Object or ID of the guild to remove.
 
         Returns
         -------
         typing.Optional[hikari.guilds.GatewayGuild]
-            The object of the guild that was removed from the cache, will be
-            [`None`][] if not found.
+            The guild object that was removed from the cache if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def set_guild(self, guild: guilds.GatewayGuild, /) -> None:
-        """Add a guild object to the cache.
+        """Add a guild to the cache.
 
         Parameters
         ----------
         guild
-            The object of the guild to add to the cache.
+            The guild object to add.
         """
 
     @abc.abstractmethod
@@ -1021,7 +986,7 @@ class MutableCache(Cache, abc.ABC):
         is_available: bool,  # noqa: FBT001 - Boolean-typed positional argument
         /,
     ) -> None:
-        """Set whether a cached guild is available or not.
+        """Set whether a guild is available or not in the cache.
 
         Parameters
         ----------
@@ -1040,43 +1005,40 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         guild
-            The object of the guild to update in the cache.
+            The guild object to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.guilds.GatewayGuild], typing.Optional[hikari.guilds.GatewayGuild]]
-            A tuple of the old cached guild object if found (else [`None`][])
-            and the object of the guild that was added to the cache if it could
-            be added (else [`None`][]).
+            A tuple of the old guild object that was cached if found (otherwise [`None`][])
+            and the new guild object if it could be cached (otherwise [`None`][]).
         """
 
     @abc.abstractmethod
     def clear_guild_channels(self) -> CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
-        """Remove all guild channels from the cache.
+        """Remove all the guild channels from the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.PermissibleGuildChannel]
-            A view of channel IDs to objects of the guild channels that were
-            removed from the cache.
+            A view of guild channel IDs to objects that were removed.
         """
 
     @abc.abstractmethod
     def clear_guild_channels_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, channels.PermissibleGuildChannel]:
-        """Remove guild channels from the cache for a specific guild.
+        """Remove all the guild channels from the cache for a specific guild.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove cached channels for.
+            Object or ID of the guild to remove the channels for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.PermissibleGuildChannel]
-            A view of channel IDs to objects of the guild channels that were
-            removed from the cache.
+            A view of guild channel IDs to objects that were removed.
         """
 
     @abc.abstractmethod
@@ -1088,13 +1050,12 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         channel
-            Object or ID of the guild channel to remove from the cache.
+            Object or ID of the guild channel to remove.
 
         Returns
         -------
         typing.Optional[hikari.channels.PermissibleGuildChannel]
-            The object of the guild channel that was removed from the cache if
-            found, else [`None`][].
+            The guild channel object that was removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
@@ -1104,7 +1065,7 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         channel
-            The guild channel based object to add to the cache.
+            The guild channel object to add.
         """
 
     @abc.abstractmethod
@@ -1116,25 +1077,23 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         channel
-            The object of the channel to update in the cache.
+            The guild channel object to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.channels.PermissibleGuildChannel], typing.Optional[hikari.channels.PermissibleGuildChannel]]
-            A tuple of the old cached guild channel if found (else [`None`][])
-            and the new cached guild channel if it could be cached
-            (else [`None`][]).
+            A tuple of the old guild channel object that was cached if found (otherwise [`None`][])
+            and the new guild channel object if it could be cached (otherwise [`None`][]).
         """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     def clear_threads(self) -> CacheView[snowflakes.Snowflake, channels.GuildThreadChannel]:
-        """Remove all thread channels from the cache.
+        """Remove all the thread channels from the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
-            A view of channel IDs to objects of the thread channels that were
-            removed from the cache.
+            A view of thread channel IDs to objects that were removed.
         """
 
     @abc.abstractmethod
@@ -1149,15 +1108,14 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove cached threads for.
+            Object or ID of the guild to remove the threads for.
         channel
-            Object or ID of the channel to remove cached threads for.
+            Object or ID of the channel to remove the threads for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
-            A view of channel IDs to objects of the thread channels that were
-            removed from the cache.
+            A view of thread channel IDs to objects that were removed.
         """
 
     @abc.abstractmethod
@@ -1169,13 +1127,12 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove cached threads for.
+            Object or ID of the guild to remove the threads for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.channels.GuildThreadChannel]
-            A view of channel IDs to objects of the thread channels that were
-            removed from the cache.
+            A view of thread channel IDs to objects that were removed.
         """
 
     @abc.abstractmethod
@@ -1187,13 +1144,12 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         thread
-            Object or ID of the thread to remove from the cache.
+            Object or ID of the thread to remove.
 
         Returns
         -------
         typing.Optional[hikari.channels.GuildThreadChannel]
-            The object of the thread that was removed from the cache if
-            found, else [`None`][].
+            The thread object removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
@@ -1203,7 +1159,7 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         channel
-            The thread channel based object to add to the cache.
+            The thread channel object to add.
         """
 
     @abc.abstractmethod
@@ -1215,43 +1171,40 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         thread
-            The object of the thread channel to update in the cache.
+            The object of the thread channel to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.channels.GuildThreadChannel], typing.Optional[hikari.channels.GuildThreadChannel]]
-            A tuple of the old cached thread channel if found (else [`None`][])
-            and the new cached thread channel if it could be cached
-            (else [`None`][]).
-        """  # noqa: E501
+            A tuple of the old thread channel object that was cached if found (otherwise [`None`][])
+            and the new thread channel object if it could be cached (otherwise [`None`][]).
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     def clear_invites(self) -> CacheView[str, invites.InviteWithMetadata]:
-        """Remove all the invite objects from the cache.
+        """Remove all the invites from the cache.
 
         Returns
         -------
         CacheView[str, hikari.invites.InviteWithMetadata]
-            A view of invite code strings to objects of the invites that were
-            removed from the cache.
+            A view of invite code strings to objects that were removed.
         """
 
     @abc.abstractmethod
     def clear_invites_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[str, invites.InviteWithMetadata]:
-        """Remove the invite objects in the cache for a specific guild.
+        """Remove all the invites from the cache for a specific guild.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove invite objects for.
+            Object or ID of the guild to remove invites for.
 
         Returns
         -------
         CacheView[str, hikari.invites.InviteWithMetadata]
-            A view of invite code strings to objects of the invites that were
-            removed from the cache for the specified guild.
+            A view of invite code strings to objects that were removed for the specified guild.
         """
 
     @abc.abstractmethod
@@ -1261,46 +1214,44 @@ class MutableCache(Cache, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
         /,
     ) -> CacheView[str, invites.InviteWithMetadata]:
-        """Remove the invite objects in the cache for a specific channel.
+        """Remove all the invites from the cache for a specific channel.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove invite objects for.
+            Object or ID of the guild to remove invites for.
         channel
-            Object or ID of the channel to remove invite objects for.
+            Object or ID of the channel to remove invites for.
 
         Returns
         -------
         CacheView[str, hikari.invites.InviteWithMetadata]
-            A view of invite code strings to objects of the invites that were
-            removed from the cache for the specified channel.
+            A view of invite code strings to objects that were removed for the specified channel.
         """
 
     @abc.abstractmethod
     def delete_invite(self, code: invites.InviteCode | str, /) -> invites.InviteWithMetadata | None:
-        """Remove an invite object from the cache.
+        """Remove an invite from the cache.
 
         Parameters
         ----------
         code
-            Object or string code of the invite to remove from the cache.
+            Object or string code of the invite to remove.
 
         Returns
         -------
         typing.Optional[hikari.invites.InviteWithMetadata]
-            The object of the invite that was removed from the cache if found,
-            else [`None`][].
+            The invite object removed from the cache if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def set_invite(self, invite: invites.InviteWithMetadata, /) -> None:
-        """Add an invite object to the cache.
+        """Add an invite to the cache.
 
         Parameters
         ----------
         invite
-            The object of the invite to add to the cache.
+            The object of the invite to add.
         """
 
     @abc.abstractmethod
@@ -1312,52 +1263,49 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         invite
-            The object of the invite to update in the cache.
+            The object of the invite to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.invites.InviteWithMetadata], typing.Optional[hikari.invites.InviteWithMetadata]]
-            A tuple of the old cached invite object if found (else
-            [`None`][]) and the new cached invite object if it could be
-            cached (else [`None`][]).
-        """  # noqa: E501
+            A tuple of the old invite object that was cached if found (otherwise [`None`][])
+            and the new  invite object if it could be cached (otherwise [`None`][]).
+        """  # noqa: E501 - Line too long
 
     @abc.abstractmethod
     def delete_me(self) -> users.OwnUser | None:
-        """Remove the own user object from the cache.
+        """Remove the own user from the cache.
 
         Returns
         -------
         typing.Optional[hikari.users.OwnUser]
-            The own user object that was removed from the cache if found,
-            else [`None`][].
+            The own user object that was removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def set_me(self, user: users.OwnUser, /) -> None:
-        """Set the own user object in the cache.
+        """Set the own user in the cache.
 
         Parameters
         ----------
         user
-            The own user object to set in the cache.
+            The own user object to set.
         """
 
     @abc.abstractmethod
     def update_me(self, user: users.OwnUser, /) -> tuple[users.OwnUser | None, users.OwnUser | None]:
-        """Update the own user entry in the cache.
+        """Update the own user in the cache.
 
         Parameters
         ----------
         user
-            The own user object to update in the cache.
+            The own user object to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.users.OwnUser], typing.Optional[hikari.users.OwnUser]]
-            A tuple of the old cached own user object if found (else
-            [`None`][]) and the new cached own user object if it could be
-            cached, else [`None`][].
+            A tuple of the old own user object that was cached if found (otherwise [`None`][])
+            and the new own user object if it could be cached, otherwise [`None`][].
         """
 
     @abc.abstractmethod
@@ -1367,30 +1315,28 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]]
-            A view of guild IDs to views of user IDs to objects of the members
-            that were removed from the cache.
+            A view of guild IDs to views of user IDs to member objects that were removed from the cache.
         """
 
     @abc.abstractmethod
     def clear_members_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, guilds.Member]:
-        """Remove the members for a specific guild from the cache.
+        """Remove all the members from the cache for a specific guild.
 
         !!! note
-            This will skip members that are being referenced by other entries in
+            This will not remove members that are being referenced by other entries in
             the cache; a matching voice state will keep a member entry alive.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove cached members for.
+            Object or ID of the guild to remove the members for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Member]
-            The view of user IDs to the member objects that were removed from
-            the cache.
+            A view of user IDs to the member objects that were removed.
         """
 
     @abc.abstractmethod
@@ -1400,35 +1346,33 @@ class MutableCache(Cache, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
     ) -> guilds.Member | None:
-        """Remove a member object from the cache.
+        """Remove a member from the cache.
 
         !!! note
-            You cannot delete a member entry that's being referenced by other
-            entries in the cache; a matching voice state will keep a member
-            entry alive.
+            This will not remove a member that is being referenced by other entries in
+            the cache; a matching voice state will keep a member entry alive.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove a member from the cache for.
+            Object or ID of the guild to remove a member for.
         user
-            Object or ID of the user to remove a member from the cache for.
+            Object or ID of the user to remove a member for.
 
         Returns
         -------
         typing.Optional[hikari.guilds.Member]
-            The object of the member that was removed from the cache if found,
-            else [`None`][].
+            The member object that was removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def set_member(self, member: guilds.Member, /) -> None:
-        """Add a member object to the cache.
+        """Add a member to the cache.
 
         Parameters
         ----------
         member
-            The object of the member to add to the cache.
+            The object of the member to add.
         """
 
     @abc.abstractmethod
@@ -1438,34 +1382,32 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         member
-            The object of the member to update in the cache.
+            The object of the member to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.guilds.Member], typing.Optional[hikari.guilds.Member]]
-            A tuple of the old cached member object if found (else [`None`][])
-            and the new cached member object if it could be cached (else
-            [`None`][]).
+            A tuple of the old member object that was cached if found (otherwise [`None`][])
+            and the new member object if it could be cached (otherwise [`None`][]).
         """
 
     @abc.abstractmethod
     def clear_presences(
         self,
     ) -> CacheView[snowflakes.Snowflake, CacheView[snowflakes.Snowflake, presences.MemberPresence]]:
-        """Remove all the presences in the cache.
+        """Remove all the presences from the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]]
-            A view of guild IDs to views of user IDs to objects of the presences
-            that were removed from the cache.
+            A view of guild IDs to views of user IDs to presence objects that were removed.
         """
 
     @abc.abstractmethod
     def clear_presences_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, presences.MemberPresence]:
-        """Remove the presences in the cache for a specific guild.
+        """Remove all the presences in the cache for a specific guild.
 
         Parameters
         ----------
@@ -1475,8 +1417,7 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.presences.MemberPresence]
-            A view of user IDs to objects of the presences that were removed
-            from the cache for the specified guild.
+            A view of user IDs to presence objects that were removed for the specified guild.
         """
 
     @abc.abstractmethod
@@ -1498,55 +1439,52 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Optional[hikari.presences.MemberPresence]
-            The object of the presence that was removed from the cache if found,
-            else [`None`][].
+            The presence object that was removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def set_presence(self, presence: presences.MemberPresence, /) -> None:
-        """Add a presence object to the cache.
+        """Add a presence to the cache.
 
         Parameters
         ----------
         presence
-            The object of the presence to add to the cache.
+            The object of the presence to add.
         """
 
     @abc.abstractmethod
     def update_presence(
         self, presence: presences.MemberPresence, /
     ) -> tuple[presences.MemberPresence | None, presences.MemberPresence | None]:
-        """Update a presence object in the cache.
+        """Update a presence in the cache.
 
         Parameters
         ----------
         presence
-            The object of the presence to update in the cache.
+            The object of the presence to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.presences.MemberPresence], typing.Optional[hikari.presences.MemberPresence]]
-            A tuple of the old cached invite object if found (else [`None`][]
-            and the new cached invite object if it could be cached ( else
-            [`None`][]).
+            A tuple of the old invite object that was cached if found (otherwise [`None`][]
+            and the new invite object if it could be cached (otherwise [`None`][]).
         """
 
     @abc.abstractmethod
     def clear_roles(self) -> CacheView[snowflakes.Snowflake, guilds.Role]:
-        """Remove all role objects from the cache.
+        """Remove all the roles from the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Role]
-            A view of role IDs to objects of the roles that were removed from
-            the cache.
+            A view of role IDs to objects that were removed.
         """
 
     @abc.abstractmethod
     def clear_roles_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, guilds.Role]:
-        """Remove role objects from the cache for a specific guild.
+        """Remove all the roles from the cache for a specific guild.
 
         Parameters
         ----------
@@ -1556,34 +1494,32 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.guilds.Role]
-            A view of role IDs to objects of the roles that were removed from
-            the cache for the specific guild.
+            A view of role IDs to objects that were removed for the specific guild.
         """
 
     @abc.abstractmethod
     def delete_role(self, role: snowflakes.SnowflakeishOr[guilds.PartialRole], /) -> guilds.Role | None:
-        """Remove a role object form the cache.
+        """Remove a role from the cache.
 
         Parameters
         ----------
         role
-            Object or ID of the role to remove from the cache.
+            Object or ID of the role to remove.
 
         Returns
         -------
         typing.Optional[hikari.guilds.Role]
-            The object of the role that was removed from the cache if found,
-            else [`None`][].
+            The role object that was removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def set_role(self, role: guilds.Role, /) -> None:
-        """Add a role object to the cache.
+        """Add a role to the cache.
 
         Parameters
         ----------
         role
-            The object of the role to add to the cache.
+            Object of the role to add.
         """
 
     @abc.abstractmethod
@@ -1593,43 +1529,40 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         role
-            The object of the role to update in the cache.
+            Object of the role to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.guilds.Role], typing.Optional[hikari.guilds.Role]]
-            A tuple of the old cached role object if found (else [`None`][]
-            and the new cached role object if it could be cached (else
-            [`None`][]).
+            A tuple of the old role object that was cached if found (otherwise [`None`][]
+            and the new role object if it could be cached (otherwise [`None`][]).
         """
 
     @abc.abstractmethod
     def clear_voice_states(self) -> CacheView[snowflakes.Snowflake, CacheView[snowflakes.Snowflake, voices.VoiceState]]:
-        """Remove all voice state objects from the cache.
+        """Remove all the voice states from the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]]
-            A view of guild IDs to views of user IDs to objects of the voice
-            states that were removed from the states.
+            A view of guild IDs to views of user IDs to voice state objects that were removed.
         """
 
     @abc.abstractmethod
     def clear_voice_states_for_guild(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
     ) -> CacheView[snowflakes.Snowflake, voices.VoiceState]:
-        """Clear the voice state objects cached for a specific guild.
+        """Remove all the voice states from the cache for a specific guild.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild to remove cached voice states for.
+            Object or ID of the guild to remove the voice states for.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
-            A view of user IDs to the voice state objects that were removed from
-            the cache.
+            A view of user IDs to voice state objects that were removed.
         """
 
     @abc.abstractmethod
@@ -1639,7 +1572,7 @@ class MutableCache(Cache, abc.ABC):
         channel: snowflakes.SnowflakeishOr[channels.PartialChannel],
         /,
     ) -> CacheView[snowflakes.Snowflake, voices.VoiceState]:
-        """Remove the voice state objects cached for a specific channel.
+        """Remove the voice states from the cache for a specific channel.
 
         Parameters
         ----------
@@ -1651,8 +1584,7 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.voices.VoiceState]
-            A view of user IDs to objects of the voice state that were removed
-            from the cache for the specified channel.
+            A view of user IDs to voice state objects that were removed for the specified channel.
         """
 
     @abc.abstractmethod
@@ -1662,64 +1594,62 @@ class MutableCache(Cache, abc.ABC):
         user: snowflakes.SnowflakeishOr[users.PartialUser],
         /,
     ) -> voices.VoiceState | None:
-        """Remove a voice state object from the cache.
+        """Remove a voice state from the cache.
 
         Parameters
         ----------
         guild
-            Object or ID of the guild the voice state to remove is related to.
+            Object or ID of the guild to remove the voice state for.
         user
-            Object or ID of the user who the voice state to remove belongs to.
+            Object or ID of the user who to remove the voice state for.
 
         Returns
         -------
         typing.Optional[hikari.voices.VoiceState]
-            The object of the voice state that was removed from the cache if
-            found, else [`None`][].
+            The object of the voice state removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def set_voice_state(self, voice_state: voices.VoiceState, /) -> None:
-        """Add a voice state object to the cache.
+        """Add a voice state to the cache.
 
         Parameters
         ----------
         voice_state
-            The object of the voice state to add to the cache.
+            Object of the voice state to add.
         """
 
     @abc.abstractmethod
     def update_voice_state(
         self, voice_state: voices.VoiceState, /
     ) -> tuple[voices.VoiceState | None, voices.VoiceState | None]:
-        """Update a voice state object in the cache.
+        """Update a voice state in the cache.
 
         Parameters
         ----------
         voice_state
-            The object of the voice state to update in the cache.
+            Object of the voice state to update.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.voices.VoiceState], typing.Optional[hikari.voices.VoiceState]]
-            A tuple of the old cached voice state if found (else [`None`][])
-            and the new cached voice state object if it could be cached
-            (else [`None`][]).
+            A tuple of the old voice state object that was cached if found (otherwise [`None`][])
+            and the new voice state object if it could be cached (otherwise [`None`][]).
         """
 
     @abc.abstractmethod
     def clear_messages(self) -> CacheView[snowflakes.Snowflake, messages.Message]:
-        """Remove all message objects from the cache.
+        """Remove all the messages from the cache.
 
         Returns
         -------
         CacheView[hikari.snowflakes.Snowflake, hikari.messages.Message]
-            A view of message objects that were removed from the cache.
+            A view of message IDs to objects that were removed.
         """
 
     @abc.abstractmethod
     def delete_message(self, message: snowflakes.SnowflakeishOr[messages.PartialMessage], /) -> messages.Message | None:
-        """Remove a message object from the cache.
+        """Remove a message from the cache.
 
         Parameters
         ----------
@@ -1729,18 +1659,17 @@ class MutableCache(Cache, abc.ABC):
         Returns
         -------
         typing.Optional[hikari.messages.Message]
-            The object of the message that was removed from the cache if found,
-            else [`None`][].
+            The message object that was removed if found, otherwise [`None`][].
         """
 
     @abc.abstractmethod
     def set_message(self, message: messages.Message, /) -> None:
-        """Add a message object to the cache.
+        """Add a message to the cache.
 
         Parameters
         ----------
         message
-            The object of the message to add to the cache.
+            Object of the message to add.
         """
 
     @abc.abstractmethod
@@ -1752,12 +1681,11 @@ class MutableCache(Cache, abc.ABC):
         Parameters
         ----------
         message
-            The object of the message to update in the cache.
+            Object of the message to update in the cache.
 
         Returns
         -------
         typing.Tuple[typing.Optional[hikari.messages.Message], typing.Optional[hikari.messages.Message]]
-            A tuple of the old cached message object if found (else [`None`][])
-            and the new cached message object if it could be cached (else
-            [`None`][]).
+            A tuple of the old message object that was cached if found (otherwise [`None`][])
+            and the new message object if it could be cached (otherwise [`None`][]).
         """
