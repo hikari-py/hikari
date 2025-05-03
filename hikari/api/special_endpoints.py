@@ -306,6 +306,21 @@ class GuildOnboardingPromptBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def id(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]]:
+        """The prompt's id."""
+
+    @abc.abstractmethod
+    def set_id(self, id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]], /) -> Self:
+        """Set this prompt's id.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """The prompt's title."""
 

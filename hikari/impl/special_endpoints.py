@@ -68,7 +68,6 @@ __all__: typing.Sequence[str] = (
 import abc
 import asyncio
 import typing
-import time as st_time
 
 import attrs
 
@@ -759,8 +758,22 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
     _single_select: bool = attrs.field(alias="single_select")
     _required: bool = attrs.field(alias="required")
     _in_onboarding: bool = attrs.field(alias="in_onboarding")
-    _id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]] = attrs.field(alias="id", default=undefined.UNDEFINED)
     _options: list[special_endpoints.GuildOnboardingPromptOptionBuilder] = attrs.field(alias="options", factory=list)
+    _id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]] = attrs.field(
+        alias="id",
+        default=undefined.UNDEFINED,
+        init=False,  # We do not need to allow the user to specify an id here. Discord ignores the id anyway.
+    )
+
+    @property
+    @typing_extensions.override
+    def id(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]]:
+        return self._id
+
+    @typing_extensions.override
+    def set_id(self, id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]], /) -> Self:
+        self._id = id
+        return self
 
     @property
     @typing_extensions.override
@@ -842,7 +855,7 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
         body.put("single_select", self._single_select)
         body.put("required", self._required)
         body.put("in_onboarding", self._in_onboarding)
-        body.put("id", self._id)
+        body.put_snowflake("id", self._id)
         return body
 
 

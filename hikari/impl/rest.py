@@ -3882,16 +3882,16 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_onboarding(response)
-    
-    def _build_prompts(self, prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder]) -> list[typing.MutableMapping[str, typing.Any]]:
+
+    def _build_prompts(
+        self, prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder]
+    ) -> list[typing.MutableMapping[str, typing.Any]]:
         prompt_bodys: list[typing.MutableMapping[str, typing.Any]] = []
         for index, prompt in enumerate(prompts):
-            prompt_body = prompt.build()
-            prompt_body["id"] = prompt_body.get("id", index)
+            prompt_body = prompt.set_id(index).build()
             prompt_bodys.append(prompt_body)
-        return prompt_bodys  
-            
-    
+        return prompt_bodys
+
     @typing_extensions.override
     async def edit_guild_onboarding(
         self,
