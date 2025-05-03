@@ -762,11 +762,6 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
     _id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]] = attrs.field(alias="id", default=undefined.UNDEFINED)
     _options: list[special_endpoints.GuildOnboardingPromptOptionBuilder] = attrs.field(alias="options", factory=list)
 
-
-    def __attrs_post_init__(self) -> None:
-        if self._id is undefined.UNDEFINED:
-            self._id = int(st_time.time())
-
     @property
     @typing_extensions.override
     def title(self) -> str:
