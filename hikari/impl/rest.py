@@ -3888,6 +3888,7 @@ class RESTClientImpl(rest_api.RESTClient):
         for index, prompt in enumerate(prompts):
             prompt_body = prompt.build()
             prompt_body.get("id", index)
+            prompt_bodys.append(prompt_body)
         return prompt_bodys  
             
     
