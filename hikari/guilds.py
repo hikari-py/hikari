@@ -1515,7 +1515,7 @@ class GuildOnboarding:
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-class GuildOnboardingPromptOption:
+class GuildOnboardingPromptOption(snowflakes.Unique):
     """Used to represent a Guild Onboarding Prompt Option."""
 
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
@@ -1539,7 +1539,7 @@ class GuildOnboardingPromptOption:
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
-class GuildOnboardingPrompt:
+class GuildOnboardingPrompt(snowflakes.Unique):
     """Used to represent a Guild Onboarding Prompt."""
 
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
