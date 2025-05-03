@@ -1243,35 +1243,25 @@ class TestContextMenuBuilder:
 def test__build_emoji_with_unicode_emoji(emoji: str | emojis.UnicodeEmoji):
     result = special_endpoints._build_emoji(emoji)
 
-    assert result == (undefined.UNDEFINED, "UNICORN", undefined.UNDEFINED)
+    assert result == (undefined.UNDEFINED, "UNICORN")
 
 
 @pytest.mark.parametrize(
-    ("emoji", "expected"),
+    "emoji",
     [
-        (snowflakes.Snowflake(54123123), ("54123123", undefined.UNDEFINED, undefined.UNDEFINED)),
-        (54123123, ("54123123", undefined.UNDEFINED, undefined.UNDEFINED)),
-        (
-            emojis.CustomEmoji(id=snowflakes.Snowflake(54123123), name="test", is_animated=True),
-            ("54123123", undefined.UNDEFINED, True),
-        ),
+        snowflakes.Snowflake(54123123),
+        54123123,
+        emojis.CustomEmoji(id=snowflakes.Snowflake(54123123), name="test", is_animated=True),
     ],
 )
-def test__build_emoji_with_custom_emoji(
-    emoji: int | str | emojis.CustomEmoji,
-    expected: tuple[undefined.UndefinedOr[str], undefined.UndefinedOr[str], undefined.UndefinedOr[bool]],
-):
+def test__build_emoji_with_custom_emoji(emoji: int | str | emojis.CustomEmoji):
     result = special_endpoints._build_emoji(emoji)
 
-    assert result == expected
+    assert result == ("54123123", undefined.UNDEFINED)
 
 
 def test__build_emoji_when_undefined():
-    assert special_endpoints._build_emoji(undefined.UNDEFINED) == (
-        undefined.UNDEFINED,
-        undefined.UNDEFINED,
-        undefined.UNDEFINED,
-    )
+    assert special_endpoints._build_emoji(undefined.UNDEFINED) == (undefined.UNDEFINED, undefined.UNDEFINED)
 
 
 class Test_ButtonBuilder:
@@ -2483,7 +2473,7 @@ class TestPollBuilder:
         assert poll_builder.build() == {
             "question": {"text": "question_text"},
             "answers": [
-                {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456", "animated": False}}},
+                {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456"}}},
                 {"poll_media": {"text": "answer_2_text"}},
                 {"poll_media": {"emoji": {"name": "👀"}}},
             ],
@@ -2505,9 +2495,7 @@ class TestPollAnswerBuilder:
             emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(456), name="question_emoji", is_animated=False),
         )
 
-        assert poll_answer.build() == {
-            "poll_media": {"text": "answer_1_text", "emoji": {"id": "456", "animated": False}}
-        }
+        assert poll_answer.build() == {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456"}}}
 
 
 class TestAutoModBlockMessageActionBuilder:

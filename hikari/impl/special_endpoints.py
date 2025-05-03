@@ -678,10 +678,9 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
     )
     _emoji_id: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
     _emoji_name: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
-    _emoji_animated: undefined.UndefinedOr[bool] = attrs.field(init=False, default=undefined.UNDEFINED)
 
     def __attrs_post_init__(self) -> None:
-        self._emoji_id, self._emoji_name, self._emoji_animated = _build_emoji(self._emoji)
+        self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
 
     @property
     @typing_extensions.override
@@ -730,7 +729,7 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
 
     @typing_extensions.override
     def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
-        self._emoji_id, self._emoji_name, self._emoji_animated = _build_emoji(emoji)
+        self._emoji_id, self._emoji_name = _build_emoji(emoji)
         self._emoji = emoji
         return self
 
@@ -744,7 +743,6 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
 
         body.put("emoji_name", self._emoji_name)
         body.put("emoji_id", self._emoji_id)
-        body.put("emoji_animated", self._emoji_animated)
 
         return body
 
@@ -1497,8 +1495,8 @@ class ContextMenuCommandBuilder(CommandBuilder, special_endpoints.ContextMenuCom
 
 def _build_emoji(
     emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
-) -> tuple[undefined.UndefinedOr[str], undefined.UndefinedOr[str], undefined.UndefinedOr[bool]]:
-    """Build an emoji into the format accepted by discord.
+) -> tuple[undefined.UndefinedOr[str], undefined.UndefinedOr[str]]:
+    """Build an emoji into the format accepted in buttons.
 
     Parameters
     ----------
@@ -1507,21 +1505,18 @@ def _build_emoji(
 
     Returns
     -------
-    typing.Tuple[hikari.undefined.UndefinedOr[str], hikari.undefined.UndefinedOr[str], undefined.UndefinedOr[bool]]
+    typing.Tuple[hikari.undefined.UndefinedOr[str], hikari.undefined.UndefinedOr[str]]
         A union of the custom emoji's id if defined (index 0) or the unicode
-        emoji's string representation (index 1) and if the emoji is custom,
-        a bool value representing if the emoji is animated or not (index 2).
+        emoji's string representation (index 1).
     """
     # Since these builder classes may be reused, this method should be called when the builder is being constructed.
     if emoji is not undefined.UNDEFINED:
-        if isinstance(emoji, emojis.CustomEmoji):
-            return str(int(emoji)), undefined.UNDEFINED, emoji.is_animated
-        if isinstance(emoji, int):
-            return str(int(emoji)), undefined.UNDEFINED, undefined.UNDEFINED
+        if isinstance(emoji, (int, emojis.CustomEmoji)):
+            return str(int(emoji)), undefined.UNDEFINED
 
-        return undefined.UNDEFINED, str(emoji), undefined.UNDEFINED
+        return undefined.UNDEFINED, str(emoji)
 
-    return undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
+    return undefined.UNDEFINED, undefined.UNDEFINED
 
 
 @attrs_extensions.with_copy
@@ -1537,7 +1532,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder, abc.ABC):
     _is_disabled: bool = attrs.field(alias="is_disabled", default=False)
 
     def __attrs_post_init__(self) -> None:
-        self._emoji_id, self._emoji_name, _ = _build_emoji(self._emoji)
+        self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
 
     @property
     @typing_extensions.override
@@ -1566,7 +1561,7 @@ class _ButtonBuilder(special_endpoints.ButtonBuilder, abc.ABC):
 
     @typing_extensions.override
     def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
-        self._emoji_id, self._emoji_name, _ = _build_emoji(emoji)
+        self._emoji_id, self._emoji_name = _build_emoji(emoji)
         self._emoji = emoji
         return self
 
@@ -1680,7 +1675,7 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
     _is_default: bool = attrs.field(alias="is_default", default=False, kw_only=True)
 
     def __attrs_post_init__(self) -> None:
-        self._emoji_id, self._emoji_name, _ = _build_emoji(self._emoji)
+        self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
 
     @property
     @typing_extensions.override
@@ -1724,7 +1719,7 @@ class SelectOptionBuilder(special_endpoints.SelectOptionBuilder):
 
     @typing_extensions.override
     def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
-        self._emoji_id, self._emoji_name, _ = _build_emoji(emoji)
+        self._emoji_id, self._emoji_name = _build_emoji(emoji)
         self._emoji = emoji
         return self
 
@@ -2882,15 +2877,10 @@ class PollAnswerBuilder(special_endpoints.PollAnswerBuilder):
         payload.put("text", self._text)
 
         if self._emoji is not undefined.UNDEFINED:
-            emoji_id, emoji_name, emoji_animated = _build_emoji(self._emoji)
+            emoji_id, emoji_name = _build_emoji(self._emoji)
 
             if emoji_id is not undefined.UNDEFINED:
-                if emoji_animated is not undefined.UNDEFINED:
-                    # Discord doesn't actually specify if it needs the animated field but
-                    # since we have that value anyway, we can just send it
-                    payload["emoji"] = {"id": emoji_id, "animated": emoji_animated}
-                else:
-                    payload["emoji"] = {"id": emoji_id}
+                payload["emoji"] = {"id": emoji_id}
 
             elif emoji_name is not undefined.UNDEFINED:
                 payload["emoji"] = {"name": emoji_name}
