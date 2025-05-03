@@ -153,8 +153,10 @@ class ChannelRepositioner(abc.ABC):
     ```py
     channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
     channel_repositioner.add_reposition_channel(
-        position=1, channel=CHANNEL_ID, lock_permissions=False, parent=CATEGORY_ID
+        position=1, channel=CHANNEL_ID, lock_permissions=True, parent=CATEGORY_ID
     )
+    # when lock_permissions is set to True, the channels permissions will be synced
+    # with the parent.
 
     await channel_repositioner
     ```
@@ -227,7 +229,10 @@ class ChannelRepositioner(abc.ABC):
             The channel that should be repositioned. This can either be a
             `[hikari.channels.GuildChannel`][] or the id of the channel.
         lock_permissions
-            fuck this shit
+            Whether the channel should sync permissions to the new parent channel or not.
+            When set to `False` or `UNDEFINED` the channel will not sync its permissions
+            to the new parent. Only when set to `True` the channel will sync its
+            permissions to the new parent.
         parent
             The id of the parent where this channel should be repositioned under.
 
