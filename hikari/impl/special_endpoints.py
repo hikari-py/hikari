@@ -755,7 +755,6 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
     """Standard implementation of [`hikari.api.special_endpoints.GuildOnboardingPromptBuilder`][]."""
 
     _title: str = attrs.field(alias="title")
-    _value: int | str | float = attrs.field(alias="value")
     _single_select: bool = attrs.field(alias="single_select")
     _required: bool = attrs.field(alias="required")
     _in_onboarding: bool = attrs.field(alias="in_onboarding")
