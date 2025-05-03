@@ -18,7 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Component that provides the ability to generate event models."""
+"""Core interface for an object that deserializes event objects."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ if typing.TYPE_CHECKING:
 
 
 class EventFactory(abc.ABC):
-    """Interface for components that deserialize JSON events."""
+    """Interface for components that deserialize JSON payloads."""
 
     __slots__: typing.Sequence[str] = ()
 
@@ -80,12 +80,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.application_events.ApplicationCommandPermissionsUpdateEvent
-            The parsed application command permissions update event.
+            The deserialized application command permissions update event object.
         """
 
     ##################
@@ -96,19 +96,19 @@ class EventFactory(abc.ABC):
     def deserialize_guild_channel_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildChannelCreateEvent:
-        """Parse a raw payload from Discord into a channel create event object.
+        """Parse a raw payload from Discord into a guild channel create event object.
 
         Parameters
         ----------
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.GuildChannelCreateEvent
-            The parsed channel create event object.
+            The deserialized guild channel create event object.
         """
 
     @abc.abstractmethod
@@ -119,40 +119,40 @@ class EventFactory(abc.ABC):
         *,
         old_channel: channel_models.PermissibleGuildChannel | None = None,
     ) -> channel_events.GuildChannelUpdateEvent:
-        """Parse a raw payload from Discord into a channel update event object.
+        """Parse a raw payload from Discord into a guild channel update event object.
 
         Parameters
         ----------
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_channel
-            The guild channel object or [`None`][].
+            The old guild channel object or [`None`][].
 
         Returns
         -------
         hikari.events.channel_events.GuildChannelUpdateEvent
-            The parsed  event object.
+            The deserialized guild channel update event object.
         """
 
     @abc.abstractmethod
     def deserialize_guild_channel_delete_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> channel_events.GuildChannelDeleteEvent:
-        """Parse a raw payload from Discord into a channel delete event object.
+        """Parse a raw payload from Discord into a guild channel delete event object.
 
         Parameters
         ----------
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.GuildChannelDeleteEvent
-            The parsed channel delete event object.
+            The deserialized guild channel delete event object.
         """
 
     @abc.abstractmethod
@@ -166,12 +166,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.PinsUpdateEvent
-            The parsed channel pins update event object.
+            The deserialized channel pins update event object.
         """
 
     @abc.abstractmethod
@@ -185,12 +185,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.GuildThreadCreateEvent
-            The parsed guild thread create event object.
+            The deserialized guild thread create event object.
         """
 
     @abc.abstractmethod
@@ -204,12 +204,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.GuildThreadAccessEvent
-            The parsed guild thread create event object.
+            The deserialized guild thread access event object.
         """
 
     @abc.abstractmethod
@@ -223,12 +223,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.GuildThreadUpdateEvent
-            The parsed guild thread update event object.
+            The deserialized guild thread update event object.
         """
 
     @abc.abstractmethod
@@ -242,12 +242,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.GuildThreadDeleteEvent
-            The parsed guild thread delete event object.
+            The deserialized guild thread delete event object.
         """
 
     @abc.abstractmethod
@@ -261,12 +261,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.ThreadMembersUpdateEvent
-            The parsed thread members update event object.
+            The deserialized thread members update event object.
         """
 
     @abc.abstractmethod
@@ -280,12 +280,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.ThreadListSyncEvent
-            The parsed thread member list sync event object.
+            The deserialized thread list sync event object.
         """
 
     @abc.abstractmethod
@@ -299,12 +299,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.WebhookUpdateEvent
-            The parsed webhook update event object.
+            The deserialized webhook update event object.
         """
 
     @abc.abstractmethod
@@ -318,12 +318,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.channel_events.InviteCreateEvent
-            The parsed invite create event object.
+            The deserialized invite create event object.
         """
 
     @abc.abstractmethod
@@ -341,14 +341,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_invite
-            The invite object or [`None`][].
+            The deleted invite object or [`None`][].
 
         Returns
         -------
         hikari.events.channel_events.InviteDeleteEvent
-            The parsed invite delete event object.
+            The deserialized invite delete event object.
         """
 
     #################
@@ -366,12 +366,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.typing_events.TypingEvent
-            The parsed typing start event object.
+            The deserialized typing start event object.
         """
 
     ################
@@ -389,12 +389,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.guild_events.GuildAvailableEvent
-            The parsed guild create event object.
+            The deserialized guild available event object.
         """
 
     @abc.abstractmethod
@@ -408,12 +408,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.guild_events.GuildJoinEvent
-            The parsed guild join event object.
+            The deserialized guild join event object.
         """
 
     @abc.abstractmethod
@@ -431,14 +431,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_guild
-            The guild object or [`None`][].
+            The old guild object or [`None`][].
 
         Returns
         -------
         hikari.events.guild_events.GuildUpdateEvent
-            The parsed guild update event object.
+            The deserialized guild update event object.
         """
 
     @abc.abstractmethod
@@ -456,14 +456,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_guild
-            The guild object or [`None`][].
+            The object of the guild that was left or [`None`][].
 
         Returns
         -------
         hikari.events.guild_events.GuildLeaveEvent
-            The parsed guild leave event object.
+            The deserialized guild leave event object.
         """
 
     @abc.abstractmethod
@@ -477,12 +477,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.guild_events.GuildUnavailableEvent
-            The parsed guild unavailable event object.
+            The deserialized guild unavailable event object.
         """
 
     @abc.abstractmethod
@@ -496,12 +496,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.guild_events.BanCreateEvent
-            The parsed guild ban add event object.
+            The deserialized guild ban add event object.
         """
 
     @abc.abstractmethod
@@ -515,12 +515,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.guild_events.BanDeleteEvent
-            The parsed guild ban remove event object.
+            The deserialized guild ban remove event object.
         """
 
     @abc.abstractmethod
@@ -538,14 +538,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_emojis
-            The sequence of emojis or [`None`][].
+            The sequence of old emojis or [`None`][].
 
         Returns
         -------
         hikari.events.guild_events.EmojisUpdateEvent
-            The parsed guild emojis update event object.
+            The deserialized guild emojis update event object.
         """
 
     @abc.abstractmethod
@@ -563,14 +563,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_stickers
-            The sequence of stickers or [`None`][].
+            The sequence of old stickers or [`None`][].
 
         Returns
         -------
         hikari.events.guild_events.StickersUpdateEvent
-            The parsed guild stickers update event object.
+            The deserialized guild stickers update event object.
         """
 
     @abc.abstractmethod
@@ -584,12 +584,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.guild_events.IntegrationCreateEvent
-            The parsed integration create event object.
+            The deserialized integration create event object.
         """
 
     @abc.abstractmethod
@@ -603,12 +603,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.guild_events.IntegrationDeleteEvent
-            The parsed integration delete event object.
+            The deserialized integration delete event object.
         """
 
     @abc.abstractmethod
@@ -622,12 +622,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.guild_events.IntegrationUpdateEvent
-            The parsed integration update event object.
+            The deserialized integration update event object.
         """
 
     @abc.abstractmethod
@@ -645,14 +645,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_presence
-            The presence object or [`None`][].
+            The old presence object or [`None`][].
 
         Returns
         -------
         hikari.events.guild_events.PresenceUpdateEvent
-            The parsed presence update event object.
+            The deserialized presence update event object.
         """
 
     @abc.abstractmethod
@@ -666,12 +666,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.guild_events.AuditLogEntryCreateEvent
-            The parsed audit log entry create object.
+            The deserialized audit log entry create event object.
         """
 
     ######################
@@ -689,12 +689,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.interaction_events.InteractionCreateEvent
-            The parsed interaction create event object.
+            The deserialized interaction create event object.
         """
 
     #################
@@ -712,12 +712,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.member_events.MemberCreateEvent
-            The parsed guild member add event object.
+            The deserialized guild member add event object.
         """
 
     @abc.abstractmethod
@@ -735,14 +735,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_member
-            The member object or [`None`][].
+            The old member object or [`None`][].
 
         Returns
         -------
         hikari.events.member_events.MemberUpdateEvent
-            The parsed guild member update event object.
+            The deserialized guild member update event object.
         """
 
     @abc.abstractmethod
@@ -760,14 +760,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_member
-            The member object or [`None`][].
+            The removed member object or [`None`][].
 
         Returns
         -------
         hikari.events.member_events.MemberDeleteEvent
-            The parsed guild member remove event object.
+            The deserialized guild member remove event object.
         """
 
     ###############
@@ -785,12 +785,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.role_events.RoleCreateEvent
-            The parsed guild role create event object.
+            The deserialized guild role create event object.
         """
 
     @abc.abstractmethod
@@ -808,14 +808,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_role
-            The role object or [`None`][].
+            The old role object or [`None`][].
 
         Returns
         -------
         hikari.events.role_events.RoleUpdateEvent
-            The parsed guild role update event object.
+            The deserialized guild role update event object.
         """
 
     @abc.abstractmethod
@@ -833,14 +833,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_role
-            The role object or [`None`][].
+            The deleted role object or [`None`][].
 
         Returns
         -------
         hikari.events.role_events.RoleDeleteEvent
-            The parsed guild role delete event object.
+            The deserialized guild role delete event object.
         """
 
     ##########################
@@ -858,12 +858,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.scheduled_events.ScheduledEventCreateEvent
-            The parsed scheduled event create event object.
+            The deserialized scheduled event create event object.
         """
 
     @abc.abstractmethod
@@ -877,12 +877,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.scheduled_events.ScheduledEventUpdateEvent
-            The parsed scheduled event update event object.
+            The deserialized scheduled event update event object.
         """
 
     @abc.abstractmethod
@@ -896,12 +896,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.scheduled_events.ScheduledEventDeleteEvent
-            The parsed scheduled event delete event object.
+            The deserialized scheduled event delete event object.
         """
 
     @abc.abstractmethod
@@ -915,12 +915,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.scheduled_events.ScheduledEventUserAddEvent
-            The parsed scheduled event user add event object.
+            The deserialized scheduled event user add event object.
         """
 
     @abc.abstractmethod
@@ -934,12 +934,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.scheduled_events.ScheduledEventUserRemoveEvent
-            The parsed scheduled event user remove event object.
+            The deserialized scheduled event user remove event object.
         """
 
     ###################
@@ -962,18 +962,18 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.lifetime_events.StartingEvent
+        hikari.events.lifetime_events.StartedEvent
             The built started event object.
         """
 
     @abc.abstractmethod
     def deserialize_stopping_event(self) -> lifetime_events.StoppingEvent:
-        """Build a starting event object.
+        """Build a stopping event object.
 
         Returns
         -------
-        hikari.events.lifetime_events.StartingEvent
-            The built starting event object.
+        hikari.events.lifetime_events.StoppingEvent
+            The built stopping event object.
         """
 
     @abc.abstractmethod
@@ -982,8 +982,8 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.lifetime_events.StartingEvent
-            The built starting event object.
+        hikari.events.lifetime_events.StoppedEvent
+            The built stopped event object.
         """
 
     ##################
@@ -1001,12 +1001,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.message_events.MessageCreateEvent
-            The parsed message create event object.
+            The deserialized message create event object.
         """
 
     @abc.abstractmethod
@@ -1024,14 +1024,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_message
-            The message object or [`None`][].
+            The old message object or [`None`][].
 
         Returns
         -------
         hikari.events.message_events.MessageUpdateEvent
-            The parsed message update event object.
+            The deserialized message update event object.
         """
 
     @abc.abstractmethod
@@ -1049,14 +1049,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_message
-            The old message object.
+            The deleted message object or [`None`][].
 
         Returns
         -------
         hikari.events.message_events.MessageDeleteEvent
-            The parsed message delete event object.
+            The deserialized message delete event object.
         """
 
     @abc.abstractmethod
@@ -1074,14 +1074,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_messages
-            A mapping of the old message objects.
+            A mapping of the deleted message IDs to objects.
 
         Returns
         -------
         hikari.events.message_events.GuildBulkMessageDeleteEvent
-            The parsed guild message delete bulk event object.
+            The deserialized guild message delete bulk event object.
         """
 
     ###################
@@ -1099,12 +1099,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.reaction_events.ReactionAddEvent
-            The parsed message reaction add event object.
+            The deserialized message reaction add event object.
         """
 
     @abc.abstractmethod
@@ -1118,12 +1118,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.reaction_events.ReactionDeleteEvent
-            The parsed message reaction remove event object.
+            The deserialized message reaction remove event object.
         """
 
     @abc.abstractmethod
@@ -1137,12 +1137,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.reaction_events.ReactionDeleteAllEvent
-            The parsed message reaction remove all event object.
+            The deserialized message reaction remove all event object.
         """
 
     @abc.abstractmethod
@@ -1156,12 +1156,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.reaction_events.ReactionDeleteEmojiEvent
-            The parsed message reaction remove emoji event object.
+            The deserialized message reaction remove emoji event object.
         """
 
     ################
@@ -1179,14 +1179,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         name
             Name of the event.
 
         Returns
         -------
         hikari.events.shard_events.ShardPayloadEvent
-            The parsed shard payload event object.
+            The deserialized shard payload event object.
         """
 
     @abc.abstractmethod
@@ -1200,12 +1200,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.shard_events.ShardReadyEvent
-            The parsed ready event object.
+            The deserialized ready event object.
         """
 
     @abc.abstractmethod
@@ -1219,7 +1219,7 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.shard_events.ShardReadyEvent
+        hikari.events.shard_events.ShardConnectedEvent
             The built shard connected event object.
         """
 
@@ -1234,7 +1234,7 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.shard_events.ShardReadyEvent
+        hikari.events.shard_events.ShardDisconnectedEvent
             The built shard disconnected event object.
         """
 
@@ -1249,7 +1249,7 @@ class EventFactory(abc.ABC):
 
         Returns
         -------
-        hikari.events.shard_events.ShardReadyEvent
+        hikari.events.shard_events.ShardResumedEvent
             The built shard resumed event object.
         """
 
@@ -1264,12 +1264,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.shard_events.MemberChunkEvent
-            The parsed member chunk object.
+            The deserialized member chunk event object.
         """
 
     ###############
@@ -1284,21 +1284,21 @@ class EventFactory(abc.ABC):
         *,
         old_user: user_models.OwnUser | None = None,
     ) -> user_events.OwnUserUpdateEvent:
-        """Parse a raw payload from Discord into a own user update event object.
+        """Parse a raw payload from Discord into an own user update event object.
 
         Parameters
         ----------
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_user
-            The OwnUser object or [`None`][].
+            The old own user object or [`None`][].
 
         Returns
         -------
         hikari.events.user_events.OwnUserUpdateEvent
-            The parsed own user update event object.
+            The deserialized own user update event object.
         """
 
     ################
@@ -1320,14 +1320,14 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
         old_state
-            The VoiceState object or [`None`][].
+            The old voice state object or [`None`][].
 
         Returns
         -------
         hikari.events.voice_events.VoiceStateUpdateEvent
-            The parsed voice state update event object.
+            The deserialized voice state update event object.
         """
 
     @abc.abstractmethod
@@ -1341,12 +1341,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.voice_events.VoiceServerUpdateEvent
-            The parsed voice server update event object.
+            The deserialized voice server update event object.
         """
 
     @abc.abstractmethod
@@ -1360,12 +1360,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.voice_events.AutoModRuleCreateEvent
-            The parsed auto-mod rule create event object.
+            The deserialized auto-mod rule create event object.
         """
 
     @abc.abstractmethod
@@ -1379,12 +1379,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.voice_events.AutoModRuleUpdateEvent
-            The parsed auto-mod rule update event object.
+            The deserialized auto-mod rule update event object.
         """
 
     @abc.abstractmethod
@@ -1398,12 +1398,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.voice_events.AutoModRuleDeleteEvent
-            The parsed auto-mod rule delete event object.
+            The deserialized auto-mod rule delete event object.
         """
 
     @abc.abstractmethod
@@ -1417,12 +1417,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.voice_events.AutoModActionExecutionEvent
-            The parsed auto-mod action execution event object.
+            The deserialized auto-mod action execution event object.
         """
 
     ##################
@@ -1440,12 +1440,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.entitlement_events.EntitlementCreateEvent
-            The parsed entitlement create event object.
+            The deserialized entitlement create event object.
         """
 
     @abc.abstractmethod
@@ -1459,12 +1459,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.entitlement_events.EntitlementDeleteEvent
-            The parsed entitlement delete event object.
+            The deserialized entitlement delete event object.
         """
 
     @abc.abstractmethod
@@ -1478,12 +1478,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.entitlement_events.EntitlementUpdateEvent
-            The parsed entitlement update event object.
+            The deserialized entitlement update event object.
         """
 
     #########################
@@ -1501,12 +1501,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.stage_events.StageInstanceCreateEvent
-            The parsed stage instance create event object.
+            The deserialized stage instance create event object.
         """
 
     @abc.abstractmethod
@@ -1520,12 +1520,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.stage_events.StageInstanceUpdateEvent
-            The parsed stage instance update event object.
+            The deserialized stage instance update event object.
         """
 
     @abc.abstractmethod
@@ -1539,12 +1539,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.stage_events.StageInstanceDeleteEvent
-            The parsed stage instance delete event object.
+            The deserialized stage instance delete event object.
         """
 
     ################
@@ -1562,12 +1562,12 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.poll_events.PollVoteCreateEvent
-            The parsed poll vote create event object.
+            The deserialized poll vote create event object.
         """
 
     @abc.abstractmethod
@@ -1581,10 +1581,10 @@ class EventFactory(abc.ABC):
         shard
             The shard that emitted this event.
         payload
-            The dict payload to parse.
+            The JSON payload to deserialize.
 
         Returns
         -------
         hikari.events.poll_events.PollVoteDeleteEvent
-            The parsed poll vote delete event object.
+            The deserialized poll vote delete event object.
         """
