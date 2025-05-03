@@ -3887,7 +3887,7 @@ class RESTClientImpl(rest_api.RESTClient):
         prompt_bodys: list[typing.MutableMapping[str, typing.Any]] = []
         for index, prompt in enumerate(prompts):
             prompt_body = prompt.build()
-            prompt_body.get("id", index)
+            prompt_body["id"] = prompt_body.get("id", index)
             prompt_bodys.append(prompt_body)
         return prompt_bodys  
             
