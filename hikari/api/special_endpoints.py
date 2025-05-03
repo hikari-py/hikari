@@ -156,7 +156,7 @@ class ChannelRepositioner(abc.ABC):
         position=1, channel=CHANNEL_ID, lock_permissions=True, parent=CATEGORY_ID
     )
     # when lock_permissions is set to True, the channels permissions will be synced
-    # with the parent.
+    # with the new parent.
 
     await channel_repositioner
     ```
