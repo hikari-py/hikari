@@ -672,7 +672,9 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
     _channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel] = attrs.field(
         alias="channel_ids", kw_only=True, factory=tuple
     )
-    _description: str | None = attrs.field(alias="description", kw_only=True, default=None)
+    _description: undefined.UndefinedOr[str] = attrs.field(
+        alias="description", kw_only=True, default=undefined.UNDEFINED
+    )
     _emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = attrs.field(
         alias="emoji", default=undefined.UNDEFINED, kw_only=True
     )
@@ -714,11 +716,11 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
 
     @property
     @typing_extensions.override
-    def description(self) -> str | None:
+    def description(self) -> undefined.UndefinedOr[str]:
         return self._description
 
     @typing_extensions.override
-    def set_description(self, description: str | None, /) -> Self:
+    def set_description(self, description: undefined.UndefinedOr[str], /) -> Self:
         self._description = description
         return self
 
@@ -831,7 +833,7 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
         channel_ids: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishSequence[channels.GuildChannel]
         ] = undefined.UNDEFINED,
-        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
     ) -> Self:
         self._options.append(
@@ -839,7 +841,7 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
                 title=title,
                 role_ids=role_ids or [],
                 channel_ids=channel_ids or [],
-                description=description or None,
+                description=description,
                 emoji=emoji,
             )
         )

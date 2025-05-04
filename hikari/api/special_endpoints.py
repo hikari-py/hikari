@@ -255,11 +255,11 @@ class GuildOnboardingPromptOptionBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def description(self) -> str | None:
+    def description(self) -> undefined.UndefinedOr[str]:
         """The prompt's title."""
 
     @abc.abstractmethod
-    def set_description(self, title: str | None, /) -> Self:
+    def set_description(self, title: undefined.UndefinedOr[str], /) -> Self:
         """Set this prompt's title.
 
         Returns
@@ -402,7 +402,7 @@ class GuildOnboardingPromptBuilder(abc.ABC):
         channel_ids: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishSequence[channels.GuildChannel]
         ] = undefined.UNDEFINED,
-        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
     ) -> Self:
         """Set this prompt's title.
