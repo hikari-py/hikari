@@ -53,7 +53,7 @@ class TestTypingIndicator:
         return hikari_test_helpers.mock_class_namespace(special_endpoints.TypingIndicator, init_=False)
 
     def test___enter__(self, typing_indicator):
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        # ruff gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             typing_indicator().__enter__()
 

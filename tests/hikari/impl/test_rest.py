@@ -643,7 +643,7 @@ class TestRESTClientImpl:
         assert obj._rest_url == "https://some.where/api/v2"
 
     def test___enter__(self, rest_client):
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        # ruff gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             rest_client.__enter__()
 
@@ -1547,6 +1547,109 @@ class TestRESTClientImpl:
             ]
         )
 
+    def test__build_message_payload_with_duplicated_resources(self, rest_client):
+        attachment1 = mock.Mock()
+        attachment2 = mock.Mock(message_models.Attachment, id=123, filename="attachment123.png")
+        component_attachment = mock.Mock(filename="component.png")
+        component_attachment2 = mock.Mock(filename="component2.png")
+        component1 = mock.Mock(
+            build=mock.Mock(return_value=({"component": 1}, (component_attachment, component_attachment)))
+        )
+        component2 = mock.Mock(
+            build=mock.Mock(return_value=({"component": 2}, (component_attachment2, component_attachment2)))
+        )
+        embed1 = mock.Mock()
+        embed2 = mock.Mock()
+        embed_attachment1 = mock.Mock()
+        embed_attachment2 = mock.Mock()
+        resource_attachment1 = mock.Mock(filename="attachment.png")
+        resource_attachment2 = mock.Mock(filename="attachment2.png")
+        resource_attachment3 = mock.Mock(filename="attachment3.png")
+        resource_attachment4 = mock.Mock(filename="attachment4.png")
+        resource_attachment5 = mock.Mock(filename="attachment5.png")
+        resource_attachment6 = mock.Mock(filename="attachment6.png")
+
+        rest_client._entity_factory.serialize_embed.side_effect = [
+            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
+            ({"embed": 2}, [embed_attachment2, embed_attachment1]),
+        ]
+
+        with (
+            mock.patch.object(
+                files,
+                "ensure_resource",
+                side_effect=[
+                    resource_attachment1,
+                    resource_attachment2,
+                    resource_attachment3,
+                    resource_attachment4,
+                    resource_attachment5,
+                    resource_attachment6,
+                ],
+            ) as ensure_resource,
+            mock.patch.object(data_binding, "URLEncodedFormBuilder") as url_encoded_form,
+        ):
+            body, form = rest_client._build_message_payload(
+                content=987654321,
+                attachments=[attachment1, attachment1, attachment2],
+                components=[component1, component2],
+                embeds=[embed1, embed2],
+                flags=120,
+                tts=True,
+                mentions_everyone=None,
+                mentions_reply=None,
+                user_mentions=None,
+                role_mentions=None,
+                edit=True,
+            )
+
+        # Returned
+        assert body == {
+            "content": "987654321",
+            "tts": True,
+            "flags": 120,
+            "embeds": [{"embed": 1}, {"embed": 2}],
+            "components": [{"component": 1}, {"component": 2}],
+            "attachments": [
+                {"id": 0, "filename": "attachment.png"},
+                {"id": 1, "filename": "attachment2.png"},
+                {"id": 123, "filename": "attachment123.png"},
+                {"id": 2, "filename": "attachment3.png"},
+                {"id": 3, "filename": "attachment4.png"},
+                {"id": 4, "filename": "attachment5.png"},
+                {"id": 5, "filename": "attachment6.png"},
+            ],
+            "allowed_mentions": {"parse": []},
+        }
+        assert form is url_encoded_form.return_value
+
+        # Attachments
+        assert ensure_resource.call_count == 6
+        ensure_resource.assert_has_calls(
+            [
+                mock.call(attachment1),
+                mock.call(attachment1),
+                mock.call(component_attachment),
+                mock.call(component_attachment2),
+                mock.call(embed_attachment1),
+                mock.call(embed_attachment2),
+            ]
+        )
+
+        # Form builder
+        url_encoded_form.assert_called_once_with()
+        assert url_encoded_form.return_value.add_resource.call_count == 6
+        url_encoded_form.return_value.add_resource.assert_has_calls(
+            [
+                mock.call("files[0]", resource_attachment1),
+                mock.call("files[1]", resource_attachment2),
+                mock.call("files[2]", resource_attachment3),
+                mock.call("files[3]", resource_attachment4),
+                mock.call("files[4]", resource_attachment5),
+                mock.call("files[5]", resource_attachment6),
+            ]
+        )
+
     @pytest.mark.parametrize(
         ("singular_arg", "plural_arg"),
         [("attachment", "attachments"), ("component", "components"), ("embed", "embeds"), ("sticker", "stickers")],
@@ -1558,6 +1661,36 @@ class TestRESTClientImpl:
             ValueError, match=rf"You may only specify one of '{singular_arg}' or '{plural_arg}', not both"
         ):
             rest_client._build_message_payload(**{singular_arg: object(), plural_arg: object()})
+
+    def test_build_voice_message_payload(self, rest_client):
+        body, form_builder = rest_client._build_voice_message_payload(
+            attachment=mock.Mock(message_models.Attachment, id=123, filename="attachment123.png"),
+            waveform="AAAA",
+            duration=3,
+            flags=120,
+            reply=123,
+            reply_must_exist=True,
+        )
+        assert body == {
+            "flags": 8312,
+            "allowed_mentions": {"parse": []},
+            "message_reference": {"message_id": "123", "fail_if_not_exists": True},
+            "attachments": [{"duration_secs": 3, "waveform": "AAAA", "id": 0, "filename": "attachment123.png"}],
+        }
+
+    def test_build_voice_message_payload_with_mentions_reply(self, rest_client):
+        body, form_builder = rest_client._build_voice_message_payload(
+            attachment=mock.Mock(message_models.Attachment, id=123, filename="attachment123.png"),
+            waveform="AAAA",
+            duration=3,
+            flags=120,
+            mentions_reply=True,
+        )
+        assert body == {
+            "flags": 8312,
+            "allowed_mentions": {"parse": [], "replied_user": True},
+            "attachments": [{"duration_secs": 3, "waveform": "AAAA", "id": 0, "filename": "attachment123.png"}],
+        }
 
     @pytest.mark.parametrize(
         "type",
@@ -2769,6 +2902,49 @@ class TestRESTClientImplAsync:
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
+    async def test_create_voice_message(self, rest_client):
+        expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=123456789)
+        attachment_obj = object()
+        reply_obj = StubModel(987654321)
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+        rest_client._build_voice_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+
+        returned = await rest_client.create_voice_message(
+            StubModel(123456789),
+            attachment=attachment_obj,
+            waveform="AAA",
+            duration=3,
+            reply=reply_obj,
+            mentions_reply=True,
+            reply_must_exist=False,
+            flags=54123,
+        )
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
+
+        rest_client._build_voice_message_payload.assert_called_once_with(
+            attachment=attachment_obj,
+            mentions_reply=True,
+            flags=54123,
+            waveform="AAA",
+            duration=3,
+            reply=reply_obj,
+            reply_must_exist=False,
+        )
+
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_create_voice_message_no_flags(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+        returned = await rest_client.create_voice_message(
+            StubModel(123456789), attachment=object(), waveform="AAA", duration=3
+        )
+        assert returned is rest_client._entity_factory.deserialize_message.return_value
+
+        rest_client._request.assert_awaited_once()
+
     async def test_crosspost_message(self, rest_client):
         expected_route = routes.POST_CHANNEL_CROSSPOST.compile(channel=444432, message=12353234)
         mock_message = object()
@@ -3452,6 +3628,28 @@ class TestRESTClientImplAsync:
             auth=None,
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_execute_webhook_voice_message(self, rest_client):
+        webhook = 432
+        token = "some token"
+        expected_route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+        attachment_obj = object()
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+        rest_client._build_voice_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+
+        await rest_client.execute_webhook_voice_message(
+            webhook=webhook, token=token, attachment=attachment_obj, waveform="AAA", duration=3
+        )
+
+        rest_client._build_voice_message_payload.assert_called_once_with(
+            attachment=attachment_obj, waveform="AAA", duration=3, flags=undefined.UNDEFINED
+        )
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form_builder=mock_form, query={"wait": "true"}, auth=None
+        )
 
     @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
     async def test_fetch_webhook_message(self, rest_client, webhook):
@@ -6277,6 +6475,26 @@ class TestRESTClientImplAsync:
             expected_route, json={"type": 1, "data": {"testing": "ensure_in_test"}}, auth=None
         )
 
+    async def test_create_interaction_voice_message_response(self, rest_client):
+        interaction = StubModel(432)
+        token = "some token"
+        expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+        attachment_obj = object()
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+        rest_client._build_voice_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+
+        await rest_client.create_interaction_voice_message_response(
+            interaction, token=token, attachment=attachment_obj, waveform="AAA", duration=3, flags=54123
+        )
+
+        rest_client._build_voice_message_payload.assert_called_once_with(
+            attachment=attachment_obj, flags=54123, waveform="AAA", duration=3
+        )
+
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
+
     async def test_edit_interaction_response_when_form(self, rest_client):
         attachment_obj = object()
         attachment_obj2 = object()
@@ -6370,6 +6588,26 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route, json={"testing": "ensure_in_test"}, auth=None)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_edit_interaction_voice_message_response(self, rest_client):
+        interaction = StubModel(432)
+        token = "some token"
+        expected_route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=interaction, token=token)
+        attachment_obj = object()
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+        rest_client._build_voice_message_payload = mock.Mock(return_value=(mock_body, mock_form))
+
+        await rest_client.edit_interaction_voice_message_response(
+            interaction, token=token, attachment=attachment_obj, waveform="AAA", duration=3
+        )
+
+        rest_client._build_voice_message_payload.assert_called_once_with(
+            attachment=attachment_obj, waveform="AAA", duration=3
+        )
+
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
 
     async def test_delete_interaction_response(self, rest_client):
         expected_route = routes.DELETE_INTERACTION_RESPONSE.compile(webhook=1235431, token="go homo now")

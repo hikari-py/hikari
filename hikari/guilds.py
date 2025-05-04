@@ -66,6 +66,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -525,16 +526,19 @@ class Member(users.User):
 
     @property
     @typing_extensions.override
+    @deprecation.deprecated("Use 'make_avatar_url' instead.")
     def avatar_url(self) -> files.URL | None:
-        return self.user.avatar_url
+        deprecation.warn_deprecated(
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
+        )
+        return self.user.make_avatar_url()
 
     @property
     def guild_avatar_url(self) -> files.URL | None:
-        """Guild Avatar URL for the user, if they have one set.
-
-        May be [`None`][] if no guild avatar is set. In this case, you
-        should use [`hikari.guilds.Member.avatar_hash`][] or [`hikari.guilds.Member.default_avatar_url`][] instead.
-        """
+        """Guild Avatar URL for the user, if they have one set."""
+        deprecation.warn_deprecated(
+            "guild_avatar_url", removal_version="2.5.0", additional_info="Use 'make_guild_avatar_url' instead."
+        )
         return self.make_guild_avatar_url()
 
     @property
@@ -545,12 +549,12 @@ class Member(users.User):
     @property
     @typing_extensions.override
     def display_avatar_decoration(self) -> users.AvatarDecoration | None:
-        return self.guild_avatar_decoration or super().display_avatar_decoration
+        return self.guild_avatar_decoration or self.user.display_avatar_decoration
 
     @property
     @typing_extensions.override
     def display_avatar_url(self) -> files.URL:
-        return self.make_guild_avatar_url() or super().display_avatar_url
+        return self.make_guild_avatar_url() or self.user.display_avatar_url
 
     @property
     @typing_extensions.override
@@ -559,22 +563,25 @@ class Member(users.User):
 
     @property
     @typing_extensions.override
+    @deprecation.deprecated("Use 'make_banner_url' instead.")
     def banner_url(self) -> files.URL | None:
-        return self.user.banner_url
+        deprecation.warn_deprecated(
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
+        )
+        return self.user.make_banner_url()
 
     @property
     def guild_banner_url(self) -> files.URL | None:
-        """Guild Banner URL for the user, if they have one set.
-
-        May be [`None`][] if no guild banner is set. In this case, you
-        should use [`hikari.guilds.Member.banner_hash`][] instead.
-        """
+        """Guild Banner URL for the user, if they have one set."""
+        deprecation.warn_deprecated(
+            "guild_banner_url", removal_version="2.5.0", additional_info="Use 'make_guild_banner_url' instead."
+        )
         return self.make_guild_banner_url()
 
     @property
     @typing_extensions.override
     def display_banner_url(self) -> files.URL | None:
-        return self.make_guild_banner_url() or super().display_banner_url
+        return self.make_guild_banner_url() or self.user.display_banner_url
 
     @property
     @typing_extensions.override
@@ -717,45 +724,82 @@ class Member(users.User):
         return self.user.global_name
 
     @typing_extensions.override
-    def make_avatar_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
-        return self.user.make_avatar_url(ext=ext, size=size)
+    def make_avatar_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        return self.user.make_avatar_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
 
-    def make_guild_avatar_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
-        """Generate the guild specific avatar url for this member, if set.
+    def make_guild_avatar_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the guild-specific avatar URL for this member, if set.
 
-        If no guild avatar is set, this returns [`None`][].
+        If no guild-specific avatar is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
+            If not specified, the format will be determined based on
+            whether the avatar is animated or not.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
             animated).
 
-            Will be ignored for default avatars which can only be `png`.
-
             If [`None`][], then the correct default extension is
-            determined based on whether the icon is animated or not.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
-            Will be ignored for default avatars.
+            determined based on whether the avatar is animated or not.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the avatar, or [`None`][] if not present.
+            The URL, or [`None`][] if no avatar is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`;
+            If an animated format is requested for a static avatar.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.guild_avatar_hash is None:
             return None
 
-        if ext is None:
-            ext = "gif" if self.guild_avatar_hash.startswith("a_") else "png"
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
+        if not file_format:
+            file_format = "GIF" if self.guild_avatar_hash.startswith("a_") else "PNG"
 
         return routes.CDN_MEMBER_AVATAR.compile_to_file(
             urls.CDN_URL,
@@ -763,29 +807,62 @@ class Member(users.User):
             user_id=self.id,
             hash=self.guild_avatar_hash,
             size=size,
-            file_format=ext,
+            file_format=file_format,
+            lossless=lossless,
         )
 
     @typing_extensions.override
-    def make_banner_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
-        return self.user.make_banner_url(ext=ext, size=size)
+    def make_banner_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        return self.user.make_banner_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
 
-    def make_guild_banner_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
-        """Generate the guild specific banner url for this member, if set.
+    def make_guild_banner_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the guild-specific banner URL for this member, if set.
 
-        If no guild banner is set, this returns [`None`][].
+        If no guild-specific banner is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
+            If not specified, the format will be determined based on
+            whether the banner is animated or not.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated).
 
             If [`None`][], then the correct default extension is
             determined based on whether the banner is animated or not.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -794,14 +871,23 @@ class Member(users.User):
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`;
+            If an animated format is requested for a static banner.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.guild_banner_hash is None:
             return None
 
-        if ext is None:
-            ext = "gif" if self.guild_banner_hash.startswith("a_") else "png"
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
+        if not file_format:
+            file_format = "GIF" if self.guild_banner_hash.startswith("a_") else "PNG"
 
         return routes.CDN_MEMBER_BANNER.compile_to_file(
             urls.CDN_URL,
@@ -809,7 +895,8 @@ class Member(users.User):
             user_id=self.id,
             hash=self.guild_banner_hash,
             size=size,
-            file_format=ext,
+            file_format=file_format,
+            lossless=lossless,
         )
 
     @typing_extensions.override
@@ -1219,8 +1306,10 @@ class Role(PartialRole):
         return self.color
 
     @property
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """Role icon URL, if there is one."""
+        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
         return self.make_icon_url()
 
     @property
@@ -1236,35 +1325,62 @@ class Role(PartialRole):
 
         return super().mention
 
-    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
+    def make_icon_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the icon URL for this role, if set.
 
-        If no role icon is set, this returns [`None`][].
+        If no icon is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the icon, or [`None`][] if not present.
+            The URL, or [`None`][] if no icon is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_ROLE_ICON.compile_to_file(
-            urls.CDN_URL, role_id=self.id, hash=self.icon_hash, size=size, file_format=ext
+            urls.CDN_URL, role_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
@@ -1335,21 +1451,44 @@ class PartialApplication(snowflakes.Unique):
         return self.name
 
     @property
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
-        """Team icon URL, if there is one."""
+        """App icon URL, if there is one."""
+        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead")
         return self.make_icon_url()
 
-    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
-        """Generate the icon URL for this application.
+    def make_icon_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the icon URL for this application, if set.
+
+        If no icon is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -1358,15 +1497,27 @@ class PartialApplication(snowflakes.Unique):
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_APPLICATION_ICON.compile_to_file(
-            urls.CDN_URL, application_id=self.id, hash=self.icon_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            application_id=self.id,
+            hash=self.icon_hash,
+            size=size,
+            file_format=file_format,
+            lossless=lossless,
         )
 
 
@@ -1603,11 +1754,6 @@ class PartialGuild(snowflakes.Unique):
         return self.name
 
     @property
-    def icon_url(self) -> files.URL | None:
-        """Icon URL for the guild, if set; otherwise [`None`][]."""
-        return self.make_icon_url()
-
-    @property
     def shard_id(self) -> int | None:
         """Return the ID of the shard this guild is served by.
 
@@ -1621,21 +1767,48 @@ class PartialGuild(snowflakes.Unique):
         assert isinstance(shard_count, int)
         return snowflakes.calculate_shard_id(shard_count, self.id)
 
-    def make_icon_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
+    @property
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
+    def icon_url(self) -> files.URL | None:
+        """Icon URL for the guild, if set; otherwise [`None`][]."""
+        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
+        return self.make_icon_url()
+
+    def make_icon_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the guild's icon URL, if set.
+
+        If no icon is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
+            If not specified, the format will be determined based on
+            whether the icon is animated or not.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`.
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated).
+            Supports `png`, `jpeg`, `jpg`, `webp`, and `gif` (when animated).
 
-            If [`None`][], then the correct default extension is
-            determined based on whether the icon is animated or not.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -1644,17 +1817,26 @@ class PartialGuild(snowflakes.Unique):
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`;
+            If an animated format is requested for a static icon.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash is None:
             return None
 
-        if ext is None:
-            ext = "gif" if self.icon_hash.startswith("a_") else "png"
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
+        if not file_format:
+            file_format = "GIF" if self.icon_hash.startswith("a_") else "PNG"
 
         return routes.CDN_GUILD_ICON.compile_to_file(
-            urls.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=ext
+            urls.CDN_URL, guild_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
         )
 
     async def ban(
@@ -2757,71 +2939,142 @@ class GuildPreview(PartialGuild):
     """The guild's description, if set."""
 
     @property
+    @deprecation.deprecated("Use 'make_discovery_splash_url' instead")
     def discovery_splash_url(self) -> files.URL | None:
         """Discovery URL splash for the guild, if set."""
+        deprecation.warn_deprecated(
+            "discovery_splash_url", removal_version="2.5.0", additional_info="Use 'make_discovery_splash_url' instead"
+        )
         return self.make_discovery_splash_url()
 
     @property
+    @deprecation.deprecated("Use 'make_splash_url' instead")
     def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
+        deprecation.warn_deprecated(
+            "splash_url", removal_version="2.5.0", additional_info="Use 'make_splash_url' instead"
+        )
         return self.make_splash_url()
 
-    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
-        """Generate the guild's discovery splash image URL, if set.
+    def make_discovery_splash_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the discovery splash URL for this guild, if set.
+
+        If no discovery splash is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The string URL.
+            The URL, or [`None`][] if no discovery splash is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            urls.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            guild_id=self.id,
+            hash=self.discovery_splash_hash,
+            size=size,
+            file_format=file_format,
+            lossless=lossless,
         )
 
-    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
-        """Generate the guild's splash image URL, if set.
+    def make_splash_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the splash URL for this guild, if set.
+
+        If no splash is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or [`None`][] if not set.
+            The URL, or [`None`][] if no splash is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext
+            urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
@@ -2960,18 +3213,30 @@ class Guild(PartialGuild):
     """The NSFW level of the guild."""
 
     @property
+    @deprecation.deprecated("Use 'make_banner_url' instead")
     def banner_url(self) -> files.URL | None:
         """Banner URL for the guild, if set."""
+        deprecation.warn_deprecated(
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead"
+        )
         return self.make_banner_url()
 
     @property
+    @deprecation.deprecated("Use 'make_discovery_splash_url' instead")
     def discovery_splash_url(self) -> files.URL | None:
         """Discovery splash URL for the guild, if set."""
+        deprecation.warn_deprecated(
+            "discovery_splash_url", removal_version="2.5.0", additional_info="Use 'make_discovery_splash_url' instead"
+        )
         return self.make_discovery_splash_url()
 
     @property
+    @deprecation.deprecated("Use 'make_splash_url' instead")
     def splash_url(self) -> files.URL | None:
         """Splash URL for the guild, if set."""
+        deprecation.warn_deprecated(
+            "splash_url", removal_version="2.5.0", additional_info="Use 'make_splash_url' instead"
+        )
         return self.make_splash_url()
 
     @property
@@ -3081,11 +3346,35 @@ class Guild(PartialGuild):
 
         return self.app.cache.get_roles_view_for_guild(self.id)
 
-    def make_banner_url(self, *, ext: str | None = None, size: int = 4096) -> files.URL | None:
-        """Generate the guild's banner image URL, if set.
+    def make_banner_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the banner URL for this guild, if set.
+
+        If no banner is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
+            If not specified, the format will be determined based on
+            whether the banner is animated or not.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
         ext
             The ext to use for this URL.
             Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
@@ -3093,86 +3382,158 @@ class Guild(PartialGuild):
 
             If [`None`][], then the correct default extension is
             determined based on whether the banner is animated or not.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the banner, or [`None`][] if no banner is set.
+            The URL, or [`None`][] if no banner is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`;
+            If an animated format is requested for a static banner.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.banner_hash is None:
             return None
 
-        if ext is None:
-            ext = "gif" if self.banner_hash.startswith("a_") else "png"
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
+        if not file_format:
+            file_format = "GIF" if self.banner_hash.startswith("a_") else "PNG"
 
         return routes.CDN_GUILD_BANNER.compile_to_file(
-            urls.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=ext
+            urls.CDN_URL, guild_id=self.id, hash=self.banner_hash, size=size, file_format=file_format, lossless=lossless
         )
 
-    def make_discovery_splash_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
-        """Generate the guild's discovery splash image URL, if set.
+    def make_discovery_splash_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the discovery splash URL for this guild, if set.
+
+        If no discovery splash is set, this returns [`None`][].
 
         Parameters
         ----------
-        ext
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
         size
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between `16` and `4096`.
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
+        ext
+            The extension to use for this URL.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The string URL.
+            The URL, or [`None`][] if no discovery splash is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.discovery_splash_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_GUILD_DISCOVERY_SPLASH.compile_to_file(
-            urls.CDN_URL, guild_id=self.id, hash=self.discovery_splash_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            guild_id=self.id,
+            hash=self.discovery_splash_hash,
+            size=size,
+            file_format=file_format,
+            lossless=lossless,
         )
 
-    def make_splash_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
-        """Generate the guild's splash image URL, if set.
+    def make_splash_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the splash URL for this guild, if set.
+
+        If no splash is set, this returns [`None`][].
 
         Parameters
         ----------
-        ext
-            The extension to use for this URL, defaults to `png`.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
         size
-            The size to set for the URL, defaults to `4096`.
-            Can be any power of two between `16` and `4096`.
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
+        ext
+            The extension to use for this URL.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL to the splash, or [`None`][] if not set.
+            The URL, or [`None`][] if no splash is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If `size` is not a power of two or not between 16 and 4096.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.splash_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_GUILD_SPLASH.compile_to_file(
-            urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=ext
+            urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=file_format, lossless=lossless
         )
 
     def get_channel(

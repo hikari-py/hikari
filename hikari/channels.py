@@ -75,6 +75,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import webhooks
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -894,37 +895,66 @@ class GroupDMChannel(PrivateChannel):
         return self.name
 
     @property
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
     def icon_url(self) -> files.URL | None:
         """Icon for this group DM, if set."""
+        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
         return self.make_icon_url()
 
-    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> files.URL | None:
-        """Generate the icon for this group, if set.
+    def make_icon_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the icon URL for this group, if set.
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [`None`][] if no icon is present.
+            The URL, or [`None`][] if no icon is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If `size` is not a power of two between 16 and 4096 (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_CHANNEL_ICON.compile_to_file(
-            urls.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=ext
+            urls.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
