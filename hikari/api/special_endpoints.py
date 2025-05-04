@@ -204,7 +204,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
 
 class GuildOnboardingPromptOptionBuilder(abc.ABC):
-    """Interface of a guild onboarding prompt option used to respond to edit guild onboardings."""
+    """Interface of a guild onboarding prompt option used to edit guild onboardings."""
 
     __slots__: typing.Sequence[str] = ()
 
