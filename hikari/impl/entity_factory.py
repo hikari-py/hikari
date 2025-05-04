@@ -1960,7 +1960,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             ]
             options.append(
                 guild_models.GuildOnboardingPromptOption(
-                    id=option_payload["id"],
+                    id=snowflakes.Snowflake(option_payload["id"]),
                     channel_ids=channel_ids,
                     role_ids=role_ids,
                     title=option_payload["title"],
@@ -1970,7 +1970,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             )
 
         return guild_models.GuildOnboardingPrompt(
-            id=payload["id"],
+            id=snowflakes.Snowflake(payload["id"]),
             type=guild_models.GuildOnboardingPromptType(payload["type"]),
             in_onboarding=payload["in_onboarding"],
             required=payload["required"],
@@ -1988,7 +1988,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             self._deserialize_guild_onboarding_prompt(prompt_payload) for prompt_payload in payload["prompts"]
         ]
         return guild_models.GuildOnboarding(
-            guild_id=payload["guild_id"],
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
             enabled=payload["enabled"],
             mode=guild_models.GuildOnboardingMode(payload["mode"]),
             default_channel_ids=default_channel_ids,
