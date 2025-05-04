@@ -5655,6 +5655,73 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
 
+    async def test_fetch_guild_onboarding(self, rest_client):
+        guild = 123
+        rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})
+        expected_route = routes.GET_GUILD_ONBOARDING.compile(guild=guild)
+        result = await rest_client.fetch_guild_onboarding(guild)
+        assert result is rest_client._entity_factory.deserialize_guild_onboarding.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_guild_onboarding.assert_called_once_with(
+            rest_client._request.return_value
+        )
+
+    async def test_edit_guild_onboarding(self, rest_client):
+        guild = 123
+        expected_route = routes.PUT_GUILD_ONBOARDING.compile(guild=guild)
+        rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})
+        result = await rest_client.edit_guild_onboarding(
+            guild=guild,
+            default_channel_ids=[456],
+            enabled=True,
+            mode=guilds.GuildOnboardingMode.ONBOARDING_DEFAULT,
+            prompts=[
+                special_endpoints.GuildOnboardingPromptBuilder(
+                    title="Test Title",
+                    single_select=True,
+                    in_onboarding=True,
+                    required=True
+                ),
+                special_endpoints.GuildOnboardingPromptBuilder(
+                    title="Test Title",
+                    single_select=True,
+                    in_onboarding=True,
+                    required=True
+                ).set_id(187)
+            ]
+        )
+        assert result is rest_client._entity_factory.deserialize_guild_onboarding.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "enabled": True,
+                "default_channel_ids": ["456"],
+                "mode": guilds.GuildOnboardingMode.ONBOARDING_DEFAULT.value,
+                "prompts": [
+                    {
+                        "id": "0",
+                        "title": "Test Title",
+                        "single_select": True,
+                        "in_onboarding": True,
+                        "required": True,
+                        "options": []
+                    },
+                    {
+                        "id": "187",
+                        "title": "Test Title",
+                        "single_select": True,
+                        "in_onboarding": True,
+                        "required": True,
+                        "options": []
+                    }
+                ]
+            },
+        )
+        rest_client._entity_factory.deserialize_guild_onboarding.assert_called_once_with(
+            rest_client._request.return_value
+        )
+
+
     async def test_fetch_vanity_url(self, rest_client):
         vanity_url = StubModel(789)
         expected_route = routes.GET_GUILD_VANITY_URL.compile(guild=123)
