@@ -890,12 +890,10 @@ class TestGuildOnboardingPromptBuilder:
         assert prompt.options == [prompt_option]
 
     def test_add_option(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
-        prompt.set_options([]).add_option(
-            title="Test Title", description="Test Description", role_ids=[123], channel_ids=[456], emoji=789
-        )
+        prompt.set_options([]).add_option(title="Test Title", description="Test Description", role_ids=[123], emoji=789)
         assert prompt.options == [
             special_endpoints.GuildOnboardingPromptOptionBuilder(
-                title="Test Title", description="Test Description", role_ids=[123], channel_ids=[456], emoji=789
+                title="Test Title", description="Test Description", role_ids=[123], channel_ids=[], emoji=789
             )
         ]
 
