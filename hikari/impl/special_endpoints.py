@@ -675,7 +675,7 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
     _description: undefined.UndefinedOr[str] = attrs.field(
         alias="description", kw_only=True, default=undefined.UNDEFINED
     )
-    _emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = attrs.field(
+    _emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str] = attrs.field(
         alias="emoji", default=undefined.UNDEFINED, kw_only=True
     )
     _emoji_id: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
@@ -726,11 +726,11 @@ class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPrompt
 
     @property
     @typing_extensions.override
-    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
+    def emoji(self) -> undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str]:
         return self._emoji
 
     @typing_extensions.override
-    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
+    def set_emoji(self, emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str], /) -> Self:
         self._emoji_id, self._emoji_name = _build_emoji(emoji)
         self._emoji = emoji
         return self
@@ -833,16 +833,16 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
         channel_ids: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishSequence[channels.GuildChannel]
         ] = undefined.UNDEFINED,
-        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedNoneOr[snowflakes.Snowflakeish | emojis.Emoji | str] = undefined.UNDEFINED,
     ) -> Self:
         self._options.append(
             GuildOnboardingPromptOptionBuilder(
                 title=title,
                 role_ids=role_ids or [],
                 channel_ids=channel_ids or [],
-                description=description,
-                emoji=emoji,
+                description=description or undefined.UNDEFINED,
+                emoji=emoji or undefined.UNDEFINED,
             )
         )
         return self
