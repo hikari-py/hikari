@@ -5677,18 +5677,12 @@ class TestRESTClientImplAsync:
             mode=guilds.GuildOnboardingMode.ONBOARDING_DEFAULT,
             prompts=[
                 special_endpoints.GuildOnboardingPromptBuilder(
-                    title="Test Title",
-                    single_select=True,
-                    in_onboarding=True,
-                    required=True
+                    title="Test Title", single_select=True, in_onboarding=True, required=True
                 ),
                 special_endpoints.GuildOnboardingPromptBuilder(
-                    title="Test Title",
-                    single_select=True,
-                    in_onboarding=True,
-                    required=True
-                ).set_id(187)
-            ]
+                    title="Test Title", single_select=True, in_onboarding=True, required=True
+                ).set_id(187),
+            ],
         )
         assert result is rest_client._entity_factory.deserialize_guild_onboarding.return_value
         rest_client._request.assert_awaited_once_with(
@@ -5704,7 +5698,7 @@ class TestRESTClientImplAsync:
                         "single_select": True,
                         "in_onboarding": True,
                         "required": True,
-                        "options": []
+                        "options": [],
                     },
                     {
                         "id": "187",
@@ -5712,15 +5706,14 @@ class TestRESTClientImplAsync:
                         "single_select": True,
                         "in_onboarding": True,
                         "required": True,
-                        "options": []
-                    }
-                ]
+                        "options": [],
+                    },
+                ],
             },
         )
         rest_client._entity_factory.deserialize_guild_onboarding.assert_called_once_with(
             rest_client._request.return_value
         )
-
 
     async def test_fetch_vanity_url(self, rest_client):
         vanity_url = StubModel(789)
