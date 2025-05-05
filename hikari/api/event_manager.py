@@ -61,12 +61,12 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
 
     ```py
     with EventStream(app, EventType, timeout=50) as stream:
-        async for entry in stream:
+        async for event in stream:
             ...
     ```
 
-    A streamer may also be directly started and closed using the [`hikari.api.event_manager.EventStream.close`][]
-    and [`hikari.api.event_manager.EventStream.open`][]. Note that if you don't call
+    A streamer may also be directly started and closed using the [`hikari.api.event_manager.EventStream.open`][]
+    and [`hikari.api.event_manager.EventStream.close`][]. Note that if you don't call
     [`hikari.api.event_manager.EventStream.close`][] after opening a streamer when
     you're finished with it then it may queue events in memory indefinitely.
 
@@ -81,7 +81,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
 
     See Also
     --------
-    LazyIterator : [`hikari.iterators.LazyIterator`][].
+    [`hikari.iterators.LazyIterator`][]
     """
 
     __slots__: typing.Sequence[str] = ()
@@ -93,7 +93,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
         If called on an already closed streamer then this will do nothing.
 
         !!! note
-            `with streamer` may be used as a short-cut for opening and
+            `with streamer` may be used as a shortcut for opening and
             closing a streamer.
         """
 
@@ -104,8 +104,8 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
         If called on an already started streamer then this will do nothing.
 
         !!! note
-            `with streamer` may be used as a short-cut for opening and
-            closing a stream.
+            `with streamer` may be used as a shortcut for opening and
+            closing a streamer.
         """
 
     @abc.abstractmethod
@@ -193,6 +193,14 @@ class EventManager(abc.ABC):
         event
             The event to dispatch.
 
+        Returns
+        -------
+        asyncio.Future[typing.Any]
+            A future that can be optionally awaited. If awaited, the future
+            will complete once all corresponding event listeners have been
+            invoked. If not awaited, this will schedule the dispatch of the
+            events in the background for later.
+
         Examples
         --------
         We can dispatch custom events by first defining a class that
@@ -232,7 +240,7 @@ class EventManager(abc.ABC):
 
         @bot.listen(MessageCreateEvent)
         async def on_message(event):
-            if "@everyone" in event.content or "@here" in event.content:
+            if event.content is not None and "@everyone" in event.content or "@here" in event.content:
                 event = EveryoneMentionedEvent(
                     author=event.author,
                     content=event.content,
@@ -252,21 +260,13 @@ class EventManager(abc.ABC):
             print(event.user, "just pinged everyone in", event.channel_id)
         ```
 
-        Returns
-        -------
-        asyncio.Future[typing.Any]
-            A future that can be optionally awaited. If awaited, the future
-            will complete once all corresponding event listeners have been
-            invoked. If not awaited, this will schedule the dispatch of the
-            events in the background for later.
-
         See Also
         --------
-        Listen : [`hikari.api.event_manager.EventManager.listen`][].
-        Stream : [`hikari.api.event_manager.EventManager.stream`][].
-        Subscribe : [`hikari.api.event_manager.EventManager.subscribe`][].
-        Unsubscribe : [`hikari.api.event_manager.EventManager.unsubscribe`][].
-        Wait_for: [`hikari.api.event_manager.EventManager.wait_for`][].
+        [`EventManager.listen`][hikari.api.event_manager.EventManager.listen],
+        [`EventManager.stream`][hikari.api.event_manager.EventManager.stream],
+        [`EventManager.subscribe`][hikari.api.event_manager.EventManager.subscribe],
+        [`EventManager.unsubscribe`][hikari.api.event_manager.EventManager.unsubscribe],
+        [`EventManager.wait_for`][hikari.api.event_manager.EventManager.wait_for].
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -294,7 +294,7 @@ class EventManager(abc.ABC):
         events.
 
         ```py
-        from hikari.events.messages import MessageCreateEvent
+        from hikari.events.message_events import MessageCreateEvent
 
 
         async def on_message(event): ...
@@ -305,11 +305,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        Dispatch : [`hikari.api.event_manager.EventManager.dispatch`][].
-        Listen : [`hikari.api.event_manager.EventManager.listen`][].
-        Stream : [`hikari.api.event_manager.EventManager.stream`][].
-        Unsubscribe : [`hikari.api.event_manager.EventManager.unsubscribe`][].
-        Wait_for : [`hikari.api.event_manager.EventManager.wait_for`][].
+        [`EventManager.dispatch`][hikari.api.event_manager.EventManager.dispatch],
+        [`EventManager.listen`][hikari.api.event_manager.EventManager.listen],
+        [`EventManager.stream`][hikari.api.event_manager.EventManager.stream],
+        [`EventManager.unsubscribe`][hikari.api.event_manager.EventManager.unsubscribe],
+        [`EventManager.wait_for`][hikari.api.event_manager.EventManager.wait_for].
         """
 
     # Yes, this is not generic. The reason for this is MyPy complains about
@@ -325,7 +325,7 @@ class EventManager(abc.ABC):
         event_type
             The event type to unsubscribe from. This must be the same exact
             type as was originally subscribed with to be removed correctly.
-            `T` must derive from [`hikari.events.base_events.Event`][].
+            `T` must be a subclass of [`hikari.events.base_events.Event`][].
         callback
             The callback to unsubscribe.
 
@@ -335,7 +335,7 @@ class EventManager(abc.ABC):
         creation event.
 
         ```py
-        from hikari.events.messages import MessageCreateEvent
+        from hikari.events.message_events import MessageCreateEvent
 
 
         async def on_message(event): ...
@@ -346,11 +346,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        Dispatch : [`hikari.api.event_manager.EventManager.dispatch`][].
-        Listen : [`hikari.api.event_manager.EventManager.listen`][].
-        Stream : [`hikari.api.event_manager.EventManager.stream`][].
-        Subscribe : [`hikari.api.event_manager.EventManager.subscribe`][].
-        Wait_for : [`hikari.api.event_manager.EventManager.wait_for`][].
+        [`EventManager.dispatch`][hikari.api.event_manager.EventManager.dispatch],
+        [`EventManager.listen`][hikari.api.event_manager.EventManager.listen],
+        [`EventManager.stream`][hikari.api.event_manager.EventManager.stream],
+        [`EventManager.subscribe`][hikari.api.event_manager.EventManager.subscribe],
+        [`EventManager.wait_for`][hikari.api.event_manager.EventManager.wait_for].
         """
 
     @abc.abstractmethod
@@ -402,11 +402,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        Dispatch : [`hikari.api.event_manager.EventManager.dispatch`][].
-        Stream : [`hikari.api.event_manager.EventManager.stream`][].
-        Subscribe : [`hikari.api.event_manager.EventManager.subscribe`][].
-        Unsubscribe : [`hikari.api.event_manager.EventManager.unsubscribe`][].
-        Wait_for : [`hikari.api.event_manager.EventManager.wait_for`][].
+        [`EventManager.dispatch`][hikari.api.event_manager.EventManager.dispatch],
+        [`EventManager.stream`][hikari.api.event_manager.EventManager.stream],
+        [`EventManager.subscribe`][hikari.api.event_manager.EventManager.subscribe],
+        [`EventManager.unsubscribe`][hikari.api.event_manager.EventManager.unsubscribe],
+        [`EventManager.wait_for`][hikari.api.event_manager.EventManager.wait_for].
         """
 
     @abc.abstractmethod
@@ -423,22 +423,22 @@ class EventManager(abc.ABC):
         Parameters
         ----------
         event_type
-            The event type to listen for. This will listen for subclasses of
-            this type additionally.
+            The event type to listen for. This will also listen for subclasses of
+            this type.
         timeout
             How long this streamer should wait for the next event before
             ending the iteration. If [`None`][] then this will continue
             until explicitly broken from.
         limit
             The limit for how many events this should queue at one time before
-            dropping extra incoming events, leave this as [`None`][] for
+            dropping extra incoming events. Leave this as [`None`][] for
             the cache size to be unlimited.
 
         Returns
         -------
         EventStream[hikari.events.base_events.Event]
             The async iterator to handle streamed events. This must be started
-            with `with stream:` or [`stream.open`][hikari.api.event_manager.EventStream.open]
+            with `with stream` or [`stream.open`][hikari.api.event_manager.EventStream.open]
             before asynchronously iterating over it.
 
         Examples
@@ -465,11 +465,11 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        Dispatch : [`hikari.api.event_manager.EventManager.dispatch`][].
-        Listen : [`hikari.api.event_manager.EventManager.listen`][].
-        Subscribe : [`hikari.api.event_manager.EventManager.subscribe`][].
-        Unsubscribe : [`hikari.api.event_manager.EventManager.unsubscribe`][].
-        Wait_for : [`hikari.api.event_manager.EventManager.wait_for`][].
+        [`EventManager.dispatch`][hikari.api.event_manager.EventManager.dispatch],
+        [`EventManager.listen`][hikari.api.event_manager.EventManager.listen],
+        [`EventManager.subscribe`][hikari.api.event_manager.EventManager.subscribe],
+        [`EventManager.unsubscribe`][hikari.api.event_manager.EventManager.unsubscribe],
+        [`EventManager.wait_for`][hikari.api.event_manager.EventManager.wait_for].
         """
 
     @abc.abstractmethod
@@ -482,20 +482,20 @@ class EventManager(abc.ABC):
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
 
-        !!! warning
-            Async predicates are not supported.
-
         Parameters
         ----------
         event_type
-            The event type to listen for. This will listen for subclasses of
-            this type additionally.
+            The event type to listen for. This will also listen for subclasses of
+            this type.
         predicate
             A function taking the event as the single parameter.
             This should return [`True`][] if the event is one you want to
             return, or [`False`][] if the event should not be returned.
             If left as [`None`][] (the default), then the first matching event type
             that the bot receives (or any subtype) will be the one returned.
+
+            !!! warning
+                Async predicates are not supported.
         timeout
             The amount of time to wait before raising an [`asyncio.TimeoutError`][]
             and giving up instead. This is measured in seconds. If
@@ -516,9 +516,9 @@ class EventManager(abc.ABC):
 
         See Also
         --------
-        Dispatch : [`hikari.api.event_manager.EventManager.dispatch`][].
-        Listen : [`hikari.api.event_manager.EventManager.listen`][].
-        Stream : [`hikari.api.event_manager.EventManager.stream`][].
-        Subscribe : [`hikari.api.event_manager.EventManager.subscribe`][].
-        Unsubscribe : [`hikari.api.event_manager.EventManager.unsubscribe`][].
+        [`EventManager.dispatch`][hikari.api.event_manager.EventManager.dispatch],
+        [`EventManager.listen`][hikari.api.event_manager.EventManager.listen],
+        [`EventManager.stream`][hikari.api.event_manager.EventManager.stream],
+        [`EventManager.subscribe`][hikari.api.event_manager.EventManager.subscribe],
+        [`EventManager.unsubscribe`][hikari.api.event_manager.EventManager.unsubscribe].
         """

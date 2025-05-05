@@ -73,27 +73,27 @@ class GatewayGuildDefinition(abc.ABC):
     @property
     @abc.abstractmethod
     def id(self) -> snowflakes.Snowflake:
-        """ID of the guild the definition is for."""
+        """The ID of the guild this definition is for."""
 
     @abc.abstractmethod
     def channels(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.PermissibleGuildChannel]:
-        """Get a mapping of channel IDs to the channels that belong to the guild."""
+        """A mapping of channel IDs to objects for the guild."""
 
     @abc.abstractmethod
     def emojis(self) -> typing.Mapping[snowflakes.Snowflake, emoji_models.KnownCustomEmoji]:
-        """Get a mapping of emoji IDs to the emojis that belong to the guild."""
+        """A mapping of emoji IDs to objects for the guild."""
 
     @abc.abstractmethod
     def stickers(self) -> typing.Mapping[snowflakes.Snowflake, sticker_models.GuildSticker]:
-        """Get a mapping of sticker IDs to the stickers that belong to the guild."""
+        """A mapping of sticker IDs to objects for the guild."""
 
     @abc.abstractmethod
     def guild(self) -> guild_models.GatewayGuild:
-        """Get the object of the guild this definition is for."""
+        """The object of the guild this definition is for."""
 
     @abc.abstractmethod
     def members(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Member]:
-        """Get a mapping of user IDs to the members that belong to the guild.
+        """A mapping of user IDs to member objects for the guild.
 
         !!! note
             This may be a partial mapping of members in the guild.
@@ -101,7 +101,7 @@ class GatewayGuildDefinition(abc.ABC):
 
     @abc.abstractmethod
     def presences(self) -> typing.Mapping[snowflakes.Snowflake, presence_models.MemberPresence]:
-        """Get a mapping of user IDs to the presences that are active in the guild.
+        """A mapping of user IDs to the presences that are active in the guild.
 
         !!! note
             This may be a partial mapping of presences active in the guild.
@@ -109,15 +109,15 @@ class GatewayGuildDefinition(abc.ABC):
 
     @abc.abstractmethod
     def roles(self) -> typing.Mapping[snowflakes.Snowflake, guild_models.Role]:
-        """Get a mapping of role IDs to the roles that belong to the guild."""
+        """A mapping of role IDs to objects for the guild."""
 
     @abc.abstractmethod
     def threads(self) -> typing.Mapping[snowflakes.Snowflake, channel_models.GuildThreadChannel]:
-        """Get a mapping of thread IDs to the public threads the bot can access in the guild."""
+        """A mapping of thread IDs to objects the bot can access in the guild."""
 
     @abc.abstractmethod
     def voice_states(self) -> typing.Mapping[snowflakes.Snowflake, voice_models.VoiceState]:
-        """Get a mapping of user IDs to the voice states that are active in the guild."""
+        """A mapping of user IDs to voice state objects that are active in the guild."""
 
 
 class EntityFactory(abc.ABC):
@@ -141,7 +141,7 @@ class EntityFactory(abc.ABC):
         Returns
         -------
         hikari.applications.OwnConnection
-            The deserialized "own connection" object.
+            The deserialized own connection object.
         """
 
     @abc.abstractmethod
@@ -156,7 +156,7 @@ class EntityFactory(abc.ABC):
         Returns
         -------
         hikari.applications.OwnGuild
-            The deserialized "own guild" object.
+            The deserialized own guild object.
         """
 
     @abc.abstractmethod
@@ -173,7 +173,7 @@ class EntityFactory(abc.ABC):
         Returns
         -------
         hikari.applications.OwnApplicationRoleConnection
-            The deserialized "own application role connection" object.
+            The deserialized own application role connection object.
         """
 
     @abc.abstractmethod
@@ -222,14 +222,14 @@ class EntityFactory(abc.ABC):
         Returns
         -------
         hikari.applications.ApplicationRoleConnectionMetadataRecord
-            The deserialized "application connection metadata record" object.
+            The deserialized application connection metadata record object.
         """
 
     @abc.abstractmethod
     def serialize_application_connection_metadata_record(
         self, record: application_models.ApplicationRoleConnectionMetadataRecord
     ) -> data_binding.JSONObject:
-        """Serialize an application connection metadata record object to a json serializable dict.
+        """Serialize an application connection metadata record object into a JSON serializable dict.
 
         Parameters
         ----------
@@ -261,7 +261,7 @@ class EntityFactory(abc.ABC):
     def deserialize_authorization_token(
         self, payload: data_binding.JSONObject
     ) -> application_models.OAuth2AuthorizationToken:
-        """Parse a raw payload from Discord into an authorization token object.
+        """Parse a raw payload from Discord into an OAuth2 authorization token object.
 
         Parameters
         ----------
@@ -276,7 +276,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_implicit_token(self, query: data_binding.Query) -> application_models.OAuth2ImplicitToken:
-        """Parse a query from Discord into an implicit token object.
+        """Parse a query from Discord into an OAuth2 implicit token object.
 
         Parameters
         ----------
@@ -327,7 +327,7 @@ class EntityFactory(abc.ABC):
             The JSON payload to deserialize.
         guild_id
             The ID of the guild this entry belongs to. If passed then this
-            will be prioritised over `"guild_id"` in the payload.
+            will be prioritized over `"guild_id"` in the payload.
 
         Returns
         -------
@@ -377,7 +377,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def serialize_permission_overwrite(self, overwrite: channel_models.PermissionOverwrite) -> data_binding.JSONObject:
-        """Serialize a permission overwrite object to a json serializable dict.
+        """Serialize a permission overwrite object into a JSON serializable dict.
 
         Parameters
         ----------
@@ -402,7 +402,7 @@ class EntityFactory(abc.ABC):
         Returns
         -------
         hikari.channels.PartialChannel
-            The deserialized "partial channel" object.
+            The deserialized partial channel object.
         """
 
     @abc.abstractmethod
@@ -449,11 +449,12 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this channel belongs to. If passed then this
-            will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this category belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
-            This currently only covers the gateway `GUILD_CREATE` event,
-            where it is not included in the channel's payload.
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the category's payload.
 
         Returns
         -------
@@ -481,11 +482,12 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this channel belongs to. If passed then this
-            will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this channel belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
-            This currently only covers the gateway `GUILD_CREATE` event,
-            where it is not included in the channel's payload.
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -513,11 +515,12 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this channel belongs to. If passed then this
-            will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this channel belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
-            This currently only covers the gateway `GUILD_CREATE` event,
-            where it is not included in the channel's payload.
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -545,11 +548,12 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this channel belongs to. If passed then this
-            will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this channel belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
-            This currently only covers the gateway `GUILD_CREATE` event,
-            where it is not included in the channel's payload.
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -577,11 +581,12 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this channel belongs to. If passed then this
-            will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this channel belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
-            This currently only covers the gateway `GUILD_CREATE` event,
-            where it is not included in the channel's payload.
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -609,11 +614,12 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this channel belongs to. If passed then this
-            will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this channel belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
-            This currently only covers the gateway `GUILD_CREATE` event,
-            where it is not included in the channel's payload.
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
@@ -629,7 +635,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def serialize_forum_tag(self, tag: channel_models.ForumTag) -> data_binding.JSONObject:
-        """Serialize a forum tag object to a json serializable dict.
+        """Serialize a forum tag object into a JSON serializable dict.
 
         Parameters
         ----------
@@ -656,12 +662,12 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         thread_id
-            ID of the thread this member belongs to. This will be
-            prioritised over `"id"` in the payload when passed.
+            The ID of the thread this member belongs to.
+            This will be prioritized over `"id"` in the payload when passed.
 
             !!! note
-                `thread_id` currently only covers the gateway `GUILD_CREATE` event
-                where the field are is included in the thread member's payload.
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"id"` is not included in the thread member's payload.
 
         Returns
         -------
@@ -672,7 +678,7 @@ class EntityFactory(abc.ABC):
         ------
         KeyError
             If `thread_id` is left as [`hikari.undefined.UNDEFINED`][]
-            when the relevant field isn't present in the passed payload.
+            when `"id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -688,15 +694,15 @@ class EntityFactory(abc.ABC):
         Parameters
         ----------
         guild_id
-            The ID of the guild this channel belongs to. If passed then this
-            will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this thread belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
             !!! note
-                `guild_id` currently only covers the gateway `GUILD_CREATE` event
-                where `"guild_id"` is not included in the channel's payload.
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the thread's payload.
         member
-            The member object for the thread. If passed then this will be
-            prioritised over `"member"` in the payload when passed.
+            The member object for the thread. This will be prioritized over
+            `"member"` in the payload when passed.
 
         Returns
         -------
@@ -725,15 +731,15 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this channel belongs to. This will be
-            prioritised over `"guild_id"` in the payload when passed.
+            The ID of the guild this thread belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
             !!! note
-                `guild_id` currently only covers the gateway `GUILD_CREATE` event
-                where `"guild_id"` is not included in the channel's payload.
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the thread's payload.
         member
-            The member object for the thread. If passed then this will be
-            prioritised over `"member"` in the payload when passed.
+            The member object for the thread.
+            This will be prioritized over `"member"` in the payload when passed.
 
         Returns
         -------
@@ -762,15 +768,15 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this channel belongs to. This will be
-            prioritised over `"guild_id"` in the payload when passed.
+            The ID of the guild this thread belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
             !!! note
-                `guild_id` currently only covers the gateway `GUILD_CREATE` event
-                where `"guild_id"` is not included in the channel's payload.
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the thread's payload.
         member
-            The member object for the thread. If passed then this will be
-            prioritised over `"member"` in the payload when passed.
+            The member object for the thread.
+            This will be prioritized over `"member"` in the payload when passed.
 
         Returns
         -------
@@ -799,15 +805,15 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this channel belongs to. This will be
-            prioritised over `"guild_id"` in the payload when passed.
+            The ID of the guild this thread belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
             !!! note
-                `guild_id` currently only covers the gateway `GUILD_CREATE` event
-                where `"guild_id"` is not included in the channel's payload.
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the thread's payload.
         member
-            The member object for the thread. If passed then this will be
-            prioritised over `"member"` in the payload when passed.
+            The member object for the thread.
+            This will be prioritized over `"member"` in the payload when passed.
 
         Returns
         -------
@@ -831,7 +837,7 @@ class EntityFactory(abc.ABC):
         """Parse a raw payload from Discord into a channel object.
 
         !!! note
-            This also deserializes to thread channels.
+            This also deserializes thread channels.
 
         Parameters
         ----------
@@ -839,23 +845,23 @@ class EntityFactory(abc.ABC):
             The JSON payload to deserialize.
         guild_id
             The ID of the guild this channel belongs to. This will be ignored
-            for DM and group DM channels and will be prioritised over
+            for DM and group DM channels and will be prioritized over
             `"guild_id"` in the payload when passed.
 
-            This is necessary in `GUILD_CREATE` events, where `"guild_id"` is not
-            included in the channel's payload
+            !!! note
+                This is necessary for gateway `GUILD_CREATE` events,
+                where `"guild_id"` is not included in the channel's payload.
 
         Returns
         -------
         hikari.channels.PartialChannel
-            The deserialized partial channel-derived object.
+            The deserialized partial channel object.
 
         Raises
         ------
         KeyError
             If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
-            `"guild_id"` is not present in the passed payload of a guild
-            channel.
+            `"guild_id"` is not present in the passed payload.
         hikari.errors.UnrecognisedEntityError
             If the channel type is unknown.
         """
@@ -883,7 +889,7 @@ class EntityFactory(abc.ABC):
     def serialize_embed(
         self, embed: embed_models.Embed
     ) -> tuple[data_binding.JSONObject, list[files.Resource[files.AsyncReader]]]:
-        """Serialize an embed object to a json serializable dict.
+        """Serialize an embed object into a JSON serializable dict.
 
         Parameters
         ----------
@@ -950,14 +956,12 @@ class EntityFactory(abc.ABC):
             for application emojis.
 
             This is used to ensure that the guild a known custom emoji belongs to
-            is remembered by allowing for a context based artificial `guild_id` attribute.
-
-
+            is remembered by allowing for a context-based artificial `guild_id` attribute.
 
         Returns
         -------
         hikari.emojis.KnownCustomEmoji
-            The deserialized "known custom emoji" object.
+            The deserialized known custom emoji object.
         """
 
     @abc.abstractmethod
@@ -1032,7 +1036,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def serialize_welcome_channel(self, welcome_channel: guild_models.WelcomeChannel) -> data_binding.JSONObject:
-        """Serialize a welcome channel object to a json serializable dict.
+        """Serialize a welcome channel object into a JSON serializable dict.
 
         Parameters
         ----------
@@ -1055,21 +1059,21 @@ class EntityFactory(abc.ABC):
     ) -> guild_models.Member:
         """Parse a raw payload from Discord into a member object.
 
-        !!! note
-            `guild_id` covers cases such as the GUILD_CREATE gateway event and
-            GET Guild Member where `"guild_id"` is not included in the returned
-            payload.
-
         Parameters
         ----------
         payload
             The JSON payload to deserialize.
         user
             The user to attach to this member, should only be passed in
-            situations where "user" is not included in the payload.
+            situations where `"user"` is not included in the payload.
         guild_id
-            The ID of the guild this member belongs to. If this is specified
-            then this will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this member belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
+
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event and
+                the REST API Get Guild Member endpoint, where is not included
+                in the payload. 
 
         Returns
         -------
@@ -1096,7 +1100,7 @@ class EntityFactory(abc.ABC):
         guild_id
             The ID of the guild this role belongs to. This is used to ensure
             that the guild a role belongs to is remembered by allowing for a
-            context based artificial `guild_id` attribute.
+            context-based artificial `guild_id` attribute.
 
         Returns
         -------
@@ -1133,8 +1137,8 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this integration belongs to. If this is specified
-            then this will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this integration belongs to. 
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
         Returns
         -------
@@ -1145,8 +1149,7 @@ class EntityFactory(abc.ABC):
         ------
         KeyError
             If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
-            `"guild_id"` is not present in the passed payload for the payload of
-            the integration.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -1227,15 +1230,17 @@ class EntityFactory(abc.ABC):
         GatewayGuildDefinition
             The deserialized guild object and the internal collections as
             maps of [`hikari.snowflakes.Snowflake`][] mapping to
-            [`hikari.channels.GuildChannel`][],
+            [`hikari.channels.PermissibleGuildChannel`][],
+            [`hikari.emojis.KnownCustomEmoji`][],
+            [`hikari.stickers.GuildSticker`][],
             [`hikari.guilds.Member`][],
             [`hikari.presences.MemberPresence`][],
             [`hikari.guilds.Role`][],
-            [`hikari.emojis.KnownCustomEmoji`][], and
-            [`hikari.stickers.GuildSticker`][]. This is provided in
-            several components to allow separate caching and linking
-            between entities in various relational cache implementations
-            internally.
+            [`hikari.channels.GuildThreadChannel`][], and
+            [`hikari.voices.VoiceState`][].
+            
+            This is provided in several components to allow separate caching and linking
+            between entities in various relational cache implementations internally.
         """
 
     ######################
@@ -1256,8 +1261,8 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this command belongs to. If this is specified
-            then this will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this command belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
         Returns
         -------
@@ -1268,8 +1273,7 @@ class EntityFactory(abc.ABC):
         ------
         KeyError
             If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
-            `"guild_id"` is not present in the passed payload for the payload of
-            the integration.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -1286,8 +1290,8 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this command belongs to. If this is specified
-            then this will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this command belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
         Returns
         -------
@@ -1298,8 +1302,7 @@ class EntityFactory(abc.ABC):
         ------
         KeyError
             If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
-            `"guild_id"` is not present in the passed payload for the payload of
-            the integration.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -1316,8 +1319,8 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this command belongs to. If this is specified
-            then this will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this command belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
 
         Returns
         -------
@@ -1328,8 +1331,7 @@ class EntityFactory(abc.ABC):
         ------
         KeyError
             If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
-            `"guild_id"` is not present in the passed payload for the payload of
-            the integration.
+            `"guild_id"` is not present in the passed payload.
         hikari.errors.UnrecognisedEntityError
             If the command type is unknown.
         """
@@ -1338,7 +1340,7 @@ class EntityFactory(abc.ABC):
     def deserialize_guild_command_permissions(
         self, payload: data_binding.JSONObject
     ) -> commands.GuildCommandPermissions:
-        """Parse a raw payload from Discord into guild command permissions object.
+        """Parse a raw payload from Discord into a guild command permissions object.
 
         Parameters
         ----------
@@ -1353,7 +1355,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def serialize_command_permission(self, permission: commands.CommandPermission) -> data_binding.JSONObject:
-        """Serialize a command permission object to a json serializable dict.
+        """Serialize a command permission object into a JSON serializable dict.
 
         Parameters
         ----------
@@ -1441,7 +1443,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
-        """Serialize a command option object to a json serializable dict.
+        """Serialize a command option object into a JSON serializable dict.
 
         Parameters
         ----------
@@ -1507,7 +1509,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_invite_with_metadata(self, payload: data_binding.JSONObject) -> invite_models.InviteWithMetadata:
-        """Parse a raw payload from Discord into a invite with metadata object.
+        """Parse a raw payload from Discord into an invite with metadata object.
 
         Parameters
         ----------
@@ -1631,19 +1633,17 @@ class EntityFactory(abc.ABC):
     ) -> presence_models.MemberPresence:
         """Parse a raw payload from Discord into a member presence object.
 
-        !!! note
-            At the time of writing, the only place where `guild_id` will be
-            mandatory is when parsing presences sent in a `GUILD_CREATE` event
-            from Discord, since the `guild_id` attribute in the payload will
-            have been omitted for redundancy.
-
         Parameters
         ----------
         payload
             The JSON payload to deserialize.
         guild_id
             The ID of the guild the presence belongs to. If this is specified
-            then it is prioritised over `guild_id` in the payload.
+            then it is prioritized over `guild_id` in the payload.
+
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the presence's payload.
 
         Returns
         -------
@@ -1746,8 +1746,8 @@ class EntityFactory(abc.ABC):
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild the user belongs to. If this is specified
-            then it is prioritised over `guild_id` in the payload.
+            The ID of the guild the user belongs to.
+            This will be prioritized over `guild_id` in the payload when passed.
 
         Returns
         -------
@@ -1822,23 +1822,25 @@ class EntityFactory(abc.ABC):
     ) -> voice_models.VoiceState:
         """Parse a raw payload from Discord into a voice state object.
 
-        !!! note
-            At the time of writing, `GUILD_CREATE` events are the only known
-            place where neither `guild_id` nor `member` will be keys on the
-            payload. In this case, you will need to provide the former
-            parameters explicitly.
-
         Parameters
         ----------
         payload
             The JSON payload to deserialize.
         guild_id
-            The ID of the guild this voice state belongs to. If this is specified
-            then this will be prioritised over `"guild_id"` in the payload.
+            The ID of the guild this voice state belongs to.
+            This will be prioritized over `"guild_id"` in the payload when passed.
+
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"guild_id"` is not included in the voice state's payload.
+
         member
-            The object of the member this voice state belongs to. If this is
-            specified then this will be prioritised over `"member"` in the
-            payload.
+            The object of the member this voice state belongs to.
+            This will be prioritized over `"member"` in the payload when passed.
+
+            !!! note
+                This currently only covers the gateway `GUILD_CREATE` event,
+                where `"member"` is not included in the voice state's payload.
 
         Returns
         -------
@@ -1849,11 +1851,7 @@ class EntityFactory(abc.ABC):
         ------
         KeyError
             If `guild_id` is left as [`hikari.undefined.UNDEFINED`][] when
-            `"guild_id"` is not present in the passed payload for the payload of
-            the voice state.
-
-            This will also be raised if no `member` data was passed in any
-            acceptable place.
+            `"guild_id"` is not present in the passed payload.
         """
 
     @abc.abstractmethod
@@ -1877,7 +1875,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_incoming_webhook(self, payload: data_binding.JSONObject) -> webhook_models.IncomingWebhook:
-        """Parse a raw payload from Discord into a incoming webhook object.
+        """Parse a raw payload from Discord into an incoming webhook object.
 
         Parameters
         ----------
@@ -1982,7 +1980,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_stage_instance(self, payload: data_binding.JSONObject) -> stage_instances.StageInstance:
-        """Parse a raw payload from Discord into a guild stage instance object.
+        """Parse a raw payload from Discord into a stage instance object.
 
         Parameters
         ----------
@@ -1991,8 +1989,8 @@ class EntityFactory(abc.ABC):
 
         Returns
         -------
-        hikari.stage_intances.StageInstance
-            The deserialized stage instance object
+        hikari.stage_instances.StageInstance
+            The deserialized stage instance object.
         """
 
     ###############
