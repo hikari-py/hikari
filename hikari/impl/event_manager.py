@@ -207,7 +207,8 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     @event_manager_base.filtered(channel_events.GuildThreadUpdateEvent, config.CacheComponents.GUILD_THREADS)
     async def on_thread_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#thread-update for more info."""
-        event = self._event_factory.deserialize_guild_thread_update_event(shard, payload)
+        old = self._cache.get_thread(snowflakes.Snowflake(payload["id"])) if self._cache else None
+        event = self._event_factory.deserialize_guild_thread_update_event(shard, payload, old_thread=old)
 
         if self._cache:
             self._cache.update_thread(event.thread)

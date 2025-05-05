@@ -189,14 +189,18 @@ class TestEventFactoryImpl:
     def test_deserialize_guild_thread_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: mock.Mock, mock_shard: shard.GatewayShard
     ):
+        mock_old_thread = object()
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_guild_thread_update_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_guild_thread_update_event(
+            mock_shard, mock_payload, old_thread=mock_old_thread
+        )
 
-        assert event.shard is mock_shard
-        assert event.thread is mock_app.entity_factory.deserialize_guild_thread.return_value
         mock_app.entity_factory.deserialize_guild_thread.assert_called_once_with(mock_payload)
         assert isinstance(event, channel_events.GuildThreadUpdateEvent)
+        assert event.shard is mock_shard
+        assert event.thread is mock_app.entity_factory.deserialize_guild_thread.return_value
+        assert event.old_thread is mock_old_thread
 
     def test_deserialize_guild_thread_delete_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: mock.Mock, mock_shard: shard.GatewayShard
