@@ -811,6 +811,12 @@ class GuildThreadUpdateEvent(GuildThreadEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
+    old_thread: channels.GuildThreadChannel | None = attrs.field(repr=True)
+    """The old thread object.
+
+    This will be [`None`][] if the thread is missing from the cache.
+    """
+
     thread: channels.GuildThreadChannel = attrs.field()
     """The thread that was updated."""
 

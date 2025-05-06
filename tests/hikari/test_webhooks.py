@@ -229,12 +229,7 @@ class TestPartialWebhook:
             assert webhook.make_avatar_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            user_id=987654321,
-            hash="hook",
-            size=4096,
-            file_format="JPEG",
-            lossless=True,
+            urls.CDN_URL, user_id=987654321, hash="hook", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_avatar_url_property(self, webhook):

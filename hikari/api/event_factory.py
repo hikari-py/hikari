@@ -214,7 +214,11 @@ class EventFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_guild_thread_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_thread: channel_models.GuildThreadChannel | None = None,
     ) -> channel_events.GuildThreadUpdateEvent:
         """Parse a raw payload from Discord into a guild thread update event object.
 
@@ -224,6 +228,8 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
+        old_thread
+            The guild thread channel object or [`None`][].
 
         Returns
         -------
