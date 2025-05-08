@@ -3520,10 +3520,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PATCH_GUILD_CHANNELS.compile(guild=guild)
         body = [{"id": str(int(channel)), "position": pos} for pos, channel in positions.items()]
-        await self._request(route, json=body)
+        await self._request(route, json=body, reason=reason)
 
     @typing_extensions.override
     async def fetch_member(
@@ -3805,10 +3806,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[guilds.PartialRole]],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PATCH_GUILD_ROLES.compile(guild=guild)
         body = [{"id": str(int(role)), "position": pos} for pos, role in positions.items()]
-        await self._request(route, json=body)
+        await self._request(route, json=body, reason=reason)
 
     @typing_extensions.override
     async def edit_role(
@@ -4934,6 +4936,7 @@ class RESTClientImpl(rest_api.RESTClient):
         scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
         ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         route = routes.POST_STAGE_INSTANCE.compile()
         body = data_binding.JSONObjectBuilder()
@@ -4943,7 +4946,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("send_start_notification", send_start_notification)
         body.put_snowflake("guild_scheduled_event_id", scheduled_event_id)
 
-        response = await self._request(route, json=body)
+        response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_stage_instance(response)
 

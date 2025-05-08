@@ -5568,6 +5568,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Reposition the channels in a guild.
 
@@ -5579,6 +5580,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         positions
             A mapping of of the object or the ID of an existing channel to
             the new position, relative to their parent category, if any.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
