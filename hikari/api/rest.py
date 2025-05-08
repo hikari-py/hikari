@@ -6321,6 +6321,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[guilds.PartialRole]],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Reposition the roles in a guild.
 
@@ -6331,6 +6332,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the object or the ID of an existing guild.
         positions
             A mapping of the position to the role.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -7948,8 +7952,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        poll
-            If provided, the poll to set on the message.
         mentions_everyone
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -8835,6 +8837,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
         ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         """Create a stage instance in guild stage channel.
 
@@ -8850,7 +8853,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Whether to send a notification to *all* server members that the stage instance has started.
         scheduled_event_id
             The ID of the scheduled event to associate with the stage instance.
-
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -8885,6 +8890,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         privacy_level: undefined.UndefinedOr[int | stage_instances.StageInstancePrivacyLevel] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         """Edit the stage instance in a guild stage channel.
 
@@ -8894,8 +8900,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The channel that the stage instance is associated with.
         topic
             The topic for the stage instance.
-        privacy_level:
+        privacy_level
             The privacy level for the stage instance.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -8925,13 +8934,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
+    async def delete_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
         """Delete the stage instance.
 
         Parameters
         ----------
         channel
             The guild stage channel to fetch the stage instance from.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
