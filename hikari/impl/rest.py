@@ -1293,9 +1293,10 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: channels_.PermissionOverwrite | guilds.PartialRole | users.PartialUser | snowflakes.Snowflakeish,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     @typing_extensions.override
     async def fetch_channel_invites(
@@ -2052,6 +2053,7 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if token is undefined.UNDEFINED:
             route = routes.DELETE_WEBHOOK.compile(webhook=webhook)
@@ -2060,7 +2062,7 @@ class RESTClientImpl(rest_api.RESTClient):
             route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
             auth = None
 
-        await self._request(route, auth=auth)
+        await self._request(route, auth=auth, reason=reason)
 
     @typing_extensions.override
     async def execute_webhook_voice_message(
@@ -2276,9 +2278,11 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_invite(response)
 
     @typing_extensions.override
-    async def delete_invite(self, invite: invites.InviteCode | str) -> invites.Invite:
+    async def delete_invite(
+        self, invite: invites.InviteCode | str, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED
+    ) -> invites.Invite:
         route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
-        response = await self._request(route)
+        response = await self._request(route, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
 
@@ -3854,10 +3858,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
     @typing_extensions.override
     async def delete_role(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_GUILD_ROLE.compile(guild=guild, role=role)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     @typing_extensions.override
     async def estimate_guild_prune_count(
@@ -4947,20 +4954,25 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         privacy_level: undefined.UndefinedOr[int | stage_instances.StageInstancePrivacyLevel] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         route = routes.PATCH_STAGE_INSTANCE.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("topic", topic)
         body.put("privacy_level", privacy_level)
 
-        response = await self._request(route, json=body)
+        response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_stage_instance(response)
 
     @typing_extensions.override
-    async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
+    async def delete_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
         route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     @typing_extensions.override
     async def fetch_poll_voters(

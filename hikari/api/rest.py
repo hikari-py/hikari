@@ -652,6 +652,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: channels_.PermissionOverwrite | guilds.PartialRole | users.PartialUser | snowflakes.Snowflakeish,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
 
@@ -662,6 +663,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object, or the ID of an existing channel.
         target
             The channel overwrite to delete.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -2110,6 +2114,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a webhook.
 
@@ -2121,6 +2126,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token
             If provided, the webhook token that will be used to delete
             the webhook instead of the token the client was initialized with.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -2736,7 +2744,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_invite(self, invite: invites.InviteCode | str) -> invites.Invite:
+    async def delete_invite(
+        self, invite: invites.InviteCode | str, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED
+    ) -> invites.Invite:
         """Delete an existing invite.
 
         Parameters
@@ -2744,6 +2754,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         invite
             The invite to delete. This may be an invite object or
             the code of an existing invite.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -6408,7 +6421,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_role(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a role.
 
@@ -6420,6 +6436,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role
             The role to delete. This may be the object or the
             ID of an existing role.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
