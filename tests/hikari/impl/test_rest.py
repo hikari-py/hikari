@@ -2692,8 +2692,8 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel=123, overwrite=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_permission_overwrite(StubModel(123), StubModel(456))
-        rest_client._request.assert_awaited_once_with(expected_route)
+        await rest_client.delete_permission_overwrite(StubModel(123), StubModel(456), reason="testing")
+        rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
 
     async def test_fetch_channel_invites(self, rest_client):
         invite1 = StubModel(456)
@@ -3419,15 +3419,17 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=123, token="token")
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
 
-        await rest_client.delete_webhook(StubModel(123), token="token")
-        rest_client._request.assert_awaited_once_with(expected_route, auth=None)
+        await rest_client.delete_webhook(StubModel(123), token="token", reason="testing")
+        rest_client._request.assert_awaited_once_with(expected_route, auth=None, reason="testing")
 
     async def test_delete_webhook_without_token(self, rest_client):
         expected_route = routes.DELETE_WEBHOOK.compile(webhook=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
 
         await rest_client.delete_webhook(StubModel(123))
-        rest_client._request.assert_awaited_once_with(expected_route, auth=undefined.UNDEFINED)
+        rest_client._request.assert_awaited_once_with(
+            expected_route, auth=undefined.UNDEFINED, reason=undefined.UNDEFINED
+        )
 
     @pytest.mark.parametrize(
         ("webhook", "avatar_url"),
@@ -3902,12 +3904,12 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_INVITE.compile(invite_code="Jx4cNGG")
         rest_client._request = mock.AsyncMock(return_value={"ok": "NO"})
 
-        result = await rest_client.delete_invite(input_invite)
+        result = await rest_client.delete_invite(input_invite, reason="testing")
 
         assert result is rest_client._entity_factory.deserialize_invite.return_value
 
         rest_client._entity_factory.deserialize_invite.assert_called_once_with(rest_client._request.return_value)
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
 
     async def test_fetch_my_user(self, rest_client):
         user = StubModel(123)
@@ -4988,10 +4990,12 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "54123123", "name": "dlksksldalksad"})
         rest_client._entity_factory.deserialize_guild_thread.return_value = mock.Mock(channels.GuildNewsThread)
 
-        result = await rest_client.create_message_thread(StubModel(123432), StubModel(595959), "Sass alert!!!")
+        result = await rest_client.create_message_thread(
+            StubModel(123432), StubModel(595959), "Sass alert!!!", reason="because why not"
+        )
 
         assert result is rest_client._entity_factory.deserialize_guild_thread.return_value
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason="because why not")
         rest_client._entity_factory.deserialize_guild_thread.assert_called_once_with(rest_client._request.return_value)
 
     async def test_create_message_thread_with_all_undefined(self, rest_client: rest.RESTClientImpl):
@@ -5001,11 +5005,15 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_guild_thread.return_value = mock.Mock(channels.GuildNewsThread)
 
         result = await rest_client.create_message_thread(
-            StubModel(123432), StubModel(595959), "Sass alert!!!", auto_archive_duration=undefined.UNDEFINED
+            StubModel(123432),
+            StubModel(595959),
+            "Sass alert!!!",
+            auto_archive_duration=undefined.UNDEFINED,
+            reason="because why not",
         )
 
         assert result is rest_client._entity_factory.deserialize_guild_thread.return_value
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason="because why not")
         rest_client._entity_factory.deserialize_guild_thread.assert_called_once_with(rest_client._request.return_value)
 
     @pytest.mark.parametrize(
@@ -5057,10 +5065,11 @@ class TestRESTClientImplAsync:
             StubModel(321123),
             channels.ChannelType.GUILD_PRIVATE_THREAD,
             "Something something send help, they're keeping the catgirls locked up at <REDACTED>",
+            reason="because why not",
         )
 
         assert result is rest_client._entity_factory.deserialize_guild_thread.return_value
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason="because why not")
         rest_client._entity_factory.deserialize_guild_thread.assert_called_once_with(rest_client._request.return_value)
 
     async def test_create_thread_with_all_undefined(self, rest_client: rest.RESTClientImpl):
@@ -5076,10 +5085,11 @@ class TestRESTClientImplAsync:
             channels.ChannelType.GUILD_PRIVATE_THREAD,
             "Something something send help, they're keeping the catgirls locked up at <REDACTED>",
             auto_archive_duration=undefined.UNDEFINED,
+            reason="because why not",
         )
 
         assert result is rest_client._entity_factory.deserialize_guild_thread.return_value
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_payload, reason="because why not")
         rest_client._entity_factory.deserialize_guild_thread.assert_called_once_with(rest_client._request.return_value)
 
     @pytest.mark.parametrize(
@@ -5306,9 +5316,11 @@ class TestRESTClientImplAsync:
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.reposition_channels(StubModel(123), {1: StubModel(456), 2: StubModel(789)})
+        await rest_client.reposition_channels(
+            StubModel(123), {1: StubModel(456), 2: StubModel(789)}, reason="because why not"
+        )
 
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because why not")
 
     async def test_fetch_member(self, rest_client):
         member = StubModel(789)
@@ -5600,9 +5612,11 @@ class TestRESTClientImplAsync:
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.reposition_roles(StubModel(123), {1: StubModel(456), 2: StubModel(789)})
+        await rest_client.reposition_roles(
+            StubModel(123), {1: StubModel(456), 2: StubModel(789)}, reason="because why not"
+        )
 
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because why not")
 
     async def test_edit_role(self, rest_client, file_resource_patch):
         expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
@@ -5648,9 +5662,9 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_GUILD_ROLE.compile(guild=123, role=456)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_role(StubModel(123), StubModel(456))
+        await rest_client.delete_role(StubModel(123), StubModel(456), reason="testing")
 
-        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
 
     async def test_estimate_guild_prune_count(self, rest_client):
         expected_route = routes.GET_GUILD_PRUNE.compile(guild=123)
@@ -7008,11 +7022,11 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value=mock_payload)
 
         result = await rest_client.create_stage_instance(
-            channel=StubModel(7334), topic="ur mom", scheduled_event_id=StubModel(3361203239)
+            channel=StubModel(7334), topic="ur mom", scheduled_event_id=StubModel(3361203239), reason="testing"
         )
 
         assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
-        rest_client._request.assert_called_once_with(expected_route, json=expected_json)
+        rest_client._request.assert_called_once_with(expected_route, json=expected_json, reason="testing")
         rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
 
     async def test_edit_stage_instance(self, rest_client):
@@ -7029,20 +7043,23 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value=mock_payload)
 
         result = await rest_client.edit_stage_instance(
-            channel=StubModel(7334), topic="ur mom", privacy_level=stage_instances.StageInstancePrivacyLevel.GUILD_ONLY
+            channel=StubModel(7334),
+            topic="ur mom",
+            privacy_level=stage_instances.StageInstancePrivacyLevel.GUILD_ONLY,
+            reason="testing",
         )
 
         assert result is rest_client._entity_factory.deserialize_stage_instance.return_value
-        rest_client._request.assert_called_once_with(expected_route, json=expected_json)
+        rest_client._request.assert_called_once_with(expected_route, json=expected_json, reason="testing")
         rest_client._entity_factory.deserialize_stage_instance.assert_called_once_with(mock_payload)
 
     async def test_delete_stage_instance(self, rest_client):
         expected_route = routes.DELETE_STAGE_INSTANCE.compile(channel=7334)
         rest_client._request = mock.AsyncMock()
 
-        await rest_client.delete_stage_instance(channel=StubModel(7334))
+        await rest_client.delete_stage_instance(channel=StubModel(7334), reason="testing")
 
-        rest_client._request.assert_called_once_with(expected_route)
+        rest_client._request.assert_called_once_with(expected_route, reason="testing")
 
     async def test_fetch_poll_voters(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.GET_POLL_ANSWER.compile(
