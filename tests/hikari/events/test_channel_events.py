@@ -264,7 +264,7 @@ class TestGuildThreadCreateEvent:
 class TestGuildThreadUpdateEvent:
     @pytest.fixture
     def event(self) -> channel_events.GuildThreadUpdateEvent:
-        return channel_events.GuildThreadUpdateEvent(shard=mock.Mock(), thread=mock.Mock())
+        return channel_events.GuildThreadUpdateEvent(shard=mock.Mock(), thread=mock.Mock(), old_thread=mock.Mock())
 
     def test_app_property(self, event: channel_events.GuildThreadUpdateEvent):
         assert event.app is event.thread.app

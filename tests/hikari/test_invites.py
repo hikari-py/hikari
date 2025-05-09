@@ -94,12 +94,7 @@ class TestInviteGuild:
             assert model.make_banner_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123321,
-            hash="fofoof",
-            size=4096,
-            file_format="JPEG",
-            lossless=True,
+            urls.CDN_URL, guild_id=123321, hash="fofoof", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_banner_url(self, model: invites.InviteGuild):
@@ -115,12 +110,7 @@ class TestInviteGuild:
             assert model.make_banner_url(ext="url", size=512) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=123321,
-            hash="fofoof",
-            size=512,
-            file_format="URL",
-            lossless=True,
+            urls.CDN_URL, guild_id=123321, hash="fofoof", size=512, file_format="URL", lossless=True
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, model: invites.InviteGuild):
@@ -132,12 +122,7 @@ class TestInviteGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=model.id,
-            hash="a_18dnf8dfbakfdh",
-            size=4096,
-            file_format="GIF",
-            lossless=True,
+            urls.CDN_URL, guild_id=model.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="GIF", lossless=True
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, model: invites.InviteGuild):
@@ -149,12 +134,7 @@ class TestInviteGuild:
             assert model.make_banner_url(ext=None, size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL,
-            guild_id=model.id,
-            hash=model.banner_hash,
-            size=4096,
-            file_format="PNG",
-            lossless=True,
+            urls.CDN_URL, guild_id=model.id, hash=model.banner_hash, size=4096, file_format="PNG", lossless=True
         )
 
     def test_make_banner_url_when_no_hash(self, model: invites.InviteGuild):
