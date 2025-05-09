@@ -236,6 +236,17 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     _positions: list[special_endpoints.RepositionChannelHelper] = attrs.field(
         repr=True, alias="positions", factory=list, init=False
     )
+    _reason: undefined.UndefinedOr[str] = attrs.field(alias="reason", repr=True, default=undefined.UNDEFINED)
+
+    @property
+    @typing_extensions.override
+    def reason(self) -> undefined.UndefinedOr[str]:
+        return self._reason
+
+    @typing_extensions.override
+    def set_reason(self, reason: undefined.UndefinedOr[str]) -> Self:
+        self._reason = reason
+        return self
 
     @property
     @typing_extensions.override
@@ -284,7 +295,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
             channel_payload.put("lock_permissions", channel.lock_permissions)
             channel_payload.put_snowflake("parent_id", channel.parent)
             body.append(channel_payload)
-        return self._request_call(route, json=body).__await__()
+        return self._request_call(route, json=body, reason=self._reason).__await__()
 
 
 @attrs_extensions.with_copy

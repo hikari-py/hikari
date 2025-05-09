@@ -5582,13 +5582,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         positions
             A mapping of of the object or the ID of an existing channel to
             the new position, relative to their parent category, if any.
+
+            !!! note
+                Instead of using the `positions` parameter, you should make
+                use of the returned [`hikari.api.special_endpoints.ChannelRepositioner`][].
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
-
-            !!! note
-                Instead of using the `position` parameter, you should make
-                use of the returned [`hikari.api.special_endpoints.ChannelRepositioner`][].
 
         Returns
         -------

@@ -144,7 +144,9 @@ class ChannelRepositioner(abc.ABC):
     --------
     Basic usage:
     ```py
-    channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
+    channel_repositioner = rest.reposition_channels(
+        guild=GUILD_ID, reason="The reason."
+    )
     channel_repositioner.add_reposition_channel(position=2, channel=CHANNEL_ID)
 
     await channel_repositioner
@@ -188,6 +190,24 @@ class ChannelRepositioner(abc.ABC):
     @abc.abstractmethod
     def set_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> Self:
         """Set the guild.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @property
+    @abc.abstractmethod
+    def reason(self) -> undefined.UndefinedOr[str]:
+        """If provided, the reason that will be recorded in the audit logs.
+
+        Maximum of 512 characters.
+        """
+
+    @abc.abstractmethod
+    def set_reason(self, reason: undefined.UndefinedOr[str]) -> Self:
+        """Set the reason.
 
         Returns
         -------

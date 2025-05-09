@@ -3522,7 +3522,7 @@ class RESTClientImpl(rest_api.RESTClient):
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]] = {},
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> special_endpoints.ChannelRepositioner:
-        builder = special_endpoints_impl.ChannelRepositioner(guild=guild, request_call=self._request)
+        builder = special_endpoints_impl.ChannelRepositioner(guild=guild, request_call=self._request, reason=reason)
         for pos, channel in positions.items():
             builder.add_reposition_channel(position=pos, channel=channel)
         return builder

@@ -72,7 +72,7 @@ class TestChannelRepositioner:
 
     @pytest.fixture
     def channel_repositioner(self) -> special_endpoints_api.ChannelRepositioner:
-        return special_endpoints.ChannelRepositioner(guild=123, request_call=mock.AsyncMock())
+        return special_endpoints.ChannelRepositioner(guild=123, request_call=mock.AsyncMock(), reason="TEST")
 
     @pytest.fixture
     def reposition_channel_helper(self) -> special_endpoints_api.RepositionChannelHelper:
@@ -82,6 +82,11 @@ class TestChannelRepositioner:
         channel_repositioner.set_guild(187)
 
         assert channel_repositioner.guild == 187
+
+    def test_set_reason(self, channel_repositioner: special_endpoints_api.ChannelRepositioner) -> None:
+        channel_repositioner.set_reason("TEST2")
+
+        assert channel_repositioner.reason == "TEST2"
 
     def test_set_positions(
         self,
