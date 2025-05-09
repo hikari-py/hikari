@@ -1,3 +1,36 @@
+## 2.3.2 (2025-05-09)
+
+### Deprecation
+
+- Deprecate all `x_url` properties in favour of `make_x_url()` methods ([#2338](https://github.com/hikari-py/hikari/issues/2338))
+
+### Features
+
+- Added `rest.create_voice_message` to support sending voice messages. ([#2251](https://github.com/hikari-py/hikari/issues/2251))
+- Add AWEBP support for asset URLs and increase sticker asset availability ([#2338](https://github.com/hikari-py/hikari/issues/2338))
+- Add `old_thread` field to `GuildThreadUpdateEvent`. ([#2353](https://github.com/hikari-py/hikari/issues/2353))
+- Add reason parameter to the following endpoints:
+    - `delete_permission_overwrite`
+    - `delete_webhook`
+    - `delete_invite`
+    - `reposition_channels`
+    - `reposition_roles`
+    - `delete_role`
+    - `create_stage_instance`
+    - `edit_stage_instance`
+    - `delete_stage_instance` ([#2354](https://github.com/hikari-py/hikari/issues/2354))
+
+### Optimizations
+
+- Optimize reusing file resources when uploading repeated ones ([#2336](https://github.com/hikari-py/hikari/issues/2336))
+
+### Bugfixes
+
+- Fix event filtering for interaction create specialized events ([#2335](https://github.com/hikari-py/hikari/issues/2335))
+- Fix duplicated uploaded attachments when reusing resources in embeds ([#2336](https://github.com/hikari-py/hikari/issues/2336))
+- Added partial missing documentation for rest voice-message interaction methods. ([#2355](https://github.com/hikari-py/hikari/issues/2355))
+
+---
 ## 2.3.1 (2025-04-27)
 
 ### Features
