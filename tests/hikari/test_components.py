@@ -28,7 +28,7 @@ from hikari import components
 class TestActionRowComponent:
     def test_getitem_operator_with_index(self):
         mock_component = mock.Mock()
-        row = components.ActionRowComponent(type=1, components=[mock.Mock(), mock_component, mock.Mock()])
+        row = components.ActionRowComponent(type=1, id=5855932, components=[mock.Mock(), mock_component, mock.Mock()])
 
         assert row[1] is mock_component
 
@@ -36,7 +36,7 @@ class TestActionRowComponent:
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
         row = components.ActionRowComponent(
-            type=1, components=[mock.Mock(), mock_component_1, mock.Mock(), mock_component_2]
+            type=1, id=5855932, components=[mock.Mock(), mock_component_1, mock.Mock(), mock_component_2]
         )
 
         assert row[1:4:2] == [mock_component_1, mock_component_2]
@@ -44,11 +44,11 @@ class TestActionRowComponent:
     def test_iter_operator(self):
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
-        row = components.ActionRowComponent(type=1, components=[mock_component_1, mock_component_2])
+        row = components.ActionRowComponent(type=1, id=5855932, components=[mock_component_1, mock_component_2])
 
         assert list(row) == [mock_component_1, mock_component_2]
 
     def test_len_operator(self):
-        row = components.ActionRowComponent(type=1, components=[mock.Mock(), mock.Mock()])
+        row = components.ActionRowComponent(type=1, id=5855932, components=[mock.Mock(), mock.Mock()])
 
         assert len(row) == 2

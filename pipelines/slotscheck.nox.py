@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -31,4 +30,4 @@ from pipelines import nox
 def slotscheck(session: nox.Session) -> None:
     """Check for common slotting mistakes."""
     nox.sync(session, self=True, groups=["slotscheck"])
-    session.run("slotscheck", "-m", config.MAIN_PACKAGE)
+    session.run("slotscheck", "-m", config.MAIN_PACKAGE, "--verbose")

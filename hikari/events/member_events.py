@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("MemberEvent", "MemberCreateEvent", "MemberUpdateEvent", "MemberDeleteEvent")
+__all__: typing.Sequence[str] = ("MemberCreateEvent", "MemberDeleteEvent", "MemberEvent", "MemberUpdateEvent")
 
 import abc
 import typing
@@ -35,6 +34,7 @@ from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -50,6 +50,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.user.app
@@ -69,7 +70,7 @@ class MemberEvent(shard_events.ShardEvent, abc.ABC):
         """ID of the user that this event concerns."""
         return self.user.id
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached view of the guild this member event occurred in.
 
         If the guild itself is not cached, this will return [`None`][].
@@ -99,11 +100,13 @@ class MemberCreateEvent(MemberEvent):
     """Member object for the member that joined the guild."""
 
     @property
+    @typing_extensions.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MemberEvent>>.
         return self.member.guild_id
 
     @property
+    @typing_extensions.override
     def user(self) -> users.User:
         # <<inherited docstring from MemberEvent>>.
         return self.member.user
@@ -121,7 +124,7 @@ class MemberUpdateEvent(MemberEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_member: typing.Optional[guilds.Member] = attrs.field()
+    old_member: guilds.Member | None = attrs.field()
     """The old member object.
 
     This will be [`None`][] if the member missing from the cache.
@@ -131,11 +134,13 @@ class MemberUpdateEvent(MemberEvent):
     """Member object for the member that was updated."""
 
     @property
+    @typing_extensions.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from MemberEvent>>.
         return self.member.guild_id
 
     @property
+    @typing_extensions.override
     def user(self) -> users.User:
         # <<inherited docstring from MemberEvent>>.
         return self.member.user
@@ -156,7 +161,7 @@ class MemberDeleteEvent(MemberEvent):
     user: users.User = attrs.field()
     # <<inherited docstring from MemberEvent>>.
 
-    old_member: typing.Optional[guilds.Member] = attrs.field()
+    old_member: guilds.Member | None = attrs.field()
     """The old member object.
 
     This will be [`None`][] if the member was missing from the cache.

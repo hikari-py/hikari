@@ -128,7 +128,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(my_user=mock.Mock())
 
         with (
@@ -151,7 +151,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(event_factory, "deserialize_ready_event") as patched_deserialize_ready_event,
@@ -169,7 +169,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(event_factory, "deserialize_resumed_event") as patched_deserialize_resumed_event,
@@ -187,7 +187,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -209,7 +209,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(channel=mock.Mock(channels.GuildChannel))
 
         with (
@@ -232,7 +232,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -252,7 +252,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
         old_channel = mock.Mock()
         event = mock.Mock(channel=mock.Mock(channels.GuildChannel))
 
@@ -282,7 +282,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
 
         with (
             mock.patch.object(
@@ -302,7 +302,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(channel=mock.Mock(id=123))
 
         with (
@@ -325,7 +325,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -345,7 +345,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -365,7 +365,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = {"id": "123321", "newly_created": True}
+        mock_payload: dict[str, typing.Any] = {"id": "123321", "newly_created": True}
 
         with (
             mock.patch.object(
@@ -388,7 +388,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = {"id": "123321", "newly_created": True}
+        mock_payload: dict[str, typing.Any] = {"id": "123321", "newly_created": True}
 
         with (
             mock.patch.object(
@@ -408,7 +408,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = {"id": "123321"}
+        mock_payload: dict[str, typing.Any] = {"id": "123321"}
 
         with (
             mock.patch.object(
@@ -431,7 +431,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = {"id": "123321"}
+        mock_payload: dict[str, typing.Any] = {"id": "123321"}
 
         with (
             mock.patch.object(
@@ -451,7 +451,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -474,7 +474,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -494,7 +494,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -517,7 +517,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -551,7 +551,7 @@ class TestEventManagerImpl:
             event.channel_ids = ["1", "2"]
             event.threads = {1: "thread1"}
 
-            mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+            mock_payload: dict[str, typing.Any] = mock.Mock()
             await event_manager_impl.on_thread_list_sync(shard, mock_payload)
 
             assert patched_clear_threads_for_channel.call_count == 2
@@ -581,7 +581,7 @@ class TestEventManagerImpl:
             event.channel_ids = None
             event.threads = {1: "thread1"}
 
-            mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+            mock_payload: dict[str, typing.Any] = mock.Mock()
             await event_manager_impl.on_thread_list_sync(shard, mock_payload)
 
             patched_clear_threads_for_guild.assert_called_once_with(event.guild_id)
@@ -596,7 +596,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -626,7 +626,7 @@ class TestEventManagerImpl:
             event = patched_deserialize_thread_members_update_event.return_value
             event.removed_member_ids = [1, 2, 3]
             event.shard.get_user_id.return_value = 1
-            mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+            mock_payload: dict[str, typing.Any] = mock.Mock()
             await event_manager_impl.on_thread_members_update(shard, mock_payload)
 
             patched_delete_thread.assert_called_once_with(event.thread_id)
@@ -650,7 +650,7 @@ class TestEventManagerImpl:
             event = patched_deserialize_thread_members_update_event.return_value
             event.removed_member_ids = [1, 2, 3]
             event.shard.get_user_id.return_value = 69
-            mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+            mock_payload: dict[str, typing.Any] = mock.Mock()
             await event_manager_impl.on_thread_members_update(shard, mock_payload)
 
             patched_delete_thread.assert_not_called()
@@ -664,7 +664,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -684,7 +684,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"unavailable": True}
+        payload: dict[str, typing.Any] = {"unavailable": True}
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
 
@@ -731,7 +731,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
         include_unavailable: bool,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"unavailable": False} if include_unavailable else {}
+        payload: dict[str, typing.Any] = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=False)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
@@ -787,7 +787,7 @@ class TestEventManagerImpl:
         entity_factory: entity_factory_impl.EntityFactoryImpl,
         include_unavailable: bool,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"unavailable": False} if include_unavailable else {}
+        payload: dict[str, typing.Any] = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=False)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
@@ -847,7 +847,7 @@ class TestEventManagerImpl:
         include_unavailable: bool,
         only_my_member: bool,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"unavailable": False} if include_unavailable else {}
+        payload: dict[str, typing.Any] = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
@@ -922,7 +922,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
         include_unavailable: bool,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
         if include_unavailable:
             payload["unavailable"] = False
 
@@ -1115,7 +1115,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
         entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
         old_guild = mock.Mock()
         mock_role = mock.Mock()
         mock_emoji = mock.Mock()
@@ -1157,7 +1157,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
         entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
         mock_role = mock.Mock()
         mock_emoji = mock.Mock()
         mock_sticker = mock.Mock()
@@ -1200,7 +1200,7 @@ class TestEventManagerImpl:
         event_factory: event_factory_impl.EventFactoryImpl,
         entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=False)
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
         guild_definition = entity_factory.deserialize_gateway_guild.return_value
@@ -1236,7 +1236,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
         stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
 
         with (
@@ -1263,7 +1263,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"unavailable": False, "id": "123"}
+        payload: dict[str, typing.Any] = {"unavailable": False, "id": "123"}
         event = mock.Mock(guild_id=123)
 
         event_factory.deserialize_guild_leave_event.return_value = event
@@ -1293,7 +1293,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"unavailable": True, "id": "123"}
+        payload: dict[str, typing.Any] = {"unavailable": True, "id": "123"}
         event = mock.Mock(guild_id=123)
 
         with (
@@ -1316,7 +1316,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"unavailable": False, "id": "123"}
+        payload: dict[str, typing.Any] = {"unavailable": False, "id": "123"}
 
         with (
             mock.patch.object(event_factory, "deserialize_guild_leave_event") as patched_deserialize_guild_leave_event,
@@ -1334,7 +1334,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"unavailable": True}
+        payload: dict[str, typing.Any] = {"unavailable": True}
 
         with (
             mock.patch.object(
@@ -1354,7 +1354,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -1375,7 +1375,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -1396,7 +1396,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"guild_id": 123}
+        payload: dict[str, typing.Any] = {"guild_id": 123}
         old_emojis = {"Test": 123}
         mock_emoji = mock.Mock()
         event = mock.Mock(emojis=[mock_emoji], guild_id=123)
@@ -1425,7 +1425,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"guild_id": 123}
+        payload: dict[str, typing.Any] = {"guild_id": 123}
 
         with (
             mock.patch.object(
@@ -1445,7 +1445,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"guild_id": 720}
+        payload: dict[str, typing.Any] = {"guild_id": 720}
         old_stickers = {700: 123}
         mock_sticker = mock.Mock()
         event = mock.Mock(stickers=[mock_sticker], guild_id=123)
@@ -1474,7 +1474,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"guild_id": 123}
+        payload: dict[str, typing.Any] = {"guild_id": 123}
 
         with (
             mock.patch.object(
@@ -1503,7 +1503,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -1524,7 +1524,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -1545,7 +1545,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -1566,7 +1566,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(user=mock.Mock(), member=mock.Mock())
 
         with (
@@ -1589,7 +1589,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -1609,7 +1609,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"guild_id": "456", "user": {"id": "123"}}
+        payload: dict[str, typing.Any] = {"guild_id": "456", "user": {"id": "123"}}
 
         with (
             mock.patch.object(
@@ -1633,7 +1633,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -1653,7 +1653,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
+        payload: dict[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
         old_member = mock.Mock()
         event = mock.Mock(member=mock.Mock())
 
@@ -1679,7 +1679,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
+        payload: dict[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
 
         with (
             mock.patch.object(
@@ -1699,7 +1699,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(members={"TestMember": 123}, presences={"TestPresences": 456})
 
         with (
@@ -1724,7 +1724,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -1744,7 +1744,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(role=mock.Mock())
 
         with (
@@ -1767,7 +1767,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -1787,7 +1787,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"role": {"id": 123}}
+        payload: dict[str, typing.Any] = {"role": {"id": 123}}
         old_role = mock.Mock()
         event = mock.Mock(role=mock.Mock())
 
@@ -1813,7 +1813,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"role": {"id": 123}}
+        payload: dict[str, typing.Any] = {"role": {"id": 123}}
 
         with (
             mock.patch.object(
@@ -1833,7 +1833,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"role_id": "123"}
+        payload: dict[str, typing.Any] = {"role_id": "123"}
 
         with (
             mock.patch.object(
@@ -1857,7 +1857,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -1877,7 +1877,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(invite="qwerty")
 
         with (
@@ -1900,7 +1900,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -1920,7 +1920,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"code": "qwerty"}
+        payload: dict[str, typing.Any] = {"code": "qwerty"}
 
         with (
             mock.patch.object(
@@ -1944,7 +1944,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -1964,7 +1964,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(message=mock.Mock())
 
         with (
@@ -1987,7 +1987,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -2007,7 +2007,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
         old_message = mock.Mock()
         event = mock.Mock(message=mock.Mock())
 
@@ -2035,7 +2035,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
 
         with (
             mock.patch.object(
@@ -2055,7 +2055,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
 
         with (
             mock.patch.object(
@@ -2079,7 +2079,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -2099,7 +2099,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"ids": [123, 456, 789, 987]}
+        payload: dict[str, typing.Any] = {"ids": [123, 456, 789, 987]}
         message1 = mock.Mock()
         message2 = mock.Mock()
         message3 = mock.Mock()
@@ -2128,7 +2128,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -2148,7 +2148,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -2169,7 +2169,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -2190,7 +2190,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -2211,7 +2211,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -2232,7 +2232,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
+        payload: dict[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
         old_presence = mock.Mock()
         event = mock.Mock(presence=mock.Mock(visible_status=presences.Status.ONLINE))
 
@@ -2260,7 +2260,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
+        payload: dict[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
         old_presence = mock.Mock()
         event = mock.Mock(presence=mock.Mock(visible_status=presences.Status.OFFLINE))
 
@@ -2288,7 +2288,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
+        payload: dict[str, typing.Any] = {"user": {"id": 123}, "guild_id": 456}
 
         with (
             mock.patch.object(
@@ -2308,7 +2308,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -2329,7 +2329,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         old_user = mock.Mock()
         event = mock.Mock(user=mock.Mock())
 
@@ -2355,7 +2355,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
 
         with (
             mock.patch.object(
@@ -2375,7 +2375,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"user_id": 123, "guild_id": 456}
+        payload: dict[str, typing.Any] = {"user_id": 123, "guild_id": 456}
         old_state = mock.Mock()
         event = mock.Mock(state=mock.Mock(channel_id=123))
 
@@ -2403,7 +2403,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"user_id": 123, "guild_id": 456}
+        payload: dict[str, typing.Any] = {"user_id": 123, "guild_id": 456}
         old_state = mock.Mock()
         event = mock.Mock(state=mock.Mock(channel_id=None))
 
@@ -2431,7 +2431,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"user_id": 123, "guild_id": 456}
+        payload: dict[str, typing.Any] = {"user_id": 123, "guild_id": 456}
 
         with (
             mock.patch.object(
@@ -2451,7 +2451,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -2472,7 +2472,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {}
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
         with (
@@ -2493,7 +2493,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_impl.EventFactoryImpl,
     ):
-        payload: typing.Mapping[str, typing.Any] = {"id": "123"}
+        payload: dict[str, typing.Any] = {"id": "123"}
 
         with (
             mock.patch.object(
@@ -2513,7 +2513,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -2533,7 +2533,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -2553,7 +2553,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -2573,7 +2573,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -2593,7 +2593,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -2615,7 +2615,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload: typing.Mapping[str, typing.Any] = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
         with (
             mock.patch.object(
@@ -2635,7 +2635,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        payload: typing.Mapping[str, typing.Any] = {
+        payload: dict[str, typing.Any] = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
             "channel_id": "733488538393510049",
@@ -2662,7 +2662,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        payload: typing.Mapping[str, typing.Any] = {
+        payload: dict[str, typing.Any] = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
             "channel_id": "733488538393510049",
@@ -2689,7 +2689,7 @@ class TestEventManagerImpl:
         shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        payload: typing.Mapping[str, typing.Any] = {
+        payload: dict[str, typing.Any] = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
             "channel_id": "733488538393510049",
@@ -2703,4 +2703,36 @@ class TestEventManagerImpl:
         event_factory.deserialize_stage_instance_delete_event.assert_called_once_with(shard, payload)
         event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_stage_instance_delete_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_message_poll_vote_create(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager_impl.on_message_poll_vote_add(shard, mock_payload)
+
+        event_factory.deserialize_poll_vote_create_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_poll_vote_create_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_message_poll_vote_delete(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager_impl.on_message_poll_vote_remove(shard, mock_payload)
+
+        event_factory.deserialize_poll_vote_delete_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_poll_vote_delete_event.return_value
         )

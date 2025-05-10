@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -36,13 +35,13 @@ def pyright(session: nox.Session) -> None:
     exists to make it easier to test and eventually reach that 100% compatibility.
     """
     nox.sync(session, self=True, extras=["speedups", "server"], groups=["pyright"])
-    session.run("pyright")
+    session.run("pyright", config.MAIN_PACKAGE)
 
 
 @nox.session()
 def pyright_tests(session: nox.Session) -> None:
     """Perform type analysis on the tests using Pyright."""
-    nox.sync(session, self=True, extras=["speedups", "server"], groups=["pyright"])
+    nox.sync(session, self=True, extras=["speedups", "server"], groups=["pyright", "pytest"])
     session.run("pyright", config.TEST_PACKAGE)
 
 

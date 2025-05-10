@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -34,6 +33,7 @@ from hikari import errors
 from hikari import snowflakes
 from hikari.api import voice
 from hikari.events import voice_events
+from hikari.internal import typing_extensions
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
@@ -56,10 +56,10 @@ class VoiceComponentImpl(voice.VoiceComponent):
     __slots__: typing.Sequence[str] = (
         "_app",
         "_connections",
-        "connections",
         "_is_alive",
         "_is_closing",
         "_voice_listener",
+        "connections",
     )
 
     _connections: dict[snowflakes.Snowflake, voice.VoiceConnection]
@@ -74,22 +74,27 @@ class VoiceComponentImpl(voice.VoiceComponent):
         self._voice_listener = False
 
     @property
+    @typing_extensions.override
     def is_alive(self) -> bool:
         return self._is_alive
 
     def _check_if_alive(self) -> None:
         if not self._is_alive:
-            raise errors.ComponentStateConflictError("Component cannot be used while it's not alive")
+            msg = "Component cannot be used while it's not alive"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._is_closing:
-            raise errors.ComponentStateConflictError("Component cannot be used while it's closing")
+            msg = "Component cannot be used while it's closing"
+            raise errors.ComponentStateConflictError(msg)
 
+    @typing_extensions.override
     async def disconnect(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> None:
         self._check_if_alive()
         guild_id = snowflakes.Snowflake(guild)
 
         if guild_id not in self._connections:
-            raise errors.VoiceError("This application doesn't have any active voice connection in this server")
+            msg = "This application doesn't have any active voice connection in this server"
+            raise errors.VoiceError(msg)
 
         conn = self._connections[guild_id]
         # We rely on the assumption that _on_connection_close will be called here rather than explicitly
@@ -101,10 +106,12 @@ class VoiceComponentImpl(voice.VoiceComponent):
         # emptying self._connections.
         await asyncio.gather(*(c.disconnect() for c in self._connections.values()))
 
+    @typing_extensions.override
     async def disconnect_all(self) -> None:
         self._check_if_alive()
         await self._disconnect_all()
 
+    @typing_extensions.override
     async def close(self) -> None:
         self._check_if_alive()
         self._is_closing = True
@@ -123,11 +130,13 @@ class VoiceComponentImpl(voice.VoiceComponent):
     def start(self) -> None:
         """Start this voice component."""
         if self._is_alive:
-            raise errors.ComponentStateConflictError("Cannot start a voice component which is already running")
+            msg = "Cannot start a voice component which is already running"
+            raise errors.ComponentStateConflictError(msg)
 
         self._is_alive = True
         self._voice_listener = False
 
+    @typing_extensions.override
     async def connect_to(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -136,24 +145,22 @@ class VoiceComponentImpl(voice.VoiceComponent):
         *,
         deaf: bool = False,
         mute: bool = False,
-        timeout: typing.Optional[int] = 5,
-        **kwargs: typing.Any,
+        timeout: int | None = 5,
+        **kwargs: object,
     ) -> _VoiceConnectionT:
         self._check_if_alive()
         guild_id = snowflakes.Snowflake(guild)
 
         if guild_id in self._connections:
-            raise errors.VoiceError(
-                "Already in a voice channel for that guild. Disconnect before attempting to connect again"
-            )
+            msg = "Already in a voice channel for that guild. Disconnect before attempting to connect again"
+            raise errors.VoiceError(msg)
 
         shard_id = snowflakes.calculate_shard_id(self._app, guild_id)
         try:
             shard = self._app.shards[shard_id]
         except KeyError:
-            raise errors.VoiceError(
-                f"Cannot connect to shard {shard_id} as it is not present in this application"
-            ) from None
+            msg = f"Cannot connect to shard {shard_id} as it is not present in this application"
+            raise errors.VoiceError(msg) from None
 
         user = self._app.cache.get_me()
         if not user:
@@ -187,7 +194,8 @@ class VoiceComponentImpl(voice.VoiceComponent):
                 ),
             )
         except asyncio.TimeoutError as e:
-            raise errors.VoiceError(f"Could not connect to voice channel {channel} in guild {guild}.") from e
+            msg = f"Could not connect to voice channel {channel} in guild {guild}."
+            raise errors.VoiceError(msg) from e
 
         # We will never receive the first endpoint as [`None`][]
         assert server_event.endpoint is not None

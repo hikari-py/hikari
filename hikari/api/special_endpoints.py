@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -26,33 +25,44 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "AutocompleteChoiceBuilder",
     "ButtonBuilder",
+    "ChannelSelectMenuBuilder",
     "CommandBuilder",
-    "SlashCommandBuilder",
-    "ContextMenuCommandBuilder",
     "ComponentBuilder",
-    "TypingIndicator",
-    "GuildBuilder",
+    "ContainerComponentBuilder",
+    "ContextMenuCommandBuilder",
+    "FileComponentBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
-    "InteractionResponseBuilder",
     "InteractionMessageBuilder",
+    "InteractionModalBuilder",
+    "InteractionResponseBuilder",
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
-    "SelectMenuBuilder",
-    "TextSelectMenuBuilder",
-    "ChannelSelectMenuBuilder",
-    "SelectOptionBuilder",
-    "TextInputBuilder",
-    "InteractionModalBuilder",
+    "MediaGalleryComponentBuilder",
+    "MediaGalleryItemBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "PollAnswerBuilder",
+    "PollBuilder",
+    "SectionComponentBuilder",
+    "SelectMenuBuilder",
+    "SelectOptionBuilder",
+    "SeparatorComponentBuilder",
+    "SlashCommandBuilder",
+    "TextDisplayComponentBuilder",
+    "TextInputBuilder",
+    "TextSelectMenuBuilder",
+    "ThumbnailComponentBuilder",
+    "TypingIndicator",
 )
 
 import abc
 import typing
 
 from hikari import components as components_
+from hikari import polls
 from hikari import undefined
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import types
@@ -72,11 +82,9 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import users
-    from hikari import voices
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
-    from hikari.internal import time
 
 _ParentT = typing.TypeVar("_ParentT")
 
@@ -104,399 +112,11 @@ class TypingIndicator(abc.ABC):
 
     @abc.abstractmethod
     async def __aexit__(
-        self, exception_type: type[BaseException], exception: BaseException, exception_traceback: types.TracebackType
+        self,
+        exception_type: type[BaseException] | None,
+        exception: BaseException | None,
+        exception_traceback: types.TracebackType | None,
     ) -> None: ...
-
-
-class GuildBuilder(abc.ABC):
-    """Result type of [`hikari.api.rest.RESTClient.guild_builder`][].
-
-    This is used to create a guild in a tidy way using the HTTP API, since
-    the logic behind creating a guild on an API level is somewhat confusing
-    and detailed.
-
-    !!! note
-        If you call [`hikari.api.special_endpoints.GuildBuilder.add_role`][], the default roles provided by Discord will
-        be created. This also applies to the `add_` functions for
-        text channels/voice channels/categories.
-
-    !!! note
-        Functions that return a [`hikari.snowflakes.Snowflake`][] do
-        **not** provide the final ID that the object will have once the
-        API call is made. The returned IDs are only able to be used to
-        re-reference particular objects while building the guild format
-        to allow for the creation of channels within categories,
-        and to provide permission overwrites.
-
-    Examples
-    --------
-    Creating an empty guild:
-
-    ```py
-    guild = await rest.guild_builder("My Server!").create()
-    ```
-
-    Creating a guild with an icon:
-
-    ```py
-    from hikari.files import WebResourceStream
-
-    guild_builder = rest.guild_builder("My Server!")
-    guild_builder.icon = WebResourceStream("cat.png", "http://...")
-    guild = await guild_builder.create()
-    ```
-
-    Adding roles to your guild:
-
-    ```py
-    from hikari.permissions import Permissions
-
-    guild_builder = rest.guild_builder("My Server!")
-
-    everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role(
-        "Admins", permissions=Permissions.ADMINISTRATOR
-    )
-
-    await guild_builder.create()
-    ```
-
-    !!! warning
-        The first role must always be the `@everyone` role.
-
-    Adding a text channel to your guild:
-
-    ```py
-    guild_builder = rest.guild_builder("My Server!")
-
-    category_id = guild_builder.add_category("My safe place")
-    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
-
-    await guild_builder.create()
-    ```
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def name(self) -> str:
-        """Name of the guild to create."""
-
-    @property
-    @abc.abstractmethod
-    def default_message_notifications(self) -> undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel]:
-        """Default message notification level that can be overwritten.
-
-        If not overridden, this will use the Discord default level.
-        """
-
-    @default_message_notifications.setter
-    def default_message_notifications(
-        self, default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel], /
-    ) -> None:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def explicit_content_filter_level(self) -> undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel]:
-        """Explicit content filter level that can be overwritten.
-
-        If not overridden, this will use the Discord default level.
-        """
-
-    @explicit_content_filter_level.setter
-    def explicit_content_filter_level(
-        self, explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel], /
-    ) -> None:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def icon(self) -> undefined.UndefinedOr[files.Resourceish]:
-        """Guild icon to use that can be overwritten.
-
-        If not overridden, the guild will not have an icon.
-        """
-
-    @icon.setter
-    def icon(self, icon: undefined.UndefinedOr[files.Resourceish], /) -> None:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def verification_level(self) -> undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]]:
-        """Verification level required to join the guild."""
-
-    @verification_level.setter
-    def verification_level(
-        self, verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]], /
-    ) -> None:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def create(self) -> guilds.RESTGuild:
-        """Send the request to Discord to create the guild.
-
-        The application user will be added to this guild as soon as it is
-        created. All IDs that were provided when building this guild will
-        become invalid and will be replaced with real IDs.
-
-        Returns
-        -------
-        hikari.guilds.RESTGuild
-            The created guild.
-
-        Raises
-        ------
-        hikari.errors.BadRequestError
-            If any values set in the guild builder are invalid.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you are already in 10 guilds.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-
-    @abc.abstractmethod
-    def add_role(
-        self,
-        name: str,
-        /,
-        *,
-        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a role.
-
-        !!! warning
-            The first role you create (i.e., position 0) must always be the
-            `@everyone` role.
-
-        Parameters
-        ----------
-        name
-            The role's name.
-        permissions
-            If provided, the permissions for the role.
-        color
-            If provided, the role's color.
-        colour
-            An alias for `color`.
-        hoist
-            If provided, whether to hoist the role.
-        mentionable
-            If provided, whether to make the role mentionable.
-        position
-            If provided, the position of the role.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this role that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
-
-        Raises
-        ------
-        ValueError
-            If you are defining the first role, but did not name it `@everyone`.
-        TypeError
-            If you specify both `color` and `colour` together or if you try to
-            specify `color`, `colour`, `hoisted`, `mentionable` or `position` for
-            the `@everyone` role.
-        """
-
-    @abc.abstractmethod
-    def add_category(
-        self,
-        name: str,
-        /,
-        *,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[
-            typing.Collection[channels.PermissionOverwrite]
-        ] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a category channel.
-
-        Parameters
-        ----------
-        name
-            The channels name. Must be between 2 and 1000 characters.
-        position
-            If provided, the position of the category.
-        permission_overwrites
-            If provided, the permission overwrites for the category.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this channel that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
-        """
-
-    @abc.abstractmethod
-    def add_text_channel(
-        self,
-        name: str,
-        /,
-        *,
-        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[
-            typing.Collection[channels.PermissionOverwrite]
-        ] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a text channel.
-
-        Parameters
-        ----------
-        name
-            The channels name. Must be between 2 and 1000 characters.
-        position
-            If provided, the position of the channel (relative to the
-            category, if any).
-        topic
-            If provided, the channels topic. Maximum 1024 characters.
-        nsfw
-            If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user
-            If provided, the amount of seconds a user has to wait
-            before being able to send another message in the channel.
-            Maximum 21600 seconds.
-        permission_overwrites
-            If provided, the permission overwrites for the channel.
-        parent_id
-            The ID of the category to create the channel under.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this channel that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
-        """
-
-    @abc.abstractmethod
-    def add_voice_channel(
-        self,
-        name: str,
-        /,
-        *,
-        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[typing.Union[channels.VideoQualityMode, int]] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[
-            typing.Collection[channels.PermissionOverwrite]
-        ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
-        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a voice channel.
-
-        Parameters
-        ----------
-        name
-            The channels name. Must be between 2 and 1000 characters.
-        position
-            If provided, the position of the channel (relative to the
-            category, if any).
-        user_limit
-            If provided, the maximum users in the channel at once.
-            Must be between 0 and 99 with 0 meaning no limit.
-        bitrate
-            If provided, the bitrate for the channel. Must be
-            between 8000 and 96000 or 8000 and 128000 for VIP
-            servers.
-        video_quality_mode
-            If provided, the new video quality mode for the channel.
-        permission_overwrites
-            If provided, the permission overwrites for the channel.
-        region
-            If provided, the voice region to for this channel. Passing
-            [`None`][] here will set it to "auto" mode where the used
-            region will be decided based on the first person who connects to it
-            when it's empty.
-        parent_id
-            The ID of the category to create the channel under.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this channel that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
-        """
-
-    @abc.abstractmethod
-    def add_stage_channel(
-        self,
-        name: str,
-        /,
-        *,
-        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[
-            typing.Collection[channels.PermissionOverwrite]
-        ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
-        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a stage channel.
-
-        Parameters
-        ----------
-        name
-            The channels name. Must be between 2 and 1000 characters.
-        position
-            If provided, the position of the channel (relative to the
-            category, if any).
-        user_limit
-            If provided, the maximum users in the channel at once.
-            Must be between 0 and 99 with 0 meaning no limit.
-        bitrate
-            If provided, the bitrate for the channel. Must be
-            between 8000 and 96000 or 8000 and 128000 for VIP
-            servers.
-        permission_overwrites
-            If provided, the permission overwrites for the channel.
-        region
-            If provided, the voice region to for this channel. Passing
-            [`None`][] here will set it to "auto" mode where the used
-            region will be decided based on the first person who connects to it
-            when it's empty.
-        parent_id
-            The ID of the category to create the channel under.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this channel that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
-        """
 
 
 class InteractionResponseBuilder(abc.ABC):
@@ -506,7 +126,7 @@ class InteractionResponseBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> typing.Union[int, base_interactions.ResponseType]:
+    def type(self) -> int | base_interactions.ResponseType:
         """Type of this response."""
 
     @abc.abstractmethod
@@ -535,12 +155,13 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> base_interactions.DeferredResponseTypesT:
         """Type of this response."""
 
     @property
     @abc.abstractmethod
-    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
         """Message flags this response should have.
 
         !!! note
@@ -550,7 +171,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
         """Set message flags for this response.
 
         !!! note
@@ -582,7 +203,7 @@ class AutocompleteChoiceBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def value(self) -> typing.Union[int, str, float]:
+    def value(self) -> int | str | float:
         """The choice's value."""
 
     @abc.abstractmethod
@@ -596,7 +217,7 @@ class AutocompleteChoiceBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_value(self, value: typing.Union[int, float, str], /) -> Self:
+    def set_value(self, value: float | str, /) -> Self:
         """Set this choice's value.
 
         Returns
@@ -656,6 +277,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> base_interactions.MessageResponseTypesT:
         """Type of this response."""
 
@@ -685,7 +307,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
         """Message flags this response should have.
 
         !!! note
@@ -707,9 +329,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def role_mentions(
-        self,
-    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]]:
+    def role_mentions(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool]:
         """Whether and what role mentions should be enabled for this response.
 
         Either a sequence of object/IDs of the roles mentions should be enabled
@@ -719,15 +339,18 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def user_mentions(
-        self,
-    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
+    def user_mentions(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users.PartialUser] | bool]:
         """Whether and what user mentions should be enabled for this response.
 
         Either a sequence of object/IDs of the users mentions should be enabled
         for, [`False`][] or [`hikari.undefined.UNDEFINED`][] to disallow any
         user mentions or [`True`][] to allow all user mentions.
         """
+
+    @property
+    @abc.abstractmethod
+    def poll(self) -> undefined.UndefinedOr[PollBuilder]:
+        """The poll to include with this response."""
 
     @abc.abstractmethod
     def clear_attachments(self, /) -> Self:
@@ -773,6 +396,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
+    def clear_components(self, /) -> Self:
+        """Clear the components set for this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
     def add_embed(self, embed: embeds_.Embed, /) -> Self:
         """Add an embed to this response.
 
@@ -780,6 +413,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         embed
             Object of the embed to add to this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def clear_embeds(self, /) -> Self:
+        """Clear the embeds set for this embed.
 
         Returns
         -------
@@ -803,7 +446,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
         """Set message flags for this response.
 
         !!! note
@@ -855,7 +498,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     def set_role_mentions(
         self,
         mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
         /,
     ) -> Self:
@@ -878,7 +521,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     def set_user_mentions(
         self,
         mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         /,
     ) -> Self:
@@ -890,6 +533,22 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             Either a sequence of object/IDs of the users mentions should be enabled for,
             [`False`][] or [`hikari.undefined.UNDEFINED`][] to disallow any user
             mentions or [`True`][] to allow all user mentions.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_poll(self, poll: undefined.UndefinedOr[PollBuilder], /) -> Self:
+        """Set the poll to include with this response.
+
+        Parameters
+        ----------
+        poll
+            The poll to include with this response, or [`hikari.undefined.UNDEFINED`][]
+            to remove a previously added poll.
 
         Returns
         -------
@@ -910,6 +569,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
         """Type of this response."""
 
@@ -971,6 +631,7 @@ class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
         """Type of this response."""
 
@@ -1002,7 +663,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
+    def default_member_permissions(self) -> undefined.UndefinedType | permissions_.Permissions | int:
         """Member permissions necessary to utilize this command by default.
 
         If `0`, then it will be available for all members. Note that this doesn't affect
@@ -1016,7 +677,7 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def name_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
         """Name localizations set for this command."""
 
     @property
@@ -1061,7 +722,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_default_member_permissions(
-        self, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
+        self, default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions, /
     ) -> Self:
         """Set the member permissions necessary to utilize this command by default.
 
@@ -1095,9 +756,7 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_name_localizations(
-        self, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
-    ) -> Self:
+    def set_name_localizations(self, name_localizations: typing.Mapping[locales.Locale | str, str], /) -> Self:
         """Set the name localizations for this command.
 
         Parameters
@@ -1205,7 +864,7 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def description_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
         """Command's localised descriptions."""
 
     @property
@@ -1230,7 +889,7 @@ class SlashCommandBuilder(CommandBuilder):
 
     @abc.abstractmethod
     def set_description_localizations(
-        self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
+        self, description_localizations: typing.Mapping[locales.Locale | str, str], /
     ) -> Self:
         """Set the localised descriptions for this command.
 
@@ -1264,6 +923,7 @@ class SlashCommandBuilder(CommandBuilder):
         """
 
     @abc.abstractmethod
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1301,6 +961,7 @@ class ContextMenuCommandBuilder(CommandBuilder):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1340,17 +1001,29 @@ class ComponentBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> typing.Union[int, components_.ComponentType]:
+    def type(self) -> int | components_.ComponentType:
         """Type of component this builder represents."""
 
+    @property
     @abc.abstractmethod
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        """Build a JSON object from this builder.
+    def id(self) -> undefined.UndefinedOr[int]:
+        """ID of the component.
+
+        It will be used to order components in the layout.
+
+        If not provided, it will be auto populated through increment.
+        """
+
+    @abc.abstractmethod
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        """Build a JSON object from this builder and collects all attachments added as components.
 
         Returns
         -------
-        typing.MutableMapping[str, typing.Any]
-            The built json object representation of this builder.
+        tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]
+            The built json object representation of this builder, and the attachments added.
         """
 
 
@@ -1361,17 +1034,18 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.BUTTON]:
         """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
-    def style(self) -> typing.Union[components_.ButtonStyle, int]:
+    def style(self) -> components_.ButtonStyle | int:
         """Button's style."""
 
     @property
     @abc.abstractmethod
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
         """Emoji which should appear on this button."""
 
     @property
@@ -1390,9 +1064,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
         """Whether the button should be marked as disabled."""
 
     @abc.abstractmethod
-    def set_emoji(
-        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> Self:
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
         """Set the emoji to display on this button.
 
         Parameters
@@ -1425,7 +1097,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this button should be disabled.
 
         Parameters
@@ -1499,7 +1171,7 @@ class SelectOptionBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
         """Emoji which should appear on this option."""
 
     @property
@@ -1556,9 +1228,7 @@ class SelectOptionBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_emoji(
-        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> Self:
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
         """Set the emoji to display on this option.
 
         Parameters
@@ -1574,7 +1244,7 @@ class SelectOptionBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_default(self, state: bool, /) -> Self:
+    def set_is_default(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this option should be selected by default.
 
         Parameters
@@ -1655,7 +1325,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this option is disabled.
 
         Parameters
@@ -1747,7 +1417,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT]
         /,
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         is_default: bool = False,
     ) -> Self:
         """Add an option to this menu.
@@ -1807,6 +1477,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.TEXT_INPUT]:
         """Type of component this builder represents."""
 
@@ -1856,7 +1527,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """Maximum length the text should have."""
 
     @abc.abstractmethod
-    def set_style(self, style: typing.Union[components_.TextInputStyle, int], /) -> Self:
+    def set_style(self, style: components_.TextInputStyle | int, /) -> Self:
         """Set the style to use for the text input.
 
         Parameters
@@ -1931,7 +1602,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_required(self, required: bool, /) -> Self:
+    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this text input is required to be filled-in.
 
         Parameters
@@ -1983,16 +1654,17 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def components(self) -> typing.Sequence[MessageActionRowBuilderComponentsT]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(self, component: ComponentBuilder, /) -> Self:
+    def add_component(self, component: MessageActionRowBuilderComponentsT, /) -> Self:
         """Add a component to this action row builder.
 
         !!! warning
@@ -2019,9 +1691,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         custom_id: str,
         /,
         *,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add an interactive button component to this action row builder.
 
@@ -2041,6 +1714,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2054,9 +1731,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         url: str,
         /,
         *,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a link button component to this action row builder.
 
@@ -2073,6 +1751,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2083,7 +1765,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_select_menu(
         self,
-        type_: typing.Union[components_.ComponentType, int],
+        type_: components_.ComponentType | int,
         custom_id: str,
         /,
         *,
@@ -2091,6 +1773,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a select menu component to this action row builder.
 
@@ -2113,6 +1796,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2136,6 +1823,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a channel select menu component to this action row builder.
 
@@ -2157,6 +1845,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2179,6 +1871,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> TextSelectMenuBuilder[Self]:
         """Add a select menu component to this action row builder.
 
@@ -2195,6 +1888,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2220,16 +1917,17 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def components(self) -> typing.Sequence[ModalActionRowBuilderComponentsT]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(self, component: ComponentBuilder, /) -> Self:
+    def add_component(self, component: ModalActionRowBuilderComponentsT, /) -> Self:
         """Add a component to this action row builder.
 
         !!! warning
@@ -2293,3 +1991,520 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         ModalActionRowBuilder
             The modal action row builder to enable call chaining.
         """
+
+
+class SectionComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for section components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.SECTION]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[SectionBuilderComponentsT]:
+        """The components attached to the section."""
+
+    @property
+    @abc.abstractmethod
+    def accessory(self) -> SectionBuilderAccessoriesT:
+        """The accessory attached to the section."""
+
+    @abc.abstractmethod
+    def add_component(self, component: SectionBuilderComponentsT) -> Self:
+        """Add a component to this section builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageSectionBuilder.add_text_display`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component
+            The component builder to add to the section.
+
+        Returns
+        -------
+        SectionComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a text display component to this section builder.
+
+        Parameters
+        ----------
+        content
+            The content for the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        SectionComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class TextDisplayComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for text display components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.TEXT_DISPLAY]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def content(self) -> str:
+        """The content for the text display."""
+
+
+class ThumbnailComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for thumbnail components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.THUMBNAIL]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def media(self) -> files.Resourceish:
+        """The media of this thumbnail."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The description for the thumbnails media."""
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the media is marked as a spoiler."""
+
+
+class MediaGalleryComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for media gallery components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.MEDIA_GALLERY]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def items(self) -> typing.Sequence[MediaGalleryItemBuilder]:
+        """The items in the media gallery."""
+
+    @abc.abstractmethod
+    def add_item(self, item: MediaGalleryItemBuilder) -> Self:
+        """Add a component to this media gallery builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageMediaGalleryBuilder.add_media_gallery_item`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        item
+            The media gallery item builder to add to the section.
+
+        Returns
+        -------
+        MediaGalleryComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_media_gallery_item(
+        self,
+        media: files.Resourceish,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        spoiler: bool = False,
+    ) -> Self:
+        """Add a media gallery item component to this media gallery builder.
+
+        Parameters
+        ----------
+        media
+            The media for the gallery item.
+        description
+            The description for the media gallery item.
+        spoiler
+            Whether the media has a spoiler.
+
+        Returns
+        -------
+        MediaGalleryComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class MediaGalleryItemBuilder(abc.ABC):
+    """Builder class for a media gallery item."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def media(self) -> files.Resourceish:
+        """The media for the gallery item."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The description for the media gallery item."""
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the media is marked as a spoiler."""
+
+    @abc.abstractmethod
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        """Build a JSON object from this builder and collects all attachments added as components.
+
+        Returns
+        -------
+        tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]
+            The built json object representation of this builder, and the attachments added.
+        """
+
+
+class SeparatorComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for separator components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.SEPARATOR]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def spacing(self) -> undefined.UndefinedOr[components_.SpacingType]:
+        """The spacing for the separator."""
+
+    @property
+    @abc.abstractmethod
+    def divider(self) -> undefined.UndefinedOr[bool]:
+        """Whether the separator has a divider."""
+
+
+class FileComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for file components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.FILE]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def file(self) -> files.Resourceish:
+        """The file to attach."""
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the file has a spoiler."""
+
+
+class ContainerComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for container components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.CONTAINER]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def accent_color(self) -> undefined.UndefinedOr[colors.Color]:
+        """The accent color for the container.
+
+        If undefined, the accent colour is hidden, if None, then no colour is set.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the container has a spoiler."""
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[ContainerBuilderComponentsT]:
+        """The components attached to the container."""
+
+    @abc.abstractmethod
+    def add_component(self, component: ContainerBuilderComponentsT) -> Self:
+        """Add a component to this container builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageContainerBuilder.add_action_row`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_text_display`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_media_gallery`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_separator`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_file`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component
+            The component builder to add to the container.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_action_row(
+        self,
+        components: typing.Sequence[MessageActionRowBuilderComponentsT],
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a action row component to this container builder.
+
+        Parameters
+        ----------
+        components
+            The components to add to the action row.
+        id
+            The ID to give to the action row.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a text display component to this container builder.
+
+        Parameters
+        ----------
+        content
+            The content of the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_media_gallery(
+        self, items: typing.Sequence[MediaGalleryItemBuilder], *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED
+    ) -> Self:
+        """Add a media gallery component to this container builder.
+
+        Parameters
+        ----------
+        items
+            The gallery media items to add to the media gallery.
+        id
+            The ID to give to the media gallery.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_separator(
+        self,
+        *,
+        spacing: components_.SpacingType = components_.SpacingType.SMALL,
+        divider: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a separator component to this container builder.
+
+        Parameters
+        ----------
+        spacing
+            The spacing for the separator.
+        divider
+            Whether the separator has a divider.
+        id
+            The ID to give to the separator.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+        """
+
+    @abc.abstractmethod
+    def add_file(
+        self, file: files.Resourceish, *, spoiler: bool = False, id: undefined.UndefinedOr[int] = undefined.UNDEFINED
+    ) -> Self:
+        """Add a spoiler component to this container builder.
+
+        Parameters
+        ----------
+        file
+            The file.
+        spoiler
+            Whether the file has a spoiler.
+        id
+            The ID to give to the file.
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class PollBuilder(abc.ABC):
+    """Builder class for polls."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def question_text(self) -> str:
+        """The question text for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def answers(self) -> typing.Sequence[PollAnswerBuilder]:
+        """The answers for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def duration(self) -> undefined.UndefinedOr[int]:
+        """The duration of the poll in hours."""
+
+    @property
+    @abc.abstractmethod
+    def allow_multiselect(self) -> bool:
+        """Whether a user can select multiple answers."""
+
+    @property
+    @abc.abstractmethod
+    def layout_type(self) -> undefined.UndefinedOr[polls.PollLayoutType]:
+        """The layout type for the poll."""
+
+    @abc.abstractmethod
+    def add_answer(
+        self,
+        *,
+        text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add an answer to the poll.
+
+        Parameters
+        ----------
+        text
+            The text for the answer.
+        emoji
+            The emoji for the answer.
+
+        Returns
+        -------
+        PollAnswerBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class PollAnswerBuilder(abc.ABC):
+    """Builder class for poll answers."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def text(self) -> undefined.UndefinedOr[str]:
+        """The text for the media object."""
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> undefined.UndefinedOr[emojis.Emoji]:
+        """The emoji for the media object."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+if typing.TYPE_CHECKING:
+    MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
+
+    ModalActionRowBuilderComponentsT = TextInputBuilder
+
+    ContainerBuilderComponentsT = typing.Union[
+        MessageActionRowBuilder,
+        TextDisplayComponentBuilder,
+        SectionComponentBuilder,
+        MediaGalleryComponentBuilder,
+        SeparatorComponentBuilder,
+        FileComponentBuilder,
+    ]
+
+    SectionBuilderAccessoriesT = typing.Union[ButtonBuilder, ThumbnailComponentBuilder]
+    SectionBuilderComponentsT = typing.Union[TextDisplayComponentBuilder]

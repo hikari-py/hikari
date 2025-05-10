@@ -43,6 +43,9 @@ class TestTeamMember:
     def test_app_property(self, model: applications.TeamMember):
         assert model.app is model.user.app
 
+    def test_avatar_decoration_property(self, model: applications.TeamMember):
+        assert model.avatar_decoration is model.user.avatar_decoration
+
     def test_avatar_hash_property(self, model: applications.TeamMember):
         assert model.avatar_hash is model.user.avatar_hash
 
@@ -157,6 +160,7 @@ class TestApplication:
             tags=[],
             install_parameters=mock.Mock(),
             approximate_guild_count=1,
+            approximate_user_install_count=1,
             integration_types_config={},
         )
 

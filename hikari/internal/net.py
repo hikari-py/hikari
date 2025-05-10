@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("generate_error_response", "create_client_session")
+__all__: typing.Sequence[str] = ("create_client_session", "generate_error_response")
 
 import http
 import typing
@@ -37,7 +36,7 @@ if typing.TYPE_CHECKING:
     from hikari.impl import config
 
 
-async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HTTPError:
+async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HTTPError:  # noqa: PLR0911 - Too many return statements
     """Given an erroneous HTTP response, return a corresponding exception."""
     real_url = str(response.real_url)
     raw_body = await response.read()
@@ -49,7 +48,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
         assert isinstance(json_body, dict)
         args.append(json_body.get("message", ""))
         args.append(json_body.get("code", 0))
-        raw_error_array: typing.Optional[data_binding.JSONObject] = json_body.get("errors")
+        raw_error_array: data_binding.JSONObject | None = json_body.get("errors")
     except ValueError:
         raw_error_array = None
 
@@ -63,20 +62,19 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
         return errors.NotFoundError(*args)
 
     try:
-        status: typing.Union[http.HTTPStatus, int] = http.HTTPStatus(response.status)
+        status: http.HTTPStatus | int = http.HTTPStatus(response.status)
     except ValueError:
         status = response.status
 
     if 400 <= status < 500:
         return errors.ClientHTTPResponseError(real_url, status, response.headers, raw_body)
-    elif 500 <= status < 600:
+    if 500 <= status < 600:
         return errors.InternalServerError(real_url, status, response.headers, raw_body)
-    else:
-        return errors.HTTPResponseError(real_url, status, response.headers, raw_body)
+    return errors.HTTPResponseError(real_url, status, response.headers, raw_body)
 
 
 def create_tcp_connector(
-    http_settings: config.HTTPSettings, *, dns_cache: typing.Union[bool, int] = True, limit: int = 100
+    http_settings: config.HTTPSettings, *, dns_cache: bool | int = True, limit: int = 100
 ) -> aiohttp.TCPConnector:
     """Create a TCP connector and return it.
 
@@ -112,8 +110,9 @@ def create_tcp_connector(
 
 def create_client_session(
     connector: aiohttp.BaseConnector,
-    connector_owner: bool,
     http_settings: config.HTTPSettings,
+    *,
+    connector_owner: bool,
     raise_for_status: bool,
     trust_env: bool,
 ) -> aiohttp.ClientSession:

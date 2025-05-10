@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,13 +22,15 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("deprecated", "Enum", "Flag")
+__all__: typing.Sequence[str] = ("Enum", "Flag", "deprecated")
 
 import functools
 import operator
 import sys
 import types
 import typing
+
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
@@ -39,7 +40,7 @@ _MAX_CACHED_MEMBERS: typing.Final[int] = 1 << 12
 
 
 class _DeprecatedAlias(typing.Generic[_T]):
-    __slots__ = ("_name", "_alias", "_removal_version")
+    __slots__ = ("_alias", "_name", "_removal_version")
 
     def __init__(self, name: str, alias: str, removal_version: str) -> None:
         self._name = name
@@ -51,7 +52,7 @@ class _DeprecatedAlias(typing.Generic[_T]):
 
         deprecation.check_if_past_removal(self._name, removal_version=removal_version)
 
-    def __get__(self, instance: typing.Optional[_T], owner_enum: _T) -> _T:
+    def __get__(self, instance: _T | None, owner_enum: _T) -> _T:
         # Import kept in-line due to circular import issues
         from hikari.internal import deprecation
 
@@ -62,27 +63,27 @@ class _DeprecatedAlias(typing.Generic[_T]):
         return owner_enum[self._alias]
 
 
-class deprecated:
+class deprecated:  # noqa: N801 - Class should use CapWords
     """Used to denote that an enum member is a deprecated alias of another."""
 
-    __slots__ = ("value", "removal_version")
+    __slots__ = ("removal_version", "value")
 
-    def __init__(self, value: typing.Any, /, *, removal_version: str) -> None:
+    def __init__(self, value: object, /, *, removal_version: str) -> None:
         self.value = value
         self.removal_version = removal_version
 
 
-class _EnumNamespace(dict[str, typing.Any]):
+class _EnumNamespace(dict[str, _T]):
     __slots__: typing.Sequence[str] = ("base", "names_to_values", "values_to_names")
 
     def __init__(self, base: type[typing.Any]) -> None:
         super().__init__()
         self.base = base
-        self.names_to_values: dict[str, typing.Any] = {}
-        self.values_to_names: dict[typing.Any, str] = {}
+        self.names_to_values: dict[str, _T] = {}
+        self.values_to_names: dict[_T, str] = {}
         self["__doc__"] = "An enumeration."
 
-    def __getitem__(self, name: str) -> typing.Any:
+    def __getitem__(self, name: str) -> _T | object:
         try:
             return super().__getitem__(name)
         except KeyError:
@@ -91,15 +92,17 @@ class _EnumNamespace(dict[str, typing.Any]):
             except KeyError:
                 raise KeyError(name) from None
 
-    def __setitem__(self, name: str, value: typing.Any) -> None:
-        if name == "" or name == "mro":
-            raise TypeError(f"Invalid enum member name: {name!r}")
+    def __setitem__(self, name: str, value: _T) -> None:
+        if name in {"", "mro"}:
+            msg = f"Invalid enum member name: {name!r}"
+            raise TypeError(msg)
 
         if isinstance(value, deprecated):
             real_value = value.value
 
             if (alias := self.values_to_names.get(real_value)) is None:
-                raise ValueError("[`deprecated`][] must be used on an existing value")
+                msg = "[`deprecated`][] must be used on an existing value"
+                raise ValueError(msg)
 
             member = _DeprecatedAlias(name, alias, value.removal_version)
             super().__setitem__(name, member)
@@ -117,7 +120,8 @@ class _EnumNamespace(dict[str, typing.Any]):
             return
 
         elif not isinstance(value, self.base):
-            raise TypeError(f"Expected member {name} to be of type {self.base.__name__} but was {type(value).__name__}")
+            msg = f"Expected member {name} to be of type {self.base.__name__} but was {type(value).__name__}"
+            raise TypeError(msg)
 
         name = sys.intern(name)
 
@@ -128,10 +132,12 @@ class _EnumNamespace(dict[str, typing.Any]):
                 # This will fail if unhashable.
                 hash(value)
             except TypeError:
-                raise TypeError(f"Cannot have unhashable values in this enum type ({name}: {value!r})") from None
+                msg = f"Cannot have unhashable values in this enum type ({name}: {value!r})"
+                raise TypeError(msg) from None
 
         if name in self.names_to_values:
-            raise TypeError(f"Cannot define {name!r} name multiple times")
+            msg = f"Cannot define {name!r} name multiple times"
+            raise TypeError(msg)
 
         self.names_to_values[name] = value
         self.values_to_names.setdefault(value, name)
@@ -145,33 +151,33 @@ _Enum = NotImplemented
 
 
 class _EnumMeta(type):
-    def __call__(cls, value: typing.Any) -> typing.Any:
+    def __call__(cls, value: object) -> Enum:
         """Cast a value to the enum, returning the raw value that was passed if value not found."""
         return cls._value_to_member_map_.get(value, value)
 
-    def __getitem__(cls, name: str) -> typing.Any:
+    def __getitem__(cls, name: str) -> Enum:
         if member := getattr(cls, name, None):
             return member
 
         raise KeyError(name)
 
-    def __contains__(cls, item: typing.Any) -> bool:
+    def __contains__(cls, item: object) -> bool:
         return item in cls._value_to_member_map_
 
-    def __iter__(cls) -> typing.Iterator[typing.Any]:
+    def __iter__(cls) -> typing.Iterator[Enum]:
         yield from cls._name_to_member_map_.values()
 
     def __new__(
-        mcs,
-        name: str,
+        mcls: type[Self],
+        cls_name: str,
         bases: tuple[type[typing.Any], ...],
-        namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
+        namespace: dict[str, typing.Any] | _EnumNamespace,
     ) -> Self:
         global _Enum
 
         if _Enum is NotImplemented:
             # noinspection PyRedundantParentheses
-            return (_Enum := super().__new__(mcs, name, bases, namespace))
+            return (_Enum := super().__new__(mcls, cls_name, bases, namespace))
 
         assert isinstance(namespace, _EnumNamespace)
 
@@ -188,7 +194,7 @@ class _EnumMeta(type):
             **{
                 name: value
                 for name, value in Enum.__dict__.items()
-                if name not in ("__class__", "__module__", "__doc__")
+                if name not in {"__class__", "__module__", "__doc__"}
             },
         }
 
@@ -199,11 +205,10 @@ class _EnumMeta(type):
         # We update the name space to ensure new fields override inherited attributes and methods.
         new_namespace.update(namespace)
 
-        cls = super().__new__(mcs, name, bases, new_namespace)
+        cls = super().__new__(mcls, cls_name, bases, new_namespace)
 
         for name, value in namespace.names_to_values.items():
-            member = new_namespace.get(name)
-            if isinstance(member, _DeprecatedAlias):
+            if isinstance(new_namespace.get(name), _DeprecatedAlias):
                 continue
 
             # Patching the member init call is around 100ns faster per call than
@@ -223,12 +228,11 @@ class _EnumMeta(type):
         return cls
 
     @classmethod
-    def __prepare__(
-        mcs, name: str, bases: tuple[type[typing.Any], ...] = ()
-    ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
+    def __prepare__(cls, name: str, bases: tuple[type[typing.Any], ...] = ()) -> dict[str, typing.Any] | _EnumNamespace:
         if _Enum is NotImplemented:
             if name != "Enum":
-                raise TypeError("First instance of _EnumMeta must be Enum")
+                msg = "First instance of _EnumMeta must be Enum"
+                raise TypeError(msg)
             return _EnumNamespace(object)
 
         try:
@@ -236,11 +240,13 @@ class _EnumMeta(type):
             base, enum_type = bases
 
             if isinstance(base, _EnumMeta):
-                raise TypeError("First base to an enum must be the type to combine with, not _EnumMeta")
+                msg = "First base to an enum must be the type to combine with, not _EnumMeta"
+                raise TypeError(msg)
 
             return _EnumNamespace(base)
         except ValueError:
-            raise TypeError("Expected exactly two base classes for an enum") from None
+            msg = "Expected exactly two base classes for an enum"
+            raise TypeError(msg) from None
 
     def __repr__(cls) -> str:
         return f"<enum {cls.__name__}>"
@@ -335,14 +341,15 @@ class Enum(metaclass=_EnumMeta):
         return self._name_
 
     @property
-    @typing.no_type_check
-    def value(self):
+    def value(self) -> object:
         """Return the value of the enum member."""
         return self._value_
 
+    @typing_extensions.override
     def __repr__(self) -> str:
         return f"<{type(self).__name__}.{self._name_}: {self._value_!r}>"
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self._name_
 
@@ -355,13 +362,13 @@ def _name_resolver(members: dict[int, _Flag], value: int) -> typing.Generator[st
     has_yielded = False
     remaining = value
     while bit <= value:
-        if member := members.get(bit):
-            # Use ._value_ to prevent overhead of making new members each time.
-            # Also let's my testing logic for the cache size be more accurate.
-            if member._value_ & remaining == member._value_:
-                remaining ^= member._value_
-                yield member.name
-                has_yielded = True
+        # Use ._value_ to prevent overhead of making new members each time.
+        # Also let's my testing logic for the cache size be more accurate.
+        member = members.get(bit)
+        if member and member._value_ & remaining == member._value_:
+            remaining ^= member._value_
+            yield member.name
+            has_yielded = True
         bit <<= 1
 
     if not has_yielded:
@@ -371,7 +378,7 @@ def _name_resolver(members: dict[int, _Flag], value: int) -> typing.Generator[st
 
 
 class _FlagMeta(type):
-    def __call__(cls, value: int = 0) -> typing.Any:
+    def __call__(cls, value: int = 0) -> Flag:
         """Cast a value to the flag enum, returning the raw value that was passed if values not found."""
         # We want to handle value invariantly to avoid issues brought in by different behaviours from sub-classed ints
         # and floats. This also ensures that .__int__ only returns an invariant int.
@@ -388,7 +395,7 @@ class _FlagMeta(type):
 
             temp_members = cls._temp_members_
             # For huge enums, don't ever cache anything. We could consume masses of memory otherwise
-            # (e.g. Permissions)
+            # (for example: Permissions)
             try:
                 # Try to get a cached value.
                 return temp_members[value]
@@ -404,7 +411,7 @@ class _FlagMeta(type):
 
                 return pseudomember
 
-    def __getitem__(cls, name: str) -> typing.Any:
+    def __getitem__(cls, name: str) -> Flag:
         if member := getattr(cls, name, None):
             return member
 
@@ -414,31 +421,31 @@ class _FlagMeta(type):
         yield from cls._name_to_member_map_.values()
 
     @classmethod
-    def __prepare__(
-        mcs, name: str, bases: tuple[type[typing.Any], ...] = ()
-    ) -> typing.Union[dict[str, typing.Any], _EnumNamespace]:
+    def __prepare__(cls, name: str, bases: tuple[type[typing.Any], ...] = ()) -> dict[str, typing.Any] | _EnumNamespace:
         if _Flag is NotImplemented:
             if name != "Flag":
-                raise TypeError("First instance of _FlagMeta must be Flag")
+                msg = "First instance of _FlagMeta must be Flag"
+                raise TypeError(msg)
             return _EnumNamespace(object)
 
         # Fails if Flag is not defined.
         if len(bases) == 1 and bases[0] == Flag:
             return _EnumNamespace(int)
-        raise TypeError("Cannot define another Flag base type")
+        msg = "Cannot define another Flag base type"
+        raise TypeError(msg)
 
     @staticmethod
     def __new__(
-        mcs,
-        name: str,
+        mcls: type[Flag],
+        cls_name: str,
         bases: tuple[type[typing.Any], ...],
-        namespace: typing.Union[dict[str, typing.Any], _EnumNamespace],
-    ) -> Self:
+        namespace: dict[str, typing.Any] | _EnumNamespace,
+    ) -> Flag:
         global _Flag
 
         if _Flag is NotImplemented:
             # noinspection PyRedundantParentheses
-            return (_Flag := super().__new__(mcs, name, bases, namespace))
+            return (_Flag := super().__new__(mcls, cls_name, bases, namespace))
 
         assert isinstance(namespace, _EnumNamespace)
         new_namespace = {
@@ -463,17 +470,16 @@ class _FlagMeta(type):
             **{
                 name: value
                 for name, value in Flag.__dict__.items()
-                if name not in ("__class__", "__module__", "__doc__")
+                if name not in {"__class__", "__module__", "__doc__"}
             },
         }
         # We update the namespace to ensure new fields override inherited attributes and methods.
         new_namespace.update(namespace)
 
-        cls = super().__new__(mcs, name, (int, *bases), new_namespace)
+        cls = super().__new__(mcls, cls_name, (int, *bases), new_namespace)
 
         for name, value in namespace.names_to_values.items():
-            member = new_namespace.get(name)
-            if isinstance(member, _DeprecatedAlias):
+            if isinstance(new_namespace.get(name), _DeprecatedAlias):
                 continue
 
             # Patching the member init call is around 100ns faster per call than
@@ -497,7 +503,7 @@ class _FlagMeta(type):
         all_bits_member = cls.__new__(cls, all_bits)
         all_bits_member._name_ = None
         all_bits_member._value_ = all_bits
-        setattr(cls, "__everything__", all_bits_member)
+        cls.__everything__ = all_bits_member
 
         return cls
 
@@ -659,7 +665,7 @@ class Flag(metaclass=_FlagMeta):
     __members__: typing.ClassVar[typing.Mapping[str, Flag]]
     __objtype__: typing.ClassVar[type[int]]
     __enumtype__: typing.ClassVar[type[Flag]]
-    _name_: typing.Optional[str]
+    _name_: str | None
     _value_: int
 
     @property
@@ -696,7 +702,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return any((flag & self) == flag for flag in flags)
 
-    def difference(self, other: typing.Union[Self, int]) -> _T:
+    def difference(self, other: Self | int) -> _T:
         """Perform a set difference with the other set.
 
         This will return all flags in this set that are not in the other value.
@@ -705,7 +711,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return self.__class__(self & ~int(other))
 
-    def intersection(self, other: typing.Union[Self, int]) -> _T:
+    def intersection(self, other: Self | int) -> _T:
         """Return a combination of flags that are set for both given values.
 
         Equivalent to using the "AND" `&` operator.
@@ -716,7 +722,7 @@ class Flag(metaclass=_FlagMeta):
         """Return a set of all flags not in the current set."""
         return self.__class__(self.__class__.__everything__._value_ & ~self._value_)
 
-    def is_disjoint(self, other: typing.Union[Self, int]) -> bool:
+    def is_disjoint(self, other: Self | int) -> bool:
         """Return whether two sets have a intersection or not.
 
         If the two sets have an intersection, then this returns
@@ -725,14 +731,14 @@ class Flag(metaclass=_FlagMeta):
         """
         return not (self & other)
 
-    def is_subset(self, other: typing.Union[Self, int]) -> bool:
+    def is_subset(self, other: Self | int) -> bool:
         """Return whether another set contains this set or not.
 
         Equivalent to using the "in" operator.
         """
         return (self & other) == other
 
-    def is_superset(self, other: typing.Union[Self, int]) -> bool:
+    def is_superset(self, other: Self | int) -> bool:
         """Return whether this set contains another set or not."""
         return (self & other) == self
 
@@ -763,7 +769,7 @@ class Flag(metaclass=_FlagMeta):
             key=lambda m: m._name_,
         )
 
-    def symmetric_difference(self, other: typing.Union[_T, int]) -> Self:
+    def symmetric_difference(self, other: _T | int) -> Self:
         """Return a set with the symmetric differences of two flag sets.
 
         Equivalent to using the "XOR" `^` operator.
@@ -772,7 +778,7 @@ class Flag(metaclass=_FlagMeta):
         """
         return self.__class__(self._value_ ^ int(other))
 
-    def union(self, other: typing.Union[_T, int]) -> Self:
+    def union(self, other: _T | int) -> Self:
         """Return a combination of all flags in this set and the other set.
 
         Equivalent to using the "OR" `~` operator.
@@ -805,12 +811,13 @@ class Flag(metaclass=_FlagMeta):
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}.{self.name}: {self.value!r}>"
 
-    def __rsub__(self, other: typing.Union[int, _T]) -> Self:
+    def __rsub__(self, other: int | _T) -> Self:
         # This logic has to be reversed to be correct, since order matters for
         # a subtraction operator. This also ensures `int - _T -> _T` is a valid
         # case for us.
         return self.__class__(other) - self
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name
 

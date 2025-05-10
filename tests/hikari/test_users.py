@@ -44,6 +44,9 @@ class TestPartialUser:
             self._username = "username"
             self._global_name = "global_name"
             self._display_name = "display_name"
+            self._avatar_decoration = users.AvatarDecoration(
+                asset_hash="avatar_decoration_asset_hash", sku_id=snowflakes.Snowflake(999), expires_at=None
+            )
             self._is_bot = False
             self._is_system = False
             self._flags = users.UserFlag.NONE
@@ -84,6 +87,10 @@ class TestPartialUser:
         @property
         def display_name(self) -> undefined.UndefinedNoneOr[str]:
             return self._display_name
+
+        @property
+        def avatar_decoration(self) -> users.AvatarDecoration | None:
+            return self._avatar_decoration
 
         @property
         def is_bot(self) -> undefined.UndefinedOr[bool]:
@@ -279,7 +286,11 @@ class TestUser:
             self._discriminator = "discriminator"
             self._username = "username"
             self._global_name = "global_name"
+            self._global_name = "global_name"
             self._display_name = "display_name"
+            self._avatar_decoration = users.AvatarDecoration(
+                asset_hash="avatar_decoration_asset_hash", sku_id=snowflakes.Snowflake(999), expires_at=None
+            )
             self._is_bot = False
             self._is_system = False
             self._flags = users.UserFlag.NONE
@@ -294,43 +305,47 @@ class TestUser:
             return self._id
 
         @property
-        def avatar_hash(self) -> undefined.UndefinedNoneOr[str]:
+        def avatar_hash(self) -> str:
             return self._avatar_hash
 
         @property
-        def banner_hash(self) -> undefined.UndefinedNoneOr[str]:
+        def banner_hash(self) -> str:
             return self._banner_hash
 
         @property
-        def accent_color(self) -> undefined.UndefinedNoneOr[colors.Color]:
+        def accent_color(self) -> colors.Color:
             return self._accent_color
 
         @property
-        def discriminator(self) -> undefined.UndefinedOr[str]:
+        def discriminator(self) -> str:
             return self._discriminator
 
         @property
-        def username(self) -> undefined.UndefinedOr[str]:
+        def username(self) -> str:
             return self._username
 
         @property
-        def global_name(self) -> undefined.UndefinedNoneOr[str]:
+        def global_name(self) -> str:
             return self._global_name
 
         @property
-        def display_name(self) -> undefined.UndefinedNoneOr[str]:
-            return self._display_name
+        def display_name(self) -> str:
+            return "display_name"
 
         @property
-        def is_bot(self) -> undefined.UndefinedOr[bool]:
+        def avatar_decoration(self) -> users.AvatarDecoration | None:
+            return self._avatar_decoration
+
+        @property
+        def is_bot(self) -> bool:
             return self._is_bot
 
         @property
-        def is_system(self) -> undefined.UndefinedOr[bool]:
+        def is_system(self) -> bool:
             return self._is_system
 
         @property
-        def flags(self) -> undefined.UndefinedOr[users.UserFlag]:
+        def flags(self) -> users.UserFlag:
             return self._flags
 
         @property
@@ -344,6 +359,22 @@ class TestUser:
 
     def test_accent_colour_alias_property(self, user: users.User):
         assert user.accent_colour is user.accent_color
+
+    def test_avatar_decoration_property(self, user: users.User):
+        with mock.patch.object(users.AvatarDecoration, "make_url") as make_url:
+            assert user.avatar_decoration is not None
+            assert user.avatar_decoration.url is make_url.return_value
+
+    def test_avatar_decoration_make_url_with_all_args(self, user: users.User):
+        with mock.patch.object(
+            routes, "CDN_AVATAR_DECORATION", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert user.avatar_decoration is not None
+            assert user.avatar_decoration.make_url(size=4096) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, hash=user.avatar_decoration.asset_hash, size=4096, file_format="png"
+        )
 
     def test_avatar_url_property(self, user: users.User):
         with mock.patch.object(users.User, "make_avatar_url") as make_avatar_url:
@@ -404,6 +435,14 @@ class TestUser:
             mock.patch.object(users.User, "default_avatar_url") as mock_default_avatar_url,
         ):
             assert user.display_avatar_url is mock_default_avatar_url
+
+    def test_display_banner_url_when_banner_url(self, user: users.User):
+        with mock.patch.object(users.User, "make_banner_url") as mock_make_banner_url:
+            assert user.display_banner_url is mock_make_banner_url.return_value
+
+    def test_display_banner_url_when_no_banner_url(self, user: users.User):
+        with mock.patch.object(users.User, "make_banner_url", return_value=None):
+            assert user.display_banner_url is None
 
     def test_default_avatar(self, user: users.User):
         with (
@@ -497,6 +536,7 @@ class TestPartialUserImpl:
             discriminator="8637",
             username="thomm.o",
             global_name=None,
+            avatar_decoration=None,
             avatar_hash=None,
             banner_hash=None,
             accent_color=None,
@@ -541,6 +581,7 @@ class TestOwnUser:
             discriminator="1234",
             username="foobar",
             global_name=None,
+            avatar_decoration=None,
             avatar_hash="69420",
             banner_hash="42069",
             accent_color=colors.Color(123456),

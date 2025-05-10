@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -32,11 +31,12 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
-from hikari.stage_instances import StageInstance
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import traits
     from hikari.api import shard as gateway_shard
+    from hikari.stage_instances import StageInstance
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)
@@ -46,6 +46,7 @@ class StageInstanceEvent(shard_events.ShardEvent, abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.stage_instance.app
