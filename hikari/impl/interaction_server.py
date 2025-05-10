@@ -199,10 +199,6 @@ class InteractionServer(interaction_server.InteractionServer):
     ----------
     entity_factory
         The entity factory instance this server should use.
-    dumps
-        The JSON encoder this server should use.
-    loads
-        The JSON decoder this server should use.
     public_key
         The public key this server should use for verifying request payloads from
         Discord. If left as [`None`][] then the client will try to work this
@@ -214,12 +210,10 @@ class InteractionServer(interaction_server.InteractionServer):
     __slots__: typing.Sequence[str] = (
         "_application_fetch_lock",
         "_close_event",
-        "_dumps",
         "_entity_factory",
         "_executor",
         "_is_closing",
         "_listeners",
-        "_loads",
         "_nacl",
         "_public_key",
         "_rest_client",
@@ -230,10 +224,8 @@ class InteractionServer(interaction_server.InteractionServer):
     def __init__(
         self,
         *,
-        dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         entity_factory: entity_factory_api.EntityFactory,
         executor: concurrent.futures.Executor | None = None,
-        loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         rest_client: rest_api.RESTClient,
         public_key: bytes | None = None,
     ) -> None:
@@ -250,12 +242,10 @@ class InteractionServer(interaction_server.InteractionServer):
         self._application_fetch_lock: asyncio.Lock | None = None
         # Building asyncio.Event when there isn't a running loop may lead to runtime errors.
         self._close_event: asyncio.Event | None = None
-        self._dumps = dumps
         self._entity_factory = entity_factory
         self._executor = executor
         self._is_closing = False
         self._listeners: dict[type[base_interactions.PartialInteraction], typing.Any] = {}
-        self._loads = loads
         self._nacl = nacl
         self._rest_client = rest_client
         self._server: aiohttp.web_runner.AppRunner | None = None
@@ -441,7 +431,7 @@ class InteractionServer(interaction_server.InteractionServer):
             return _Response(_BAD_REQUEST_STATUS, b"Invalid request signature")
 
         try:
-            payload = self._loads(body)
+            payload = data_binding.default_json_loads(body)
             assert isinstance(payload, dict)
             interaction_type = int(payload["type"])
 
@@ -493,7 +483,7 @@ class InteractionServer(interaction_server.InteractionServer):
                     return _Response(_NO_CONTENT_STATUS)
 
                 raw_payload, files = result.build(self._entity_factory)
-                payload = self._dumps(raw_payload)
+                payload = data_binding.default_json_dumps(raw_payload)
 
             except Exception as exc:  # noqa: BLE001 - Blind except
                 asyncio.get_running_loop().call_exception_handler(
