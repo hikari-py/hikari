@@ -5868,10 +5868,10 @@ class TestRESTClientImplAsync:
         )
 
     async def test_fetch_guild_onboarding(self, rest_client):
-        guild = 123
+        GUILD = 123
         rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})
-        expected_route = routes.GET_GUILD_ONBOARDING.compile(guild=guild)
-        result = await rest_client.fetch_guild_onboarding(guild)
+        expected_route = routes.GET_GUILD_ONBOARDING.compile(guild=GUILD)
+        result = await rest_client.fetch_guild_onboarding(GUILD)
         assert result is rest_client._entity_factory.deserialize_guild_onboarding.return_value
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_guild_onboarding.assert_called_once_with(
@@ -5879,11 +5879,11 @@ class TestRESTClientImplAsync:
         )
 
     async def test_edit_guild_onboarding(self, rest_client):
-        guild = 123
-        expected_route = routes.PUT_GUILD_ONBOARDING.compile(guild=guild)
+        GUILD = 123
+        expected_route = routes.PUT_GUILD_ONBOARDING.compile(guild=GUILD)
         rest_client._request = mock.AsyncMock(return_value={"haha": "funny"})
         result = await rest_client.edit_guild_onboarding(
-            guild=guild,
+            guild=GUILD,
             default_channel_ids=[456],
             enabled=True,
             mode=guilds.GuildOnboardingMode.ONBOARDING_DEFAULT,
@@ -5895,6 +5895,7 @@ class TestRESTClientImplAsync:
                     title="Test Title", single_select=True, in_onboarding=True, required=True
                 ).set_id(187),
             ],
+            reason="test reason",
         )
         assert result is rest_client._entity_factory.deserialize_guild_onboarding.return_value
         rest_client._request.assert_awaited_once_with(
@@ -5922,6 +5923,7 @@ class TestRESTClientImplAsync:
                     },
                 ],
             },
+            reason="test reason",
         )
         rest_client._entity_factory.deserialize_guild_onboarding.assert_called_once_with(
             rest_client._request.return_value

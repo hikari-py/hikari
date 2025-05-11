@@ -4033,6 +4033,7 @@ class RESTClientImpl(rest_api.RESTClient):
         prompts: undefined.UndefinedOr[
             typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder]
         ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.GuildOnboarding:
         route = routes.PUT_GUILD_ONBOARDING.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
@@ -4042,7 +4043,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if prompts is not undefined.UNDEFINED:
             body.put("prompts", self._build_prompts(prompts))
 
-        response = await self._request(route, json=body)
+        response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_onboarding(response)
 

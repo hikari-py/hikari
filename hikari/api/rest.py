@@ -6860,6 +6860,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         prompts: undefined.UndefinedOr[
             typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder]
         ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.GuildOnboarding:
         """Edit a guilds onboarding flow.
 
@@ -6876,6 +6877,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         prompts
             The prompts of the onboarding flow.
             For further information look at [`hikari.api.special_endpoints.GuildOnboardingPromptBuilder`][].
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
