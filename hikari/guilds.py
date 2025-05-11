@@ -1215,14 +1215,16 @@ class PartialRole(snowflakes.Unique):
 class RoleColors:
     """Represents a role colors object."""
 
-    primary_color: colors.Color = attrs.field(eq=False, hash=False, repr=True)
+    _primary_color: colors.Color = attrs.field(eq=False, hash=False, repr=True)
     """The primary color of the role."""
-
-    secondary_color: colors.Color | None = attrs.field(eq=False, hash=False, repr=True)
+    _secondary_color: colors.Color | None = attrs.field(eq=False, hash=False, repr=True)
     """The secondary color of the role."""
-
-    tertiary_color: colors.Color | None = attrs.field(eq=False, hash=False, repr=True)
+    _tertiary_color: colors.Color | None = attrs.field(eq=False, hash=False, repr=True)
     """The tertiary color of the role."""
+
+    @property
+    def primary_color
+
 
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
