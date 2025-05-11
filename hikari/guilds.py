@@ -195,6 +195,7 @@ class GuildFeature(str, enums.Enum):
     ENHANCED_ROLE_COLORS = "ENHANCED_ROLE_COLORS"
     """Guild is able to set gradient colors to roles."""
 
+
 @typing.final
 class GuildMessageNotificationsLevel(int, enums.Enum):
     """Represents the default notification level for new messages in a guild."""
@@ -1209,6 +1210,7 @@ class PartialRole(snowflakes.Unique):
     def __str__(self) -> str:
         return self.name
 
+
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class RoleColors:
     """Represents a role colors object."""
@@ -1221,6 +1223,7 @@ class RoleColors:
 
     tertiary_color: colors.Color | None = attrs.field(eq=False, hash=False, repr=True)
     """The tertiary color of the role."""
+
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Role(PartialRole):

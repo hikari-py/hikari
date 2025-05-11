@@ -2023,7 +2023,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if "guild_connections" in tags_payload:
                 is_guild_linked_role = True
 
-
         colors_payload = payload["colors"]
         primary_color = color_models.Color(colors_payload["primary_color"])
         secondary_color: color_models.Color | None = None
@@ -2033,9 +2032,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_tertiary_color := colors_payload.get("tertiary_color")) is not None:
             tertiary_color = color_models.Color(raw_tertiary_color)
         colors = guild_models.RoleColors(
-            primary_color=primary_color,
-            secondary_color=secondary_color,
-            tertiary_color=tertiary_color
+            primary_color=primary_color, secondary_color=secondary_color, tertiary_color=tertiary_color
         )
 
         emoji: emoji_models.UnicodeEmoji | None = None
