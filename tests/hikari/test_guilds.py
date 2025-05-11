@@ -139,9 +139,7 @@ class TestRole:
             name="@everyone",
             color=colors.Color(0x1A2B3C),
             colors=guilds.RoleColors(
-                primary_color=colors.Color(0x1A2B3C),
-                secondary_color=colors.Color(0x1A2B3C),
-                tertiary_color=None
+                primary_color=colors.Color(0x1A2B3C), secondary_color=colors.Color(0x1A2B3C), tertiary_color=None
             ),
             guild_id=snowflakes.Snowflake(112233),
             is_hoisted=False,
@@ -162,10 +160,8 @@ class TestRole:
     def test_colour_property(self, model):
         assert model.colour == colors.Color(0x1A2B3C)
         assert model.colors == guilds.RoleColors(
-                primary_color=colors.Color(0x1A2B3C),
-                secondary_color=colors.Color(0x1A2B3C),
-                tertiary_color=None
-            )
+            primary_color=colors.Color(0x1A2B3C), secondary_color=colors.Color(0x1A2B3C), tertiary_color=None
+        )
 
     def test_make_icon_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
         with mock.patch.object(

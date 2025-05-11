@@ -3775,8 +3775,8 @@ class RESTClientImpl(rest_api.RESTClient):
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
-        if not undefined.any_undefined(color, colour, colors):
-            msg = "Can not specify 'color', 'colour' or 'colors' together."
+        if not undefined.any_undefined(color, colour):
+            msg = "Can not specify 'color' and 'colour' together."
             raise TypeError(msg)
 
         if not undefined.any_undefined(icon, unicode_emoji):
@@ -3830,8 +3830,8 @@ class RESTClientImpl(rest_api.RESTClient):
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
-        if not undefined.any_undefined(color, colour, colors):
-            msg = "Can not specify 'color', 'colour' or 'colors' together."
+        if not undefined.any_undefined(color, colour):
+            msg = "Can not specify 'color' and 'colour' together."
             raise TypeError(msg)
 
         if not undefined.any_undefined(icon, unicode_emoji):

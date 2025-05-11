@@ -60,6 +60,7 @@ import typing
 import attrs
 
 from hikari import channels as channels_
+from hikari import colors
 from hikari import snowflakes
 from hikari import stickers
 from hikari import traits
@@ -76,7 +77,8 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import colors
+    from typing_extensions import Self
+
     from hikari import colours
     from hikari import emojis as emojis_
     from hikari import files
@@ -1217,21 +1219,21 @@ class RoleColors:
 
     _primary_color: colors.Colorish = attrs.field(hash=True, repr=True, alias="primary_color")
     _secondary_color: colors.Colorish | None = attrs.field(hash=True, repr=True, alias="secondary_color", default=None)
-    _tertiary_color: colors.Colorish | None = attrs.field( hash=True, repr=True, alias="tertiary_color", default=None)
+    _tertiary_color: colors.Colorish | None = attrs.field(hash=True, repr=True, alias="tertiary_color", default=None)
 
     @property
     def primary_color(self) -> colors.Color:
         """The primary color of the role."""
         return colors.Color.of(self._primary_color)
 
-    def set_primary_color(self, primary_color: colors.Colorish) -> typing.Self:
+    def set_primary_color(self, primary_color: colors.Colorish) -> Self:
         """Set the primary color of the role.
 
         Parameters
         ----------
         primary_color
             The new color to set
-        
+
         Returns
         -------
         RoleColors
@@ -1247,14 +1249,14 @@ class RoleColors:
             return None
         return colors.Color.of(self._secondary_color)
 
-    def set_secondary_color(self, secondary_color: colors.Colorish | None) -> typing.Self:
+    def set_secondary_color(self, secondary_color: colors.Colorish | None) -> Self:
         """Set the secondary color of the role.
 
         Parameters
         ----------
         secondary_color
             The new color to set
-            
+
         Returns
         -------
         RoleColors
@@ -1270,14 +1272,14 @@ class RoleColors:
             return None
         return colors.Color.of(self._secondary_color)
 
-    def set_tertiary_color(self, tertiary_color: colors.Colorish | None) -> typing.Self:
+    def set_tertiary_color(self, tertiary_color: colors.Colorish | None) -> Self:
         """Set the secondary color of the role.
 
         Parameters
         ----------
         tertiary_color
             The new color to set
-        
+
         Returns
         -------
         RoleColors
@@ -1285,8 +1287,6 @@ class RoleColors:
         """
         self._tertiary_color = tertiary_color
         return self
-
-
 
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
