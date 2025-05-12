@@ -68,6 +68,7 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.api import rest as rest_api
+from hikari.api import special_endpoints
 from hikari.impl import buckets as buckets_impl
 from hikari.impl import config as config_impl
 from hikari.impl import entity_factory as entity_factory_impl
@@ -90,6 +91,7 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from hikari import audit_logs
+    from hikari import auto_mod
     from hikari import invites
     from hikari import sessions
     from hikari import stickers as stickers_
@@ -98,7 +100,6 @@ if typing.TYPE_CHECKING:
     from hikari import webhooks
     from hikari.api import cache as cache_api
     from hikari.api import entity_factory as entity_factory_
-    from hikari.api import special_endpoints
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
@@ -1292,9 +1293,10 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: channels_.PermissionOverwrite | guilds.PartialRole | users.PartialUser | snowflakes.Snowflakeish,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_CHANNEL_PERMISSIONS.compile(channel=channel, overwrite=target)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     @typing_extensions.override
     async def fetch_channel_invites(
@@ -1493,6 +1495,7 @@ class RESTClientImpl(rest_api.RESTClient):
             attachment = content
             content = undefined.UNDEFINED
 
+        resources: list[files.Resource[typing.Any]] = []
         final_attachments: list[files.Resourceish | messages_.Attachment] = []
         if attachment:
             final_attachments.append(attachment)
@@ -1504,7 +1507,7 @@ class RESTClientImpl(rest_api.RESTClient):
             if component is not None:
                 component_payload, component_attachments = component.build()
                 serialized_components = [component_payload]
-                final_attachments.extend(component_attachments)
+                resources.extend(component_attachments)
 
                 if component.type in _V2_COMPONENT_TYPES:
                     if flags is undefined.UNDEFINED:
@@ -1519,7 +1522,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 for comp in components:
                     component_payload, component_attachments = comp.build()
                     serialized_components.append(component_payload)
-                    final_attachments.extend(component_attachments)
+                    resources.extend(component_attachments)
 
                     if comp.type in _V2_COMPONENT_TYPES:
                         if flags is undefined.UNDEFINED:
@@ -1530,7 +1533,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if embed is not undefined.UNDEFINED:
             if embed is not None:
                 embed_payload, embed_attachments = self._entity_factory.serialize_embed(embed)
-                final_attachments.extend(embed_attachments)
+                resources.extend(embed_attachments)
                 serialized_embeds = [embed_payload]
 
             else:
@@ -1541,7 +1544,7 @@ class RESTClientImpl(rest_api.RESTClient):
             if embeds is not None:
                 for e in embeds:
                     embed_payload, embed_attachments = self._entity_factory.serialize_embed(e)
-                    final_attachments.extend(embed_attachments)
+                    resources.extend(embed_attachments)
                     serialized_embeds.append(embed_payload)
 
         body = data_binding.JSONObjectBuilder()
@@ -1561,9 +1564,15 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         form_builder: data_binding.URLEncodedFormBuilder | None = None
-        if final_attachments:
+        if resources or final_attachments:
             attachments_payload = []
             attachment_id = 0
+
+            # The rationale behind this large (and probably confusing) piece of code
+            # is to always upload all attachments specified as `attachments=[]`, no
+            # matter if they are the same, but for other resources spread across
+            # all the other components/embeds, deduplicate them and only upload them once.
+            final_attachments.extend(list(dict.fromkeys(resources)))
 
             for f in final_attachments:
                 if edit and isinstance(f, messages_.Attachment):
@@ -1582,6 +1591,54 @@ class RESTClientImpl(rest_api.RESTClient):
 
         elif attachment is None or attachments is None:
             body.put("attachments", [])
+
+        return body, form_builder
+
+    def _build_voice_message_payload(
+        self,
+        /,
+        *,
+        attachment: files.Resourceish | messages_.Attachment,
+        waveform: str,
+        duration: float,
+        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+    ) -> tuple[data_binding.JSONObjectBuilder, data_binding.URLEncodedFormBuilder]:
+        if not flags:
+            flags = messages_.MessageFlag.IS_VOICE_MESSAGE
+        else:
+            flags |= messages_.MessageFlag.IS_VOICE_MESSAGE
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("flags", flags)
+        body.put(
+            "allowed_mentions",
+            mentions.generate_allowed_mentions(
+                undefined.UNDEFINED, mentions_reply, undefined.UNDEFINED, undefined.UNDEFINED
+            ),
+        )
+
+        if reply:
+            message_reference = data_binding.JSONObjectBuilder()
+            message_reference.put_snowflake("message_id", reply)
+            message_reference.put("fail_if_not_exists", reply_must_exist)
+
+            body.put("message_reference", message_reference)
+
+        form_builder = data_binding.URLEncodedFormBuilder()
+
+        resource = files.ensure_resource(attachment)
+        attachment_payload: dict[str, typing.Any] = {
+            "duration_secs": duration,
+            "waveform": waveform,
+            "id": 0,
+            "filename": resource.filename,
+        }
+        form_builder.add_resource("files[0]", resource)
+
+        body.put("attachments", [attachment_payload])
 
         return body, form_builder
 
@@ -1637,7 +1694,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if reply:
             message_reference = data_binding.JSONObjectBuilder()
-            message_reference.put("message_id", str(int(reply)))
+            message_reference.put_snowflake("message_id", reply)
             message_reference.put("fail_if_not_exists", reply_must_exist)
 
             body.put("message_reference", message_reference)
@@ -1648,6 +1705,36 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             response = await self._request(route, json=body)
 
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
+
+    @typing_extensions.override
+    async def create_voice_message(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
+
+        body, form_builder = self._build_voice_message_payload(
+            attachment=attachment,
+            waveform=waveform,
+            duration=duration,
+            reply=reply,
+            reply_must_exist=reply_must_exist,
+            mentions_reply=mentions_reply,
+            flags=flags,
+        )
+        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+
+        response = await self._request(route, form_builder=form_builder)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
@@ -1966,6 +2053,7 @@ class RESTClientImpl(rest_api.RESTClient):
         webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         if token is undefined.UNDEFINED:
             route = routes.DELETE_WEBHOOK.compile(webhook=webhook)
@@ -1974,7 +2062,40 @@ class RESTClientImpl(rest_api.RESTClient):
             route = routes.DELETE_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
             auth = None
 
-        await self._request(route, auth=auth)
+        await self._request(route, auth=auth, reason=reason)
+
+    @typing_extensions.override
+    async def execute_webhook_voice_message(
+        self,
+        # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
+        webhook: webhooks.ExecutableWebhook | snowflakes.Snowflakeish,
+        token: str,
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        thread: undefined.UndefinedType | snowflakes.SnowflakeishOr[channels_.GuildThreadChannel] = undefined.UNDEFINED,
+        username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar_url: undefined.UndefinedType | str | files.URL = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
+        route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook_id, token=token)
+
+        query = data_binding.StringMapBuilder()
+        query.put("wait", True)
+        query.put("thread_id", thread)
+
+        body, form_builder = self._build_voice_message_payload(
+            attachment=attachment, waveform=waveform, duration=duration, flags=flags
+        )
+        body.put("username", username)
+        body.put("avatar_url", avatar_url, conversion=str)
+        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+
+        response = await self._request(route, form_builder=form_builder, query=query, auth=None)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
 
     @typing_extensions.override
     async def execute_webhook(
@@ -2157,9 +2278,11 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_invite(response)
 
     @typing_extensions.override
-    async def delete_invite(self, invite: invites.InviteCode | str) -> invites.Invite:
+    async def delete_invite(
+        self, invite: invites.InviteCode | str, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED
+    ) -> invites.Invite:
         route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
-        response = await self._request(route)
+        response = await self._request(route, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
 
@@ -3397,10 +3520,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PATCH_GUILD_CHANNELS.compile(guild=guild)
         body = [{"id": str(int(channel)), "position": pos} for pos, channel in positions.items()]
-        await self._request(route, json=body)
+        await self._request(route, json=body, reason=reason)
 
     @typing_extensions.override
     async def fetch_member(
@@ -3682,10 +3806,11 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[guilds.PartialRole]],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.PATCH_GUILD_ROLES.compile(guild=guild)
         body = [{"id": str(int(role)), "position": pos} for pos, role in positions.items()]
-        await self._request(route, json=body)
+        await self._request(route, json=body, reason=reason)
 
     @typing_extensions.override
     async def edit_role(
@@ -3735,10 +3860,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
     @typing_extensions.override
     async def delete_role(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         route = routes.DELETE_GUILD_ROLE.compile(guild=guild, role=role)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     @typing_extensions.override
     async def estimate_guild_prune_count(
@@ -4314,6 +4442,31 @@ class RESTClientImpl(rest_api.RESTClient):
             await self._request(route, json=body, auth=None)
 
     @typing_extensions.override
+    async def create_interaction_voice_message_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+
+        data, form_builder = self._build_voice_message_payload(
+            attachment=attachment, waveform=waveform, duration=duration, flags=flags
+        )
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.MESSAGE_CREATE)
+        body.put("data", data)
+
+        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+
+        await self._request(route, form_builder=form_builder, auth=None)
+
+    @typing_extensions.override
     async def edit_interaction_response(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -4364,6 +4517,26 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_message(response)
 
     @typing_extensions.override
+    async def edit_interaction_voice_message_response(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        token: str,
+        attachment: files.Resourceish | messages_.Attachment,
+        waveform: str,
+        duration: float,
+    ) -> messages_.Message:
+        route = routes.PATCH_INTERACTION_RESPONSE.compile(webhook=application, token=token)
+
+        body, form_builder = self._build_voice_message_payload(
+            attachment=attachment, waveform=waveform, duration=duration
+        )
+        form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+
+        response = await self._request(route, form_builder=form_builder, auth=None)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
+
+    @typing_extensions.override
     async def delete_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> None:
@@ -4403,20 +4576,20 @@ class RESTClientImpl(rest_api.RESTClient):
             msg = "Must specify exactly only one of 'component' or 'components'"
             raise ValueError(msg)
 
-        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+        if component:
+            components = (component,)
 
-        body = data_binding.JSONObjectBuilder()
-        body.put("type", base_interactions.ResponseType.MODAL)
+        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
         data = data_binding.JSONObjectBuilder()
         data.put("title", title)
         data.put("custom_id", custom_id)
+        # Component builders return a tuple of (payload, files), but we only care about
+        # the payload, as there is no way to upload anything to a modal
+        data.put_array("components", components, conversion=lambda c: c.build()[0])
 
-        if component:
-            components = (component,)
-
-        data.put_array("components", components, conversion=lambda c: c.build())
-
+        body = data_binding.JSONObjectBuilder()
+        body.put("type", base_interactions.ResponseType.MODAL)
         body.put("data", data)
 
         await self._request(route, json=body, auth=None)
@@ -4763,6 +4936,7 @@ class RESTClientImpl(rest_api.RESTClient):
         scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
         ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         route = routes.POST_STAGE_INSTANCE.compile()
         body = data_binding.JSONObjectBuilder()
@@ -4772,7 +4946,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("send_start_notification", send_start_notification)
         body.put_snowflake("guild_scheduled_event_id", scheduled_event_id)
 
-        response = await self._request(route, json=body)
+        response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_stage_instance(response)
 
@@ -4783,20 +4957,25 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         privacy_level: undefined.UndefinedOr[int | stage_instances.StageInstancePrivacyLevel] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         route = routes.PATCH_STAGE_INSTANCE.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("topic", topic)
         body.put("privacy_level", privacy_level)
 
-        response = await self._request(route, json=body)
+        response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_stage_instance(response)
 
     @typing_extensions.override
-    async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
+    async def delete_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
         route = routes.DELETE_STAGE_INSTANCE.compile(channel=channel)
-        await self._request(route)
+        await self._request(route, reason=reason)
 
     @typing_extensions.override
     async def fetch_poll_voters(
@@ -4833,3 +5012,94 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
+
+    @typing_extensions.override
+    async def fetch_auto_mod_rules(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Sequence[auto_mod.AutoModRule]:
+        results = await self._request(routes.GET_GUILD_AUTO_MODERATION_RULES.compile(guild=guild))
+        assert isinstance(results, list)
+        return [self._entity_factory.deserialize_auto_mod_rule(rule) for rule in results]
+
+    @typing_extensions.override
+    async def fetch_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+    ) -> auto_mod.AutoModRule:
+        result = await self._request(routes.GET_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule))
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    @typing_extensions.override
+    async def create_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
+        name: str,
+        event_type: auto_mod.AutoModEventType | int,
+        trigger: special_endpoints.AutoModTriggerBuilder,
+        actions: typing.Sequence[special_endpoints.AutoModActionBuilder],
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=guild)
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("name", name)
+        payload.put("event_type", event_type)
+        payload.put("trigger_type", trigger.type)
+        payload.put("trigger_metadata", trigger.build())
+        payload.put("enabled", enabled)
+        payload.put_snowflake_array("exempt_channels", exempt_channels)
+        payload.put_snowflake_array("exempt_roles", exempt_roles)
+        payload.put_array("actions", actions, conversion=lambda a: a.build())
+
+        result = await self._request(route, json=payload, reason=reason)
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    @typing_extensions.override
+    async def edit_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[auto_mod.AutoModEventType | int] = undefined.UNDEFINED,
+        trigger: undefined.UndefinedOr[special_endpoints.AutoModTriggerBuilder] = undefined.UNDEFINED,
+        actions: undefined.UndefinedOr[typing.Sequence[special_endpoints.AutoModActionBuilder]] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule)
+        payload = data_binding.JSONObjectBuilder()
+        payload.put("name", name)
+        payload.put("event_type", event_type)
+        payload.put("enabled", enabled)
+        payload.put_snowflake_array("exempt_channels", exempt_channels)
+        payload.put_snowflake_array("exempt_roles", exempt_roles)
+        payload.put("trigger_metadata", trigger, conversion=lambda m: m.build())
+        payload.put_array("actions", actions, conversion=lambda a: a.build())
+
+        result = await self._request(route, json=payload, reason=reason)
+        assert isinstance(result, dict)
+        return self._entity_factory.deserialize_auto_mod_rule(result)
+
+    @typing_extensions.override
+    async def delete_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        await self._request(routes.DELETE_GUILD_AUTO_MODERATION_RULE.compile(guild=guild, rule=rule), reason=reason)

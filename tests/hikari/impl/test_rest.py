@@ -34,8 +34,10 @@ import pytest
 
 from hikari import applications
 from hikari import audit_logs
+from hikari import auto_mod
 from hikari import channels
 from hikari import colors
+from hikari import components
 from hikari import commands
 from hikari import embeds
 from hikari import emojis
@@ -878,15 +880,37 @@ def mock_scheduled_event(mock_partial_guild: guilds.PartialGuild) -> scheduled_e
     )
 
 
+@pytest.fixture
+def mock_auto_mod_rule(mock_partial_guild: guilds.PartialGuild, mock_user: users.User) -> auto_mod.AutoModRule:
+    return auto_mod.AutoModRule(
+        app=mock.Mock(),
+        id=snowflakes.Snowflake(999),
+        guild_id=mock_partial_guild.id,
+        name="auto_mod_rule",
+        creator_id=mock_user.id,
+        event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+        trigger=auto_mod.KeywordTrigger(
+            type=auto_mod.AutoModTriggerType.KEYWORD,
+            keyword_filter=["hello", "world"],
+            regex_patterns=["[abc]+", "[123]+"],
+            allow_list=["goodbye", "planet"],
+        ),
+        actions=[],
+        is_enabled=False,
+        exempt_role_ids=[snowflakes.Snowflake(968583), snowflakes.Snowflake(534908), snowflakes.Snowflake(345873)],
+        exempt_channel_ids=[snowflakes.Snowflake(834754), snowflakes.Snowflake(192438)],
+    )
+
+
 class TestStringifyHttpMessage:
-    def test_when_body_is_str(self, rest_client: rest.RESTClientImpl):
+    def test_when_body_is_str(self):
         headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
 
         returned = rest._stringify_http_message(headers, None)
 
         assert returned == "    HEADER1: value1\n    HEADER2: value2\n    Authorization: **REDACTED TOKEN**"
 
-    def test_when_body_is_not_None(self, rest_client: rest.RESTClientImpl):
+    def test_when_body_is_not_None(self):
         headers = {"HEADER1": "value1", "HEADER2": "value2", "Authorization": "this will never see the light of day"}
 
         returned = rest._stringify_http_message(headers, bytes("hello :)", "ascii"))
@@ -2004,6 +2028,108 @@ class TestRESTClientImpl:
             ]
         )
 
+    def test__build_message_payload_with_duplicated_resources(self, rest_client: rest.RESTClientImpl):
+        attachment1 = mock.Mock()
+        attachment2 = mock.Mock(messages.Attachment, id=123, filename="attachment123.png")
+        component_attachment = mock.Mock(filename="component.png")
+        component_attachment2 = mock.Mock(filename="component2.png")
+        component1 = mock.Mock(
+            build=mock.Mock(return_value=({"component": 1}, (component_attachment, component_attachment)))
+        )
+        component2 = mock.Mock(
+            build=mock.Mock(return_value=({"component": 2}, (component_attachment2, component_attachment2)))
+        )
+        embed1 = mock.Mock()
+        embed2 = mock.Mock()
+        embed_attachment1 = mock.Mock()
+        embed_attachment2 = mock.Mock()
+        resource_attachment1 = mock.Mock(filename="attachment.png")
+        resource_attachment2 = mock.Mock(filename="attachment2.png")
+        resource_attachment3 = mock.Mock(filename="attachment3.png")
+        resource_attachment4 = mock.Mock(filename="attachment4.png")
+        resource_attachment5 = mock.Mock(filename="attachment5.png")
+        resource_attachment6 = mock.Mock(filename="attachment6.png")
+
+        rest_client._entity_factory.serialize_embed.side_effect = [
+            ({"embed": 1}, [embed_attachment1, embed_attachment2]),
+            ({"embed": 2}, [embed_attachment2, embed_attachment1]),
+        ]
+
+        with (
+            mock.patch.object(
+                files,
+                "ensure_resource",
+                side_effect=[
+                    resource_attachment1,
+                    resource_attachment2,
+                    resource_attachment3,
+                    resource_attachment4,
+                    resource_attachment5,
+                    resource_attachment6,
+                ],
+            ) as ensure_resource,
+            mock.patch.object(data_binding, "URLEncodedFormBuilder") as url_encoded_form,
+        ):
+            body, form = rest_client._build_message_payload(
+                content=987654321,
+                attachments=[attachment1, attachment1, attachment2],
+                components=[component1, component2],
+                embeds=[embed1, embed2],
+                flags=120,
+                tts=True,
+                mentions_everyone=undefined.UNDEFINED,
+                mentions_reply=undefined.UNDEFINED,
+                user_mentions=undefined.UNDEFINED,
+                role_mentions=undefined.UNDEFINED,
+                edit=True,
+            )
+
+        # Returned
+        assert body == {
+            "content": "987654321",
+            "tts": True,
+            "flags": 120,
+            "embeds": [{"embed": 1}, {"embed": 2}],
+            "components": [{"component": 1}, {"component": 2}],
+            "attachments": [
+                {"id": 0, "filename": "attachment.png"},
+                {"id": 1, "filename": "attachment2.png"},
+                {"id": 123, "filename": "attachment123.png"},
+                {"id": 2, "filename": "attachment3.png"},
+                {"id": 3, "filename": "attachment4.png"},
+                {"id": 4, "filename": "attachment5.png"},
+                {"id": 5, "filename": "attachment6.png"},
+            ],
+        }
+        assert form is url_encoded_form.return_value
+
+        # Attachments
+        assert ensure_resource.call_count == 6
+        ensure_resource.assert_has_calls(
+            [
+                mock.call(attachment1),
+                mock.call(attachment1),
+                mock.call(component_attachment),
+                mock.call(component_attachment2),
+                mock.call(embed_attachment1),
+                mock.call(embed_attachment2),
+            ]
+        )
+
+        # Form builder
+        url_encoded_form.assert_called_once_with()
+        assert url_encoded_form.return_value.add_resource.call_count == 6
+        url_encoded_form.return_value.add_resource.assert_has_calls(
+            [
+                mock.call("files[0]", resource_attachment1),
+                mock.call("files[1]", resource_attachment2),
+                mock.call("files[2]", resource_attachment3),
+                mock.call("files[3]", resource_attachment4),
+                mock.call("files[4]", resource_attachment5),
+                mock.call("files[5]", resource_attachment6),
+            ]
+        )
+
     @pytest.mark.parametrize(
         ("singular_arg", "plural_arg"),
         [("attachment", "attachments"), ("component", "components"), ("embed", "embeds"), ("sticker", "stickers")],
@@ -2015,6 +2141,138 @@ class TestRESTClientImpl:
             ValueError, match=rf"You may only specify one of '{singular_arg}' or '{plural_arg}', not both"
         ):
             rest_client._build_message_payload(**{singular_arg: mock.Mock(), plural_arg: mock.Mock()})
+
+    def test_build_voice_message_payload(self, rest_client: rest.RESTClientImpl):
+        body, form_builder = rest_client._build_voice_message_payload(
+            attachment=mock.Mock(messages.Attachment, id=123, filename="attachment123.png"),
+            waveform="AAAA",
+            duration=3,
+            flags=120,
+            reply=123,
+            reply_must_exist=True,
+        )
+        assert body == {
+            "flags": 8312,
+            "allowed_mentions": {"parse": []},
+            "message_reference": {"message_id": "123", "fail_if_not_exists": True},
+            "attachments": [{"duration_secs": 3, "waveform": "AAAA", "id": 0, "filename": "attachment123.png"}],
+        }
+
+    def test_build_voice_message_payload_with_mentions_reply(self, rest_client: rest.RESTClientImpl):
+        body, form_builder = rest_client._build_voice_message_payload(
+            attachment=mock.Mock(messages.Attachment, id=123, filename="attachment123.png"),
+            waveform="AAAA",
+            duration=3,
+            flags=120,
+            mentions_reply=True,
+        )
+        assert body == {
+            "flags": 8312,
+            "allowed_mentions": {"parse": [], "replied_user": True},
+            "attachments": [{"duration_secs": 3, "waveform": "AAAA", "id": 0, "filename": "attachment123.png"}],
+        }
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.ACTION_ROW,
+            components.ComponentType.BUTTON,
+            components.ComponentType.TEXT_SELECT_MENU,
+            components.ComponentType.USER_SELECT_MENU,
+            components.ComponentType.ROLE_SELECT_MENU,
+            components.ComponentType.MENTIONABLE_SELECT_MENU,
+            components.ComponentType.CHANNEL_SELECT_MENU,
+        ),
+    )
+    def test__build_message_payload_with_singular_components_v1(
+        self, rest_client: rest.RESTClientImpl, type: components.ComponentType
+    ):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(component=component)
+
+        assert payload.get("flags") is None
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.SECTION,
+            components.ComponentType.TEXT_DISPLAY,
+            components.ComponentType.THUMBNAIL,
+            components.ComponentType.MEDIA_GALLERY,
+            components.ComponentType.FILE,
+            components.ComponentType.SEPARATOR,
+            components.ComponentType.CONTAINER,
+        ),
+    )
+    def test__build_message_payload_with_singular_components_v2(
+        self, rest_client: rest.RESTClientImpl, type: components.ComponentType
+    ):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(component=component)
+
+        assert payload.get("flags") is messages.MessageFlag.IS_COMPONENTS_V2
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.ACTION_ROW,
+            components.ComponentType.BUTTON,
+            components.ComponentType.TEXT_SELECT_MENU,
+            components.ComponentType.USER_SELECT_MENU,
+            components.ComponentType.ROLE_SELECT_MENU,
+            components.ComponentType.MENTIONABLE_SELECT_MENU,
+            components.ComponentType.CHANNEL_SELECT_MENU,
+        ),
+    )
+    def test__build_message_payload_with_multiple_components_v1(
+        self, rest_client: rest.RESTClientImpl, type: components.ComponentType
+    ):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(component=component)
+
+        assert payload.get("flags") is None
+
+    @pytest.mark.parametrize(
+        "type",
+        (
+            components.ComponentType.SECTION,
+            components.ComponentType.TEXT_DISPLAY,
+            components.ComponentType.THUMBNAIL,
+            components.ComponentType.MEDIA_GALLERY,
+            components.ComponentType.FILE,
+            components.ComponentType.SEPARATOR,
+            components.ComponentType.CONTAINER,
+        ),
+    )
+    def test__build_message_payload_with_multiple_components_v2(
+        self, rest_client: rest.RESTClientImpl, type: components.ComponentType
+    ):
+        component = mock.Mock(type=type, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(components=[component])
+
+        assert payload.get("flags") is messages.MessageFlag.IS_COMPONENTS_V2
+
+    def test__build_message_payload_with_mixed_components(self, rest_client: rest.RESTClientImpl):
+        component_1 = mock.Mock(type=components.ComponentType.ACTION_ROW, build=mock.Mock(return_value=({}, ())))
+        component_2 = mock.Mock(type=components.ComponentType.CONTAINER, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(components=[component_1, component_2])
+
+        assert payload.get("flags") is messages.MessageFlag.IS_COMPONENTS_V2
+
+    def test__build_message_payload_with_components_v2_and_flags(self, rest_client: rest.RESTClientImpl):
+        component_1 = mock.Mock(type=components.ComponentType.ACTION_ROW, build=mock.Mock(return_value=({}, ())))
+        component_2 = mock.Mock(type=components.ComponentType.CONTAINER, build=mock.Mock(return_value=({}, ())))
+
+        payload, _ = rest_client._build_message_payload(
+            components=[component_1, component_2], flags=messages.MessageFlag.EPHEMERAL
+        )
+
+        assert payload.get("flags") is messages.MessageFlag.IS_COMPONENTS_V2 | messages.MessageFlag.EPHEMERAL
 
     def test_interaction_deferred_builder(self, rest_client: rest.RESTClientImpl):
         result = rest_client.interaction_deferred_builder(5)
@@ -3066,7 +3324,7 @@ class TestRESTClientImplAsync:
 
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
             await rest_client.delete_permission_overwrite(mock_guild_text_channel, mock_target)
-            patched__request.assert_awaited_once_with(expected_route)
+            patched__request.assert_awaited_once_with(expected_route, reason=undefined.UNDEFINED)
 
     async def test_fetch_channel_invites(
         self, rest_client: rest.RESTClientImpl, mock_guild_text_channel: channels.GuildTextChannel
@@ -3353,11 +3611,10 @@ class TestRESTClientImplAsync:
         self,
         rest_client: rest.RESTClientImpl,
         mock_guild_news_channel: channels.GuildNewsChannel,
-        mock_message: messages.Message,
+        hikari_message: messages.Message,
     ):
         expected_route = routes.POST_CHANNEL_CROSSPOST.compile(channel=4565, message=101)
-
-        message = mock.Mock()
+        mock_message = mock.Mock()
 
         with (
             mock.patch.object(
@@ -3367,14 +3624,16 @@ class TestRESTClientImplAsync:
                 return_value={"id": "93939383883", "content": "foobar"},
             ) as patched__request,
             mock.patch.object(
-                rest_client.entity_factory, "deserialize_message", return_value=message
+                rest_client.entity_factory, "deserialize_message", return_value=mock_message
             ) as patched_deserialize_message,
         ):
-            result = await rest_client.crosspost_message(mock_guild_news_channel, mock_message)
+            result = await rest_client.crosspost_message(
+                mock_guild_news_channel, hikari_message
+            )  # FIXME: This should be changed.
 
-            assert result is message
-            patched_deserialize_message.assert_called_once_with({"id": "93939383883", "content": "foobar"})
-            patched__request.assert_awaited_once_with(expected_route)
+        assert result is mock_message
+        patched_deserialize_message.assert_called_once_with({"id": "93939383883", "content": "foobar"})
+        patched__request.assert_awaited_once_with(expected_route)
 
     async def test_edit_message_when_form(
         self,
@@ -4030,8 +4289,8 @@ class TestRESTClientImplAsync:
         with mock.patch.object(
             rest_client, "_request", new_callable=mock.AsyncMock, return_value={"id": "456"}
         ) as patched__request:
-            await rest_client.delete_webhook(mock_partial_webhook, token="token")
-            patched__request.assert_awaited_once_with(expected_route, auth=None)
+            await rest_client.delete_webhook(mock_partial_webhook, token="token", reason="testing")
+            patched__request.assert_awaited_once_with(expected_route, auth=None, reason="testing")
 
     async def test_delete_webhook_without_token(
         self, rest_client: rest.RESTClientImpl, mock_partial_webhook: webhooks.PartialWebhook
@@ -4042,7 +4301,9 @@ class TestRESTClientImplAsync:
             rest_client, "_request", new_callable=mock.AsyncMock, return_value={"id": "456"}
         ) as patched__request:
             await rest_client.delete_webhook(mock_partial_webhook)
-            patched__request.assert_awaited_once_with(expected_route, auth=undefined.UNDEFINED)
+            patched__request.assert_awaited_once_with(
+                expected_route, auth=undefined.UNDEFINED, reason=undefined.UNDEFINED
+            )
 
     @pytest.mark.parametrize(
         ("webhook", "avatar_url"),
@@ -4277,6 +4538,34 @@ class TestRESTClientImplAsync:
             auth=None,
         )
         patched_deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_execute_webhook_voice_message(self, rest_client: rest.RESTClientImpl):
+        webhook = 432
+        token = "some token"
+        expected_route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook, token=token)
+        attachment_obj = mock.Mock()
+        mock_form = mock.Mock()
+        mock_body = data_binding.JSONObjectBuilder()
+
+        with (
+            mock.patch.object(
+                rest_client, "_request", new_callable=mock.AsyncMock, return_value={"message_id": 123}
+            ) as patched__request,
+            mock.patch.object(
+                rest_client, "_build_voice_message_payload", return_value=(mock_body, mock_form)
+            ) as patched__build_voice_message_payload,
+        ):
+            await rest_client.execute_webhook_voice_message(
+                webhook=webhook, token=token, attachment=attachment_obj, waveform="AAA", duration=3
+            )
+
+        patched__build_voice_message_payload.assert_called_once_with(
+            attachment=attachment_obj, waveform="AAA", duration=3, flags=undefined.UNDEFINED
+        )
+
+        patched__request.assert_awaited_once_with(
+            expected_route, form_builder=mock_form, query={"wait": "true"}, auth=None
+        )
 
     @pytest.mark.parametrize("webhook", [mock.Mock(webhooks.ExecutableWebhook, webhook_id=432), 432])
     async def test_fetch_webhook_message(
@@ -4626,12 +4915,12 @@ class TestRESTClientImplAsync:
             ) as patched__request,
             mock.patch.object(rest_client.entity_factory, "deserialize_invite") as patched_deserialize_invite,
         ):
-            result = await rest_client.delete_invite(input_invite)
+            result = await rest_client.delete_invite(input_invite, reason="testing")
 
-            assert result is patched_deserialize_invite.return_value
+        assert result is patched_deserialize_invite.return_value
 
-            patched_deserialize_invite.assert_called_once_with(patched__request.return_value)
-            patched__request.assert_awaited_once_with(expected_route)
+        patched_deserialize_invite.assert_called_once_with(patched__request.return_value)
+        patched__request.assert_awaited_once_with(expected_route, reason="testing")
 
     async def test_fetch_my_user(self, rest_client: rest.RESTClientImpl, mock_user: users.User):
         expected_route = routes.GET_MY_USER.compile()
@@ -5669,17 +5958,23 @@ class TestRESTClientImplAsync:
     async def test_set_guild_incident_actions(self, rest_client: rest.RESTClientImpl):
         expected_route = routes.PUT_GUILD_INCIDENT_ACTIONS.compile(guild=123)
         expected_json = {"invites_disabled_until": "2023-09-01T14:48:02.222000+00:00", "dms_disabled_until": None}
-        rest_client._request = mock.AsyncMock(return_value={"testing": "data"})
 
-        result = await rest_client.set_guild_incident_actions(
-            123, invites_disabled_until=datetime.datetime(2023, 9, 1, 14, 48, 2, 222000, tzinfo=datetime.timezone.utc)
-        )
-        assert result is rest_client._entity_factory.deserialize_guild_incidents.return_value
+        with (
+            mock.patch.object(
+                rest_client, "_request", new_callable=mock.AsyncMock, return_value={"testing": "data"}
+            ) as patched__request,
+            mock.patch.object(
+                rest_client._entity_factory, "deserialize_guild_incidents"
+            ) as patched_deserialize_guild_incidents,
+        ):
+            result = await rest_client.set_guild_incident_actions(
+                123,
+                invites_disabled_until=datetime.datetime(2023, 9, 1, 14, 48, 2, 222000, tzinfo=datetime.timezone.utc),
+            )
+        assert result is patched_deserialize_guild_incidents.return_value
 
-        rest_client._entity_factory.deserialize_guild_incidents.assert_called_once_with(
-            rest_client._request.return_value
-        )
-        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        patched_deserialize_guild_incidents.assert_called_once_with(patched__request.return_value)
+        patched__request.assert_awaited_once_with(expected_route, json=expected_json)
 
     async def test_fetch_guild_channels(
         self, rest_client: rest.RESTClientImpl, mock_partial_guild: guilds.PartialGuild
@@ -6148,10 +6443,12 @@ class TestRESTClientImplAsync:
                 rest_client.entity_factory, "deserialize_guild_thread", return_value=mock.Mock(channels.GuildNewsThread)
             ) as patched_deserialize_guild_thread,
         ):
-            result = await rest_client.create_message_thread(mock_guild_text_channel, mock_message, "Sass alert!!!")
+            result = await rest_client.create_message_thread(
+                mock_guild_text_channel, mock_message, "Sass alert!!!", reason="because why not"
+            )
 
             assert result is patched_deserialize_guild_thread.return_value
-            patched__request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
+            patched__request.assert_awaited_once_with(expected_route, json=expected_payload, reason="because why not")
             patched_deserialize_guild_thread.assert_called_once_with(patched__request.return_value)
 
     async def test_create_message_thread_with_all_undefined(
@@ -6175,12 +6472,16 @@ class TestRESTClientImplAsync:
             ) as patched_deserialize_guild_thread,
         ):
             result = await rest_client.create_message_thread(
-                mock_guild_text_channel, mock_message, "Sass alert!!!", auto_archive_duration=undefined.UNDEFINED
+                mock_guild_text_channel,
+                mock_message,
+                "Sass alert!!!",
+                auto_archive_duration=undefined.UNDEFINED,
+                reason="because why not",
             )
 
-            assert result is patched_deserialize_guild_thread.return_value
-            patched__request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
-            patched_deserialize_guild_thread.assert_called_once_with(patched__request.return_value)
+        assert result is patched_deserialize_guild_thread.return_value
+        patched__request.assert_awaited_once_with(expected_route, json=expected_payload, reason="because why not")
+        patched_deserialize_guild_thread.assert_called_once_with(patched__request.return_value)
 
     @pytest.mark.parametrize(
         ("auto_archive_duration", "rate_limit_per_user"),
@@ -6287,9 +6588,9 @@ class TestRESTClientImplAsync:
                 auto_archive_duration=undefined.UNDEFINED,
             )
 
-            assert result is patched_deserialize_guild_thread.return_value
-            patched__request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
-            patched_deserialize_guild_thread.assert_called_once_with(patched__request.return_value)
+        assert result is patched_deserialize_guild_thread.return_value
+        patched__request.assert_awaited_once_with(expected_route, json=expected_payload, reason=undefined.UNDEFINED)
+        patched_deserialize_guild_thread.assert_called_once_with(patched__request.return_value)
 
     @pytest.mark.parametrize(
         ("auto_archive_duration", "rate_limit_per_user"),
@@ -6567,10 +6868,12 @@ class TestRESTClientImplAsync:
 
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
             await rest_client.reposition_channels(
-                mock_partial_guild, {1: make_guild_text_channel(456), 2: make_guild_text_channel(789)}
+                mock_partial_guild,
+                {1: make_guild_text_channel(456), 2: make_guild_text_channel(789)},
+                reason="because why not",
             )
 
-            patched__request.assert_awaited_once_with(expected_route, json=expected_json)
+        patched__request.assert_awaited_once_with(expected_route, json=expected_json, reason="because why not")
 
     async def test_fetch_member(
         self, rest_client: rest.RESTClientImpl, mock_partial_guild: guilds.PartialGuild, mock_user: users.User
@@ -6956,13 +7259,12 @@ class TestRESTClientImplAsync:
     async def test_reposition_roles(self, rest_client: rest.RESTClientImpl, mock_partial_guild: guilds.PartialGuild):
         expected_route = routes.PATCH_GUILD_ROLES.compile(guild=123)
         expected_json = [{"id": "456", "position": 1}, {"id": "789", "position": 2}]
-
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
             await rest_client.reposition_roles(
-                mock_partial_guild, {1: make_partial_role(456), 2: make_partial_role(789)}
+                mock_partial_guild, {1: make_partial_role(456), 2: make_partial_role(789)}, reason="because why not"
             )
 
-            patched__request.assert_awaited_once_with(expected_route, json=expected_json)
+        patched__request.assert_awaited_once_with(expected_route, json=expected_json, reason="because why not")
 
     async def test_edit_role(
         self,
@@ -7037,9 +7339,9 @@ class TestRESTClientImplAsync:
         expected_route = routes.DELETE_GUILD_ROLE.compile(guild=123, role=333)
 
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
-            await rest_client.delete_role(mock_partial_guild, mock_partial_role)
+            await rest_client.delete_role(mock_partial_guild, mock_partial_role, reason="because i can")
 
-            patched__request.assert_awaited_once_with(expected_route)
+        patched__request.assert_awaited_once_with(expected_route, reason="because i can")
 
     async def test_estimate_guild_prune_count(
         self, rest_client: rest.RESTClientImpl, mock_partial_guild: guilds.PartialGuild
@@ -7409,7 +7711,6 @@ class TestRESTClientImplAsync:
         self, rest_client: rest.RESTClientImpl, mock_partial_guild: guilds.PartialGuild
     ):
         expected_routes = routes.POST_GUILD_TEMPLATES.compile(guild=123)
-        rest_client._request = mock.AsyncMock(return_value={"code": "94949sdfkds"})
 
         with (
             mock.patch.object(
@@ -8293,7 +8594,7 @@ class TestRESTClientImplAsync:
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
             await rest_client.delete_interaction_response(mock_application, "go homo now")
 
-            patched__request.assert_awaited_once_with(expected_route, auth=None)
+        patched__request.assert_awaited_once_with(expected_route, auth=None)
 
     async def test_create_autocomplete_response(
         self, rest_client: rest.RESTClientImpl, mock_partial_interaction: interactions.PartialInteraction
@@ -8337,7 +8638,7 @@ class TestRESTClientImplAsync:
         self, rest_client: rest.RESTClientImpl, mock_partial_interaction: interactions.PartialInteraction
     ):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=777, token="snek")
-        component = mock.Mock()
+        component = mock.Mock(build=mock.Mock(return_value=({}, [])))
 
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
             await rest_client.create_modal_response(
@@ -8348,7 +8649,7 @@ class TestRESTClientImplAsync:
                 expected_route,
                 json={
                     "type": 9,
-                    "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
+                    "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value[0]]},
                 },
                 auth=None,
             )
@@ -8357,7 +8658,7 @@ class TestRESTClientImplAsync:
         self, rest_client: rest.RESTClientImpl, mock_partial_interaction: interactions.PartialInteraction
     ):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=777, token="snek")
-        component = mock.Mock()
+        component = mock.Mock(build=mock.Mock(return_value=({}, [])))
 
         with mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request:
             await rest_client.create_modal_response(
@@ -8368,7 +8669,7 @@ class TestRESTClientImplAsync:
                 expected_route,
                 json={
                     "type": 9,
-                    "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value]},
+                    "data": {"title": "title", "custom_id": "idd", "components": [component.build.return_value[0]]},
                 },
                 auth=None,
             )
@@ -8947,12 +9248,15 @@ class TestRESTClientImplAsync:
             ) as patched_deserialize_stage_instance,
         ):
             result = await rest_client.create_stage_instance(
-                channel=mock_guild_stage_channel, topic="ur mom", scheduled_event_id=mock_scheduled_event
+                channel=mock_guild_stage_channel,
+                topic="ur mom",
+                scheduled_event_id=mock_scheduled_event,
+                reason="testing",
             )
 
-            assert result is patched_deserialize_stage_instance.return_value
-            patched__request.assert_called_once_with(expected_route, json=expected_json)
-            patched_deserialize_stage_instance.assert_called_once_with(mock_payload)
+        assert result is patched_deserialize_stage_instance.return_value
+        patched__request.assert_called_once_with(expected_route, json=expected_json, reason="testing")
+        patched_deserialize_stage_instance.assert_called_once_with(mock_payload)
 
     async def test_edit_stage_instance(
         self, rest_client: rest.RESTClientImpl, mock_guild_stage_channel: channels.GuildStageChannel
@@ -8967,7 +9271,6 @@ class TestRESTClientImplAsync:
             "privacy_level": 2,
             "discoverable_disabled": False,
         }
-
         with (
             mock.patch.object(
                 rest_client, "_request", new_callable=mock.AsyncMock, return_value=mock_payload
@@ -8980,11 +9283,12 @@ class TestRESTClientImplAsync:
                 channel=mock_guild_stage_channel,
                 topic="ur mom",
                 privacy_level=stage_instances.StageInstancePrivacyLevel.GUILD_ONLY,
+                reason="testing",
             )
 
-            assert result is patched_deserialize_stage_instance.return_value
-            patched__request.assert_called_once_with(expected_route, json=expected_json)
-            patched_deserialize_stage_instance.assert_called_once_with(mock_payload)
+        assert result is patched_deserialize_stage_instance.return_value
+        patched__request.assert_called_once_with(expected_route, json=expected_json, reason="testing")
+        patched_deserialize_stage_instance.assert_called_once_with(mock_payload)
 
     async def test_delete_stage_instance(
         self, rest_client: rest.RESTClientImpl, mock_guild_stage_channel: channels.GuildStageChannel
@@ -8995,9 +9299,9 @@ class TestRESTClientImplAsync:
             mock.patch.object(rest_client, "_request", new_callable=mock.AsyncMock) as patched__request,
             mock.patch.object(rest_client.entity_factory, "deserialize_stage_instance"),
         ):
-            await rest_client.delete_stage_instance(channel=mock_guild_stage_channel)
+            await rest_client.delete_stage_instance(channel=mock_guild_stage_channel, reason="testing")
 
-        patched__request.assert_called_once_with(expected_route)
+        patched__request.assert_called_once_with(expected_route, reason="testing")
 
     async def test_fetch_poll_voters(
         self,
@@ -9009,11 +9313,14 @@ class TestRESTClientImplAsync:
             channel=mock_guild_text_channel, message=mock_message, answer=snowflakes.Snowflake(4)
         )
 
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "1234"}])
-
-        with mock.patch.object(
-            rest_client._entity_factory, "deserialize_user", return_value=mock.Mock()
-        ) as patched_deserialize_user:
+        with (
+            mock.patch.object(
+                rest_client, "_request", new_callable=mock.AsyncMock, return_value=[{"id": "1234"}]
+            ) as patched__request,
+            mock.patch.object(
+                rest_client._entity_factory, "deserialize_user", return_value=mock.Mock()
+            ) as patched_deserialize_user,
+        ):
             await rest_client.fetch_poll_voters(
                 mock_guild_text_channel,
                 mock_message,
@@ -9022,9 +9329,9 @@ class TestRESTClientImplAsync:
                 limit=6,
             )
 
-            patched_deserialize_user.assert_called_once_with({"id": "1234"})
+        patched_deserialize_user.assert_called_once_with({"id": "1234"})
 
-        rest_client._request.assert_awaited_once_with(expected_route, query={"after": "574893", "limit": "6"})
+        patched__request.assert_awaited_once_with(expected_route, query={"after": "574893", "limit": "6"})
 
     async def test_end_poll(
         self,
@@ -9038,12 +9345,234 @@ class TestRESTClientImplAsync:
 
         message_obj = mock.Mock()
 
-        rest_client._request = mock.AsyncMock(return_value={"id": "398475938475"})
-
-        rest_client._entity_factory.deserialize_message = mock.Mock(return_value=message_obj)
-
-        response = await rest_client.end_poll(mock_guild_text_channel, mock_message)
-
-        rest_client._request.assert_awaited_once_with(expected_route)
+        with (
+            mock.patch.object(
+                rest_client, "_request", new_callable=mock.AsyncMock, return_value={"id": "398475938475"}
+            ) as patched__request,
+            mock.patch.object(
+                rest_client._entity_factory, "deserialize_message", return_value=message_obj
+            ) as patched_deserialize_message,
+        ):
+            response = await rest_client.end_poll(mock_guild_text_channel, mock_message)
 
         assert response is message_obj
+
+        patched__request.assert_awaited_once_with(expected_route)
+        patched_deserialize_message.assert_called_once_with(patched__request.return_value)
+
+    async def test_fetch_auto_mod_rules(
+        self, rest_client: rest.RESTClientImpl, hikari_partial_guild: guilds.PartialGuild
+    ):
+        mock_payload_1 = {"id": "432123"}
+        mock_payload_2 = {"id": "949494994"}
+        mock_result_1 = mock.Mock()
+        mock_result_2 = mock.Mock()
+        expected_route = routes.GET_GUILD_AUTO_MODERATION_RULES.compile(guild=123)
+
+        with (
+            mock.patch.object(
+                rest_client, "_request", new_callable=mock.AsyncMock, return_value=[mock_payload_1, mock_payload_2]
+            ) as patched__request,
+            mock.patch.object(
+                rest_client._entity_factory, "deserialize_auto_mod_rule", side_effect=[mock_result_1, mock_result_2]
+            ) as patched_deserialize_auto_mod_rule,
+        ):
+            result = await rest_client.fetch_auto_mod_rules(hikari_partial_guild)
+
+        assert result == [mock_result_1, mock_result_2]
+        patched__request.assert_awaited_once_with(expected_route)
+        patched_deserialize_auto_mod_rule.assert_has_calls([mock.call(mock_payload_1), mock.call(mock_payload_2)])
+
+    async def test_fetch_auto_mod_rule(
+        self,
+        rest_client: rest.RESTClientImpl,
+        hikari_partial_guild: guilds.PartialGuild,
+        mock_auto_mod_rule: auto_mod.AutoModRule,
+    ):
+        expected_route = routes.GET_GUILD_AUTO_MODERATION_RULE.compile(guild=123, rule=999)
+
+        with (
+            mock.patch.object(
+                rest_client, "_request", new=mock.AsyncMock(return_value={"id": "442123"})
+            ) as patched__request,
+            mock.patch.object(
+                rest_client._entity_factory, "deserialize_auto_mod_rule"
+            ) as patched_deserialize_auto_mod_rule,
+        ):
+            result = await rest_client.fetch_auto_mod_rule(hikari_partial_guild, mock_auto_mod_rule)
+
+        assert result is patched_deserialize_auto_mod_rule.return_value
+        patched__request.assert_awaited_once_with(expected_route)
+        patched_deserialize_auto_mod_rule.assert_called_once_with(patched__request.return_value)
+
+    async def test_create_auto_mod_rule(
+        self, rest_client: rest.RESTClientImpl, hikari_partial_guild: guilds.PartialGuild
+    ):
+        mock_action = mock.Mock(special_endpoints.AutoModBlockMessageActionBuilder)
+        expected_route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=123)
+
+        with (
+            mock.patch.object(
+                rest_client, "_request", new=mock.AsyncMock(return_value={"id": "494949494"})
+            ) as patched__request,
+            mock.patch.object(
+                rest_client._entity_factory, "deserialize_auto_mod_rule"
+            ) as patched_deserialize_auto_mod_rule,
+        ):
+            result = await rest_client.create_auto_mod_rule(
+                hikari_partial_guild,
+                name="meow",
+                event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+                trigger=special_endpoints.AutoModKeywordTriggerBuilder(keyword_filter=["hello", "world"]),
+                actions=[mock_action],
+                enabled=False,
+                exempt_roles=[make_partial_role(4212), make_partial_role(43123)],
+                exempt_channels=[
+                    make_guild_text_channel(566),
+                    make_guild_text_channel(333),
+                    make_guild_text_channel(222),
+                ],
+                reason="a reason meow",
+            )
+
+        assert result is patched_deserialize_auto_mod_rule.return_value
+        patched_deserialize_auto_mod_rule.assert_called_once_with(patched__request.return_value)
+        patched__request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "meow",
+                "event_type": 1,
+                "trigger_type": 1,
+                "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
+                "actions": [mock_action.build.return_value],
+                "enabled": False,
+                "exempt_roles": ["4212", "43123"],
+                "exempt_channels": ["566", "333", "222"],
+            },
+            reason="a reason meow",
+        )
+        mock_action.build.assert_called_once_with()
+
+    async def test_create_auto_mod_rule_partial(
+        self, rest_client: rest.RESTClientImpl, hikari_partial_guild: guilds.PartialGuild
+    ):
+        mock_action = mock.Mock(special_endpoints.AutoModBlockMessageActionBuilder)
+        expected_route = routes.POST_GUILD_AUTO_MODERATION_RULE.compile(guild=123)
+
+        with (
+            mock.patch.object(
+                rest_client, "_request", new=mock.AsyncMock(return_value={"id": "494949494"})
+            ) as patched__request,
+            mock.patch.object(
+                rest_client._entity_factory, "deserialize_auto_mod_rule"
+            ) as patched_deserialize_auto_mod_rule,
+        ):
+            result = await rest_client.create_auto_mod_rule(
+                hikari_partial_guild,
+                name="meow",
+                event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+                trigger=special_endpoints.AutoModKeywordTriggerBuilder(keyword_filter=["hello", "world"]),
+                actions=[mock_action],
+            )
+
+        assert result is patched_deserialize_auto_mod_rule.return_value
+        patched_deserialize_auto_mod_rule.assert_called_once_with(patched__request.return_value)
+        patched__request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "meow",
+                "event_type": 1,
+                "trigger_type": 1,
+                "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
+                "actions": [mock_action.build.return_value],
+            },
+            reason=undefined.UNDEFINED,
+        )
+        mock_action.build.assert_called_once_with()
+
+    async def test_edit_auto_mod_rule(
+        self,
+        rest_client: rest.RESTClientImpl,
+        hikari_partial_guild: guilds.PartialGuild,
+        mock_auto_mod_rule: auto_mod.AutoModRule,
+    ):
+        mock_action = mock.Mock(special_endpoints.AutoModBlockMessageActionBuilder)
+        expected_route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=123, rule=999)
+
+        with (
+            mock.patch.object(
+                rest_client, "_request", new=mock.AsyncMock(return_value={"id": "494949494"})
+            ) as patched__request,
+            mock.patch.object(
+                rest_client._entity_factory, "deserialize_auto_mod_rule"
+            ) as patched_deserialize_auto_mod_rule,
+        ):
+            result = await rest_client.edit_auto_mod_rule(
+                hikari_partial_guild,
+                mock_auto_mod_rule,
+                name="meow",
+                event_type=auto_mod.AutoModEventType.MESSAGE_SEND,
+                trigger=special_endpoints.AutoModKeywordTriggerBuilder(keyword_filter=["hello", "world"]),
+                actions=[mock_action],
+                enabled=False,
+                exempt_roles=[make_partial_role(4545), make_partial_role(5656)],
+                exempt_channels=[
+                    make_guild_text_channel(555),
+                    make_guild_text_channel(666),
+                    make_guild_text_channel(777),
+                ],
+                reason="nyaa nyaa",
+            )
+
+        assert result is patched_deserialize_auto_mod_rule.return_value
+        patched_deserialize_auto_mod_rule.assert_called_once_with(patched__request.return_value)
+        patched__request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "name": "meow",
+                "event_type": 1,
+                "trigger_metadata": {"keyword_filter": ["hello", "world"], "regex_patterns": [], "allow_list": []},
+                "actions": [mock_action.build.return_value],
+                "enabled": False,
+                "exempt_roles": ["4545", "5656"],
+                "exempt_channels": ["555", "666", "777"],
+            },
+            reason="nyaa nyaa",
+        )
+        mock_action.build.assert_called_once_with()
+
+    async def test_edit_auto_mod_rule_partial(
+        self,
+        rest_client: rest.RESTClientImpl,
+        hikari_partial_guild: guilds.PartialGuild,
+        mock_auto_mod_rule: auto_mod.AutoModRule,
+    ):
+        expected_route = routes.PATCH_GUILD_AUTO_MODERATION_RULE.compile(guild=123, rule=999)
+
+        with (
+            mock.patch.object(
+                rest_client, "_request", new=mock.AsyncMock(return_value={"id": "494949494"})
+            ) as patched__request,
+            mock.patch.object(
+                rest_client._entity_factory, "deserialize_auto_mod_rule"
+            ) as patched_deserialize_auto_mod_rule,
+        ):
+            result = await rest_client.edit_auto_mod_rule(hikari_partial_guild, mock_auto_mod_rule)
+
+        assert result is patched_deserialize_auto_mod_rule.return_value
+        patched_deserialize_auto_mod_rule.assert_called_once_with(patched__request.return_value)
+        patched__request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
+
+    async def test_delete_auto_mod_rule(
+        self,
+        rest_client: rest.RESTClientImpl,
+        hikari_partial_guild: guilds.PartialGuild,
+        mock_auto_mod_rule: auto_mod.AutoModRule,
+    ):
+        expected_route = routes.DELETE_GUILD_AUTO_MODERATION_RULE.compile(guild=123, rule=999)
+
+        with mock.patch.object(rest_client, "_request", new=mock.AsyncMock()) as patched__request:
+            result = await rest_client.delete_auto_mod_rule(hikari_partial_guild, mock_auto_mod_rule, reason="ok hi")
+
+        assert result is None
+        patched__request.assert_awaited_once_with(expected_route, reason="ok hi")

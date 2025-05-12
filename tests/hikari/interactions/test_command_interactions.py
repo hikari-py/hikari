@@ -114,7 +114,7 @@ class TestAutocompleteInteraction:
             guild_id=snowflakes.Snowflake(5412231),
             guild_locale="en-US",
             locale="en-US",
-            app_permissions=123321,
+            app_permissions=None,
             member=mock.Mock(),
             user=mock.Mock(),
             token="httptptptptptptptp",

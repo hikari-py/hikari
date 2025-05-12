@@ -51,30 +51,39 @@ class TestScheduledEvent:
             image_hash="image_hash",
         )
 
+    def test_make_image_url_format_set_to_deprecated_ext_argument_if_provided(
+        self, scheduled_event: scheduled_events.ScheduledEvent
+    ):
+        scheduled_event.id = snowflakes.Snowflake(543123)
+        scheduled_event.image_hash = "ododododo"
+
+        with mock.patch.object(
+            routes, "SCHEDULED_EVENT_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert scheduled_event.make_image_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, scheduled_event_id=543123, hash="ododododo", size=4096, file_format="JPEG", lossless=True
+        )
+
     def test_image_url_property(self, scheduled_event: scheduled_events.ScheduledEvent):
         with mock.patch.object(scheduled_events.ScheduledEvent, "make_image_url") as patched_make_image_url:
             assert scheduled_event.image_url == patched_make_image_url.return_value
 
-            patched_make_image_url.assert_called_once_with()
-
     def test_image_url(self, scheduled_event: scheduled_events.ScheduledEvent):
-        with (
-            mock.patch.object(routes, "SCHEDULED_EVENT_COVER") as patched_route,
-            mock.patch.object(patched_route, "compile_to_file") as patched_compile_to_file,
-        ):
-            assert scheduled_event.make_image_url(ext="jpeg", size=1) is patched_compile_to_file.return_value
+        scheduled_event.id = snowflakes.Snowflake(543123)
+        scheduled_event.image_hash = "ododododo"
+        with mock.patch.object(routes, "SCHEDULED_EVENT_COVER") as route:
+            assert scheduled_event.make_image_url(file_format="JPEG", size=1) is route.compile_to_file.return_value
 
-            patched_compile_to_file.assert_called_once_with(
-                urls.CDN_URL, scheduled_event_id=123456, hash="image_hash", size=1, file_format="jpeg"
-            )
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, scheduled_event_id=543123, hash="ododododo", size=1, file_format="JPEG", lossless=True
+        )
 
     def test_make_image_url_when_image_hash_is_none(self, scheduled_event: scheduled_events.ScheduledEvent):
         scheduled_event.image_hash = None
 
-        with (
-            mock.patch.object(routes, "SCHEDULED_EVENT_COVER") as patched_route,
-            mock.patch.object(patched_route, "compile_to_file") as patched_compile_to_file,
-        ):
-            assert scheduled_event.make_image_url(ext="jpeg", size=1) is None
+        with mock.patch.object(routes, "SCHEDULED_EVENT_COVER") as patched_scheduled_event_cover:
+            assert scheduled_event.make_image_url(ext="JPEG", size=1) is None
 
-        patched_compile_to_file.assert_not_called()
+        patched_scheduled_event_cover.assert_not_called()

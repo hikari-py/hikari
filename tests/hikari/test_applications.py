@@ -35,9 +35,12 @@ from hikari.internal import routes
 
 class TestTeamMember:
     @pytest.fixture
-    def model(self) -> applications.TeamMember:
+    def model(self):
+        user = mock.Mock(users.User)
+        user.avatar_hash = "a_test"
+        user.banner_hash = "a_test2"
         return applications.TeamMember(
-            membership_state=4, permissions=["*"], team_id=snowflakes.Snowflake(34123), user=mock.Mock(users.User)
+            membership_state=4, permissions=["*"], team_id=snowflakes.Snowflake(34123), user=user
         )
 
     def test_app_property(self, model: applications.TeamMember):
@@ -50,15 +53,21 @@ class TestTeamMember:
         assert model.avatar_hash is model.user.avatar_hash
 
     def test_avatar_url_property(self, model: applications.TeamMember):
-        assert model.avatar_url is model.user.avatar_url
+        assert model.avatar_url is model.user.make_avatar_url()
 
     def test_banner_hash_property(self, model: applications.TeamMember):
         assert model.banner_hash is model.user.banner_hash
 
-    def test_banner_url_propert(self, model: applications.TeamMember):
-        assert model.banner_url is model.user.banner_url
+    def test_banner_url_property(self, model: applications.TeamMember):
+        assert model.banner_url is model.user.make_banner_url()
 
-    def test_accent_color_propert(self, model: applications.TeamMember):
+    def test_make_avatar_url(self, model: applications.TeamMember):
+        assert model.make_avatar_url() is model.user.make_avatar_url()
+
+    def test_make_banner_url(self, model: applications.TeamMember):
+        assert model.make_banner_url() is model.user.make_banner_url()
+
+    def test_accent_color_property(self, model: applications.TeamMember):
         assert model.accent_color is model.user.accent_color
 
     def test_default_avatar_url_property(self, model: applications.TeamMember):
@@ -107,32 +116,39 @@ class TestTeam:
     def test_str_operator(self, team: applications.Team):
         assert str(team) == "Team beanos (123)"
 
-    def test_icon_url_property(self, team: applications.Team):
-        with mock.patch.object(
-            applications.Team, "make_icon_url", mock.Mock(return_value="url")
-        ) as patched_make_icon_url:
-            assert team.icon_url == "url"
-
-            patched_make_icon_url.assert_called_once_with()
-
-    def test_make_icon_url_when_hash_is_None(self, team: applications.Team):
-        team.icon_hash = None
-
+    def test_make_icon_url_format_set_to_deprecated_ext_argument_if_provided(self, team: applications.Team):
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert team.make_icon_url(ext="jpeg", size=1) is None
+            assert team.make_icon_url(ext="JPEG") == "file"
 
-        route.compile_to_file.assert_not_called()
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, team_id=123, hash="icon_hash", size=4096, file_format="JPEG", lossless=True
+        )
+
+    def test_icon_url_property(self, team: applications.Team):
+        with mock.patch.object(applications.Team, "make_icon_url", return_value="url"):
+            assert team.icon_url == "url"
+
+    def test_make_icon_url_when_hash_is_None(self, team: applications.Team):
+        with (
+            mock.patch.object(team, "icon_hash", None),
+            mock.patch.object(
+                routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+            ) as patched_cdn_team_icon_route,
+        ):
+            assert team.make_icon_url(file_format="JPEG", size=1) is None
+
+        patched_cdn_team_icon_route.compile_to_file.assert_not_called()
 
     def test_make_icon_url_when_hash_is_not_None(self, team: applications.Team):
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert team.make_icon_url(ext="jpeg", size=1) == "file"
+            assert team.make_icon_url(file_format="JPEG", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, team_id=123, hash="icon_hash", size=1, file_format="jpeg"
+            urls.CDN_URL, team_id=123, hash="icon_hash", size=1, file_format="JPEG", lossless=True
         )
 
 
@@ -141,61 +157,64 @@ class TestApplication:
     def application(self) -> applications.Application:
         return applications.Application(
             id=snowflakes.Snowflake(123),
-            name="application",
-            description="application_description",
+            name="name",
+            description="description",
             icon_hash="icon_hash",
-            app=mock.Mock(traits.RESTAware),
-            is_bot_public=True,
+            app=mock.Mock(),
+            is_bot_public=False,
             is_bot_code_grant_required=False,
             owner=mock.Mock(),
-            rpc_origins=[],
+            rpc_origins=None,
             flags=applications.ApplicationFlags.EMBEDDED,
-            public_key=b"application",
-            team=mock.Mock(),
+            public_key=b"public_key",
+            team=None,
             cover_image_hash="cover_image_hash",
-            terms_of_service_url="terms_of_service_url",
-            privacy_policy_url="privacy_policy_url",
-            role_connections_verification_url="role_connections_verification_url",
-            custom_install_url="custom_install_url",
+            terms_of_service_url=None,
+            privacy_policy_url=None,
+            role_connections_verification_url=None,
+            custom_install_url=None,
             tags=[],
-            install_parameters=mock.Mock(),
-            approximate_guild_count=1,
-            approximate_user_install_count=1,
+            install_parameters=None,
+            approximate_guild_count=0,
+            approximate_user_install_count=0,
             integration_types_config={},
+        )
+
+    def test_make_icon_url_format_set_to_deprecated_ext_argument_if_provided(
+        self, application: applications.Application
+    ):
+        with mock.patch.object(
+            routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert application.make_cover_image_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, application_id=123, hash="cover_image_hash", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_cover_image_url_property(self, application: applications.Application):
         with mock.patch.object(
-            applications.Application, "make_cover_image_url", mock.Mock(return_value="url")
-        ) as patched_make_cover_image_url:
-            assert application.cover_image_url == "url"
+            routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as patched_cdn_application_cover:
+            assert application.make_cover_image_url(file_format="JPEG", size=1) == "file"
 
-            patched_make_cover_image_url.assert_called_once_with()
-
-    def test_make_cover_image_url_when_hash_is_None(self, application: applications.Application):
-        application.cover_image_hash = None
-
-        with (
-            mock.patch.object(routes, "CDN_APPLICATION_COVER") as patched_route,
-            mock.patch.object(
-                patched_route, "compile_to_file", mock.Mock(return_value="file")
-            ) as patched_compile_to_file,
-        ):
-            assert application.make_cover_image_url(ext="jpeg", size=1) is None
-
-        patched_compile_to_file.assert_not_called()
+        patched_cdn_application_cover.compile_to_file.assert_called_once_with(
+            "https://cdn.discordapp.com",
+            application_id=123,
+            hash="cover_image_hash",
+            size=1,
+            file_format="JPEG",
+            lossless=True,
+        )
 
     def test_make_cover_image_url_when_hash_is_not_None(self, application: applications.Application):
-        with (
-            mock.patch.object(routes, "CDN_APPLICATION_COVER") as patched_route,
-            mock.patch.object(
-                patched_route, "compile_to_file", mock.Mock(return_value="file")
-            ) as patched_compile_to_file,
-        ):
-            assert application.make_cover_image_url(ext="jpeg", size=1) == "file"
+        with mock.patch.object(
+            routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as patched_cdn_application_cover:
+            assert application.make_cover_image_url(file_format="JPEG", size=1) == "file"
 
-        patched_compile_to_file.assert_called_once_with(
-            urls.CDN_URL, application_id=123, hash="cover_image_hash", size=1, file_format="jpeg"
+        patched_cdn_application_cover.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, application_id=123, hash="cover_image_hash", size=1, file_format="JPEG", lossless=True
         )
 
 

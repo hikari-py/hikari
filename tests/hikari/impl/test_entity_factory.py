@@ -28,6 +28,7 @@ import pytest
 
 from hikari import applications as application_models
 from hikari import audit_logs as audit_log_models
+from hikari import auto_mod as auto_mod_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import commands
@@ -1586,7 +1587,12 @@ class TestEntityFactoryImpl:
     def test_deserialize_audit_log_entry(
         self,
         entity_factory_impl: entity_factory.EntityFactoryImpl,
+        auto_mod_rule_payload: dict[str, typing.Any],
         audit_log_entry_payload: dict[str, typing.Any],
+        application_webhook_payload: dict[str, typing.Any],
+        incoming_webhook_payload: dict[str, typing.Any],
+        follower_webhook_payload: dict[str, typing.Any],
+        partial_integration_payload: dict[str, typing.Any],
         hikari_app: traits.RESTAware,
     ):
         entry = entity_factory_impl.deserialize_audit_log_entry(
@@ -1703,6 +1709,7 @@ class TestEntityFactoryImpl:
     def audit_log_payload(
         self,
         audit_log_entry_payload: dict[str, typing.Any],
+        auto_mod_rule_payload: dict[str, typing.Any],
         user_payload: dict[str, typing.Any],
         incoming_webhook_payload: dict[str, typing.Any],
         application_webhook_payload: dict[str, typing.Any],
@@ -1714,6 +1721,7 @@ class TestEntityFactoryImpl:
     ) -> dict[str, typing.Any]:
         return {
             "audit_log_entries": [audit_log_entry_payload],
+            "auto_moderation_rules": [auto_mod_rule_payload],
             "integrations": [partial_integration_payload],
             "threads": [guild_public_thread_payload, guild_private_thread_payload, guild_news_thread_payload],
             "users": [user_payload],
@@ -1726,6 +1734,7 @@ class TestEntityFactoryImpl:
         hikari_app: traits.RESTAware,
         audit_log_payload: dict[str, typing.Any],
         audit_log_entry_payload: dict[str, typing.Any],
+        auto_mod_rule_payload: dict[str, typing.Any],
         user_payload: dict[str, typing.Any],
         incoming_webhook_payload: dict[str, typing.Any],
         application_webhook_payload: dict[str, typing.Any],
@@ -1736,6 +1745,10 @@ class TestEntityFactoryImpl:
         guild_news_thread_payload: dict[str, typing.Any],
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(audit_log_payload, guild_id=snowflakes.Snowflake(123321))
+
+        assert audit_log.auto_mod_rules == {
+            94594949494: entity_factory_impl.deserialize_auto_mod_rule(auto_mod_rule_payload)
+        }
 
         assert audit_log.entries == {
             694026906592477214: entity_factory_impl.deserialize_audit_log_entry(
@@ -1777,6 +1790,7 @@ class TestEntityFactoryImpl:
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(
             {
+                "auto_moderation_rules": [],
                 "webhooks": [incoming_webhook_payload, {"type": -99999}, application_webhook_payload],
                 "threads": [],
                 "users": [],
@@ -1799,6 +1813,7 @@ class TestEntityFactoryImpl:
     ):
         audit_log = entity_factory_impl.deserialize_audit_log(
             {
+                "auto_moderation_rules": [],
                 "webhooks": {},
                 "threads": [guild_public_thread_payload, {"type": -99998}, guild_private_thread_payload],
                 "users": [],
@@ -1811,6 +1826,25 @@ class TestEntityFactoryImpl:
         assert audit_log.threads == {
             947643783913308301: entity_factory_impl.deserialize_guild_public_thread(guild_public_thread_payload),
             947690637610844210: entity_factory_impl.deserialize_guild_private_thread(guild_private_thread_payload),
+        }
+
+    def test_deserialize_audit_log_skips_unknown_auto_mod_rule_type(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, auto_mod_rule_payload: dict[str, typing.Any]
+    ):
+        audit_log = entity_factory_impl.deserialize_audit_log(
+            {
+                "auto_moderation_rules": [{"id": "4949", "trigger_type": -6959595}, auto_mod_rule_payload],
+                "webhooks": [],
+                "users": [],
+                "audit_log_entries": [],
+                "integrations": [],
+                "threads": [],
+            },
+            guild_id=snowflakes.Snowflake(123321),
+        )
+
+        assert audit_log.auto_mod_rules == {
+            94594949494: entity_factory_impl.deserialize_auto_mod_rule(auto_mod_rule_payload)
         }
 
     ##################
@@ -6210,7 +6244,9 @@ class TestEntityFactoryImpl:
     def text_input_payload(self):
         return {"type": 4, "id": 3904875, "custom_id": "name", "value": "Wumpus"}
 
-    def test__deserialize_text_input(self, entity_factory_impl, text_input_payload):
+    def test__deserialize_text_input(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, text_input_payload: dict[str, typing.Any]
+    ):
         text_input = entity_factory_impl._deserialize_text_input(text_input_payload)
 
         assert text_input.type == component_models.ComponentType.TEXT_INPUT
@@ -6236,7 +6272,7 @@ class TestEntityFactoryImpl:
         return {"type": 10, "id": 9840745, "content": "A text display!"}
 
     @pytest.fixture
-    def thumbnail_payload(self, media_payload):
+    def thumbnail_payload(self, media_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
         return {
             "type": 11,
             "id": 9824133,
@@ -6246,30 +6282,32 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def section_payload(self, button_payload, text_display_payload):
+    def section_payload(self, button_payload: dict[str, typing.Any], text_display_payload: dict[str, typing.Any]):
         return {"type": 9, "id": 9478385, "accessory": button_payload, "components": [text_display_payload]}
 
     @pytest.fixture
-    def media_gallery_item_payload(self, media_payload):
+    def media_gallery_item_payload(self, media_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
         return {"media": media_payload, "description": "Gallery item description?", "spoiler": True}
 
     @pytest.fixture
-    def media_gallery_payload(self, media_gallery_item_payload):
+    def media_gallery_payload(self, media_gallery_item_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
         return {"type": 12, "id": 9267351, "items": [media_gallery_item_payload]}
 
     @pytest.fixture
-    def separator_payload(self):
+    def separator_payload(self) -> dict[str, typing.Any]:
         return {"type": 14, "id": 4920478, "spacing": 1, "divider": True}
 
     @pytest.fixture
-    def file_payload(self, media_payload):
+    def file_payload(self, media_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
         return {"type": 13, "id": 2407385, "file": media_payload, "spoiler": False}
 
     @pytest.fixture
-    def container_payload(self, file_payload):
+    def container_payload(self, file_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
         return {"type": 17, "id": 5830957, "accent_color": 16757027, "spoiler": True, "components": [file_payload]}
 
-    def test__deserialize_media(self, entity_factory_impl, media_payload):
+    def test__deserialize_media(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, media_payload: dict[str, typing.Any]
+    ):
         media = entity_factory_impl._deserialize_media(media_payload)
 
         assert media.url == "https://com.com.com.com.com.com.com.com.com.com/"
@@ -6284,7 +6322,9 @@ class TestEntityFactoryImpl:
 
         assert isinstance(media, component_models.MediaResource)
 
-    def test__deserialize_media_with_unset_fields(self, entity_factory_impl, media_payload):
+    def test__deserialize_media_with_unset_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, media_payload: dict[str, typing.Any]
+    ):
         del media_payload["proxy_url"]
         del media_payload["width"]
         del media_payload["height"]
@@ -6301,7 +6341,9 @@ class TestEntityFactoryImpl:
 
         assert isinstance(media, component_models.MediaResource)
 
-    def test__deserialize_media_with_nullable_fields(self, entity_factory_impl, media_payload):
+    def test__deserialize_media_with_nullable_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, media_payload: dict[str, typing.Any]
+    ):
         media_payload["width"] = None
         media_payload["height"] = None
         media_payload["content_type"] = None
@@ -6316,7 +6358,12 @@ class TestEntityFactoryImpl:
 
         assert isinstance(media, component_models.MediaResource)
 
-    def test__deserialize_action_row_component(self, entity_factory_impl, action_row_payload, button_payload):
+    def test__deserialize_action_row_component(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        action_row_payload: dict[str, typing.Any],
+        button_payload: dict[str, typing.Any],
+    ):
         action_row = entity_factory_impl._deserialize_action_row_component(action_row_payload)
 
         assert action_row.type == component_models.ComponentType.ACTION_ROW
@@ -6327,7 +6374,7 @@ class TestEntityFactoryImpl:
         assert isinstance(action_row, component_models.ActionRowComponent)
 
     def test__deserialize_action_row_component_with_unknown_component_type(
-        self, entity_factory_impl, action_row_payload
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, action_row_payload: dict[str, typing.Any]
     ):
         action_row_payload["components"] = [{"type": -9999}, {"type": 9999}]
 
@@ -6336,7 +6383,11 @@ class TestEntityFactoryImpl:
         assert action_row.components == []
 
     def test__deserialize_section_component(
-        self, entity_factory_impl, section_payload, button_payload, text_display_payload
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        section_payload: dict[str, typing.Any],
+        button_payload: dict[str, typing.Any],
+        text_display_payload: dict[str, typing.Any],
     ):
         section = entity_factory_impl._deserialize_section_component(section_payload)
 
@@ -6346,12 +6397,19 @@ class TestEntityFactoryImpl:
         assert section.accessory == entity_factory_impl._deserialize_button(button_payload)
         assert section.components == [entity_factory_impl._deserialize_text_display_component(text_display_payload)]
 
-    def test__deserialize_section_component_with_unknown_accessory_type(self, entity_factory_impl, section_payload):
+    def test__deserialize_section_component_with_unknown_accessory_type(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, section_payload: dict[str, typing.Any]
+    ):
         section_payload["accessory"] = {"type": 9999}
         with pytest.raises(errors.UnrecognisedEntityError, match=r"Unknown section accessory type 9999"):
             entity_factory_impl._deserialize_section_component(section_payload)
 
-    def test__deserialize_thumbnail_component(self, entity_factory_impl, thumbnail_payload, media_payload):
+    def test__deserialize_thumbnail_component(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        thumbnail_payload: dict[str, typing.Any],
+        media_payload: dict[str, typing.Any],
+    ):
         thumbnail = entity_factory_impl._deserialize_thumbnail_component(thumbnail_payload)
 
         assert thumbnail.type == component_models.ComponentType.THUMBNAIL
@@ -6362,7 +6420,9 @@ class TestEntityFactoryImpl:
 
         assert isinstance(thumbnail, component_models.ThumbnailComponent)
 
-    def test__deserialize_thumbnail_component_with_unset_fields(self, entity_factory_impl, thumbnail_payload):
+    def test__deserialize_thumbnail_component_with_unset_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, thumbnail_payload: dict[str, typing.Any]
+    ):
         del thumbnail_payload["description"]
         del thumbnail_payload["spoiler"]
 
@@ -6371,7 +6431,9 @@ class TestEntityFactoryImpl:
         assert thumbnail.description is None
         assert thumbnail.is_spoiler is False
 
-    def test__deserialize_text_display_component(self, entity_factory_impl, text_display_payload):
+    def test__deserialize_text_display_component(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, text_display_payload: dict[str, typing.Any]
+    ):
         text_display = entity_factory_impl._deserialize_text_display_component(text_display_payload)
 
         assert text_display.type == component_models.ComponentType.TEXT_DISPLAY
@@ -6381,7 +6443,10 @@ class TestEntityFactoryImpl:
         assert isinstance(text_display, component_models.TextDisplayComponent)
 
     def test__deserialize_media_gallery_component(
-        self, entity_factory_impl, media_gallery_payload, media_gallery_item_payload
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        media_gallery_payload: dict[str, typing.Any],
+        media_gallery_item_payload: dict[str, typing.Any],
     ):
         media_gallery = entity_factory_impl._deserialize_media_gallery_component(media_gallery_payload)
 
@@ -6391,7 +6456,12 @@ class TestEntityFactoryImpl:
 
         assert isinstance(media_gallery, component_models.MediaGalleryComponent)
 
-    def test__deserialize_media_gallery_item(self, entity_factory_impl, media_gallery_item_payload, media_payload):
+    def test__deserialize_media_gallery_item(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        media_gallery_item_payload: dict[str, typing.Any],
+        media_payload: dict[str, typing.Any],
+    ):
         media_gallery_item = entity_factory_impl._deserialize_media_gallery_item(media_gallery_item_payload)
 
         assert media_gallery_item.media == entity_factory_impl._deserialize_media(media_payload)
@@ -6400,7 +6470,9 @@ class TestEntityFactoryImpl:
 
         assert isinstance(media_gallery_item, component_models.MediaGalleryItem)
 
-    def test__deserialize_media_gallery_item_with_unset_fields(self, entity_factory_impl, media_gallery_item_payload):
+    def test__deserialize_media_gallery_item_with_unset_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, media_gallery_item_payload: dict[str, typing.Any]
+    ):
         del media_gallery_item_payload["description"]
         del media_gallery_item_payload["spoiler"]
 
@@ -6409,7 +6481,9 @@ class TestEntityFactoryImpl:
         assert media_gallery_item.description is None
         assert media_gallery_item.is_spoiler is False
 
-    def test__deserialize_separator_component(self, entity_factory_impl, separator_payload):
+    def test__deserialize_separator_component(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, separator_payload: dict[str, typing.Any]
+    ):
         separator = entity_factory_impl._deserialize_separator_component(separator_payload)
 
         assert separator.type == component_models.ComponentType.SEPARATOR
@@ -6419,14 +6493,21 @@ class TestEntityFactoryImpl:
 
         assert isinstance(separator, component_models.SeparatorComponent)
 
-    def test__deserialize_separator_component_with_unset_fields(self, entity_factory_impl, separator_payload):
+    def test__deserialize_separator_component_with_unset_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, separator_payload: dict[str, typing.Any]
+    ):
         del separator_payload["divider"]
 
         separator = entity_factory_impl._deserialize_separator_component(separator_payload)
 
         assert separator.divider is False
 
-    def test__deserialize_file_component(self, entity_factory_impl, file_payload, media_payload):
+    def test__deserialize_file_component(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        file_payload: dict[str, typing.Any],
+        media_payload: dict[str, typing.Any],
+    ):
         file = entity_factory_impl._deserialize_file_component(file_payload)
 
         assert file.type == component_models.ComponentType.FILE
@@ -6436,14 +6517,21 @@ class TestEntityFactoryImpl:
 
         assert isinstance(file, component_models.FileComponent)
 
-    def test__deserialize_file_component_with_unset_fields(self, entity_factory_impl, file_payload):
+    def test__deserialize_file_component_with_unset_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, file_payload: dict[str, typing.Any]
+    ):
         del file_payload["spoiler"]
 
         file = entity_factory_impl._deserialize_file_component(file_payload)
 
         assert file.is_spoiler is False
 
-    def test__deserialize_container_component(self, entity_factory_impl, container_payload, file_payload):
+    def test__deserialize_container_component(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        container_payload: dict[str, typing.Any],
+        file_payload: dict[str, typing.Any],
+    ):
         container = entity_factory_impl._deserialize_container_component(container_payload)
 
         assert container.type == component_models.ComponentType.CONTAINER
@@ -6454,7 +6542,9 @@ class TestEntityFactoryImpl:
 
         assert isinstance(container, component_models.ContainerComponent)
 
-    def test__deserialize_container_component_with_unset_fields(self, entity_factory_impl, container_payload):
+    def test__deserialize_container_component_with_unset_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, container_payload: dict[str, typing.Any]
+    ):
         del container_payload["accent_color"]
         del container_payload["spoiler"]
 
@@ -6463,14 +6553,18 @@ class TestEntityFactoryImpl:
         assert container.accent_color is None
         assert container.is_spoiler is False
 
-    def test__deserialize_container_component_with_nullable_fields(self, entity_factory_impl, container_payload):
+    def test__deserialize_container_component_with_nullable_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, container_payload: dict[str, typing.Any]
+    ):
         container_payload["accent_color"] = None
 
         container = entity_factory_impl._deserialize_container_component(container_payload)
 
         assert container.accent_color is None
 
-    def test__deserialize_container_component_with_unknown_component_type(self, entity_factory_impl, container_payload):
+    def test__deserialize_container_component_with_unknown_component_type(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, container_payload: dict[str, typing.Any]
+    ):
         container_payload["components"] = [{"type": 9999}]
 
         container = entity_factory_impl._deserialize_container_component(container_payload)
@@ -6479,13 +6573,13 @@ class TestEntityFactoryImpl:
 
     def test__deserialize_message_components(
         self,
-        entity_factory_impl,
-        action_row_payload,
-        text_display_payload,
-        section_payload,
-        media_gallery_payload,
-        separator_payload,
-        file_payload,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        action_row_payload: dict[str, typing.Any],
+        text_display_payload: dict[str, typing.Any],
+        section_payload: dict[str, typing.Any],
+        media_gallery_payload: dict[str, typing.Any],
+        separator_payload: dict[str, typing.Any],
+        file_payload: dict[str, typing.Any],
     ):
         message_components = entity_factory_impl._deserialize_top_level_components(
             [
@@ -6512,12 +6606,19 @@ class TestEntityFactoryImpl:
 
         assert message_components[5] == entity_factory_impl._deserialize_file_component(file_payload)
 
-    def test__deserialize_message_components_handles_unknown_top_component_type(self, entity_factory_impl):
+    def test__deserialize_message_components_handles_unknown_top_component_type(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl
+    ):
         message_components = entity_factory_impl._deserialize_top_level_components([{"type": 9999}, {"type": -9999}])
 
         assert len(message_components) == 0
 
-    def test__deserialize_modal_components(self, entity_factory_impl, action_row_payload, text_input_payload):
+    def test__deserialize_modal_components(
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        action_row_payload: dict[str, typing.Any],
+        text_input_payload: dict[str, typing.Any],
+    ):
         action_row_payload["components"] = [text_input_payload]
 
         modal_components = entity_factory_impl._deserialize_modal_components([action_row_payload])
@@ -6530,7 +6631,9 @@ class TestEntityFactoryImpl:
             components=[entity_factory_impl._deserialize_text_input(text_input_payload)],
         )
 
-    def test__deserialize_modal_components_handles_unknown_top_component_type(self, entity_factory_impl):
+    def test__deserialize_modal_components_handles_unknown_top_component_type(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl
+    ):
         modal_components = entity_factory_impl._deserialize_modal_components([{"type": 9999}])
 
         assert len(modal_components) == 0
@@ -6547,7 +6650,14 @@ class TestEntityFactoryImpl:
             (8, "_deserialize_channel_select_menu", "_message_component_type_mapping"),
         ],
     )
-    def test__deserialize_components(self, hikari_app: traits.RESTAware, type_: int, fn: str, mapping: str):
+    def test__deserialize_components(
+        self,
+        hikari_app: traits.RESTAware,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        type_: int,
+        fn: str,
+        mapping: str,
+    ):
         component_payload = {"type": type_}
         payload = [{"type": 1, "components": [component_payload]}]
 
@@ -6639,7 +6749,7 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
-    def partial_interaction_metadata_payload(self, user_payload):
+    def partial_interaction_metadata_payload(self, user_payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
         return {
             "id": "123456",
             "type": 2,
@@ -6766,7 +6876,10 @@ class TestEntityFactoryImpl:
         assert attachment.waveform is None
 
     def test__deserialize_partial_message_interaction_metadata(
-        self, entity_factory_impl, partial_interaction_metadata_payload, user_payload
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        partial_interaction_metadata_payload: dict[str, typing.Any],
+        user_payload: dict[str, typing.Any],
     ):
         partial_message_interaction_metadata = entity_factory_impl._deserialize_command_interaction_metadata(
             partial_interaction_metadata_payload
@@ -6785,7 +6898,10 @@ class TestEntityFactoryImpl:
         assert isinstance(partial_message_interaction_metadata, base_interactions.PartialInteractionMetadata)
 
     def test__deserialize_command_interaction_metadata(
-        self, entity_factory_impl, partial_interaction_metadata_payload, user_payload
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        partial_interaction_metadata_payload: dict[str, typing.Any],
+        user_payload: dict[str, typing.Any],
     ):
         partial_interaction_metadata_payload["target_user"] = user_payload
         partial_interaction_metadata_payload["target_message_id"] = "59332"
@@ -6800,7 +6916,9 @@ class TestEntityFactoryImpl:
         assert command_interaction_metadata.target_message_id == snowflakes.Snowflake(59332)
 
     def test__deserialize_message_component_interaction_metadata(
-        self, entity_factory_impl, partial_interaction_metadata_payload
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        partial_interaction_metadata_payload: dict[str, typing.Any],
     ):
         partial_interaction_metadata_payload["interacted_message_id"] = "684831"
 
@@ -6814,7 +6932,10 @@ class TestEntityFactoryImpl:
         assert message_component_interaction_metadata.interacted_message_id == snowflakes.Snowflake(684831)
 
     def test__deserialize_modal_interaction_metadata_with_commmand_interaction(
-        self, entity_factory_impl, partial_interaction_metadata_payload, user_payload
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        partial_interaction_metadata_payload: dict[str, typing.Any],
+        user_payload: dict[str, typing.Any],
     ):
         component_interaction_metadata_payload = dict(partial_interaction_metadata_payload)
         component_interaction_metadata_payload["target_user"] = user_payload
@@ -6839,7 +6960,9 @@ class TestEntityFactoryImpl:
         )
 
     def test__deserialize_modal_interaction_metadata_with_component_interaction(
-        self, entity_factory_impl, partial_interaction_metadata_payload
+        self,
+        entity_factory_impl: entity_factory.EntityFactoryImpl,
+        partial_interaction_metadata_payload: dict[str, typing.Any],
     ):
         command_interaction_metadata_payload = dict(partial_interaction_metadata_payload)
         command_interaction_metadata_payload["type"] = 3
@@ -7215,7 +7338,7 @@ class TestEntityFactoryImpl:
         assert message.thread is None
 
         # Poll
-        message.poll is None
+        assert message.poll is None
 
     def test_deserialize_message_with_null_sub_fields(
         self, entity_factory_impl: entity_factory.EntityFactoryImpl, message_payload: dict[str, typing.Any]
@@ -7985,24 +8108,28 @@ class TestEntityFactoryImpl:
     def avatar_decoration_payload(self) -> dict[str, typing.Any]:
         return {"asset": "ahhhhhhvatardecoration", "sku_id": "789", "expires_at": 1743753661}
 
-    def test_deserialize_avatar_decoration(self, entity_factory_impl, avatar_decoration_payload: dict[str, typing.Any]):
+    def test_deserialize_avatar_decoration(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, avatar_decoration_payload: dict[str, typing.Any]
+    ):
         decoration = entity_factory_impl._deserialize_avatar_decoration(avatar_decoration_payload)
+        assert decoration is not None
         assert decoration.asset_hash == "ahhhhhhvatardecoration"
         assert decoration.sku_id == 789
         assert decoration.expires_at == datetime.datetime(2025, 4, 4, 8, 1, 1, tzinfo=datetime.timezone.utc)
 
     def test_deserialize_avatar_decoration_with_no_expiry(
-        self, entity_factory_impl, avatar_decoration_payload: dict[str, typing.Any]
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, avatar_decoration_payload: dict[str, typing.Any]
     ):
         decoration = entity_factory_impl._deserialize_avatar_decoration(
             {**avatar_decoration_payload, "expires_at": None}
         )
+        assert decoration is not None
         assert decoration.asset_hash == "ahhhhhhvatardecoration"
         assert decoration.sku_id == 789
         assert decoration.expires_at is None
 
     def test_deserialize_avatar_decoration_with_empty_payload(
-        self, entity_factory_impl, avatar_decoration_payload: dict[str, typing.Any]
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl
     ):
         decoration = entity_factory_impl._deserialize_avatar_decoration(None)
         assert decoration is None
@@ -8545,7 +8672,7 @@ class TestEntityFactoryImpl:
     ###########
 
     @pytest.fixture
-    def poll_payload(self):
+    def poll_payload(self) -> dict[str, typing.Any]:
         return {
             "question": {"text": "fruit"},
             "answers": [
@@ -8565,7 +8692,9 @@ class TestEntityFactoryImpl:
             },
         }
 
-    def test_deserialize_poll(self, entity_factory_impl, poll_payload):
+    def test_deserialize_poll(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, poll_payload: dict[str, typing.Any]
+    ):
         poll = entity_factory_impl.deserialize_poll(poll_payload)
 
         assert poll.question.text == "fruit"
@@ -8599,16 +8728,217 @@ class TestEntityFactoryImpl:
         assert results_answer_counts[1].count == 28347
         assert results_answer_counts[1].me_voted is True
 
-    def test_deserialize_poll_with_unset_fields(self, entity_factory_impl, poll_payload):
+    def test_deserialize_poll_with_unset_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, poll_payload: dict[str, typing.Any]
+    ):
         poll_payload["expiry"] = None
 
         poll = entity_factory_impl.deserialize_poll(poll_payload)
 
         assert poll.expiry is None
 
-    def test_deserialize_poll_with_null_fields(self, entity_factory_impl, poll_payload):
+    def test_deserialize_poll_with_null_fields(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, poll_payload: dict[str, typing.Any]
+    ):
         del poll_payload["results"]
 
         poll = entity_factory_impl.deserialize_poll(poll_payload)
 
         assert poll.results is None
+
+    def test_deserialize_auto_mod_action_for_block_message(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
+        result = entity_factory_impl.deserialize_auto_mod_action({"type": 1})
+
+        assert result.type is auto_mod_models.AutoModActionType.BLOCK_MESSAGE
+        assert isinstance(result, auto_mod_models.AutoModBlockMessage)
+
+    def test_deserialize_auto_mod_action_for_send_alert_message(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl
+    ):
+        result = entity_factory_impl.deserialize_auto_mod_action({"type": 2, "metadata": {"channel_id": "43123123"}})
+
+        assert result.type is auto_mod_models.AutoModActionType.SEND_ALERT_MESSAGE
+        assert isinstance(result, auto_mod_models.AutoModSendAlertMessage)
+        assert result.channel_id == 43123123
+
+    def test_deserialize_auto_mod_action_for_timeout(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
+        result = entity_factory_impl.deserialize_auto_mod_action({"type": 3, "metadata": {"duration_seconds": 123321}})
+
+        assert result.type is auto_mod_models.AutoModActionType.TIMEOUT
+        assert isinstance(result, auto_mod_models.AutoModTimeout)
+        assert result.duration == datetime.timedelta(seconds=123321)
+
+    def test_deserialize_auto_mod_action_for_unknown_type(self, entity_factory_impl: entity_factory.EntityFactoryImpl):
+        with pytest.raises(errors.UnrecognisedEntityError):
+            entity_factory_impl.deserialize_auto_mod_action({"type": -696969})
+
+    @pytest.fixture
+    def auto_mod_rule_payload(self) -> dict[str, typing.Any]:
+        return {
+            "id": "94594949494",
+            "guild_id": "9595939234",
+            "name": "hihihihi",
+            "creator_id": "595684849",
+            "event_type": 2,
+            "trigger_type": 4,
+            "trigger_metadata": {"presets": [1, 2, 3], "allow_list": ["okokok", "No"]},
+            "actions": [
+                {"type": 1},
+                {"type": 2, "metadata": {"channel_id": "43212123"}},
+                {"type": 3, "metadata": {"duration_seconds": 321123}},
+            ],
+            "enabled": True,
+            "exempt_roles": ["49493932", "123321"],
+            "exempt_channels": ["95959595", "31223"],
+        }
+
+    def test_deserialize_auto_mod_rule(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, auto_mod_rule_payload: dict[str, typing.Any]
+    ):
+        result = entity_factory_impl.deserialize_auto_mod_rule(auto_mod_rule_payload)
+
+        assert result.id == 94594949494
+        assert result.guild_id == 9595939234
+        assert result.name == "hihihihi"
+        assert result.creator_id == 595684849
+        assert result.event_type is auto_mod_models.AutoModEventType.MEMBER_UPDATE
+        assert isinstance(result.trigger, auto_mod_models.KeywordPresetTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.KEYWORD_PRESET
+        assert result.actions == [
+            entity_factory_impl.deserialize_auto_mod_action({"type": 1}),
+            entity_factory_impl.deserialize_auto_mod_action({"type": 2, "metadata": {"channel_id": "43212123"}}),
+            entity_factory_impl.deserialize_auto_mod_action({"type": 3, "metadata": {"duration_seconds": 321123}}),
+        ]
+        assert result.is_enabled is True
+        assert result.exempt_role_ids == [49493932, 123321]
+        assert result.exempt_channel_ids == [95959595, 31223]
+
+    def test_deserialize_auto_mod_rule_for_keyword_trigger(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, auto_mod_rule_payload: dict[str, typing.Any]
+    ):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 1,
+                "trigger_metadata": {
+                    "keyword_filter": ["ok", "no", "bye"],
+                    "regex_patterns": ["some", "regex", "patterns"],
+                    "allow_list": ["allowed", "stuff"],
+                },
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.KeywordTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.KEYWORD
+        assert result.trigger.keyword_filter == ["ok", "no", "bye"]
+        assert result.trigger.regex_patterns == ["some", "regex", "patterns"]
+        assert result.trigger.allow_list == ["allowed", "stuff"]
+
+    def test_deserialize_auto_mod_rule_for_spam_trigger(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, auto_mod_rule_payload: dict[str, typing.Any]
+    ):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 3,
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.SpamTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.SPAM
+
+    def test_deserialize_auto_mod_rule_for_keyword_preset_trigger(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, auto_mod_rule_payload: dict[str, typing.Any]
+    ):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 4,
+                "trigger_metadata": {"presets": [1, 3], "allow_list": ["allowed", "stuff"]},
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.KeywordPresetTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.KEYWORD_PRESET
+        assert result.trigger.presets == [
+            auto_mod_models.AutoModKeywordPresetType.PROFANITY,
+            auto_mod_models.AutoModKeywordPresetType.SLURS,
+        ]
+        assert result.trigger.allow_list == ["allowed", "stuff"]
+
+    def test_deserialize_auto_mod_rule_for_mention_spam_trigger(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, auto_mod_rule_payload: dict[str, typing.Any]
+    ):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 5,
+                "trigger_metadata": {"mention_total_limit": 5, "mention_raid_protection_enabled": False},
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.MentionSpamTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.MENTION_SPAM
+        assert result.trigger.mention_total_limit == 5
+        assert result.trigger.mention_raid_protection_enabled is False
+
+    def test_deserialize_auto_mod_rule_for_member_profile_trigger(
+        self, entity_factory_impl: entity_factory.EntityFactoryImpl, auto_mod_rule_payload: dict[str, typing.Any]
+    ):
+        result = entity_factory_impl.deserialize_auto_mod_rule(
+            {
+                "id": "94594949494",
+                "guild_id": "9595939234",
+                "name": "hihihihi",
+                "creator_id": "595684849",
+                "event_type": 1,
+                "trigger_type": 6,
+                "trigger_metadata": {
+                    "keyword_filter": ["ok", "no", "bye"],
+                    "regex_patterns": ["some", "regex", "patterns"],
+                    "allow_list": ["allowed", "stuff"],
+                },
+                "actions": [],
+                "enabled": True,
+                "exempt_roles": [],
+                "exempt_channels": [],
+            }
+        )
+
+        assert isinstance(result.trigger, auto_mod_models.MemberProfileTrigger)
+        assert result.trigger.type is auto_mod_models.AutoModTriggerType.MEMBER_PROFILE
+        assert result.trigger.keyword_filter == ["ok", "no", "bye"]
+        assert result.trigger.regex_patterns == ["some", "regex", "patterns"]
+        assert result.trigger.allow_list == ["allowed", "stuff"]

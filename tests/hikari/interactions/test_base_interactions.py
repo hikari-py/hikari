@@ -344,11 +344,11 @@ class TestModalResponseMixin:
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
             guild_id=snowflakes.Snowflake(5412231),
             channel=mock.Mock(id=3123123),
-            member=object(),
-            user=object(),
+            member=None,
+            user=mock.Mock(),
             locale="es-ES",
             guild_locale="en-US",
-            app_permissions=123321,
+            app_permissions=None,
             authorizing_integration_owners={
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },

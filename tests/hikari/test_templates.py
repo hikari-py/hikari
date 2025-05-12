@@ -77,5 +77,5 @@ class TestTemplate:
 
         obj.app.rest.sync_guild_template.assert_awaited_once_with(123, "abc123")
 
-    def test_str(self, obj):
+    def test_str(self, obj: templates.Template):
         assert str(obj) == "https://discord.new/abc123"

@@ -26,6 +26,7 @@ import mock
 import pytest
 
 from hikari import applications
+from hikari import auto_mod
 from hikari import channels
 from hikari import colors
 from hikari import commands
@@ -1264,16 +1265,14 @@ def test__build_emoji_when_undefined():
 
 
 class Test_ButtonBuilder:
+    class ButtonBuilder(special_endpoints._ButtonBuilder):
+        @property
+        def style(self) -> components.ButtonStyle:
+            return components.ButtonStyle.DANGER
+
     @pytest.fixture
     def button(self) -> special_endpoints._ButtonBuilder:
-        return special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.DANGER,
-            custom_id="sfdasdasd",
-            url="hi there",
-            emoji=543123,
-            label="a lebel",
-            is_disabled=True,
-        )
+        return Test_ButtonBuilder.ButtonBuilder(id=5855932, emoji=543123, label="a lebel", is_disabled=True)
 
     def test_type_property(self, button: special_endpoints._ButtonBuilder):
         assert button.type is components.ComponentType.BUTTON
@@ -1324,27 +1323,17 @@ class Test_ButtonBuilder:
         assert button.set_is_disabled(False)
         assert button.is_disabled is False
 
-    def test_build(self):
-        button = special_endpoints._ButtonBuilder(
-            id=5855932,
-            style=components.ButtonStyle.DANGER,
-            url="https://example.com",
-            label="no u",
-            custom_id="ooga booga",
-            emoji="emoji_name",
-            is_disabled=True,
-        )
-
+    def test_build(self, button: special_endpoints._ButtonBuilder):
         payload, attachments = button.build()
+
+        assert attachments == []
 
         assert payload == {
             "id": 5855932,
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.DANGER,
-            "url": "https://example.com",
-            "emoji": {"name": "emoji_name"},
-            "label": "no u",
-            "custom_id": "ooga booga",
+            "emoji": {"id": "543123"},
+            "label": "a lebel",
             "disabled": True,
         }
 
@@ -1352,9 +1341,7 @@ class Test_ButtonBuilder:
         "emoji", [123321, emojis.CustomEmoji(id=snowflakes.Snowflake(123321), name="", is_animated=True)]
     )
     def test_build_with_custom_emoji(self, emoji: typing.Union[int, emojis.Emoji]):
-        button = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.DANGER, emoji=emoji, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
-        )
+        button = Test_ButtonBuilder.ButtonBuilder(emoji=emoji)
 
         payload, attachments = button.build()
 
@@ -1368,15 +1355,13 @@ class Test_ButtonBuilder:
         assert attachments == []
 
     def test_build_without_optional_fields(self):
-        button = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.LINK, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
-        )
+        button = Test_ButtonBuilder.ButtonBuilder()
 
         payload, attachments = button.build()
 
         assert payload == {
             "type": components.ComponentType.BUTTON,
-            "style": components.ButtonStyle.LINK,
+            "style": components.ButtonStyle.DANGER,
             "disabled": False,
         }
 
@@ -1389,6 +1374,24 @@ class TestLinkButtonBuilder:
 
         assert button.url == "hihihihi"
 
+    def test_build(self):
+        button = special_endpoints.LinkButtonBuilder(
+            id=5855932, url="hihihihi", label="no u", emoji="emoji_name", is_disabled=True
+        )
+
+        payload, attachments = button.build()
+
+        assert payload == {
+            "id": 5855932,
+            "style": components.ButtonStyle.LINK,
+            "type": components.ComponentType.BUTTON,
+            "disabled": True,
+            "emoji": {"name": "emoji_name"},
+            "label": "no u",
+            "url": "hihihihi",
+        }
+        assert attachments == []
+
 
 class TestInteractiveButtonBuilder:
     def test_custom_id_property(self):
@@ -1397,6 +1400,29 @@ class TestInteractiveButtonBuilder:
         ).set_custom_id("eeeeee")
 
         assert button.custom_id == "eeeeee"
+
+    def test_build(self):
+        button = special_endpoints.InteractiveButtonBuilder(
+            id=5855932,
+            style=components.ButtonStyle.PRIMARY,
+            label="no u",
+            emoji="emoji_name",
+            is_disabled=True,
+            custom_id="oogie",
+        )
+
+        payload, attachments = button.build()
+
+        assert payload == {
+            "id": 5855932,
+            "style": components.ButtonStyle.PRIMARY,
+            "type": components.ComponentType.BUTTON,
+            "custom_id": "oogie",
+            "disabled": True,
+            "emoji": {"name": "emoji_name"},
+            "label": "no u",
+        }
+        assert attachments == []
 
 
 class TestSelectOptionBuilder:
@@ -2349,20 +2375,6 @@ class TestMessageContainerBuilder:
 
         assert attachments == [files.ensure_resource("some-test-file.png"), files.ensure_resource("file.txt")]
 
-    def test_build_without_optional_fields(self):
-        container = special_endpoints.ContainerComponentBuilder(accent_color=None)
-
-        payload, attachments = container.build()
-
-        assert payload == {
-            "type": components.ComponentType.CONTAINER,
-            "accent_color": None,
-            "spoiler": False,
-            "components": [],
-        }
-
-        assert attachments == []
-
     def test_build_without_undefined_fields(self):
         container = special_endpoints.ContainerComponentBuilder()
 
@@ -2484,3 +2496,169 @@ class TestPollAnswerBuilder:
         )
 
         assert poll_answer.build() == {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456"}}}
+
+
+class TestAutoModBlockMessageActionBuilder:
+    def test_type_property(self):
+        block_message_action = special_endpoints.AutoModBlockMessageActionBuilder(custom_message="beanos")
+
+        assert block_message_action.type == auto_mod.AutoModActionType.BLOCK_MESSAGE
+        assert block_message_action.custom_message == "beanos"
+
+    def test_build(self):
+        block_message_action = special_endpoints.AutoModBlockMessageActionBuilder(custom_message="hello world!")
+
+        assert block_message_action.build() == {
+            "type": auto_mod.AutoModActionType.BLOCK_MESSAGE,
+            "metadata": {"custom_message": "hello world!"},
+        }
+
+
+class TestAutoModSendAlertMessageActionBuilder:
+    def test_type_property(self):
+        send_alert_message_action = special_endpoints.AutoModSendAlertMessageActionBuilder(
+            channel_id=snowflakes.Snowflake(123)
+        )
+
+        assert send_alert_message_action.type == auto_mod.AutoModActionType.SEND_ALERT_MESSAGE
+        assert send_alert_message_action.channel_id == snowflakes.Snowflake(123)
+
+    def test_build(self):
+        send_alert_message_action = special_endpoints.AutoModSendAlertMessageActionBuilder(
+            channel_id=snowflakes.Snowflake(456)
+        )
+
+        assert send_alert_message_action.build() == {
+            "type": auto_mod.AutoModActionType.SEND_ALERT_MESSAGE,
+            "metadata": {"channel_id": 456},
+        }
+
+
+class TestAutoModTimeoutActionBuilder:
+    def test_type_property(self):
+        timeout_action = special_endpoints.AutoModTimeoutActionBuilder(duration_seconds=3)
+
+        assert timeout_action.type == auto_mod.AutoModActionType.TIMEOUT
+        assert timeout_action.duration_seconds == 3
+
+    def test_build(self):
+        timeout_action = special_endpoints.AutoModTimeoutActionBuilder(duration_seconds=5)
+
+        assert timeout_action.build() == {
+            "type": auto_mod.AutoModActionType.TIMEOUT,
+            "metadata": {"duration_seconds": 5},
+        }
+
+
+class TestAutoModBlockMemberInteractionActionBuilder:
+    def test_type_property(self):
+        block_member_interaction_action = special_endpoints.AutoModBlockMemberInteractionActionBuilder()
+
+        assert block_member_interaction_action.type == auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION
+
+    def test_build(self):
+        block_member_interaction_action = special_endpoints.AutoModBlockMemberInteractionActionBuilder()
+
+        assert block_member_interaction_action.build() == {
+            "type": auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION,
+            "metadata": {},
+        }
+
+
+class TestAutoModKeywordTriggerBuilder:
+    def test_type_property(self):
+        keyword_trigger = special_endpoints.AutoModKeywordTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert keyword_trigger.type == auto_mod.AutoModTriggerType.KEYWORD
+        assert keyword_trigger.keyword_filter == ["keyword", "filter"]
+        assert keyword_trigger.regex_patterns == ["regex", "patterns"]
+        assert keyword_trigger.allow_list == ["allow", "list"]
+
+    def test_build(self):
+        keyword_trigger = special_endpoints.AutoModKeywordTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert keyword_trigger.build() == {
+            "keyword_filter": ["keyword", "filter"],
+            "regex_patterns": ["regex", "patterns"],
+            "allow_list": ["allow", "list"],
+        }
+
+
+class TestAutoModSpamTriggerBuilder:
+    def test_type_property(self):
+        spam_trigger = special_endpoints.AutoModSpamTriggerBuilder()
+
+        assert spam_trigger.type == auto_mod.AutoModTriggerType.SPAM
+
+    def test_build(self):
+        spam_trigger = special_endpoints.AutoModSpamTriggerBuilder()
+
+        assert spam_trigger.build() == {}
+
+
+class TestAutoModKeywordPresetTriggerBuilder:
+    def test_type_property(self):
+        keyword_preset_trigger = special_endpoints.AutoModKeywordPresetTriggerBuilder(
+            presets=[auto_mod.AutoModKeywordPresetType.PROFANITY, auto_mod.AutoModKeywordPresetType.SLURS],
+            allow_list=["allow", "list"],
+        )
+
+        assert keyword_preset_trigger.type == auto_mod.AutoModTriggerType.KEYWORD_PRESET
+        assert keyword_preset_trigger.presets == [
+            auto_mod.AutoModKeywordPresetType.PROFANITY,
+            auto_mod.AutoModKeywordPresetType.SLURS,
+        ]
+        assert keyword_preset_trigger.allow_list == ["allow", "list"]
+
+    def test_build(self):
+        keyword_preset_trigger = special_endpoints.AutoModKeywordPresetTriggerBuilder(
+            presets=[auto_mod.AutoModKeywordPresetType.PROFANITY, auto_mod.AutoModKeywordPresetType.SLURS],
+            allow_list=["allow", "list"],
+        )
+
+        assert keyword_preset_trigger.build() == {"presets": [1, 3], "allow_list": ["allow", "list"]}
+
+
+class TestAutoModMentionSpamTriggerBuilder:
+    def test_type_property(self):
+        mention_spam_trigger = special_endpoints.AutoModMentionSpamTriggerBuilder(
+            mention_total_limit=3, mention_raid_protection_enabled=True
+        )
+
+        assert mention_spam_trigger.type == auto_mod.AutoModTriggerType.MENTION_SPAM
+        assert mention_spam_trigger.mention_total_limit == 3
+        assert mention_spam_trigger.mention_raid_protection_enabled is True
+
+    def test_build(self):
+        mention_spam_trigger = special_endpoints.AutoModMentionSpamTriggerBuilder(
+            mention_total_limit=5, mention_raid_protection_enabled=False
+        )
+
+        assert mention_spam_trigger.build() == {"mention_total_limit": 5, "mention_raid_protection_enabled": False}
+
+
+class TestAutoModMemberProfileTriggerBuilder:
+    def test_type_property(self):
+        member_profile_trigger = special_endpoints.AutoModMemberProfileTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert member_profile_trigger.type == auto_mod.AutoModTriggerType.MEMBER_PROFILE
+        assert member_profile_trigger.keyword_filter == ["keyword", "filter"]
+        assert member_profile_trigger.regex_patterns == ["regex", "patterns"]
+        assert member_profile_trigger.allow_list == ["allow", "list"]
+
+    def test_build(self):
+        member_profile_trigger = special_endpoints.AutoModMemberProfileTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert member_profile_trigger.build() == {
+            "keyword_filter": ["keyword", "filter"],
+            "regex_patterns": ["regex", "patterns"],
+            "allow_list": ["allow", "list"],
+        }

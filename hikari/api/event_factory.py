@@ -40,6 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
     from hikari.events import application_events
+    from hikari.events import auto_mod_events
     from hikari.events import channel_events
     from hikari.events import guild_events
     from hikari.events import interaction_events
@@ -213,7 +214,11 @@ class EventFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_guild_thread_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_thread: channel_models.GuildThreadChannel | None = None,
     ) -> channel_events.GuildThreadUpdateEvent:
         """Parse a raw payload from Discord into a guild thread update event object.
 
@@ -223,6 +228,8 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
+        old_thread
+            The guild thread channel object or [`None`][].
 
         Returns
         -------
@@ -1346,6 +1353,82 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.voice_events.VoiceServerUpdateEvent
             The parsed voice server update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_rule_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModRuleCreateEvent:
+        """Parse a raw payload from Discord into an auto-mod rule create event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.AutoModRuleCreateEvent
+            The parsed auto-mod rule create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_rule_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModRuleUpdateEvent:
+        """Parse a raw payload from Discord into an auto-mod rule update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.AutoModRuleUpdateEvent
+            The parsed auto-mod rule update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_rule_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModRuleDeleteEvent:
+        """Parse a raw payload from Discord into an auto-mod rule delete event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.AutoModRuleDeleteEvent
+            The parsed auto-mod rule delete event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_action_execution_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModActionExecutionEvent:
+        """Parse a raw payload from Discord into an auto-mod action execution event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.AutoModActionExecutionEvent
+            The parsed auto-mod action execution event object.
         """
 
     ##################

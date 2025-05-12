@@ -128,7 +128,7 @@ class TestEventStream:
     async def test___anext___when_stream_closed(self):
         streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=float("inf"))
 
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        # ruff gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
             await streamer.__anext__()
 

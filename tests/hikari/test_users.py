@@ -373,7 +373,17 @@ class TestUser:
             assert user.avatar_decoration.make_url(size=4096) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, hash=user.avatar_decoration.asset_hash, size=4096, file_format="png"
+            urls.MEDIA_PROXY_URL, hash=user.avatar_decoration.asset_hash, size=4096, file_format="PNG", lossless=True
+        )
+
+    def test_make_avatar_url_format_set_to_deprecated_ext_argument_if_provided(self, user: users.User):
+        with mock.patch.object(
+            routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert user.make_avatar_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, user_id=12, hash="avatar_hash", size=4096, file_format="JPEG", lossless=True
         )
 
     def test_avatar_url_property(self, user: users.User):
@@ -382,47 +392,39 @@ class TestUser:
 
     def test_make_avatar_url_when_no_hash(self, user: users.User):
         with mock.patch.object(user, "_avatar_hash", None):
-            assert user.make_avatar_url(ext="png", size=1024) is None
+            assert user.make_avatar_url(file_format="PNG", size=1024) is None
 
     def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_for_gif(self, user: users.User):
         with (
-            mock.patch.object(user, "_avatar_hash", "a_avatar_hash"),
-            mock.patch.object(routes, "CDN_USER_AVATAR") as patched_route,
+            mock.patch.object(user, "_avatar_hash", "a_18dnf8dfbakfdh"),
             mock.patch.object(
-                patched_route, "compile_to_file", new=mock.Mock(return_value="file")
-            ) as patched_compile_to_file,
+                routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+            ) as route,
         ):
-            assert user.make_avatar_url(ext=None, size=4096) == "file"
+            assert user.make_avatar_url(file_format="GIF", size=4096) == "file"
 
-        patched_compile_to_file.assert_called_once_with(
-            urls.CDN_URL, user_id=user.id, hash="a_avatar_hash", size=4096, file_format="gif"
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, user_id=user.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="GIF", lossless=True
         )
 
     def test_make_avatar_url_when_format_is_None_and_avatar_hash_is_not_for_gif(self, user: users.User):
-        with (
-            mock.patch.object(routes, "CDN_USER_AVATAR") as patched_route,
-            mock.patch.object(
-                patched_route, "compile_to_file", new=mock.Mock(return_value="file")
-            ) as patched_compile_to_file,
-        ):
-            assert user.make_avatar_url(ext=None, size=4096) == "file"
+        with mock.patch.object(
+            routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert user.make_avatar_url(file_format="PNG", size=4096) == "file"
 
-        patched_compile_to_file.assert_called_once_with(
-            urls.CDN_URL, user_id=user.id, hash=user.avatar_hash, size=4096, file_format="png"
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, user_id=user.id, hash=user.avatar_hash, size=4096, file_format="PNG", lossless=True
         )
 
     def test_make_avatar_url_with_all_args(self, user: users.User):
-        with (
-            mock.patch.object(user, "_discriminator", "1234"),
-            mock.patch.object(routes, "CDN_USER_AVATAR") as patched_route,
-            mock.patch.object(
-                patched_route, "compile_to_file", new=mock.Mock(return_value="file")
-            ) as patched_compile_to_file,
-        ):
-            assert user.make_avatar_url(ext="url", size=4096) == "file"
+        with mock.patch.object(
+            routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert user.make_avatar_url(file_format="JPG", size=4096) == "file"
 
-        patched_compile_to_file.assert_called_once_with(
-            urls.CDN_URL, user_id=user.id, hash=user.avatar_hash, size=4096, file_format="url"
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, user_id=user.id, hash=user.avatar_hash, size=4096, file_format="JPG", lossless=True
         )
 
     def test_display_avatar_url_when_avatar_url(self, user: users.User):
@@ -455,7 +457,7 @@ class TestUser:
         ):
             assert user.default_avatar_url == "file"
 
-        patched_compile_to_file.assert_called_once_with(urls.CDN_URL, style=4, file_format="png")
+        patched_compile_to_file.assert_called_once_with(urls.CDN_URL, style=4, file_format="PNG")
 
     def test_default_avatar_for_migrated_users(self, user: users.User):
         with (
@@ -468,68 +470,69 @@ class TestUser:
         ):
             assert user.default_avatar_url == "file"
 
-        patched_compile_to_file.assert_called_once_with(urls.CDN_URL, style=0, file_format="png")
+        patched_compile_to_file.assert_called_once_with(urls.CDN_URL, style=0, file_format="PNG")
+
+    def test_make_banner_url_format_set_to_deprecated_ext_argument_if_provided(self, user: users.User):
+        with mock.patch.object(
+            routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert user.make_banner_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, user_id=12, hash="banner_hash", size=4096, file_format="JPEG", lossless=True
+        )
 
     def test_banner_url_property(self, user: users.User):
         with mock.patch.object(users.User, "make_banner_url") as make_banner_url:
             assert user.banner_url is make_banner_url.return_value
 
     def test_make_banner_url_when_no_hash(self, user: users.User):
-        with (
-            mock.patch.object(user, "_banner_hash", None),
-            mock.patch.object(routes, "CDN_USER_BANNER") as patched_route,
-            mock.patch.object(
-                patched_route, "compile_to_file", new=mock.Mock(return_value="file")
-            ) as patched_compile_to_file,
-        ):
-            assert user.make_banner_url(ext=None, size=4096) is None
-
-        patched_compile_to_file.assert_not_called()
+        with mock.patch.object(user, "_banner_hash", None), mock.patch.object(routes, "CDN_USER_BANNER"):
+            assert user.make_banner_url(file_format="JPG", size=4096) is None
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_for_gif(self, user: users.User):
         with (
-            mock.patch.object(user, "_banner_hash", "a_banner_hash"),
-            mock.patch.object(routes, "CDN_USER_BANNER") as patched_route,
+            mock.patch.object(user, "_banner_hash", "a_18dnf8dfbakfdh"),
             mock.patch.object(
-                patched_route, "compile_to_file", new=mock.Mock(return_value="file")
-            ) as patched_compile_to_file,
+                routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+            ) as route,
         ):
-            assert user.make_banner_url(ext=None, size=4096) == "file"
+            assert user.make_banner_url(file_format="GIF", size=4096) == "file"
 
-        patched_compile_to_file.assert_called_once_with(
-            urls.CDN_URL, user_id=user.id, hash="a_banner_hash", size=4096, file_format="gif"
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, user_id=user.id, hash="a_18dnf8dfbakfdh", size=4096, file_format="GIF", lossless=True
         )
 
     def test_make_banner_url_when_format_is_None_and_banner_hash_is_not_for_gif(self, user: users.User):
         with (
-            mock.patch.object(routes, "CDN_USER_BANNER") as patched_route,
+            mock.patch.object(user, "_banner_hash", "banner_hash"),
             mock.patch.object(
-                patched_route, "compile_to_file", new=mock.Mock(return_value="file")
-            ) as patched_compile_to_file,
+                routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+            ) as route,
         ):
-            assert user.make_banner_url(ext=None, size=4096) == "file"
+            assert user.make_banner_url(file_format="PNG", size=4096) == "file"
 
-        patched_compile_to_file.assert_called_once_with(
-            urls.CDN_URL, user_id=user.id, hash=user.banner_hash, size=4096, file_format="png"
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, user_id=user.id, hash=user.banner_hash, size=4096, file_format="PNG", lossless=True
         )
 
     def test_make_banner_url_with_all_args(self, user: users.User):
         with (
-            mock.patch.object(routes, "CDN_USER_BANNER") as patched_route,
+            mock.patch.object(user, "_banner_hash", "banner_hash"),
             mock.patch.object(
-                patched_route, "compile_to_file", new=mock.Mock(return_value="file")
-            ) as patched_compile_to_file,
+                routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+            ) as route,
         ):
-            assert user.make_banner_url(ext="url", size=4096) == "file"
+            assert user.make_banner_url(file_format="PNG", size=4096) == "file"
 
-        patched_compile_to_file.assert_called_once_with(
-            urls.CDN_URL, user_id=user.id, hash=user.banner_hash, size=4096, file_format="url"
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, user_id=user.id, hash=user.banner_hash, size=4096, file_format="PNG", lossless=True
         )
 
 
 class TestPartialUserImpl:
     @pytest.fixture
-    def obj(self) -> users.PartialUserImpl:
+    def partial_user(self) -> users.PartialUserImpl:
         return users.PartialUserImpl(
             id=snowflakes.Snowflake(123),
             app=mock.Mock(),
@@ -545,36 +548,36 @@ class TestPartialUserImpl:
             flags=users.UserFlag.DISCORD_EMPLOYEE,
         )
 
-    def test_str_operator(self, obj: users.PartialUserImpl):
-        assert str(obj) == "thomm.o#8637"
+    def test_str_operator(self, partial_user: users.PartialUserImpl):
+        assert str(partial_user) == "thomm.o#8637"
 
-    def test_str_operator_when_partial(self, obj: users.PartialUserImpl):
-        obj.username = undefined.UNDEFINED
-        assert str(obj) == "Partial user ID 123"
+    def test_str_operator_when_partial(self, partial_user: users.PartialUserImpl):
+        partial_user.username = undefined.UNDEFINED
+        assert str(partial_user) == "Partial user ID 123"
 
-    def test_mention_property(self, obj: users.PartialUserImpl):
-        assert obj.mention == "<@123>"
+    def test_mention_property(self, partial_user: users.PartialUserImpl):
+        assert partial_user.mention == "<@123>"
 
-    def test_display_name_property_when_global_name(self, obj: users.PartialUserImpl):
-        obj.global_name = "Thommo"
-        assert obj.display_name == obj.global_name
+    def test_display_name_property_when_global_name(self, partial_user: users.PartialUserImpl):
+        partial_user.global_name = "Thommo"
+        assert partial_user.display_name == partial_user.global_name
 
-    def test_display_name_property_when_no_global_name(self, obj: users.PartialUserImpl):
-        obj.global_name = None
-        assert obj.display_name == obj.username
+    def test_display_name_property_when_no_global_name(self, partial_user: users.PartialUserImpl):
+        partial_user.global_name = None
+        assert partial_user.display_name == partial_user.username
 
     @pytest.mark.asyncio
-    async def test_fetch_self(self, obj: users.PartialUserImpl):
+    async def test_fetch_self(self, partial_user: users.PartialUserImpl):
         user = mock.Mock()
-        obj.app.rest.fetch_user = mock.AsyncMock(return_value=user)
-        assert await obj.fetch_self() is user
-        obj.app.rest.fetch_user.assert_awaited_once_with(user=123)
+        partial_user.app.rest.fetch_user = mock.AsyncMock(return_value=user)
+        assert await partial_user.fetch_self() is user
+        partial_user.app.rest.fetch_user.assert_awaited_once_with(user=123)
 
 
 @pytest.mark.asyncio
 class TestOwnUser:
     @pytest.fixture
-    def obj(self) -> users.OwnUser:
+    def own_user(self) -> users.OwnUser:
         return users.OwnUser(
             id=snowflakes.Snowflake(12345),
             app=mock.Mock(),
@@ -595,16 +598,16 @@ class TestOwnUser:
             premium_type=None,
         )
 
-    async def test_fetch_self(self, obj: users.OwnUser):
+    async def test_fetch_self(self, own_user: users.OwnUser):
         user = mock.Mock()
-        obj.app.rest.fetch_my_user = mock.AsyncMock(return_value=user)
-        assert await obj.fetch_self() is user
-        obj.app.rest.fetch_my_user.assert_awaited_once_with()
+        own_user.app.rest.fetch_my_user = mock.AsyncMock(return_value=user)
+        assert await own_user.fetch_self() is user
+        own_user.app.rest.fetch_my_user.assert_awaited_once_with()
 
-    async def test_fetch_dm_channel(self, obj: users.OwnUser):
+    async def test_fetch_dm_channel(self, own_user: users.OwnUser):
         with pytest.raises(TypeError, match=r"Unable to fetch your own DM channel"):
-            await obj.fetch_dm_channel()
+            await own_user.fetch_dm_channel()
 
-    async def test_send(self, obj: users.OwnUser):
+    async def test_send(self, own_user: users.OwnUser):
         with pytest.raises(TypeError, match=r"Unable to send a DM to yourself"):
-            await obj.send()
+            await own_user.send()

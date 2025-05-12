@@ -22,12 +22,11 @@ from __future__ import annotations
 
 import typing
 
+from hikari.internal import routes
 import mock
 import pytest
 
-from hikari import channels
-from hikari import snowflakes
-from hikari import traits
+from hikari import channels, snowflakes, traits, urls
 from hikari import undefined
 from hikari import webhooks
 
@@ -269,6 +268,16 @@ class TestPartialWebhook:
 
     def test_mention_property(self, webhook: webhooks.PartialWebhook):
         assert webhook.mention == "<@987654321>"
+
+    def test_make_avatar_url_format_set_to_deprecated_ext_argument_if_provided(self, webhook: webhooks.PartialWebhook):
+        with mock.patch.object(
+            routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert webhook.make_avatar_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, user_id=987654321, hash="hook", size=4096, file_format="JPEG", lossless=True
+        )
 
     def test_avatar_url_property(self, webhook: webhooks.PartialWebhook):
         assert webhook.avatar_url == webhook.make_avatar_url()

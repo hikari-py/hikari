@@ -41,7 +41,7 @@ class TestModalInteraction:
             app=hikari_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
-            channel=object(),
+            channel=mock.Mock(),
             guild_id=snowflakes.Snowflake(5412231),
             member=mock.Mock(),
             user=mock.Mock(),
@@ -52,7 +52,7 @@ class TestModalInteraction:
             message=mock.Mock(),
             locale="es-ES",
             guild_locale="en-US",
-            app_permissions=543123,
+            app_permissions=None,
             components=[
                 special_endpoints.ModalActionRowBuilder(
                     id=9817398,

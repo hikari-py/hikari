@@ -32,6 +32,7 @@ import attrs
 
 from hikari import applications as application_models
 from hikari import audit_logs as audit_log_models
+from hikari import auto_mod as auto_mod_models
 from hikari import channels as channel_models
 from hikari import colors as color_models
 from hikari import commands
@@ -450,6 +451,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_app",
         "_audit_log_entry_converters",
         "_audit_log_event_mapping",
+        "_auto_mod_action_mapping",
+        "_auto_mod_trigger_mapping",
         "_command_mapping",
         "_container_component_mapping",
         "_dm_channel_type_mapping",
@@ -522,6 +525,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MESSAGE_DELETE: self._deserialize_message_delete_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_DISCONNECT: self._deserialize_member_disconnect_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
+        }
+        self._auto_mod_action_mapping = {
+            auto_mod_models.AutoModActionType.BLOCK_MESSAGE: self._deserialize_auto_mod_block_message,
+            auto_mod_models.AutoModActionType.SEND_ALERT_MESSAGE: self._deserialize_auto_mod_block_send_alert_message,
+            auto_mod_models.AutoModActionType.TIMEOUT: self._deserialize_auto_mod_timeout,
+        }
+        self._auto_mod_trigger_mapping = {
+            auto_mod_models.AutoModTriggerType.KEYWORD: self._deserialize_auto_mod_keyword_trigger,
+            auto_mod_models.AutoModTriggerType.SPAM: self._deserialize_auto_mod_spam_trigger,
+            auto_mod_models.AutoModTriggerType.KEYWORD_PRESET: self._deserialize_auto_mod_keyword_preset_trigger,
+            auto_mod_models.AutoModTriggerType.MENTION_SPAM: self._deserialize_auto_mod_mention_spam_trigger,
+            auto_mod_models.AutoModTriggerType.MEMBER_PROFILE: self._deserialize_auto_mod_member_profile_trigger,
         }
         self._command_mapping = {
             commands.CommandType.SLASH: self.deserialize_slash_command,
@@ -991,6 +1006,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 entries[entry.id] = entry
 
+        auto_mod_rules: dict[snowflakes.Snowflake, auto_mod_models.AutoModRule] = {}
+        for rule_payload in payload["auto_moderation_rules"]:
+            try:
+                rule = self.deserialize_auto_mod_rule(rule_payload)
+
+            except errors.UnrecognisedEntityError:
+                continue
+
+            auto_mod_rules[rule.id] = rule
+
         integrations = {
             snowflakes.Snowflake(integration["id"]): self.deserialize_partial_integration(integration)
             for integration in payload["integrations"]
@@ -1018,7 +1043,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             webhooks[webhook.id] = webhook
 
         return audit_log_models.AuditLog(
-            entries=entries, integrations=integrations, threads=threads, users=users, webhooks=webhooks
+            auto_mod_rules=auto_mod_rules,
+            entries=entries,
+            integrations=integrations,
+            threads=threads,
+            users=users,
+            webhooks=webhooks,
         )
 
     ##################
@@ -4315,4 +4345,106 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             allow_multiselect=payload["allow_multiselect"],
             layout_type=poll_models.PollLayoutType(payload["layout_type"]),
             results=results,
+        )
+
+    ###################
+    # AUTO-MOD MODELS #
+    ###################
+
+    def _deserialize_auto_mod_block_message(
+        self, payload: data_binding.JSONObject
+    ) -> auto_mod_models.AutoModBlockMessage:
+        return auto_mod_models.AutoModBlockMessage(type=auto_mod_models.AutoModActionType(payload["type"]))
+
+    def _deserialize_auto_mod_block_send_alert_message(
+        self, payload: data_binding.JSONObject
+    ) -> auto_mod_models.AutoModSendAlertMessage:
+        return auto_mod_models.AutoModSendAlertMessage(
+            channel_id=snowflakes.Snowflake(payload["metadata"]["channel_id"]),
+            type=auto_mod_models.AutoModActionType(payload["type"]),
+        )
+
+    def _deserialize_auto_mod_timeout(self, payload: data_binding.JSONObject) -> auto_mod_models.AutoModTimeout:
+        return auto_mod_models.AutoModTimeout(
+            type=auto_mod_models.AutoModActionType(payload["type"]),
+            duration=datetime.timedelta(seconds=payload["metadata"]["duration_seconds"]),
+        )
+
+    @typing_extensions.override
+    def deserialize_auto_mod_action(self, payload: data_binding.JSONObject) -> auto_mod_models.PartialAutoModAction:
+        action_type = auto_mod_models.AutoModActionType(payload["type"])
+
+        if converter := self._auto_mod_action_mapping.get(action_type):
+            return converter(payload)
+
+        _LOGGER.debug("Unrecognised auto-moderation action type %s", action_type)
+        unrecognized_entity_message = f"Unrecognised auto-moderation action type {action_type}"
+        raise errors.UnrecognisedEntityError(unrecognized_entity_message)
+
+    def _deserialize_auto_mod_keyword_trigger(
+        self, payload: data_binding.JSONObject | None, /
+    ) -> auto_mod_models.KeywordTrigger:
+        assert payload is not None
+        return auto_mod_models.KeywordTrigger(
+            type=auto_mod_models.AutoModTriggerType.KEYWORD,
+            keyword_filter=payload["keyword_filter"],
+            regex_patterns=payload["regex_patterns"],
+            allow_list=payload["allow_list"],
+        )
+
+    def _deserialize_auto_mod_spam_trigger(self, _: data_binding.JSONObject | None, /) -> auto_mod_models.SpamTrigger:
+        return auto_mod_models.SpamTrigger(type=auto_mod_models.AutoModTriggerType.SPAM)
+
+    def _deserialize_auto_mod_keyword_preset_trigger(
+        self, payload: data_binding.JSONObject | None, /
+    ) -> auto_mod_models.KeywordPresetTrigger:
+        assert payload is not None
+        return auto_mod_models.KeywordPresetTrigger(
+            type=auto_mod_models.AutoModTriggerType.KEYWORD_PRESET,
+            allow_list=payload["allow_list"],
+            presets=[auto_mod_models.AutoModKeywordPresetType(preset) for preset in payload["presets"]],
+        )
+
+    def _deserialize_auto_mod_mention_spam_trigger(
+        self, payload: data_binding.JSONObject | None, /
+    ) -> auto_mod_models.MentionSpamTrigger:
+        assert payload is not None
+        return auto_mod_models.MentionSpamTrigger(
+            type=auto_mod_models.AutoModTriggerType.MENTION_SPAM,
+            mention_total_limit=payload["mention_total_limit"],
+            mention_raid_protection_enabled=payload["mention_raid_protection_enabled"],
+        )
+
+    def _deserialize_auto_mod_member_profile_trigger(
+        self, payload: data_binding.JSONObject | None, /
+    ) -> auto_mod_models.MemberProfileTrigger:
+        assert payload is not None
+        return auto_mod_models.MemberProfileTrigger(
+            type=auto_mod_models.AutoModTriggerType.MEMBER_PROFILE,
+            keyword_filter=payload["keyword_filter"],
+            regex_patterns=payload["regex_patterns"],
+            allow_list=payload["allow_list"],
+        )
+
+    @typing_extensions.override
+    def deserialize_auto_mod_rule(self, payload: data_binding.JSONObject) -> auto_mod_models.AutoModRule:
+        trigger_type = auto_mod_models.AutoModTriggerType(payload["trigger_type"])
+        trigger_converter = self._auto_mod_trigger_mapping.get(trigger_type)
+        if not trigger_converter:
+            _LOGGER.debug("Unrecognised auto-moderation trigger type %s", trigger_type)
+            unrecognized_entity_message = f"Unrecognised auto-moderation trigger type {trigger_type}"
+            raise errors.UnrecognisedEntityError(unrecognized_entity_message)
+
+        return auto_mod_models.AutoModRule(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            name=payload["name"],
+            creator_id=snowflakes.Snowflake(payload["creator_id"]),
+            event_type=auto_mod_models.AutoModEventType(payload["event_type"]),
+            trigger=trigger_converter(payload.get("trigger_metadata")),
+            actions=[self.deserialize_auto_mod_action(action) for action in payload["actions"]],
+            is_enabled=payload["enabled"],
+            exempt_channel_ids=[snowflakes.Snowflake(id_) for id_ in payload["exempt_channels"]],
+            exempt_role_ids=[snowflakes.Snowflake(id_) for id_ in payload["exempt_roles"]],
         )

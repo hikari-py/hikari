@@ -23,7 +23,6 @@
 from __future__ import annotations
 
 import typing
-import warnings
 
 if hasattr(typing, "override"):  # 3.12+
     override = typing.override
@@ -36,16 +35,3 @@ else:  # <=3.11
         This has no runtime side-effects.
         """
         return arg
-
-
-if hasattr(warnings, "deprecated"):  # 3.13+
-    deprecated = warnings.deprecated
-
-else:  # <=3.11
-
-    def deprecated(*args, **kwargs):  # noqa: ARG001 - Unused arguments
-        """Mark a function, overload, or class as deprecated for type-checkers.
-
-        This has no runtime side-effects.
-        """
-        return lambda value: value

@@ -28,6 +28,7 @@ import types
 import typing
 
 from hikari import applications as application_models
+from hikari import auto_mod as auto_mod_models
 from hikari import channels as channel_models
 from hikari import colors
 from hikari import emojis as emojis_models
@@ -36,6 +37,7 @@ from hikari import undefined
 from hikari import users as user_models
 from hikari.api import event_factory
 from hikari.events import application_events
+from hikari.events import auto_mod_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import interaction_events
@@ -178,10 +180,14 @@ class EventFactoryImpl(event_factory.EventFactory):
 
     @typing_extensions.override
     def deserialize_guild_thread_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_thread: channel_models.GuildThreadChannel | None = None,
     ) -> channel_events.GuildThreadUpdateEvent:
         channel = self._app.entity_factory.deserialize_guild_thread(payload)
-        return channel_events.GuildThreadUpdateEvent(shard=shard, thread=channel)
+        return channel_events.GuildThreadUpdateEvent(shard=shard, thread=channel, old_thread=old_thread)
 
     @typing_extensions.override
     def deserialize_guild_thread_delete_event(
@@ -1089,4 +1095,51 @@ class EventFactoryImpl(event_factory.EventFactory):
             message_id=snowflakes.Snowflake(payload["message_id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
             answer_id=payload["answer_id"],
+        )
+
+    @typing_extensions.override
+    def deserialize_auto_mod_rule_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModRuleCreateEvent:
+        return auto_mod_events.AutoModRuleCreateEvent(
+            shard=shard, rule=self._app.entity_factory.deserialize_auto_mod_rule(payload)
+        )
+
+    @typing_extensions.override
+    def deserialize_auto_mod_rule_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModRuleUpdateEvent:
+        return auto_mod_events.AutoModRuleUpdateEvent(
+            shard=shard, rule=self._app.entity_factory.deserialize_auto_mod_rule(payload)
+        )
+
+    @typing_extensions.override
+    def deserialize_auto_mod_rule_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModRuleDeleteEvent:
+        return auto_mod_events.AutoModRuleDeleteEvent(
+            shard=shard, rule=self._app.entity_factory.deserialize_auto_mod_rule(payload)
+        )
+
+    @typing_extensions.override
+    def deserialize_auto_mod_action_execution_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModActionExecutionEvent:
+        channel_id = payload.get("channel_id")
+        message_id = payload.get("message_id")
+        alert_message_id = payload.get("alert_system_message_id")
+        return auto_mod_events.AutoModActionExecutionEvent(
+            app=self._app,
+            shard=shard,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            action=self._app.entity_factory.deserialize_auto_mod_action(payload["action"]),
+            rule_id=snowflakes.Snowflake(payload["rule_id"]),
+            rule_trigger_type=auto_mod_models.AutoModTriggerType(payload["rule_trigger_type"]),
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            channel_id=snowflakes.Snowflake(channel_id) if channel_id else None,
+            message_id=snowflakes.Snowflake(message_id) if message_id else None,
+            alert_system_message_id=snowflakes.Snowflake(alert_message_id) if alert_message_id is not None else None,
+            content=payload.get("content") or None,
+            matched_keyword=payload["matched_keyword"],
+            matched_content=payload.get("matched_content") or None,
         )
