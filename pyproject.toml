@@ -78,7 +78,7 @@ server = ["pynacl~=1.5"]
 "CI" = "https://github.com/hikari-py/hikari/actions"
 
 [dependency-groups]
-nox = ["nox[uv]==2025.2.9"]
+nox = ["nox[uv]==2025.5.1"]
 
 audit = ["uv-secure"]
 codespell = ["codespell==2.4.1"]
@@ -86,7 +86,7 @@ coverage = ["coverage[toml]==7.8.0"]
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
-    "mkdocs-material[imaging]==9.6.12",
+    "mkdocs-material[imaging]==9.6.14",
     # Docstring parsing for API reference
     "mkdocstrings[python]==0.29.1",
     "griffe-inherited-docstrings==1.1.1",
@@ -100,8 +100,9 @@ mkdocs = [
     # Image viewer ext
     # "mkdocs-glightbox==0.3.7",
 ]
-mypy = ["mypy[faster-cache]==1.15.0"]
-pyright = ["pyright==1.1.399"]
+
+mypy = ["mypy[faster-cache]==1.15.0", { include-group = "types" }]
+pyright = ["pyright==1.1.400", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==8.3.5",
@@ -112,9 +113,14 @@ pytest = [
     { include-group = "coverage" },
 ]
 release = ["twine==6.1.0"]
-ruff = ["ruff==0.11.6"]
+ruff = ["ruff==0.11.9"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
+types = [
+    # examples/voice_message/*
+    "pydub-stubs~=0.25.1.5"
+]
+
 
 [tool.uv]
 required-version = "~=0.6"
@@ -245,7 +251,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = 'rillrate.*'
+module = ["numpy.*"] # Numpy has already abonded py 3.9 and since we still support it we can't bring numpy into the project dependencies
 ignore_missing_imports = true
 
 [tool.slotscheck]

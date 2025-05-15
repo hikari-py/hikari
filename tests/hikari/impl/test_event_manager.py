@@ -298,25 +298,34 @@ class TestEventManagerImpl:
     async def test_on_thread_update_stateful(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
-        mock_payload = mock.Mock()
-        await event_manager_impl.on_thread_update(shard, mock_payload)
+        payload = {"id": 123}
+        old_thread = mock.Mock()
+        event = mock.Mock(thread=mock.Mock(channels.GuildThreadChannel))
 
-        event = event_factory.deserialize_guild_thread_update_event.return_value
+        event_factory.deserialize_guild_thread_update_event.return_value = event
+        event_manager_impl._cache.get_thread.return_value = old_thread
+
+        await event_manager_impl.on_thread_update(shard, payload)
+
+        event_manager_impl._cache.get_thread.assert_called_once_with(123)
         event_manager_impl._cache.update_thread.assert_called_once_with(event.thread)
+        event_factory.deserialize_guild_thread_update_event.assert_called_once_with(
+            shard, payload, old_thread=old_thread
+        )
         event_manager_impl.dispatch.assert_awaited_once_with(event)
-        event_factory.deserialize_guild_thread_update_event.assert_called_once_with(shard, mock_payload)
 
     @pytest.mark.asyncio
     async def test_on_thread_update_stateless(
         self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
-        mock_payload = mock.Mock()
-        await stateless_event_manager_impl.on_thread_update(shard, mock_payload)
+        payload = {"id": 123}
+
+        await stateless_event_manager_impl.on_thread_update(shard, payload)
 
         stateless_event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_guild_thread_update_event.return_value
         )
-        event_factory.deserialize_guild_thread_update_event.assert_called_once_with(shard, mock_payload)
+        event_factory.deserialize_guild_thread_update_event.assert_called_once_with(shard, payload, old_thread=None)
 
     @pytest.mark.asyncio
     async def test_on_thread_delete_stateful(
@@ -1792,4 +1801,68 @@ class TestEventManagerImpl:
         event_factory.deserialize_poll_vote_delete_event.assert_called_once_with(shard, mock_payload)
         event_manager_impl.dispatch.assert_awaited_once_with(
             event_factory.deserialize_poll_vote_delete_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_auto_moderation_rule_create(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager_impl.on_auto_moderation_rule_create(shard, mock_payload)
+
+        event_factory.deserialize_auto_mod_rule_create_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_auto_mod_rule_create_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_auto_moderation_rule_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager_impl.on_auto_moderation_rule_update(shard, mock_payload)
+
+        event_factory.deserialize_auto_mod_rule_update_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_auto_mod_rule_update_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_auto_moderation_rule_delete(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager_impl.on_auto_moderation_rule_delete(shard, mock_payload)
+
+        event_factory.deserialize_auto_mod_rule_delete_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_auto_mod_rule_delete_event.return_value
+        )
+
+    @pytest.mark.asyncio
+    async def test_on_auto_moderation_action_execution(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        await event_manager_impl.on_auto_moderation_action_execution(shard, mock_payload)
+
+        event_factory.deserialize_auto_mod_action_execution_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_awaited_once_with(
+            event_factory.deserialize_auto_mod_action_execution_event.return_value
         )

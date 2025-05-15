@@ -36,6 +36,7 @@ from hikari import undefined
 if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import audit_logs
+    from hikari import auto_mod
     from hikari import channels as channels_
     from hikari import colors
     from hikari import commands
@@ -651,6 +652,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: channels_.PermissionOverwrite | guilds.PartialRole | users.PartialUser | snowflakes.Snowflakeish,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
 
@@ -661,6 +663,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             object, or the ID of an existing channel.
         target
             The channel overwrite to delete.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -1188,6 +1193,119 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             `role_mentions` or `user_mentions` or if both `attachment` and
             `attachments`, `component` and `components` or `embed` and `embeds`
             are specified.
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; if `reply` is not found or not in the
+            same channel as `channel`; too many components.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you are missing the [hikari.permissions.Permissions.SEND_MESSAGES]
+            in the channel or the person you are trying to message has the DM's
+            disabled.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_voice_message(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
+        reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        """Create a voice message in the given channel.
+
+        Parameters
+        ----------
+        channel
+            The channel to create the message in.
+        attachment
+            The audio attachment used as source for the voice message.
+            This can be a resource, or string of a path on your computer
+            or a URL. The Content-Type of the attachment has to start with
+            `audio/`.
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a [`pathlib.PurePath`][] or [`str`][] to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                [`hikari.files.WebResource`][] such as
+                [`hikari.files.URL`][],
+                [`hikari.messages.Attachment`][], etc will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a [`hikari.files.Bytes`][] is passed, or a [`str`][]
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a [`hikari.files.File`][], [`pathlib.PurePath`][] or
+                [`str`][] that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of [`concurrent.futures.Executor`][] that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
+        waveform
+            The waveform of the entire voice message, with 1 byte
+            per datapoint encoded in base64.
+
+            Official clients sample the recording at most once per 100
+            milliseconds, but will downsample so that no more than 256
+            datapoints are in the waveform.
+
+            !!! note
+                Discord states that this is implementation detail and might
+                change without notice. You have been warned!
+        duration
+            The duration of the voice message in seconds. This is intended to be
+            a float.
+        reply
+            If provided, the message to reply to.
+        reply_must_exist
+            If provided, whether to error if the message being replied to does
+            not exist instead of sending as a normal (non-reply) message.
+
+            This will not do anything if not being used with `reply`.
+        mentions_reply
+            If provided, whether to mention the author of the message
+            that is being replied to.
+
+            This will not do anything if not being used with `reply`.
+        flags
+            If provided, optional flags to set on the message. If
+            [`hikari.undefined.UNDEFINED`][], the flags will be set
+            to [`hikari.MessageFlag.IS_VOICE_MESSAGE`][], which is
+            needed for sending voice messages.
+
+
+            Note that some flags may not be able to be set. Currently the only
+            flags that can be set are [hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS].
+
+        Returns
+        -------
+        hikari.messages.Message
+            The created voice message.
+
+        Raises
+        ------
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -1996,6 +2114,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         webhook: snowflakes.SnowflakeishOr[webhooks.PartialWebhook],
         *,
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a webhook.
 
@@ -2007,12 +2126,134 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         token
             If provided, the webhook token that will be used to delete
             the webhook instead of the token the client was initialized with.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
         hikari.errors.ForbiddenError
             If you are missing the [`hikari.permissions.Permissions.MANAGE_WEBHOOKS`][] permission when not
             using a token.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the webhook is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def execute_webhook_voice_message(
+        self,
+        # MyPy might not say this but SnowflakeishOr[ExecutableWebhook] isn't valid as ExecutableWebhook isn't Unique
+        webhook: webhooks.ExecutableWebhook | snowflakes.Snowflakeish,
+        token: str,
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        thread: undefined.UndefinedType | snowflakes.SnowflakeishOr[channels_.GuildThreadChannel] = undefined.UNDEFINED,
+        username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        avatar_url: undefined.UndefinedType | str | files.URL = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        """Execute a webhook, by sending a voice message.
+
+        !!! warning
+            At the time of writing, `username` and `avatar_url` are ignored for
+            interaction webhooks.
+
+            Additionally, [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][],
+            [`hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`][] and
+            [`hikari.messages.MessageFlag.EPHEMERAL`][] are the only flags that
+            can be set, with [`hikari.messages.MessageFlag.EPHEMERAL`][] limited to
+            interaction webhooks.
+
+        Parameters
+        ----------
+        webhook
+            The webhook to execute. This may be the object
+            or the ID of an existing webhook.
+        token
+            The webhook token.
+        attachment
+            The audio attachment used as source for the voice message.
+            This can be a resource, or string of a path on your computer
+            or a URL. The Content-Type of the attachment has to start with
+            `audio/`.
+
+
+            Attachments can be passed as many different things, to aid in
+            convenience.
+
+            - If a [`pathlib.PurePath`][] or [`str`][] to a valid URL, the
+                resource at the given URL will be streamed to Discord when
+                sending the message. Subclasses of
+                [`hikari.files.WebResource`][] such as
+                [`hikari.files.URL`][],
+                [`hikari.messages.Attachment`][],
+                [`hikari.emojis.Emoji`][],
+                [`hikari.embeds.EmbedResource`][], etc. will also be uploaded this way.
+                This will use bit-inception, so only a small percentage of the
+                resource will remain in memory at any one time, thus aiding in
+                scalability.
+            - If a [hikari.files.Bytes] is passed, or a [`str`][]
+                that contains a valid data URI is passed, then this is uploaded
+                with a randomized file name if not provided.
+            - If a [hikari.files.File], [`pathlib.PurePath`][] or
+                [`str`][] that is an absolute or relative path to a file
+                on your file system is passed, then this resource is uploaded
+                as an attachment using non-blocking code internally and streamed
+                using bit-inception where possible. This depends on the
+                type of [`concurrent.futures.Executor`][] that is being used for
+                the application (default is a thread pool which supports this
+                behaviour).
+        waveform
+            The waveform of the entire voice message, with 1 byte
+            per datapoint encoded in base64.
+
+            Official clients sample the recording at most once per 100
+            milliseconds, but will downsample so that no more than 256
+            datapoints are in the waveform.
+
+            !!! note
+                Discord states that this is implementation detail and might
+                change without notice. You have been warned!
+        duration
+            The duration of the voice message in seconds. This is intended to be
+            a float.
+        thread
+            If provided then the message will be created in the target thread
+            within the webhook's channel, otherwise it will be created in
+            the webhook's target channel.
+
+            This is required when trying to create a thread message.
+        username
+            If provided, the username to override the webhook's username
+            for this request.
+        avatar_url
+            If provided, the url of an image to override the webhook's
+            avatar with for this request.
+        flags
+            The flags to set for this webhook message.
+
+        Returns
+        -------
+        hikari.messages.Message
+            The created message.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; too many components.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -2505,7 +2746,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_invite(self, invite: invites.InviteCode | str) -> invites.Invite:
+    async def delete_invite(
+        self, invite: invites.InviteCode | str, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED
+    ) -> invites.Invite:
         """Delete an existing invite.
 
         Parameters
@@ -2513,6 +2756,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         invite
             The invite to delete. This may be an invite object or
             the code of an existing invite.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -5324,6 +5570,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Reposition the channels in a guild.
 
@@ -5335,6 +5582,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         positions
             A mapping of of the object or the ID of an existing channel to
             the new position, relative to their parent category, if any.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -6077,6 +6327,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         positions: typing.Mapping[int, snowflakes.SnowflakeishOr[guilds.PartialRole]],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Reposition the roles in a guild.
 
@@ -6087,6 +6338,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the object or the ID of an existing guild.
         positions
             A mapping of the position to the role.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -6177,7 +6431,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def delete_role(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], role: snowflakes.SnowflakeishOr[guilds.PartialRole]
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        role: snowflakes.SnowflakeishOr[guilds.PartialRole],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a role.
 
@@ -6189,6 +6446,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role
             The role to delete. This may be the object or the
             ID of an existing role.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -7549,6 +7809,77 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def create_interaction_voice_message_response(
+        self,
+        interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
+        token: str,
+        attachment: files.Resourceish,
+        waveform: str,
+        duration: float,
+        *,
+        flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> None:
+        """Create the a initial voice message response for a interaction.
+
+        !!! warning
+            Calling this with an interaction which already has an initial
+            response will result in this raising a [`hikari.errors.NotFoundError`][].
+            This includes if the REST interaction server has already responded
+            to the request.
+
+        Parameters
+        ----------
+        interaction
+            Object or ID of the interaction this response is for.
+        token
+            The interaction's token.
+        attachment
+            The audio attachment used as source for the voice message.
+            This can be a resource, or string of a path on your computer
+            or a URL. The Content-Type of the attachment has to start with
+            `audio/`.
+        waveform
+            The waveform of the entire voice message, with 1 byte
+            per datapoint encoded in base64.
+
+            Official clients sample the recording at most once per 100
+            milliseconds, but will downsample so that no more than 256
+            datapoints are in the waveform.
+
+            !!! note
+                Discord states that this is implementation detail and might
+                change without notice. You have been warned!
+        duration
+            The duration of the voice message in seconds. This is intended to be
+            a float.
+        flags
+            If provided, the message flags this response should have.
+
+            As of writing the only message flags which can be set here are
+            [`hikari.messages.MessageFlag.EPHEMERAL`][],
+            [`hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`][]
+            and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no embeds; messages with more than 2000 characters
+            in them, embeds that exceed one of the many embed limits
+            invalid image URLs in embeds.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction is not found or if the interaction's initial
+            response has already been created.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def edit_interaction_response(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -7641,8 +7972,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If this is [`None`][] then any present embeds are removed.
             Otherwise, the new embeds that were provided will be used as the
             replacement.
-        poll
-            If provided, the poll to set on the message.
         mentions_everyone
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -7673,6 +8002,73 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ValueError
             If both `attachment` and `attachments`, `component` and `components`
             or `embed` and `embeds` are specified.
+        hikari.errors.BadRequestError
+            This may be raised in several discrete situations, such as messages
+            being empty with no attachments or embeds; messages with more than
+            2000 characters in them, embeds that exceed one of the many embed
+            limits; too many attachments; attachments that are too large;
+            invalid image URLs in embeds; too many components.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the interaction or the message are not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_interaction_voice_message_response(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        token: str,
+        attachment: files.Resourceish | messages_.Attachment,
+        waveform: str,
+        duration: float,
+    ) -> messages_.Message:
+        """Edit the initial response to a voice message.
+
+        !!! note
+            Even though this edits the initial response, this only works for
+            editing/responding to deferred responses. Voice messages can not
+            be edited.
+
+        Parameters
+        ----------
+        application
+            Object or ID of the application to edit a command response for.
+        token
+            The interaction's token.
+        attachment
+            The audio attachment used as source for the voice message.
+            This can be a resource, or string of a path on your computer
+            or a URL. The Content-Type of the attachment has to start with
+            `audio/`.
+        waveform
+            The waveform of the entire voice message, with 1 byte
+            per datapoint encoded in base64.
+
+            Official clients sample the recording at most once per 100
+            milliseconds, but will downsample so that no more than 256
+            datapoints are in the waveform.
+
+            !!! note
+                Discord states that this is implementation detail and might
+                change without notice. You have been warned!
+        duration
+            The duration of the voice message in seconds. This is intended to be
+            a float.
+
+
+        Returns
+        -------
+        hikari.messages.Message
+            The edited message.
+
+        Raises
+        ------
         hikari.errors.BadRequestError
             This may be raised in several discrete situations, such as messages
             being empty with no attachments or embeds; messages with more than
@@ -8475,6 +8871,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
         ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         """Create a stage instance in guild stage channel.
 
@@ -8490,7 +8887,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Whether to send a notification to *all* server members that the stage instance has started.
         scheduled_event_id
             The ID of the scheduled event to associate with the stage instance.
-
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -8525,6 +8924,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         privacy_level: undefined.UndefinedOr[int | stage_instances.StageInstancePrivacyLevel] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         """Edit the stage instance in a guild stage channel.
 
@@ -8534,8 +8934,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The channel that the stage instance is associated with.
         topic
             The topic for the stage instance.
-        privacy_level:
+        privacy_level
             The privacy level for the stage instance.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Returns
         -------
@@ -8565,13 +8968,20 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def delete_stage_instance(self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]) -> None:
+    async def delete_stage_instance(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
         """Delete the stage instance.
 
         Parameters
         ----------
         channel
             The guild stage channel to fetch the stage instance from.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
 
         Raises
         ------
@@ -8669,6 +9079,248 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_auto_mod_rules(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], /
+    ) -> typing.Sequence[auto_mod.AutoModRule]:
+        """Fetch a guild's auto-moderation rules.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to fetch the auto-moderation rules of.
+
+        Returns
+        -------
+        typing.Sequence[hikari.auto_mod.AutoModRule]
+            Sequence of the guild's auto-moderation rules.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        /,
+    ) -> auto_mod.AutoModRule:
+        """Fetch an auto-moderation rule.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to fetch the auto-moderation rules of.
+        rule
+            Object or ID of the auto-moderation rule to fetch.
+
+        Returns
+        -------
+        hikari.auto_mod.AutoModRule
+            The fetched auto-moderation rule.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or rule was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def create_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        name: str,
+        event_type: auto_mod.AutoModEventType | int,
+        trigger: special_endpoints.AutoModTriggerBuilder,
+        actions: typing.Sequence[special_endpoints.AutoModActionBuilder],
+        enabled: undefined.UndefinedOr[bool] = True,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        """Create an auto-moderation rule.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to create the auto-moderation rules in.
+        name
+            The rule's name.
+        event_type
+            The type of user content creation event this rule should trigger on.
+        trigger
+            The trigger builder to create the rule from.
+        actions
+            Sequence of the actions to execute when this rule is triggered.
+        enabled
+            Whether this auto-moderation rule should be enabled.
+        exempt_channels
+            Sequence of up to 50 objects and IDs of channels which are not
+            effected by the rule.
+        exempt_roles
+            Sequence of up to 20 objects and IDs of roles which are not
+            effected by the rule.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.auto_mod.AutoModRule
+            The created auto-moderation rule.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission or if you try to
+            set a TIMEOUT action without the `MODERATE_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        *,
+        name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[auto_mod.AutoModEventType | int] = undefined.UNDEFINED,
+        trigger: undefined.UndefinedOr[special_endpoints.AutoModTriggerBuilder] = undefined.UNDEFINED,
+        actions: undefined.UndefinedOr[typing.Sequence[special_endpoints.AutoModActionBuilder]] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exempt_roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        exempt_channels: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.PartialChannel]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> auto_mod.AutoModRule:
+        """Edit an auto-moderation rule.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to edit an auto-moderation rule in.
+        rule
+            Object or ID of the auto-moderation rule to edit.
+        name
+            If specified, the rule's new name.
+        event_type
+            The type of user content creation event this rule should trigger on.
+        trigger
+            The trigger builder to edit the trigger from.
+        actions
+            If specified, a sequence of the actions to execute when this rule
+            is triggered.
+        enabled
+            If specified, whether this auto-moderation rule should be enabled.
+        exempt_channels
+            If specified, a sequence of up to 50 objects and IDs of channels
+            which are not effected by the rule.
+        exempt_roles
+            If specified, a sequence of up to 20 objects and IDs of roles which
+            are not effected by the rule.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.auto_mod.AutoModRule
+            The created auto-moderation rule.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission or if you try to
+            set a TIMEOUT action without the `MODERATE_MEMBERS` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def delete_auto_mod_rule(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Delete an auto-moderation rule.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to delete the auto-moderation rules of.
+        rule
+            Object or ID of the auto-moderation rule to delete.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the `MANAGE_GUILD` permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild or rule was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
