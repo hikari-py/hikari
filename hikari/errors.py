@@ -334,7 +334,7 @@ class BadRequestError(ClientHTTPResponseError):
             try:
                 value += _dump_errors(self.errors).strip("\n")
             except KeyError:
-                value += msgspec.json.format(self.errors, indent=2)
+                value += msgspec.json.format(data_binding.default_json_dumps(self.errors), indent=2).decode()
 
         self._cached_str = value
         return value

@@ -32,6 +32,7 @@ import typing
 import aiohttp
 import aiohttp.web
 import aiohttp.web_runner
+import msgspec
 
 from hikari import applications
 from hikari import errors
@@ -435,7 +436,7 @@ class InteractionServer(interaction_server.InteractionServer):
             assert isinstance(payload, dict)
             interaction_type = int(payload["type"])
 
-        except (ValueError, TypeError):
+        except (msgspec.DecodeError, TypeError):
             _LOGGER.exception("Received a request with an invalid JSON body")
             return _Response(_BAD_REQUEST_STATUS, b"Invalid JSON body")
 
