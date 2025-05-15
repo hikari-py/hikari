@@ -482,7 +482,7 @@ def _stringify_http_message(headers: data_binding.Headers, body: bytes | None) -
 
     if body:
         string += "\n\n    "
-        string += body.decode("ascii")
+        string += body.decode()
 
     return string
 
