@@ -20,42 +20,43 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
 from hikari import applications
 from hikari import monetization
+from hikari import permissions
 from hikari import snowflakes
 from hikari.interactions import base_interactions
 from hikari.interactions import component_interactions
 
-
-@pytest.fixture
-def mock_app():
-    return mock.Mock(rest=mock.AsyncMock())
+if typing.TYPE_CHECKING:
+    from hikari import traits
 
 
 class TestComponentInteraction:
     @pytest.fixture
-    def mock_component_interaction(self, mock_app):
+    def mock_component_interaction(self, hikari_app: traits.RESTAware) -> component_interactions.ComponentInteraction:
         return component_interactions.ComponentInteraction(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.MESSAGE_COMPONENT,
             guild_id=snowflakes.Snowflake(5412231),
-            channel=object(),
-            member=object(),
-            user=object(),
+            channel=mock.Mock(),
+            member=mock.Mock(),
+            user=mock.Mock(),
             token="httptptptptptptptp",
             version=1,
             application_id=snowflakes.Snowflake(43123),
             component_type=2,
             values=(),
             custom_id="OKOKOK",
-            message=object(),
+            message=mock.Mock(),
             locale="es-ES",
             guild_locale="en-US",
-            app_permissions=123321,
+            app_permissions=permissions.Permissions.NONE,
             resolved=None,
             entitlements=[
                 monetization.Entitlement(
@@ -77,24 +78,32 @@ class TestComponentInteraction:
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
-    def test_build_response(self, mock_component_interaction, mock_app):
-        mock_app.rest.interaction_message_builder = mock.Mock()
+    def test_build_response(
+        self, mock_component_interaction: component_interactions.ComponentInteraction, hikari_app: traits.RESTAware
+    ):
+        hikari_app.rest.interaction_message_builder = mock.Mock()
         response = mock_component_interaction.build_response(4)
 
-        assert response is mock_app.rest.interaction_message_builder.return_value
-        mock_app.rest.interaction_message_builder.assert_called_once_with(4)
+        assert response is hikari_app.rest.interaction_message_builder.return_value
+        hikari_app.rest.interaction_message_builder.assert_called_once_with(4)
 
-    def test_build_response_with_invalid_type(self, mock_component_interaction):
+    def test_build_response_with_invalid_type(
+        self, mock_component_interaction: component_interactions.ComponentInteraction
+    ):
         with pytest.raises(ValueError, match="Invalid type passed for an immediate response"):
-            mock_component_interaction.build_response(999)
+            mock_component_interaction.build_response(999)  # pyright: ignore [reportArgumentType]
 
-    def test_build_deferred_response(self, mock_component_interaction, mock_app):
-        mock_app.rest.interaction_deferred_builder = mock.Mock()
+    def test_build_deferred_response(
+        self, mock_component_interaction: component_interactions.ComponentInteraction, hikari_app: traits.RESTAware
+    ):
+        hikari_app.rest.interaction_deferred_builder = mock.Mock()
         response = mock_component_interaction.build_deferred_response(5)
 
-        assert response is mock_app.rest.interaction_deferred_builder.return_value
-        mock_app.rest.interaction_deferred_builder.assert_called_once_with(5)
+        assert response is hikari_app.rest.interaction_deferred_builder.return_value
+        hikari_app.rest.interaction_deferred_builder.assert_called_once_with(5)
 
-    def test_build_deferred_response_with_invalid_type(self, mock_component_interaction):
+    def test_build_deferred_response_with_invalid_type(
+        self, mock_component_interaction: component_interactions.ComponentInteraction
+    ):
         with pytest.raises(ValueError, match="Invalid type passed for a deferred response"):
             mock_component_interaction.build_deferred_response(33333)

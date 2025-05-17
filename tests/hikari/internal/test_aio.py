@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import asyncio
+import typing
 
 import mock.mock
 import pytest
@@ -30,12 +31,12 @@ from tests.hikari import hikari_test_helpers
 
 
 class CoroutineStub:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any):
         self.awaited = False
         self.args = args
         self.kwargs = kwargs
 
-    def __eq__(self, other):
+    def __eq__(self, other: typing.Any):
         return isinstance(other, CoroutineStub) and self.args == other.args and self.kwargs == other.kwargs
 
     def __await__(self):
@@ -50,7 +51,7 @@ class CoroutineStub:
 
 
 class CoroutineFunctionStub:
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: typing.Any, **kwargs: typing.Any):
         return CoroutineStub(*args, **kwargs)
 
 
@@ -66,12 +67,12 @@ class TestCoroutineFunctionStubUsedInTests:
 class TestCompletedFuture:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
-    async def test_is_awaitable(self, args):
+    async def test_is_awaitable(self, args: tuple[int, ...]):
         await aio.completed_future(*args)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("args", [(), (12,)])
-    async def test_is_completed(self, args):
+    async def test_is_completed(self, args: tuple[int, ...]):
         future = aio.completed_future(*args)
         assert future.done()
 
@@ -81,7 +82,8 @@ class TestCompletedFuture:
 
     @pytest.mark.asyncio
     async def test_non_default_result(self):
-        assert aio.completed_future(...).result() is ...
+        obj = mock.Mock
+        assert aio.completed_future(obj).result() is obj
 
 
 @pytest.mark.asyncio
@@ -214,7 +216,7 @@ class TestAllOf:
         f2 = event_loop.create_future()
         f3 = event_loop.create_future()
 
-        async def quickly_run_task(task):
+        async def quickly_run_task(task: asyncio.Task[typing.Sequence[typing.Any]]):
             try:
                 await asyncio.wait_for(asyncio.shield(task), timeout=0.01)
             except asyncio.TimeoutError:

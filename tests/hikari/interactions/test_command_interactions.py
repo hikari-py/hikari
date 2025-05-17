@@ -20,11 +20,14 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
 from hikari import applications
 from hikari import monetization
+from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
 from hikari.impl import special_endpoints
@@ -32,22 +35,17 @@ from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 
 
-@pytest.fixture
-def mock_app():
-    return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
-
-
 class TestCommandInteraction:
     @pytest.fixture
-    def mock_command_interaction(self, mock_app):
+    def mock_command_interaction(self, hikari_app: traits.RESTAware) -> command_interactions.CommandInteraction:
         return command_interactions.CommandInteraction(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             channel=mock.Mock(id=3123123),
             guild_id=snowflakes.Snowflake(5412231),
-            member=object(),
-            user=object(),
+            member=mock.Mock(),
+            user=mock.Mock(),
             token="httptptptptptptptp",
             version=1,
             application_id=snowflakes.Snowflake(43123),
@@ -58,7 +56,7 @@ class TestCommandInteraction:
             resolved=None,
             locale="es-ES",
             guild_locale="en-US",
-            app_permissions=543123,
+            app_permissions=permissions.Permissions.NONE,
             registered_guild_id=snowflakes.Snowflake(12345678),
             entitlements=[
                 monetization.Entitlement(
@@ -80,40 +78,45 @@ class TestCommandInteraction:
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
         )
 
-    def test_channel_id_property(self, mock_command_interaction):
-        assert mock_command_interaction.channel_id == 3123123
-
-    def test_build_response(self, mock_command_interaction, mock_app):
-        mock_app.rest.interaction_message_builder = mock.Mock()
+    def test_build_response(
+        self, mock_command_interaction: command_interactions.CommandInteraction, hikari_app: mock.Mock
+    ):
+        hikari_app.rest.interaction_message_builder = mock.Mock()
         builder = mock_command_interaction.build_response()
 
-        assert builder is mock_app.rest.interaction_message_builder.return_value
-        mock_app.rest.interaction_message_builder.assert_called_once_with(base_interactions.ResponseType.MESSAGE_CREATE)
+        assert builder is hikari_app.rest.interaction_message_builder.return_value
+        hikari_app.rest.interaction_message_builder.assert_called_once_with(
+            base_interactions.ResponseType.MESSAGE_CREATE
+        )
 
-    def test_build_deferred_response(self, mock_command_interaction, mock_app):
-        mock_app.rest.interaction_deferred_builder = mock.Mock()
+    def test_build_deferred_response(
+        self, mock_command_interaction: command_interactions.CommandInteraction, hikari_app: traits.RESTAware
+    ):
+        hikari_app.rest.interaction_deferred_builder = mock.Mock()
         builder = mock_command_interaction.build_deferred_response()
 
-        assert builder is mock_app.rest.interaction_deferred_builder.return_value
-        mock_app.rest.interaction_deferred_builder.assert_called_once_with(
+        assert builder is hikari_app.rest.interaction_deferred_builder.return_value
+        hikari_app.rest.interaction_deferred_builder.assert_called_once_with(
             base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
         )
 
 
 class TestAutocompleteInteraction:
     @pytest.fixture
-    def mock_autocomplete_interaction(self, mock_app):
+    def mock_autocomplete_interaction(
+        self, hikari_app: traits.RESTAware
+    ) -> command_interactions.AutocompleteInteraction:
         return command_interactions.AutocompleteInteraction(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(2312312),
             type=base_interactions.InteractionType.APPLICATION_COMMAND,
             channel=mock.Mock(3123123),
             guild_id=snowflakes.Snowflake(5412231),
             guild_locale="en-US",
             locale="en-US",
-            app_permissions=123321,
-            member=object(),
-            user=object(),
+            app_permissions=None,
+            member=mock.Mock(),
+            user=mock.Mock(),
             token="httptptptptptptptp",
             version=1,
             application_id=snowflakes.Snowflake(43123),
@@ -143,28 +146,35 @@ class TestAutocompleteInteraction:
         )
 
     @pytest.fixture
-    def mock_command_choices(self):
+    def mock_command_choices(self) -> typing.Sequence[special_endpoints.AutocompleteChoiceBuilder]:
         return [
             special_endpoints.AutocompleteChoiceBuilder(name="a", value="b"),
             special_endpoints.AutocompleteChoiceBuilder(name="foo", value="bar"),
         ]
 
-    def test_build_response(self, mock_autocomplete_interaction, mock_app, mock_command_choices):
-        mock_app.rest.interaction_autocomplete_builder = mock.Mock()
+    def test_build_response(
+        self,
+        mock_autocomplete_interaction: command_interactions.AutocompleteInteraction,
+        hikari_app: traits.RESTAware,
+        mock_command_choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
+    ):
+        hikari_app.rest.interaction_autocomplete_builder = mock.Mock()
         builder = mock_autocomplete_interaction.build_response(mock_command_choices)
 
-        assert builder is mock_app.rest.interaction_autocomplete_builder.return_value
-        mock_app.rest.interaction_autocomplete_builder.assert_called_once_with(mock_command_choices)
+        assert builder is hikari_app.rest.interaction_autocomplete_builder.return_value
+        hikari_app.rest.interaction_autocomplete_builder.assert_called_once_with(mock_command_choices)
 
     @pytest.mark.asyncio
     async def test_create_response(
         self,
         mock_autocomplete_interaction: command_interactions.AutocompleteInteraction,
-        mock_app,
-        mock_command_choices,
+        mock_command_choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
     ):
-        await mock_autocomplete_interaction.create_response(mock_command_choices)
+        with mock.patch.object(
+            mock_autocomplete_interaction.app.rest, "create_autocomplete_response", mock.AsyncMock()
+        ) as patched_create_autocomplete_response:
+            await mock_autocomplete_interaction.create_response(mock_command_choices)
 
-        mock_app.rest.create_autocomplete_response.assert_awaited_once_with(
-            2312312, "httptptptptptptptp", mock_command_choices
-        )
+            patched_create_autocomplete_response.assert_awaited_once_with(
+                2312312, "httptptptptptptptp", mock_command_choices
+            )

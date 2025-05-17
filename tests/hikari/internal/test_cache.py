@@ -31,7 +31,7 @@ from hikari.internal import cache
 
 class TestStickerData:
     def test_from_entity(self) -> None:
-        mock_user = object()
+        mock_user = mock.Mock()
         mock_sticker = stickers.GuildSticker(
             id=snowflakes.Snowflake(69420),
             name="lulzor",
@@ -55,7 +55,7 @@ class TestStickerData:
         assert data.user is mock_user
 
     def test_from_entity_when_user_not_passed(self) -> None:
-        mock_user = object()
+        mock_user = mock.Mock()
         mock_sticker = mock_sticker = stickers.GuildSticker(
             id=snowflakes.Snowflake(69420),
             name="lulzor",

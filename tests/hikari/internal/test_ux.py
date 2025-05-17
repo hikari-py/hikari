@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import contextlib
 import importlib
+import importlib.resources
 import logging
 import logging.config
 import os
@@ -30,8 +31,11 @@ import platform
 import string
 import sys
 import time
+import typing
 
 import colorlog
+import colorlog.escape_codes
+import colorlog.formatter
 import mock
 import pytest
 
@@ -91,7 +95,7 @@ class TestInitLogging:
 
     def test_when_flavour_is_a_dict_and_is_incremental(self):
         # This will emulate it being populated during the basicConfig call
-        def _basicConfig(*args, **kwargs):
+        def _basicConfig(*args: typing.Any, **kwargs: typing.Any):
             logging_basic_config(*args, **kwargs)
             stack.enter_context(mock.patch.object(logging.root, "handlers", new=[handler]))
 
@@ -118,7 +122,7 @@ class TestInitLogging:
 
     def test_when_supports_color(self):
         # This will emulate it being populated during the basicConfig call
-        def _basicConfig(*args, **kwargs):
+        def _basicConfig(*args: typing.Any, **kwargs: typing.Any):
             logging_basic_config(*args, **kwargs)
             stack.enter_context(mock.patch.object(logging.root, "handlers", new=[handler]))
 
@@ -231,18 +235,18 @@ def test_read_banner():
         mock_file = None
         open_encoding = None
 
-        def joinpath(self, path):
+        def joinpath(self, path: str):
             self.joint_path = path
             return self
 
-        def open(self, mode, encoding):
+        def open(self, mode: str, encoding: str):
             self.open_mode = mode
             self.open_encoding = encoding
             return self.mock_file
 
     traversable = MockTraversable()
     traversable.mock_file = MockFile()
-    read = object()
+    read = mock.Mock()
 
     with mock.patch.object(importlib.resources, "files", return_value=traversable, create=True) as read_text:
         assert ux._read_banner("hikaru") is read
@@ -263,7 +267,7 @@ class TestPrintBanner:
         write.assert_not_called()
 
     @pytest.fixture
-    def mock_args(self):
+    def mock_args(self) -> typing.Generator[None, None, None]:
         _about_path = str(pathlib.Path("/", "somewhere", "..", "coding", "hikari", "_about.py"))
 
         stack = contextlib.ExitStack()
@@ -466,7 +470,7 @@ class TestSupportsColor:
                 assert ux.supports_color(allow_color=True, force_color=False) is False
 
     @pytest.mark.parametrize("colorterm", ["truecolor", "24bit", "TRUECOLOR", "24BIT"])
-    def test_when_COLORTERM_has_correct_value(self, colorterm):
+    def test_when_COLORTERM_has_correct_value(self, colorterm: str):
         with mock.patch.dict(os.environ, {"COLORTERM": colorterm}, clear=True):
             assert ux.supports_color(allow_color=True, force_color=False) is True
 
@@ -490,7 +494,7 @@ class TestSupportsColor:
             ("Terminus", True, False, False),
         ],
     )
-    def test_when_plat_is_win32(self, term_program, ansicon, isatty, expected):
+    def test_when_plat_is_win32(self, term_program: str, ansicon: bool, isatty: bool, expected: bool):
         environ = {"TERM_PROGRAM": term_program}
         if ansicon:
             environ["ANSICON"] = "ooga booga"
@@ -504,7 +508,7 @@ class TestSupportsColor:
             assert ux.supports_color(allow_color=True, force_color=False) is expected
 
     @pytest.mark.parametrize("isatty", [True, False])
-    def test_when_plat_is_not_win32(self, isatty):
+    def test_when_plat_is_not_win32(self, isatty: bool):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.dict(os.environ, {}, clear=True))
         stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
@@ -515,7 +519,7 @@ class TestSupportsColor:
 
     @pytest.mark.parametrize("isatty", [True, False])
     @pytest.mark.parametrize("plat", ["linux", "win32"])
-    def test_when_PYCHARM_HOSTED(self, isatty, plat):
+    def test_when_PYCHARM_HOSTED(self, isatty: bool, plat: str):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.dict(os.environ, {"PYCHARM_HOSTED": "OOGA BOOGA"}, clear=True))
         stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
@@ -526,7 +530,7 @@ class TestSupportsColor:
 
     @pytest.mark.parametrize("isatty", [True, False])
     @pytest.mark.parametrize("plat", ["linux", "win32"])
-    def test_when_WT_SESSION(self, isatty, plat):
+    def test_when_WT_SESSION(self, isatty: bool, plat: str):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.dict(os.environ, {"WT_SESSION": "OOGA BOOGA"}, clear=True))
         stack.enter_context(mock.patch.object(sys.stdout, "isatty", return_value=isatty))
@@ -538,7 +542,7 @@ class TestSupportsColor:
 
 class TestHikariVersion:
     @pytest.mark.parametrize("v", ["1", "1.0.0dev2"])
-    def test_init_when_version_number_is_invalid(self, v):
+    def test_init_when_version_number_is_invalid(self, v: str):
         with pytest.raises(ValueError, match=rf"Invalid version: '{v}'"):
             ux.HikariVersion(v)
 
@@ -566,7 +570,7 @@ class TestHikariVersion:
             (ux.HikariVersion("1.2.3"), False),
         ],
     )
-    def test_eq(self, other, result):
+    def test_eq(self, other: ux.HikariVersion, result: bool):
         assert (ux.HikariVersion("1.2.3.dev99") == other) is result
 
     @pytest.mark.parametrize(
@@ -578,7 +582,7 @@ class TestHikariVersion:
             (ux.HikariVersion("1.2.3"), True),
         ],
     )
-    def test_ne(self, other, result):
+    def test_ne(self, other: ux.HikariVersion, result: bool):
         assert (ux.HikariVersion("1.2.3.dev99") != other) is result
 
     @pytest.mark.parametrize(
@@ -590,7 +594,7 @@ class TestHikariVersion:
             (ux.HikariVersion("1.2.3"), True),
         ],
     )
-    def test_lt(self, other, result):
+    def test_lt(self, other: ux.HikariVersion, result: bool):
         assert (ux.HikariVersion("1.2.3.dev99") < other) is result
 
     @pytest.mark.parametrize(
@@ -602,7 +606,7 @@ class TestHikariVersion:
             (ux.HikariVersion("1.2.3"), True),
         ],
     )
-    def test_le(self, other, result):
+    def test_le(self, other: ux.HikariVersion, result: bool):
         assert (ux.HikariVersion("1.2.3.dev99") <= other) is result
 
     @pytest.mark.parametrize(
@@ -614,7 +618,7 @@ class TestHikariVersion:
             (ux.HikariVersion("1.2.3"), False),
         ],
     )
-    def test_ge(self, other, result):
+    def test_ge(self, other: ux.HikariVersion, result: bool):
         assert (ux.HikariVersion("1.2.3.dev99") > other) is result
 
     @pytest.mark.parametrize(
@@ -626,21 +630,23 @@ class TestHikariVersion:
             (ux.HikariVersion("1.2.3"), False),
         ],
     )
-    def test_gt(self, other, result):
+    def test_gt(self, other: ux.HikariVersion, result: bool):
         assert (ux.HikariVersion("1.2.3.dev99") >= other) is result
 
 
 @pytest.mark.asyncio
 class TestCheckForUpdates:
     @pytest.fixture
-    def http_settings(self):
+    def http_settings(self) -> config.HTTPSettings:
         return mock.Mock(spec_set=config.HTTPSettings)
 
     @pytest.fixture
-    def proxy_settings(self):
+    def proxy_settings(self) -> config.ProxySettings:
         return mock.Mock(spec_set=config.ProxySettings)
 
-    async def test_when_not_official_pypi_release(self, http_settings, proxy_settings):
+    async def test_when_not_official_pypi_release(
+        self, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
+    ):
         stack = contextlib.ExitStack()
         logger = stack.enter_context(mock.patch.object(ux, "_LOGGER"))
         create_client_session = stack.enter_context(mock.patch.object(net, "create_client_session"))
@@ -653,7 +659,7 @@ class TestCheckForUpdates:
         logger.info.assert_not_called()
         create_client_session.assert_not_called()
 
-    async def test_when_error_fetching(self, http_settings, proxy_settings):
+    async def test_when_error_fetching(self, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings):
         ex = RuntimeError("testing")
         stack = contextlib.ExitStack()
         logger = stack.enter_context(mock.patch.object(ux, "_LOGGER"))
@@ -674,7 +680,9 @@ class TestCheckForUpdates:
             trust_env=proxy_settings.trust_env,
         )
 
-    async def test_when_no_new_available_releases(self, http_settings, proxy_settings):
+    async def test_when_no_new_available_releases(
+        self, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
+    ):
         data = {
             "releases": {
                 "0.1.0": [{"yanked": False}],
@@ -721,7 +729,9 @@ class TestCheckForUpdates:
         )
 
     @pytest.mark.parametrize("v", ["1.0.1", "1.0.1.dev10"])
-    async def test_check_for_updates(self, v, http_settings, proxy_settings):
+    async def test_check_for_updates(
+        self, v: str, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
+    ):
         data = {
             "releases": {
                 v: [{"yanked": False}, {"yanked": True}],
