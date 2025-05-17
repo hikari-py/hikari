@@ -341,7 +341,7 @@ class EventManagerBase(event_manager_.EventManager):
         self._intents = intents
         self._listeners: _ListenerMapT[base_events.Event] = {}
         self._waiters: _WaiterMapT[base_events.Event] = {}
-        self._dispatched_tasks = set()
+        self._dispatched_tasks: set[asyncio.Task[None]] = set()
 
         for name, member in inspect.getmembers(self):
             if name.startswith("on_"):
@@ -550,13 +550,15 @@ class EventManagerBase(event_manager_.EventManager):
         return decorator
 
     @typing.overload
-    def dispatch(self, event: base_events.Events, *, wait: bool = False) -> None: ...
+    def dispatch(self, event: base_events.Event, *, wait: typing.Literal[False] = False) -> None: ...
 
     @typing.overload
-    def dispatch(self, event: base_events.Events, *, wait: bool = True) -> asyncio.Future[None]: ...
+    def dispatch(
+        self, event: base_events.Event, *, wait: typing.Literal[True] = True
+    ) -> asyncio.Future[typing.Any]: ...
 
     @typing_extensions.override
-    def dispatch(self, event: base_events.Events, *, wait: bool = False) -> asyncio.Future[None] | None:
+    def dispatch(self, event: base_events.Event, *, wait: bool = False) -> asyncio.Future[typing.Any] | None:
         tasks: list[asyncio.Task[None]] = []
 
         for cls in event.dispatches():
