@@ -443,10 +443,10 @@ class TestGatewayBot:
         assert bot._shards == {}
         cache.clear.assert_called_once_with()
 
-        event_manager.dispatch.assert_has_calls(
+        event_manager.dispatch.assert_has_awaits(
             [
-                mock.call(event_factory.deserialize_stopping_event.return_value),
-                mock.call(event_factory.deserialize_stopped_event.return_value),
+                mock.call(event_factory.deserialize_stopping_event.return_value, wait=True),
+                mock.call(event_factory.deserialize_stopped_event.return_value, wait=True),
             ]
         )
 
@@ -691,8 +691,8 @@ class TestGatewayBot:
         assert event_manager.dispatch.call_count == 2
         event_manager.dispatch.assert_has_awaits(
             [
-                mock.call(event_factory.deserialize_starting_event.return_value),
-                mock.call(event_factory.deserialize_started_event.return_value),
+                mock.call(event_factory.deserialize_starting_event.return_value, wait=True),
+                mock.call(event_factory.deserialize_started_event.return_value, wait=True),
             ]
         )
 

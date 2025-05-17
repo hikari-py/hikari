@@ -481,7 +481,7 @@ class GatewayBot(traits.GatewayBotAware):
         _LOGGER.info("bot requested to shut down")
         self._closing_event.set()
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event())
+        await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event(), wait=True)
         _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
 
         await _close_resource("voice handler", self._voice.close())
@@ -497,7 +497,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._cache.clear()
         self._shards.clear()
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event())
+        await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event(), wait=True)
 
         self._closed_event.set()
         self._closed_event = None
@@ -505,7 +505,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         _LOGGER.info("bot shut down successfully")
 
-    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: base_events.Event) -> None:
         """Dispatch an event.
 
         Parameters
@@ -588,7 +588,7 @@ class GatewayBot(traits.GatewayBotAware):
         Unsubscribe : [`hikari.impl.gateway_bot.GatewayBot.unsubscribe`][].
         Wait_for : [`hikari.impl.gateway_bot.GatewayBot.wait_for`][].
         """
-        return self._event_manager.dispatch(event)
+        self._event_manager.dispatch(event)
 
     def get_listeners(
         self, event_type: type[base_events.EventT], /, *, polymorphic: bool = True
@@ -951,7 +951,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._rest.start()
         self._voice.start()
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_starting_event())
+        await self._event_manager.dispatch(self._event_factory.deserialize_starting_event(), wait=True)
         requirements = await self._rest.fetch_gateway_bot_info()
 
         if shard_count is None:
@@ -1022,7 +1022,7 @@ class GatewayBot(traits.GatewayBotAware):
 
             await aio.first_completed(self._closing_event.wait(), gather)
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_started_event())
+        await self._event_manager.dispatch(self._event_factory.deserialize_started_event(), wait=True)
 
         _LOGGER.info("started successfully in approx %.2f seconds", time.monotonic() - start_time)
 
