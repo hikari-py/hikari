@@ -711,6 +711,7 @@ class GatewayBot(traits.GatewayBotAware):
         status: presences.Status = presences.Status.ONLINE,
         shard_ids: typing.Sequence[int] | None = None,
         shard_count: int | None = None,
+        startup_window_delay: int = 5,
     ) -> None:
         """Start the application and block until it's finished running.
 
@@ -813,6 +814,10 @@ class GatewayBot(traits.GatewayBotAware):
             msg = "'shard_ids' must be passed with 'shard_count'"
             raise TypeError(msg)
 
+        if startup_window_delay < 5:
+            msg = "'startup_window_delay' must be at least 5 seconds"
+            raise ValueError(msg)
+
         loop = aio.get_or_make_loop()
 
         if asyncio_debug:
@@ -840,6 +845,7 @@ class GatewayBot(traits.GatewayBotAware):
                         shard_ids=shard_ids,
                         shard_count=shard_count,
                         status=status,
+                        startup_window_delay=startup_window_delay,
                     )
                 )
 
@@ -880,6 +886,7 @@ class GatewayBot(traits.GatewayBotAware):
         shard_ids: typing.Sequence[int] | None = None,
         shard_count: int | None = None,
         status: presences.Status = presences.Status.ONLINE,
+        startup_window_delay: int = 5,
     ) -> None:
         """Start the bot, wait for all shards to become ready, and then return.
 
@@ -987,11 +994,13 @@ class GatewayBot(traits.GatewayBotAware):
             shard_ids = shard_ids[max_concurrency:]
 
             if self._shards:
-                _LOGGER.info("the next startup window is in 5 seconds, please wait...")
+                _LOGGER.info("the next startup window is in %d seconds, please wait...", startup_window_delay)
 
                 try:
                     await aio.first_completed(
-                        self._closing_event.wait(), *(shard.join() for shard in self._shards.values()), timeout=5
+                        self._closing_event.wait(),
+                        *(shard.join() for shard in self._shards.values()),
+                        timeout=startup_window_delay,
                     )
 
                     if self._closing_event.is_set():
