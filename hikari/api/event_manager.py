@@ -32,7 +32,6 @@ from hikari.events import base_events
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
-    import asyncio
     import types
 
     from typing_extensions import Self
@@ -185,7 +184,7 @@ class EventManager(abc.ABC):
         """
 
     @abc.abstractmethod
-    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: base_events.Event) -> None:
         """Dispatch an event.
 
         Parameters
