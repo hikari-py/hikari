@@ -79,7 +79,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager"
 class _FilteredMethodT(fast_protocol.FastProtocolChecking, typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
-    def __call__(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject, /) -> None:
+    def __call__(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         raise NotImplementedError
 
     @property
