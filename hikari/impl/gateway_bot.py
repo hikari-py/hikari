@@ -808,7 +808,7 @@ class GatewayBot(traits.GatewayBotAware):
         TypeError
             If `shard_ids` is passed without `shard_count`.
         ValueError
-            If `startup_window_delay` is 5 seconds or less.
+            If `startup_window_delay` is less than 5 seconds.
         """
         if self._closed_event:
             msg = "bot is already running"
@@ -930,6 +930,8 @@ class GatewayBot(traits.GatewayBotAware):
 
             Defaults to [`None`][] which results in the count being
             determined dynamically on startup.
+        startup_window_delay
+            The time in seconds to wait in between shard startup windows.
         status
             The initial status to show for the user presence on startup.
 
@@ -937,6 +939,8 @@ class GatewayBot(traits.GatewayBotAware):
         ------
         TypeError
             If `shard_ids` is passed without `shard_count`.
+        ValueError
+            If `startup_window_delay` is less than 5 seconds.
         hikari.errors.ComponentStateConflictError
             If bot is already running.
         """
@@ -947,6 +951,10 @@ class GatewayBot(traits.GatewayBotAware):
         if shard_ids is not None and shard_count is None:
             msg = "'shard_ids' must be passed with 'shard_count'"
             raise TypeError(msg)
+
+        if startup_window_delay < 5:
+            msg = "'startup_window_delay' must be at least 5 seconds"
+            raise ValueError(msg)
 
         _validate_activity(activity)
 
