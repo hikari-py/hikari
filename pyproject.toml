@@ -147,6 +147,7 @@ exclude_lines = [
     "^if __name__ == ['\"]__main__['\"]:$",
     "^\\s*\\.\\.\\.$",
     "^\\s*@abc.abstractmethod$",
+    "^\\s*@typing.overload$",
     "^\\s*if typing.TYPE_CHECKING:$",
     # Whatever is in inside `if not typing.TYPE_CHECKING:` is expected to be tested, but the branch will always run, making
     # coverage think that its only partial
