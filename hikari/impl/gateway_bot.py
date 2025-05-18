@@ -481,7 +481,7 @@ class GatewayBot(traits.GatewayBotAware):
         _LOGGER.info("bot requested to shut down")
         self._closing_event.set()
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event(), wait=True)
+        await self._event_manager.dispatch(self._event_factory.deserialize_stopping_event(), return_tasks=True)
         _LOGGER.log(ux.TRACE, "StoppingEvent dispatch completed, now beginning termination")
 
         await _close_resource("voice handler", self._voice.close())
@@ -497,7 +497,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._cache.clear()
         self._shards.clear()
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event(), wait=True)
+        await self._event_manager.dispatch(self._event_factory.deserialize_stopped_event(), return_tasks=True)
 
         self._closed_event.set()
         self._closed_event = None
@@ -505,13 +505,28 @@ class GatewayBot(traits.GatewayBotAware):
 
         _LOGGER.info("bot shut down successfully")
 
-    def dispatch(self, event: base_events.Event) -> None:
+    @typing.overload
+    def dispatch(self, event: base_events.Event, *, return_tasks: typing.Literal[False] = False) -> None: ...
+
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: typing.Literal[True] = True
+    ) -> asyncio.Future[typing.Any]: ...
+
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: bool = False
+    ) -> asyncio.Future[typing.Any] | None: ...
+
+    def dispatch(self, event: base_events.Event, *, return_tasks: bool = False) -> asyncio.Future[typing.Any] | None:
         """Dispatch an event.
 
         Parameters
         ----------
         event
             The event to dispatch.
+        return_tasks
+            Whether to return an asyncio future to wait for the listeners to finish.
 
         Examples
         --------
@@ -588,7 +603,7 @@ class GatewayBot(traits.GatewayBotAware):
         Unsubscribe : [`hikari.impl.gateway_bot.GatewayBot.unsubscribe`][].
         Wait_for : [`hikari.impl.gateway_bot.GatewayBot.wait_for`][].
         """
-        self._event_manager.dispatch(event)
+        return self._event_manager.dispatch(event, return_tasks=return_tasks)
 
     def get_listeners(
         self, event_type: type[base_events.EventT], /, *, polymorphic: bool = True
@@ -951,7 +966,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._rest.start()
         self._voice.start()
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_starting_event(), wait=True)
+        await self._event_manager.dispatch(self._event_factory.deserialize_starting_event(), return_tasks=True)
         requirements = await self._rest.fetch_gateway_bot_info()
 
         if shard_count is None:
@@ -1022,7 +1037,7 @@ class GatewayBot(traits.GatewayBotAware):
 
             await aio.first_completed(self._closing_event.wait(), gather)
 
-        await self._event_manager.dispatch(self._event_factory.deserialize_started_event(), wait=True)
+        await self._event_manager.dispatch(self._event_factory.deserialize_started_event(), return_tasks=True)
 
         _LOGGER.info("started successfully in approx %.2f seconds", time.monotonic() - start_time)
 

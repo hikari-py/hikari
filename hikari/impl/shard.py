@@ -934,7 +934,9 @@ class GatewayShardImpl(shard.GatewayShard):
                 if not self._handshake_event.is_set():
                     continue
 
-                await self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self), wait=True)
+                await self._event_manager.dispatch(
+                    self._event_factory.deserialize_connected_event(self), return_tasks=True
+                )
                 await aio.first_completed(*lifetime_tasks)
 
                 # Since nothing went wrong, we can reset the backoff and try again
@@ -1005,7 +1007,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     if self._handshake_event.is_set():
                         # We dispatched the connected event, so we can dispatch the disconnected one too
                         await self._event_manager.dispatch(
-                            self._event_factory.deserialize_disconnected_event(self), wait=True
+                            self._event_factory.deserialize_disconnected_event(self), return_tasks=True
                         )
 
     def _serialize_and_store_presence_payload(

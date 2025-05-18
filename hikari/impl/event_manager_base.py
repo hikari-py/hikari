@@ -550,15 +550,20 @@ class EventManagerBase(event_manager_.EventManager):
         return decorator
 
     @typing.overload
-    def dispatch(self, event: base_events.Event, *, wait: typing.Literal[False] = False) -> None: ...
+    def dispatch(self, event: base_events.Event, *, return_tasks: typing.Literal[False] = False) -> None: ...
 
     @typing.overload
     def dispatch(
-        self, event: base_events.Event, *, wait: typing.Literal[True] = True
+        self, event: base_events.Event, *, return_tasks: typing.Literal[True] = True
     ) -> asyncio.Future[typing.Any]: ...
 
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: bool = False
+    ) -> asyncio.Future[typing.Any] | None: ...
+
     @typing_extensions.override
-    def dispatch(self, event: base_events.Event, *, wait: bool = False) -> asyncio.Future[typing.Any] | None:
+    def dispatch(self, event: base_events.Event, *, return_tasks: bool = False) -> asyncio.Future[typing.Any] | None:
         tasks: list[asyncio.Task[None]] = []
 
         for cls in event.dispatches():
@@ -587,7 +592,7 @@ class EventManagerBase(event_manager_.EventManager):
                 del self._waiters[cls]
                 self._increment_waiter_group_count(cls, -1)
 
-        if wait:
+        if return_tasks:
             return asyncio.gather(*tasks)
 
         self._dispatched_tasks.update(tasks)

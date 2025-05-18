@@ -185,23 +185,28 @@ class EventManager(abc.ABC):
         """
 
     @typing.overload
-    def dispatch(self, event: base_events.EventT, *, wait: typing.Literal[False] = False) -> None: ...
+    def dispatch(self, event: base_events.Event, *, return_tasks: typing.Literal[False] = False) -> None: ...
 
     @typing.overload
     def dispatch(
-        self, event: base_events.EventT, *, wait: typing.Literal[True] = True
+        self, event: base_events.Event, *, return_tasks: typing.Literal[True] = True
     ) -> asyncio.Future[typing.Any]: ...
 
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: bool = False
+    ) -> asyncio.Future[typing.Any] | None: ...
+
     @abc.abstractmethod
-    def dispatch(self, event: base_events.Event, *, wait: bool = False) -> asyncio.Future[typing.Any] | None:
+    def dispatch(self, event: base_events.Event, *, return_tasks: bool = False) -> asyncio.Future[typing.Any] | None:
         """Dispatch an event.
 
         Parameters
         ----------
         event
             The event to dispatch.
-        wait
-            Whether to return a asyncio future to wait for the listeners to finish.
+        return_tasks
+            Whether to return an asyncio future to wait for the listeners to finish.
 
         Examples
         --------
