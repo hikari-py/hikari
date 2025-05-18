@@ -693,7 +693,7 @@ class GatewayBot(traits.GatewayBotAware):
         ux.print_banner(banner, allow_color=allow_color, force_color=force_color, extra_args=extra_args)
 
     @typing_extensions.override
-    def run(
+    def run(  # noqa: PLR0912 - Too many branches
         self,
         *,
         activity: presences.Activity | None = None,
@@ -796,6 +796,8 @@ class GatewayBot(traits.GatewayBotAware):
 
             Defaults to [`None`][] which results in the count being
             determined dynamically on startup.
+        startup_window_delay
+            The time in seconds to wait in between shard startup windows.
         status
             The initial status to show for the user presence on startup.
 
@@ -805,6 +807,8 @@ class GatewayBot(traits.GatewayBotAware):
             If bot is already running.
         TypeError
             If `shard_ids` is passed without `shard_count`.
+        ValueError
+            If `startup_window_delay` is 5 seconds or less.
         """
         if self._closed_event:
             msg = "bot is already running"
