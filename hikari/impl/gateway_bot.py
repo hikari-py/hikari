@@ -693,7 +693,7 @@ class GatewayBot(traits.GatewayBotAware):
         ux.print_banner(banner, allow_color=allow_color, force_color=force_color, extra_args=extra_args)
 
     @typing_extensions.override
-    def run(
+    def run(  # noqa: PLR0912 - Too many branches
         self,
         *,
         activity: presences.Activity | None = None,
@@ -711,6 +711,7 @@ class GatewayBot(traits.GatewayBotAware):
         status: presences.Status = presences.Status.ONLINE,
         shard_ids: typing.Sequence[int] | None = None,
         shard_count: int | None = None,
+        startup_window_delay: int = 5,
     ) -> None:
         """Start the application and block until it's finished running.
 
@@ -795,6 +796,8 @@ class GatewayBot(traits.GatewayBotAware):
 
             Defaults to [`None`][] which results in the count being
             determined dynamically on startup.
+        startup_window_delay
+            The time in seconds to wait in between shard startup windows.
         status
             The initial status to show for the user presence on startup.
 
@@ -804,6 +807,8 @@ class GatewayBot(traits.GatewayBotAware):
             If bot is already running.
         TypeError
             If `shard_ids` is passed without `shard_count`.
+        ValueError
+            If `startup_window_delay` is less than 5 seconds.
         """
         if self._closed_event:
             msg = "bot is already running"
@@ -812,6 +817,10 @@ class GatewayBot(traits.GatewayBotAware):
         if shard_ids is not None and shard_count is None:
             msg = "'shard_ids' must be passed with 'shard_count'"
             raise TypeError(msg)
+
+        if startup_window_delay < 5:
+            msg = "'startup_window_delay' must be at least 5 seconds"
+            raise ValueError(msg)
 
         loop = aio.get_or_make_loop()
 
@@ -840,6 +849,7 @@ class GatewayBot(traits.GatewayBotAware):
                         shard_ids=shard_ids,
                         shard_count=shard_count,
                         status=status,
+                        startup_window_delay=startup_window_delay,
                     )
                 )
 
@@ -880,6 +890,7 @@ class GatewayBot(traits.GatewayBotAware):
         shard_ids: typing.Sequence[int] | None = None,
         shard_count: int | None = None,
         status: presences.Status = presences.Status.ONLINE,
+        startup_window_delay: int = 5,
     ) -> None:
         """Start the bot, wait for all shards to become ready, and then return.
 
@@ -919,6 +930,8 @@ class GatewayBot(traits.GatewayBotAware):
 
             Defaults to [`None`][] which results in the count being
             determined dynamically on startup.
+        startup_window_delay
+            The time in seconds to wait in between shard startup windows.
         status
             The initial status to show for the user presence on startup.
 
@@ -926,6 +939,8 @@ class GatewayBot(traits.GatewayBotAware):
         ------
         TypeError
             If `shard_ids` is passed without `shard_count`.
+        ValueError
+            If `startup_window_delay` is less than 5 seconds.
         hikari.errors.ComponentStateConflictError
             If bot is already running.
         """
@@ -936,6 +951,10 @@ class GatewayBot(traits.GatewayBotAware):
         if shard_ids is not None and shard_count is None:
             msg = "'shard_ids' must be passed with 'shard_count'"
             raise TypeError(msg)
+
+        if startup_window_delay < 5:
+            msg = "'startup_window_delay' must be at least 5 seconds"
+            raise ValueError(msg)
 
         _validate_activity(activity)
 
@@ -987,11 +1006,13 @@ class GatewayBot(traits.GatewayBotAware):
             shard_ids = shard_ids[max_concurrency:]
 
             if self._shards:
-                _LOGGER.info("the next startup window is in 5 seconds, please wait...")
+                _LOGGER.info("the next startup window is in %d seconds, please wait...", startup_window_delay)
 
                 try:
                     await aio.first_completed(
-                        self._closing_event.wait(), *(shard.join() for shard in self._shards.values()), timeout=5
+                        self._closing_event.wait(),
+                        *(shard.join() for shard in self._shards.values()),
+                        timeout=startup_window_delay,
                     )
 
                     if self._closing_event.is_set():
