@@ -425,9 +425,6 @@ class EventManagerBase(event_manager_.EventManager):
 
         try:
             consumer.callback(shard, payload)
-        except asyncio.CancelledError:
-            # Skip cancelled errors, likely caused by the event loop being shut down.
-            pass
         except errors.UnrecognisedEntityError:
             _LOGGER.debug("Event referenced an unrecognised entity, discarding")
         except Exception as ex:  # noqa: BLE001 - Do not catch blind exception
