@@ -23,6 +23,7 @@ from __future__ import annotations
 import array as array_
 import operator
 import sys
+import typing
 
 import mock
 import pytest
@@ -76,9 +77,9 @@ class TestFreezableDict:
 
     def test___setitem__(self):
         mock_map = collections.FreezableDict({"hmm": "forearm", "cat": "bag", "ok": "bye"})
-        mock_map["bye"] = 4
+        mock_map["bye"] = "goobyyy"
 
-        assert mock_map == {"hmm": "forearm", "cat": "bag", "ok": "bye", "bye": 4}
+        assert mock_map == {"hmm": "forearm", "cat": "bag", "ok": "bye", "bye": "goobyyy"}
 
 
 class TestLimitedCapacityCacheMap:
@@ -109,45 +110,45 @@ class TestLimitedCapacityCacheMap:
         assert result == {"o": "no", "good": "bye"}
 
     def test___delitem___for_existing_entry(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map["Ok"] = 42
         del mock_map["Ok"]
         assert "Ok" not in mock_map
 
     def test___delitem___for_non_existing_entry(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         with pytest.raises(KeyError):
             del mock_map["Blam"]
 
     def test___getitem___for_existing_entry(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map["blat"] = 42
         assert mock_map["blat"] == 42
 
     def test___getitem___for_non_existing_entry(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         with pytest.raises(KeyError):
             mock_map["CIA"]
 
     def test___iter___(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map.update({"OK": "blam", "blaaa": "neoeo", "neon": "genesis", "evangelion": None})
         assert list(mock_map) == ["OK", "blaaa", "neon", "evangelion"]
 
     def test___len___(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map.update({"ooga": "blam", "blaaa": "neoeo", "the": "boys", "neon": "genesis", "evangelion": None})
         assert len(mock_map) == 5
 
     def test___setitem___when_limit_not_reached(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=50)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=50)
         mock_map["OK"] = 523
         mock_map["blam"] = 512387
         mock_map.update({"bll": "no", "ieiei": "lslsl"})
         assert mock_map == {"OK": 523, "blam": 512387, "bll": "no", "ieiei": "lslsl"}
 
     def test___setitem___when_limit_reached(self):
-        mock_map = collections.LimitedCapacityCacheMap(limit=4)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(limit=4)
         mock_map.update({"bll": "no", "ieiei": "lslsl", "pacify": "me", "qt": "pie"})
         mock_map["eva"] = "Rei"
         mock_map.update({"shinji": "ikari"})
@@ -155,7 +156,9 @@ class TestLimitedCapacityCacheMap:
 
     def test___setitem___when_limit_reached_and_expire_callback_set(self):
         expire_callback = mock.Mock()
-        mock_map = collections.LimitedCapacityCacheMap(limit=4, on_expire=expire_callback)
+        mock_map: collections.LimitedCapacityCacheMap[str, typing.Any] = collections.LimitedCapacityCacheMap(
+            limit=4, on_expire=expire_callback
+        )
         mock_map.update({"bll": "no", "ieiei": "lslsl", "pacify": "me", "qt": "pie"})
         mock_map["eva"] = "Rei"
         mock_map.update({"shinji": "ikari"})
@@ -192,7 +195,9 @@ class TestSnowflakeSet:
             ([0, 122], [123, 121, 999991, 121, 121, 124, 120], [0, 120, 121, 122, 123, 124, 999991]),
         ],
     )
-    def test_add_inserts_items(self, start_with, add_items, expect):
+    def test_add_inserts_items(
+        self, start_with: typing.Sequence[int], add_items: typing.Sequence[int], expect: typing.Sequence[int]
+    ):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(start_with)
@@ -216,7 +221,9 @@ class TestSnowflakeSet:
             ([0, 122], [123, 121, 999991, 121, 121, 124, 120], [0, 120, 121, 122, 123, 124, 999991]),
         ],
     )
-    def test_add_all_inserts_items(self, start_with, add_items, expect):
+    def test_add_all_inserts_items(
+        self, start_with: typing.Sequence[int], add_items: typing.Sequence[int], expect: typing.Sequence[int]
+    ):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(start_with)
@@ -264,7 +271,9 @@ class TestSnowflakeSet:
             ([9, 18, 27, 36, 45, 54, 63], [18, 27, 18, 18, 36, 64, 63], [9, 45, 54]),
         ],
     )
-    def test_discard(self, start_with, discard, expect):
+    def test_discard(
+        self, start_with: typing.Sequence[int], discard: typing.Sequence[int], expect: typing.Sequence[int]
+    ):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(start_with)
@@ -292,7 +301,7 @@ class TestSnowflakeSet:
             ([12], "12", False),
         ],
     )
-    def test_contains(self, start_with, look_for, expect):
+    def test_contains(self, start_with: typing.Sequence[int], look_for: int, expect: bool):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(start_with)
@@ -308,7 +317,7 @@ class TestSnowflakeSet:
         assert list(sfs) == [9, 18, 27, 36, 45, 54, 63]
 
     @pytest.mark.parametrize("items", [*range(0, 10)])
-    def test_len(self, items):
+    def test_len(self, items: int):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(i for i in range(items))
@@ -316,7 +325,7 @@ class TestSnowflakeSet:
         assert len(sfs) == items
 
     @pytest.mark.parametrize("items", [*range(0, 10)])
-    def test_length_hint(self, items):
+    def test_length_hint(self, items: int):
         # given
         sfs = collections.SnowflakeSet()
         sfs._ids.extend(i for i in range(items))

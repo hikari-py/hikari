@@ -20,12 +20,13 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
 from hikari import files
 from hikari.internal import routes
-from tests.hikari import hikari_test_helpers
 
 
 class TestCompiledRoute:
@@ -35,16 +36,16 @@ class TestCompiledRoute:
             major_param_hash="abc123", route=mock.Mock(method="GET"), compiled_path="/some/endpoint"
         )
 
-    def test_method(self, compiled_route):
+    def test_method(self, compiled_route: routes.CompiledRoute):
         assert compiled_route.method == "GET"
 
-    def test_create_url(self, compiled_route):
+    def test_create_url(self, compiled_route: routes.CompiledRoute):
         assert compiled_route.create_url("https://some.url/api") == "https://some.url/api/some/endpoint"
 
-    def test_create_real_bucket_hash(self, compiled_route):
+    def test_create_real_bucket_hash(self, compiled_route: routes.CompiledRoute):
         assert compiled_route.create_real_bucket_hash("UNKNOWN", "AUTH_HASH") == "UNKNOWN;AUTH_HASH;abc123"
 
-    def test__str__(self, compiled_route):
+    def test__str__(self, compiled_route: routes.CompiledRoute):
         assert str(compiled_route) == "GET /some/endpoint"
 
 
@@ -59,7 +60,7 @@ class TestRoute:
             (routes.GET_INVITE, None),
         ],
     )
-    def test_major_params(self, route, params):
+    def test_major_params(self, route: routes.Route, params: typing.Optional[frozenset[tuple[str, ...]]]):
         assert route.major_params == params
 
     def test_compile_with_no_major_params(self):
@@ -148,7 +149,7 @@ class TestCDNRoute:
             ("LOTTIE", "json"),
         ],
     )
-    def test_compile_uses_correct_extensions(self, input_file_format, expected_file_format):
+    def test_compile_uses_correct_extensions(self, input_file_format: str, expected_file_format: str):
         route = routes.CDNRoute("/foo/bar", {"PNG", "JPG", "JPEG", "WEBP", "AWEBP", "APNG", "GIF", "LOTTIE"})
 
         compiled_url = route.compile("http://example.com", file_format=input_file_format)
@@ -172,7 +173,7 @@ class TestCDNRoute:
     @pytest.mark.parametrize(
         ("input_file_format", "expected_file_format"), [("JPG", "jpg"), ("jpg", "jpg"), ("PNG", "png"), ("PNG", "png")]
     )
-    def test_compile_uses_lowercase_file_format_always(self, input_file_format, expected_file_format):
+    def test_compile_uses_lowercase_file_format_always(self, input_file_format: str, expected_file_format: str):
         route = routes.CDNRoute("/foo/bar", {"PNG", "JPG"})
 
         compiled_url = route.compile("http://example.com", file_format=input_file_format)
@@ -220,7 +221,7 @@ class TestCDNRoute:
             route.compile("http://example.com", file_format="PNG", hash="boooob", size=-10)
 
     @pytest.mark.parametrize("size", [int(2**size) for size in range(4, 13)])
-    def test_passing_valid_sizes_to_sizable_does_not_raise_ValueError(self, size):
+    def test_passing_valid_sizes_to_sizable_does_not_raise_ValueError(self, size: int):
         route = routes.CDNRoute("/foo/bar", {"PNG", "JPG", "GIF"})
         route.compile("http://example.com", file_format="PNG", hash="boooob", size=size)
 
@@ -286,7 +287,16 @@ class TestCDNRoute:
             ),
         ],
     )
-    def test_compile_generates_expected_url(self, base_url, template, file_format, kwds, foo, bar, expected_url):
+    def test_compile_generates_expected_url(
+        self,
+        base_url: str,
+        template: str,
+        file_format: str,
+        kwds: dict[str, typing.Any],
+        foo: str,
+        bar: str | int,
+        expected_url: str,
+    ):
         route = routes.CDNRoute(template, {"PNG", "GIF", "JPG", "WEBP", "APNG"})
 
         actual_url = route.compile(base_url=base_url, file_format=file_format, foo=foo, bar=bar, **kwds)

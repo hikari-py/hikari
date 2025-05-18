@@ -26,6 +26,7 @@ import pytest
 from hikari import files
 from hikari import presences
 from hikari import snowflakes
+from hikari import traits
 from hikari import urls
 from hikari.impl import gateway_bot
 from hikari.internal import routes
@@ -81,7 +82,11 @@ class TestActivityAssets:
 
     def test_make_large_image_url(self):
         asset = presences.ActivityAssets(
-            application_id=45123123, large_image="541sdfasdasd", large_text=None, small_image=None, small_text=None
+            application_id=snowflakes.Snowflake(45123123),
+            large_image="541sdfasdasd",
+            large_text=None,
+            small_image=None,
+            small_text=None,
         )
 
         with mock.patch.object(routes, "CDN_APPLICATION_ASSET") as route:
@@ -160,7 +165,11 @@ class TestActivityAssets:
 
     def test_make_small_image_url(self):
         asset = presences.ActivityAssets(
-            application_id=123321, large_image=None, large_text=None, small_image="aseqwsdas", small_text=None
+            application_id=snowflakes.Snowflake(123321),
+            large_image=None,
+            large_text=None,
+            small_image="aseqwsdas",
+            small_text=None,
         )
 
         with mock.patch.object(routes, "CDN_APPLICATION_ASSET") as route:
@@ -202,7 +211,7 @@ class TestActivity:
 
 class TestMemberPresence:
     @pytest.fixture
-    def model(self, mock_app):
+    def model(self, mock_app: traits.RESTAware) -> presences.MemberPresence:
         return presences.MemberPresence(
             app=mock_app,
             user_id=snowflakes.Snowflake(432),
@@ -213,14 +222,14 @@ class TestMemberPresence:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_user(self, model):
+    async def test_fetch_user(self, model: presences.MemberPresence):
         model.app.rest.fetch_user = mock.AsyncMock()
 
         assert await model.fetch_user() is model.app.rest.fetch_user.return_value
         model.app.rest.fetch_user.assert_awaited_once_with(432)
 
     @pytest.mark.asyncio
-    async def test_fetch_member(self, model):
+    async def test_fetch_member(self, model: presences.MemberPresence):
         model.app.rest.fetch_member = mock.AsyncMock()
 
         assert await model.fetch_member() is model.app.rest.fetch_member.return_value

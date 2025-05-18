@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import http
+import typing
 
 import aiohttp
 import mock
@@ -42,7 +43,7 @@ from hikari.internal import net
     ],
 )
 @pytest.mark.asyncio
-async def test_generate_error_response(status_, expected_error):
+async def test_generate_error_response(status_: http.HTTPStatus, expected_error: str):
     class StubResponse:
         real_url = "https://some.url"
         status = status_
@@ -95,7 +96,7 @@ async def test_generate_error_response(status_, expected_error):
     ],
 )
 @pytest.mark.asyncio
-async def test_generate_error_response_with_non_conforming_status_code(status_, expected_error):
+async def test_generate_error_response_with_non_conforming_status_code(status_: int, expected_error: str):
     class StubResponse:
         real_url = "https://some.url"
         status = status_
@@ -121,7 +122,7 @@ async def test_generate_error_response_with_non_conforming_status_code(status_, 
     ],
 )
 @pytest.mark.asyncio
-async def test_generate_error_when_error_without_json(status_, expected_error):
+async def test_generate_error_when_error_without_json(status_: http.HTTPStatus, expected_error: str):
     class StubResponse:
         real_url = "https://some.url"
         status = status_
@@ -143,7 +144,7 @@ async def test_generate_bad_request_error_without_json_response():
         real_url = "https://some.url"
         status = http.HTTPStatus.BAD_REQUEST
         headers = {}
-        json = mock.AsyncMock(side_effect=aiohttp.ContentTypeError(None, None))
+        json = mock.AsyncMock(side_effect=aiohttp.ContentTypeError(mock.Mock(), ()))
 
         async def read(self):
             return "some raw body"
@@ -164,7 +165,9 @@ async def test_generate_bad_request_error_without_json_response():
     ],
 )
 @pytest.mark.asyncio
-async def test_generate_bad_request_error_with_json_response(data, expected_errors):
+async def test_generate_bad_request_error_with_json_response(
+    data: str, expected_errors: typing.Optional[dict[str, typing.Any]]
+):
     class StubResponse:
         real_url = "https://some.url"
         status = http.HTTPStatus.BAD_REQUEST
