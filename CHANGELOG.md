@@ -1,3 +1,14 @@
+## 2.3.3 (2025-05-18)
+
+### Features
+
+- Add `startup_window_delay` argument to `.run` and `.start` to customize the time in between startup windows for shards ([#2369](https://github.com/hikari-py/hikari/issues/2369))
+
+### Optimizations
+
+- Greatly optimize event managers memory management by avoiding unnecessary tasks creations and reducing lifetime of objects ([#2368](https://github.com/hikari-py/hikari/issues/2368))
+
+---
 ## 2.3.2 (2025-05-09)
 
 ### Deprecation
