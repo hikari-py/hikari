@@ -604,6 +604,7 @@ class TestGatewayBot:
                 shard_ids=shard_ids,
                 shard_count=shard_count,
                 status=status,
+                startup_window_delay=15,
             )
 
         loop.run_until_complete.assert_has_calls(
@@ -619,6 +620,7 @@ class TestGatewayBot:
             shard_ids=shard_ids,
             shard_count=shard_count,
             status=status,
+            startup_window_delay=15,
         )
         handle_interrupts.assert_called_once_with(enabled=False, loop=loop, propagate_interrupts=False)
         handle_interrupts.return_value.assert_used_once()
@@ -681,6 +683,7 @@ class TestGatewayBot:
                 idle_since="some idle since",
                 status="some status",
                 large_threshold=500,
+                startup_window_delay=10,
             )
 
         check_for_updates.assert_called_once_with(http_settings, proxy_settings)
@@ -727,7 +730,7 @@ class TestGatewayBot:
                 # Shard 1
                 mock.call(closing_event_closing_wait, gather.return_value),
                 # Shard 2
-                mock.call(closing_event_closing_wait, shard1.join.return_value, timeout=5),
+                mock.call(closing_event_closing_wait, shard1.join.return_value, timeout=10),
                 mock.call(closing_event_closing_wait, gather.return_value),
             ]
         )
