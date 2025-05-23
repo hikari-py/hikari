@@ -9,7 +9,7 @@ on:
 
 jobs:
   prepare-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 
     if: github.ref == 'refs/heads/master'
 
