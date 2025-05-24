@@ -295,68 +295,193 @@ class AuditLogEventType(int, enums.Enum):
     """The type of event that occurred."""
 
     GUILD_UPDATE = 1
+    """Indicates that guild settings were updated."""
+
     CHANNEL_CREATE = 10
+    """Indicates that a channel was created."""
+
     CHANNEL_UPDATE = 11
+    """Indicates that a channel's settings were updated."""
+
     CHANNEL_DELETE = 12
+    """Indicates that a channel was deleted."""
+
     CHANNEL_OVERWRITE_CREATE = 13
+    """Indicates that a permission overwrite was added to a channel."""
+
     CHANNEL_OVERWRITE_UPDATE = 14
+    """Indicates that a permission overwrite was updated for a channel."""
+
     CHANNEL_OVERWRITE_DELETE = 15
+    """Indicates that a permissino overwrite was deleted for a channel."""
+
     MEMBER_KICK = 20
+    """Indicates that a member was kicked from a guild."""
+
     MEMBER_PRUNE = 21
+    """Indicates that members were pruned from a guild."""
+
     MEMBER_BAN_ADD = 22
+    """Indicates that a member was banned from a guild."""
+
     MEMBER_BAN_REMOVE = 23
+    """Indicates that a member was unbanned from a guild."""
+
     MEMBER_UPDATE = 24
+    """Indicates that a member was updated in a guild."""
+
     MEMBER_ROLE_UPDATE = 25
+    """Indicates that a member was added or removed from a role."""
+
     MEMBER_MOVE = 26
+    """Indicates that a member was moved to a different voice channel."""
+
     MEMBER_DISCONNECT = 27
+    """Indicates that a member was disconnected from a voice channel."""
+
     BOT_ADD = 28
+    """Indicates a bot user was added to a guild."""
+
     ROLE_CREATE = 30
+    """Indicates that a role was created."""
+
     ROLE_UPDATE = 31
+    """Indicates that a role was edited."""
+
     ROLE_DELETE = 32
+    """Indicates that a role was deleted."""
+
     INVITE_CREATE = 40
+    """Indicates that a guild invite was created."""
+
     INVITE_UPDATE = 41
+    """Indicates that a guild invite was updated."""
+
     INVITE_DELETE = 42
+    """Indicates that a guild invite was deleted."""
+
     WEBHOOK_CREATE = 50
+    """Indicates that a webhook was created."""
+
     WEBHOOK_UPDATE = 51
+    """Indicates that a webhook properties or channel were updated."""
+
     WEBHOOK_DELETE = 52
+    """Indicates that a webhook was deleted."""
+
     EMOJI_CREATE = 60
+    """Indicates that an emoji was created."""
+
     EMOJI_UPDATE = 61
+    """Indicates that an emoji name was updated."""
+
     EMOJI_DELETE = 62
+    """Indicates that an emoji was deleted."""
+
     MESSAGE_DELETE = 72
+    """Indicates that a single message was deleted."""
+
     MESSAGE_BULK_DELETE = 73
+    """Indicates that multiple messages were deleted."""
+
     MESSAGE_PIN = 74
+    """Indicates that a message was pinned to a channel."""
+
     MESSAGE_UNPIN = 75
+    """Indicates that a message was unpinned from a channel."""
+
     INTEGRATION_CREATE = 80
+    """Indicates that an integration was added to a guild."""
+
     INTEGRATION_UPDATE = 81
+    """Indicates that an integration was updated."""
+
     INTEGRATION_DELETE = 82
+    """Indicates that an integration was removed from a guild."""
+
     STAGE_INSTANCE_CREATE = 83
+    """Indicates that a stage instance was created (stage channel went live)."""
+
     STAGE_INSTANCE_UPDATE = 84
+    """Indicates that a stage instance's details were updated."""
+
     STAGE_INSTANCE_DELETE = 85
+    """Indicates that a stage instance was deleted (stage channel no longer live)."""
+
     STICKER_CREATE = 90
+    """Indicates that a sticker was created."""
+
     STICKER_UPDATE = 91
+    """Indicates that sticker sticker details were updated."""
+
     STICKER_DELETE = 92
+    """Indicates that a sticke was deleted."""
+
     GUILD_SCHEDULED_EVENT_CREATE = 100
+    """Indicates that a guild event was created"""
+
     GUILD_SCHEDULED_EVENT_UPDATE = 101
+    """Indicates that a guild event was updated."""
+
     GUILD_SCHEDULED_EVENT_DELETE = 102
+    """Indicates thata guild event was cancelled."""
+
     THREAD_CREATE = 110
+    """Indicates that a thread was created in a channel."""
+
     THREAD_UPDATE = 111
+    """Indicates hat a thread was upodated,"""
+
     THREAD_DELETE = 112
+    """Indicates that a thread was deleted."""
+
     APPLICATION_COMMAND_PERMISSION_UPDATE = 121
+    """Indicates tht permissions were updated for a command."""
+
     AUTO_MODERATION_RULE_CREATE = 140
+    """Indicates hat an automod rule was created."""
+
     AUTO_MODERATION_RULE_UPDATE = 141
+    """Indicates that a n automod rule was uodated."""
+
     AUTO_MODERATION_RULE_DELETE = 142
+    """Indicates that an automod rule was deleted."""
+
     AUTO_MODERATION_BLOCK_MESSAGE = 143
+    """Indicates that a message was blocker by an automod rule."""
+
     AUTO_MODERATION_FLAG_TO_CHANNEL = 144
+    """Indicates that a message was flagged by automod."""
+
     AUTO_MODERATION_USER_COMMUNICATION_DISABLED = 145
+    """Indicates that a member was timed out yb automod."""
+
     CREATOR_MONETIZATION_REQUEST_CREATED = 150
+    """Indicates that creator moetization."""
+
     CREATOR_MONETIZATION_TERMS_ACCEPTED = 151
+    """Indicated that creator monetization terms were accepted."""
+
     ONBOARDING_PROMPT_CREATE = 163
+    """Indicates that onboarding prompt was created."""
+
     ONBOARDING_PROMPT_UPDATE = 164
+    """Indicates that onboarding prompt was updated."""
+
     ONBOARDING_PROMPT_DELETE = 165
+    """Indicates that onboarding prompt was deleed."""
+
     ONBOARDING_CREATE = 166
+    """Indicates that onboarding was created."""
+
     ONBOARDING_UPDATE = 167
+    """Indicates that onboarding was uodated."""
+
     HOME_SETTINGS_CREATE = 190
+    """Indicates that guild server guild was created."""
+
     HOME_SETTINGS_UPDATE = 191
+    """Indictas that giuld server guild was uodated."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
