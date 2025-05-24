@@ -47,7 +47,7 @@ import aiohttp
 from hikari import _about as about
 from hikari import applications
 from hikari import channels as channels_
-from hikari import colors
+from hikari import colors as colors_
 from hikari import commands
 from hikari import components as components_
 from hikari import embeds as embeds_
@@ -3766,8 +3766,9 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors_.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors_.Colorish] = undefined.UNDEFINED,
+        colors: undefined.UndefinedOr[guilds.RoleColors] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -3786,8 +3787,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color, conversion=colors.Color.of)
-        body.put("color", colour, conversion=colors.Color.of)
+        body.put("color", color, conversion=colors_.Color.of)
+        body.put("color", colour, conversion=colors_.Color.of)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
@@ -3820,8 +3821,9 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors_.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors_.Colorish] = undefined.UNDEFINED,
+        colors: undefined.UndefinedOr[guilds.RoleColors] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -3841,8 +3843,8 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color, conversion=colors.Color.of)
-        body.put("color", colour, conversion=colors.Color.of)
+        body.put("color", color, conversion=colors_.Color.of)
+        body.put("color", colour, conversion=colors_.Color.of)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
