@@ -158,7 +158,7 @@ class ShardCloseCode(int, enums.Enum):
     """A code indicating that the server is going down or the gateway is restarting."""
 
     PROTOCOL_ERROR = 1_002
-    """A code indicating that a protocol error has occured."""
+    """A code indicating that a protocol error has occurred."""
 
     TYPE_ERROR = 1_003
     """A code indicating that unsupported data was received."""
@@ -173,7 +173,9 @@ class ShardCloseCode(int, enums.Enum):
     """A code indicating that the message sent was too large."""
 
     UNEXPECTED_CONDITION = 1_011
-    """A code indicating that an unexpected condition was encountered that prevented the request from being fulfilling."""
+    """
+    A code indicating that an unexpected condition was encountered, which prevented the request from being fulfilled.
+    """
 
     UNKNOWN_ERROR = 4_000
     """A code indicating that something unknown has gone awry."""
@@ -191,13 +193,13 @@ class ShardCloseCode(int, enums.Enum):
     """A code indicating that the token sent for identifying is incorrect."""
 
     ALREADY_AUTHENTICATED = 4_005
-    """A code indicating that more than one identifying payload had been sent."""
+    """A code indicating that more than one identifying payload were sent."""
 
     INVALID_SEQ = 4_007
     """A code indicating that the sequence sent when resuming the session is invalid."""
 
     RATE_LIMITED = 4_008
-    """A code indicating that payloads had been sent too quickly resulting in a disconnect."""
+    """A code indicating that payloads were sent too quickly resulting in a disconnect."""
 
     SESSION_TIMEOUT = 4_009
     """A code indicating that the session has timed out."""
@@ -209,10 +211,10 @@ class ShardCloseCode(int, enums.Enum):
     """A code indicating that sharding is required due to having too many guilds."""
 
     INVALID_VERSION = 4_012
-    """A code indicating that an invalid API version had been sent."""
+    """A code indicating that an invalid API version was sent."""
 
     INVALID_INTENT = 4_013
-    """A code indicating invalid intents had been sent."""
+    """A code indicating that invalid intents were sent."""
 
     DISALLOWED_INTENT = 4_014
     """A code indicating that (a) disallowed intent(s) had been sent."""
