@@ -313,22 +313,22 @@ class AuditLogEventType(int, enums.Enum):
     """Indicates that a permission overwrite was updated for a channel."""
 
     CHANNEL_OVERWRITE_DELETE = 15
-    """Indicates that a permissino overwrite was deleted for a channel."""
+    """Indicates that a permission overwrite was deleted from a channel."""
 
     MEMBER_KICK = 20
-    """Indicates that a member was kicked from a guild."""
+    """Indicates that a member was kicked from guild."""
 
     MEMBER_PRUNE = 21
-    """Indicates that members were pruned from a guild."""
+    """Indicates that members were pruned from guild."""
 
     MEMBER_BAN_ADD = 22
-    """Indicates that a member was banned from a guild."""
+    """Indicates that a member was banned from guild."""
 
     MEMBER_BAN_REMOVE = 23
-    """Indicates that a member was unbanned from a guild."""
+    """Indicates that guild ban was lifted for a member."""
 
     MEMBER_UPDATE = 24
-    """Indicates that a member was updated in a guild."""
+    """Indicates that a member was updated in guild."""
 
     MEMBER_ROLE_UPDATE = 25
     """Indicates that a member was added or removed from a role."""
@@ -340,7 +340,7 @@ class AuditLogEventType(int, enums.Enum):
     """Indicates that a member was disconnected from a voice channel."""
 
     BOT_ADD = 28
-    """Indicates a bot user was added to a guild."""
+    """Indicates a bot user was added to guild."""
 
     ROLE_CREATE = 30
     """Indicates that a role was created."""
@@ -391,13 +391,13 @@ class AuditLogEventType(int, enums.Enum):
     """Indicates that a message was unpinned from a channel."""
 
     INTEGRATION_CREATE = 80
-    """Indicates that an integration was added to a guild."""
+    """Indicates that an app was added to guild."""
 
     INTEGRATION_UPDATE = 81
-    """Indicates that an integration was updated."""
+    """Indicates that an app was updated (i.e., it's scopes were updated)."""
 
     INTEGRATION_DELETE = 82
-    """Indicates that an integration was removed from a guild."""
+    """Indicates that an app was removed from guild."""
 
     STAGE_INSTANCE_CREATE = 83
     """Indicates that a stage instance was created (stage channel went live)."""
@@ -412,10 +412,10 @@ class AuditLogEventType(int, enums.Enum):
     """Indicates that a sticker was created."""
 
     STICKER_UPDATE = 91
-    """Indicates that sticker sticker details were updated."""
+    """Indicates that a sticker's details were updated."""
 
     STICKER_DELETE = 92
-    """Indicates that a sticke was deleted."""
+    """Indicates that a sticker was deleted."""
 
     GUILD_SCHEDULED_EVENT_CREATE = 100
     """Indicates that a guild event was created"""
@@ -430,58 +430,58 @@ class AuditLogEventType(int, enums.Enum):
     """Indicates that a thread was created in a channel."""
 
     THREAD_UPDATE = 111
-    """Indicates hat a thread was upodated,"""
+    """Indicates that a thread was updated."""
 
     THREAD_DELETE = 112
     """Indicates that a thread was deleted."""
 
     APPLICATION_COMMAND_PERMISSION_UPDATE = 121
-    """Indicates tht permissions were updated for a command."""
+    """Indicates that permissions were updated for a command."""
 
     AUTO_MODERATION_RULE_CREATE = 140
-    """Indicates hat an automod rule was created."""
+    """Indicates that an automod rule was created."""
 
     AUTO_MODERATION_RULE_UPDATE = 141
-    """Indicates that a n automod rule was uodated."""
+    """Indicates that an automod rule was updated."""
 
     AUTO_MODERATION_RULE_DELETE = 142
     """Indicates that an automod rule was deleted."""
 
     AUTO_MODERATION_BLOCK_MESSAGE = 143
-    """Indicates that a message was blocker by an automod rule."""
+    """Indicates that a message was blocked by automod."""
 
     AUTO_MODERATION_FLAG_TO_CHANNEL = 144
     """Indicates that a message was flagged by automod."""
 
     AUTO_MODERATION_USER_COMMUNICATION_DISABLED = 145
-    """Indicates that a member was timed out yb automod."""
+    """Indicates that a member was timed out by automod."""
 
     CREATOR_MONETIZATION_REQUEST_CREATED = 150
-    """Indicates that creator moetization."""
+    """Indicates that creator monetization request was created."""
 
     CREATOR_MONETIZATION_TERMS_ACCEPTED = 151
-    """Indicated that creator monetization terms were accepted."""
+    """Indicates that creator monetization terms were accepted."""
 
     ONBOARDING_PROMPT_CREATE = 163
-    """Indicates that onboarding prompt was created."""
+    """Indicates that a guild onboarding question was created."""
 
     ONBOARDING_PROMPT_UPDATE = 164
-    """Indicates that onboarding prompt was updated."""
+    """Indicates that a guild onboarding question was updated."""
 
     ONBOARDING_PROMPT_DELETE = 165
-    """Indicates that onboarding prompt was deleed."""
+    """Indicates that a guild onboarding question was deleted."""
 
     ONBOARDING_CREATE = 166
-    """Indicates that onboarding was created."""
+    """Indicates that guild onboarding was created."""
 
     ONBOARDING_UPDATE = 167
-    """Indicates that onboarding was uodated."""
+    """Indicates that guild onboarding was updated."""
 
     HOME_SETTINGS_CREATE = 190
-    """Indicates that guild server guild was created."""
+    """Indicates that guild server guide was created."""
 
     HOME_SETTINGS_UPDATE = 191
-    """Indictas that giuld server guild was uodated."""
+    """Indicates that guild server guide was uodated."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
