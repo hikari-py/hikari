@@ -342,6 +342,16 @@ class AuditLogEventType(int, enums.Enum):
     THREAD_UPDATE = 111
     THREAD_DELETE = 112
     APPLICATION_COMMAND_PERMISSION_UPDATE = 121
+
+    SOUNDBOARD_SOUND_CREATE = 130
+    """Indicates that a soundboard sound was created."""
+
+    SOUNDBOARD_SOUND_UPDATE = 131
+    """Indicates that a soundboard sound was updated"""
+
+    SOUNDBOARD_SOUND_DELETE = 132
+    """Indicates that a soundboard sound was deleted."""
+
     AUTO_MODERATION_RULE_CREATE = 140
     AUTO_MODERATION_RULE_UPDATE = 141
     AUTO_MODERATION_RULE_DELETE = 142
