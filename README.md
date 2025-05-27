@@ -239,23 +239,6 @@ async def print_my_user(token):
 asyncio.run(print_my_user("user token acquired through OAuth here"))
 ```
 
-## Optional Features
-
-Optional features can be specified when installing hikari:
-
-- `server` - Install dependencies required to enable Hikari's standard interaction server (RESTBot) functionality.
-- `speedups` - Detailed in [`hikari[speedups]`](#hikarispeedups).
-
-Example:
-
-```bash
-# To install hikari with the speedups feature:
-python -m pip install -U hikari[speedups]
-
-# To install hikari with both the speedups and server features:
-python -m pip install -U hikari[speedups, server]
-```
-
 ## Additional resources
 
 You may wish to use a command framework on top of hikari so that you can start writing a bot quickly without
@@ -273,8 +256,6 @@ There are also third party libraries to help you manage components:
 - [`yuyo`](https://github.com/FasterSpeeding/Yuyo) - A collection of utility classes and functions designed to expand Hikari.
 - [`miru`](https://github.com/hypergonial/hikari-miru) - A component handler for hikari, inspired by discord.py's views.
 - [`flare`](https://github.com/brazier-dev/hikari-flare/) - a component manager designed to write simple interactions with persistent data.
-
----
 
 ## Making your application more efficient
 
@@ -315,14 +296,6 @@ if os.name != "nt":
 
 # Your code goes here
 ```
-
-### Compiled extensions
-
-Eventually, we will start providing the option to use compiled components of this library over pure Python ones if it
-suits your use case. This should also enable further scalability of your application, should
-[_PEP 554 -- Multiple Interpreters in the Stdlib_](https://www.python.org/dev/peps/pep-0554/#abstract) be accepted.
-
-Currently, this functionality does not yet exist.
 
 ## Show your support!
 
