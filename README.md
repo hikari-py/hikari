@@ -20,6 +20,23 @@ development.
 
 Python 3.9, 3.10, 3.11, 3.12 and 3.13 are currently supported.
 
+## Large bots
+
+Hikari is used in the wild to run some large bots! Here are some examples:
+
+<div align="center">
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://invite-tracker.com"><img src="https://cdn.invite-tracker.com/logo.png" width="100px;" height="100px;" alt="Invite Tracker"/><br /><sub><b>Invite Tracker</b></sub></a>
+      <td align="center" valign="top" width="14.28%"><a href="https://nmarkov.xyz"><img src="https://nmarkov.xyz/logo.png" width="100px;" alt="nMarkov"/><br /><sub><b>nMarkov</b></sub></a>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+If you want to add your large bot to the list, please contact `@davfsa` on our [Discord server](https://discord.gg/hikari) or submit a pull request to add it to the list!
+
 ## Installation
 
 Install hikari from PyPI with the following command:
@@ -316,6 +333,10 @@ Currently, this functionality does not yet exist.
 
 ---
 
+## Show your support!
+
+If you made it this far into the readme, leave us a ⭐ on our GitHub repository. It really helps us out ❤️
+
 ## Developing hikari
 
 To familiarize yourself with the project, you should read our
@@ -326,9 +347,9 @@ If you wish to contribute something, you should first start by cloning the repos
 > [!NOTE]
 > We are using the package manager `uv` here. If you don't know how to use `uv`, we have a more detailed
 > section about that in the [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
-In the repository, make a virtual environment (`uv venv`) and enter it (`source .venv/bin/activate` on
-Linux or macOS, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
-`source .venv/Scripts/activate`).
+> In the repository, make a virtual environment (`uv venv`) and enter it (`source .venv/bin/activate` on
+> Linux or macOS, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
+> `source .venv/Scripts/activate`).
 
 The first thing you should run is `uv sync --group nox` to install nox.
 This handles running predefined tasks and pipelines.
