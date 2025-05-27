@@ -1,5 +1,7 @@
 <div align="center">
+<a href="https://github.com/hikari-py/hikari"><img src="https://www.hikari-py.dev/logo.png" height="100px;" alt="Invite Tracker"/></a>
 <h1>hikari</h1>
+<br>
 <a href="https://pypi.org/project/hikari"><img height="20" alt="Supported python versions" src="https://img.shields.io/pypi/pyversions/hikari"></a>
 <a href="https://pypi.org/project/hikari"><img height="20" alt="PyPI version" src="https://img.shields.io/pypi/v/hikari"></a>
 <br>
@@ -19,7 +21,6 @@ Built on good intentions and the hope that it will be extendable and reusable, r
 development.
 
 Python 3.9, 3.10, 3.11, 3.12 and 3.13 are currently supported.
-
 
 ## Installation
 
