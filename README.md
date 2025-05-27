@@ -1,6 +1,6 @@
 <div align="center">
 <a href="https://github.com/hikari-py/hikari"><img src="https://www.hikari-py.dev/logo.png" height="100px;" alt="Invite Tracker"/></a>
-<h2>hikari</h3>
+<h3>hikari</h3>
 <br>
 <a href="https://pypi.org/project/hikari"><img height="20" alt="Supported python versions" src="https://img.shields.io/pypi/pyversions/hikari"></a>
 <a href="https://pypi.org/project/hikari"><img height="20" alt="PyPI version" src="https://img.shields.io/pypi/v/hikari"></a>
