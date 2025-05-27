@@ -13,6 +13,8 @@
 <a href="https://docs.hikari-py.dev/en/stable"><img height="20" alt="Documentation Status" src="https://readthedocs.org/projects/hikari-py/badge/?version=latest"></a>
 </div>
 
+---
+
 An opinionated, static typed Discord microframework for Python3 and asyncio that supports Discord's v10 REST and
 Gateway APIs.
 
