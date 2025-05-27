@@ -24,7 +24,6 @@ Python 3.9, 3.10, 3.11, 3.12 and 3.13 are currently supported.
 
 Hikari is used in the wild to run some large bots! Here are some examples:
 
-<div align="center">
 <table>
   <tbody>
     <tr>
@@ -33,7 +32,6 @@ Hikari is used in the wild to run some large bots! Here are some examples:
     </tr>
   </tbody>
 </table>
-</div>
 
 If you want to add your large bot to the list, please contact `@davfsa` on our [Discord server](https://discord.gg/hikari) or submit a pull request to add it to the list!
 
