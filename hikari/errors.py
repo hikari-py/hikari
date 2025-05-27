@@ -152,27 +152,72 @@ class ShardCloseCode(int, enums.Enum):
     """Reasons for a shard connection closure."""
 
     NORMAL_CLOSURE = 1_000
+    """A code indicating that the connection has been closed normally."""
+
     GOING_AWAY = 1_001
+    """A code indicating that the server is going down or the gateway is restarting."""
+
     PROTOCOL_ERROR = 1_002
+    """A code indicating that a protocol error has occurred."""
+
     TYPE_ERROR = 1_003
+    """A code indicating that unsupported data was received."""
+
     ENCODING_ERROR = 1_007
+    """A code indicating that invalid data was received."""
+
     POLICY_VIOLATION = 1_008
+    """A code indicating that a policy has been violated."""
+
     TOO_BIG = 1_009
+    """A code indicating that the message sent was too large."""
+
     UNEXPECTED_CONDITION = 1_011
+    """
+    A code indicating that an unexpected condition was encountered, which prevented the request from being fulfilled.
+    """
+
     UNKNOWN_ERROR = 4_000
+    """A code indicating that something unknown has gone awry."""
+
     UNKNOWN_OPCODE = 4_001
+    """A code indicating that an unknown opcode was sent."""
+
     DECODE_ERROR = 4_002
+    """A code indicating that an invalid payload was sent."""
+
     NOT_AUTHENTICATED = 4_003
+    """A code indicating that either a payload was sent before identifying, or the session has been invalidated."""
+
     AUTHENTICATION_FAILED = 4_004
+    """A code indicating that the token sent for identifying is incorrect."""
+
     ALREADY_AUTHENTICATED = 4_005
+    """A code indicating that more than one identifying payload were sent."""
+
     INVALID_SEQ = 4_007
+    """A code indicating that the sequence sent when resuming the session is invalid."""
+
     RATE_LIMITED = 4_008
+    """A code indicating that payloads were sent too quickly resulting in a disconnect."""
+
     SESSION_TIMEOUT = 4_009
+    """A code indicating that the session has timed out."""
+
     INVALID_SHARD = 4_010
+    """A code indicating that an invalid shard was sent for identifying."""
+
     SHARDING_REQUIRED = 4_011
+    """A code indicating that sharding is required due to having too many guilds."""
+
     INVALID_VERSION = 4_012
+    """A code indicating that an invalid API version was sent."""
+
     INVALID_INTENT = 4_013
+    """A code indicating that invalid intents were sent."""
+
     DISALLOWED_INTENT = 4_014
+    """A code indicating that (a) disallowed intent(s) had been sent."""
 
     @property
     def is_standard(self) -> bool:
