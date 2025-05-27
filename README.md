@@ -46,7 +46,7 @@ Hikari is used in the wild to run some large bots! Here are some examples:
 
 If you want to add your large bot to the list, please contact `@davfsa` on our [Discord server](https://discord.gg/hikari) or submit a pull request to add it to the list!
 
-## Bots
+## Getting started
 
 Hikari provides two different default bot implementations to suit your needs:
 
