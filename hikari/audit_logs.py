@@ -438,6 +438,15 @@ class AuditLogEventType(int, enums.Enum):
     APPLICATION_COMMAND_PERMISSION_UPDATE = 121
     """Indicates that permissions were updated for a command."""
 
+    SOUNDBOARD_SOUND_CREATE = 130
+    """Indicates that a soundboard sound was created."""
+
+    SOUNDBOARD_SOUND_UPDATE = 131
+    """Indicates that a soundboard sound was updated"""
+
+    SOUNDBOARD_SOUND_DELETE = 132
+    """Indicates that a soundboard sound was deleted."""
+
     AUTO_MODERATION_RULE_CREATE = 140
     """Indicates that an automod rule was created."""
 
