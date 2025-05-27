@@ -20,6 +20,17 @@ development.
 
 Python 3.9, 3.10, 3.11, 3.12 and 3.13 are currently supported.
 
+
+## Installation
+
+Install hikari from PyPI with the following command:
+
+```bash
+python -m pip install -U hikari
+# Windows users may need to run this instead...
+py -3 -m pip install -U hikari
+```
+
 ## Large bots
 
 Hikari is used in the wild to run some large bots! Here are some examples:
@@ -34,18 +45,6 @@ Hikari is used in the wild to run some large bots! Here are some examples:
 </table>
 
 If you want to add your large bot to the list, please contact `@davfsa` on our [Discord server](https://discord.gg/hikari) or submit a pull request to add it to the list!
-
-## Installation
-
-Install hikari from PyPI with the following command:
-
-```bash
-python -m pip install -U hikari
-# Windows users may need to run this instead...
-py -3 -m pip install -U hikari
-```
-
----
 
 ## Bots
 
@@ -214,8 +213,6 @@ below:
 - [GatewayBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/gateway_bot/#hikari.impl.gateway_bot.GatewayBot.run)
 - [RESTBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot.run)
 
----
-
 ## REST-only applications
 
 You may only want to integrate with the REST API, for example if writing a web dashboard.
@@ -241,8 +238,6 @@ async def print_my_user(token):
 
 asyncio.run(print_my_user("user token acquired through OAuth here"))
 ```
-
----
 
 ## Optional Features
 
@@ -328,8 +323,6 @@ suits your use case. This should also enable further scalability of your applica
 [_PEP 554 -- Multiple Interpreters in the Stdlib_](https://www.python.org/dev/peps/pep-0554/#abstract) be accepted.
 
 Currently, this functionality does not yet exist.
-
----
 
 ## Show your support!
 
