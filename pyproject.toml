@@ -100,7 +100,7 @@ mkdocs = [
     # "mkdocs-glightbox==0.3.7",
 ]
 
-mypy = ["mypy[faster-cache]==1.15.0", { include-group = "types" }]
+mypy = ["mypy[faster-cache]==1.16.0", { include-group = "types" }]
 pyright = ["pyright==1.1.401", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
