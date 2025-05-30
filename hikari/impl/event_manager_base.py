@@ -565,7 +565,16 @@ class EventManagerBase(event_manager_.EventManager):
 
         for cls in event.dispatches():
             if cls in self._listeners:
-                tasks.extend(asyncio.create_task(self._invoke_callback(c, event)) for c in self._listeners[cls])
+                for c in self._listeners[cls]:
+                    task = asyncio.create_task(
+                        self._invoke_callback(c, event), name=f"handler for '{type(event).__name__}'"
+                    )
+
+                    if return_tasks:
+                        tasks.append(task)
+                    else:
+                        self._dispatched_tasks.add(task)
+                        task.add_done_callback(self._dispatched_tasks.discard)
 
             if cls not in self._waiters:
                 continue
@@ -592,9 +601,6 @@ class EventManagerBase(event_manager_.EventManager):
         if return_tasks:
             return asyncio.gather(*tasks)
 
-        self._dispatched_tasks.update(tasks)
-        for task in tasks:
-            task.add_done_callback(self._dispatched_tasks.remove)
         return None
 
     @typing_extensions.override
