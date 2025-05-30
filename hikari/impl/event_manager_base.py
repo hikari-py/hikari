@@ -567,7 +567,7 @@ class EventManagerBase(event_manager_.EventManager):
             if cls in self._listeners:
                 for c in self._listeners[cls]:
                     task = asyncio.create_task(
-                        self._invoke_callback(c, event), name=f"handler for '{type(event).__name__}'"
+                        self._invoke_callback(c, event), name=f"handler '{c.__name__}' for '{type(event).__name__}'"
                     )
 
                     if return_tasks:
