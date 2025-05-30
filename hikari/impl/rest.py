@@ -834,7 +834,9 @@ class RESTClientImpl(rest_api.RESTClient):
                         data = await form_builder.build(request_stack, executor=self._executor)
 
                     if compiled_route.route.has_ratelimits:
-                        await request_stack.enter_async_context(self._bucket_manager.acquire_bucket(compiled_route, auth))
+                        await request_stack.enter_async_context(
+                            self._bucket_manager.acquire_bucket(compiled_route, auth)
+                        )
 
                     if trace_logging_enabled:
                         uuid = time.uuid()
@@ -849,17 +851,19 @@ class RESTClientImpl(rest_api.RESTClient):
                         start = time.monotonic()
 
                     # Make the request.
-                    response = await response_stack.enter_async_context(self._client_session.request(
-                        compiled_route.method,
-                        url,
-                        headers=headers,
-                        params=query,
-                        data=data,
-                        allow_redirects=self._http_settings.max_redirects is not None,
-                        max_redirects=self._http_settings.max_redirects,
-                        proxy=self._proxy_settings.url,
-                        proxy_headers=self._proxy_settings.all_headers,
-                    ))
+                    response = await response_stack.enter_async_context(
+                        self._client_session.request(
+                            compiled_route.method,
+                            url,
+                            headers=headers,
+                            params=query,
+                            data=data,
+                            allow_redirects=self._http_settings.max_redirects is not None,
+                            max_redirects=self._http_settings.max_redirects,
+                            proxy=self._proxy_settings.url,
+                            proxy_headers=self._proxy_settings.all_headers,
+                        )
+                    )
 
                     if trace_logging_enabled:
                         time_taken = (time.monotonic() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
