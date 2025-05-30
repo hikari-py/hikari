@@ -560,7 +560,7 @@ class EventManagerBase(event_manager_.EventManager):
     ) -> asyncio.Future[typing.Any] | None: ...
 
     @typing_extensions.override
-    def dispatch(  # noqa PLR0912 - Too many branches
+    def dispatch(  # noqa: PLR0912 - Too many branches
         self, event: base_events.Event, *, return_tasks: bool = False
     ) -> asyncio.Future[typing.Any] | None:
         tasks: list[asyncio.Task[None]] = []
