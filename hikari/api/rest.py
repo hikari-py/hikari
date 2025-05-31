@@ -5566,13 +5566,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def reposition_channels(
+    def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]] = {},
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        """Reposition the channels in a guild.
+    ) -> special_endpoints.ChannelRepositioner:
+        """Return a [`hikari.api.special_endpoints.ChannelRepositioner`][], used to reposition channels in a guild.
 
         Parameters
         ----------
@@ -5582,23 +5582,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         positions
             A mapping of of the object or the ID of an existing channel to
             the new position, relative to their parent category, if any.
+
+            !!! note
+                Instead of using the `positions` parameter, you should make
+                use of the returned [`hikari.api.special_endpoints.ChannelRepositioner`][].
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.NotFoundError
-            If the guild is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
+        Returns
+        -------
+        hikari.api.special_endpoints.ChannelRepositioner
+            The channel repositioner.
+
         """
 
     @abc.abstractmethod
