@@ -205,7 +205,7 @@ class MessageFlag(enums.Flag):
     """This message came from the urgent message system."""
 
     HAS_THREAD = 1 << 5
-    """This message has an associated thread, with the same id."""
+    """This message has an associated thread with the same ID."""
 
     EPHEMERAL = 1 << 6
     """This message is only visible to the user that invoked the interaction."""
