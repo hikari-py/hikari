@@ -183,6 +183,17 @@ class MessageType(int, enums.Enum):
 
 
 @typing.final
+class MessageReferenceType(int, enums.Enum):
+    """The type of a [`hikari.messages.MessageReference`][]."""
+
+    DEFAULT = 0
+    """Indicates a replied to message."""
+
+    FORWARD = 1
+    """Indicates a forwarded message."""
+
+
+@typing.final
 class MessageFlag(enums.Flag):
     """Additional flags for message options."""
 
@@ -354,6 +365,9 @@ class MessageReference:
         repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}
     )
     """Client application that models may use for procedures."""
+
+    type: undefined.UndefinedOr[MessageReferenceType | int] = attrs.field(hash=False, eq=False, repr=False)
+    """The type of the reference."""
 
     id: snowflakes.Snowflake | None = attrs.field(repr=True)
     """The ID of the original message.
@@ -660,7 +674,7 @@ class PartialMessage(snowflakes.Unique):
     """
 
     referenced_message: undefined.UndefinedNoneOr[PartialMessage] = attrs.field(hash=False, eq=False, repr=False)
-    """The message that was replied to.
+    """The message that was forwarded or replied to.
 
     If `type` is [`hikari.messages.MessageType.REPLY`][] and [`hikari.undefined.UNDEFINED`][], Discord's
     backend didn't attempt to fetch the message, so the status is unknown. If
