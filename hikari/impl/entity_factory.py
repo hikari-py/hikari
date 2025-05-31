@@ -3425,6 +3425,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return message_models.MessageReference(
             app=self._app,
+            type=message_models.MessageReferenceType(payload.get("type", 0)),
             id=message_reference_message_id,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             guild_id=message_reference_guild_id,
@@ -3573,6 +3574,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 referenced_message = None
 
+        message_snapshots: undefined.UndefinedNoneOr[typing.Sequence[message_models.PartialMessage]] = (
+            undefined.UNDEFINED
+        )
+        if (message_snapshots_payload := payload.get("message_snapshots")) is not None:
+            message_snapshots = [self.deserialize_partial_message(snapshot) for snapshot in message_snapshots_payload]
+
         stickers: undefined.UndefinedOr[typing.Sequence[sticker_models.PartialSticker]] = undefined.UNDEFINED
         if "sticker_items" in payload:
             stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["sticker_items"]]
@@ -3634,6 +3641,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application=application,
             message_reference=message_reference,
             referenced_message=referenced_message,
+            message_snapshots=message_snapshots,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED,
             stickers=stickers,
             nonce=payload.get("nonce", undefined.UNDEFINED),
@@ -3687,6 +3695,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if referenced_message_payload := payload.get("referenced_message"):
             referenced_message = self.deserialize_partial_message(referenced_message_payload)
 
+        message_snapshots: typing.Sequence[message_models.PartialMessage] | None = None
+        if (message_snapshots_payload := payload.get("message_snapshots")) is not None:
+            message_snapshots = [self.deserialize_partial_message(snapshot) for snapshot in message_snapshots_payload]
+
         application: message_models.MessageApplication | None = None
         if "application" in payload:
             application = self._deserialize_message_application(payload["application"])
@@ -3738,6 +3750,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application=application,
             message_reference=message_reference,
             referenced_message=referenced_message,
+            message_snapshots=message_snapshots,
             flags=message_models.MessageFlag(payload["flags"]),
             stickers=stickers,
             nonce=payload.get("nonce"),
