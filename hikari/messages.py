@@ -503,6 +503,80 @@ def _map_cache_maybe_discover(
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
+class MessageSnapshot:
+    type: undefined.UndefinedOr[MessageType | int] = attrs.field(hash=False, eq=False, repr=False)
+    """The message type."""
+
+    content: undefined.UndefinedNoneOr[str] = attrs.field(hash=False, eq=False, repr=False)
+    """The content of the message."""
+
+    embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attrs.field(hash=False, eq=False, repr=False)
+    """The message embeds."""
+
+    attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attrs.field(hash=False, eq=False, repr=False)
+    """The message attachments."""
+
+    timestamp: undefined.UndefinedOr[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
+    """The timestamp that the message was sent at."""
+
+    edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
+    """The timestamp that the message was last edited at."""
+
+    flags: undefined.UndefinedOr[MessageFlag] = attrs.field(hash=False, eq=False, repr=False)
+    """The message flags."""
+
+    stickers: undefined.UndefinedOr[typing.Sequence[stickers_.PartialSticker]] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
+    """The stickers sent with this message."""
+
+    user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
+    """Users who were notified by their mention in the message.
+
+    !!! warning
+        If the contents have not mutated and this is a message update event,
+        some fields that are not affected may be empty instead.
+
+        This is a Discord limitation.
+    """
+
+    role_mention_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
+    """IDs of roles that were notified by their mention in the message.
+
+    !!! warning
+        If the contents have not mutated and this is a message update event,
+        some fields that are not affected may be empty instead.
+
+        This is a Discord limitation.
+    """
+
+    components: undefined.UndefinedOr[typing.Sequence[component_models.TopLevelComponentTypesT]] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
+    """Sequence of the components attached to this message."""
+
+    @property
+    def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
+        """Ids of the users who were notified by their mention in the message.
+
+        !!! warning
+            If the contents have not mutated and this is a message update event,
+            some fields that are not affected may be empty instead.
+
+            This is a Discord limitation.
+        """
+        if self.user_mentions is undefined.UNDEFINED:
+            return undefined.UNDEFINED
+
+        return list(self.user_mentions.keys())
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
 class PartialMessage(snowflakes.Unique):
     """A message representation containing partially populated information.
 
@@ -681,7 +755,7 @@ class PartialMessage(snowflakes.Unique):
     `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
 
-    message_snapshots: undefined.UndefinedNoneOr[typing.Sequence[PartialMessage]] = attrs.field(
+    message_snapshots: undefined.UndefinedNoneOr[typing.Sequence[MessageSnapshot]] = attrs.field(
         hash=False, eq=False, repr=False
     )
     """The partial message snapshot associated with the message_reference"""
@@ -1518,7 +1592,7 @@ class Message(PartialMessage):
     If `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
 
-    message_snapshots: typing.Sequence[PartialMessage] | None = attrs.field(hash=False, eq=False, repr=False)
+    message_snapshots: typing.Sequence[MessageSnapshot] | None = attrs.field(hash=False, eq=False, repr=False)
     """The partial message snapshot associated with the message_reference."""
 
     application_id: snowflakes.Snowflake | None = attrs.field(hash=False, eq=False, repr=False)
