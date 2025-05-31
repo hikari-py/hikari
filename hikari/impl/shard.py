@@ -184,7 +184,7 @@ class _GatewayTransport:
             await self._exit_stack.aclose()
 
             # We have to sleep to allow aiohttp time to close SSL transports...
-            # This code can be removed in aiohttp v4.0.0
+            # This code can be once aiohttp 3.12.6 is the minimum required version
             # https://github.com/aio-libs/aiohttp/issues/1925
             # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
             await asyncio.sleep(0.25)
@@ -341,7 +341,7 @@ class _GatewayTransport:
             await exit_stack.aclose()
 
             # We have to sleep to allow aiohttp time to close SSL transports...
-            # This code can be removed in aiohttp v4.0.0
+            # This code can be once aiohttp 3.12.6 is the minimum required version
             # https://github.com/aio-libs/aiohttp/issues/1925
             # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
             await asyncio.sleep(0.25)
