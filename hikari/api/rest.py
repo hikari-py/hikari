@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import audit_logs
     from hikari import auto_mod
     from hikari import channels as channels_
-    from hikari import colors
+    from hikari import colors as colors_
     from hikari import commands
     from hikari import embeds as embeds_
     from hikari import emojis
@@ -6259,8 +6259,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors_.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors_.Colorish] = undefined.UNDEFINED,
+        colors: undefined.UndefinedOr[guilds.RoleColors] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -6285,6 +6286,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the role's color.
         colour
             An alias for `color`.
+        colors
+            TODO
         hoist
             If provided, whether to hoist the role.
         icon
@@ -6365,8 +6368,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors_.Colorish] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors_.Colorish] = undefined.UNDEFINED,
+        colors: undefined.UndefinedOr[guilds.RoleColors] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -6391,6 +6395,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new color for the role.
         colour
             An alias for `color`.
+        colors
+            TODO
         hoist
             If provided, whether to hoist the role.
         icon
