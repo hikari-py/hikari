@@ -674,12 +674,17 @@ class PartialMessage(snowflakes.Unique):
     """
 
     referenced_message: undefined.UndefinedNoneOr[PartialMessage] = attrs.field(hash=False, eq=False, repr=False)
-    """The message that was forwarded or replied to.
+    """The message that was replied to.
 
     If `type` is [`hikari.messages.MessageType.REPLY`][] and [`hikari.undefined.UNDEFINED`][], Discord's
     backend didn't attempt to fetch the message, so the status is unknown. If
     `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
+
+    message_snapshots: undefined.UndefinedNoneOr[typing.Sequence[PartialMessage]] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
+    """The partial message snapshot associated with the message_reference"""
 
     application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.
@@ -1512,6 +1517,9 @@ class Message(PartialMessage):
 
     If `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
+
+    message_snapshots: typing.Sequence[PartialMessage] | None = attrs.field(hash=False, eq=False, repr=False)
+    """The partial message snapshot associated with the message_reference."""
 
     application_id: snowflakes.Snowflake | None = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.
