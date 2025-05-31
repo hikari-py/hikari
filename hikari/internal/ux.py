@@ -473,7 +473,7 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
     try:
         async with (
             net.create_client_session(
-                connector=net.create_tcp_connector(dns_cache=False, limit=1, http_settings=http_settings),
+                connector=net.create_tcp_connector(dns_cache=False, http_settings=http_settings),
                 connector_owner=True,
                 http_settings=http_settings,
                 raise_for_status=True,

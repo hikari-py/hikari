@@ -292,7 +292,7 @@ class _GatewayTransport:
 
         try:
             try:
-                connector = net.create_tcp_connector(http_settings=http_settings, dns_cache=False, limit=1)
+                connector = net.create_tcp_connector(http_settings=http_settings, dns_cache=False)
                 client_session = await exit_stack.enter_async_context(
                     net.create_client_session(
                         connector=connector,
