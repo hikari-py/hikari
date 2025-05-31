@@ -265,7 +265,8 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
     def release(self) -> None:
         """Release the lock on the bucket."""
-        self._lock.release()
+        if self._lock.locked():
+            self._lock.release()
 
     @typing_extensions.override
     async def acquire(self) -> None:
@@ -281,7 +282,8 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         hikari.errors.RateLimitTooLongError
             If the rate limit is longer than `max_rate_limit`.
         """
-        await self._lock.acquire()
+        if self.is_unknown:
+            await self._lock.acquire()
 
         if self.is_unknown:
             return
@@ -291,7 +293,6 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         if self.is_rate_limited(now) and retry_after > self._max_rate_limit:
             # Release lock before we error
-            self._lock.release()
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 is_global=False,
@@ -307,7 +308,6 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         global_ratelimit = self._global_ratelimit
         if global_ratelimit.reset_at and (global_ratelimit.reset_at - now) > self._max_rate_limit:
             # Release lock before we error
-            self._lock.release()
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 is_global=True,
