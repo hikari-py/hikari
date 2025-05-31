@@ -387,7 +387,7 @@ class TestGatewayTransport:
             [mock.call(create_client_session.return_value), mock.call(client_session.ws_connect.return_value)]
         )
 
-        create_tcp_connector.assert_called_once_with(http_settings=http_settings, dns_cache=False, limit=1)
+        create_tcp_connector.assert_called_once_with(http_settings=http_settings, dns_cache=False)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector.return_value,
             connector_owner=True,
