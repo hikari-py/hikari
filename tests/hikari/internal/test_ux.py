@@ -704,7 +704,7 @@ class TestCheckForUpdates:
         logger.info.assert_not_called()
 
         json_loads.assert_called_once_with(_request.read.return_value)
-        create_tcp_connector.assert_called_once_with(dns_cache=False,  http_settings=http_settings)
+        create_tcp_connector.assert_called_once_with(dns_cache=False, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
             connector_owner=True,
