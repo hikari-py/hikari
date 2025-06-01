@@ -1752,6 +1752,39 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_message(response)
 
     @typing_extensions.override
+    async def forward_message(
+        self,
+        channel_to: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        channel_from: snowflakes.SnowflakeishOr[channels_.TextableChannel] | None = None,
+    ) -> messages_.Message:
+        route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel_to)
+
+        if isinstance(message, messages_.PartialMessage):
+            channel_from = message.channel_id
+
+        if channel_from is None:
+            msg = "The message's channel of origin was not provided and could not be obtained from the message."
+            raise ValueError(msg)
+
+        message_reference = data_binding.JSONObjectBuilder()
+        message_reference.put("type", messages_.MessageReferenceType.FORWARD)
+        message_reference.put_snowflake("message_id", message)
+        message_reference.put_snowflake("channel_id", channel_from)
+
+        body, form_builder = self._build_message_payload()
+        body.put("message_reference", message_reference)
+
+        if form_builder is not None:
+            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            response = await self._request(route, form_builder=form_builder)
+        else:
+            response = await self._request(route, json=body)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
+
+    @typing_extensions.override
     async def edit_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
