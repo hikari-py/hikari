@@ -43,9 +43,12 @@ class TestRESTBucket:
     def compiled_route(self, template):
         return routes.CompiledRoute("/foo/bar", template, "1a2b3c")
 
-    @pytest.mark.parametrize(("name", "expected"), [("spaghetti", False), ("UNKNOW", False), ("UNKNoWN hash", False), ("UNKNOWN", True), ("UNKNOWN hash", True)])
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [("spaghetti", False), ("UNKNOW", False), ("UNKNoWN hash", False), ("UNKNOWN", True), ("UNKNOWN hash", True)],
+    )
     def test_is_unknown(self, name, compiled_route, expected):
-        bucket =  buckets.RESTBucket(name, compiled_route, mock.Mock(), float("inf"))
+        bucket = buckets.RESTBucket(name, compiled_route, mock.Mock(), float("inf"))
 
         assert bucket.is_unknown is expected
 
@@ -100,7 +103,7 @@ class TestRESTBucket:
 
         with (
             mock.patch.object(buckets.RESTBucket, "is_rate_limited", return_value=True),
-            pytest.raises(errors.RateLimitTooLongError)
+            pytest.raises(errors.RateLimitTooLongError),
         ):
             await bucket.acquire()
 
@@ -116,7 +119,7 @@ class TestRESTBucket:
 
         with (
             mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire,
-            pytest.raises(errors.RateLimitTooLongError)
+            pytest.raises(errors.RateLimitTooLongError),
         ):
             await bucket.acquire()
 
