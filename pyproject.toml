@@ -32,7 +32,7 @@ name = "hikari"
 description = "A sane Discord API for Python 3 built on asyncio and good intentions"
 requires-python = ">=3.9.0,<3.14"
 dependencies = [
-    "aiohttp~=3.11",
+    "aiohttp~=3.12",
     "attrs~=25.1",
     "colorlog~=6.9",
     "multidict~=6.1",
@@ -100,7 +100,7 @@ mkdocs = [
     # "mkdocs-glightbox==0.3.7",
 ]
 
-mypy = ["mypy[faster-cache]==1.15.0", { include-group = "types" }]
+mypy = ["mypy[faster-cache]==1.16.0", { include-group = "types" }]
 pyright = ["pyright==1.1.401", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",

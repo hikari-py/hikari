@@ -258,7 +258,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
         for the guild and will otherwise default to `en-US`.
     """
 
-    locale: str = attrs.field(eq=False, hash=False, repr=True)
+    locale: str | locales.Locale = attrs.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this modal interaction."""
 
     authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (

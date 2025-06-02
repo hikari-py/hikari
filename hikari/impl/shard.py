@@ -184,7 +184,7 @@ class _GatewayTransport:
             await self._exit_stack.aclose()
 
             # We have to sleep to allow aiohttp time to close SSL transports...
-            # This code can be removed in aiohttp v4.0.0
+            # This code can be once aiohttp 3.12.6 is the minimum required version
             # https://github.com/aio-libs/aiohttp/issues/1925
             # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
             await asyncio.sleep(0.25)
@@ -292,7 +292,7 @@ class _GatewayTransport:
 
         try:
             try:
-                connector = net.create_tcp_connector(http_settings=http_settings, dns_cache=False, limit=1)
+                connector = net.create_tcp_connector(http_settings=http_settings, dns_cache=False)
                 client_session = await exit_stack.enter_async_context(
                     net.create_client_session(
                         connector=connector,
@@ -341,7 +341,7 @@ class _GatewayTransport:
             await exit_stack.aclose()
 
             # We have to sleep to allow aiohttp time to close SSL transports...
-            # This code can be removed in aiohttp v4.0.0
+            # This code can be once aiohttp 3.12.6 is the minimum required version
             # https://github.com/aio-libs/aiohttp/issues/1925
             # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
             await asyncio.sleep(0.25)

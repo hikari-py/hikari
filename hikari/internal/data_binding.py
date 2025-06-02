@@ -234,7 +234,7 @@ class StringMapBuilder(multidict.MultiDict[str]):
         elif isinstance(value, snowflakes.Unique):
             value = str(value.id)
         elif isinstance(value, datetime.datetime):
-            value = snowflakes.Snowflake.from_datetime(value)
+            value = str(snowflakes.Snowflake.from_datetime(value))
         else:
             value = str(value)
 

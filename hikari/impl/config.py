@@ -240,6 +240,14 @@ class HTTPSettings(config.HTTPSettings):
         by any value set here.
     """
 
+    connection_limit: int = attrs.field(default=0)
+    """The maximum number of concurrent connections to allow per connector.
+
+    If `0`, then there will be no limit.
+
+    The default is to not have any limit.
+    """
+
     @max_redirects.validator
     def _(self, _: attrs.Attribute[int | None], value: object) -> None:
         # This error won't occur until some time in the future where it will be annoying to
