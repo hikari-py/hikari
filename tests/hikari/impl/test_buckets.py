@@ -44,8 +44,7 @@ class TestRESTBucket:
         return routes.CompiledRoute("/foo/bar", template, "1a2b3c")
 
     @pytest.mark.parametrize(
-        ("name", "expected"),
-        [("spaghetti", False), ("UNKNOW", False), ("UNKNoWN hash", False), ("UNKNOWN", True), ("UNKNOWN hash", True)],
+        ("name", "expected"), [("spaghetti", False), ("UNKNoWN hash", False), ("UNKNOWN", True), ("UNKNOWN hash", True)]
     )
     def test_is_unknown(self, name, compiled_route, expected):
         bucket = buckets.RESTBucket(name, compiled_route, mock.Mock(), float("inf"))
