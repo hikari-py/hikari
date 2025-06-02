@@ -43,109 +43,149 @@ class TestRESTBucket:
     def compiled_route(self, template):
         return routes.CompiledRoute("/foo/bar", template, "1a2b3c")
 
+    @pytest.mark.parametrize(("name", "expected"), [("spaghetti", False), ("UNKNOW", False), ("UNKNoWN hash", False), ("UNKNOWN", True), ("UNKNOWN hash", True)])
+    def test_is_unknown(self, name, compiled_route, expected):
+        bucket =  buckets.RESTBucket(name, compiled_route, mock.Mock(), float("inf"))
+
+        assert bucket.is_unknown is expected
+
     @pytest.mark.asyncio
-    async def test_async_context_manager(self, compiled_route):
-        with mock.patch.object(buckets.RESTBucket, "acquire", new=mock.AsyncMock()) as acquire:
-            with mock.patch.object(buckets.RESTBucket, "release") as release:
-                async with buckets.RESTBucket("spaghetti", compiled_route, object(), float("inf")):
-                    acquire.assert_awaited_once_with()
-                    release.assert_not_called()
+    async def test_usage_when_unknown(self, compiled_route):
+        bucket = buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, mock.Mock(), float("inf"))
+        bucket._lock = mock.Mock(acquire=mock.AsyncMock(), locked=mock.Mock(return_value=False))
 
-            release.assert_called_once_with()
+        async with bucket:
+            bucket._lock.acquire.assert_awaited_once_with()
+            bucket._lock.release.assert_not_called()
 
-    @pytest.mark.parametrize("name", ["spaghetti", buckets.UNKNOWN_HASH])
-    def test_is_unknown(self, name, compiled_route):
-        with buckets.RESTBucket(name, compiled_route, object(), float("inf")) as rl:
-            assert rl.is_unknown is (name == buckets.UNKNOWN_HASH)
+            bucket._lock.locked.return_value = True
 
-    def test_release(self, compiled_route):
-        with buckets.RESTBucket(__name__, compiled_route, object(), float("inf")) as rl:
-            rl._lock = mock.Mock()
+        bucket._lock.acquire.assert_awaited_once_with()
+        bucket._lock.release.assert_called_once_with()
 
-            rl.release()
+    @pytest.mark.asyncio
+    async def test_usage_when_resolved(self, compiled_route):
+        global_ratelimit = mock.Mock(acquire=mock.AsyncMock(), reset_at=None)
+        bucket = buckets.RESTBucket("resolved bucket", compiled_route, global_ratelimit, float("inf"))
+        bucket._lock = mock.Mock(acquire=mock.AsyncMock(), locked=mock.Mock(return_value=False))
 
-            rl._lock.release.assert_called_once_with()
+        async with bucket:
+            bucket._lock.acquire.assert_not_called()
+            bucket._lock.release.assert_not_called()
+
+        bucket._lock.acquire.assert_not_called()
+        bucket._lock.release.assert_not_called()
 
     def test_update_rate_limit(self, compiled_route):
-        with buckets.RESTBucket(__name__, compiled_route, object(), float("inf")) as rl:
-            rl.remaining = 1
-            rl.limit = 2
-            rl.reset_at = 3
-            rl.period = 2
+        bucket = buckets.RESTBucket("updating ratelimit test", compiled_route, mock.Mock(), float("inf"))
 
-            with mock.patch.object(hikari_date, "monotonic", return_value=4.20):
-                rl.update_rate_limit(9, 18, 27)
+        bucket.remaining = 1
+        bucket.limit = 2
+        bucket.reset_at = 3
+        bucket.period = 2
 
-            assert rl.remaining == 9
-            assert rl.limit == 18
-            assert rl.reset_at == 27
-            assert rl.period == 27 - 4.20
+        with mock.patch.object(hikari_date, "monotonic", return_value=4.20):
+            bucket.update_rate_limit(9, 18, 27)
 
-    @pytest.mark.asyncio
-    async def test_acquire_when_unknown_bucket(self, compiled_route):
-        with buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, object(), float("inf")) as rl:
-            rl._lock = mock.AsyncMock()
-            with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
-                assert await rl.acquire() is None
-
-            rl._lock.acquire.assert_awaited_once_with()
-            super_acquire.assert_not_called()
+        assert bucket.remaining == 9
+        assert bucket.limit == 18
+        assert bucket.reset_at == 27
+        assert bucket.period == 27 - 4.20
 
     @pytest.mark.asyncio
     async def test_acquire_when_too_long_ratelimit(self, compiled_route):
-        stack = contextlib.ExitStack()
-        rl = stack.enter_context(buckets.RESTBucket("spaghetti", compiled_route, object(), 60))
-        rl._lock = mock.Mock(acquire=mock.AsyncMock())
-        rl.reset_at = time.perf_counter() + 999999999999999999999999999
-        stack.enter_context(mock.patch.object(buckets.RESTBucket, "is_rate_limited", return_value=True))
-        stack.enter_context(pytest.raises(errors.RateLimitTooLongError))
+        bucket = buckets.RESTBucket("spaghetti", compiled_route, mock.Mock(), 60)
+        bucket.reset_at = time.perf_counter() + 999999999999999999999999999
+        bucket._lock = mock.Mock(acquire=mock.AsyncMock())
 
-        with stack:
-            await rl.acquire()
+        with (
+            mock.patch.object(buckets.RESTBucket, "is_rate_limited", return_value=True),
+            pytest.raises(errors.RateLimitTooLongError)
+        ):
+            await bucket.acquire()
 
-        rl._lock.acquire.assert_awaited_once_with()
-        rl._lock.release.assert_called_once_with()
+        bucket._lock.acquire.assert_not_called()
+        bucket._lock.release.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_acquire_when_too_long_global_ratelimit(self, compiled_route):
         global_ratelimit = mock.Mock(reset_at=time.perf_counter() + 999999999999999999999999999)
 
-        with buckets.RESTBucket("spaghetti", compiled_route, global_ratelimit, 1) as rl:
-            rl._lock = mock.Mock(acquire=mock.AsyncMock())
-            with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
-                with pytest.raises(errors.RateLimitTooLongError):
-                    await rl.acquire()
+        bucket = buckets.RESTBucket("spaghetti", compiled_route, global_ratelimit, 1)
+        bucket._lock = mock.Mock(acquire=mock.AsyncMock())
 
-            rl._lock.acquire.assert_awaited_once_with()
-            super_acquire.assert_awaited_once_with()
-            rl._lock.release.assert_called_once_with()
-            global_ratelimit.acquire.assert_not_called()
+        with (
+            mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire,
+            pytest.raises(errors.RateLimitTooLongError)
+        ):
+            await bucket.acquire()
+
+        bucket._lock.acquire.assert_not_called()
+        bucket._lock.release.assert_not_called()
+        super_acquire.assert_called_once_with()
+        global_ratelimit.acquire.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_acquire(self, compiled_route):
+    async def test_acquire_when_unknown_bucket(self, compiled_route):
         global_ratelimit = mock.Mock(acquire=mock.AsyncMock(), reset_at=None)
 
-        with buckets.RESTBucket("spaghetti", compiled_route, global_ratelimit, float("inf")) as rl:
-            rl._lock = mock.AsyncMock()
-            with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
-                await rl.acquire()
+        bucket = buckets.RESTBucket("UNKNOWN", compiled_route, global_ratelimit, float("inf"))
+        bucket._lock = mock.Mock(acquire=mock.AsyncMock())
 
-            super_acquire.assert_awaited_once_with()
-            rl._lock.acquire.assert_awaited_once_with()
-            global_ratelimit.acquire.assert_awaited_once_with()
+        with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
+            await bucket.acquire()
+
+        bucket._lock.acquire.assert_awaited_once_with()
+        super_acquire.assert_not_called()
+        global_ratelimit.acquire.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_acquire_when_resolved_while_waiting(self, compiled_route):
+        async def resolve_bucket():
+            nonlocal lock_acquire_called
+
+            bucket.resolve("some real hash")
+            lock_acquire_called += 1
+
+        global_ratelimit = mock.Mock(acquire=mock.AsyncMock(), reset_at=None)
+        bucket = buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, global_ratelimit, float("inf"))
+        bucket._lock = mock.Mock(acquire=resolve_bucket)
+        lock_acquire_called = 0
+
+        with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
+            await bucket.acquire()
+
+        super_acquire.assert_awaited_once_with()
+        assert lock_acquire_called == 1
+        global_ratelimit.acquire.assert_awaited_once_with()
+
+    @pytest.mark.asyncio
+    async def test_acquire_when_resolved_bucket(self, compiled_route):
+        global_ratelimit = mock.Mock(acquire=mock.AsyncMock(), reset_at=None)
+        bucket = buckets.RESTBucket("spaghetti", compiled_route, global_ratelimit, float("inf"))
+        bucket._lock = mock.Mock()
+
+        with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
+            await bucket.acquire()
+
+        super_acquire.assert_awaited_once_with()
+        bucket._lock.acquire.assert_not_called()
+        global_ratelimit.acquire.assert_awaited_once_with()
 
     def test_resolve_when_not_unknown(self, compiled_route):
-        with buckets.RESTBucket("spaghetti", compiled_route, object(), float("inf")) as rl:
-            with pytest.raises(RuntimeError, match=r"Cannot resolve known bucket"):
-                rl.resolve("test")
+        bucket = buckets.RESTBucket("spaghetti", compiled_route, mock.Mock(), float("inf"))
 
-            assert rl.name == "spaghetti"
+        with pytest.raises(RuntimeError, match=r"Cannot resolve known bucket"):
+            bucket.resolve("test")
+
+        assert bucket.name == "spaghetti"
 
     def test_resolve(self, compiled_route):
-        with buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, object(), float("inf")) as rl:
-            rl.resolve("test")
+        bucket = buckets.RESTBucket(buckets.UNKNOWN_HASH, compiled_route, mock.Mock(), float("inf"))
 
-            assert rl.name == "test"
+        bucket.resolve("test")
+
+        assert bucket.name == "test"
 
 
 class TestRESTBucketManager:

@@ -261,7 +261,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     @property
     def is_unknown(self) -> bool:
         """Whether it represents an UNKNOWN bucket."""
-        return self.name.startswith(UNKNOWN_HASH)
+        # A quicker ".startswith". Since this is an insanely hot path, we want this
+        # to be as quick as possible
+        return self.name[:len(UNKNOWN_HASH)] == UNKNOWN_HASH
 
     def release(self) -> None:
         """Release the lock on the bucket."""
@@ -285,8 +287,8 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         if self.is_unknown:
             await self._lock.acquire()
 
-        if self.is_unknown:
-            return
+            if self.is_unknown:
+                return
 
         now = time.monotonic()
         retry_after = self.reset_at - now
