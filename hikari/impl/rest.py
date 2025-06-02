@@ -75,7 +75,6 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
-from hikari.internal import aio
 from hikari.internal import data_binding
 from hikari.internal import mentions
 from hikari.internal import net
@@ -741,8 +740,9 @@ class RESTClientImpl(rest_api.RESTClient):
         ) -> None:
             return None
 
+    # We rather keep everything we can here inline.
     @typing.final
-    async def _request(
+    async def _request(  # noqa: C901, PLR0912, PLR0915
         self,
         compiled_route: routes.CompiledRoute,
         *,
