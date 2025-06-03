@@ -1514,36 +1514,6 @@ class PartialMessage(snowflakes.Unique):
                 channel=self.channel_id, message=self.id, emoji=emoji, emoji_id=emoji_id
             )
 
-    async def forward(self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]) -> Message:
-        """Forward this message.
-
-        Parameters
-        ----------
-        channel
-            The object or ID of the channel to forward the message to.
-
-        Returns
-        -------
-        hikari.messages.Message
-            The message object that was forwarded.
-
-        Raises
-        ------
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.ForbiddenError
-            If you tried to forward a message without the
-            [hikari.permissions.Permissions.VIEW_CHANNEL] or [hikari.permissions.Permissions.SEND_MESSAGES].
-        hikari.errors.NotFoundError
-            If the channel or message is not found.
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        return await self.app.rest.forward_message(channel_to=channel, message=self)
-
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Message(PartialMessage):

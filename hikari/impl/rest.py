@@ -1772,14 +1772,10 @@ class RESTClientImpl(rest_api.RESTClient):
         message_reference.put_snowflake("message_id", message)
         message_reference.put_snowflake("channel_id", channel_from)
 
-        body, form_builder = self._build_message_payload()
+        body = data_binding.JSONObjectBuilder()
         body.put("message_reference", message_reference)
 
-        if form_builder is not None:
-            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
-            response = await self._request(route, form_builder=form_builder)
-        else:
-            response = await self._request(route, json=body)
+        response = await self._request(route, json=body)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
