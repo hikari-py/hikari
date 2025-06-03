@@ -75,7 +75,6 @@ from hikari.impl import entity_factory as entity_factory_impl
 from hikari.impl import rate_limits
 from hikari.impl import special_endpoints as special_endpoints_impl
 from hikari.interactions import base_interactions
-from hikari.internal import aio
 from hikari.internal import data_binding
 from hikari.internal import mentions
 from hikari.internal import net
@@ -741,8 +740,9 @@ class RESTClientImpl(rest_api.RESTClient):
         ) -> None:
             return None
 
+    # We rather keep everything we can here inline.
     @typing.final
-    async def _request(
+    async def _request(  # noqa: C901, PLR0912, PLR0915
         self,
         compiled_route: routes.CompiledRoute,
         *,
@@ -751,44 +751,12 @@ class RESTClientImpl(rest_api.RESTClient):
         json: data_binding.JSONObjectBuilder | data_binding.JSONArray | None = None,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-    ) -> None | data_binding.JSONObject | data_binding.JSONArray:
+    ) -> data_binding.JSONObject | data_binding.JSONArray | None:
+        # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
+        # of JSON response.
         if not self._close_event:
             msg = "Cannot use an inactive REST client"
             raise errors.ComponentStateConflictError(msg)
-
-        request_task = asyncio.create_task(
-            self._perform_request(
-                compiled_route=compiled_route,
-                query=query,
-                form_builder=form_builder,
-                json=json,
-                reason=reason,
-                auth=auth,
-            )
-        )
-
-        await aio.first_completed(request_task, self._close_event.wait())
-
-        if not request_task.cancelled():
-            return request_task.result()
-
-        msg = "The REST client was closed mid-request"
-        raise errors.ComponentStateConflictError(msg)
-
-    # We rather keep everything we can here inline.
-    @typing.final
-    async def _perform_request(  # noqa: C901, PLR0912, PLR0915
-        self,
-        compiled_route: routes.CompiledRoute,
-        *,
-        query: data_binding.StringMapBuilder | None = None,
-        form_builder: data_binding.URLEncodedFormBuilder | None = None,
-        json: data_binding.JSONObject | data_binding.JSONArray | None = None,
-        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-    ) -> None | data_binding.JSONObject | data_binding.JSONArray:
-        # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
-        # of JSON response.
 
         assert self._client_session is not None  # This will never be None here
 
