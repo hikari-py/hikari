@@ -6619,6 +6619,72 @@ class TestEntityFactoryImpl:
         assert sticker.format_type is sticker_models.StickerFormatType.LOTTIE
         assert isinstance(sticker, sticker_models.PartialSticker)
 
+    def test_deserialize_message_snapshot(
+        self,
+        entity_factory_impl,
+        embed_payload,
+        attachment_payload,
+        user_payload,
+        custom_emoji_payload,
+        action_row_payload,
+    ):
+        payload = {
+            "type": message_models.MessageType.DEFAULT,
+            "content": "test content",
+            "embeds": [embed_payload],
+            "attachments": [attachment_payload],
+            "timestamp": "2025-06-03T05:12:59.510000+00:00",
+            "edited_timestamp": "2025-06-03T05:14:06.510000+00:00",
+            "flags": message_models.MessageFlag.HAS_SNAPSHOT,
+            "stickers": [{"id": "469", "name": "Dance_dance", "format_type": sticker_models.StickerFormatType.APNG}],
+            "mentions": [user_payload],
+            "mention_roles": ["333333"],
+            "components": [action_row_payload],
+        }
+        message_snapshot: message_models.MessageSnapshot = entity_factory_impl.deserialize_message_snapshot(payload)
+        assert message_snapshot.type == message_models.MessageType.DEFAULT
+        assert message_snapshot.content == "test content"
+        assert message_snapshot.embeds == [entity_factory_impl.deserialize_embed(embed_payload)]
+        assert message_snapshot.attachments == [entity_factory_impl._deserialize_message_attachment(attachment_payload)]
+        assert message_snapshot.flags == message_models.MessageFlag.HAS_SNAPSHOT
+        assert message_snapshot.stickers[0].id == 469
+        assert list(message_snapshot.user_mentions.keys())[0] == entity_factory_impl.deserialize_user(user_payload).id
+        assert message_snapshot.user_mentions_ids == [entity_factory_impl.deserialize_user(user_payload).id]
+        assert message_snapshot.role_mention_ids == [snowflakes.Snowflake("333333")]
+        assert message_snapshot.components == entity_factory_impl._deserialize_top_level_components(
+            [action_row_payload]
+        )
+        assert message_snapshot.timestamp == datetime.datetime(
+            2025, 6, 3, 5, 12, 59, 510000, tzinfo=datetime.timezone.utc
+        )
+        assert message_snapshot.edited_timestamp == datetime.datetime(
+            2025, 6, 3, 5, 14, 6, 510000, tzinfo=datetime.timezone.utc
+        )
+
+    def test_deserialize_message_snapshot_all_unset(
+        self,
+        entity_factory_impl,
+        embed_payload,
+        attachment_payload,
+        user_payload,
+        custom_emoji_payload,
+        action_row_payload,
+    ):
+        payload = {}
+        message_snapshot = entity_factory_impl.deserialize_message_snapshot(payload)
+        assert message_snapshot.type == undefined.UNDEFINED
+        assert message_snapshot.content == undefined.UNDEFINED
+        assert message_snapshot.embeds == undefined.UNDEFINED
+        assert message_snapshot.attachments == undefined.UNDEFINED
+        assert message_snapshot.flags == undefined.UNDEFINED
+        assert message_snapshot.stickers == undefined.UNDEFINED
+        assert message_snapshot.user_mentions == undefined.UNDEFINED
+        assert message_snapshot.user_mentions_ids == undefined.UNDEFINED
+        assert message_snapshot.role_mention_ids == undefined.UNDEFINED
+        assert message_snapshot.components == undefined.UNDEFINED
+        assert message_snapshot.timestamp == undefined.UNDEFINED
+        assert message_snapshot.edited_timestamp == undefined.UNDEFINED
+
     def test_deserialize_message(
         self,
         entity_factory_impl,
