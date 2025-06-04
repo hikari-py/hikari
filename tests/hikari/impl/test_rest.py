@@ -2934,11 +2934,62 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
 
-    async def test_forward_message(self, rest_client):
+    async def test_forward_message_id(self, rest_client):
         rest_client._request = mock.AsyncMock(return_value={"message_id": 1239})
         expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=1234)
         m = await rest_client.forward_message(channel_to=1234, message=123, channel_from=12345)
         assert m is rest_client._entity_factory.deserialize_message.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "message_reference": {
+                    "message_id": "123",
+                    "channel_id": "12345",
+                    "type": message_models.MessageReferenceType.FORWARD,
+                }
+            },
+        )
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 1239})
+
+    async def test_forward_partial_message(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 1239})
+        expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=1234)
+        m = message_models.PartialMessage(
+            app=None,
+            id=snowflakes.Snowflake(123),
+            channel_id=snowflakes.Snowflake(12345),
+            guild_id=None,
+            author=undefined.UNDEFINED,
+            member=undefined.UNDEFINED,
+            content=undefined.UNDEFINED,
+            timestamp=undefined.UNDEFINED,
+            edited_timestamp=undefined.UNDEFINED,
+            is_tts=undefined.UNDEFINED,
+            user_mentions=undefined.UNDEFINED,
+            role_mention_ids=undefined.UNDEFINED,
+            channel_mentions=undefined.UNDEFINED,
+            mentions_everyone=undefined.UNDEFINED,
+            attachments=undefined.UNDEFINED,
+            embeds=undefined.UNDEFINED,
+            poll=undefined.UNDEFINED,
+            reactions=undefined.UNDEFINED,
+            is_pinned=undefined.UNDEFINED,
+            webhook_id=undefined.UNDEFINED,
+            type=undefined.UNDEFINED,
+            activity=undefined.UNDEFINED,
+            application=undefined.UNDEFINED,
+            message_reference=undefined.UNDEFINED,
+            flags=undefined.UNDEFINED,
+            stickers=undefined.UNDEFINED,
+            nonce=undefined.UNDEFINED,
+            referenced_message=undefined.UNDEFINED,
+            message_snapshots=undefined.UNDEFINED,
+            application_id=undefined.UNDEFINED,
+            components=undefined.UNDEFINED,
+            interaction_metadata=None,
+        )
+        res = await rest_client.forward_message(channel_to=1234, message=m, channel_from=69)
+        assert res is rest_client._entity_factory.deserialize_message.return_value
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={

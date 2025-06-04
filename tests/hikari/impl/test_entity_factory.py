@@ -6541,6 +6541,23 @@ class TestEntityFactoryImpl:
         # Poll
         assert partial_message.poll == entity_factory_impl.deserialize_poll(poll_payload)
 
+    def test_deserialize_partial_message_with_snapshot(self, entity_factory_impl, message_payload):
+        del message_payload["message_reference"]
+        del message_payload["referenced_message"]
+
+        message_payload["message_snapshots"] = [
+            {
+                "type": message_models.MessageType.DEFAULT,
+                "content": "let there be light",
+                "flags": message_models.MessageFlag.HAS_THREAD,
+            }
+        ]
+
+        partial_message = entity_factory_impl.deserialize_partial_message(message_payload)
+        assert (snapshot := partial_message.message_snapshots[0]).content == "let there be light"
+        assert snapshot.flags == message_models.MessageFlag.HAS_THREAD
+        assert snapshot.type == message_models.MessageType.DEFAULT
+
     def test_deserialize_partial_message_with_partial_fields(self, entity_factory_impl, message_payload):
         message_payload["content"] = ""
         message_payload["edited_timestamp"] = None
@@ -6660,6 +6677,58 @@ class TestEntityFactoryImpl:
         assert message_snapshot.edited_timestamp == datetime.datetime(
             2025, 6, 3, 5, 14, 6, 510000, tzinfo=datetime.timezone.utc
         )
+
+    def test_deserialize_message_snapshot_sticker_items_field(
+        self,
+        entity_factory_impl,
+        embed_payload,
+        attachment_payload,
+        user_payload,
+        custom_emoji_payload,
+        action_row_payload,
+    ):
+        payload = {
+            "type": message_models.MessageType.DEFAULT,
+            "content": "test content",
+            "embeds": [embed_payload],
+            "attachments": [attachment_payload],
+            "timestamp": "2025-06-03T05:12:59.510000+00:00",
+            "edited_timestamp": "2025-06-03T05:14:06.510000+00:00",
+            "flags": message_models.MessageFlag.HAS_SNAPSHOT,
+            "sticker_items": [
+                {"id": "469", "name": "Dance_dance", "format_type": sticker_models.StickerFormatType.APNG}
+            ],
+            "mentions": [user_payload],
+            "mention_roles": ["333333"],
+            "components": [action_row_payload],
+        }
+        message_snapshot: message_models.MessageSnapshot = entity_factory_impl.deserialize_message_snapshot(payload)
+        assert message_snapshot.stickers[0].id == 469
+
+    def test_deserialize_message_snapshot_no_edit(
+        self,
+        entity_factory_impl,
+        embed_payload,
+        attachment_payload,
+        user_payload,
+        custom_emoji_payload,
+        action_row_payload,
+    ):
+        payload = {
+            "type": message_models.MessageType.DEFAULT,
+            "content": "test content",
+            "embeds": [embed_payload],
+            "attachments": [attachment_payload],
+            "timestamp": "2025-06-03T05:12:59.510000+00:00",
+            "edited_timestamp": None,
+            "flags": message_models.MessageFlag.HAS_SNAPSHOT,
+            "stickers": [{"id": "469", "name": "Dance_dance", "format_type": sticker_models.StickerFormatType.APNG}],
+            "mentions": [user_payload],
+            "mention_roles": ["333333"],
+            "components": [action_row_payload],
+        }
+        message_snapshot: message_models.MessageSnapshot = entity_factory_impl.deserialize_message_snapshot(payload)
+        assert message_snapshot.edited_timestamp == None
 
     def test_deserialize_message_snapshot_all_unset(
         self,
