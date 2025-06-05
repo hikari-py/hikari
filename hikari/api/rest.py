@@ -1375,7 +1375,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel_to: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        channel_from: snowflakes.SnowflakeishOr[channels_.TextableChannel] | None = None,
+        channel_from: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextableChannel]] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Forward a message.
 
