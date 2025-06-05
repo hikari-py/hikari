@@ -2974,6 +2974,14 @@ class TestRESTClientImplAsync:
         )
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 1239})
 
+    async def test_forward_fails_with_no_channel(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 1239})
+        with pytest.raises(ValueError) as excinfo:
+            await rest_client.forward_message(channel_to=1234, message=123)
+        assert "The message's channel of origin was not provided and could not be obtained from the message." in str(
+            excinfo.value
+        )
+
     async def test_create_voice_message_no_flags(self, rest_client):
         rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
         returned = await rest_client.create_voice_message(
