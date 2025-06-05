@@ -1724,14 +1724,14 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         channel_to: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        channel_from: snowflakes.SnowflakeishOr[channels_.TextableChannel] | None = None,
+        channel_from: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextableChannel]] = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel_to)
 
         if isinstance(message, messages_.PartialMessage):
             channel_from = message.channel_id
 
-        if channel_from is None:
+        if channel_from is undefined.UNDEFINED:
             msg = "The message's channel of origin was not provided and could not be obtained from the message."
             raise ValueError(msg)
 
