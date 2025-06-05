@@ -536,26 +536,12 @@ class MessageSnapshot:
     user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = attrs.field(
         hash=False, eq=False, repr=False
     )
-    """Users who were notified by their mention in the message.
-
-    !!! warning
-        If the contents have not mutated and this is a message update event,
-        some fields that are not affected may be empty instead.
-
-        This is a Discord limitation.
-    """
+    """Users who were notified by their mention in the message."""
 
     role_mention_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attrs.field(
         hash=False, eq=False, repr=False
     )
-    """IDs of roles that were notified by their mention in the message.
-
-    !!! warning
-        If the contents have not mutated and this is a message update event,
-        some fields that are not affected may be empty instead.
-
-        This is a Discord limitation.
-    """
+    """IDs of roles that were notified by their mention in the message."""
 
     components: undefined.UndefinedOr[typing.Sequence[component_models.TopLevelComponentTypesT]] = attrs.field(
         hash=False, eq=False, repr=False
@@ -564,14 +550,7 @@ class MessageSnapshot:
 
     @property
     def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
-        """Ids of the users who were notified by their mention in the message.
-
-        !!! warning
-            If the contents have not mutated and this is a message update event,
-            some fields that are not affected may be empty instead.
-
-            This is a Discord limitation.
-        """
+        """Ids of the users who were notified by their mention in the message."""
         if self.user_mentions is undefined.UNDEFINED:
             return undefined.UNDEFINED
 
