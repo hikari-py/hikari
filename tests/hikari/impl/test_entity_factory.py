@@ -6741,18 +6741,20 @@ class TestEntityFactoryImpl:
     ):
         payload = {}
         message_snapshot = entity_factory_impl.deserialize_message_snapshot(payload)
-        assert message_snapshot.type == undefined.UNDEFINED
-        assert message_snapshot.content == undefined.UNDEFINED
-        assert message_snapshot.embeds == undefined.UNDEFINED
-        assert message_snapshot.attachments == undefined.UNDEFINED
-        assert message_snapshot.flags == undefined.UNDEFINED
-        assert message_snapshot.stickers == undefined.UNDEFINED
-        assert message_snapshot.user_mentions == undefined.UNDEFINED
-        assert message_snapshot.user_mentions_ids == undefined.UNDEFINED
-        assert message_snapshot.role_mention_ids == undefined.UNDEFINED
-        assert message_snapshot.components == undefined.UNDEFINED
-        assert message_snapshot.timestamp == undefined.UNDEFINED
-        assert message_snapshot.edited_timestamp == undefined.UNDEFINED
+        assert undefined.all_undefined(
+            message_snapshot.type,
+            message_snapshot.content,
+            message_snapshot.embeds,
+            message_snapshot.attachments,
+            message_snapshot.flags,
+            message_snapshot.stickers,
+            message_snapshot.user_mentions,
+            message_snapshot.user_mentions_ids,
+            message_snapshot.role_mention_ids,
+            message_snapshot.components,
+            message_snapshot.timestamp,
+            message_snapshot.edited_timestamp,
+        )
 
     def test_deserialize_message(
         self,
