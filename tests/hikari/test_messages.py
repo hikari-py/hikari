@@ -125,6 +125,7 @@ def message():
         activity=None,
         application=None,
         message_reference=None,
+        message_snapshots=None,
         flags=None,
         nonce=None,
         referenced_message=None,
@@ -152,7 +153,11 @@ class TestMessage:
 @pytest.fixture
 def message_reference():
     return messages.MessageReference(
-        app=None, guild_id=snowflakes.Snowflake(123), channel_id=snowflakes.Snowflake(456), id=snowflakes.Snowflake(789)
+        app=None,
+        guild_id=snowflakes.Snowflake(123),
+        channel_id=snowflakes.Snowflake(456),
+        id=snowflakes.Snowflake(789),
+        type=messages.MessageReferenceType.DEFAULT,
     )
 
 

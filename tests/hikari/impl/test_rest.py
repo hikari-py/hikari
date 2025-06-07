@@ -2130,9 +2130,7 @@ class TestRESTClientImplAsync:
                 await rest_client._request(route)
 
     @hikari_test_helpers.timeout()
-    async def test_request_when_status_in_retry_codes_will_retry_until_exhausted(
-        self, rest_client, exit_exception
-    ):
+    async def test_request_when_status_in_retry_codes_will_retry_until_exhausted(self, rest_client, exit_exception):
         class StubResponse:
             status = http.HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -2935,6 +2933,54 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_forward_message_id(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 1239})
+        expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=1234)
+        m = await rest_client.forward_message(channel_to=1234, message=123, channel_from=12345)
+        assert m is rest_client._entity_factory.deserialize_message.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "message_reference": {
+                    "message_id": "123",
+                    "channel_id": "12345",
+                    "type": message_models.MessageReferenceType.FORWARD,
+                }
+            },
+        )
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 1239})
+
+    async def test_forward_partial_message(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 1239})
+        expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=1234)
+        m = mock.Mock(
+            spec=message_models.PartialMessage,
+            id=snowflakes.Snowflake(123),
+            channel_id=snowflakes.Snowflake(12345),
+            __int__=lambda self: int(self.id),
+        )
+        res = await rest_client.forward_message(channel_to=1234, message=m, channel_from=69)
+        assert res is rest_client._entity_factory.deserialize_message.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "message_reference": {
+                    "message_id": "123",
+                    "channel_id": "12345",
+                    "type": message_models.MessageReferenceType.FORWARD,
+                }
+            },
+        )
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 1239})
+
+    async def test_forward_fails_with_no_channel(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 1239})
+        with pytest.raises(ValueError) as excinfo:
+            await rest_client.forward_message(channel_to=1234, message=123)
+        assert "The message's channel of origin was not provided and could not be obtained from the message." in str(
+            excinfo.value
+        )
 
     async def test_create_voice_message_no_flags(self, rest_client):
         rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
