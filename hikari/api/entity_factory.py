@@ -1590,7 +1590,7 @@ class EntityFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_message_snapshot(self, payload: data_binding.JSONObject) -> message_models.MessageSnapshot:
-        """Parse a raw payload from Discord into a partial message snapshot object.
+        """Parse a raw payload from Discord into a snapshot object.
 
         Parameters
         ----------
