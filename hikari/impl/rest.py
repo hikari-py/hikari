@@ -3049,6 +3049,51 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_guild_forum_channel(response)
 
     @typing_extensions.override
+    async def create_guild_media_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: str
+        | emojis.Emoji
+        | undefined.UndefinedType
+        | snowflakes.Snowflake = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildMediaChannel:
+        response = await self._create_guild_channel(
+            guild,
+            name,
+            channels_.ChannelType.GUILD_MEDIA,
+            topic=topic,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            default_auto_archive_duration=default_auto_archive_duration,
+            default_thread_rate_limit_per_user=default_thread_rate_limit_per_user,
+            default_forum_layout=default_forum_layout,
+            default_sort_order=default_sort_order,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            available_tags=available_tags,
+            default_reaction_emoji=default_reaction_emoji,
+            reason=reason,
+        )
+        return self._entity_factory.deserialize_guild_media_channel(response)
+
+    @typing_extensions.override
     async def create_guild_voice_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
