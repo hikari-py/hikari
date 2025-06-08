@@ -1387,7 +1387,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The object or ID of the message to forward.
         channel_from
             The object or ID of the message's channel of origin.
-            This field will be ignored if the message provided is of type [`hikari.messages.PartialMessage`][] rather than [`hikari.snowflakes.Snowflakeish`][].
+            This field will be ignored if the message provided
+              is of type [`hikari.messages.PartialMessage`][] rather than [`hikari.snowflakes.Snowflakeish`][].
 
         Returns
         -------
@@ -1401,8 +1402,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you tried to forward a message without
-            the [`hikari.permissions.Permissions.VIEW_CHANNEL`][] or [`hikari.permissions.Permissions.SEND_MESSAGES`][] permissions.
+            If you tried to forward a message without the [`hikari.permissions.Permissions.VIEW_CHANNEL`][]
+              or [`hikari.permissions.Permissions.SEND_MESSAGES`][] permissions.
         hikari.errors.NotFoundError
             If the channel or message was not found.
         hikari.errors.RateLimitTooLongError
