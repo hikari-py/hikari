@@ -34,11 +34,11 @@ __all__: typing.Sequence[str] = (
     "GuildCategory",
     "GuildChannel",
     "GuildForumChannel",
+    "GuildMediaChannel",
     "GuildNewsChannel",
     "GuildNewsThread",
     "GuildPrivateThread",
     "GuildPublicThread",
-    "GuildMediaChannel",
     "GuildStageChannel",
     "GuildTextChannel",
     "GuildThreadChannel",
@@ -1801,10 +1801,10 @@ class GuildPrivateThread(GuildThreadChannel):
 class GuildMediaChannel(PermissibleGuildChannel):
     """Represents a guild media channel."""
 
-    topic: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    topic: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The guidelines for the channel."""
 
-    last_thread_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    last_thread_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the last thread created in this channel.
 
     .. warning::
@@ -1853,12 +1853,10 @@ class GuildMediaChannel(PermissibleGuildChannel):
     default_sort_order: ForumSortOrderType = attrs.field(eq=False, hash=False, repr=False)
     """The default sort order for the forum."""
 
-    default_reaction_emoji_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    default_reaction_emoji_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the default reaction emoji."""
 
-    default_reaction_emoji_name: typing.Union[str, emojis.UnicodeEmoji, None] = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    default_reaction_emoji_name: str | emojis.UnicodeEmoji | None = attrs.field(eq=False, hash=False, repr=False)
     """Name of the default reaction emoji.
 
     Either the string name of the custom emoji, the object

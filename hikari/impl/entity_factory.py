@@ -1599,13 +1599,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             metadata=self._deserialize_thread_metadata(payload["thread_metadata"]),
         )
 
+    @typing_extensions.override
     def deserialize_guild_media_channel(
         self,
         payload: data_binding.JSONObject,
         *,
         guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
     ) -> channel_models.GuildMediaChannel:
-        channel_fields = self._set_guild_channel_attrsibutes(payload, guild_id=guild_id)
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
 
         # Discord's docs are just wrong about this always being included.
         default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
@@ -1618,13 +1619,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             for overwrite in payload["permission_overwrites"]
         }
 
-        last_thread_id: typing.Optional[snowflakes.Snowflake] = None
+        last_thread_id: snowflakes.Snowflake | None = None
         if raw_last_thread_id := payload.get("last_message_id"):
             last_thread_id = snowflakes.Snowflake(raw_last_thread_id)
 
-        available_tags: typing.List[channel_models.ForumTag] = []
+        available_tags: list[channel_models.ForumTag] = []
         for tag_payload in payload.get("available_tags", ()):
-            tag_emoji: typing.Union[emoji_models.UnicodeEmoji, snowflakes.Snowflake, None]
+            tag_emoji: emoji_models.UnicodeEmoji | snowflakes.Snowflake | None
             if tag_emoji := tag_payload["emoji_id"]:
                 tag_emoji = snowflakes.Snowflake(tag_emoji)
 
@@ -1640,8 +1641,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                 )
             )
 
-        reaction_emoji_id: typing.Optional[snowflakes.Snowflake] = None
-        reaction_emoji_name: typing.Union[None, emoji_models.UnicodeEmoji, str] = None
+        reaction_emoji_id: snowflakes.Snowflake | None = None
+        reaction_emoji_name: emoji_models.UnicodeEmoji | str | None = None
         if reaction_emoji_payload := payload.get("default_reaction_emoji"):
             if reaction_emoji_id := reaction_emoji_payload["emoji_id"]:
                 reaction_emoji_id = snowflakes.Snowflake(reaction_emoji_id)
