@@ -132,7 +132,7 @@ class ChannelType(int, enums.Enum):
     """A channel consisting of a collection of public guild threads."""
 
     GUILD_MEDIA = 16
-    """"""
+    """A channel of threads, quite similar to GUILD_FORUM, for media."""
 
 
 @typing.final
