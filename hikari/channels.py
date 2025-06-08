@@ -127,8 +127,14 @@ class ChannelType(int, enums.Enum):
     GUILD_STAGE = 13
     """A few to many voice channel for hosting events."""
 
+    GUILD_DIRECTORY = 14
+    """The channel in a hub containing the listed servers"""
+
     GUILD_FORUM = 15
     """A channel consisting of a collection of public guild threads."""
+
+    GUILD_MEDIA = 16
+    """A channel that can only contain threads, similar to [`hikari.channels.ChannelType.GUILD_FORUM`][]."""
 
 
 @typing.final
