@@ -1853,6 +1853,9 @@ class GuildMediaChannel(PermissibleGuildChannel):
     default_sort_order: ForumSortOrderType = attrs.field(eq=False, hash=False, repr=False)
     """The default sort order for the forum."""
 
+    default_layout: ForumLayoutType = attrs.field(eq=False, hash=False, repr=False)
+    """The default layout of a thread-only channel."""
+
     default_reaction_emoji_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the default reaction emoji."""
 

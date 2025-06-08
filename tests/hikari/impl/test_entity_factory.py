@@ -2284,6 +2284,95 @@ class TestEntityFactoryImpl:
         assert forum_channel.default_sort_order == channel_models.ForumSortOrderType.LATEST_ACTIVITY
         assert forum_channel.default_layout == channel_models.ForumLayoutType.NOT_SET
 
+    def test_deserialize_guild_media_channel(
+        self, entity_factory_impl, mock_app, guild_forum_channel_payload, permission_overwrite_payload
+    ):
+        guild_forum_channel_payload["type"] = 16
+
+        media_channel = entity_factory_impl.deserialize_guild_media_channel(guild_forum_channel_payload)
+        assert media_channel.app is mock_app
+        assert media_channel.id == 961367432532987974
+        assert media_channel.name == "testing_forum_channel"
+        assert media_channel.topic == "A fun place to discuss fun stuff!"
+        assert media_channel.type == channel_models.ChannelType.GUILD_MEDIA
+        assert media_channel.flags == channel_models.ChannelFlag.REQUIRE_TAG
+        assert media_channel.guild_id == 777192995619340299
+        assert media_channel.position == 2
+        assert media_channel.permission_overwrites == {
+            4242: entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
+        }
+        assert media_channel.is_nsfw is True
+        assert media_channel.parent_id == 1234567890
+        assert media_channel.last_thread_id == 1057301863181058088
+        assert media_channel.default_sort_order == channel_models.ForumSortOrderType.CREATION_DATE
+        assert media_channel.default_layout == channel_models.ForumLayoutType.LIST_VIEW
+        assert media_channel.rate_limit_per_user.total_seconds() == 100
+        assert media_channel.default_auto_archive_duration.total_seconds() == 6060
+        assert media_channel.default_thread_rate_limit_per_user.total_seconds() == 1400
+        assert media_channel.default_reaction_emoji_id == 654395854798716938
+        assert media_channel.default_reaction_emoji_name == "some_emoji_name"
+        assert len(media_channel.available_tags) == 2
+        tag1 = media_channel.available_tags[0]
+        assert tag1.id == 924798733516800000
+        assert tag1.name == "First!"
+        assert tag1.moderated is True
+        assert tag1.emoji_id == 51685451281621
+        assert tag1.unicode_emoji is None
+        assert isinstance(tag1, channel_models.ForumTag)
+        tag2 = media_channel.available_tags[1]
+        assert tag2.id == 970821992448000000
+        assert tag2.name == "Big!"
+        assert tag2.moderated is False
+        assert tag2.emoji_id is None
+        assert tag2.unicode_emoji == "B"
+        assert isinstance(tag2, channel_models.ForumTag)
+        assert isinstance(media_channel, channel_models.GuildMediaChannel)
+
+    def test_deserialize_guild_media_channel_with_null_fields(self, entity_factory_impl, guild_forum_channel_payload):
+        guild_forum_channel_payload["type"] = 16
+
+        guild_forum_channel_payload["topic"] = None
+        guild_forum_channel_payload["parent_id"] = None
+        guild_forum_channel_payload["last_message_id"] = None
+        guild_forum_channel_payload["default_sort_order"] = None
+        guild_forum_channel_payload["default_reaction_emoji"]["emoji_id"] = None
+        guild_forum_channel_payload["default_reaction_emoji"]["emoji_name"] = None
+
+        media_channel = entity_factory_impl.deserialize_guild_media_channel(guild_forum_channel_payload)
+
+        assert media_channel.parent_id is None
+        assert media_channel.topic is None
+        assert media_channel.last_thread_id is None
+        assert media_channel.default_sort_order == channel_models.ForumSortOrderType.LATEST_ACTIVITY
+        assert media_channel.default_reaction_emoji_id is None
+        assert media_channel.default_reaction_emoji_name is None
+
+    def test_deserialize_guild_media_channel_with_unset_fields(self, entity_factory_impl, guild_forum_channel_payload):
+        guild_forum_channel_payload["type"] = 16
+
+        del guild_forum_channel_payload["available_tags"]
+        del guild_forum_channel_payload["default_reaction_emoji"]
+        del guild_forum_channel_payload["nsfw"]
+        del guild_forum_channel_payload["last_message_id"]
+        del guild_forum_channel_payload["default_auto_archive_duration"]
+        del guild_forum_channel_payload["default_thread_rate_limit_per_user"]
+        del guild_forum_channel_payload["rate_limit_per_user"]
+        del guild_forum_channel_payload["default_sort_order"]
+        del guild_forum_channel_payload["default_forum_layout"]
+
+        media_channel = entity_factory_impl.deserialize_guild_media_channel(guild_forum_channel_payload)
+
+        assert media_channel.available_tags == []
+        assert media_channel.is_nsfw is False
+        assert media_channel.last_thread_id is None
+        assert media_channel.default_reaction_emoji_id is None
+        assert media_channel.default_reaction_emoji_name is None
+        assert media_channel.default_auto_archive_duration == datetime.timedelta(minutes=1440)
+        assert media_channel.default_thread_rate_limit_per_user == datetime.timedelta(minutes=0)
+        assert media_channel.rate_limit_per_user == datetime.timedelta(minutes=0)
+        assert media_channel.default_sort_order == channel_models.ForumSortOrderType.LATEST_ACTIVITY
+        assert media_channel.default_layout == channel_models.ForumLayoutType.NOT_SET
+
     def test_serialize_forum_tag(self, entity_factory_impl):
         tag = channel_models.ForumTag(id=snowflakes.Snowflake(123), name="test", moderated=True, emoji=None)
         unicode_emoji = object()
