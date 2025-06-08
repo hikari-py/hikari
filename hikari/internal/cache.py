@@ -744,7 +744,7 @@ class MessageData(BaseData[messages.Message]):
     stickers: tuple[stickers_.PartialSticker, ...] = attrs.field()
     nonce: str | None = attrs.field()
     referenced_message: RefCell[MessageData] | None = attrs.field()
-    message_snapshots: tuple[messages.MessageSnapshot] | None = attrs.field()
+    message_snapshots: tuple[messages.MessageSnapshot, ...] = attrs.field()
     application_id: snowflakes.Snowflake | None = attrs.field()
     components: tuple[components_.TopLevelComponentTypesT, ...] = attrs.field()
     thread: channels_.GuildThreadChannel | None = attrs.field()
@@ -763,7 +763,6 @@ class MessageData(BaseData[messages.Message]):
             typing.Mapping[snowflakes.Snowflake, RefCell[users_.User]]
         ] = undefined.UNDEFINED,
         referenced_message: RefCell[MessageData] | None = None,
-        message_snapshots: tuple[messages.MessageSnapshot] | None = None,
     ) -> MessageData:
         if not member and message.member:
             member = RefCell(MemberData.build_from_entity(message.member))
@@ -810,7 +809,7 @@ class MessageData(BaseData[messages.Message]):
             stickers=tuple(map(copy.copy, message.stickers)),
             nonce=message.nonce,
             referenced_message=referenced_message,
-            message_snapshots=message_snapshots,
+            message_snapshots=tuple(map(copy.copy, message.message_snapshots)),
             application_id=message.application_id,
             components=tuple(message.components),
             thread=message.thread,

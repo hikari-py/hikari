@@ -6739,22 +6739,18 @@ class TestEntityFactoryImpl:
         custom_emoji_payload,
         action_row_payload,
     ):
-        payload = {}
+        payload = {"type": 0}
         message_snapshot = entity_factory_impl.deserialize_message_snapshot(payload)
-        assert undefined.all_undefined(
-            message_snapshot.type,
-            message_snapshot.content,
-            message_snapshot.embeds,
-            message_snapshot.attachments,
-            message_snapshot.flags,
-            message_snapshot.stickers,
-            message_snapshot.user_mentions,
-            message_snapshot.user_mentions_ids,
-            message_snapshot.role_mention_ids,
-            message_snapshot.components,
-            message_snapshot.timestamp,
-            message_snapshot.edited_timestamp,
-        )
+        assert undefined.all_undefined(message_snapshot.flags, message_snapshot.timestamp)
+        assert message_snapshot.content is None
+        assert message_snapshot.embeds is None
+        assert message_snapshot.attachments == []
+        assert message_snapshot.stickers is None
+        assert message_snapshot.user_mentions is None
+        assert message_snapshot.user_mentions_ids is None
+        assert message_snapshot.role_mention_ids is None
+        assert message_snapshot.components is None
+        assert message_snapshot.edited_timestamp is None
 
     def test_deserialize_message(
         self,

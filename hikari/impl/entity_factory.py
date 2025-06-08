@@ -3514,47 +3514,47 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if "timestamp" in payload:
             timestamp = time.iso8601_datetime_string_to_datetime(payload["timestamp"])
 
-        edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED
-        if "edited_timestamp" in payload:
-            if (raw_edited_timestamp := payload["edited_timestamp"]) is not None:
-                edited_timestamp = time.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
-            else:
-                edited_timestamp = None
+        edited_timestamp: datetime.datetime | None = (
+            time.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
+            if (raw_edited_timestamp := payload.get("edited_timestamp"))
+            else None
+        )
 
-        attachments: undefined.UndefinedOr[list[message_models.Attachment]] = undefined.UNDEFINED
-        if "attachments" in payload:
-            attachments = [self._deserialize_message_attachment(attachment) for attachment in payload["attachments"]]
+        attachments: list[message_models.Attachment] = (
+            [self._deserialize_message_attachment(attachment) for attachment in attachments_payload]
+            if (attachments_payload := payload.get("attachments"))
+            else []
+        )
 
-        embeds: undefined.UndefinedOr[list[embed_models.Embed]] = undefined.UNDEFINED
-        if "embeds" in payload:
-            embeds = [self.deserialize_embed(embed) for embed in payload["embeds"]]
+        embeds: list[embed_models.Embed] | None = (
+            [self.deserialize_embed(embed) for embed in embeds_payload]
+            if (embeds_payload := payload.get("embeds"))
+            else None
+        )
 
-        stickers: undefined.UndefinedOr[typing.Sequence[sticker_models.PartialSticker]] = undefined.UNDEFINED
+        stickers: list[sticker_models.PartialSticker] | None = None
         if "sticker_items" in payload:
             stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["sticker_items"]]
         # This is only here for backwards compatibility as old messages still return this field
         elif "stickers" in payload:
             stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["stickers"]]
 
-        content = payload.get("content", undefined.UNDEFINED)
-        if content is not undefined.UNDEFINED:
-            content = content or None  # Default to None if content is an empty string
+        content = payload.get("content") or None  # Default to None if content is an empty string
 
-        components: undefined.UndefinedOr[typing.Sequence[component_models.TopLevelComponentTypesT]] = (
-            undefined.UNDEFINED
-        )
+        components: typing.Sequence[component_models.TopLevelComponentTypesT] | None = None
         if component_payloads := payload.get("components"):
             components = self._deserialize_top_level_components(component_payloads)
-        user_mentions: undefined.UndefinedOr[dict[snowflakes.Snowflake, user_models.User]] = undefined.UNDEFINED
+
+        user_mentions: dict[snowflakes.Snowflake, user_models.User] | None = None
         if raw_user_mentions := payload.get("mentions"):
             user_mentions = {u.id: u for u in map(self.deserialize_user, raw_user_mentions)}
 
-        role_mention_ids: undefined.UndefinedOr[list[snowflakes.Snowflake]] = undefined.UNDEFINED
+        role_mention_ids: list[snowflakes.Snowflake] | None = None
         if raw_role_mention_ids := payload.get("mention_roles"):
             role_mention_ids = [snowflakes.Snowflake(i) for i in raw_role_mention_ids]
 
         return message_models.MessageSnapshot(
-            type=message_models.MessageType(payload["type"]) if "type" in payload else undefined.UNDEFINED,
+            type=message_models.MessageType(payload["type"]),
             content=content,
             embeds=embeds,
             attachments=attachments,
@@ -3633,9 +3633,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 referenced_message = None
 
-        message_snapshots: undefined.UndefinedNoneOr[typing.Sequence[message_models.MessageSnapshot]] = (
-            undefined.UNDEFINED
-        )
+        message_snapshots: typing.Sequence[message_models.MessageSnapshot] = []
         if (message_snapshots_payload := payload.get("message_snapshots")) is not None:
             message_snapshots = [self.deserialize_message_snapshot(snapshot) for snapshot in message_snapshots_payload]
 
@@ -3754,7 +3752,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if referenced_message_payload := payload.get("referenced_message"):
             referenced_message = self.deserialize_partial_message(referenced_message_payload)
 
-        message_snapshots: typing.Sequence[message_models.MessageSnapshot] | None = None
+        message_snapshots: typing.Sequence[message_models.MessageSnapshot] = []
         if (message_snapshots_payload := payload.get("message_snapshots")) is not None:
             message_snapshots = [self.deserialize_message_snapshot(snapshot) for snapshot in message_snapshots_payload]
 

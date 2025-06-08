@@ -369,7 +369,9 @@ class MessageReference:
     )
     """Client application that models may use for procedures."""
 
-    type: undefined.UndefinedOr[MessageReferenceType | int] = attrs.field(hash=False, eq=False, repr=False)
+    type: MessageReferenceType | int = attrs.field(
+        hash=False, eq=False, repr=False, default=MessageReferenceType.DEFAULT
+    )
     """The type of the reference."""
 
     id: snowflakes.Snowflake | None = attrs.field(repr=True)
@@ -507,52 +509,48 @@ def _map_cache_maybe_discover(
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
 class MessageSnapshot:
-    type: undefined.UndefinedOr[MessageType | int] = attrs.field(hash=False, eq=False, repr=False)
+    type: MessageType | int = attrs.field(hash=False, eq=False, repr=False)
     """The message type."""
 
-    content: undefined.UndefinedNoneOr[str] = attrs.field(hash=False, eq=False, repr=False)
+    content: str | None = attrs.field(hash=False, eq=False, repr=False)
     """The content of the message."""
 
-    embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = attrs.field(hash=False, eq=False, repr=False)
+    embeds: typing.Sequence[embeds_.Embed] | None = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
 
-    attachments: undefined.UndefinedOr[typing.Sequence[Attachment]] = attrs.field(hash=False, eq=False, repr=False)
+    attachments: typing.Sequence[Attachment] = attrs.field(hash=False, eq=False, repr=False)
     """The message attachments."""
 
     timestamp: undefined.UndefinedOr[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was sent at."""
 
-    edited_timestamp: undefined.UndefinedNoneOr[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
+    edited_timestamp: datetime.datetime | None = attrs.field(hash=False, eq=False, repr=False)
     """The timestamp that the message was last edited at."""
 
     flags: undefined.UndefinedOr[MessageFlag] = attrs.field(hash=False, eq=False, repr=False)
     """The message flags."""
 
-    stickers: undefined.UndefinedOr[typing.Sequence[stickers_.PartialSticker]] = attrs.field(
-        hash=False, eq=False, repr=False
-    )
+    stickers: typing.Sequence[stickers_.PartialSticker] | None = attrs.field(hash=False, eq=False, repr=False)
     """The stickers sent with this message."""
 
-    user_mentions: undefined.UndefinedOr[typing.Mapping[snowflakes.Snowflake, users_.User]] = attrs.field(
+    user_mentions: typing.Mapping[snowflakes.Snowflake, users_.User] | None = attrs.field(
         hash=False, eq=False, repr=False
     )
     """Users who were notified by their mention in the message."""
 
-    role_mention_ids: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = attrs.field(
-        hash=False, eq=False, repr=False
-    )
+    role_mention_ids: typing.Sequence[snowflakes.Snowflake] | None = attrs.field(hash=False, eq=False, repr=False)
     """IDs of roles that were notified by their mention in the message."""
 
-    components: undefined.UndefinedOr[typing.Sequence[component_models.TopLevelComponentTypesT]] = attrs.field(
+    components: typing.Sequence[component_models.TopLevelComponentTypesT] | None = attrs.field(
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""
 
     @property
-    def user_mentions_ids(self) -> undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]]:
+    def user_mentions_ids(self) -> typing.Sequence[snowflakes.Snowflake] | None:
         """Ids of the users who were notified by their mention in the message."""
-        if self.user_mentions is undefined.UNDEFINED:
-            return undefined.UNDEFINED
+        if self.user_mentions is None:
+            return None
 
         return list(self.user_mentions.keys())
 
@@ -737,9 +735,7 @@ class PartialMessage(snowflakes.Unique):
     `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
 
-    message_snapshots: undefined.UndefinedNoneOr[typing.Sequence[MessageSnapshot]] = attrs.field(
-        hash=False, eq=False, repr=False
-    )
+    message_snapshots: typing.Sequence[MessageSnapshot] = attrs.field(hash=False, eq=False, repr=False)
     """The partial message snapshot associated with the message_reference"""
 
     application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
@@ -1574,7 +1570,7 @@ class Message(PartialMessage):
     If `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
 
-    message_snapshots: typing.Sequence[MessageSnapshot] | None = attrs.field(hash=False, eq=False, repr=False)
+    message_snapshots: typing.Sequence[MessageSnapshot] = attrs.field(hash=False, eq=False, repr=False)
     """The partial message snapshot associated with the message_reference."""
 
     application_id: snowflakes.Snowflake | None = attrs.field(hash=False, eq=False, repr=False)
