@@ -3520,30 +3520,26 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else None
         )
 
-        attachments: list[message_models.Attachment] = (
-            [self._deserialize_message_attachment(attachment) for attachment in attachments_payload]
-            if (attachments_payload := payload.get("attachments"))
-            else []
-        )
+        attachments: list[message_models.Attachment] = [
+            self._deserialize_message_attachment(attachment) for attachment in payload.get("attachments", [])
+        ]
 
-        embeds: list[embed_models.Embed] | None = (
-            [self.deserialize_embed(embed) for embed in embeds_payload]
-            if (embeds_payload := payload.get("embeds"))
-            else None
-        )
+        embeds: list[embed_models.Embed] = [self.deserialize_embed(embed) for embed in payload.get("embeds", [])]
 
-        stickers: list[sticker_models.PartialSticker] | None = None
+        stickers: list[sticker_models.PartialSticker]
         if "sticker_items" in payload:
             stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["sticker_items"]]
         # This is only here for backwards compatibility as old messages still return this field
         elif "stickers" in payload:
             stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["stickers"]]
+        else:
+            stickers = []
 
         content = payload.get("content") or None  # Default to None if content is an empty string
 
-        components: typing.Sequence[component_models.TopLevelComponentTypesT] | None = None
-        if component_payloads := payload.get("components"):
-            components = self._deserialize_top_level_components(component_payloads)
+        components: typing.Sequence[component_models.TopLevelComponentTypesT] = self._deserialize_top_level_components(
+            payload.get("components", [])
+        )
 
         user_mentions: dict[snowflakes.Snowflake, user_models.User] | None = None
         if raw_user_mentions := payload.get("mentions"):
