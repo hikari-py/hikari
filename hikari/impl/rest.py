@@ -1000,20 +1000,23 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         body_retry_after = float(body["retry_after"])
+        reason = body.get("message", "none")
 
         if body.get("global", False) is True:
             _LOGGER.error(
-                "rate limited on the global bucket. You should consider lowering the number of requests you make or "
-                "contacting Discord to raise this limit. Backing off and retrying request..."
+                "rate limited on the global bucket (reason: '%s'). You should consider lowering the number of requests "
+                "you make or contacting Discord to raise this limit. Backing off and retrying request...",
+                reason,
             )
             self._bucket_manager.throttle(body_retry_after)
             return 0
 
         _LOGGER.error(
-            "rate limited on a %s sub bucket on bucket %s. You should consider lowering the number of requests "
-            "you make to '%s'. Backing off and retrying request...",
+            "rate limited on a %s sub bucket on bucket %s (reason: '%s'). You should consider lowering the number "
+            "of requests you make to '%s'. Backing off and retrying request...",
             resp_headers.get(_X_RATELIMIT_SCOPE_HEADER, "route"),
             bucket,
+            reason,
             compiled_route.route,
         )
 
