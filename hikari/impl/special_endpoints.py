@@ -287,6 +287,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     @typing_extensions.override
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
         route = routes.PATCH_GUILD_CHANNELS.compile(guild=self._guild)
+
         body = []
         for channel in self._positions:
             channel_payload = data_binding.JSONObjectBuilder()
@@ -295,6 +296,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
             channel_payload.put("lock_permissions", channel.lock_permissions)
             channel_payload.put_snowflake("parent_id", channel.parent)
             body.append(channel_payload)
+
         return self._request_call(route, json=body, reason=self._reason).__await__()
 
 
