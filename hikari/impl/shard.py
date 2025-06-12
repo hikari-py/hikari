@@ -98,7 +98,7 @@ _TOTAL_RATELIMIT: typing.Final[tuple[float, int]] = (60.0, 120)
 # to get around (leaving 3 slots for it).
 _NON_PRIORITY_RATELIMIT: typing.Final[tuple[float, int]] = (60.0, 117)
 # Used to identify the end of a ZLIB payload
-_ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
+_ZLIB_SYNC_FLUSH: typing.Final[bytes] = b"\x00\x00\xff\xff"
 # Close codes which don't invalidate the current session.
 _RECONNECTABLE_CLOSE_CODES: frozenset[errors.ShardCloseCode] = frozenset(
     (
@@ -184,13 +184,14 @@ class _GatewayTransport:
             await self._exit_stack.aclose()
 
             # We have to sleep to allow aiohttp time to close SSL transports...
-            # This code can be removed in aiohttp v4.0.0
+            # This code can be once aiohttp 3.12.6 is the minimum required version
             # https://github.com/aio-libs/aiohttp/issues/1925
             # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
             await asyncio.sleep(0.25)
 
     async def receive_json(self) -> data_binding.JSONObject:
         pl = await self._receive_and_check()
+
         if self._logger.isEnabledFor(ux.TRACE):
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
@@ -247,7 +248,7 @@ class _GatewayTransport:
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.BINARY:
-            if message.data.endswith(_ZLIB_SUFFIX):
+            if message.data.endswith(_ZLIB_SYNC_FLUSH):
                 # Hot and fast path: we already have the full message
                 # in a single frame
                 return self._zlib.decompress(message.data)
@@ -256,7 +257,7 @@ class _GatewayTransport:
             # the whole message. Only then do we create a buffer
             buff = bytearray(message.data)
 
-            while not buff.endswith(_ZLIB_SUFFIX):
+            while not buff.endswith(_ZLIB_SYNC_FLUSH):
                 message = await self._ws.receive()
 
                 if message.type == aiohttp.WSMsgType.BINARY:
@@ -291,7 +292,7 @@ class _GatewayTransport:
 
         try:
             try:
-                connector = net.create_tcp_connector(http_settings=http_settings, dns_cache=False, limit=1)
+                connector = net.create_tcp_connector(http_settings=http_settings, dns_cache=False)
                 client_session = await exit_stack.enter_async_context(
                     net.create_client_session(
                         connector=connector,
@@ -340,7 +341,7 @@ class _GatewayTransport:
             await exit_stack.aclose()
 
             # We have to sleep to allow aiohttp time to close SSL transports...
-            # This code can be removed in aiohttp v4.0.0
+            # This code can be once aiohttp 3.12.6 is the minimum required version
             # https://github.com/aio-libs/aiohttp/issues/1925
             # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
             await asyncio.sleep(0.25)
@@ -933,7 +934,9 @@ class GatewayShardImpl(shard.GatewayShard):
                 if not self._handshake_event.is_set():
                     continue
 
-                await self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self))
+                await self._event_manager.dispatch(
+                    self._event_factory.deserialize_connected_event(self), return_tasks=True
+                )
                 await aio.first_completed(*lifetime_tasks)
 
                 # Since nothing went wrong, we can reset the backoff and try again
@@ -1003,7 +1006,9 @@ class GatewayShardImpl(shard.GatewayShard):
 
                     if self._handshake_event.is_set():
                         # We dispatched the connected event, so we can dispatch the disconnected one too
-                        await self._event_manager.dispatch(self._event_factory.deserialize_disconnected_event(self))
+                        await self._event_manager.dispatch(
+                            self._event_factory.deserialize_disconnected_event(self), return_tasks=True
+                        )
 
     def _serialize_and_store_presence_payload(
         self,

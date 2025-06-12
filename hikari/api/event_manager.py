@@ -184,14 +184,29 @@ class EventManager(abc.ABC):
             If there is no consumer for the event.
         """
 
+    @typing.overload
+    def dispatch(self, event: base_events.Event, *, return_tasks: typing.Literal[False] = False) -> None: ...
+
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: typing.Literal[True] = True
+    ) -> asyncio.Future[typing.Any]: ...
+
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: bool = False
+    ) -> asyncio.Future[typing.Any] | None: ...
+
     @abc.abstractmethod
-    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: base_events.Event, *, return_tasks: bool = False) -> asyncio.Future[typing.Any] | None:
         """Dispatch an event.
 
         Parameters
         ----------
         event
             The event to dispatch.
+        return_tasks
+            Whether to return an asyncio future to wait for the listeners to finish.
 
         Examples
         --------

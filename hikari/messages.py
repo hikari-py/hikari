@@ -121,11 +121,17 @@ class MessageType(int, enums.Enum):
     GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING = 17
     """A message to indicate the final warning before removal from discovery."""
 
+    THREAD_CREATED = 18
+    """A message to denote that a thread was created."""
+
     REPLY = 19
     """A message that replies to another message."""
 
     CHAT_INPUT = 20
     """A message sent to indicate a chat input application command has been executed."""
+
+    THREAD_STARTER_MESSAGE = 21
+    """A message send when a thread starter message is added to a thread."""
 
     GUILD_INVITE_REMINDER = 22
     """A message sent to remind to invite people to the guild."""
@@ -139,6 +145,24 @@ class MessageType(int, enums.Enum):
     ROLE_SUBSCRIPTION_PURCHASE = 25
     """A message sent to indicate a role subscription has been purchased."""
 
+    INTERACTION_PREMIUM_UPSELL = 26
+    """A message sent when a user is upsold to a premium interaction."""
+
+    STAGE_START = 27
+    """A message to denote that a stage channel started."""
+
+    STAGE_END = 28
+    """A message to denote that a stage channel ended."""
+
+    STAGE_SPEAKER = 29
+    """"A message sent when a user starts speaking in a stage channel."""
+
+    STAGE_TOPIC = 31
+    """A message to denote that a stage channel's topic has changed."""
+
+    GUILD_APPLICATION_PREMIUM_SUBSCRIPTION = 32
+    """A message to denote a user has purchased an application premium subscription."""
+
     GUILD_INCIDENT_ALERT_MODE_ENABLED = 36
     """A message sent to indicate that a guild incident action has been enabled."""
 
@@ -150,6 +174,9 @@ class MessageType(int, enums.Enum):
 
     GUILD_INCIDENT_REPORT_FALSE_ALARM = 39
     """A message sent to indicate that the raid has been reported as a false alarm."""
+
+    PURCHASE_NOTIFICATION = 44
+    """A message to denote a user purchased a guild product."""
 
     POLL_RESULT = 46
     """A message sent to indicate a poll has finished."""
@@ -176,6 +203,9 @@ class MessageFlag(enums.Flag):
 
     URGENT = 1 << 4
     """This message came from the urgent message system."""
+
+    HAS_THREAD = 1 << 5
+    """This message has an associated thread with the same ID."""
 
     EPHEMERAL = 1 << 6
     """This message is only visible to the user that invoked the interaction."""
