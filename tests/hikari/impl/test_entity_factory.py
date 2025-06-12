@@ -6865,6 +6865,23 @@ class TestEntityFactoryImpl:
         assert message.thread.flags == channel_models.ChannelFlag.PINNED
         assert message.thread.name == "e"
 
+    def test_deserialize_message_with_snapshot(self, entity_factory_impl, message_payload):
+        del message_payload["message_reference"]
+        del message_payload["referenced_message"]
+
+        message_payload["message_snapshots"] = [
+            {
+                "type": message_models.MessageType.DEFAULT,
+                "content": "let there be light",
+                "flags": message_models.MessageFlag.HAS_THREAD,
+            }
+        ]
+
+        message = entity_factory_impl.deserialize_message(message_payload)
+        assert (snapshot := message.message_snapshots[0]).content == "let there be light"
+        assert snapshot.flags == message_models.MessageFlag.HAS_THREAD
+        assert snapshot.type == message_models.MessageType.DEFAULT
+
     def test_deserialize_message_with_unset_sub_fields(self, entity_factory_impl, message_payload):
         del message_payload["application"]["cover_image"]
         del message_payload["activity"]["party_id"]
