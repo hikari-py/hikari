@@ -1714,7 +1714,7 @@ class GuildOnboardingPrompt(snowflakes.Unique):
     in_onboarding: bool = attrs.field(hash=False, repr=True)
     """Indicates whether the prompt is present in the onboarding flow.
 
-    If `false`, the prompt will only appear in the Channels & Roles tab
+    If [`False`][], the prompt will only appear in the Channels & Roles tab
     """
 
 
