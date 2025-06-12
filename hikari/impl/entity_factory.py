@@ -3541,13 +3541,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             payload.get("components", [])
         )
 
-        user_mentions: dict[snowflakes.Snowflake, user_models.User] | None = None
-        if raw_user_mentions := payload.get("mentions"):
-            user_mentions = {u.id: u for u in map(self.deserialize_user, raw_user_mentions)}
+        user_mentions: dict[snowflakes.Snowflake, user_models.User] = {
+            u.id: u for u in map(self.deserialize_user, payload.get("mentions", []))
+        }
 
-        role_mention_ids: list[snowflakes.Snowflake] | None = None
-        if raw_role_mention_ids := payload.get("mention_roles"):
-            role_mention_ids = [snowflakes.Snowflake(i) for i in raw_role_mention_ids]
+        role_mention_ids: list[snowflakes.Snowflake] = [
+            snowflakes.Snowflake(i) for i in payload.get("mention_roles", [])
+        ]
 
         return message_models.MessageSnapshot(
             type=message_models.MessageType(payload["type"]),

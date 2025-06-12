@@ -515,7 +515,7 @@ class MessageSnapshot:
     content: str | None = attrs.field(hash=False, eq=False, repr=False)
     """The content of the message."""
 
-    embeds: typing.Sequence[embeds_.Embed] | None = attrs.field(hash=False, eq=False, repr=False)
+    embeds: typing.Sequence[embeds_.Embed] = attrs.field(hash=False, eq=False, repr=False)
     """The message embeds."""
 
     attachments: typing.Sequence[Attachment] = attrs.field(hash=False, eq=False, repr=False)
@@ -533,15 +533,13 @@ class MessageSnapshot:
     stickers: typing.Sequence[stickers_.PartialSticker] | None = attrs.field(hash=False, eq=False, repr=False)
     """The stickers sent with this message."""
 
-    user_mentions: typing.Mapping[snowflakes.Snowflake, users_.User] | None = attrs.field(
-        hash=False, eq=False, repr=False
-    )
+    user_mentions: typing.Mapping[snowflakes.Snowflake, users_.User] = attrs.field(hash=False, eq=False, repr=False)
     """Users who were notified by their mention in the message."""
 
-    role_mention_ids: typing.Sequence[snowflakes.Snowflake] | None = attrs.field(hash=False, eq=False, repr=False)
+    role_mention_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """IDs of roles that were notified by their mention in the message."""
 
-    components: typing.Sequence[component_models.TopLevelComponentTypesT] | None = attrs.field(
+    components: typing.Sequence[component_models.TopLevelComponentTypesT] = attrs.field(
         hash=False, eq=False, repr=False
     )
     """Sequence of the components attached to this message."""
@@ -549,9 +547,6 @@ class MessageSnapshot:
     @property
     def user_mentions_ids(self) -> typing.Sequence[snowflakes.Snowflake] | None:
         """Ids of the users who were notified by their mention in the message."""
-        if self.user_mentions is None:
-            return None
-
         return list(self.user_mentions.keys())
 
 
