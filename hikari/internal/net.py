@@ -73,9 +73,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
     return errors.HTTPResponseError(real_url, status, response.headers, raw_body)
 
 
-def create_tcp_connector(
-    http_settings: config.HTTPSettings, *, dns_cache: bool | int = True, limit: int = 100
-) -> aiohttp.TCPConnector:
+def create_tcp_connector(http_settings: config.HTTPSettings, *, dns_cache: bool | int = True) -> aiohttp.TCPConnector:
     """Create a TCP connector and return it.
 
     Parameters
@@ -101,7 +99,7 @@ def create_tcp_connector(
     return aiohttp.TCPConnector(
         enable_cleanup_closed=http_settings.enable_cleanup_closed,
         force_close=http_settings.force_close_transports,
-        limit=limit,
+        limit=http_settings.connection_limit,
         ssl=http_settings.ssl,
         ttl_dns_cache=dns_cache if not isinstance(dns_cache, bool) else 10,
         use_dns_cache=dns_cache is not False,
