@@ -530,7 +530,7 @@ class MessageSnapshot:
     flags: undefined.UndefinedOr[MessageFlag] = attrs.field(hash=False, eq=False, repr=False)
     """The message flags."""
 
-    stickers: typing.Sequence[stickers_.PartialSticker] | None = attrs.field(hash=False, eq=False, repr=False)
+    stickers: typing.Sequence[stickers_.PartialSticker] = attrs.field(hash=False, eq=False, repr=False)
     """The stickers sent with this message."""
 
     user_mentions: typing.Mapping[snowflakes.Snowflake, users_.User] = attrs.field(hash=False, eq=False, repr=False)
