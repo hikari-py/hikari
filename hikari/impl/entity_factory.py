@@ -1981,10 +1981,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     @typing_extensions.override
     def deserialize_guild_onboarding(self, payload: data_binding.JSONObject) -> guild_models.GuildOnboarding:
-        default_channel_ids: list[snowflakes.Snowflake] = [
+        default_channel_ids = [
             snowflakes.Snowflake(default_channel_id) for default_channel_id in payload["default_channel_ids"]
         ]
-        prompts: list[guild_models.GuildOnboardingPrompt] = [
+        prompts = [
             self._deserialize_guild_onboarding_prompt(prompt_payload) for prompt_payload in payload["prompts"]
         ]
         return guild_models.GuildOnboarding(
