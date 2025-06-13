@@ -1371,6 +1371,49 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def forward_message(
+        self,
+        channel_to: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        channel_from: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextableChannel]] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        """Forward a message.
+
+        Parameters
+        ----------
+        channel_to
+            The object or ID of the channel to forward the message to.
+        message
+            The object or ID of the message to forward.
+        channel_from
+            The object or ID of the message's channel of origin.
+            This field will be ignored if the message provided
+              is of type [`hikari.messages.PartialMessage`][] rather than [`hikari.snowflakes.Snowflakeish`][].
+
+        Returns
+        -------
+        hikari.messages.Message
+            The message object that was forwarded.
+
+        Raises
+        ------
+        ValueError
+            If the message is of type [`hikari.snowflakes.Snowflakeish`][] and `channel_from` was not provided.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you tried to forward a message without the [`hikari.permissions.Permissions.VIEW_CHANNEL`][]
+              or [`hikari.permissions.Permissions.SEND_MESSAGES`][] permissions.
+        hikari.errors.NotFoundError
+            If the channel or message was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discords side while handling the request.
+        """
+
+    @abc.abstractmethod
     async def edit_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
