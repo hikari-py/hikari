@@ -3558,15 +3558,16 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
     @typing_extensions.override
-    async def reposition_channels(
+    def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
+        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]] = {},
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        route = routes.PATCH_GUILD_CHANNELS.compile(guild=guild)
-        body = [{"id": str(int(channel)), "position": pos} for pos, channel in positions.items()]
-        await self._request(route, json=body, reason=reason)
+    ) -> special_endpoints.ChannelRepositioner:
+        builder = special_endpoints_impl.ChannelRepositioner(guild=guild, request_call=self._request, reason=reason)
+        for pos, channel in positions.items():
+            builder.add_reposition_channel(position=pos, channel=channel)
+        return builder
 
     @typing_extensions.override
     async def fetch_member(
