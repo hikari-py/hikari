@@ -104,7 +104,7 @@ mypy = ["mypy[faster-cache]==1.16.1", { include-group = "types" }]
 pyright = ["pyright==1.1.402", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
-    "pytest==8.4.0",
+    "pytest==8.4.1",
     "pytest-asyncio==1.0.0",
     "pytest-cov==6.2.1",
     "pytest-randomly==3.16.0",
