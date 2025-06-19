@@ -37,7 +37,6 @@ __all__: typing.Sequence[str] = (
 )
 
 import datetime
-import time
 import time as time_
 import typing
 import uuid as uuid_

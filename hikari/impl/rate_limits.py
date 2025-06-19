@@ -342,8 +342,8 @@ class SlidingWindowedBurstRateLimiter(BurstRateLimiter):
         else:
             self.drip()
 
-    def get_time_to_wait(self, now: float) -> float:
-        """Determine how long until we can perform another request.
+    def get_time_until_next_slide(self, now: float) -> float:
+        """Determine how long until the next window slide occurs (aka, when we can make another request).
 
         !!! warning
             Invoking this method will update the internal state if we were
@@ -420,7 +420,7 @@ class SlidingWindowedBurstRateLimiter(BurstRateLimiter):
             is occurring by checking if it is not [`None`][].
         """
         while self.queue:
-            sleep_for = self.get_time_to_wait(time.time())
+            sleep_for = self.get_time_until_next_slide(time.time())
 
             if sleep_for > 0:
                 _LOGGER.debug("you are being rate limited on bucket %s, backing off for %ss", self.name, sleep_for)

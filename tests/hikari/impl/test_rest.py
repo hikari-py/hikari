@@ -171,7 +171,7 @@ class TestClientCredentialsStrategy:
             mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_old_token))
         )
 
-        with mock.patch.object(time, "monotonic", return_value=99999999999):
+        with mock.patch.object(time, "time", return_value=99999999999):
             new_token = await strategy.acquire(mock_rest)
 
         mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
@@ -2221,6 +2221,7 @@ class TestRESTClientImplAsync:
                 rest._X_RATELIMIT_LIMIT_HEADER: "123456789",
                 rest._X_RATELIMIT_REMAINING_HEADER: "987654321",
                 rest._X_RATELIMIT_RESET_AFTER_HEADER: "12.2",
+                rest._X_RATELIMIT_RESET_HEADER: "12123123.2",
             }
 
         response = StubResponse()
@@ -2235,6 +2236,7 @@ class TestRESTClientImplAsync:
             remaining_header=987654321,
             limit_header=123456789,
             reset_after=12.2,
+            reset_at=12123123.2,
         )
 
     async def test__parse_ratelimits_when_not_ratelimited(self, rest_client):

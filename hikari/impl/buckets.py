@@ -306,11 +306,11 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
 
         now = time.time()
 
-        if self.is_rate_limited(now) and now - self.next_slide_at > self._max_rate_limit:
+        if self.is_rate_limited(now) and self.next_slide_at - now > self._max_rate_limit:
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 is_global=False,
-                retry_after=self.get_time_to_wait(time.time()),
+                retry_after=self.get_time_until_next_slide(time.time()),
                 max_retry_after=self._max_rate_limit,
                 reset_at=self.next_slide_at,
                 limit=self.limit,
@@ -397,12 +397,7 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
             msg = "Cannot resolve known bucket"
             raise RuntimeError(msg)
 
-        begin = reset_at - reset_after
-        end = reset_at
-        print((end - begin) / (limit - remaining))
-
         slide_period = reset_after / (limit - remaining)
-
         self.name = real_bucket_hash
         self.remaining = remaining
         self.limit = limit
