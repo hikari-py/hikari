@@ -400,11 +400,11 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
             raise RuntimeError(msg)
 
         slide_period = reset_after / (limit - remaining)
-        self.name = real_bucket_hash
-        self.remaining = remaining
-        self.limit = limit
-        self.slide_period = slide_period
-        self.next_slide_at = (reset_at - reset_after) + self.slide_period
+        self.name: str = real_bucket_hash
+        self.remaining: int = remaining
+        self.limit: int = limit
+        self.slide_period: float = slide_period
+        self.next_slide_at: float = (reset_at - reset_after) + self.slide_period
 
 
 def _create_authentication_hash(authentication: str | None) -> str:
