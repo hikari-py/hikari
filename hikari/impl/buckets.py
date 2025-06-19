@@ -351,7 +351,8 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
         if self.limit != limit:
             if self.limit > limit:
                 _LOGGER.warning(
-                    "bucket '%s' decreased its limit (%d -> %d). It is possible that you will see a small increase in 429s",
+                    "bucket '%s' decreased its limit (%d -> %d). "
+                    "It is possible that you will see a small increase in 429s",
                     self.name,
                     self.limit,
                     limit,
@@ -363,7 +364,8 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
         if not math.isclose(self.slide_period, slide_period, abs_tol=0.2):
             if not math.isclose(self.slide_period, slide_period, abs_tol=0.4):
                 _LOGGER.warning(
-                    "bucket '%s' greatly increased its slide period (%s -> %s). It is possible that you will see a small increase in 429s",
+                    "bucket '%s' greatly increased its slide period (%s -> %s). "
+                    "It is possible that you will see a small increase in 429s",
                     self.name,
                     self.slide_period,
                     slide_period,
