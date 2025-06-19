@@ -117,7 +117,7 @@ class TestRESTBucket:
         bucket._lock = mock.Mock(acquire=mock.AsyncMock())
 
         with (
-            mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire,
+            mock.patch.object(rate_limits.SlidingWindowedBurstRateLimiter, "acquire") as super_acquire,
             pytest.raises(errors.RateLimitTooLongError),
         ):
             await bucket.acquire()
@@ -134,7 +134,7 @@ class TestRESTBucket:
         bucket = buckets.RESTBucket("UNKNOWN", compiled_route, global_ratelimit, float("inf"))
         bucket._lock = mock.Mock(acquire=mock.AsyncMock())
 
-        with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
+        with mock.patch.object(rate_limits.SlidingWindowedBurstRateLimiter, "acquire") as super_acquire:
             await bucket.acquire()
 
         bucket._lock.acquire.assert_awaited_once_with()
@@ -154,7 +154,7 @@ class TestRESTBucket:
         bucket._lock = mock.Mock(acquire=resolve_bucket)
         lock_acquire_called = 0
 
-        with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
+        with mock.patch.object(rate_limits.SlidingWindowedBurstRateLimiter, "acquire") as super_acquire:
             await bucket.acquire()
 
         super_acquire.assert_awaited_once_with()
@@ -167,7 +167,7 @@ class TestRESTBucket:
         bucket = buckets.RESTBucket("spaghetti", compiled_route, global_ratelimit, float("inf"))
         bucket._lock = mock.Mock()
 
-        with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as super_acquire:
+        with mock.patch.object(rate_limits.SlidingWindowedBurstRateLimiter, "acquire") as super_acquire:
             await bucket.acquire()
 
         super_acquire.assert_awaited_once_with()

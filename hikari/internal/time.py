@@ -28,8 +28,8 @@ __all__: typing.Sequence[str] = (
     "datetime_to_discord_epoch",
     "discord_epoch_to_datetime",
     "local_datetime",
-    "monotonic",
-    "monotonic_ns",
+    "time",
+    "time_ns",
     "timespan_to_int",
     "unix_epoch_to_datetime",
     "utc_datetime",
@@ -38,6 +38,7 @@ __all__: typing.Sequence[str] = (
 
 import datetime
 import time
+import time as time_
 import typing
 import uuid as uuid_
 
@@ -196,29 +197,24 @@ def utc_datetime() -> datetime.datetime:
     return datetime.datetime.now(tz=datetime.timezone.utc)
 
 
-# time.monotonic_ns is no slower than time.monotonic, but is more accurate.
-# Also, fun fact that monotonic_ns appears to be 1µs faster on average than
-# monotonic on ARM64 architectures, but on x86, monotonic is around 1ns faster
-# than monotonic_ns. Just thought that was kind of interesting to note down.
-# (RPi 3B versus i7 6700)
 if typing.TYPE_CHECKING:
 
-    def monotonic() -> float:
-        """Performance counter for benchmarking."""  # noqa: D401 - Imperative mood
+    def time() -> float:
+        """Epoch time in seconds (since 00:00:00 UTC on January 1, 1970)."""
         raise NotImplementedError
 
-    def monotonic_ns() -> int:
-        """Performance counter for benchmarking as nanoseconds."""  # noqa: D401 - Imperative mood
+    def time_ns() -> int:
+        """Epoch time in nanoseconds (since 00:00:00 UTC on January 1, 1970)."""
         raise NotImplementedError
 
 else:
-    monotonic = time.perf_counter
-    """Performance counter for benchmarking."""
+    time = time_.time
+    """Epoch time in seconds (since 00:00:00 UTC on January 1, 1970)."""
 
-    monotonic_ns = time.perf_counter_ns
-    """Performance counter for benchmarking as nanoseconds."""
+    time_ns = time_.time_ns
+    """Epoch time in nanoseconds (since 00:00:00 UTC on January 1, 1970)."""
 
 
 def uuid() -> str:
     """Generate a unique UUID (1ns precision)."""
-    return uuid_.uuid1(None, monotonic_ns()).hex
+    return uuid_.uuid1(None, time_ns()).hex

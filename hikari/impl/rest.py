@@ -115,6 +115,7 @@ _X_AUDIT_LOG_REASON_HEADER: typing.Final[str] = sys.intern("X-Audit-Log-Reason")
 _X_RATELIMIT_BUCKET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Bucket")
 _X_RATELIMIT_LIMIT_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Limit")
 _X_RATELIMIT_REMAINING_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Remaining")
+_X_RATELIMIT_RESET_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset")
 _X_RATELIMIT_RESET_AFTER_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Reset-After")
 _X_RATELIMIT_SCOPE_HEADER: typing.Final[str] = sys.intern("X-RateLimit-Scope")
 _RETRY_ERROR_CODES: typing.Final[frozenset[int]] = frozenset((500, 502, 503, 504))
@@ -181,7 +182,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
 
     @property
     def _is_expired(self) -> bool:
-        return time.monotonic() >= self._expire_at
+        return time.time() >= self._expire_at
 
     @property
     def scopes(self) -> typing.Sequence[applications.OAuth2Scope | str]:
@@ -219,7 +220,7 @@ class ClientCredentialsStrategy(rest_api.TokenStrategy):
                 raise
 
             # Expires in is lowered a bit in-order to lower the chance of a dead token being used.
-            self._expire_at = time.monotonic() + math.floor(response.expires_in.total_seconds() * 0.99)
+            self._expire_at = time.time() + math.floor(response.expires_in.total_seconds() * 0.99)
             self._token = f"{response.token_type} {response.access_token}"
             return self._token
 
@@ -844,7 +845,7 @@ class RESTClientImpl(rest_api.RESTClient):
                         url,
                         _stringify_http_message(headers, self._dumps(json)) if json else None,
                     )
-                    start = time.monotonic()
+                    start = time.time()
 
                 # Make the request.
                 response = await self._client_session.request(
@@ -860,7 +861,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 )
 
                 if trace_logging_enabled:
-                    time_taken = (time.monotonic() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
+                    time_taken = (time.time() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
                     _LOGGER.log(
                         ux.TRACE,
                         "%s %s %s in %sms\n%s",
@@ -956,6 +957,7 @@ class RESTClientImpl(rest_api.RESTClient):
         limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
         remaining = int(resp_headers.get(_X_RATELIMIT_REMAINING_HEADER, "1"))
         bucket = resp_headers.get(_X_RATELIMIT_BUCKET_HEADER)
+        reset_at = float(resp_headers.get(_X_RATELIMIT_RESET_HEADER, "0"))
         reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
 
         if bucket:
@@ -976,6 +978,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 bucket_header=bucket,
                 remaining_header=remaining,
                 limit_header=limit,
+                reset_at=reset_at,
                 reset_after=reset_after,
             )
 
@@ -1055,7 +1058,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 is_global=False,
                 retry_after=body_retry_after,
                 max_retry_after=self._bucket_manager.max_rate_limit,
-                reset_at=time.monotonic() + body_retry_after,
+                reset_at=time.time() + body_retry_after,
                 limit=None,
                 period=None,
             )

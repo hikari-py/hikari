@@ -30,7 +30,7 @@ __all__: typing.Sequence[str] = (
     "BurstRateLimiter",
     "ExponentialBackOff",
     "ManualRateLimiter",
-    "WindowedBurstRateLimiter",
+    "SlidingWindowedBurstRateLimiter",
 )
 
 import abc
@@ -161,7 +161,7 @@ class ManualRateLimiter(BurstRateLimiter):
     # <<inherited docstring from BurstRateLimiter>>.
 
     reset_at: float | None
-    """The monotonic [`time.monotonic`][] timestamp at which the ratelimit gets lifted."""
+    """The monotonic [`time.time`][] timestamp at which the ratelimit gets lifted."""
 
     def __init__(self) -> None:
         super().__init__("global")
@@ -235,7 +235,7 @@ class ManualRateLimiter(BurstRateLimiter):
         """
         _LOGGER.warning("you are being globally rate limited for %ss", retry_after)
 
-        self.reset_at = time.monotonic() + retry_after
+        self.reset_at = time.time() + retry_after
         await asyncio.sleep(retry_after)
         self.reset_at = None
 
@@ -250,7 +250,7 @@ class ManualRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now
-            The monotonic [`time.monotonic`][] timestamp.
+            The [`time.time`][] timestamp.
 
         Returns
         -------
@@ -264,14 +264,14 @@ class ManualRateLimiter(BurstRateLimiter):
         return self.reset_at - now
 
 
-class WindowedBurstRateLimiter(BurstRateLimiter):
+class SlidingWindowedBurstRateLimiter(BurstRateLimiter):
     """Windowed burst rate limiter.
 
-    Rate limiter for rate limits that last fixed periods of time with a
+    Rate limiter for rate limits that has a sliding window recovery rate, with a
     fixed number of times it can be used in that time frame.
 
-    To use this, you should call [`hikari.impl.rate_limits.WindowedBurstRateLimiter.acquire`][] and await the
-    result immediately before performing your rate-limited task.
+    To use this, you should call [`hikari.impl.rate_limits.SlidingWindowedBurstRateLimiter.acquire`][] and then
+    perform your rate-limited task.
 
     If the rate limit has been hit, acquiring time will return an incomplete
     future that is placed on the internal queue. A throttle task is then spun up
@@ -293,31 +293,31 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     that a unit has been placed into the bucket.
     """
 
-    __slots__: typing.Sequence[str] = ("limit", "period", "remaining", "reset_at")
+    __slots__: typing.Sequence[str] = ("limit", "next_slide_at", "remaining", "slide_period")
 
     throttle_task: asyncio.Task[typing.Any] | None
     # <<inherited docstring from BurstRateLimiter>>.
 
-    reset_at: float
-    """The [`time.monotonic`][] that the limit window ends at."""
+    next_slide_at: float
+    """The [`time.time`][] in which the next slide will be made."""
 
     remaining: int
     """The number of [`hikari.impl.rate_limits.WindowedBurstRateLimiter.acquire`][]'s
     left in this window before you will get rate limited."""
 
-    period: float
-    """How long the window lasts for from the start in seconds."""
+    slide_period: float
+    """How long until the window slides (aka, every how often remaining increments by 1 ) in seconds."""
 
     limit: int
     """The maximum number of [`hikari.impl.rate_limits.WindowedBurstRateLimiter.acquire`][]'s
     allowed in this time window."""
 
-    def __init__(self, name: str, period: float, limit: int) -> None:
+    def __init__(self, name: str, slide_period: float, limit: int) -> None:
         super().__init__(name)
-        self.reset_at = 0.0
         self.remaining = 0
         self.limit = limit
-        self.period = period
+        self.slide_period = slide_period
+        self.next_slide_at = time.time() + self.slide_period
 
     @typing_extensions.override
     async def acquire(self) -> None:
@@ -330,7 +330,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         # if it hasn't started. Likewise, if the throttle task is still running, we should
         # delegate releasing the future to the throttler task so that we still process
         # first-come-first-serve
-        if self.throttle_task is not None or self.is_rate_limited(time.monotonic()):
+        if self.throttle_task is not None or self.is_rate_limited(time.time()):
             loop = asyncio.get_running_loop()
             future = loop.create_future()
 
@@ -342,8 +342,8 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         else:
             self.drip()
 
-    def get_time_until_reset(self, now: float) -> float:
-        """Determine how long until the current rate limit is reset.
+    def get_time_to_wait(self, now: float) -> float:
+        """Determine how long until we can perform another request.
 
         !!! warning
             Invoking this method will update the internal state if we were
@@ -355,7 +355,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now
-            The monotonic [`time.monotonic`][] timestamp.
+            The [`time.time`][] timestamp.
 
         Returns
         -------
@@ -365,7 +365,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         """
         if not self.is_rate_limited(now):
             return 0.0
-        return self.reset_at - now
+        return self.next_slide_at - now
 
     def is_rate_limited(self, now: float) -> bool:
         """Determine if we are under a rate limit at the given time.
@@ -380,16 +380,20 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now
-            The monotonic [`time.monotonic`][] timestamp.
+            The [`time.time`][] timestamp.
 
         Returns
         -------
         bool
             Whether the bucket is ratelimited.
         """
-        if self.reset_at <= now:
-            self.remaining = self.limit
-            self.reset_at = now + self.period
+        if now > self.next_slide_at:
+            gain = math.floor((now - self.next_slide_at) / self.slide_period) + 1
+            now_remaining = self.remaining + gain
+
+            self.remaining = min(self.limit, now_remaining)
+            self.next_slide_at = self.next_slide_at + gain * self.slide_period
+
             return False
 
         return self.remaining <= 0
@@ -416,7 +420,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
             is occurring by checking if it is not [`None`][].
         """
         while self.queue:
-            sleep_for = self.get_time_until_reset(time.monotonic())
+            sleep_for = self.get_time_to_wait(time.time())
 
             if sleep_for > 0:
                 _LOGGER.debug("you are being rate limited on bucket %s, backing off for %ss", self.name, sleep_for)

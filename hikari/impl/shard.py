@@ -511,7 +511,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self._last_heartbeat_ack_received = float("nan")
         self._last_heartbeat_sent = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
-        self._non_priority_rate_limit = rate_limits.WindowedBurstRateLimiter(
+        self._non_priority_rate_limit = rate_limits.SlidingWindowedBurstRateLimiter(
             f"shard {shard_id} non-priority rate limit", *_NON_PRIORITY_RATELIMIT
         )
         self._proxy_settings = proxy_settings
@@ -522,7 +522,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self._shard_id = shard_id
         self._status = initial_status
         self._token = token
-        self._total_rate_limit = rate_limits.WindowedBurstRateLimiter(
+        self._total_rate_limit = rate_limits.SlidingWindowedBurstRateLimiter(
             f"shard {shard_id} total rate limit", *_TOTAL_RATELIMIT
         )
         self._transport_compression = compression is not None
@@ -716,11 +716,11 @@ class GatewayShardImpl(shard.GatewayShard):
     async def _send_heartbeat(self) -> None:
         self._logger.log(ux.TRACE, "sending HEARTBEAT [s:%s]", self._seq)
         await self._send_json({_OP: _HEARTBEAT, _D: self._seq}, priority=True)
-        self._last_heartbeat_sent = time.monotonic()
+        self._last_heartbeat_sent = time.time()
 
     async def _heartbeat(self, heartbeat_interval: float) -> None:
         # Prevent immediately zombie-ing.
-        self._last_heartbeat_ack_received = time.monotonic()
+        self._last_heartbeat_ack_received = time.time()
         self._logger.debug("starting heartbeat with interval %ss", heartbeat_interval)
 
         while True:
@@ -729,7 +729,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 self._logger.error(
                     "connection has not received a HEARTBEAT_ACK for approx %.1fs and is being disconnected; "
                     "will attempt to reconnect",
-                    time.monotonic() - self._last_heartbeat_ack_received,
+                    time.time() - self._last_heartbeat_ack_received,
                 )
                 return
 
@@ -783,7 +783,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     self._logger.debug("ignoring unknown event %s:\n    %r", name, data)
 
             elif op == _HEARTBEAT_ACK:
-                now = time.monotonic()
+                now = time.time()
                 self._last_heartbeat_ack_received = now
                 self._heartbeat_latency = now - self._last_heartbeat_sent
                 self._logger.log(ux.TRACE, "received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000)
@@ -922,13 +922,13 @@ class GatewayShardImpl(shard.GatewayShard):
         while True:
             self._handshake_event.clear()
 
-            if time.monotonic() - last_started_at < _BACKOFF_WINDOW:
+            if time.time() - last_started_at < _BACKOFF_WINDOW:
                 backoff_time = next(backoff)
                 self._logger.info("backing off reconnecting for %.2fs", backoff_time)
                 await asyncio.sleep(backoff_time)
 
             try:
-                last_started_at = time.monotonic()
+                last_started_at = time.time()
                 lifetime_tasks = await self._connect()
 
                 if not self._handshake_event.is_set():

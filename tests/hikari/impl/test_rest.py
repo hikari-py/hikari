@@ -240,7 +240,7 @@ class TestClientCredentialsStrategy:
         strategy = rest.ClientCredentialsStrategy(client=65123, client_secret="12354")
         strategy._lock = MockLock(strategy)
         strategy._token = None
-        strategy._expire_at = time.monotonic() + 500
+        strategy._expire_at = time.time() + 500
 
         result = await strategy.acquire(mock_rest)
 
