@@ -462,11 +462,11 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             return
 
         slide_period = reset_after / (limit - remaining)
-        self.name: str = real_bucket_hash
-        self.remaining: int = remaining
-        self.limit: int = limit
-        self.period: float = slide_period
-        self.increase_at: float = (reset_at - reset_after) + self.period
+        self.name = real_bucket_hash
+        self.remaining = remaining
+        self.limit = limit
+        self.period = slide_period
+        self.increase_at = (reset_at - reset_after) + self.period
         self._out_of_sync = False
 
 
