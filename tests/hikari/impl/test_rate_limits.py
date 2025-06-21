@@ -424,17 +424,6 @@ class TestWindowedBurstRateLimiter:
             assert rl.increase_at == 207
             assert rl.remaining == 27
 
-    # def test_is_rate_limited_caps_max_gain(self):
-    #     with rate_limits.WindowedBurstRateLimiter(__name__, 27, 27) as rl:
-    #         now = 999
-    #         rl.increase_at = 80
-    #         rl.remaining = 4
-    #
-    #         assert not rl.is_rate_limited(now)
-    #
-    #         assert rl.increase_at == 1025
-    #         assert rl.remaining == 27
-
     @pytest.mark.parametrize("remaining", [-1, 0, 1])
     def test_is_rate_limited_when_rate_limit_not_expired(self, remaining):
         with rate_limits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
