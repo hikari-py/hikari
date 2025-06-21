@@ -251,7 +251,13 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__: typing.Sequence[str] = ("_compiled_route", "_global_ratelimit", "_lock", "_max_rate_limit")
+    __slots__: typing.Sequence[str] = (
+        "_compiled_route",
+        "_global_ratelimit",
+        "_lock",
+        "_max_rate_limit",
+        "_out_of_sync",
+    )
 
     def __init__(
         self,
@@ -265,6 +271,7 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
         self._max_rate_limit = max_rate_limit
         self._global_ratelimit = global_ratelimit
         self._lock = asyncio.Lock()
+        self._out_of_sync = False
 
     async def __aenter__(self) -> None:
         await self.acquire()
@@ -317,6 +324,9 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
                 period=self.slide_period,
             )
 
+        if self.remaining == self.limit:
+            self._out_of_sync = True
+
         await super().acquire()
 
         global_ratelimit = self._global_ratelimit
@@ -333,6 +343,14 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
             )
 
         await global_ratelimit.acquire()
+
+    def slide_window(self, now: float) -> None:
+        # If we are out of sync, we shouldn't slide the window along, as we will be off due to
+        # network latency
+        if self._out_of_sync:
+            return None
+
+        return super().slide_window(now)
 
     def update_rate_limit(self, remaining: int, limit: int, reset_at: float, reset_after: float) -> None:
         """Update the rate limit information.
@@ -359,9 +377,18 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
                 )
             self.limit = limit
 
-        # 0.2 and 0.4 are chosen arbitrarily after some testing to account for precision losses
+        # We want to update the slide period only, and only if:
+        #   1. The bucket is out of sync (ie, we reset the full window)
+        #   2. We receive the first usage of the bucket, which will always have the most accurate slide period
+        #   3. The slide periods differ too much. This is helpful if we diverged too much from the real one
+        #      due to network latency, of if the bucket randomly changed
+        #      Note: 0.2 and 0.4 are chosen arbitrarily after some testing
         slide_period = reset_after / (limit - remaining)
-        if not math.isclose(self.slide_period, slide_period, abs_tol=0.2):
+        if (
+            self._out_of_sync
+            or remaining == limit - 1
+            or not math.isclose(self.slide_period, slide_period, abs_tol=0.2)
+        ):
             if not math.isclose(self.slide_period, slide_period, abs_tol=0.4):
                 _LOGGER.warning(
                     "bucket '%s' greatly increased its slide period (%s -> %s). "
@@ -373,6 +400,7 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
 
             self.slide_period = slide_period
             self.next_slide_at = (reset_at - reset_after) + slide_period
+            self._out_of_sync = False
 
     def resolve(self, real_bucket_hash: str, remaining: int, limit: int, reset_at: float, reset_after: float) -> None:
         """Set the ratelimit information for this bucket.
@@ -405,6 +433,7 @@ class RESTBucket(rate_limits.SlidingWindowedBurstRateLimiter):
         self.limit: int = limit
         self.slide_period: float = slide_period
         self.next_slide_at: float = (reset_at - reset_after) + self.slide_period
+        self._out_of_sync = False
 
 
 def _create_authentication_hash(authentication: str | None) -> str:

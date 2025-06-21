@@ -265,7 +265,7 @@ class ManualRateLimiter(BurstRateLimiter):
 
 
 class SlidingWindowedBurstRateLimiter(BurstRateLimiter):
-    """Windowed burst rate limiter.
+    """Sliding windowed burst rate limiter.
 
     Rate limiter for rate limits that has a sliding window recovery rate, with a
     fixed number of times it can be used in that time frame.
@@ -388,15 +388,26 @@ class SlidingWindowedBurstRateLimiter(BurstRateLimiter):
             Whether the bucket is ratelimited.
         """
         if now > self.next_slide_at:
-            gain = math.floor((now - self.next_slide_at) / self.slide_period) + 1
-            now_remaining = self.remaining + gain
-
-            self.remaining = min(self.limit, now_remaining)
-            self.next_slide_at = self.next_slide_at + gain * self.slide_period
-
-            return False
+            self.slide_window(now)
 
         return self.remaining <= 0
+
+    def slide_window(self, now: float) -> None:
+        """Slide the window along.
+        
+        !!! note
+            You should usually not need to invoke this directly!
+
+        Parameters
+        ----------
+        now
+            The [`time.time`][] timestamp.
+        """
+        gain = math.floor((now - self.next_slide_at) / self.slide_period) + 1
+        now_remaining = self.remaining + gain
+
+        self.remaining = min(self.limit, now_remaining)
+        self.next_slide_at = self.next_slide_at + gain * self.slide_period
 
     def drip(self) -> None:
         """Decrement the remaining counter."""
