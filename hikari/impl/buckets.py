@@ -391,6 +391,10 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         reset_after
             The `X-RateLimit-Reset-After` header cast to a [`float`][].
         """
+        if remaining == limit:
+            # This should never happen, but just in case
+            return
+
         slide_period = reset_after / (limit - remaining)
         next_slide_at = (reset_at - reset_after) + slide_period
         if next_slide_at < self.increase_at:
@@ -452,6 +456,10 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         if not self.is_unknown:
             msg = "Cannot resolve known bucket"
             raise RuntimeError(msg)
+
+        if remaining == limit:
+            # This should never happen, but just in case
+            return
 
         slide_period = reset_after / (limit - remaining)
         self.name: str = real_bucket_hash
