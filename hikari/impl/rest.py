@@ -922,13 +922,13 @@ class RESTClientImpl(rest_api.RESTClient):
         # If returns a `float`, the time to wait before retrying the request. If `None`, the request
         # does not need to be retried.
         resp_headers = response.headers
-        limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
-        remaining = int(resp_headers.get(_X_RATELIMIT_REMAINING_HEADER, "1"))
         bucket = resp_headers.get(_X_RATELIMIT_BUCKET_HEADER)
-        reset_at = float(resp_headers.get(_X_RATELIMIT_RESET_HEADER, "0"))
-        reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
+        remaining = int(resp_headers.get(_X_RATELIMIT_REMAINING_HEADER, "1"))
 
         if bucket:
+            limit = int(resp_headers.get(_X_RATELIMIT_LIMIT_HEADER, "1"))
+            reset_at = float(resp_headers.get(_X_RATELIMIT_RESET_HEADER, "0"))
+            reset_after = float(resp_headers.get(_X_RATELIMIT_RESET_AFTER_HEADER, "0"))
             if not compiled_route.route.has_ratelimits:
                 # This should theoretically never see the light of day, but it scares me that Discord might
                 # pull a funny one and this may go unnoticed, so better safe to have it!
@@ -974,7 +974,9 @@ class RESTClientImpl(rest_api.RESTClient):
         # isn't some weird edge case here somewhere in Discord's implementation.
         # We can safely retry if this happens as acquiring the bucket will handle
         # this.
-        if remaining <= 0:
+        scope = resp_headers.get(_X_RATELIMIT_SCOPE_HEADER, "route")
+
+        if scope == "route" and remaining <= 0:
             _LOGGER.warning(
                 "rate limited on bucket %s, maybe you are running more than one bot on this token? Retrying request...",
                 bucket,
@@ -1017,7 +1019,7 @@ class RESTClientImpl(rest_api.RESTClient):
         _LOGGER.error(
             "rate limited on a %s sub bucket on bucket %s (reason: '%s'). You should consider lowering the number "
             "of requests you make to '%s'. Backing off and retrying request...",
-            resp_headers.get(_X_RATELIMIT_SCOPE_HEADER, "route"),
+            scope,
             bucket,
             reason,
             compiled_route.route,

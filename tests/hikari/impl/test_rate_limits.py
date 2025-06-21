@@ -215,10 +215,10 @@ class TestManualRateLimiter:
         assert limiter.throttle_task is None
 
 
-class TestSlidingWindowedBurstRateLimiter:
+class TestWindowedBurstRateLimiter:
     @pytest.fixture
     def ratelimiter(self):
-        inst = hikari_test_helpers.mock_class_namespace(rate_limits.SlidingWindowedBurstRateLimiter, slots_=False)(
+        inst = hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
             __name__, 3, 3
         )
         yield inst
@@ -229,21 +229,21 @@ class TestSlidingWindowedBurstRateLimiter:
     async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
+        ratelimiter.remaining = 10
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
         event_loop.create_future = mock.Mock()
 
         await ratelimiter.acquire()
 
-        ratelimiter.drip.assert_called_once_with()
+        assert ratelimiter.remaining == 9
         event_loop.create_future.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
+        ratelimiter.remaining = 10
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
         future = MockFuture()
@@ -251,7 +251,7 @@ class TestSlidingWindowedBurstRateLimiter:
 
         await ratelimiter.acquire()
 
-        ratelimiter.drip.assert_not_called()
+        assert ratelimiter.remaining == 10
 
     @pytest.mark.asyncio
     async def test_no_drip_if_rate_limited(self, ratelimiter):
@@ -334,7 +334,7 @@ class TestSlidingWindowedBurstRateLimiter:
         event_loop = asyncio.get_running_loop()
 
         with mock.patch.object(asyncio, "sleep"):
-            with rate_limits.SlidingWindowedBurstRateLimiter(__name__, 0.001, 1) as rl:
+            with rate_limits.WindowedBurstRateLimiter(__name__, 0.001, 1) as rl:
                 rl.queue = [event_loop.create_future() for _ in range(15)]
                 old_queue = list(rl.queue)
                 await rl.throttle()
@@ -352,7 +352,7 @@ class TestSlidingWindowedBurstRateLimiter:
         futures = [event_loop.create_future() for _ in range(20)]
         reset_time_iter = iter(range(int(len(futures) / window)))
 
-        def mock_get_time_until_next_slide(_self, _):
+        def mock_get_time_until_increase(_self, _):
             nonlocal loop_count
 
             for i, future in enumerate(futures):
@@ -368,19 +368,17 @@ class TestSlidingWindowedBurstRateLimiter:
             return next(reset_time_iter)
 
         stack = contextlib.ExitStack()
-        rl = stack.enter_context(rate_limits.SlidingWindowedBurstRateLimiter(__name__, 0, window))
+        rl = stack.enter_context(rate_limits.WindowedBurstRateLimiter(__name__, 0, window))
         stack.enter_context(
             mock.patch.object(
-                rate_limits.SlidingWindowedBurstRateLimiter,
-                "get_time_until_next_slide",
-                new=mock_get_time_until_next_slide,
+                rate_limits.WindowedBurstRateLimiter, "get_time_until_increase", new=mock_get_time_until_increase
             )
         )
         stack.enter_context(mock.patch.object(asyncio, "sleep"))
 
         with stack:
             rl.queue = list(futures)
-            rl.next_slide_at = time.time()
+            rl.increase_at = time.time()
             await rl.throttle()
             # die if we take too long...
             await asyncio.wait(futures, timeout=3)
@@ -394,54 +392,54 @@ class TestSlidingWindowedBurstRateLimiter:
     async def test_throttle_resets_throttle_task(self):
         event_loop = asyncio.get_running_loop()
 
-        with rate_limits.SlidingWindowedBurstRateLimiter(__name__, 0.001, 1) as rl:
+        with rate_limits.WindowedBurstRateLimiter(__name__, 0.001, 1) as rl:
             rl.queue = [event_loop.create_future() for _ in range(15)]
             rl.throttle_task = None
             await rl.throttle()
         assert rl.throttle_task is None
 
-    def test_get_time_until_next_slide_if_not_rate_limited(self):
-        with hikari_test_helpers.mock_class_namespace(rate_limits.SlidingWindowedBurstRateLimiter, slots_=False)(
+    def test_get_time_until_increase_if_not_rate_limited(self):
+        with hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
             __name__, 0.01, 1
         ) as rl:
             rl.is_rate_limited = mock.Mock(return_value=False)
-            assert rl.get_time_until_next_slide(420) == 0.0
+            assert rl.get_time_until_increase(420) == 0.0
 
-    def test_get_time_until_next_slide_if_rate_limited(self):
-        with hikari_test_helpers.mock_class_namespace(rate_limits.SlidingWindowedBurstRateLimiter, slots_=False)(
+    def test_get_time_until_increase_if_rate_limited(self):
+        with hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
             __name__, 0.01, 1
         ) as rl:
             rl.is_rate_limited = mock.Mock(return_value=True)
-            rl.next_slide_at = 420.4
-            assert rl.get_time_until_next_slide(69.8) == 420.4 - 69.8
+            rl.increase_at = 420.4
+            assert rl.get_time_until_increase(69.8) == 420.4 - 69.8
 
-    def test_is_rate_limited_with_multiple_gain(self):
-        with rate_limits.SlidingWindowedBurstRateLimiter(__name__, 27, 27) as rl:
+    def test_is_rate_limited_when_rate_limit_expired(self):
+        with rate_limits.WindowedBurstRateLimiter(__name__, 27, 27) as rl:
             now = 180
-            rl.next_slide_at = 80
-            rl.remaining = 4
+            rl.increase_at = 80
+            rl.remaining = 3
 
             assert not rl.is_rate_limited(now)
 
-            assert rl.next_slide_at == 188
-            assert rl.remaining == 8
-
-    def test_is_rate_limited_caps_max_gain(self):
-        with rate_limits.SlidingWindowedBurstRateLimiter(__name__, 27, 27) as rl:
-            now = 999
-            rl.next_slide_at = 80
-            rl.remaining = 4
-
-            assert not rl.is_rate_limited(now)
-
-            assert rl.next_slide_at == 1025
+            assert rl.increase_at == 207
             assert rl.remaining == 27
 
+    # def test_is_rate_limited_caps_max_gain(self):
+    #     with rate_limits.WindowedBurstRateLimiter(__name__, 27, 27) as rl:
+    #         now = 999
+    #         rl.increase_at = 80
+    #         rl.remaining = 4
+    #
+    #         assert not rl.is_rate_limited(now)
+    #
+    #         assert rl.increase_at == 1025
+    #         assert rl.remaining == 27
+
     @pytest.mark.parametrize("remaining", [-1, 0, 1])
-    def test_is_rate_limited_when_rate_limit_not_expired_only_returns_False(self, remaining):
-        with rate_limits.SlidingWindowedBurstRateLimiter(__name__, 403, 27) as rl:
+    def test_is_rate_limited_when_rate_limit_not_expired(self, remaining):
+        with rate_limits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
             now = 420
-            rl.next_slide_at = now + 69
+            rl.increase_at = now + 69
             rl.remaining = remaining
             assert rl.is_rate_limited(now) is (remaining <= 0)
 

@@ -511,7 +511,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self._last_heartbeat_ack_received = float("nan")
         self._last_heartbeat_sent = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
-        self._non_priority_rate_limit = rate_limits.SlidingWindowedBurstRateLimiter(
+        self._non_priority_rate_limit = rate_limits.WindowedBurstRateLimiter(
             f"shard {shard_id} non-priority rate limit", *_NON_PRIORITY_RATELIMIT
         )
         self._proxy_settings = proxy_settings
@@ -522,7 +522,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self._shard_id = shard_id
         self._status = initial_status
         self._token = token
-        self._total_rate_limit = rate_limits.SlidingWindowedBurstRateLimiter(
+        self._total_rate_limit = rate_limits.WindowedBurstRateLimiter(
             f"shard {shard_id} total rate limit", *_TOTAL_RATELIMIT
         )
         self._transport_compression = compression is not None
