@@ -41,27 +41,11 @@ from tests.hikari import hikari_test_helpers
 
 
 def test_fixed_size_nonce():
-    stack = contextlib.ExitStack()
-    monotonic = stack.enter_context(mock.patch.object(time, "monotonic_ns"))
-    monotonic.return_value.to_bytes = mock.Mock(return_value="foo")
-
-    randbits = stack.enter_context(mock.patch.object(random, "getrandbits"))
-    randbits.return_value.to_bytes = mock.Mock(return_value="bar")
-
-    encode = stack.enter_context(mock.patch.object(base64, "b64encode"))
-    encode.return_value.decode = mock.Mock(return_value="nonce")
-
-    with stack:
-        assert event_manager._fixed_size_nonce() == "nonce"
-
-    monotonic.assert_called_once_with()
-    monotonic.return_value.to_bytes.assert_called_once_with(8, "big")
-
-    randbits.assert_called_once_with(92)
-    randbits.return_value.to_bytes.assert_called_once_with(12, "big")
-
-    encode.assert_called_once_with("foobar")
-    encode.return_value.decode.assert_called_once_with("ascii")
+    with (
+        mock.patch.object(time, "time_ns", return_value=1750363933884138616),
+        mock.patch.object(random, "getrandbits", return_value=3816720724214628891853616180),
+    ):
+        assert event_manager._fixed_size_nonce() == "GEqKuVrRxHgMVR4NDFaqlnpIdDQ="
 
 
 @pytest.fixture

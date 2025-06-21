@@ -72,7 +72,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager"
 
 def _fixed_size_nonce() -> str:
     # This generates nonces of length 28 for use in member chunking.
-    head = time.monotonic_ns().to_bytes(8, "big")
+    head = time.time_ns().to_bytes(8, "big")
     tail = random.getrandbits(92).to_bytes(12, "big")
     return base64.b64encode(head + tail).decode("ascii")
 

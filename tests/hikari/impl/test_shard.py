@@ -896,7 +896,7 @@ class TestGatewayShardImplAsync:
 
         stack = contextlib.ExitStack()
         sleep = stack.enter_context(mock.patch.object(asyncio, "sleep", side_effect=[None, ExitException]))
-        stack.enter_context(mock.patch.object(time, "monotonic", return_value=10))
+        stack.enter_context(mock.patch.object(time, "time", return_value=10))
         send_heartbeat = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_send_heartbeat"))
         stack.enter_context(pytest.raises(ExitException))
 
@@ -913,7 +913,7 @@ class TestGatewayShardImplAsync:
         client._last_heartbeat_sent = 10
         client._logger = mock.Mock()
 
-        with mock.patch.object(time, "monotonic", return_value=5):
+        with mock.patch.object(time, "time", return_value=5):
             with mock.patch.object(asyncio, "sleep") as sleep:
                 await client._heartbeat(20)
 
@@ -1117,7 +1117,7 @@ class TestGatewayShardImplAsync:
         client._seq = 10
 
         with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
-            with mock.patch.object(time, "monotonic", return_value=200):
+            with mock.patch.object(time, "time", return_value=200):
                 await client._send_heartbeat()
 
         send_json.assert_awaited_once_with({"op": 1, "d": 10}, priority=True)
@@ -1194,7 +1194,7 @@ class TestGatewayShardImplAsync:
         client._last_heartbeat_sent = 1.5
         client._handshake_event = mock.Mock()
 
-        with mock.patch.object(time, "monotonic", return_value=3):
+        with mock.patch.object(time, "time", return_value=3):
             with pytest.raises(RuntimeError):
                 await client._poll_events()
 
