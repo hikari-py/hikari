@@ -217,11 +217,11 @@ class ChannelRepositioner(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def positions(self) -> typing.Sequence[RepositionChannelHelper]:
+    def positions(self) -> typing.Sequence[RepositionedChannel]:
         """The positions."""
 
     @abc.abstractmethod
-    def set_positions(self, positions: typing.Sequence[RepositionChannelHelper]) -> Self:
+    def set_positions(self, positions: typing.Sequence[RepositionedChannel]) -> Self:
         """Set the positions.
 
         Returns
@@ -282,7 +282,7 @@ class ChannelRepositioner(abc.ABC):
         """
 
 
-class RepositionChannelHelper(abc.ABC):
+class RepositionedChannel(abc.ABC):
     __slots__: typing.Sequence[str] = ()
 
     @property
@@ -296,7 +296,7 @@ class RepositionChannelHelper(abc.ABC):
 
         Returns
         -------
-        RepositionChannelHelper
+        RepositionedChannel
             The reposition channel helper.
         """
 
@@ -311,7 +311,7 @@ class RepositionChannelHelper(abc.ABC):
 
         Returns
         -------
-        RepositionChannelHelper
+        RepositionedChannel
             The reposition channel helper.
         """
 
@@ -326,7 +326,7 @@ class RepositionChannelHelper(abc.ABC):
 
         Returns
         -------
-        RepositionChannelHelper
+        RepositionedChannel
             The reposition channel helper.
         """
 
@@ -341,7 +341,7 @@ class RepositionChannelHelper(abc.ABC):
 
         Returns
         -------
-        RepositionChannelHelper
+        RepositionedChannel
             The reposition channel helper.
         """
 

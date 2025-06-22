@@ -75,8 +75,8 @@ class TestChannelRepositioner:
         return special_endpoints.ChannelRepositioner(guild=123, request_call=mock.AsyncMock(), reason="TEST")
 
     @pytest.fixture
-    def reposition_channel_helper(self) -> special_endpoints_api.RepositionChannelHelper:
-        return special_endpoints.RepositionChannelHelper(channel=123, position=1, lock_permissions=False, parent=321)
+    def reposition_channel_helper(self) -> special_endpoints_api.RepositionedChannel:
+        return special_endpoints.RepositionedChannel(channel=123, position=1, lock_permissions=False, parent=321)
 
     def test_set_guild(self, channel_repositioner: special_endpoints_api.ChannelRepositioner) -> None:
         channel_repositioner.set_guild(187)
@@ -91,7 +91,7 @@ class TestChannelRepositioner:
     def test_set_positions(
         self,
         channel_repositioner: special_endpoints_api.ChannelRepositioner,
-        reposition_channel_helper: special_endpoints_api.RepositionChannelHelper,
+        reposition_channel_helper: special_endpoints_api.RepositionedChannel,
     ) -> None:
         channel_repositioner.set_positions((reposition_channel_helper,))
         # also test if the Sequence gets correctly converted to list, that's why we pass a tuple and check for a list.
@@ -100,40 +100,40 @@ class TestChannelRepositioner:
 
 class TestRepositionChannelHelper:
     @pytest.fixture
-    def reposition_channel_helper(self) -> special_endpoints_api.RepositionChannelHelper:
-        return special_endpoints.RepositionChannelHelper(channel=123, position=1, lock_permissions=False, parent=321)
+    def reposition_channel_helper(self) -> special_endpoints_api.RepositionedChannel:
+        return special_endpoints.RepositionedChannel(channel=123, position=1, lock_permissions=False, parent=321)
 
-    def test_set_channel(self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+    def test_set_channel(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
         reposition_channel_helper.set_channel(187)
 
         assert reposition_channel_helper.channel == 187
 
-    def test_set_position(self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+    def test_set_position(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
         reposition_channel_helper.set_position(187)
 
         assert reposition_channel_helper.position == 187
 
     def test_set_lock_permissions(
-        self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper
+        self, reposition_channel_helper: special_endpoints_api.RepositionedChannel
     ) -> None:
         reposition_channel_helper.set_lock_permissions(True)
 
         assert reposition_channel_helper.lock_permissions == True
 
     def test_set_lock_permissions_undefined(
-        self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper
+        self, reposition_channel_helper: special_endpoints_api.RepositionedChannel
     ) -> None:
         reposition_channel_helper.set_lock_permissions(undefined.UNDEFINED)
 
         assert reposition_channel_helper.lock_permissions == undefined.UNDEFINED
 
-    def test_set_parent(self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper) -> None:
+    def test_set_parent(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
         reposition_channel_helper.set_parent(187)
 
         assert reposition_channel_helper.parent == 187
 
     def test_set_parent_undefined(
-        self, reposition_channel_helper: special_endpoints_api.RepositionChannelHelper
+        self, reposition_channel_helper: special_endpoints_api.RepositionedChannel
     ) -> None:
         reposition_channel_helper.set_parent(undefined.UNDEFINED)
 

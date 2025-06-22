@@ -233,7 +233,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
 
     _guild: snowflakes.SnowflakeishOr[guilds.PartialGuild] = attrs.field(repr=True, alias="guild")
     _request_call: _RequestCallSig = attrs.field(alias="request_call", metadata={attrs_extensions.SKIP_DEEP_COPY: True})
-    _positions: list[special_endpoints.RepositionChannelHelper] = attrs.field(
+    _positions: list[special_endpoints.RepositionedChannel] = attrs.field(
         repr=True, alias="positions", factory=list, init=False
     )
     _reason: undefined.UndefinedOr[str] = attrs.field(alias="reason", repr=True, default=undefined.UNDEFINED)
@@ -260,11 +260,11 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
 
     @property
     @typing_extensions.override
-    def positions(self) -> typing.Sequence[special_endpoints.RepositionChannelHelper]:
+    def positions(self) -> typing.Sequence[special_endpoints.RepositionedChannel]:
         return self._positions
 
     @typing_extensions.override
-    def set_positions(self, positions: typing.Sequence[special_endpoints.RepositionChannelHelper]) -> Self:
+    def set_positions(self, positions: typing.Sequence[special_endpoints.RepositionedChannel]) -> Self:
         self._positions = list(positions)
         return self
 
@@ -278,7 +278,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
         parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
         self._positions.append(
-            RepositionChannelHelper(
+            RepositionedChannel(
                 channel=channel, position=position, lock_permissions=lock_permissions, parent=parent
             )
         )
@@ -302,7 +302,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=False, weakref_slot=False)
-class RepositionChannelHelper(special_endpoints.RepositionChannelHelper):
+class RepositionedChannel(special_endpoints.RepositionedChannel):
     """Standard implementation of [`hikari.api.special_endpoints.RepositionChannelHelper`][]."""
 
     _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True, alias="channel")
