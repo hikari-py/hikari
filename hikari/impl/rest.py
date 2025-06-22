@@ -3978,8 +3978,9 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_onboarding(response)
 
+    @staticmethod
     def _build_prompts(
-        self, prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder]
+        prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder],
     ) -> list[typing.MutableMapping[str, typing.Any]]:
         prompt_bodys: list[typing.MutableMapping[str, typing.Any]] = []
         for index, prompt in enumerate(prompts):

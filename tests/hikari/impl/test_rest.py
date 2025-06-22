@@ -2130,9 +2130,7 @@ class TestRESTClientImplAsync:
                 await rest_client._request(route)
 
     @hikari_test_helpers.timeout()
-    async def test_request_when_status_in_retry_codes_will_retry_until_exhausted(
-        self, rest_client, exit_exception
-    ):
+    async def test_request_when_status_in_retry_codes_will_retry_until_exhausted(self, rest_client, exit_exception):
         class StubResponse:
             status = http.HTTPStatus.INTERNAL_SERVER_ERROR
 

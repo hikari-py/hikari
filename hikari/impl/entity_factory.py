@@ -1984,9 +1984,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         default_channel_ids = [
             snowflakes.Snowflake(default_channel_id) for default_channel_id in payload["default_channel_ids"]
         ]
-        prompts = [
-            self._deserialize_guild_onboarding_prompt(prompt_payload) for prompt_payload in payload["prompts"]
-        ]
+        prompts = [self._deserialize_guild_onboarding_prompt(prompt_payload) for prompt_payload in payload["prompts"]]
         return guild_models.GuildOnboarding(
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
             enabled=payload["enabled"],
