@@ -113,9 +113,7 @@ class TestRepositionChannelHelper:
 
         assert reposition_channel_helper.position == 187
 
-    def test_set_lock_permissions(
-        self, reposition_channel_helper: special_endpoints_api.RepositionedChannel
-    ) -> None:
+    def test_set_lock_permissions(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
         reposition_channel_helper.set_lock_permissions(True)
 
         assert reposition_channel_helper.lock_permissions == True
@@ -132,9 +130,7 @@ class TestRepositionChannelHelper:
 
         assert reposition_channel_helper.parent == 187
 
-    def test_set_parent_undefined(
-        self, reposition_channel_helper: special_endpoints_api.RepositionedChannel
-    ) -> None:
+    def test_set_parent_undefined(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
         reposition_channel_helper.set_parent(undefined.UNDEFINED)
 
         assert reposition_channel_helper.parent == undefined.UNDEFINED

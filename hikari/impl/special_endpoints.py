@@ -278,9 +278,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
         parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
         self._positions.append(
-            RepositionedChannel(
-                channel=channel, position=position, lock_permissions=lock_permissions, parent=parent
-            )
+            RepositionedChannel(channel=channel, position=position, lock_permissions=lock_permissions, parent=parent)
         )
         return self
 
