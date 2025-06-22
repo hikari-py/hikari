@@ -2774,6 +2774,7 @@ class TestCacheImpl:
         mock_application = mock.MagicMock(messages.MessageApplication)
         mock_reference = mock.MagicMock(messages.MessageReference)
         mock_referenced_message = object()
+        mock_message_snapshots = mock.MagicMock()
         mock_component = object()
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
@@ -2805,6 +2806,7 @@ class TestCacheImpl:
             activity=mock_activity,
             application=mock_application,
             message_reference=mock_reference,
+            message_snapshots=mock_message_snapshots,
             flags=messages.MessageFlag.CROSSPOSTED,
             nonce="aNonce",
             referenced_message=cache_utilities.RefCell(mock_referenced_message_data),
@@ -2895,6 +2897,7 @@ class TestCacheImpl:
             activity=None,
             application=None,
             message_reference=None,
+            message_snapshots=None,
             flags=messages.MessageFlag.CROSSPOSTED,
             nonce=None,
             referenced_message=None,

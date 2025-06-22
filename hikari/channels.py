@@ -34,6 +34,7 @@ __all__: typing.Sequence[str] = (
     "GuildCategory",
     "GuildChannel",
     "GuildForumChannel",
+    "GuildMediaChannel",
     "GuildNewsChannel",
     "GuildNewsThread",
     "GuildPrivateThread",
@@ -129,6 +130,9 @@ class ChannelType(int, enums.Enum):
 
     GUILD_FORUM = 15
     """A channel consisting of a collection of public guild threads."""
+
+    GUILD_MEDIA = 16
+    """A channel of threads, quite similar to GUILD_FORUM, for media."""
 
 
 @typing.final
@@ -1791,3 +1795,74 @@ class GuildPrivateThread(GuildThreadChannel):
         This only applies to private threads.
         """
         return self.metadata.is_invitable
+
+
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+class GuildMediaChannel(PermissibleGuildChannel):
+    """Represents a guild media channel."""
+
+    topic: str | None = attrs.field(eq=False, hash=False, repr=False)
+    """The guidelines for the channel."""
+
+    last_thread_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the last thread created in this channel.
+
+    .. warning::
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
+
+    rate_limit_per_user: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
+    """The delay (in seconds) between a user can create threads in this channel.
+
+    If there is no rate limit, this will be 0 seconds.
+
+    .. note::
+        Any user that has permissions allowing `MANAGE_MESSAGES`,
+        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
+        will not be affected by this rate limit.
+    """
+
+    default_thread_rate_limit_per_user: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
+    """The default delay (in seconds) between a user can send a message in created threads.
+
+    If there is no rate limit, this will be 0 seconds.
+
+    .. note::
+        Any user that has permissions allowing `MANAGE_MESSAGES`,
+        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
+        will not be affected by this rate limit.
+    """
+
+    default_auto_archive_duration: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
+    """The auto archive duration Discord's client defaults to for threads in this channel.
+
+    This may be be either 1 hour, 1 day, 3 days or 1 week.
+    """
+
+    flags: ChannelFlag = attrs.field(eq=False, hash=False, repr=False)
+    """The channel flags for this channel.
+
+    .. note::
+        As of writing, the only flag that can be set is `ChannelFlag.REQUIRE_TAG`.
+    """
+
+    available_tags: typing.Sequence[ForumTag] = attrs.field(eq=False, hash=False, repr=False)
+    """The available tags to select from when creating a thread."""
+
+    default_sort_order: ForumSortOrderType = attrs.field(eq=False, hash=False, repr=False)
+    """The default sort order for the forum."""
+
+    default_layout: ForumLayoutType = attrs.field(eq=False, hash=False, repr=False)
+    """The default layout of a thread-only channel."""
+
+    default_reaction_emoji_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the default reaction emoji."""
+
+    default_reaction_emoji_name: str | emojis.UnicodeEmoji | None = attrs.field(eq=False, hash=False, repr=False)
+    """Name of the default reaction emoji.
+
+    Either the string name of the custom emoji, the object
+    of the `hikari.emojis.UnicodeEmoji` or `None` when the relevant
+    custom emoji's data is not available (e.g. the emoji has been deleted).
+    """
