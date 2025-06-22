@@ -5573,7 +5573,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> special_endpoints.ChannelRepositioner:
         """Return a [`hikari.api.special_endpoints.ChannelRepositioner`][], used to reposition channels in a guild.
-
+        
+        !!! note
+            The exceptions on this endpoint will only be raised once the
+            returned [`hikari.api.special_endpoints.ChannelRepositioner`][]
+            is awaited.
+        
         Parameters
         ----------
         guild
@@ -5592,10 +5597,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        !!! note
-            The exceptions on this endpoint will only be raised once the
-            returned [`hikari.api.special_endpoints.ChannelRepositioner`][]
-            is awaited.
         hikari.errors.ForbiddenError
             If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
         hikari.errors.UnauthorizedError
