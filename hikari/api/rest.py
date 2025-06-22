@@ -5590,6 +5590,24 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
 
+        Raises
+        ------
+        !!! note
+            The exceptions on this endpoint will only be raised once the
+            returned [`hikari.api.special_endpoints.ChannelRepositioner`][]
+            is awaited.
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+
         Returns
         -------
         hikari.api.special_endpoints.ChannelRepositioner
