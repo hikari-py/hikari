@@ -430,7 +430,10 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
             self._out_of_sync = False
             self.period = slide_period
-            self.increase_at = next_slide_at
+
+            if next_slide_at > self.increase_at:
+                # We only want to change this if we are lacking behind, as that can lead to 429s
+                self.increase_at = next_slide_at
 
     def resolve(self, real_bucket_hash: str, remaining: int, limit: int, reset_at: float, reset_after: float) -> None:
         """Set the ratelimit information for this bucket.
