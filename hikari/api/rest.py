@@ -234,8 +234,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new name for the channel.
         flags
             If provided, the new channel flags to use for the channel. This can
-            only be used on a forum channel to apply [`hikari.channels.ChannelFlag.REQUIRE_TAG`][], or
-            on a forum thread to apply [`hikari.channels.ChannelFlag.PINNED`][].
+            only be used on a forum or media channel to apply [`hikari.channels.ChannelFlag.REQUIRE_TAG`][], or
+            on a forum or media thread to apply [`hikari.channels.ChannelFlag.PINNED`][].
         position
             If provided, the new position for the channel.
         topic
@@ -270,7 +270,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the ratelimit that should be set in threads derived
             from this channel.
 
-            This only applies to forum channels.
+            This only applies to forum and media channels.
         default_forum_layout
             If provided, the default forum layout to show in the client.
         default_sort_order
@@ -278,11 +278,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         available_tags
             If provided, the new available tags to select from when creating a thread.
 
-            This only applies to forum channels.
+            This only applies to forum and media channels.
         default_reaction_emoji
-            If provided, the new default reaction emoji for threads created in a forum channel.
+            If provided, the new default reaction emoji for threads created in a forum or media channel.
 
-            This only applies to forum channels.
+            This only applies to forum and media channels.
         archived
             If provided, the new archived state for the thread. This only
             applies to threads.
@@ -302,7 +302,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             writing.
         applied_tags
             If provided, the new tags to apply to the thread. This only applies
-            to threads in a forum channel.
+            to threads in a forum or media channel.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -1368,6 +1368,49 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def forward_message(
+        self,
+        channel_to: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        channel_from: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextableChannel]] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        """Forward a message.
+
+        Parameters
+        ----------
+        channel_to
+            The object or ID of the channel to forward the message to.
+        message
+            The object or ID of the message to forward.
+        channel_from
+            The object or ID of the message's channel of origin.
+            This field will be ignored if the message provided
+              is of type [`hikari.messages.PartialMessage`][] rather than [`hikari.snowflakes.Snowflakeish`][].
+
+        Returns
+        -------
+        hikari.messages.Message
+            The message object that was forwarded.
+
+        Raises
+        ------
+        ValueError
+            If the message is of type [`hikari.snowflakes.Snowflakeish`][] and `channel_from` was not provided.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you tried to forward a message without the [`hikari.permissions.Permissions.VIEW_CHANNEL`][]
+              or [`hikari.permissions.Permissions.SEND_MESSAGES`][] permissions.
+        hikari.errors.NotFoundError
+            If the channel or message was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discords side while handling the request.
         """
 
     @abc.abstractmethod
@@ -4691,6 +4734,99 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def create_guild_media_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: str
+        | emojis.Emoji
+        | undefined.UndefinedType
+        | snowflakes.Snowflake = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildMediaChannel:
+        """Create a media channel in a guild.
+
+        Parameters
+        ----------
+        guild
+            The guild to create the channel in. This may be the
+            object or the ID of an existing guild.
+        name
+            The channels name. Must be between 2 and 1000 characters.
+        position
+            If provided, the position of the category.
+        category
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
+        permission_overwrites
+            If provided, the permission overwrites for the category.
+        topic
+            If provided, the channels topic. Maximum 1024 characters.
+        nsfw
+            If provided, whether to mark the channel as NSFW.
+        rate_limit_per_user
+            If provided, the amount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+        default_auto_archive_duration
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as [`hikari.undefined.UNDEFINED`][].
+        default_thread_rate_limit_per_user
+            If provided, the ratelimit that should be set in threads created
+            from the forum.
+        default_forum_layout
+            If provided, the default forum layout to show in the client.
+        default_sort_order
+            If provided, the default sort order to show in the client.
+        available_tags
+            If provided, the available tags to select from when creating a thread.
+        default_reaction_emoji
+            If provided, the new default reaction emoji for threads created in the media channel.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildMediaChannel
+            The created media channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def create_guild_voice_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -5053,12 +5189,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         tags: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildPublicThread:
-        """Create a post in a forum channel.
+        """Create a post in a forum or media channel.
 
         Parameters
         ----------
         channel
-            Object or ID of the forum channel to create a post in.
+            Object or ID of the forum or media channel to create a post in.
         name
             Name of the post.
         content

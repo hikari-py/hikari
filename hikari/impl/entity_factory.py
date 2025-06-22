@@ -599,6 +599,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             channel_models.ChannelType.GUILD_VOICE: self.deserialize_guild_voice_channel,
             channel_models.ChannelType.GUILD_STAGE: self.deserialize_guild_stage_channel,
             channel_models.ChannelType.GUILD_FORUM: self.deserialize_guild_forum_channel,
+            channel_models.ChannelType.GUILD_MEDIA: self.deserialize_guild_media_channel,
         }
         self._thread_channel_type_mapping = {
             channel_models.ChannelType.GUILD_NEWS_THREAD: self.deserialize_guild_news_thread,
@@ -1596,6 +1597,82 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             member=actual_member,
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
             metadata=self._deserialize_thread_metadata(payload["thread_metadata"]),
+        )
+
+    @typing_extensions.override
+    def deserialize_guild_media_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildMediaChannel:
+        channel_fields = self._set_guild_channel_attributes(payload, guild_id=guild_id)
+
+        # Discord's docs are just wrong about this always being included.
+        default_auto_archive_duration = datetime.timedelta(minutes=payload.get("default_auto_archive_duration", 1440))
+        default_thread_rate_limit_per_user = datetime.timedelta(
+            seconds=payload.get("default_thread_rate_limit_per_user", 0)
+        )
+
+        permission_overwrites = {
+            snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
+            for overwrite in payload["permission_overwrites"]
+        }
+
+        last_thread_id: snowflakes.Snowflake | None = None
+        if raw_last_thread_id := payload.get("last_message_id"):
+            last_thread_id = snowflakes.Snowflake(raw_last_thread_id)
+
+        available_tags: list[channel_models.ForumTag] = []
+        for tag_payload in payload.get("available_tags", ()):
+            tag_emoji: emoji_models.UnicodeEmoji | snowflakes.Snowflake | None
+            if tag_emoji := tag_payload["emoji_id"]:
+                tag_emoji = snowflakes.Snowflake(tag_emoji)
+
+            elif tag_emoji := tag_payload["emoji_name"]:
+                tag_emoji = emoji_models.UnicodeEmoji(tag_emoji)
+
+            available_tags.append(
+                channel_models.ForumTag(
+                    id=snowflakes.Snowflake(tag_payload["id"]),
+                    name=tag_payload["name"],
+                    moderated=tag_payload["moderated"],
+                    emoji=tag_emoji,
+                )
+            )
+
+        reaction_emoji_id: snowflakes.Snowflake | None = None
+        reaction_emoji_name: emoji_models.UnicodeEmoji | str | None = None
+        if reaction_emoji_payload := payload.get("default_reaction_emoji"):
+            if reaction_emoji_id := reaction_emoji_payload["emoji_id"]:
+                reaction_emoji_id = snowflakes.Snowflake(reaction_emoji_id)
+
+            if reaction_emoji_name := reaction_emoji_payload["emoji_name"]:
+                reaction_emoji_name = emoji_models.UnicodeEmoji(reaction_emoji_name)
+
+        return channel_models.GuildMediaChannel(
+            app=self._app,
+            id=channel_fields.id,
+            name=channel_fields.name,
+            type=channel_fields.type,
+            guild_id=channel_fields.guild_id,
+            permission_overwrites=permission_overwrites,
+            is_nsfw=payload.get("nsfw", False),
+            parent_id=channel_fields.parent_id,
+            topic=payload["topic"],
+            last_thread_id=last_thread_id,
+            rate_limit_per_user=datetime.timedelta(seconds=payload.get("rate_limit_per_user", 0)),
+            default_thread_rate_limit_per_user=default_thread_rate_limit_per_user,
+            default_auto_archive_duration=default_auto_archive_duration,
+            position=int(payload["position"]),
+            available_tags=available_tags,
+            flags=channel_models.ChannelFlag(payload["flags"]),
+            # Discord's docs are just wrong about this never being null.
+            default_sort_order=channel_models.ForumSortOrderType(payload.get("default_sort_order") or 0),
+            # Discord may send None here for old channels, but they are just NOT_SET
+            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout", 0)),
+            default_reaction_emoji_id=reaction_emoji_id,
+            default_reaction_emoji_name=reaction_emoji_name,
         )
 
     @typing_extensions.override
@@ -3472,6 +3549,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return message_models.MessageReference(
             app=self._app,
+            type=message_models.MessageReferenceType(payload.get("type", 0)),
             id=message_reference_message_id,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             guild_id=message_reference_guild_id,
@@ -3555,6 +3633,61 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         raise errors.UnrecognisedEntityError(msg)
 
     @typing_extensions.override
+    def deserialize_message_snapshot(self, payload: data_binding.JSONObject) -> message_models.MessageSnapshot:
+        timestamp: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
+        if "timestamp" in payload:
+            timestamp = time.iso8601_datetime_string_to_datetime(payload["timestamp"])
+
+        edited_timestamp: datetime.datetime | None = (
+            time.iso8601_datetime_string_to_datetime(raw_edited_timestamp)
+            if (raw_edited_timestamp := payload.get("edited_timestamp"))
+            else None
+        )
+
+        attachments: list[message_models.Attachment] = [
+            self._deserialize_message_attachment(attachment) for attachment in payload.get("attachments", [])
+        ]
+
+        embeds: list[embed_models.Embed] = [self.deserialize_embed(embed) for embed in payload.get("embeds", [])]
+
+        stickers: list[sticker_models.PartialSticker]
+        if "sticker_items" in payload:
+            stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["sticker_items"]]
+        # This is only here for backwards compatibility as old messages still return this field
+        elif "stickers" in payload:
+            stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["stickers"]]
+        else:
+            stickers = []
+
+        content = payload.get("content") or None  # Default to None if content is an empty string
+
+        components: typing.Sequence[component_models.TopLevelComponentTypesT] = self._deserialize_top_level_components(
+            payload.get("components", [])
+        )
+
+        user_mentions: dict[snowflakes.Snowflake, user_models.User] = {
+            u.id: u for u in map(self.deserialize_user, payload.get("mentions", []))
+        }
+
+        role_mention_ids: list[snowflakes.Snowflake] = [
+            snowflakes.Snowflake(i) for i in payload.get("mention_roles", [])
+        ]
+
+        return message_models.MessageSnapshot(
+            type=message_models.MessageType(payload["type"]),
+            content=content,
+            embeds=embeds,
+            attachments=attachments,
+            timestamp=timestamp,
+            edited_timestamp=edited_timestamp,
+            stickers=stickers,
+            user_mentions=user_mentions,
+            role_mention_ids=role_mention_ids,
+            flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED,
+            components=components,
+        )
+
+    @typing_extensions.override
     def deserialize_partial_message(  # noqa: C901, PLR0912, PLR0915
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:
@@ -3620,6 +3753,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             else:
                 referenced_message = None
 
+        message_snapshots: typing.Sequence[message_models.MessageSnapshot] = []
+        if (message_snapshots_payload := payload.get("message_snapshots")) is not None:
+            message_snapshots = [self.deserialize_message_snapshot(snapshot) for snapshot in message_snapshots_payload]
+
         stickers: undefined.UndefinedOr[typing.Sequence[sticker_models.PartialSticker]] = undefined.UNDEFINED
         if "sticker_items" in payload:
             stickers = [self.deserialize_partial_sticker(sticker) for sticker in payload["sticker_items"]]
@@ -3681,6 +3818,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application=application,
             message_reference=message_reference,
             referenced_message=referenced_message,
+            message_snapshots=message_snapshots,
             flags=message_models.MessageFlag(payload["flags"]) if "flags" in payload else undefined.UNDEFINED,
             stickers=stickers,
             nonce=payload.get("nonce", undefined.UNDEFINED),
@@ -3734,6 +3872,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if referenced_message_payload := payload.get("referenced_message"):
             referenced_message = self.deserialize_partial_message(referenced_message_payload)
 
+        message_snapshots: typing.Sequence[message_models.MessageSnapshot] = []
+        if (message_snapshots_payload := payload.get("message_snapshots")) is not None:
+            message_snapshots = [self.deserialize_message_snapshot(snapshot) for snapshot in message_snapshots_payload]
+
         application: message_models.MessageApplication | None = None
         if "application" in payload:
             application = self._deserialize_message_application(payload["application"])
@@ -3785,6 +3927,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             application=application,
             message_reference=message_reference,
             referenced_message=referenced_message,
+            message_snapshots=message_snapshots,
             flags=message_models.MessageFlag(payload["flags"]),
             stickers=stickers,
             nonce=payload.get("nonce"),

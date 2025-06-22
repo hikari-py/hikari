@@ -1000,20 +1000,23 @@ class RESTClientImpl(rest_api.RESTClient):
             )
 
         body_retry_after = float(body["retry_after"])
+        reason = body.get("message", "none")
 
         if body.get("global", False) is True:
             _LOGGER.error(
-                "rate limited on the global bucket. You should consider lowering the number of requests you make or "
-                "contacting Discord to raise this limit. Backing off and retrying request..."
+                "rate limited on the global bucket (reason: '%s'). You should consider lowering the number of requests "
+                "you make or contacting Discord to raise this limit. Backing off and retrying request...",
+                reason,
             )
             self._bucket_manager.throttle(body_retry_after)
             return 0
 
         _LOGGER.error(
-            "rate limited on a %s sub bucket on bucket %s. You should consider lowering the number of requests "
-            "you make to '%s'. Backing off and retrying request...",
+            "rate limited on a %s sub bucket on bucket %s (reason: '%s'). You should consider lowering the number "
+            "of requests you make to '%s'. Backing off and retrying request...",
             resp_headers.get(_X_RATELIMIT_SCOPE_HEADER, "route"),
             bucket,
+            reason,
             compiled_route.route,
         )
 
@@ -1715,6 +1718,35 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.POST_CHANNEL_CROSSPOST.compile(channel=channel, message=message)
 
         response = await self._request(route)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_message(response)
+
+    @typing_extensions.override
+    async def forward_message(
+        self,
+        channel_to: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        channel_from: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextableChannel]] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel_to)
+
+        if isinstance(message, messages_.PartialMessage):
+            channel_from = message.channel_id
+
+        if channel_from is undefined.UNDEFINED:
+            msg = "The message's channel of origin was not provided and could not be obtained from the message."
+            raise ValueError(msg)
+
+        message_reference = data_binding.JSONObjectBuilder()
+        message_reference.put("type", messages_.MessageReferenceType.FORWARD)
+        message_reference.put_snowflake("message_id", message)
+        message_reference.put_snowflake("channel_id", channel_from)
+
+        body = data_binding.JSONObjectBuilder()
+        body.put("message_reference", message_reference)
+
+        response = await self._request(route, json=body)
 
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
@@ -3047,6 +3079,48 @@ class RESTClientImpl(rest_api.RESTClient):
             reason=reason,
         )
         return self._entity_factory.deserialize_guild_forum_channel(response)
+
+    @typing_extensions.override
+    async def create_guild_media_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: undefined.UndefinedOr[str | emojis.Emoji | snowflakes.Snowflake] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildMediaChannel:
+        response = await self._create_guild_channel(
+            guild,
+            name,
+            channels_.ChannelType.GUILD_MEDIA,
+            topic=topic,
+            nsfw=nsfw,
+            rate_limit_per_user=rate_limit_per_user,
+            default_auto_archive_duration=default_auto_archive_duration,
+            default_thread_rate_limit_per_user=default_thread_rate_limit_per_user,
+            default_forum_layout=default_forum_layout,
+            default_sort_order=default_sort_order,
+            position=position,
+            permission_overwrites=permission_overwrites,
+            category=category,
+            available_tags=available_tags,
+            default_reaction_emoji=default_reaction_emoji,
+            reason=reason,
+        )
+        return self._entity_factory.deserialize_guild_media_channel(response)
 
     @typing_extensions.override
     async def create_guild_voice_channel(
