@@ -417,9 +417,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         #   2. We receive the first usage of the bucket, which will always have the most accurate slide period
         #   3. The slide periods differ too much. This is helpful if we diverged too much from the real one
         #      due to network latency, of if the bucket randomly changed
-        #      Note: 0.3 and 0.5 are chosen arbitrarily after some testing
-        if self._out_of_sync or remaining == limit - 1 or not math.isclose(self.period, slide_period, abs_tol=0.3):
-            if not math.isclose(self.period, slide_period, abs_tol=0.5):
+        #      Note: 0.5 and 0.7 are chosen arbitrarily after some testing
+        if self._out_of_sync or remaining == limit - 1 or not math.isclose(self.period, slide_period, abs_tol=0.5):
+            if not math.isclose(self.period, slide_period, abs_tol=0.7):
                 _LOGGER.warning(
                     "bucket '%s' greatly increased its slide period (%s -> %s). "
                     "It is possible that you will see a small increase in 429s",
@@ -430,10 +430,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
             self._out_of_sync = False
             self.period = slide_period
-
-            if next_slide_at > self.increase_at:
-                # We only want to change this if we are lacking behind, as that can lead to 429s
-                self.increase_at = next_slide_at
+            self.increase_at = next_slide_at
 
     def resolve(self, real_bucket_hash: str, remaining: int, limit: int, reset_at: float, reset_after: float) -> None:
         """Set the ratelimit information for this bucket.
@@ -610,7 +607,7 @@ class RESTBucketManager:
             del self._real_hashes_to_buckets[full_hash]
 
         if dead:
-            _LOGGER.info("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
+            _LOGGER.debug("purged %s stale buckets, %s remain in survival, %s active", dead, survival, active)
         else:
             _LOGGER.log(ux.TRACE, "no buckets purged, %s remain in survival, %s active", survival, active)
 
