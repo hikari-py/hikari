@@ -976,7 +976,7 @@ class RESTClientImpl(rest_api.RESTClient):
         # this.
         scope = resp_headers.get(_X_RATELIMIT_SCOPE_HEADER, "route")
 
-        if scope == "route" and remaining <= 0:
+        if scope == "user" and remaining <= 0:
             _LOGGER.warning(
                 "rate limited on bucket %s, maybe you are running more than one bot on this token? Retrying request...",
                 bucket,

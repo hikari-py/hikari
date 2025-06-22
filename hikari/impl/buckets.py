@@ -366,7 +366,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         # The second part of this 'if' is to account for some cases where there can be a race
         # condition and we receive rate limit updates out of order, and we cannot update `_out_of_sync`
         if not self._out_of_sync or (now - self.increase_at > self.period):
-            gain = math.ceil((now - self.increase_at) / self.period)
+            gain = math.floor((now - self.increase_at) / self.period) + 1
             now_remaining = self.remaining + gain
 
             self.remaining = min(self.limit, now_remaining)
@@ -417,9 +417,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         #   2. We receive the first usage of the bucket, which will always have the most accurate slide period
         #   3. The slide periods differ too much. This is helpful if we diverged too much from the real one
         #      due to network latency, of if the bucket randomly changed
-        #      Note: 0.2 and 0.4 are chosen arbitrarily after some testing
-        if self._out_of_sync or remaining == limit - 1 or not math.isclose(self.period, slide_period, abs_tol=0.2):
-            if not math.isclose(self.period, slide_period, abs_tol=0.4):
+        #      Note: 0.3 and 0.5 are chosen arbitrarily after some testing
+        if self._out_of_sync or remaining == limit - 1 or not math.isclose(self.period, slide_period, abs_tol=0.3):
+            if not math.isclose(self.period, slide_period, abs_tol=0.5):
                 _LOGGER.warning(
                     "bucket '%s' greatly increased its slide period (%s -> %s). "
                     "It is possible that you will see a small increase in 429s",

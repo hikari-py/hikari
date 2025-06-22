@@ -401,10 +401,6 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.remaining = self.limit
         self.increase_at = now + self.period
 
-    def drip(self) -> None:
-        """Decrement the remaining counter."""
-        self.remaining -= 1
-
     async def throttle(self) -> None:
         """Perform the throttling rate limiter logic.
 

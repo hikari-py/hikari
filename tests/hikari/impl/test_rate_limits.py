@@ -257,7 +257,7 @@ class TestWindowedBurstRateLimiter:
     async def test_no_drip_if_rate_limited(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
+        ratelimiter.remaining = 10
         ratelimiter.throttle_task = False
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
         future = MockFuture()
@@ -265,13 +265,13 @@ class TestWindowedBurstRateLimiter:
 
         await ratelimiter.acquire()
 
-        ratelimiter.drip.assert_not_called()
+        assert ratelimiter.remaining == 10
 
     @pytest.mark.asyncio
     async def test_task_scheduled_if_rate_limited_and_throttle_task_is_None(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
+        ratelimiter.remaining = 10
         ratelimiter.throttle_task = None
         ratelimiter.throttle = mock.AsyncMock()
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
@@ -281,13 +281,12 @@ class TestWindowedBurstRateLimiter:
         await ratelimiter.acquire()
         assert ratelimiter.throttle_task is not None
 
-        ratelimiter.throttle.assert_called()
+        assert ratelimiter.remaining == 9
 
     @pytest.mark.asyncio
     async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = event_loop.create_future()
         old_task = ratelimiter.throttle_task
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
@@ -301,7 +300,6 @@ class TestWindowedBurstRateLimiter:
     async def test_future_is_added_to_queue_if_throttle_task_is_not_None(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
         future = MockFuture()
@@ -316,7 +314,6 @@ class TestWindowedBurstRateLimiter:
     async def test_future_is_added_to_queue_if_rate_limited(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
         future = MockFuture()

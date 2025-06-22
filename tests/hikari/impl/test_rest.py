@@ -2297,7 +2297,7 @@ class TestRESTClientImplAsync:
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
-            headers = {rest._X_RATELIMIT_REMAINING_HEADER: "0"}
+            headers = {rest._X_RATELIMIT_SCOPE_HEADER: "user", rest._X_RATELIMIT_REMAINING_HEADER: "0"}
             real_url = "https://some.url"
 
             async def json(self):
