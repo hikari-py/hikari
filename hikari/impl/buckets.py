@@ -411,6 +411,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
                     limit,
                 )
             self.limit = limit
+            self.remaining = min(self.remaining, self.limit)
 
         # We want to update the slide period only, and only if:
         #   1. The bucket is out of sync (ie, we reset the full window)
