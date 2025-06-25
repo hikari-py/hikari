@@ -1016,7 +1016,7 @@ class RESTClientImpl(rest_api.RESTClient):
             self._bucket_manager.throttle(body_retry_after)
             return 0
 
-        _LOGGER.error(
+        _LOGGER.warning(
             "rate limited on a %s sub bucket on bucket %s (reason: '%s'). You should consider lowering the number "
             "of requests you make to '%s'. Backing off and retrying request...",
             scope,
