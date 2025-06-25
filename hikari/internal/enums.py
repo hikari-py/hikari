@@ -412,7 +412,7 @@ class _FlagMeta(type):
                 return pseudomember
 
     def __getitem__(cls, name: str) -> Flag:
-        if member := getattr(cls, name, None):
+        if (member := getattr(cls, name, None)) is not None:
             return member
 
         raise KeyError(name)
