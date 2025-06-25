@@ -1,3 +1,11 @@
+## 2.3.5 (2025-06-25)
+
+### Bugfixes
+
+- Fix enum `__getitem__` not properly returning items with a falsy value ([#2434](https://github.com/hikari-py/hikari/issues/2434))
+- Fix deserializing message snapshots ([#2435](https://github.com/hikari-py/hikari/issues/2435))
+
+---
 ## 2.3.4 (2025-06-24)
 
 ### Features
