@@ -3338,6 +3338,67 @@ class TestEntityFactoryImpl:
 
         assert result == {"channel_id": "4312312", "description": "meow2"}
 
+    @pytest.fixture
+    def guild_onboarding_prompt_payload(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "id": "123",
+            "type": 0,
+            "title": "test",
+            "single_select": True,
+            "required": True,
+            "in_onboarding": True,
+            "options": [
+                {
+                    "id": "456",
+                    "channel_ids": ["123"],
+                    "role_ids": ["123"],
+                    "emoji": {"name": "❤️"},
+                    "title": "title",
+                    "description": "description",
+                }
+            ],
+        }
+
+    def test_deserialize_guild_onboarding_prompt(
+        self, entity_factory_impl, guild_onboarding_prompt_payload: typing.MutableMapping[str, typing.Any]
+    ):
+        prompt = entity_factory_impl._deserialize_guild_onboarding_prompt(guild_onboarding_prompt_payload)
+        assert isinstance(prompt, guild_models.GuildOnboardingPrompt)
+        assert prompt.title == "test"
+        assert prompt.id == 123
+        assert prompt.type == guild_models.GuildOnboardingPromptType.MULTIPLE_CHOICE
+        assert prompt.in_onboarding == True
+        assert prompt.required == True
+        assert prompt.single_select == True
+        assert prompt.options == [
+            guild_models.GuildOnboardingPromptOption(
+                id=snowflakes.Snowflake("456"),
+                channel_ids=[snowflakes.Snowflake("123")],
+                role_ids=[snowflakes.Snowflake("123")],
+                emoji=emoji_models.UnicodeEmoji("❤️"),
+                title="title",
+                description="description",
+            )
+        ]
+
+    def test_deserialize_guild_onboarding(
+        self, entity_factory_impl, guild_onboarding_prompt_payload: typing.MutableMapping[str, typing.Any]
+    ):
+        payload = {
+            "default_channel_ids": ["123"],
+            "prompts": [guild_onboarding_prompt_payload],
+            "guild_id": "187",
+            "enabled": True,
+            "mode": guild_models.GuildOnboardingMode.ONBOARDING_DEFAULT.value,
+        }
+        onboarding = entity_factory_impl.deserialize_guild_onboarding(payload)
+        assert onboarding.guild_id == snowflakes.Snowflake("187")
+        assert onboarding.enabled == True
+        assert onboarding.default_channel_ids == [snowflakes.Snowflake("123")]
+        assert onboarding.mode == guild_models.GuildOnboardingMode.ONBOARDING_DEFAULT
+        assert len(onboarding.prompts) == 1
+        assert isinstance(onboarding.prompts[0], guild_models.GuildOnboardingPrompt)
+
     def test_deserialize_member(self, entity_factory_impl, mock_app, member_payload, user_payload):
         member_payload = {**member_payload, "guild_id": "76543325"}
         member = entity_factory_impl.deserialize_member(member_payload)

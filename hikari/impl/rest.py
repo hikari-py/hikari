@@ -4049,6 +4049,53 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_welcome_screen(response)
 
     @typing_extensions.override
+    async def fetch_guild_onboarding(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.GuildOnboarding:
+        route = routes.GET_GUILD_ONBOARDING.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_onboarding(response)
+
+    @staticmethod
+    def _build_prompts(
+        prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder],
+    ) -> list[typing.MutableMapping[str, typing.Any]]:
+        prompt_bodys: list[typing.MutableMapping[str, typing.Any]] = []
+        for index, prompt in enumerate(prompts):
+            if prompt.id is undefined.UNDEFINED:
+                prompt.set_id(index)
+            prompt_bodys.append(prompt.build())
+        return prompt_bodys
+
+    @typing_extensions.override
+    async def edit_guild_onboarding(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        default_channel_ids: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.GuildChannel]
+        ] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mode: undefined.UndefinedOr[guilds.GuildOnboardingMode] = undefined.UNDEFINED,
+        prompts: undefined.UndefinedOr[
+            typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.GuildOnboarding:
+        route = routes.PUT_GUILD_ONBOARDING.compile(guild=guild)
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake_array("default_channel_ids", default_channel_ids)
+        body.put("enabled", enabled)
+        body.put("mode", mode, conversion=int)
+        if prompts is not undefined.UNDEFINED:
+            body.put("prompts", self._build_prompts(prompts))
+
+        response = await self._request(route, json=body, reason=reason)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_onboarding(response)
+
+    @typing_extensions.override
     async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         route = routes.GET_GUILD_VANITY_URL.compile(guild=guild)
         response = await self._request(route)
