@@ -637,6 +637,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         """Object of the application this entity factory is bound to."""
         return self._app
 
+    @typing_extensions.override
+    def serialize_color_gradient(self, gradient: color_models.ColorGradient) -> data_binding.JSONObject:
+        return {
+            "primary_color": gradient.primary_color,
+            "secondary_color": gradient.secondary_color,
+            "tertiary_color": gradient.tertiary_color,
+        }
+
     ######################
     # APPLICATION MODELS #
     ######################
@@ -2108,7 +2116,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         tertiary_color: color_models.Color | None = None
         if (raw_tertiary_color := colors_payload.get("tertiary_color")) is not None:
             tertiary_color = color_models.Color(raw_tertiary_color)
-        colors = guild_models.RoleColors(
+        colors = color_models.ColorGradient(
             primary_color=primary_color, secondary_color=secondary_color, tertiary_color=tertiary_color
         )
 

@@ -3444,7 +3444,7 @@ class TestEntityFactoryImpl:
         assert guild_role.unicode_emoji == emoji_models.UnicodeEmoji("\N{OK HAND SIGN}")
         assert isinstance(guild_role.unicode_emoji, emoji_models.UnicodeEmoji)
         assert guild_role.color == color_models.Color(3_447_003)
-        assert guild_role.colors == guild_models.RoleColors(
+        assert guild_role.colors == color_models.ColorGradient(
             primary_color=color_models.Color(3_447_003),
             secondary_color=color_models.Color(3_447_003),
             tertiary_color=None,

@@ -138,7 +138,7 @@ class TestRole:
             id=snowflakes.Snowflake(979899100),
             name="@everyone",
             color=colors.Color(0x1A2B3C),
-            colors=guilds.RoleColors(
+            colors=colors.ColorGradient(
                 primary_color=colors.Color(0x1A2B3C), secondary_color=colors.Color(0x1A2B3C), tertiary_color=None
             ),
             guild_id=snowflakes.Snowflake(112233),
@@ -159,7 +159,7 @@ class TestRole:
 
     def test_colour_property(self, model):
         assert model.colour == colors.Color(0x1A2B3C)
-        assert model.colors == guilds.RoleColors(
+        assert model.colors == colors.ColorGradient(
             primary_color=colors.Color(0x1A2B3C), secondary_color=colors.Color(0x1A2B3C), tertiary_color=None
         )
 
