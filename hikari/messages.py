@@ -121,11 +121,17 @@ class MessageType(int, enums.Enum):
     GUILD_DISCOVERY_GRACE_PERIOD_FINAL_WARNING = 17
     """A message to indicate the final warning before removal from discovery."""
 
+    THREAD_CREATED = 18
+    """A message to denote that a thread was created."""
+
     REPLY = 19
     """A message that replies to another message."""
 
     CHAT_INPUT = 20
     """A message sent to indicate a chat input application command has been executed."""
+
+    THREAD_STARTER_MESSAGE = 21
+    """A message send when a thread starter message is added to a thread."""
 
     GUILD_INVITE_REMINDER = 22
     """A message sent to remind to invite people to the guild."""
@@ -139,6 +145,24 @@ class MessageType(int, enums.Enum):
     ROLE_SUBSCRIPTION_PURCHASE = 25
     """A message sent to indicate a role subscription has been purchased."""
 
+    INTERACTION_PREMIUM_UPSELL = 26
+    """A message sent when a user is upsold to a premium interaction."""
+
+    STAGE_START = 27
+    """A message to denote that a stage channel started."""
+
+    STAGE_END = 28
+    """A message to denote that a stage channel ended."""
+
+    STAGE_SPEAKER = 29
+    """"A message sent when a user starts speaking in a stage channel."""
+
+    STAGE_TOPIC = 31
+    """A message to denote that a stage channel's topic has changed."""
+
+    GUILD_APPLICATION_PREMIUM_SUBSCRIPTION = 32
+    """A message to denote a user has purchased an application premium subscription."""
+
     GUILD_INCIDENT_ALERT_MODE_ENABLED = 36
     """A message sent to indicate that a guild incident action has been enabled."""
 
@@ -151,8 +175,22 @@ class MessageType(int, enums.Enum):
     GUILD_INCIDENT_REPORT_FALSE_ALARM = 39
     """A message sent to indicate that the raid has been reported as a false alarm."""
 
+    PURCHASE_NOTIFICATION = 44
+    """A message to denote a user purchased a guild product."""
+
     POLL_RESULT = 46
     """A message sent to indicate a poll has finished."""
+
+
+@typing.final
+class MessageReferenceType(int, enums.Enum):
+    """The type of a [`hikari.messages.MessageReference`][]."""
+
+    DEFAULT = 0
+    """Indicates a replied to message."""
+
+    FORWARD = 1
+    """Indicates a forwarded message."""
 
 
 @typing.final
@@ -177,6 +215,9 @@ class MessageFlag(enums.Flag):
     URGENT = 1 << 4
     """This message came from the urgent message system."""
 
+    HAS_THREAD = 1 << 5
+    """This message has an associated thread with the same ID."""
+
     EPHEMERAL = 1 << 6
     """This message is only visible to the user that invoked the interaction."""
 
@@ -191,6 +232,9 @@ class MessageFlag(enums.Flag):
 
     IS_VOICE_MESSAGE = 1 << 13
     """This message is a voice message."""
+
+    HAS_SNAPSHOT = 1 << 14
+    """This message has a snapshot (via Message Forwarding)."""
 
     IS_COMPONENTS_V2 = 1 << 15
     """This message uses the new components system."""
@@ -325,6 +369,11 @@ class MessageReference:
     )
     """Client application that models may use for procedures."""
 
+    type: MessageReferenceType | int = attrs.field(
+        hash=False, eq=False, repr=False, default=MessageReferenceType.DEFAULT
+    )
+    """The type of the reference."""
+
     id: snowflakes.Snowflake | None = attrs.field(repr=True)
     """The ID of the original message.
 
@@ -455,6 +504,50 @@ def _map_cache_maybe_discover(
         if obj is not None:
             results[id_] = obj
     return results
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
+class MessageSnapshot:
+    type: MessageType | int = attrs.field(hash=False, eq=False, repr=False)
+    """The message type."""
+
+    content: str | None = attrs.field(hash=False, eq=False, repr=False)
+    """The content of the message."""
+
+    embeds: typing.Sequence[embeds_.Embed] = attrs.field(hash=False, eq=False, repr=False)
+    """The message embeds."""
+
+    attachments: typing.Sequence[Attachment] = attrs.field(hash=False, eq=False, repr=False)
+    """The message attachments."""
+
+    timestamp: undefined.UndefinedOr[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
+    """The timestamp that the message was sent at."""
+
+    edited_timestamp: datetime.datetime | None = attrs.field(hash=False, eq=False, repr=False)
+    """The timestamp that the message was last edited at."""
+
+    flags: undefined.UndefinedOr[MessageFlag] = attrs.field(hash=False, eq=False, repr=False)
+    """The message flags."""
+
+    stickers: typing.Sequence[stickers_.PartialSticker] = attrs.field(hash=False, eq=False, repr=False)
+    """The stickers sent with this message."""
+
+    user_mentions: typing.Mapping[snowflakes.Snowflake, users_.User] = attrs.field(hash=False, eq=False, repr=False)
+    """Users who were notified by their mention in the message."""
+
+    role_mention_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
+    """IDs of roles that were notified by their mention in the message."""
+
+    components: typing.Sequence[component_models.TopLevelComponentTypesT] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
+    """Sequence of the components attached to this message."""
+
+    @property
+    def user_mentions_ids(self) -> typing.Sequence[snowflakes.Snowflake] | None:
+        """Ids of the users who were notified by their mention in the message."""
+        return list(self.user_mentions.keys())
 
 
 @attrs_extensions.with_copy
@@ -636,6 +729,9 @@ class PartialMessage(snowflakes.Unique):
     backend didn't attempt to fetch the message, so the status is unknown. If
     `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
+
+    message_snapshots: typing.Sequence[MessageSnapshot] = attrs.field(hash=False, eq=False, repr=False)
+    """The partial message snapshot associated with the message_reference"""
 
     application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.
@@ -1468,6 +1564,9 @@ class Message(PartialMessage):
 
     If `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
+
+    message_snapshots: typing.Sequence[MessageSnapshot] = attrs.field(hash=False, eq=False, repr=False)
+    """The partial message snapshot associated with the message_reference."""
 
     application_id: snowflakes.Snowflake | None = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.
