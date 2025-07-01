@@ -156,7 +156,7 @@ class _EnumMeta(type):
         return cls._value_to_member_map_.get(value, value)
 
     def __getitem__(cls, name: str) -> Enum:
-        if member := getattr(cls, name, None):
+        if (member := getattr(cls, name, None)) is not None:
             return member
 
         raise KeyError(name)
@@ -412,7 +412,7 @@ class _FlagMeta(type):
                 return pseudomember
 
     def __getitem__(cls, name: str) -> Flag:
-        if member := getattr(cls, name, None):
+        if (member := getattr(cls, name, None)) is not None:
             return member
 
         raise KeyError(name)

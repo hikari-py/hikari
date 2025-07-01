@@ -760,7 +760,7 @@ class TestInteractionServer:
         assert g_complete is False
         assert len(mock_interaction_server._running_generator_listeners) != 0
         # Give some time for the task to complete
-        await asyncio.sleep(hikari_test_helpers.REASONABLE_QUICK_RESPONSE_TIME)
+        await asyncio.sleep(0.01)
 
         assert g_complete is True
         assert len(mock_interaction_server._running_generator_listeners) == 0

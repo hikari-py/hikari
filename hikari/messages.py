@@ -183,6 +183,17 @@ class MessageType(int, enums.Enum):
 
 
 @typing.final
+class MessageReferenceType(int, enums.Enum):
+    """The type of a [`hikari.messages.MessageReference`][]."""
+
+    DEFAULT = 0
+    """Indicates a replied to message."""
+
+    FORWARD = 1
+    """Indicates a forwarded message."""
+
+
+@typing.final
 class MessageFlag(enums.Flag):
     """Additional flags for message options."""
 
@@ -221,6 +232,9 @@ class MessageFlag(enums.Flag):
 
     IS_VOICE_MESSAGE = 1 << 13
     """This message is a voice message."""
+
+    HAS_SNAPSHOT = 1 << 14
+    """This message has a snapshot (via Message Forwarding)."""
 
     IS_COMPONENTS_V2 = 1 << 15
     """This message uses the new components system."""
@@ -355,6 +369,11 @@ class MessageReference:
     )
     """Client application that models may use for procedures."""
 
+    type: MessageReferenceType | int = attrs.field(
+        hash=False, eq=False, repr=False, default=MessageReferenceType.DEFAULT
+    )
+    """The type of the reference."""
+
     id: snowflakes.Snowflake | None = attrs.field(repr=True)
     """The ID of the original message.
 
@@ -485,6 +504,50 @@ def _map_cache_maybe_discover(
         if obj is not None:
             results[id_] = obj
     return results
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
+class MessageSnapshot:
+    type: MessageType | int = attrs.field(hash=False, eq=False, repr=False)
+    """The message type."""
+
+    content: str | None = attrs.field(hash=False, eq=False, repr=False)
+    """The content of the message."""
+
+    embeds: typing.Sequence[embeds_.Embed] = attrs.field(hash=False, eq=False, repr=False)
+    """The message embeds."""
+
+    attachments: typing.Sequence[Attachment] = attrs.field(hash=False, eq=False, repr=False)
+    """The message attachments."""
+
+    timestamp: undefined.UndefinedOr[datetime.datetime] = attrs.field(hash=False, eq=False, repr=False)
+    """The timestamp that the message was sent at."""
+
+    edited_timestamp: datetime.datetime | None = attrs.field(hash=False, eq=False, repr=False)
+    """The timestamp that the message was last edited at."""
+
+    flags: undefined.UndefinedOr[MessageFlag] = attrs.field(hash=False, eq=False, repr=False)
+    """The message flags."""
+
+    stickers: typing.Sequence[stickers_.PartialSticker] = attrs.field(hash=False, eq=False, repr=False)
+    """The stickers sent with this message."""
+
+    user_mentions: typing.Mapping[snowflakes.Snowflake, users_.User] = attrs.field(hash=False, eq=False, repr=False)
+    """Users who were notified by their mention in the message."""
+
+    role_mention_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
+    """IDs of roles that were notified by their mention in the message."""
+
+    components: typing.Sequence[component_models.TopLevelComponentTypesT] = attrs.field(
+        hash=False, eq=False, repr=False
+    )
+    """Sequence of the components attached to this message."""
+
+    @property
+    def user_mentions_ids(self) -> typing.Sequence[snowflakes.Snowflake] | None:
+        """Ids of the users who were notified by their mention in the message."""
+        return list(self.user_mentions.keys())
 
 
 @attrs_extensions.with_copy
@@ -666,6 +729,9 @@ class PartialMessage(snowflakes.Unique):
     backend didn't attempt to fetch the message, so the status is unknown. If
     `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
+
+    message_snapshots: typing.Sequence[MessageSnapshot] = attrs.field(hash=False, eq=False, repr=False)
+    """The partial message snapshot associated with the message_reference"""
 
     application_id: undefined.UndefinedNoneOr[snowflakes.Snowflake] = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.
@@ -1498,6 +1564,9 @@ class Message(PartialMessage):
 
     If `type` is [`hikari.messages.MessageType.REPLY`][] and [`None`][], the message was deleted.
     """
+
+    message_snapshots: typing.Sequence[MessageSnapshot] = attrs.field(hash=False, eq=False, repr=False)
+    """The partial message snapshot associated with the message_reference."""
 
     application_id: snowflakes.Snowflake | None = attrs.field(hash=False, eq=False, repr=False)
     """ID of the application this message was sent by.

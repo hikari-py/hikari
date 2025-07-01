@@ -171,7 +171,7 @@ class TestClientCredentialsStrategy:
             mock.Mock(authorize_client_credentials_token=mock.AsyncMock(return_value=mock_old_token))
         )
 
-        with mock.patch.object(time, "monotonic", return_value=99999999999):
+        with mock.patch.object(time, "time", return_value=99999999999):
             new_token = await strategy.acquire(mock_rest)
 
         mock_rest.authorize_client_credentials_token.assert_awaited_once_with(
@@ -240,7 +240,7 @@ class TestClientCredentialsStrategy:
         strategy = rest.ClientCredentialsStrategy(client=65123, client_secret="12354")
         strategy._lock = MockLock(strategy)
         strategy._token = None
-        strategy._expire_at = time.monotonic() + 500
+        strategy._expire_at = time.time() + 500
 
         result = await strategy.acquire(mock_rest)
 
@@ -2130,9 +2130,7 @@ class TestRESTClientImplAsync:
                 await rest_client._request(route)
 
     @hikari_test_helpers.timeout()
-    async def test_request_when_status_in_retry_codes_will_retry_until_exhausted(
-        self, rest_client, exit_exception
-    ):
+    async def test_request_when_status_in_retry_codes_will_retry_until_exhausted(self, rest_client, exit_exception):
         class StubResponse:
             status = http.HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -2221,6 +2219,7 @@ class TestRESTClientImplAsync:
                 rest._X_RATELIMIT_LIMIT_HEADER: "123456789",
                 rest._X_RATELIMIT_REMAINING_HEADER: "987654321",
                 rest._X_RATELIMIT_RESET_AFTER_HEADER: "12.2",
+                rest._X_RATELIMIT_RESET_HEADER: "12123123.2",
             }
 
         response = StubResponse()
@@ -2235,6 +2234,7 @@ class TestRESTClientImplAsync:
             remaining_header=987654321,
             limit_header=123456789,
             reset_after=12.2,
+            reset_at=12123123.2,
         )
 
     async def test__parse_ratelimits_when_not_ratelimited(self, rest_client):
@@ -2297,7 +2297,7 @@ class TestRESTClientImplAsync:
         class StubResponse:
             status = http.HTTPStatus.TOO_MANY_REQUESTS
             content_type = rest._APPLICATION_JSON
-            headers = {rest._X_RATELIMIT_REMAINING_HEADER: "0"}
+            headers = {rest._X_RATELIMIT_SCOPE_HEADER: "user", rest._X_RATELIMIT_REMAINING_HEADER: "0"}
             real_url = "https://some.url"
 
             async def json(self):
@@ -2935,6 +2935,54 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form)
         rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 123})
+
+    async def test_forward_message_id(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 1239})
+        expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=1234)
+        m = await rest_client.forward_message(channel_to=1234, message=123, channel_from=12345)
+        assert m is rest_client._entity_factory.deserialize_message.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "message_reference": {
+                    "message_id": "123",
+                    "channel_id": "12345",
+                    "type": message_models.MessageReferenceType.FORWARD,
+                }
+            },
+        )
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 1239})
+
+    async def test_forward_partial_message(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 1239})
+        expected_route = routes.POST_CHANNEL_MESSAGES.compile(channel=1234)
+        m = mock.Mock(
+            spec=message_models.PartialMessage,
+            id=snowflakes.Snowflake(123),
+            channel_id=snowflakes.Snowflake(12345),
+            __int__=lambda self: int(self.id),
+        )
+        res = await rest_client.forward_message(channel_to=1234, message=m, channel_from=69)
+        assert res is rest_client._entity_factory.deserialize_message.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route,
+            json={
+                "message_reference": {
+                    "message_id": "123",
+                    "channel_id": "12345",
+                    "type": message_models.MessageReferenceType.FORWARD,
+                }
+            },
+        )
+        rest_client._entity_factory.deserialize_message.assert_called_once_with({"message_id": 1239})
+
+    async def test_forward_fails_with_no_channel(self, rest_client):
+        rest_client._request = mock.AsyncMock(return_value={"message_id": 1239})
+        with pytest.raises(ValueError) as excinfo:
+            await rest_client.forward_message(channel_to=1234, message=123)
+        assert "The message's channel of origin was not provided and could not be obtained from the message." in str(
+            excinfo.value
+        )
 
     async def test_create_voice_message_no_flags(self, rest_client):
         rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
@@ -4784,6 +4832,56 @@ class TestRESTClientImplAsync:
             default_reaction_emoji="some reaction",
         )
         rest_client._entity_factory.deserialize_guild_forum_channel.assert_called_once_with(
+            rest_client._create_guild_channel.return_value
+        )
+
+    async def test_create_guild_media_channel(self, rest_client: rest.RESTClientImpl):
+        guild = StubModel(123)
+        category_channel = StubModel(789)
+        overwrite1 = StubModel(987)
+        overwrite2 = StubModel(654)
+        tag1 = StubModel(1203)
+        tag2 = StubModel(1204)
+        rest_client._create_guild_channel = mock.AsyncMock()
+
+        returned = await rest_client.create_guild_media_channel(
+            guild,
+            "help-center",
+            position=1,
+            topic="get help!",
+            nsfw=False,
+            rate_limit_per_user=60,
+            permission_overwrites=[overwrite1, overwrite2],
+            category=category_channel,
+            reason="because we need one",
+            default_auto_archive_duration=5445234,
+            default_thread_rate_limit_per_user=40,
+            default_forum_layout=channels.ForumLayoutType.LIST_VIEW,
+            default_sort_order=channels.ForumSortOrderType.LATEST_ACTIVITY,
+            available_tags=[tag1, tag2],
+            default_reaction_emoji="some reaction",
+        )
+        assert returned is rest_client._entity_factory.deserialize_guild_media_channel.return_value
+
+        rest_client._create_guild_channel.assert_awaited_once_with(
+            guild,
+            "help-center",
+            channels.ChannelType.GUILD_MEDIA,
+            position=1,
+            topic="get help!",
+            nsfw=False,
+            rate_limit_per_user=60,
+            permission_overwrites=[overwrite1, overwrite2],
+            category=category_channel,
+            reason="because we need one",
+            default_auto_archive_duration=5445234,
+            default_thread_rate_limit_per_user=40,
+            default_forum_layout=channels.ForumLayoutType.LIST_VIEW,
+            default_sort_order=channels.ForumSortOrderType.LATEST_ACTIVITY,
+            available_tags=[tag1, tag2],
+            default_reaction_emoji="some reaction",
+        )
+        rest_client._entity_factory.deserialize_guild_media_channel.assert_called_once_with(
             rest_client._create_guild_channel.return_value
         )
 
