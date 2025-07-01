@@ -502,6 +502,17 @@ def _transform_emoji_to_url_format(
     return emoji
 
 
+def _build_prompts(
+    prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder],
+) -> list[typing.MutableMapping[str, typing.Any]]:
+    prompt_bodys: list[typing.MutableMapping[str, typing.Any]] = []
+    for index, prompt in enumerate(prompts):
+        if prompt.id is undefined.UNDEFINED:
+            prompt.set_id(index)
+        prompt_bodys.append(prompt.build())
+    return prompt_bodys
+
+
 class RESTClientImpl(rest_api.RESTClient):
     """Implementation of the V10-compatible Discord HTTP API.
 
@@ -4052,17 +4063,6 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_guild_onboarding(response)
 
-    @staticmethod
-    def _build_prompts(
-        prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder],
-    ) -> list[typing.MutableMapping[str, typing.Any]]:
-        prompt_bodys: list[typing.MutableMapping[str, typing.Any]] = []
-        for index, prompt in enumerate(prompts):
-            if prompt.id is undefined.UNDEFINED:
-                prompt.set_id(index)
-            prompt_bodys.append(prompt.build())
-        return prompt_bodys
-
     @typing_extensions.override
     async def edit_guild_onboarding(
         self,
@@ -4084,7 +4084,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("enabled", enabled)
         body.put("mode", mode, conversion=int)
         if prompts is not undefined.UNDEFINED:
-            body.put("prompts", self._build_prompts(prompts))
+            body.put("prompts", _build_prompts(prompts))
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
