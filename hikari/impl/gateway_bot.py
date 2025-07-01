@@ -973,7 +973,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         _validate_activity(activity)
 
-        start_time = time.monotonic()
+        start_time = time.time()
         self._closed_event = asyncio.Event()
         self._closing_event = asyncio.Event()
 
@@ -1060,7 +1060,7 @@ class GatewayBot(traits.GatewayBotAware):
 
         await self._event_manager.dispatch(self._event_factory.deserialize_started_event(), return_tasks=True)
 
-        _LOGGER.info("started successfully in approx %.2f seconds", time.monotonic() - start_time)
+        _LOGGER.info("started successfully in approx %.2f seconds", time.time() - start_time)
 
     def stream(
         self, event_type: type[base_events.EventT], /, timeout: float | None, limit: int | None = None
@@ -1350,9 +1350,9 @@ class GatewayBot(traits.GatewayBotAware):
             url=url,
         )
         try:
-            start = time.monotonic()
+            start = time.time()
             await new_shard.start()
-            end = time.monotonic()
+            end = time.time()
 
         except Exception:
             if new_shard.is_alive:

@@ -1,3 +1,71 @@
+## 2.3.5 (2025-06-25)
+
+### Bugfixes
+
+- Fix enum `__getitem__` not properly returning items with a falsy value ([#2434](https://github.com/hikari-py/hikari/issues/2434))
+- Fix deserializing message snapshots ([#2435](https://github.com/hikari-py/hikari/issues/2435))
+
+---
+## 2.3.4 (2025-06-24)
+
+### Features
+
+- Add `THREAD_CREATED`, `THREAD_STARTER_MESSAGE`, `INTERACTION_PREMIUM_UPSELL`, `STAGE_START`, `STAGE_END`, `STAGE_SPEAKER`, `STAGE_TOPIC`, `GUILD_APPLICATION_PREMIUM_SUBSCRIPTION`, and `PURCHASE_NOTIFICATION` to `MessageType` enum. ([#2382](https://github.com/hikari-py/hikari/issues/2382))
+- Add `SOUNDBOARD_SOUND_CREATE`, `SOUNDBOARD_SOUND_UPDATE`, and `SOUNDBOARD_SOUND_CREATE` to `AuditLogEventType` enum. ([#2384](https://github.com/hikari-py/hikari/issues/2384))
+- Re-export `hikari.impl.event_factory` as part of `hikari.impl` ([#2388](https://github.com/hikari-py/hikari/issues/2388))
+- Add naming to dispatch tasks to allow to identify them in the event loop ([#2394](https://github.com/hikari-py/hikari/issues/2394))
+- Allow setting HTTP concurrent connection limit through `HTTPSettings.connection_limit` ([#2395](https://github.com/hikari-py/hikari/issues/2395))
+- Add `HAS_THREAD` member to `MessageFlag`. ([#2398](https://github.com/hikari-py/hikari/issues/2398))
+- Add message forwarding support. ([#2399](https://github.com/hikari-py/hikari/issues/2399))
+- Add support for guild media channels. ([#2409](https://github.com/hikari-py/hikari/issues/2409))
+- Add reason to error log when hitting a subratelimit, if available ([#2416](https://github.com/hikari-py/hikari/issues/2416))
+
+### Optimizations
+
+- Optimize request flow ([#2393](https://github.com/hikari-py/hikari/issues/2393))
+- Sligly optimize memory usage when dispatching tasks ([#2394](https://github.com/hikari-py/hikari/issues/2394))
+- Switch ratelimiting logic to a sliding window implementation to better match Discord's side. This will allow maximum throughput that Discord would allow ([#2427](https://github.com/hikari-py/hikari/issues/2427))
+
+### Bugfixes
+
+- Fix typing inconsistency for `PartialInteraction.locale` ([#2401](https://github.com/hikari-py/hikari/issues/2401))
+
+### Documentation Improvements
+
+- Add items with missing docstrings (mainly enum values) ([#2381](https://github.com/hikari-py/hikari/issues/2381))
+- Document members of `ShardCloseCode` and `AuditLogEventType` enums. ([#2383](https://github.com/hikari-py/hikari/issues/2383))
+
+---
+## 2.3.4.dev1 (2025-06-24)
+
+### Features
+
+- Add `THREAD_CREATED`, `THREAD_STARTER_MESSAGE`, `INTERACTION_PREMIUM_UPSELL`, `STAGE_START`, `STAGE_END`, `STAGE_SPEAKER`, `STAGE_TOPIC`, `GUILD_APPLICATION_PREMIUM_SUBSCRIPTION`, and `PURCHASE_NOTIFICATION` to `MessageType` enum. ([#2382](https://github.com/hikari-py/hikari/issues/2382))
+- Add `SOUNDBOARD_SOUND_CREATE`, `SOUNDBOARD_SOUND_UPDATE`, and `SOUNDBOARD_SOUND_CREATE` to `AuditLogEventType` enum. ([#2384](https://github.com/hikari-py/hikari/issues/2384))
+- Re-export `hikari.impl.event_factory` as part of `hikari.impl` ([#2388](https://github.com/hikari-py/hikari/issues/2388))
+- Add naming to dispatch tasks to allow to identify them in the event loop ([#2394](https://github.com/hikari-py/hikari/issues/2394))
+- Allow setting HTTP concurrent connection limit through `HTTPSettings.connection_limit` ([#2395](https://github.com/hikari-py/hikari/issues/2395))
+- Add `HAS_THREAD` member to `MessageFlag`. ([#2398](https://github.com/hikari-py/hikari/issues/2398))
+- Add message forwarding support. ([#2399](https://github.com/hikari-py/hikari/issues/2399))
+- Add support for guild media channels. ([#2409](https://github.com/hikari-py/hikari/issues/2409))
+- Add reason to error log when hitting a subratelimit, if available ([#2416](https://github.com/hikari-py/hikari/issues/2416))
+
+### Optimizations
+
+- Optimize request flow ([#2393](https://github.com/hikari-py/hikari/issues/2393))
+- Sligly optimize memory usage when dispatching tasks ([#2394](https://github.com/hikari-py/hikari/issues/2394))
+- Switch ratelimiting logic to a sliding window implementation to better match Discord's side. This will allow maximum throughput that Discord would allow ([#2427](https://github.com/hikari-py/hikari/issues/2427))
+
+### Bugfixes
+
+- Fix typing inconsistency for `PartialInteraction.locale` ([#2401](https://github.com/hikari-py/hikari/issues/2401))
+
+### Documentation Improvements
+
+- Add items with missing docstrings (mainly enum values) ([#2381](https://github.com/hikari-py/hikari/issues/2381))
+- Document members of `ShardCloseCode` and `AuditLogEventType` enums. ([#2383](https://github.com/hikari-py/hikari/issues/2383))
+
+---
 ## 2.3.3 (2025-05-18)
 
 ### Features
