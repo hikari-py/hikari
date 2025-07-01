@@ -3634,6 +3634,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     @typing_extensions.override
     def deserialize_message_snapshot(self, payload: data_binding.JSONObject) -> message_models.MessageSnapshot:
+        payload = payload["message"]
+
         timestamp: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED
         if "timestamp" in payload:
             timestamp = time.iso8601_datetime_string_to_datetime(payload["timestamp"])

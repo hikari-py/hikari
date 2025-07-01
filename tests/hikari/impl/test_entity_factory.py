@@ -6697,9 +6697,11 @@ class TestEntityFactoryImpl:
 
         message_payload["message_snapshots"] = [
             {
-                "type": message_models.MessageType.DEFAULT,
-                "content": "let there be light",
-                "flags": message_models.MessageFlag.HAS_THREAD,
+                "message": {
+                    "type": message_models.MessageType.DEFAULT,
+                    "content": "let there be light",
+                    "flags": message_models.MessageFlag.HAS_THREAD,
+                }
             }
         ]
 
@@ -6796,17 +6798,21 @@ class TestEntityFactoryImpl:
         action_row_payload,
     ):
         payload = {
-            "type": message_models.MessageType.DEFAULT,
-            "content": "test content",
-            "embeds": [embed_payload],
-            "attachments": [attachment_payload],
-            "timestamp": "2025-06-03T05:12:59.510000+00:00",
-            "edited_timestamp": "2025-06-03T05:14:06.510000+00:00",
-            "flags": message_models.MessageFlag.HAS_SNAPSHOT,
-            "stickers": [{"id": "469", "name": "Dance_dance", "format_type": sticker_models.StickerFormatType.APNG}],
-            "mentions": [user_payload],
-            "mention_roles": ["333333"],
-            "components": [action_row_payload],
+            "message": {
+                "type": message_models.MessageType.DEFAULT,
+                "content": "test content",
+                "embeds": [embed_payload],
+                "attachments": [attachment_payload],
+                "timestamp": "2025-06-03T05:12:59.510000+00:00",
+                "edited_timestamp": "2025-06-03T05:14:06.510000+00:00",
+                "flags": message_models.MessageFlag.HAS_SNAPSHOT,
+                "stickers": [
+                    {"id": "469", "name": "Dance_dance", "format_type": sticker_models.StickerFormatType.APNG}
+                ],
+                "mentions": [user_payload],
+                "mention_roles": ["333333"],
+                "components": [action_row_payload],
+            }
         }
         message_snapshot: message_models.MessageSnapshot = entity_factory_impl.deserialize_message_snapshot(payload)
         assert message_snapshot.type == message_models.MessageType.DEFAULT
@@ -6838,19 +6844,21 @@ class TestEntityFactoryImpl:
         action_row_payload,
     ):
         payload = {
-            "type": message_models.MessageType.DEFAULT,
-            "content": "test content",
-            "embeds": [embed_payload],
-            "attachments": [attachment_payload],
-            "timestamp": "2025-06-03T05:12:59.510000+00:00",
-            "edited_timestamp": "2025-06-03T05:14:06.510000+00:00",
-            "flags": message_models.MessageFlag.HAS_SNAPSHOT,
-            "sticker_items": [
-                {"id": "469", "name": "Dance_dance", "format_type": sticker_models.StickerFormatType.APNG}
-            ],
-            "mentions": [user_payload],
-            "mention_roles": ["333333"],
-            "components": [action_row_payload],
+            "message": {
+                "type": message_models.MessageType.DEFAULT,
+                "content": "test content",
+                "embeds": [embed_payload],
+                "attachments": [attachment_payload],
+                "timestamp": "2025-06-03T05:12:59.510000+00:00",
+                "edited_timestamp": "2025-06-03T05:14:06.510000+00:00",
+                "flags": message_models.MessageFlag.HAS_SNAPSHOT,
+                "sticker_items": [
+                    {"id": "469", "name": "Dance_dance", "format_type": sticker_models.StickerFormatType.APNG}
+                ],
+                "mentions": [user_payload],
+                "mention_roles": ["333333"],
+                "components": [action_row_payload],
+            }
         }
         message_snapshot: message_models.MessageSnapshot = entity_factory_impl.deserialize_message_snapshot(payload)
         assert message_snapshot.stickers[0].id == 469
@@ -6865,17 +6873,21 @@ class TestEntityFactoryImpl:
         action_row_payload,
     ):
         payload = {
-            "type": message_models.MessageType.DEFAULT,
-            "content": "test content",
-            "embeds": [embed_payload],
-            "attachments": [attachment_payload],
-            "timestamp": "2025-06-03T05:12:59.510000+00:00",
-            "edited_timestamp": None,
-            "flags": message_models.MessageFlag.HAS_SNAPSHOT,
-            "stickers": [{"id": "469", "name": "Dance_dance", "format_type": sticker_models.StickerFormatType.APNG}],
-            "mentions": [user_payload],
-            "mention_roles": ["333333"],
-            "components": [action_row_payload],
+            "message": {
+                "type": message_models.MessageType.DEFAULT,
+                "content": "test content",
+                "embeds": [embed_payload],
+                "attachments": [attachment_payload],
+                "timestamp": "2025-06-03T05:12:59.510000+00:00",
+                "edited_timestamp": None,
+                "flags": message_models.MessageFlag.HAS_SNAPSHOT,
+                "stickers": [
+                    {"id": "469", "name": "Dance_dance", "format_type": sticker_models.StickerFormatType.APNG}
+                ],
+                "mentions": [user_payload],
+                "mention_roles": ["333333"],
+                "components": [action_row_payload],
+            }
         }
         message_snapshot: message_models.MessageSnapshot = entity_factory_impl.deserialize_message_snapshot(payload)
         assert message_snapshot.edited_timestamp == None
@@ -6889,7 +6901,7 @@ class TestEntityFactoryImpl:
         custom_emoji_payload,
         action_row_payload,
     ):
-        payload = {"type": 0}
+        payload = {"message": {"type": 0}}
         message_snapshot = entity_factory_impl.deserialize_message_snapshot(payload)
         assert undefined.all_undefined(message_snapshot.flags, message_snapshot.timestamp)
         assert message_snapshot.content is None
@@ -7021,9 +7033,11 @@ class TestEntityFactoryImpl:
 
         message_payload["message_snapshots"] = [
             {
-                "type": message_models.MessageType.DEFAULT,
-                "content": "let there be light",
-                "flags": message_models.MessageFlag.HAS_THREAD,
+                "message": {
+                    "type": message_models.MessageType.DEFAULT,
+                    "content": "let there be light",
+                    "flags": message_models.MessageFlag.HAS_THREAD,
+                }
             }
         ]
 

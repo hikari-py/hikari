@@ -116,7 +116,7 @@ class CompiledRoute:
 
 
 @attrs_extensions.with_copy
-@attrs.define(unsafe_hash=True, init=False, weakref_slot=False)
+@attrs.define(hash=False, eq=False, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -138,10 +138,13 @@ class Route:
     path_template: str = attrs.field()
     """The template string used for the path."""
 
-    major_params: frozenset[str] | None = attrs.field(hash=False, eq=False, repr=False)
+    major_params: frozenset[str] | None = attrs.field(repr=False, init=False, default=None)
     """The optional major parameter name combination for this endpoint."""
 
-    has_ratelimits: bool = attrs.field(hash=False, eq=False, repr=False)
+    ratelimit_hash: int | None = attrs.field(repr=False, default=None)
+    """The rate limit hash for this endpoint."""
+
+    has_ratelimits: bool = attrs.field(repr=False, default=True)
     """Whether this route is affected by ratelimits.
 
     This should be left as [`True`][] (the default) for most routes. This
@@ -149,13 +152,8 @@ class Route:
     be a bit more efficient with them.
     """
 
-    def __init__(self, method: str, path_template: str, *, has_ratelimits: bool = True) -> None:
-        self.method = method
-        self.path_template = path_template
-        self.has_ratelimits = has_ratelimits
-
-        self.major_params = None
-        match = PARAM_REGEX.findall(path_template)
+    def __attrs_post_init__(self) -> None:
+        match = PARAM_REGEX.findall(self.path_template)
         for major_param_combo in MAJOR_PARAM_COMBOS:
             if major_param_combo.issubset(match):
                 self.major_params = major_param_combo
@@ -185,6 +183,10 @@ class Route:
             compiled_path=self.path_template.format_map(data),
             major_param_hash=MAJOR_PARAM_COMBOS[self.major_params](data) if self.major_params else "-",
         )
+
+    @typing_extensions.override
+    def __hash__(self) -> int:
+        return self.ratelimit_hash or hash((self.method, self.path_template))
 
     @typing_extensions.override
     def __str__(self) -> str:
@@ -318,6 +320,10 @@ PATCH: typing.Final[str] = "PATCH"
 DELETE: typing.Final[str] = "DELETE"
 PUT: typing.Final[str] = "PUT"
 
+# PUT/DELETE /reactions/ are a special case because you pass arguments as part of the route,
+# so we need to join them
+_JOINED_REACTIONS_HASH = hash("PUT/DELETE REACTIONS")
+
 # Channels
 GET_CHANNEL: typing.Final[Route] = Route(GET, "/channels/{channel}")
 PATCH_CHANNEL: typing.Final[Route] = Route(PATCH, "/channels/{channel}")
@@ -378,10 +384,14 @@ POST_EXPIRE_POLL: typing.Final[Route] = Route(POST, "/channels/{channel}/polls/{
 
 # Reactions
 GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
-DELETE_ALL_REACTIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions")
-DELETE_REACTION_EMOJI: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}")
+DELETE_ALL_REACTIONS: typing.Final[Route] = Route(
+    DELETE, "/channels/{channel}/messages/{message}/reactions", ratelimit_hash=_JOINED_REACTIONS_HASH
+)
+DELETE_REACTION_EMOJI: typing.Final[Route] = Route(
+    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}", ratelimit_hash=_JOINED_REACTIONS_HASH
+)
 DELETE_REACTION_USER: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/{user}"
+    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/{user}", ratelimit_hash=_JOINED_REACTIONS_HASH
 )
 
 # Guilds
@@ -533,8 +543,12 @@ GET_MY_GUILDS: typing.Final[Route] = Route(GET, "/users/@me/guilds")
 GET_MY_USER: typing.Final[Route] = Route(GET, "/users/@me")
 PATCH_MY_USER: typing.Final[Route] = Route(PATCH, "/users/@me")
 
-PUT_MY_REACTION: typing.Final[Route] = Route(PUT, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me")
-DELETE_MY_REACTION: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me")
+PUT_MY_REACTION: typing.Final[Route] = Route(
+    PUT, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me", ratelimit_hash=_JOINED_REACTIONS_HASH
+)
+DELETE_MY_REACTION: typing.Final[Route] = Route(
+    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me", ratelimit_hash=_JOINED_REACTIONS_HASH
+)
 
 # Voice
 GET_VOICE_REGIONS: typing.Final[Route] = Route(GET, "/voice/regions")
