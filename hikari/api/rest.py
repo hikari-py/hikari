@@ -1516,36 +1516,29 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone
-            If provided, sanitation for `@everyone` mentions. If
-            [`hikari.undefined.UNDEFINED`][], then the previous setting is
-            not changed. If [`True`][], then `@everyone`/`@here` mentions
-            in the message content will show up as mentioning everyone that can
-            view the chat.
+            If provided, whether the message should parse @everyone/@here
+            mentions.
         mentions_reply
             If provided, whether to mention the author of the message
             that is being replied to.
 
-            This will not do anything if `message` is not a reply message.
+            This will not do anything if not being used with `reply`.
         user_mentions
-            If provided, sanitation for user mentions. If
-            [`hikari.undefined.UNDEFINED`][], then the previous setting is
-            not changed. If [`True`][], all valid user mentions will behave
-            as mentions. If [`False`][], all valid user mentions will not
-            behave as mentions.
-
-            You may alternatively pass a collection of
-            [`hikari.snowflakes.Snowflake`][] user IDs, or
-            [`hikari.users.PartialUser`][]-derived objects.
+            If provided, and [`True`][], all user mentions will be detected.
+            If not provided or [`False`][], all user mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
+            specific users.
         role_mentions
-            If provided, sanitation for role mentions. If
-            [`hikari.undefined.UNDEFINED`][], then the previous setting is
-            not changed. If [`True`][], all valid role mentions will behave
-            as mentions. If [`False`][], all valid role mentions will not
-            behave as mentions.
-
-            You may alternatively pass a collection of
-            [hikari.snowflakes.Snowflake] role IDs, or
-            [hikari.guilds.PartialRole]-derived objects.
+            If provided, and [`True`][], all role mentions will be detected.
+            If not provided or [`False`][], all role mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
+            specific roles.
         flags
             If provided, optional flags to set on the message. If
             [`hikari.undefined.UNDEFINED`][], then nothing is changed.
