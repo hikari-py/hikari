@@ -1194,7 +1194,7 @@ class TestRESTClientImpl:
         with mock.patch.object(mentions, "generate_allowed_mentions") as generate_allowed_mentions:
             body, form = rest_client._build_message_payload(edit=True)
 
-        assert body == {}
+        assert body == {"allowed_mentions": []}
         assert form is None
 
         generate_allowed_mentions.assert_not_called()
