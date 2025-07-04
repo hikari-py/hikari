@@ -2023,6 +2023,53 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return payload
 
+    def _deserialize_guild_onboarding_prompt(
+        self, payload: data_binding.JSONObject
+    ) -> guild_models.GuildOnboardingPrompt:
+        options: list[guild_models.GuildOnboardingPromptOption] = []
+        for option_payload in payload["options"]:
+            emoji = self.deserialize_emoji(option_payload["emoji"])
+            channel_ids: list[snowflakes.Snowflake] = [
+                snowflakes.Snowflake(channel_id) for channel_id in option_payload["channel_ids"]
+            ]
+            role_ids: list[snowflakes.Snowflake] = [
+                snowflakes.Snowflake(role_id) for role_id in option_payload["role_ids"]
+            ]
+            options.append(
+                guild_models.GuildOnboardingPromptOption(
+                    id=snowflakes.Snowflake(option_payload["id"]),
+                    channel_ids=channel_ids,
+                    role_ids=role_ids,
+                    title=option_payload["title"],
+                    description=option_payload.get("description"),
+                    emoji=emoji,
+                )
+            )
+
+        return guild_models.GuildOnboardingPrompt(
+            id=snowflakes.Snowflake(payload["id"]),
+            type=guild_models.GuildOnboardingPromptType(payload["type"]),
+            in_onboarding=payload["in_onboarding"],
+            required=payload["required"],
+            single_select=payload["single_select"],
+            title=payload["title"],
+            options=options,
+        )
+
+    @typing_extensions.override
+    def deserialize_guild_onboarding(self, payload: data_binding.JSONObject) -> guild_models.GuildOnboarding:
+        default_channel_ids = [
+            snowflakes.Snowflake(default_channel_id) for default_channel_id in payload["default_channel_ids"]
+        ]
+        prompts = [self._deserialize_guild_onboarding_prompt(prompt_payload) for prompt_payload in payload["prompts"]]
+        return guild_models.GuildOnboarding(
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            enabled=payload["enabled"],
+            mode=guild_models.GuildOnboardingMode(payload["mode"]),
+            default_channel_ids=default_channel_ids,
+            prompts=prompts,
+        )
+
     @typing_extensions.override
     def deserialize_member(
         self,
