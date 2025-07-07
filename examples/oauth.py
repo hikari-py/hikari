@@ -74,7 +74,9 @@ if __name__ == "__main__":
     server = web.Application()
     server.add_routes(route_table)
 
-    server.on_startup.append(start_discord_rest)
-    server.on_cleanup.append(stop_discord_rest)
+    # Temporary type ignores due to aiohttp having the wrong types.
+    # see: https://github.com/aio-libs/aiohttp/issues/11274
+    server.on_startup.append(start_discord_rest)  # type: ignore[arg-type]
+    server.on_cleanup.append(stop_discord_rest)  # type: ignore[arg-type]
 
     web.run_app(server, host=host, port=port)
