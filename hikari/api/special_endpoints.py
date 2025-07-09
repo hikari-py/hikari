@@ -203,6 +203,233 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
+class GuildOnboardingPromptOptionBuilder(abc.ABC):
+    """Interface of a guild onboarding prompt option used to edit guild onboardings."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_title(self, title: str, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def role_ids(self) -> snowflakes.SnowflakeishSequence[guilds.Role]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_role_ids(self, role_ids: snowflakes.SnowflakeishSequence[guilds.Role], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def channel_ids(self) -> snowflakes.SnowflakeishSequence[channels.GuildChannel]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_channel_ids(self, channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_description(self, title: undefined.UndefinedOr[str], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str]:
+        """Emoji which should appear on this option."""
+
+    @abc.abstractmethod
+    def set_emoji(self, emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str], /) -> Self:
+        """Set the emoji to display on this option.
+
+        Parameters
+        ----------
+        emoji
+            Object, ID or raw string of the emoji which should be displayed on
+            this option.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class GuildOnboardingPromptBuilder(abc.ABC):
+    """Interface of a guild onboarding prompt used to respond to edit guild onboardings.
+
+    !!! Note
+        You cannot set the type of the prompt. Discord will automatically do that
+        based on how many options the prompt has.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def id(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]]:
+        """The prompt's id."""
+
+    @abc.abstractmethod
+    def set_id(self, id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]], /) -> Self:
+        """Set this prompt's id.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_title(self, title: str, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def single_select(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_single_select(self, single_select: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def required(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def in_onboarding(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_in_onboarding(self, in_onboarding: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[GuildOnboardingPromptOptionBuilder]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_options(self, options: typing.Sequence[GuildOnboardingPromptOptionBuilder], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def add_option(
+        self,
+        title: str,
+        role_ids: undefined.UndefinedNoneOr[snowflakes.SnowflakeishSequence[guilds.Role]] = undefined.UNDEFINED,
+        channel_ids: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishSequence[channels.GuildChannel]
+        ] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
 class AutocompleteChoiceBuilder(abc.ABC):
     """Interface of an autocomplete choice used to respond to interactions."""
 
