@@ -226,6 +226,133 @@ class TypingIndicator(special_endpoints.TypingIndicator):
             pass
 
 
+@attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
+class ChannelRepositioner(special_endpoints.ChannelRepositioner):
+    """Standard implementation of [`hikari.api.special_endpoints.ChannelRepositioner`][]."""
+
+    _guild: snowflakes.SnowflakeishOr[guilds.PartialGuild] = attrs.field(repr=True, alias="guild")
+    _request_call: _RequestCallSig = attrs.field(alias="request_call", metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    _positions: list[special_endpoints.RepositionedChannel] = attrs.field(
+        repr=True, alias="positions", factory=list, init=False
+    )
+    _reason: undefined.UndefinedOr[str] = attrs.field(alias="reason", repr=True, default=undefined.UNDEFINED)
+
+    @property
+    @typing_extensions.override
+    def reason(self) -> undefined.UndefinedOr[str]:
+        return self._reason
+
+    @typing_extensions.override
+    def set_reason(self, reason: undefined.UndefinedOr[str]) -> Self:
+        self._reason = reason
+        return self
+
+    @property
+    @typing_extensions.override
+    def guild(self) -> snowflakes.SnowflakeishOr[guilds.PartialGuild]:
+        return self._guild
+
+    @typing_extensions.override
+    def set_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> Self:
+        self._guild = guild
+        return self
+
+    @property
+    @typing_extensions.override
+    def positions(self) -> typing.Sequence[special_endpoints.RepositionedChannel]:
+        return self._positions
+
+    @typing_extensions.override
+    def set_positions(self, positions: typing.Sequence[special_endpoints.RepositionedChannel]) -> Self:
+        self._positions = list(positions)
+        return self
+
+    @typing_extensions.override
+    def add_reposition_channel(
+        self,
+        position: int,
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        *,
+        lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+    ) -> Self:
+        self._positions.append(
+            RepositionedChannel(channel=channel, position=position, lock_permissions=lock_permissions, parent=parent)
+        )
+        return self
+
+    @typing_extensions.override
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
+        route = routes.PATCH_GUILD_CHANNELS.compile(guild=self._guild)
+
+        body = []
+        for channel in self._positions:
+            channel_payload = data_binding.JSONObjectBuilder()
+            channel_payload.put_snowflake("id", channel.channel)
+            channel_payload.put("position", channel.position)
+            channel_payload.put("lock_permissions", channel.lock_permissions)
+            channel_payload.put_snowflake("parent_id", channel.parent)
+            body.append(channel_payload)
+
+        return self._request_call(route, json=body, reason=self._reason).__await__()
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
+class RepositionedChannel(special_endpoints.RepositionedChannel):
+    """Standard implementation of [`hikari.api.special_endpoints.RepositionedChannel`][]."""
+
+    _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True, alias="channel")
+    _position: int = attrs.field(repr=True, alias="position")
+    _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(
+        repr=True, default=undefined.UNDEFINED, alias="lock_permissions"
+    )
+    _parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
+        repr=True, default=undefined.UNDEFINED, alias="parent"
+    )
+
+    @property
+    @typing_extensions.override
+    def channel(self) -> snowflakes.SnowflakeishOr[channels.GuildChannel]:
+        return self._channel
+
+    @typing_extensions.override
+    def set_channel(self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]) -> Self:
+        self._channel = channel
+        return self
+
+    @property
+    @typing_extensions.override
+    def position(self) -> int:
+        return self._position
+
+    @typing_extensions.override
+    def set_position(self, position: int) -> Self:
+        self._position = position
+        return self
+
+    @property
+    @typing_extensions.override
+    def lock_permissions(self) -> undefined.UndefinedOr[bool]:
+        return self._lock_permissions
+
+    @typing_extensions.override
+    def set_lock_permissions(self, lock: undefined.UndefinedOr[bool]) -> Self:
+        self._lock_permissions = lock
+        return self
+
+    @property
+    @typing_extensions.override
+    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+        return self._parent
+
+    @typing_extensions.override
+    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+        self._parent = parent
+        return self
+
+
 # We use an explicit forward reference for this, since this breaks potential
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).

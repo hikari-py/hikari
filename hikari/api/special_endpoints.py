@@ -131,6 +131,221 @@ class TypingIndicator(abc.ABC):
     ) -> None: ...
 
 
+class ChannelRepositioner(abc.ABC):
+    """Helper class used for repositioning channels in a guild.
+
+    This is an object that should be awaited to trigger the repositioning.
+    Only channels to be modified are required.
+
+    !!! note
+        This class should only be initialized by [`hikari.api.rest.RESTClient.reposition_channels`][].
+
+    Examples
+    --------
+    Basic usage:
+    ```py
+    channel_repositioner = rest.reposition_channels(
+        guild=GUILD_ID, reason="The reason."
+    )
+    channel_repositioner.add_reposition_channel(position=2, channel=CHANNEL_ID)
+
+    await channel_repositioner
+    ```
+    Change parent:
+    ```py
+    channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
+    channel_repositioner.add_reposition_channel(
+        position=1, channel=CHANNEL_ID, lock_permissions=True, parent=CATEGORY_ID
+    )
+    # when lock_permissions is set to True, the channels permissions will be synced
+    # with the new parent.
+
+    await channel_repositioner
+    ```
+
+    Raises
+    ------
+    hikari.errors.UnauthorizedError
+        If you are unauthorized to make the request (invalid/missing token).
+    hikari.errors.ForbiddenError
+        If you cannot access the channel.
+    hikari.errors.NotFoundError
+        If the channel is not found.
+    hikari.errors.RateLimitTooLongError
+        Raised in the event that a rate limit occurs that is
+        longer than `max_rate_limit` when making a request.
+    hikari.errors.InternalServerError
+        If an internal error occurs on Discord while handling the request.
+
+
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def guild(self) -> snowflakes.SnowflakeishOr[guilds.PartialGuild]:
+        """The guild."""
+
+    @abc.abstractmethod
+    def set_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> Self:
+        """Set the guild.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @property
+    @abc.abstractmethod
+    def reason(self) -> undefined.UndefinedOr[str]:
+        """If provided, the reason that will be recorded in the audit logs.
+
+        Maximum of 512 characters.
+        """
+
+    @abc.abstractmethod
+    def set_reason(self, reason: undefined.UndefinedOr[str]) -> Self:
+        """Set the reason.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @property
+    @abc.abstractmethod
+    def positions(self) -> typing.Sequence[RepositionedChannel]:
+        """The positions."""
+
+    @abc.abstractmethod
+    def set_positions(self, positions: typing.Sequence[RepositionedChannel]) -> Self:
+        """Set the positions.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @abc.abstractmethod
+    def add_reposition_channel(
+        self,
+        position: int,
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        *,
+        lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a channel that should be repositioned to the channel repositioner.
+
+        Parameters
+        ----------
+        position
+            The new position for the channel.
+        channel
+            The channel that should be repositioned. This can either be a
+            `[hikari.channels.GuildChannel`][] or the id of the channel.
+        lock_permissions
+            Whether the channel should sync permissions to the new parent channel or not.
+            When set to `False` or `UNDEFINED` the channel will not sync its permissions
+            to the new parent. Only when set to `True` the channel will sync its
+            permissions to the new parent.
+        parent
+            The id of the parent where this channel should be repositioned under.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @abc.abstractmethod
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
+        """Reposition the channels in a guild.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you cannot access the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+
+class RepositionedChannel(abc.ABC):
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def channel(self) -> snowflakes.SnowflakeishOr[channels.GuildChannel]:
+        """Channel property."""
+
+    @abc.abstractmethod
+    def set_channel(self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]) -> Self:
+        """Set the channel.
+
+        Returns
+        -------
+        RepositionedChannel
+            The reposition channel helper.
+        """
+
+    @property
+    @abc.abstractmethod
+    def position(self) -> int:
+        """Position property."""
+
+    @abc.abstractmethod
+    def set_position(self, position: int) -> Self:
+        """Set the position.
+
+        Returns
+        -------
+        RepositionedChannel
+            The reposition channel helper.
+        """
+
+    @property
+    @abc.abstractmethod
+    def lock_permissions(self) -> undefined.UndefinedOr[bool]:
+        """Lock permissions property."""
+
+    @abc.abstractmethod
+    def set_lock_permissions(self, lock: undefined.UndefinedOr[bool]) -> Self:
+        """Set the lock.
+
+        Returns
+        -------
+        RepositionedChannel
+            The reposition channel helper.
+        """
+
+    @property
+    @abc.abstractmethod
+    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+        """Parent property."""
+
+    @abc.abstractmethod
+    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+        """Set the parent.
+
+        Returns
+        -------
+        RepositionedChannel
+            The reposition channel helper.
+        """
+
+
 class InteractionResponseBuilder(abc.ABC):
     """Base class for all interaction response builders used in the interaction server."""
 
