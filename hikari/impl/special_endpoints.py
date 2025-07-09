@@ -301,7 +301,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=False, weakref_slot=False)
 class RepositionedChannel(special_endpoints.RepositionedChannel):
-    """Standard implementation of [`hikari.api.special_endpoints.RepositionChannelHelper`][]."""
+    """Standard implementation of [`hikari.api.special_endpoints.RepositionedChannel`][]."""
 
     _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True, alias="channel")
     _position: int = attrs.field(repr=True, alias="position")

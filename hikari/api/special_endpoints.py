@@ -236,8 +236,8 @@ class ChannelRepositioner(abc.ABC):
         position: int,
         channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
         *,
-        lock_permissions: bool,
-        parent: snowflakes.SnowflakeishOr[channels.GuildCategory],
+        lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
     ) -> Self:
         """Add a channel that should be repositioned to the channel repositioner.
 

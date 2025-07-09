@@ -5711,8 +5711,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to reposition the channels in. This may be the
             object or the ID of an existing guild.
         positions
-            A mapping of of the object or the ID of an existing channel to
-            the new position, relative to their parent category, if any.
+            A mapping of the new position to the object or the ID of an existing channel,
+            relative to their parent category, if any.
 
             !!! note
                 Instead of using the `positions` parameter, you should make
