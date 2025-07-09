@@ -25,7 +25,6 @@ import typing
 import mock
 import pytest
 
-import hikari
 from hikari import applications
 from hikari import auto_mod
 from hikari import channels

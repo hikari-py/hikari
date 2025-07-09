@@ -291,7 +291,13 @@ class GuildOnboardingPromptOptionBuilder(abc.ABC):
 
     @abc.abstractmethod
     def build(self) -> typing.MutableMapping[str, typing.Any]:
-        """Build it goddamit."""
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
 
 
 class GuildOnboardingPromptBuilder(abc.ABC):
@@ -415,7 +421,13 @@ class GuildOnboardingPromptBuilder(abc.ABC):
 
     @abc.abstractmethod
     def build(self) -> typing.MutableMapping[str, typing.Any]:
-        """Build it goddamit."""
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
 
 
 class AutocompleteChoiceBuilder(abc.ABC):
