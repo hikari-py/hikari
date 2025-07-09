@@ -1530,14 +1530,12 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("embeds", serialized_embeds)
         body.put("components", serialized_components)
         body.put("poll", poll, conversion=lambda p: p.build())
+        body.put(
+            "allowed_mentions",
+            mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
+        )
 
         body.put_snowflake_array("sticker_ids", (sticker,) if sticker else stickers)
-
-        if not edit or not undefined.all_undefined(mentions_everyone, mentions_reply, user_mentions, role_mentions):
-            body.put(
-                "allowed_mentions",
-                mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
-            )
 
         form_builder: data_binding.URLEncodedFormBuilder | None = None
         if resources or final_attachments:

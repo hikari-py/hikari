@@ -416,13 +416,18 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         # We want to update the slide period only, and only if:
         #   1. The bucket is out of sync (ie, we reset the full window)
         #   2. We receive the first usage of the bucket, which will always have the most accurate slide period
-        #   3. The slide periods differ too much. This is helpful if we diverged too much from the real one
-        #      due to network latency, of if the bucket randomly changed
-        #      Note: 0.5 and 0.7 are chosen arbitrarily after some testing
-        if self._out_of_sync or remaining == limit - 1 or not math.isclose(self.period, slide_period, abs_tol=0.5):
-            if not math.isclose(self.period, slide_period, abs_tol=0.7):
+        #   3. The slide period increased
+        #   4. The slide period greatly changed
+        #      Note: 0.3 and 0.5 are chosen arbitrarily after some testing
+        if (
+            self._out_of_sync
+            or remaining == limit - 1
+            or slide_period > self.period
+            or not math.isclose(self.period, slide_period, abs_tol=0.3)
+        ):
+            if not math.isclose(self.period, slide_period, abs_tol=0.5):
                 _LOGGER.warning(
-                    "bucket '%s' greatly increased its slide period (%s -> %s). "
+                    "bucket '%s' greatly changed its slide period (%s -> %s). "
                     "It is possible that you will see a small increase in 429s",
                     self.name,
                     self.period,

@@ -81,11 +81,11 @@ nox = ["nox[uv]==2025.5.1"]
 
 audit = ["uv-secure"]
 codespell = ["codespell==2.4.1"]
-coverage = ["coverage[toml]==7.9.1"]
+coverage = ["coverage[toml]==7.9.2"]
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
-    "mkdocs-material[imaging]==9.6.14",
+    "mkdocs-material==9.6.15",
     # Docstring parsing for API reference
     "mkdocstrings[python]==0.29.1",
     "griffe-inherited-docstrings==1.1.1",
@@ -101,7 +101,7 @@ mkdocs = [
 ]
 
 mypy = ["mypy[faster-cache]==1.16.1", { include-group = "types" }]
-pyright = ["pyright==1.1.402", { include-group = "types" }]
+pyright = ["pyright==1.1.403", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==8.4.1",
