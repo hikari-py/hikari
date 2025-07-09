@@ -5422,6 +5422,14 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="because why not")
 
+    async def test_reposition_channels_no_channels(self, rest_client):
+        expected_route = routes.PATCH_GUILD_CHANNELS.compile(guild=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.reposition_channels(StubModel(123), reason="because why not")
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=[], reason="because why not")
+
     async def test_fetch_member(self, rest_client):
         member = StubModel(789)
         expected_route = routes.GET_GUILD_MEMBER.compile(guild=123, user=456)

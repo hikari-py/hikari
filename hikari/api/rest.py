@@ -5698,7 +5698,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]] = {},
+        positions: undefined.UndefinedOr[
+            typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]]
+        ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> special_endpoints.ChannelRepositioner:
         """Return a [`hikari.api.special_endpoints.ChannelRepositioner`][], used to reposition channels in a guild.
