@@ -6962,6 +6962,87 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_guild_onboarding(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.GuildOnboarding:
+        """Fetch a guild's onboarding object.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to fetch the onboarding object for.
+
+        Returns
+        -------
+        hikari.guilds.GuildOnboarding
+            The requested onboarding object.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_guild_onboarding(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        default_channel_ids: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.GuildChannel]
+        ] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mode: undefined.UndefinedOr[guilds.GuildOnboardingMode] = undefined.UNDEFINED,
+        prompts: undefined.UndefinedOr[
+            typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.GuildOnboarding:
+        """Edit a guilds onboarding flow.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to fetch the onboarding object for.
+        default_channel_ids
+            Sequence of channel ids that a user get opted into by default.
+        enabled
+            If the onboarding flow should be enabled in this guild.
+        mode
+            The onboarding mode for the guild. For further information look at [`hikari.guilds.GuildOnboardingMode`][].
+        prompts
+            The prompts of the onboarding flow.
+            For further information look at [`hikari.api.special_endpoints.GuildOnboardingPromptBuilder`][].
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.GuildOnboarding
+            The requested onboarding object.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def fetch_vanity_url(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> invites.VanityURL:
         """Fetch a guild's vanity url.
 

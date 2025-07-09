@@ -790,6 +790,203 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
 
 
 @attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
+class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPromptOptionBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.GuildOnboardingPromptOptionBuilder`][]."""
+
+    _title: str = attrs.field(alias="title")
+    _role_ids: snowflakes.SnowflakeishSequence[guilds.Role] = attrs.field(alias="role_ids", kw_only=True, factory=tuple)
+    _channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel] = attrs.field(
+        alias="channel_ids", kw_only=True, factory=tuple
+    )
+    _description: undefined.UndefinedOr[str] = attrs.field(
+        alias="description", kw_only=True, default=undefined.UNDEFINED
+    )
+    _emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str] = attrs.field(
+        alias="emoji", default=undefined.UNDEFINED, kw_only=True
+    )
+    _emoji_id: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
+    _emoji_name: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
+
+    def __attrs_post_init__(self) -> None:
+        self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
+
+    @property
+    @typing_extensions.override
+    def title(self) -> str:
+        return self._title
+
+    @typing_extensions.override
+    def set_title(self, title: str, /) -> Self:
+        self._title = title
+        return self
+
+    @property
+    @typing_extensions.override
+    def role_ids(self) -> snowflakes.SnowflakeishSequence[guilds.Role]:
+        return self._role_ids
+
+    @typing_extensions.override
+    def set_role_ids(self, role_ids: snowflakes.SnowflakeishSequence[guilds.Role], /) -> Self:
+        self._role_ids = role_ids
+        return self
+
+    @typing_extensions.override
+    def set_channel_ids(self, channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel], /) -> Self:
+        self._channel_ids = channel_ids
+        return self
+
+    @property
+    @typing_extensions.override
+    def channel_ids(self) -> snowflakes.SnowflakeishSequence[channels.GuildChannel]:
+        return self._channel_ids
+
+    @property
+    @typing_extensions.override
+    def description(self) -> undefined.UndefinedOr[str]:
+        return self._description
+
+    @typing_extensions.override
+    def set_description(self, description: undefined.UndefinedOr[str], /) -> Self:
+        self._description = description
+        return self
+
+    @property
+    @typing_extensions.override
+    def emoji(self) -> undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str]:
+        return self._emoji
+
+    @typing_extensions.override
+    def set_emoji(self, emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str], /) -> Self:
+        self._emoji_id, self._emoji_name = _build_emoji(emoji)
+        self._emoji = emoji
+        return self
+
+    @typing_extensions.override
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        body = data_binding.JSONObjectBuilder()
+        body.put("title", self._title)
+        body.put("description", self._description)
+        body.put_snowflake_array("channel_ids", self._channel_ids)
+        body.put_snowflake_array("role_ids", self._role_ids)
+
+        body.put("emoji_name", self._emoji_name)
+        body.put("emoji_id", self._emoji_id)
+
+        return body
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
+class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.GuildOnboardingPromptBuilder`][]."""
+
+    _title: str = attrs.field(alias="title")
+    _single_select: bool = attrs.field(alias="single_select")
+    _required: bool = attrs.field(alias="required")
+    _in_onboarding: bool = attrs.field(alias="in_onboarding")
+    _options: list[special_endpoints.GuildOnboardingPromptOptionBuilder] = attrs.field(alias="options", factory=list)
+    _id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]] = attrs.field(
+        alias="id",
+        default=undefined.UNDEFINED,
+        init=False,  # We do not need to allow the user to specify an id here. Discord ignores the id anyway.
+    )
+
+    @property
+    @typing_extensions.override
+    def id(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]]:
+        return self._id
+
+    @typing_extensions.override
+    def set_id(self, id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]], /) -> Self:
+        self._id = id
+        return self
+
+    @property
+    @typing_extensions.override
+    def title(self) -> str:
+        return self._title
+
+    @typing_extensions.override
+    def set_title(self, title: str, /) -> Self:
+        self._title = title
+        return self
+
+    @property
+    @typing_extensions.override
+    def single_select(self) -> bool:
+        return self._single_select
+
+    @typing_extensions.override
+    def set_single_select(self, single_select: bool, /) -> Self:
+        self._single_select = single_select
+        return self
+
+    @property
+    @typing_extensions.override
+    def required(self) -> bool:
+        return self._required
+
+    @typing_extensions.override
+    def set_required(self, required: bool, /) -> Self:
+        self._required = required
+        return self
+
+    @property
+    @typing_extensions.override
+    def in_onboarding(self) -> bool:
+        return self._in_onboarding
+
+    @typing_extensions.override
+    def set_in_onboarding(self, in_onboarding: bool, /) -> Self:
+        self._in_onboarding = in_onboarding
+        return self
+
+    @property
+    @typing_extensions.override
+    def options(self) -> typing.Sequence[special_endpoints.GuildOnboardingPromptOptionBuilder]:
+        return self._options
+
+    @typing_extensions.override
+    def set_options(self, options: typing.Sequence[special_endpoints.GuildOnboardingPromptOptionBuilder], /) -> Self:
+        self._options = list(options)
+        return self
+
+    @typing_extensions.override
+    def add_option(
+        self,
+        title: str,
+        role_ids: undefined.UndefinedNoneOr[snowflakes.SnowflakeishSequence[guilds.Role]] = undefined.UNDEFINED,
+        channel_ids: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishSequence[channels.GuildChannel]
+        ] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedNoneOr[snowflakes.Snowflakeish | emojis.Emoji | str] = undefined.UNDEFINED,
+    ) -> Self:
+        self._options.append(
+            GuildOnboardingPromptOptionBuilder(
+                title=title,
+                role_ids=role_ids or [],
+                channel_ids=channel_ids or [],
+                description=description or undefined.UNDEFINED,
+                emoji=emoji or undefined.UNDEFINED,
+            )
+        )
+        return self
+
+    @typing_extensions.override
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        body = data_binding.JSONObjectBuilder()
+        body.put_array("options", self._options, conversion=lambda option: option.build())
+        body.put("title", self._title)
+        body.put("single_select", self._single_select)
+        body.put("required", self._required)
+        body.put("in_onboarding", self._in_onboarding)
+        body.put_snowflake("id", self._id)
+        return body
+
+
+@attrs_extensions.with_copy
 @attrs.define(weakref_slot=False)
 class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.InteractionAutocompleteBuilder`][]."""
