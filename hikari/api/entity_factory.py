@@ -1648,7 +1648,7 @@ class EntityFactory(abc.ABC):
 
         Parameters
         ----------
-        paload
+        payload
             The JSON payload to deserialize.
 
         Returns

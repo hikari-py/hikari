@@ -1194,10 +1194,12 @@ class TestRESTClientImpl:
         with mock.patch.object(mentions, "generate_allowed_mentions") as generate_allowed_mentions:
             body, form = rest_client._build_message_payload(edit=True)
 
-        assert body == {}
+        assert body == {"allowed_mentions": generate_allowed_mentions.return_value}
         assert form is None
 
-        generate_allowed_mentions.assert_not_called()
+        generate_allowed_mentions.assert_called_once_with(
+            undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
+        )
 
     def test__build_message_payload_embed_content_syntactic_sugar(self, rest_client):
         embed = mock.Mock(embeds.Embed)
