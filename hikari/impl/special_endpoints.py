@@ -1988,7 +1988,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         return self.add_component(LinkButtonBuilder(id=id, url=url, label=label, emoji=emoji, is_disabled=is_disabled))
 
     @typing_extensions.override
-    def add_premium_button(self, sku_id: id, /, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+    def add_premium_button(self, sku_id: int, /, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
         return self.add_component(PremiumButtonBuilder(id=id, sku_id=sku_id))
 
     @typing_extensions.override
