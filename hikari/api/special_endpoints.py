@@ -631,23 +631,6 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
-class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
-    """Interface of an interaction premium required response builder used within REST servers.
-
-    This can be returned by the listener registered to
-    `hikari.api.interaction_server.InteractionServer` as a response to the interaction
-    create.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    @typing_extensions.override
-    def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
-        """Type of this response."""
-
-
 class CommandBuilder(abc.ABC):
     """Interface of a command builder used when bulk creating commands over REST."""
 

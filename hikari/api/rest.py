@@ -7771,16 +7771,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def interaction_premium_required_builder(self) -> special_endpoints.InteractionPremiumRequiredBuilder:
-        """Create a builder for a premium required interaction response.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.InteractionPremiumRequiredBuilder
-            The interaction premium required response builder object.
-        """
-
-    @abc.abstractmethod
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
@@ -8305,22 +8295,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         ValueError
             If both `component` and `components` are specified or if none are specified.
-        """
-
-    @abc.abstractmethod
-    async def create_premium_required_response(
-        self, interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction], token: str
-    ) -> None:
-        """Create an ephemeral response indicating that the user needs premium features.
-
-        This is only available to monetized applications.
-
-        Parameters
-        ----------
-        interaction
-            Object or ID of the interaction this response is for.
-        token
-            The interaction's token.
         """
 
     @abc.abstractmethod

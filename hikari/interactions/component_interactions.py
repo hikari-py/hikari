@@ -83,9 +83,7 @@ The following types are valid for this:
 
 @attrs.define(unsafe_hash=True, weakref_slot=False)
 class ComponentInteraction(
-    base_interactions.MessageResponseMixin[ComponentResponseTypesT],
-    base_interactions.ModalResponseMixin,
-    base_interactions.PremiumResponseMixin,
+    base_interactions.MessageResponseMixin[ComponentResponseTypesT], base_interactions.ModalResponseMixin
 ):
     """Represents a component interaction on Discord."""
 
