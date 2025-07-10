@@ -1073,23 +1073,6 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
-class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
-    """Interface of an interaction premium required response builder used within REST servers.
-
-    This can be returned by the listener registered to
-    `hikari.api.interaction_server.InteractionServer` as a response to the interaction
-    create.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    @typing_extensions.override
-    def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
-        """Type of this response."""
-
-
 class CommandBuilder(abc.ABC):
     """Interface of a command builder used when bulk creating commands over REST."""
 
@@ -1575,6 +1558,17 @@ class LinkButtonBuilder(ButtonBuilder, abc.ABC):
     @abc.abstractmethod
     def url(self) -> str:
         """URL this button should link to when pressed."""
+
+
+class PremiumButtonBuilder(ButtonBuilder, abc.ABC):
+    """Builder interface for premium buttons."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def sku_id(self) -> int:
+        """The SKU ID this button should link to when pressed."""
 
 
 class InteractiveButtonBuilder(ButtonBuilder, abc.ABC):
@@ -2205,6 +2199,25 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ActionRowBuilder
+            The action row builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_premium_button(self, sku_id: int, /, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a premium button component to this action row builder.
+
+        Parameters
+        ----------
+        sku_id
+            The SKU ID that this button will link to.
         id
             The ID to give to the button.
 

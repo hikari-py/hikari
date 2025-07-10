@@ -172,7 +172,6 @@ class CommandInteraction(
     BaseCommandInteraction,
     base_interactions.MessageResponseMixin[CommandResponseTypesT],
     base_interactions.ModalResponseMixin,
-    base_interactions.PremiumResponseMixin,
 ):
     """Represents a command interaction on Discord."""
 

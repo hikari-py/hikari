@@ -53,6 +53,7 @@ __all__: typing.Sequence[str] = (
     "ModalActionRowBuilder",
     "PollAnswerBuilder",
     "PollBuilder",
+    "PremiumButtonBuilder",
     "SectionComponentBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
@@ -1368,23 +1369,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
 
 @attrs.define(kw_only=False, weakref_slot=False)
-class InteractionPremiumRequiredBuilder(special_endpoints.InteractionPremiumRequiredBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.InteractionPremiumRequiredBuilder`."""
-
-    @property
-    @typing_extensions.override
-    def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
-        return base_interactions.ResponseType.PREMIUM_REQUIRED
-
-    @typing_extensions.override
-    def build(
-        self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
-        return {"type": self.type}, ()
-
-
-@attrs.define(kw_only=False, weakref_slot=False)
-class CommandBuilder(special_endpoints.CommandBuilder):
+class CommandBuilder(special_endpoints.CommandBuilder, abc.ABC):
     """Standard implementation of [`hikari.api.special_endpoints.CommandBuilder`][]."""
 
     _name: str = attrs.field(alias="name")
@@ -1749,6 +1734,34 @@ class LinkButtonBuilder(_ButtonBuilder, special_endpoints.LinkButtonBuilder):
         data, attachments = super().build()
 
         data["url"] = self._url
+
+        return data, attachments
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PremiumButtonBuilder(_ButtonBuilder, special_endpoints.PremiumButtonBuilder):
+    """Builder class for premium buttons."""
+
+    _custom_id: undefined.UndefinedType = attrs.field(init=False, default=undefined.UNDEFINED)
+    _sku_id: int = attrs.field(alias="sku_id")
+
+    @property
+    @typing_extensions.override
+    def sku_id(self) -> int:
+        return self._sku_id
+
+    @property
+    @typing_extensions.override
+    def style(self) -> typing.Literal[component_models.ButtonStyle.PREMIUM]:
+        return component_models.ButtonStyle.PREMIUM
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        data, attachments = super().build()
+
+        data["sku_id"] = self._sku_id
 
         return data, attachments
 
@@ -2297,6 +2310,10 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(LinkButtonBuilder(id=id, url=url, label=label, emoji=emoji, is_disabled=is_disabled))
+
+    @typing_extensions.override
+    def add_premium_button(self, sku_id: int, /, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        return self.add_component(PremiumButtonBuilder(id=id, sku_id=sku_id))
 
     @typing_extensions.override
     def add_select_menu(

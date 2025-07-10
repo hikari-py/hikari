@@ -4471,10 +4471,6 @@ class RESTClientImpl(rest_api.RESTClient):
         return special_endpoints_impl.InteractionModalBuilder(title=title, custom_id=custom_id)
 
     @typing_extensions.override
-    def interaction_premium_required_builder(self) -> special_endpoints.InteractionPremiumRequiredBuilder:
-        return special_endpoints_impl.InteractionPremiumRequiredBuilder()
-
-    @typing_extensions.override
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
@@ -4697,18 +4693,6 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing_extensions.override
     def build_modal_action_row(self) -> special_endpoints.ModalActionRowBuilder:
         return special_endpoints_impl.ModalActionRowBuilder()
-
-    @typing_extensions.override
-    async def create_premium_required_response(
-        self, interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction], token: str
-    ) -> None:
-        route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
-
-        body = data_binding.JSONObjectBuilder()
-        body.put("type", base_interactions.ResponseType.PREMIUM_REQUIRED)
-        body.put("data", {})
-
-        await self._request(route, json=body, auth=None)
 
     @typing_extensions.override
     async def fetch_scheduled_event(
