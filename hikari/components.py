@@ -209,6 +209,14 @@ class ButtonStyle(int, enums.Enum):
         interaction and custom_id shouldn't be included for this style.
     """
 
+    PREMIUM = 6
+    """A .
+
+    !!! warning
+        Unlike the other button styles, clicking this one will not trigger an
+        interaction and custom_id shouldn't be included for this style.
+    """
+
 
 @typing.final
 class TextInputStyle(int, enums.Enum):

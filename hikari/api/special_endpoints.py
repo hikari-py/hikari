@@ -1118,6 +1118,17 @@ class LinkButtonBuilder(ButtonBuilder, abc.ABC):
         """URL this button should link to when pressed."""
 
 
+class PremiumButtonBuilder(ButtonBuilder, abc.ABC):
+    """Builder interface for premium buttons."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def sku_id(self) -> int:
+        """The SKU ID this button should link to when pressed."""
+
+
 class InteractiveButtonBuilder(ButtonBuilder, abc.ABC):
     """Builder interface for interactive buttons."""
 
@@ -1746,6 +1757,25 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ActionRowBuilder
+            The action row builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_premium_button(self, sku_id: int, /, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a premium button component to this action row builder.
+
+        Parameters
+        ----------
+        sku_id
+            The SKU ID that this button will link to.
         id
             The ID to give to the button.
 

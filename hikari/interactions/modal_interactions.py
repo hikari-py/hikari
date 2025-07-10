@@ -65,9 +65,7 @@ The following types are valid for this:
 
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class ModalInteraction(
-    base_interactions.MessageResponseMixin[ModalResponseTypesT]
-):
+class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypesT]):
     """Represents a modal interaction on Discord."""
 
     custom_id: str = attrs.field(eq=False, hash=False, repr=True)
