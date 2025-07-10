@@ -210,7 +210,7 @@ class ButtonStyle(int, enums.Enum):
     """
 
     PREMIUM = 6
-    """A .
+    """A button that will link to a specific SKU item.
 
     !!! warning
         Unlike the other button styles, clicking this one will not trigger an
