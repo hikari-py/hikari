@@ -87,7 +87,7 @@ mkdocs = [
     # Mkdocs Material
     "mkdocs-material==9.6.15",
     # Docstring parsing for API reference
-    "mkdocstrings[python]==0.29.1",
+    "mkdocstrings[python]==0.30.0",
     "griffe-inherited-docstrings==1.1.1",
     # Generate API reference pages dynamically
     "mkdocs-gen-files==0.5.0",
