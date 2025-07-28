@@ -273,7 +273,7 @@ class PrimaryGuild:
             raise ValueError(error)
 
         return routes.CDN_PRIMARY_GUILD_BADGE.compile_to_file(
-            urls.MEDIA_PROXY_URL,
+            urls.CDN_URL,
             guild_id=self.identity_guild_id,
             hash=self.badge_hash,
             size=size,
