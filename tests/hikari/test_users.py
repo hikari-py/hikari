@@ -390,6 +390,7 @@ class TestPartialUserImpl:
             is_bot=False,
             is_system=False,
             flags=users.UserFlag.DISCORD_EMPLOYEE,
+            primary_guild=None,
         )
 
     def test_str_operator(self, obj):
@@ -440,6 +441,7 @@ class TestOwnUser:
             is_verified=False,
             email="someone@example.com",
             premium_type=None,
+            primary_guild=None,
         )
 
     async def test_fetch_self(self, obj):

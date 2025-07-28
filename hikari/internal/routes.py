@@ -659,6 +659,9 @@ CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}"
 CDN_AVATAR_DECORATION: typing.Final[CDNRoute] = CDNRoute(
     "/avatar-decoration-presets/{hash}", {PNG, *JPEG_JPG, WEBP, APNG}
 )
+CDN_PRIMARY_GUILD_BADGE: typing.Final[CDNRoute] = CDNRoute(
+    "guild-tag-badges/{guild_id}/{hash}.png", {PNG, *JPEG_JPG, WEBP}
+)
 CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{style}", {PNG})
 CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
 CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})

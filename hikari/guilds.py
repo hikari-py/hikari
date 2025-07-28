@@ -516,6 +516,12 @@ class Member(users.User):
 
     @property
     @typing_extensions.override
+    def primary_guild(self) -> users.PrimaryGuild | None:
+        """The primary guild of the member."""
+        return self.user.primary_guild
+
+    @property
+    @typing_extensions.override
     def avatar_decoration(self) -> users.AvatarDecoration | None:
         return self.user.avatar_decoration
 
