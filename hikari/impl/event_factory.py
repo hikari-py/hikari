@@ -515,6 +515,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 username=user_payload.get("username", undefined.UNDEFINED),
                 global_name=user_payload.get("global_name", undefined.UNDEFINED),
                 avatar_decoration=None,
+                primary_guild=user_payload.get("primary_guild", undefined.UNDEFINED),
                 avatar_hash=user_payload.get("avatar", undefined.UNDEFINED),
                 banner_hash=user_payload.get("banner", undefined.UNDEFINED),
                 accent_color=accent_color,
