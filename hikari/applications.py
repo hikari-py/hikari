@@ -465,6 +465,11 @@ class TeamMember(users.User):
     def global_name(self) -> str | None:
         return self.user.global_name
 
+    @property
+    @typing_extensions.override
+    def primary_guild(self) -> users.PrimaryGuild | None:
+        return self.user.primary_guild
+
     @typing_extensions.override
     def __str__(self) -> str:
         return str(self.user)
