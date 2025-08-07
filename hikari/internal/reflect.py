@@ -88,7 +88,7 @@ def profiled(call: typing.Callable[..., _T]) -> typing.Callable[..., _T]:  # pra
         internal detail and will likely be removed without prior warning in
         the future. You have been warned!
     """
-    import cProfile
+    import cProfile  # noqa: PLC0415
 
     if inspect.iscoroutinefunction(call):
         msg = "cannot profile async calls"

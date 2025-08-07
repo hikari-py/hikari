@@ -698,7 +698,8 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         return All(conditions)
 
-    def _complete(self) -> typing.NoReturn:
+    @staticmethod
+    def _complete() -> typing.NoReturn:
         msg = "No more items exist in this iterator. It has been exhausted."
         raise StopAsyncIteration(msg) from None
 
@@ -787,7 +788,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     @abc.abstractmethod
     async def _next_chunk(self) -> typing.Generator[ValueT, None, None] | None: ...
 
-    @typing_extensions.override
+    @typing_extensions.override  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
     async def __anext__(self) -> ValueT:
         # This sneaky snippet of code let's us use generators rather than lists.
         # This is important, as we can use this to make generators that
@@ -802,7 +803,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
             if self._buffer is not None:
                 return next(self._buffer)
 
-        self._complete()  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
+        self._complete()
 
 
 class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
@@ -906,13 +907,13 @@ class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._iterator = iterator
         self._predicate = predicate
 
-    @typing_extensions.override
+    @typing_extensions.override  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
     async def __anext__(self) -> ValueT:
         async for item in self._iterator:
             if self._predicate(item):
                 return item
 
-        self._complete()  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
+        self._complete()
 
 
 class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[ValueT]]):
@@ -922,7 +923,7 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         self._iterator = iterator
         self._chunk_size = chunk_size
 
-    @typing_extensions.override
+    @typing_extensions.override  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
     async def __anext__(self) -> typing.Sequence[ValueT]:
         chunk: list[ValueT] = []
 
@@ -935,7 +936,7 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         if chunk:
             return chunk
 
-        self._complete()  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
+        self._complete()
 
 
 class _ReversedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
@@ -978,14 +979,14 @@ class _TakeWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._iterator = iterator
         self._condition = condition
 
-    @typing_extensions.override
+    @typing_extensions.override  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
     async def __anext__(self) -> ValueT:
         item = await self._iterator.__anext__()
 
         if self._condition(item):
             return item
 
-        self._complete()  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
+        self._complete()
 
 
 class _DropWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
