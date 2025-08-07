@@ -235,7 +235,7 @@ class _GatewayTransport:
         reason = f"{message.data!r} [extra={message.extra!r}, type={message.type}]"
         raise errors.GatewayTransportError(reason) from self._ws.exception()
 
-    async def _receive_and_check_text(self) -> bytes:  # noqa: RET503 - ruff doesnt understand `typing.NoReturn`
+    async def _receive_and_check_text(self) -> bytes:  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.TEXT:
@@ -244,7 +244,7 @@ class _GatewayTransport:
 
         self._handle_other_message(message)
 
-    async def _receive_and_check_zlib(self) -> bytes:  # noqa: RET503 - ruff doesnt understand `typing.NoReturn`
+    async def _receive_and_check_zlib(self) -> bytes:  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.BINARY:
