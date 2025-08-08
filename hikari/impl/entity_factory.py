@@ -3082,21 +3082,24 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
         # InteractionCallbackResource
-        resource = undefined.UNDEFINED
+        resource: undefined.UndefinedOr[base_interactions.InteractionCallbackResource] = undefined.UNDEFINED
         if "resource" in payload:
             resource_payload = payload["resource"]
 
-            activity_instance = undefined.UNDEFINED
-            if "activity_instance" in resource_payload:
-                activity_instance = base_interactions.InteractionCallbackActivityInstance(
-                    id=resource_payload["activity_instance"]["id"]
-                )
+            activity_instance = (
+                base_interactions.InteractionCallbackActivityInstance(id=resource_payload["activity_instance"]["id"])
+                if "activity_instance" in resource_payload
+                else undefined.UNDEFINED
+            )
+            message = (
+                self.deserialize_message(resource_payload["message"])
+                if "message" in resource_payload
+                else undefined.UNDEFINED
+            )
 
             resource = base_interactions.InteractionCallbackResource(
                 type=base_interactions.ResponseType(resource_payload["type"]),
-                message=self.deserialize_message(resource_payload["message"])
-                if "message" in resource_payload
-                else undefined.UNDEFINED,
+                message=message,
                 activity_instance=activity_instance,
             )
 
