@@ -26,6 +26,10 @@ __all__: typing.Sequence[str] = (
     "DEFERRED_RESPONSE_TYPES",
     "MESSAGE_RESPONSE_TYPES",
     "DeferredResponseTypesT",
+    "InteractionCallback",
+    "InteractionCallbackActivityInstance",
+    "InteractionCallbackResource",
+    "InteractionCallbackResponse",
     "InteractionChannel",
     "InteractionMember",
     "InteractionType",
@@ -194,6 +198,8 @@ class InteractionCallback(snowflakes.Unique):
 
 @attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
 class InteractionCallbackResource:
+    """An interaction callback resources."""
+
     type: ResponseType = attrs.field()
     """The type of the interaction response."""
 
@@ -212,6 +218,8 @@ class InteractionCallbackResource:
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class InteractionCallbackActivityInstance:
+    """An interaction callback activity instance."""
+
     id: str = attrs.field(hash=True, repr=True)
     """The instance ID of the activity if one was launched or joined."""
 
