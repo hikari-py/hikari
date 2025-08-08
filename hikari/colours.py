@@ -22,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Colour", "Colourish")
+__all__: typing.Sequence[str] = ("Colour", "ColourGradient", "Colourish")
 
 import typing
 
@@ -33,3 +33,6 @@ Colour = colors.Color
 
 Colourish = colors.Colorish
 """An alias for [`hikari.colors.Colorish`][]."""
+
+ColourGradient = colors.ColorGradient
+"""An alias for [`hikari.colors.ColorGradient`][]."""
