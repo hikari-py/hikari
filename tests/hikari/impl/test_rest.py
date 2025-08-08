@@ -6506,7 +6506,7 @@ class TestRESTClientImplAsync:
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=432, token="some token")
         rest_client._build_message_payload = mock.Mock(return_value=(mock_body, mock_form))
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"interaction": "callback"})
 
         await rest_client.create_interaction_response(
             StubModel(432),
@@ -6545,7 +6545,9 @@ class TestRESTClientImplAsync:
         mock_form.add_field.assert_called_once_with(
             "payload_json", b'{"type":1,"data":{"testing":"ensure_in_test"}}', content_type="application/json"
         )
-        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form_builder=mock_form, auth=None, query={"with_response": "true"}
+        )
 
     async def test_create_interaction_response_when_no_form(self, rest_client):
         attachment_obj = object()
@@ -6559,7 +6561,7 @@ class TestRESTClientImplAsync:
         mock_body.put("testing", "ensure_in_test")
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=432, token="some token")
         rest_client._build_message_payload = mock.Mock(return_value=(mock_body, None))
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"interaction": "callback"})
 
         await rest_client.create_interaction_response(
             StubModel(432),
@@ -6596,7 +6598,10 @@ class TestRESTClientImplAsync:
             role_mentions=[1234],
         )
         rest_client._request.assert_awaited_once_with(
-            expected_route, json={"type": 1, "data": {"testing": "ensure_in_test"}}, auth=None
+            expected_route,
+            json={"type": 1, "data": {"testing": "ensure_in_test"}},
+            query={"with_response": "true"},
+            auth=None,
         )
 
     async def test_create_interaction_voice_message_response(self, rest_client):
@@ -6606,7 +6611,7 @@ class TestRESTClientImplAsync:
         attachment_obj = object()
         mock_form = mock.Mock()
         mock_body = data_binding.JSONObjectBuilder()
-        rest_client._request = mock.AsyncMock(return_value={"message_id": 123})
+        rest_client._request = mock.AsyncMock(return_value={"interaction": "callback"})
         rest_client._build_voice_message_payload = mock.Mock(return_value=(mock_body, mock_form))
 
         await rest_client.create_interaction_voice_message_response(
@@ -6617,7 +6622,9 @@ class TestRESTClientImplAsync:
             attachment=attachment_obj, flags=54123, waveform="AAA", duration=3
         )
 
-        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_form, auth=None)
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form_builder=mock_form, query={"with_response": "true"}, auth=None
+        )
 
     async def test_edit_interaction_response_when_form(self, rest_client):
         attachment_obj = object()
@@ -6743,7 +6750,7 @@ class TestRESTClientImplAsync:
 
     async def test_create_autocomplete_response(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"interaction": "callback"})
 
         choices = [
             special_endpoints.AutocompleteChoiceBuilder(name="c", value="d"),
@@ -6754,12 +6761,13 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"type": 8, "data": {"choices": [{"name": "c", "value": "d"}, {"name": "eee", "value": "fff"}]}},
+            query={"with_response": "true"},
             auth=None,
         )
 
     async def test_create_autocomplete_response_for_deprecated_command_choices(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"interaction": "callback"})
 
         choices = [commands.CommandChoice(name="a", value="b"), commands.CommandChoice(name="foo", value="bar")]
         await rest_client.create_autocomplete_response(StubModel(1235431), "snek", choices)
@@ -6767,12 +6775,13 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"type": 8, "data": {"choices": [{"name": "a", "value": "b"}, {"name": "foo", "value": "bar"}]}},
+            query={"with_response": "true"},
             auth=None,
         )
 
     async def test_create_modal_response(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"interaction": "callback"})
         mock_payload = mock.Mock()
         mock_files = mock.Mock()
         component = mock.Mock(build=mock.Mock(return_value=(mock_payload, mock_files)))
@@ -6784,12 +6793,13 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"type": 9, "data": {"title": "title", "custom_id": "idd", "components": [mock_payload]}},
+            query={"with_response": "true"},
             auth=None,
         )
 
     async def test_create_modal_response_with_plural_args(self, rest_client):
         expected_route = routes.POST_INTERACTION_RESPONSE.compile(interaction=1235431, token="snek")
-        rest_client._request = mock.AsyncMock()
+        rest_client._request = mock.AsyncMock(return_value={"interaction": "callback"})
         mock_payload = mock.Mock()
         mock_files = mock.Mock()
         component = mock.Mock(build=mock.Mock(return_value=(mock_payload, mock_files)))
@@ -6801,6 +6811,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(
             expected_route,
             json={"type": 9, "data": {"title": "title", "custom_id": "idd", "components": [mock_payload]}},
+            query={"with_response": "true"},
             auth=None,
         )
 

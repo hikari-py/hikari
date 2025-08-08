@@ -3062,6 +3062,50 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         raise errors.UnrecognisedEntityError(msg)
 
     @typing_extensions.override
+    def deserialize_interaction_callback_response(
+        self, payload: data_binding.JSONObject
+    ) -> base_interactions.InteractionCallbackResponse:
+        # InteractionCallback
+        interaction_payload = payload["interaction"]
+        response_message_id = (
+            snowflakes.Snowflake(interaction_payload["response_message_id"])
+            if "response_message_id" in interaction_payload
+            else undefined.UNDEFINED
+        )
+        interaction = base_interactions.InteractionCallback(
+            id=snowflakes.Snowflake(interaction_payload["id"]),
+            type=base_interactions.InteractionType(interaction_payload["type"]),
+            activity_instance_id=interaction_payload.get("activity_instance_id", undefined.UNDEFINED),
+            response_message_id=response_message_id,
+            response_message_loading=interaction_payload.get("response_message_loading", False),
+            response_message_ephemeral=interaction_payload.get("response_message_ephemeral", False),
+        )
+
+        # InteractionCallbackResource
+        resource: undefined.UndefinedOr[base_interactions.InteractionCallbackResource] = undefined.UNDEFINED
+        if "resource" in payload:
+            resource_payload = payload["resource"]
+
+            activity_instance = (
+                base_interactions.InteractionCallbackActivityInstance(id=resource_payload["activity_instance"]["id"])
+                if "activity_instance" in resource_payload
+                else undefined.UNDEFINED
+            )
+            message = (
+                self.deserialize_message(resource_payload["message"])
+                if "message" in resource_payload
+                else undefined.UNDEFINED
+            )
+
+            resource = base_interactions.InteractionCallbackResource(
+                type=base_interactions.ResponseType(resource_payload["type"]),
+                message=message,
+                activity_instance=activity_instance,
+            )
+
+        return base_interactions.InteractionCallbackResponse(interaction=interaction, resource=resource)
+
+    @typing_extensions.override
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
         payload: typing.MutableMapping[str, typing.Any] = {
             "type": option.type,
