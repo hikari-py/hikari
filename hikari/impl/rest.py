@@ -4505,7 +4505,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
         data, form = self._build_message_payload(
@@ -4527,11 +4527,17 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", response_type)
         body.put("data", data)
 
+        query = data_binding.StringMapBuilder()
+        query.put("with_response", True)
+
         if form is not None:
             form.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
-            await self._request(route, form_builder=form, auth=None)
+            response = await self._request(route, form_builder=form, query=query, auth=None)
         else:
-            await self._request(route, json=body, auth=None)
+            response = await self._request(route, json=body, query=query, auth=None)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_interaction_callback_response(response)
 
     @typing_extensions.override
     async def create_interaction_voice_message_response(
@@ -4543,7 +4549,7 @@ class RESTClientImpl(rest_api.RESTClient):
         duration: float,
         *,
         flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
         data, form_builder = self._build_voice_message_payload(
@@ -4556,7 +4562,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
         form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
 
-        await self._request(route, form_builder=form_builder, auth=None)
+        query = data_binding.StringMapBuilder()
+        query.put("with_response", True)
+
+        response = await self._request(route, form_builder=form_builder, query=query, auth=None)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_interaction_callback_response(response)
 
     @typing_extensions.override
     async def edit_interaction_response(
@@ -4641,8 +4653,11 @@ class RESTClientImpl(rest_api.RESTClient):
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
         choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
+
+        query = data_binding.StringMapBuilder()
+        query.put("with_response", True)
 
         body = data_binding.JSONObjectBuilder()
         body.put("type", base_interactions.ResponseType.AUTOCOMPLETE)
@@ -4651,7 +4666,10 @@ class RESTClientImpl(rest_api.RESTClient):
         data.put("choices", [{"name": choice.name, "value": choice.value} for choice in choices])
 
         body.put("data", data)
-        await self._request(route, json=body, auth=None)
+        response = await self._request(route, json=body, query=query, auth=None)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_interaction_callback_response(response)
 
     @typing_extensions.override
     async def create_modal_response(
@@ -4663,7 +4681,7 @@ class RESTClientImpl(rest_api.RESTClient):
         custom_id: str,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         if undefined.all_undefined(component, components) or not undefined.any_undefined(component, components):
             msg = "Must specify exactly only one of 'component' or 'components'"
             raise ValueError(msg)
@@ -4684,7 +4702,13 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("type", base_interactions.ResponseType.MODAL)
         body.put("data", data)
 
-        await self._request(route, json=body, auth=None)
+        query = data_binding.StringMapBuilder()
+        query.put("with_response", True)
+
+        response = await self._request(route, json=body, query=query, auth=None)
+
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_interaction_callback_response(response)
 
     @typing_extensions.override
     def build_message_action_row(self) -> special_endpoints.MessageActionRowBuilder:

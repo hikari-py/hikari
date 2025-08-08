@@ -7924,7 +7924,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         """Create the initial response for a interaction.
 
         !!! warning
@@ -7998,6 +7998,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
 
+        Returns
+        -------
+        hikari.interactions.base_interactions.InteractionCallbackResponse
+            The interaction callback response.
+
         Raises
         ------
         ValueError
@@ -8032,7 +8037,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         duration: float,
         *,
         flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         """Create the a initial voice message response for a interaction.
 
         !!! warning
@@ -8073,6 +8078,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             [`hikari.messages.MessageFlag.EPHEMERAL`][],
             [`hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`][]
             and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
+
+        Returns
+        -------
+        hikari.interactions.base_interactions.InteractionCallbackResponse
+            The interaction callback response.
 
         Raises
         ------
@@ -8332,7 +8342,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
         choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         """Create the initial response for an autocomplete interaction.
 
         Parameters
@@ -8343,6 +8353,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The interaction's token.
         choices
             The autocomplete choices themselves.
+
+        Returns
+        -------
+        hikari.interactions.base_interactions.InteractionCallbackResponse
+            The interaction callback response.
 
         Raises
         ------
@@ -8368,7 +8383,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         custom_id: str,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         """Create a response by sending a modal.
 
         Parameters
