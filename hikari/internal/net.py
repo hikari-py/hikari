@@ -28,6 +28,7 @@ import http
 import typing
 
 import aiohttp
+import msgspec
 
 from hikari import errors
 from hikari.internal import data_binding
@@ -49,7 +50,7 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
         args.append(json_body.get("message", ""))
         args.append(json_body.get("code", 0))
         raw_error_array: data_binding.JSONObject | None = json_body.get("errors")
-    except ValueError:
+    except msgspec.DecodeError:
         raw_error_array = None
 
     if response.status == http.HTTPStatus.BAD_REQUEST:

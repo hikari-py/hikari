@@ -36,6 +36,7 @@ dependencies = [
     "attrs~=25.1",
     "colorlog~=6.9",
     "multidict~=6.1",
+    "msgspec~=0.19"
 ]
 scripts = { "hikari" = "hikari.cli:main" }
 
@@ -66,7 +67,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-speedups = ["aiohttp[speedups]~=3.11", "ciso8601~=2.3", "orjson~=3.10"]
+speedups = ["aiohttp[speedups]~=3.11", "ciso8601~=2.3"]
 server = ["pynacl~=1.5"]
 
 [project.urls]
