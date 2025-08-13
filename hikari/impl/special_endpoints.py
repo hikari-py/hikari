@@ -46,6 +46,7 @@ __all__: typing.Sequence[str] = (
     "InteractionMessageBuilder",
     "InteractionModalBuilder",
     "InteractiveButtonBuilder",
+    "LabelComponentBuilder",
     "LinkButtonBuilder",
     "MediaGalleryComponentBuilder",
     "MediaGalleryItemBuilder",
@@ -1984,11 +1985,17 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
     _options: list[special_endpoints.SelectOptionBuilder] = attrs.field()
     _parent: _ParentT | None = attrs.field()
     _type: typing.Literal[component_models.ComponentType.TEXT_SELECT_MENU] = attrs.field()
+    _required: undefined.UndefinedOr[bool] = attrs.field(default=undefined.UNDEFINED)
 
     if not typing.TYPE_CHECKING:
         # This will not work with the generated for attrs copy methods.
         __copy__ = None
         __deepcopy__ = None
+
+    @property
+    @typing_extensions.override
+    def required(self) -> undefined.UndefinedOr[bool]:
+        return self._required
 
     @typing.overload
     def __init__(
@@ -2002,6 +2009,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None: ...
 
     @typing.overload
@@ -2015,6 +2023,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None: ...
 
     def __init__(
@@ -2028,6 +2037,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        required: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
         super().__init__(
             type=component_models.ComponentType.TEXT_SELECT_MENU,
@@ -2039,6 +2049,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
             is_disabled=is_disabled,
         )
         self._options = list(options)
+        self._required = required
         self._parent = parent
 
     @property
@@ -2081,6 +2092,8 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         payload, attachments = super().build()
 
         payload["options"] = [option.build() for option in self._options]
+        if self._required is not undefined.UNDEFINED:
+            payload["required"] = self.required
         return payload, attachments
 
 
@@ -2231,7 +2244,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         data["type"] = component_models.ComponentType.TEXT_INPUT
         data["style"] = self._style
         data["custom_id"] = self._custom_id
-        data["label"] = self._label
+        # data["label"] = self._label # FIXME: This needs to exist for action rows, but not for labels.
         data.put("id", self._id)
         data.put("placeholder", self._placeholder)
         data.put("value", self._value)
@@ -2934,6 +2947,137 @@ class ContainerComponentBuilder(special_endpoints.ContainerComponentBuilder):
             attachments.extend(component_attachments)
 
         payload.put_array("components", components_payload)
+
+        return payload, attachments
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.LabelComponentBuilder`][]."""
+
+    _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
+    _label: str = attrs.field(alias="label")
+    _description: str | None = attrs.field(alias="description", default=None)
+    _component: special_endpoints.LabelBuilderComponentsT = attrs.field(alias="component")
+
+    @property
+    @typing_extensions.override
+    def type(self) -> typing.Literal[component_models.ComponentType.LABEL]:
+        return component_models.ComponentType.LABEL
+
+    @property
+    @typing_extensions.override
+    def id(self) -> undefined.UndefinedOr[int]:
+        return self._id
+
+    @property
+    @typing_extensions.override
+    def label(self) -> str:
+        return self._label
+
+    @property
+    @typing_extensions.override
+    def description(self) -> str | None:
+        return self._description
+
+    @property
+    @typing_extensions.override
+    def component(self) -> special_endpoints.LabelBuilderComponentsT:
+        return self._component
+
+    @typing_extensions.override
+    def set_component(self, component: special_endpoints.LabelBuilderComponentsT, /) -> Self:
+        self._component = component
+        return self
+
+    @typing_extensions.override
+    def set_text_input(
+        self,
+        custom_id: str,
+        label: str,
+        /,
+        *,
+        style: component_models.TextInputStyle = component_models.TextInputStyle.SHORT,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        value: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        required: bool = True,
+        min_length: int = 0,
+        max_length: int = 4000,
+    ) -> Self:
+        return self.set_component(
+            TextInputBuilder(
+                custom_id=custom_id,
+                label=label,
+                style=style,
+                placeholder=placeholder,
+                value=value,
+                required=required,
+                min_length=min_length,
+                max_length=max_length,
+            )
+        )
+
+    @typing_extensions.override
+    def set_select_menu(
+        self,
+        type_: component_models.ComponentType | int,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        return self.set_component(
+            SelectMenuBuilder(
+                type=type_,
+                id=id,
+                custom_id=custom_id,
+                placeholder=placeholder,
+                min_values=min_values,
+                max_values=max_values,
+                is_disabled=is_disabled,
+            )
+        )
+
+    @typing_extensions.override
+    def set_text_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> special_endpoints.TextSelectMenuBuilder[Self]:
+        component = TextSelectMenuBuilder(
+            id=id,
+            custom_id=custom_id,
+            parent=self,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_disabled=is_disabled,
+        )
+        self.set_component(component)
+        return component
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload = data_binding.JSONObjectBuilder()
+        payload["type"] = self.type
+        payload["label"] = self._label
+        payload.put("id", self._id)  # FIXME: This might not exist.
+        payload.put("description", self._description)
+        component_payload, attachments = self._component.build()
+
+        payload.put("component", component_payload)
 
         return payload, attachments
 

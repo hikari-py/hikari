@@ -33,6 +33,8 @@ __all__: typing.Sequence[str] = (
     "FileComponent",
     "InteractiveButtonTypes",
     "InteractiveButtonTypesT",
+    "LabelComponent",
+    "LabelTypesT",
     "MediaGalleryComponent",
     "MediaGalleryItem",
     "MediaLoadingType",
@@ -41,6 +43,7 @@ __all__: typing.Sequence[str] = (
     "MessageComponentTypesT",
     "ModalActionRowComponent",
     "ModalComponentTypesT",
+    "ModalActionRowComponentTypesT",
     "PartialComponent",
     "SectionComponent",
     "SelectMenuComponent",
@@ -106,6 +109,7 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This component may only be used inside a modal container.
+        FIXME: This needs switching to a different item, like label.
 
     !!! note
         This cannot be top-level and must be within a container component such
@@ -178,6 +182,12 @@ class ComponentType(int, enums.Enum):
     !!! note
         As this is a container component it can never be contained within another
         component and therefore will always be top-level.
+    """
+
+    LABEL = 18
+    """A label component.
+
+    FIXME: This needs a better description.
     """
 
 
@@ -565,6 +575,20 @@ class ContainerComponent(PartialComponent):
     """The components within the container."""
 
 
+@attrs.define(kw_only=True, weakref_slot=False)
+class LabelComponent(PartialComponent):
+    """Represents a label component."""
+
+    label: str = attrs.field()
+    """The label name of the label component."""
+
+    description: undefined.UndefinedOr[str] = attrs.field()
+    """The description of the label component."""
+
+    component: LabelTypesT = attrs.field()
+    """The component within the label."""
+
+
 TopLevelComponentTypesT = typing.Union[
     ActionRowComponent[PartialComponent],
     TextDisplayComponent,
@@ -701,7 +725,17 @@ The following values are valid for this:
 * [`hikari.components.ButtonComponent`][]
 * [`hikari.components.SelectMenuComponent`][]
 """  # noqa: E501
-ModalComponentTypesT = TextInputComponent
+
+ModalComponentTypesT = typing.Union[ActionRowComponent[PartialComponent], LabelComponent]
+"""Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
+
+The following values are valid for this:
+
+* [`hikari.components.ActionRowComponent`][]
+* [`hikari.components.LabelComponent`][]
+"""
+
+ModalActionRowComponentTypesT = TextInputComponent  # FIXME: This is a breaking change.
 """Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:
@@ -709,7 +743,16 @@ The following values are valid for this:
 * [`hikari.components.TextInputComponent`][]
 """  # noqa: E501
 
+LabelTypesT = typing.Union[TextSelectMenuComponent, TextInputComponent]
+"""Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.LabelComponent`][].
+
+The following values are valid for this:
+
+* [`hikari.components.TextSelectMenuComponent`][]
+* [`hikari.components.TextInputComponent`][]
+"""
+
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""
-ModalActionRowComponent = ActionRowComponent[ModalComponentTypesT]
+ModalActionRowComponent = ActionRowComponent[ModalActionRowComponentTypesT]
 """A modal action row component."""
