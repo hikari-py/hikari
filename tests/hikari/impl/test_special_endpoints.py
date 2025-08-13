@@ -2614,6 +2614,31 @@ class TestMessageContainerBuilder:
         assert attachments == []
 
 
+class TestLabelBuilder:
+    def test_type_property(self):
+        label = special_endpoints.LabelComponentBuilder(label="test", component=mock.Mock())
+
+        assert label.type is components.ComponentType.LABEL
+
+    def test_set_component(self):
+        raise NotImplementedError
+
+    def test_set_text_input(self):
+        raise NotImplementedError
+
+    def test_set_select_menu(self):
+        raise NotImplementedError
+
+    def test_set_text_menu(self):
+        raise NotImplementedError
+
+    def test_build(self):
+        raise NotImplementedError
+
+    def test_build_without_optional_fields(self):
+        raise NotImplementedError
+
+
 class TestModalActionRow:
     def test_type_property(self):
         row = special_endpoints.ModalActionRowBuilder()
