@@ -464,13 +464,13 @@ class Member(users.User):
     raw_communication_disabled_until: datetime.datetime | None = attrs.field(repr=False)
     """The datetime when this member's timeout will expire.
 
-     Will be [`None`][] if the member is not timed out.
+    Will be [`None`][] if the member is not timed out.
 
-     !!! note
+    !!! note
         The datetime might be in the past, so it is recommended to use
         [`hikari.guilds.Member.communication_disabled_until`][] method to check if the member is timed
         out at the time of the call.
-     """
+    """
 
     role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
     """A sequence of the IDs of the member's current roles."""
