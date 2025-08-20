@@ -895,7 +895,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] in the channel.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -928,7 +928,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
