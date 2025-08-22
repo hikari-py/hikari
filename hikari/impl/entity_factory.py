@@ -235,6 +235,7 @@ class _UserFields:
     username: str = attrs.field()
     global_name: str | None = attrs.field()
     avatar_decoration: user_models.AvatarDecoration | None = attrs.field()
+    primary_guild: user_models.PrimaryGuild | None = attrs.field()
     avatar_hash: str = attrs.field()
     banner_hash: str | None = attrs.field()
     accent_color: color_models.Color | None = attrs.field()
@@ -3061,6 +3062,50 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         raise errors.UnrecognisedEntityError(msg)
 
     @typing_extensions.override
+    def deserialize_interaction_callback_response(
+        self, payload: data_binding.JSONObject
+    ) -> base_interactions.InteractionCallbackResponse:
+        # InteractionCallback
+        interaction_payload = payload["interaction"]
+        response_message_id = (
+            snowflakes.Snowflake(interaction_payload["response_message_id"])
+            if "response_message_id" in interaction_payload
+            else undefined.UNDEFINED
+        )
+        interaction = base_interactions.InteractionCallback(
+            id=snowflakes.Snowflake(interaction_payload["id"]),
+            type=base_interactions.InteractionType(interaction_payload["type"]),
+            activity_instance_id=interaction_payload.get("activity_instance_id", undefined.UNDEFINED),
+            response_message_id=response_message_id,
+            response_message_loading=interaction_payload.get("response_message_loading", False),
+            response_message_ephemeral=interaction_payload.get("response_message_ephemeral", False),
+        )
+
+        # InteractionCallbackResource
+        resource: undefined.UndefinedOr[base_interactions.InteractionCallbackResource] = undefined.UNDEFINED
+        if "resource" in payload:
+            resource_payload = payload["resource"]
+
+            activity_instance = (
+                base_interactions.InteractionCallbackActivityInstance(id=resource_payload["activity_instance"]["id"])
+                if "activity_instance" in resource_payload
+                else undefined.UNDEFINED
+            )
+            message = (
+                self.deserialize_message(resource_payload["message"])
+                if "message" in resource_payload
+                else undefined.UNDEFINED
+            )
+
+            resource = base_interactions.InteractionCallbackResource(
+                type=base_interactions.ResponseType(resource_payload["type"]),
+                message=message,
+                activity_instance=activity_instance,
+            )
+
+        return base_interactions.InteractionCallbackResponse(interaction=interaction, resource=resource)
+
+    @typing_extensions.override
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
         payload: typing.MutableMapping[str, typing.Any] = {
             "type": option.type,
@@ -4270,15 +4315,32 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             asset_hash=payload["asset"], sku_id=snowflakes.Snowflake(payload["sku_id"]), expires_at=expires_at
         )
 
+    def _deserialize_primary_guild(self, payload: data_binding.JSONObject | None) -> user_models.PrimaryGuild | None:
+        if not payload:
+            return None
+
+        identity_guild_id = None
+        if (identity_guild_id_payload := payload.get("identity_guild_id")) is not None:
+            identity_guild_id = snowflakes.Snowflake(int(identity_guild_id_payload))
+
+        return user_models.PrimaryGuild(
+            identity_guild_id=identity_guild_id,
+            identity_enabled=payload.get("identity_enabled"),
+            tag=payload.get("tag"),
+            badge_hash=payload.get("badge"),
+        )
+
     def _set_user_attributes(self, payload: data_binding.JSONObject) -> _UserFields:
         accent_color = payload.get("accent_color")
         avatar_decoration = self._deserialize_avatar_decoration(payload.get("avatar_decoration_data"))
+        primary_guild = self._deserialize_primary_guild(payload.get("primary_guild"))
         return _UserFields(
             id=snowflakes.Snowflake(payload["id"]),
             discriminator=payload["discriminator"],
             username=payload["username"],
             global_name=payload.get("global_name"),
             avatar_decoration=avatar_decoration,
+            primary_guild=primary_guild,
             avatar_hash=payload["avatar"],
             banner_hash=payload.get("banner", None),
             accent_color=color_models.Color(accent_color) if accent_color is not None else None,
@@ -4299,6 +4361,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             username=user_fields.username,
             global_name=payload.get("global_name"),
             avatar_decoration=user_fields.avatar_decoration,
+            primary_guild=user_fields.primary_guild,
             avatar_hash=user_fields.avatar_hash,
             banner_hash=user_fields.banner_hash,
             accent_color=user_fields.accent_color,
@@ -4317,6 +4380,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             username=user_fields.username,
             global_name=payload.get("global_name"),
             avatar_decoration=user_fields.avatar_decoration,
+            primary_guild=user_fields.primary_guild,
             avatar_hash=user_fields.avatar_hash,
             banner_hash=user_fields.banner_hash,
             accent_color=user_fields.accent_color,

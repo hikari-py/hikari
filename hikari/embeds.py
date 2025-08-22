@@ -254,7 +254,7 @@ def _ensure_embed_resource(resource: files.Resourceish) -> files.Resource[files.
     return files.ensure_resource(resource)
 
 
-class Embed:
+class Embed:  # noqa: PLW1641 - No __hash__
     """Represents an embed."""
 
     __slots__: typing.Sequence[str] = (

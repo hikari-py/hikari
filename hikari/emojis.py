@@ -229,7 +229,7 @@ class UnicodeEmoji(str, Emoji):
 
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class CustomEmoji(snowflakes.Unique, Emoji):
+class CustomEmoji(snowflakes.Unique, Emoji):  # noqa: PLW1641 - No __hash__
     """Represents a custom emoji.
 
     This is a custom emoji that is from a guild you might not be part of.

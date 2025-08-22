@@ -81,11 +81,11 @@ nox = ["nox[uv]==2025.5.1"]
 
 audit = ["uv-secure"]
 codespell = ["codespell==2.4.1"]
-coverage = ["coverage[toml]==7.9.2"]
+coverage = ["coverage[toml]==7.10.4"]
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
-    "mkdocs-material==9.6.15",
+    "mkdocs-material==9.6.17",
     # Docstring parsing for API reference
     "mkdocstrings[python]==0.30.0",
     "griffe-inherited-docstrings==1.1.1",
@@ -100,7 +100,7 @@ mkdocs = [
     # "mkdocs-glightbox==0.3.7",
 ]
 
-mypy = ["mypy[faster-cache]==1.17.0", { include-group = "types" }]
+mypy = ["mypy[faster-cache]==1.17.1", { include-group = "types" }]
 pyright = ["pyright==1.1.403", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
@@ -112,7 +112,7 @@ pytest = [
     { include-group = "coverage" },
 ]
 release = ["twine==6.1.0"]
-ruff = ["ruff==0.11.13"]
+ruff = ["ruff==0.12.9"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==24.8.0"]
 types = [
