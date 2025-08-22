@@ -398,6 +398,51 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
 # We use an explicit forward reference for this, since this breaks potential
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).
+class PinnedMessageIterator(iterators.BufferedLazyIterator["messages.PinnedMessage"]):
+    """Implementation of an iterator for message history."""
+
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_has_more", "_request_call", "_route")
+
+    def __init__(
+        self,
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: _RequestCallSig,
+        channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
+        first_id: undefined.UndefinedOr[str],
+    ) -> None:
+        super().__init__()
+        self._entity_factory = entity_factory
+        self._request_call = request_call
+        self._first_id = first_id
+        self._route = routes.GET_CHANNEL_PINS.compile(channel=channel)
+        self._has_more = True
+
+    @typing_extensions.override
+    async def _next_chunk(self) -> typing.Generator[messages.PinnedMessage, typing.Any, None] | None:
+        if self._has_more is False:
+            return None
+        query = data_binding.StringMapBuilder()
+        query.put("before", self._first_id)
+        query.put("limit", 50)
+
+        response = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(response, dict)
+
+        if response["has_more"] is False:
+            self._has_more = False
+
+        chunk = response["items"]
+
+        if chunk == []:
+            return None
+
+        self._first_id = chunk[-1]["pinned_at"]
+        return (self._entity_factory.deserialize_pinned_message(m) for m in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
 class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
     """Implementation of an iterator for message reactions."""
 

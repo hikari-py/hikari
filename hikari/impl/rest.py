@@ -1336,13 +1336,17 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
     @typing_extensions.override
-    async def fetch_pins(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
-    ) -> typing.Sequence[messages_.Message]:
-        route = routes.GET_CHANNEL_PINS.compile(channel=channel)
-        response = await self._request(route)
-        assert isinstance(response, list)
-        return [self._entity_factory.deserialize_message(message_pl) for message_pl in response]
+    def fetch_pins(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[messages_.PinnedMessage]:
+        first_id = str(int(before.timestamp())) if before is not undefined.UNDEFINED else undefined.UNDEFINED
+
+        return special_endpoints_impl.PinnedMessageIterator(
+            entity_factory=self._entity_factory, request_call=self._request, channel=channel, first_id=first_id
+        )
 
     @typing_extensions.override
     async def pin_message(

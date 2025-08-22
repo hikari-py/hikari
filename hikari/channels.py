@@ -699,12 +699,12 @@ class TextableChannel(PartialChannel):
         """
         return self.app.rest.trigger_typing(self.id)
 
-    async def fetch_pins(self) -> typing.Sequence[messages_.Message]:
+    def fetch_pins(self) -> iterators.LazyIterator[messages_.PinnedMessage]:
         """Fetch the pinned messages in this text channel.
 
         Returns
         -------
-        typing.Sequence[hikari.messages.Message]
+        iterators.LazyIterator[hikari.messages.PinnedMessage]
             The pinned messages in this text channel.
 
         Raises
@@ -722,7 +722,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_pins(self.id)
+        return self.app.rest.fetch_pins(self.id)
 
     async def pin_message(self, message: snowflakes.SnowflakeishOr[messages_.PartialMessage]) -> None:
         """Pin an existing message in the text channel.
