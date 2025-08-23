@@ -419,8 +419,9 @@ class PinnedMessageIterator(iterators.BufferedLazyIterator["messages.PinnedMessa
 
     @typing_extensions.override
     async def _next_chunk(self) -> typing.Generator[messages.PinnedMessage, typing.Any, None] | None:
-        if self._has_more is False:
+        if not self._has_more:
             return None
+
         query = data_binding.StringMapBuilder()
         query.put("before", self._first_id)
         query.put("limit", 50)
@@ -428,13 +429,12 @@ class PinnedMessageIterator(iterators.BufferedLazyIterator["messages.PinnedMessa
         response = await self._request_call(compiled_route=self._route, query=query)
         assert isinstance(response, dict)
 
-        if response["has_more"] is False:
-            self._has_more = False
-
         chunk = response["items"]
+		if not chunk:
+			self._has_more = False
+			return None
 
-        if chunk == []:
-            return None
+        self._has_more = response["has_more"]
 
         self._first_id = chunk[-1]["pinned_at"]
         return (self._entity_factory.deserialize_pinned_message(m) for m in chunk)
