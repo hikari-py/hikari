@@ -842,21 +842,33 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_pins(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
-    ) -> typing.Sequence[messages_.Message]:
+    def fetch_pins(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[messages_.PinnedMessage]:
         """Fetch the pinned messages in this text channel.
+
+        !!! note
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See [`hikari.iterators`][] for the full API for this iterator type.
 
         Parameters
         ----------
         channel
             The channel to fetch pins from. This may be the object or
             the ID of an existing channel.
+        before
+            If provided, fetch pins before this time.
 
         Returns
         -------
-        typing.Sequence[hikari.messages.Message]
-            The pinned messages in this text channel.
+        hikari.iterators.LazyIterator[hikari.messages.PinnedMessage]
+            An iterator to fetch the pinned messages.
 
         Raises
         ------

@@ -1675,6 +1675,21 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_pinned_message(self, payload: data_binding.JSONObject) -> message_models.PinnedMessage:
+        """Parse a raw payload from Discord into a pinned message object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.PinnedMessage
+            The deserialized pinned message object.
+        """
+
+    @abc.abstractmethod
     def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:
         """Parse a raw payload from Discord into a partial message object.
 
