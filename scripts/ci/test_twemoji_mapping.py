@@ -27,17 +27,16 @@ does not map these on a 1-to-1 basis.
 
 from __future__ import annotations
 
-import os
 import json
+import os
 import pathlib
 import shutil
 import subprocess
-import traceback
-
 import sys
 import time
-import urllib.request
+import traceback
 import urllib.error
+import urllib.request
 
 sys.path.append("..")
 
