@@ -430,9 +430,9 @@ class PinnedMessageIterator(iterators.BufferedLazyIterator["messages.PinnedMessa
         assert isinstance(response, dict)
 
         chunk = response["items"]
-		if not chunk:
-			self._has_more = False
-			return None
+        if not chunk:
+            self._has_more = False
+            return None
 
         self._has_more = response["has_more"]
 
