@@ -85,7 +85,7 @@ coverage = ["coverage[toml]==7.10.4"]
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
-    "mkdocs-material==9.6.17",
+    "mkdocs-material==9.6.18",
     # Docstring parsing for API reference
     "mkdocstrings[python]==0.30.0",
     "griffe-inherited-docstrings==1.1.1",
