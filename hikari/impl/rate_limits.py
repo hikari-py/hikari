@@ -293,7 +293,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     that a unit has been placed into the bucket.
     """
 
-    __slots__: typing.Sequence[str] = ("move_at", "limit", "period", "remaining")
+    __slots__: typing.Sequence[str] = ("limit", "move_at", "period", "remaining")
 
     throttle_task: asyncio.Task[typing.Any] | None
     # <<inherited docstring from BurstRateLimiter>>.

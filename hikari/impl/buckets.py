@@ -256,10 +256,10 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     __slots__: typing.Sequence[str] = (
         "_compiled_route",
         "_global_ratelimit",
+        "_is_fixed",
         "_lock",
         "_max_rate_limit",
         "_out_of_sync",
-        "_is_fixed",
         "reset_at",
     )
 
@@ -617,7 +617,6 @@ class RESTBucketManager:
         bucket_pairs = self._real_hashes_to_buckets.items()
 
         for full_hash, bucket in bucket_pairs:
-            print(full_hash, bucket.move_at, now)
             if bucket.is_empty and bucket.reset_at + expire_after < now:
                 # If it is still running a throttle and is in memory, it will remain in memory
                 # but we will not know about it.
