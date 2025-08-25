@@ -423,16 +423,19 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         if not self._out_of_sync:
             reset_at_eq = math.isclose(self.reset_at, reset_at, rel_tol=0.0, abs_tol=0.05)
-            if self._is_fixed and not reset_at_eq:
-                _LOGGER.debug("bucket '%s' stopped being a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
-                self._is_fixed = False
-            elif not self._is_fixed and reset_at_eq:
+            if not self._is_fixed and reset_at_eq:
                 # Fixed buckets will not have a moving reset_at
                 _LOGGER.debug(
                     "bucket '%s' detected to be a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at
                 )
                 self._is_fixed = True
                 self.move_at = reset_at
+
+            elif self._is_fixed and not reset_at_eq:
+                _LOGGER.debug("bucket '%s' stopped being a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
+                self._is_fixed = False
+                # Setting this here will have an effect bellow
+                self._out_of_sync = True
 
         self.reset_at = reset_at
 
