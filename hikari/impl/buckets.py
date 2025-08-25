@@ -698,6 +698,8 @@ class RESTBucketManager:
         if bucket := self._real_hashes_to_buckets.get(real_bucket_hash):
             _LOGGER.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
         else:
+            # Ensure new buckets always have an unknown hash
+            real_bucket_hash = _create_unknown_hash(compiled_route, authentication_hash)
             _LOGGER.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
             bucket = RESTBucket(real_bucket_hash, compiled_route, self._global_ratelimit, self._max_rate_limit)
             self._real_hashes_to_buckets[real_bucket_hash] = bucket
