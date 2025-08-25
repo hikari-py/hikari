@@ -434,7 +434,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             elif self._is_fixed and not reset_at_eq:
                 _LOGGER.debug("bucket '%s' stopped being a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
                 self._is_fixed = False
-                # Setting this here will have an effect bellow
+                # Setting this here will have an effect below
                 self._out_of_sync = True
 
         self.reset_at = reset_at
