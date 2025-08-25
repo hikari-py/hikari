@@ -88,6 +88,7 @@ class TestRESTBucket:
         bucket.remaining = 1
         bucket.limit = 2
         bucket.move_at = now
+        bucket.reset_at = now
         bucket.period = 2
 
         bucket.update_rate_limit(0, 2, now, 4)
@@ -95,6 +96,7 @@ class TestRESTBucket:
         assert bucket.remaining == 1
         assert bucket.limit == 2
         assert bucket.move_at == now
+        assert bucket.reset_at == now
         assert bucket.period == 2
 
     @pytest.mark.parametrize("limit", (10, 5))
@@ -105,6 +107,7 @@ class TestRESTBucket:
         bucket.remaining = 1
         bucket.limit = 2
         bucket.move_at = now
+        bucket.reset_at = now
         bucket.period = 2
 
         bucket.update_rate_limit(0, limit, now + 20, 4)
@@ -118,13 +121,17 @@ class TestRESTBucket:
         bucket.remaining = 1
         bucket.limit = 3
         bucket.move_at = now
+        bucket.reset_at = now
         bucket.period = 2
-        bucket._out_of_sync = True
+        bucket._out_of_sync = False
+        bucket._is_fixed = False
 
         bucket.update_rate_limit(1, 3, 123123124, 4.5)
 
+        assert bucket._is_fixed is False
         assert bucket.remaining == 1
         assert bucket.limit == 3
+        assert bucket.reset_at == 123123124
         assert bucket.move_at == 123123121.75
         assert bucket.period == 2.25
         assert bucket._out_of_sync is False
@@ -384,7 +391,7 @@ class TestRESTBucketManager:
 
         assert "UNKNOWN;auth_hash;bobs" in bucket_manager._real_hashes_to_buckets
         assert isinstance(bucket_manager._real_hashes_to_buckets["UNKNOWN;auth_hash;bobs"], buckets.RESTBucket)
-        create_unknown_hash.assert_called_once_with(route, "auth_hash")
+        create_unknown_hash.assert_has_calls((mock.call(route, "auth_hash"), mock.call(route, "auth_hash")))
 
     @pytest.mark.asyncio
     async def test_acquire_route_when_not_in_routes_to_real_hashes_doesnt_cache_route(self, bucket_manager):
