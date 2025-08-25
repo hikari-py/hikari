@@ -228,7 +228,10 @@ UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ratelimits")
 
-def _calculate_sliding_window(*, remaining: int, limit:int, reset_at:float, reset_after: float) -> tuple[float, float]:
+
+def _calculate_sliding_window(
+    *, remaining: int, limit: int, reset_at: float, reset_after: float
+) -> tuple[float, float]:
     slide_period = reset_after / (limit - remaining)
     next_slide_at = (reset_at - reset_after) + slide_period
 
@@ -421,20 +424,12 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         if not self._out_of_sync:
             reset_at_eq = math.isclose(self.reset_at, reset_at, rel_tol=0.0, abs_tol=0.05)
             if self._is_fixed and not reset_at_eq:
-                _LOGGER.debug(
-                    "bucket '%s' stopped being a fixed bucket (%f vs %f)",
-                    self.name,
-                    self.reset_at,
-                    reset_at,
-                )
+                _LOGGER.debug("bucket '%s' stopped being a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
                 self._is_fixed = False
             elif not self._is_fixed and reset_at_eq:
                 # Fixed buckets will not have a moving reset_at
                 _LOGGER.debug(
-                    "bucket '%s' detected to be a fixed bucket (%f vs %f)",
-                    self.name,
-                    self.reset_at,
-                    reset_at,
+                    "bucket '%s' detected to be a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at
                 )
                 self._is_fixed = True
                 self.move_at = reset_at
@@ -457,7 +452,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             self._out_of_sync = False
             return
 
-        slide_period, move_at = _calculate_sliding_window(remaining=remaining, limit=limit, reset_at=reset_at, reset_after=reset_after)
+        slide_period, move_at = _calculate_sliding_window(
+            remaining=remaining, limit=limit, reset_at=reset_at, reset_after=reset_after
+        )
         # We want to update the slide period only, and only if:
         #   1. The bucket is out of sync (ie, we reset the full window)
         #   2. We receive the first usage of the bucket, which will always have the most accurate slide period
@@ -512,7 +509,9 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             # This should never happen, but just in case
             return
 
-        slide_period, move_at = _calculate_sliding_window(remaining=remaining, limit=limit, reset_at=reset_at, reset_after=reset_after)
+        slide_period, move_at = _calculate_sliding_window(
+            remaining=remaining, limit=limit, reset_at=reset_at, reset_after=reset_after
+        )
 
         self.name = real_bucket_hash
         self.remaining = remaining
