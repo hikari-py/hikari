@@ -391,7 +391,7 @@ class TestRESTBucketManager:
 
         assert "UNKNOWN;auth_hash;bobs" in bucket_manager._real_hashes_to_buckets
         assert isinstance(bucket_manager._real_hashes_to_buckets["UNKNOWN;auth_hash;bobs"], buckets.RESTBucket)
-        create_unknown_hash.assert_called_once_with(route, "auth_hash")
+        create_unknown_hash.assert_has_calls((mock.call(route, "auth_hash"), mock.call(route, "auth_hash")))
 
     @pytest.mark.asyncio
     async def test_acquire_route_when_not_in_routes_to_real_hashes_doesnt_cache_route(self, bucket_manager):
