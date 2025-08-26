@@ -2505,7 +2505,7 @@ class RESTClientImpl(rest_api.RESTClient):
         form_builder.add_field("grant_type", "authorization_code")
         form_builder.add_field("code", code)
         form_builder.add_field("redirect_uri", redirect_uri)
-        
+
         if code_verifier is not undefined.UNDEFINED:
             form_builder.add_field("code_verifier", code_verifier)
 
