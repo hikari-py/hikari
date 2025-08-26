@@ -3258,7 +3258,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         client_secret: str,
         code: str,
         redirect_uri: str,
-        code_verifier: str,
+        *,
+        code_verifier: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> applications.OAuth2AuthorizationToken:
         """Authorize an OAuth2 token using the authorize code grant type.
 
