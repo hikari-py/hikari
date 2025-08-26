@@ -686,7 +686,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_channel_invites(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildChannel]
-    ) -> typing.Sequence[invites.InviteWithMetadata]:
+    ) -> typing.Sequence[invites.InviteWithMetadata | invites.Invite]:
         """Fetch all invites pointing to the given guild channel.
 
         Parameters
@@ -697,7 +697,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.invites.InviteWithMetadata]
+        typing.Sequence[hikari.invites.InviteWithMetadata | hikari.invites.Invite]
             The invites pointing to the given guild channel.
 
         Raises
@@ -6752,7 +6752,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_guild_invites(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[invites.InviteWithMetadata]:
+    ) -> typing.Sequence[invites.InviteWithMetadata | invites.Invite]:
         """Fetch the guild's invites.
 
         Parameters
@@ -6763,7 +6763,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.invites.InviteWithMetadata]
+        typing.Sequence[hikari.invites.InviteWithMetadata | hikari.invites.Invite]
             The invites for the guild.
 
         Raises
