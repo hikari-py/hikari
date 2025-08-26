@@ -2497,12 +2497,17 @@ class RESTClientImpl(rest_api.RESTClient):
         client_secret: str,
         code: str,
         redirect_uri: str,
+        *,
+        code_verifier: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> applications.OAuth2AuthorizationToken:
         route = routes.POST_TOKEN.compile()
         form_builder = data_binding.URLEncodedFormBuilder()
         form_builder.add_field("grant_type", "authorization_code")
         form_builder.add_field("code", code)
         form_builder.add_field("redirect_uri", redirect_uri)
+
+        if code_verifier is not undefined.UNDEFINED:
+            form_builder.add_field("code_verifier", code_verifier)
 
         response = await self._request(
             route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret)

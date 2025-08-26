@@ -3258,6 +3258,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         client_secret: str,
         code: str,
         redirect_uri: str,
+        *,
+        code_verifier: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> applications.OAuth2AuthorizationToken:
         """Authorize an OAuth2 token using the authorize code grant type.
 
@@ -3271,6 +3273,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The authorization code to exchange for an OAuth2 access token.
         redirect_uri
             The redirect uri that was included in the authorization request.
+        code_verifier
+            If provided, the random string generated for PKCE, required to
+            securely validate the authorization code exchange.
 
         Returns
         -------
