@@ -1297,14 +1297,14 @@ class RESTClientImpl(rest_api.RESTClient):
         #
         # It is undocumented when this happens, but we have to handle it.
         # I have asked them about it, and as of writing, haven't gotten a reply
-        invites = []
+        to_return: list[invites.InviteWithMetadata | invites.Invite] = []
         for invite_payload in response:
             if "created_at" in invite_payload:
-                invites.append(self._entity_factory.deserialize_invite_with_metadata(invite_payload))
+                to_return.append(self._entity_factory.deserialize_invite_with_metadata(invite_payload))
             else:
-                invites.append(self._entity_factory.deserialize_invite(invite_payload))
+                to_return.append(self._entity_factory.deserialize_invite(invite_payload))
 
-        return invites
+        return to_return
 
     @typing_extensions.override
     async def create_invite(
@@ -4005,14 +4005,14 @@ class RESTClientImpl(rest_api.RESTClient):
         #
         # It is undocumented when this happens, but we have to handle it.
         # I have asked them about it, and as of writing, haven't gotten a reply
-        invites = []
+        to_return: list[invites.InviteWithMetadata | invites.Invite] = []
         for invite_payload in response:
             if "created_at" in invite_payload:
-                invites.append(self._entity_factory.deserialize_invite_with_metadata(invite_payload))
+                to_return.append(self._entity_factory.deserialize_invite_with_metadata(invite_payload))
             else:
-                invites.append(self._entity_factory.deserialize_invite(invite_payload))
+                to_return.append(self._entity_factory.deserialize_invite(invite_payload))
 
-        return invites
+        return to_return
 
     @typing_extensions.override
     async def fetch_integrations(
