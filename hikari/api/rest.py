@@ -3275,6 +3275,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         code_verifier
             If provided, the random string generated for PKCE, required to
             securely validate the authorization code exchange.
+
         Returns
         -------
         hikari.applications.OAuth2AuthorizationToken
