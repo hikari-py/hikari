@@ -2716,14 +2716,17 @@ class TestRESTClientImplAsync:
         invite1 = StubModel(456)
         invite2 = StubModel(789)
         expected_route = routes.GET_CHANNEL_INVITES.compile(channel=123)
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
-        rest_client._entity_factory.deserialize_invite_with_metadata = mock.Mock(side_effect=[invite1, invite2])
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789", "created_at": "invite with metadata"}])
+        rest_client._entity_factory.deserialize_invite = mock.Mock(return_value=invite1)
+        rest_client._entity_factory.deserialize_invite_with_metadata = mock.Mock(return_value=invite2)
 
         assert await rest_client.fetch_channel_invites(StubModel(123)) == [invite1, invite2]
         rest_client._request.assert_awaited_once_with(expected_route)
-        assert rest_client._entity_factory.deserialize_invite_with_metadata.call_count == 2
-        rest_client._entity_factory.deserialize_invite_with_metadata.assert_has_calls(
-            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        rest_client._entity_factory.deserialize_invite.assert_called_once_with(
+            {"id": "456"}
+        )
+        rest_client._entity_factory.deserialize_invite_with_metadata.assert_called_once_with(
+            {"id": "789", "created_at": "invite with metadata"}
         )
 
     async def test_create_invite(self, rest_client):
@@ -5832,15 +5835,18 @@ class TestRESTClientImplAsync:
         invite1 = StubModel(456)
         invite2 = StubModel(789)
         expected_route = routes.GET_GUILD_INVITES.compile(guild=123)
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
-        rest_client._entity_factory.deserialize_invite_with_metadata = mock.Mock(side_effect=[invite1, invite2])
+        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789", "created_at": "invite with metadata"}])
+        rest_client._entity_factory.deserialize_invite = mock.Mock(return_value=invite1)
+        rest_client._entity_factory.deserialize_invite_with_metadata = mock.Mock(return_value=invite2)
 
         assert await rest_client.fetch_guild_invites(StubModel(123)) == [invite1, invite2]
 
         rest_client._request.assert_awaited_once_with(expected_route)
-        assert rest_client._entity_factory.deserialize_invite_with_metadata.call_count == 2
-        rest_client._entity_factory.deserialize_invite_with_metadata.assert_has_calls(
-            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        rest_client._entity_factory.deserialize_invite.assert_called_once_with(
+            {"id": "456"}
+        )
+        rest_client._entity_factory.deserialize_invite_with_metadata.assert_called_once_with(
+            {"id": "789", "created_at": "invite with metadata"}
         )
 
     async def test_fetch_integrations(self, rest_client):
