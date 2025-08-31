@@ -1288,23 +1288,12 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing_extensions.override
     async def fetch_channel_invites(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildChannel]
-    ) -> typing.Sequence[invites.InviteWithMetadata | invites.Invite]:
+    ) -> typing.Sequence[invites.InviteWithMetadata]:
         route = routes.GET_CHANNEL_INVITES.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, list)
 
-        # Discord will randomly not respond with metadata and respond with a normal invite object
-        #
-        # It is undocumented when this happens, but we have to handle it.
-        # I have asked them about it, and as of writing, haven't gotten a reply
-        to_return: list[invites.InviteWithMetadata | invites.Invite] = []
-        for invite_payload in response:
-            if "created_at" in invite_payload:
-                to_return.append(self._entity_factory.deserialize_invite_with_metadata(invite_payload))
-            else:
-                to_return.append(self._entity_factory.deserialize_invite(invite_payload))
-
-        return to_return
+        return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
 
     @typing_extensions.override
     async def create_invite(
@@ -3996,23 +3985,19 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing_extensions.override
     async def fetch_guild_invites(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[invites.InviteWithMetadata | invites.Invite]:
+    ) -> typing.Sequence[invites.InviteWithMetadata] | typing.Sequence[invites.Invite]:
         route = routes.GET_GUILD_INVITES.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
 
-        # Discord will randomly not respond with metadata and respond with a normal invite object
-        #
-        # It is undocumented when this happens, but we have to handle it.
-        # I have asked them about it, and as of writing, haven't gotten a reply
-        to_return: list[invites.InviteWithMetadata | invites.Invite] = []
-        for invite_payload in response:
-            if "created_at" in invite_payload:
-                to_return.append(self._entity_factory.deserialize_invite_with_metadata(invite_payload))
-            else:
-                to_return.append(self._entity_factory.deserialize_invite(invite_payload))
+        # If we are missing MANAGE_GUILD, we will only get normal invites (no metadata)
+        if not response:
+            return []
 
-        return to_return
+        if "created_at" in response[0]:
+            return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
+
+        return [self._entity_factory.deserialize_invite(invite_payload) for invite_payload in response]
 
     @typing_extensions.override
     async def fetch_integrations(
