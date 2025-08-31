@@ -5847,7 +5847,9 @@ class TestRESTClientImplAsync:
         invite1 = StubModel(456)
         invite2 = StubModel(789)
         expected_route = routes.GET_GUILD_INVITES.compile(guild=123)
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "456", "created_at": "metadata"}, {"id": "789", "created_at": "metadata"}])
+        rest_client._request = mock.AsyncMock(
+            return_value=[{"id": "456", "created_at": "metadata"}, {"id": "789", "created_at": "metadata"}]
+        )
         rest_client._entity_factory.deserialize_invite_with_metadata = mock.Mock(side_effect=[invite1, invite2])
 
         assert await rest_client.fetch_guild_invites(StubModel(123)) == [invite1, invite2]

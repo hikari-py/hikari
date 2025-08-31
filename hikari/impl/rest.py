@@ -3995,7 +3995,9 @@ class RESTClientImpl(rest_api.RESTClient):
             return []
 
         if "created_at" in response[0]:
-            return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
+            return [
+                self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response
+            ]
 
         return [self._entity_factory.deserialize_invite(invite_payload) for invite_payload in response]
 
