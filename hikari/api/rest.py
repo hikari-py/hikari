@@ -6757,7 +6757,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_guild_invites(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[invites.InviteWithMetadata]:
+    ) -> typing.Sequence[invites.InviteWithMetadata] | typing.Sequence[invites.Invite]:
         """Fetch the guild's invites.
 
         Parameters
@@ -6768,13 +6768,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.invites.InviteWithMetadata]
+        typing.Sequence[hikari.invites.InviteWithMetadata] | typing.Sequence[hikari.invites.Invite]
             The invites for the guild.
+
+            Will contain the metadata if you have the [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+            permission.
 
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+            or [`hikari.permissions.Permissions.VIEW_AUDIT_LOG`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError

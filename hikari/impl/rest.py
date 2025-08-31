@@ -1292,6 +1292,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_CHANNEL_INVITES.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, list)
+
         return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
 
     @typing_extensions.override
@@ -3989,11 +3990,21 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing_extensions.override
     async def fetch_guild_invites(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[invites.InviteWithMetadata]:
+    ) -> typing.Sequence[invites.InviteWithMetadata] | typing.Sequence[invites.Invite]:
         route = routes.GET_GUILD_INVITES.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
+
+        # If we are missing MANAGE_GUILD, we will only get normal invites (no metadata)
+        if not response:
+            return []
+
+        if "created_at" in response[0]:
+            return [
+                self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response
+            ]
+
+        return [self._entity_factory.deserialize_invite(invite_payload) for invite_payload in response]
 
     @typing_extensions.override
     async def fetch_integrations(
