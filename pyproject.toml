@@ -95,7 +95,7 @@ mkdocs = [
     # Minify
     "mkdocs-minify-plugin==0.8.0",
     # Towncrier draft changelogs
-    "mkdocs-towncrier==0.1.4",
+    "mkdocs-towncrier==0.1.5",
     # Image viewer ext
     # "mkdocs-glightbox==0.3.7",
 ]
