@@ -1075,7 +1075,7 @@ mkdocs = [
     { name = "mkdocs-literate-nav", specifier = "==0.6.2" },
     { name = "mkdocs-material", specifier = "==9.6.18" },
     { name = "mkdocs-minify-plugin", specifier = "==0.8.0" },
-    { name = "mkdocs-towncrier", specifier = "==0.1.4" },
+    { name = "mkdocs-towncrier", specifier = "==0.1.5" },
     { name = "mkdocstrings", extras = ["python"], specifier = "==0.30.0" },
 ]
 mypy = [
@@ -1099,7 +1099,7 @@ pytest = [
 release = [{ name = "twine", specifier = "==6.1.0" }]
 ruff = [{ name = "ruff", specifier = "==0.12.11" }]
 slotscheck = [{ name = "slotscheck", specifier = "==0.19.1" }]
-towncrier = [{ name = "towncrier", specifier = "==24.8.0" }]
+towncrier = [{ name = "towncrier", specifier = "==25.8.0" }]
 types = [{ name = "pydub-stubs", specifier = "~=0.25.1.5" }]
 
 [[package]]
@@ -1564,15 +1564,15 @@ wheels = [
 
 [[package]]
 name = "mkdocs-towncrier"
-version = "0.1.4"
+version = "0.1.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mkdocs" },
     { name = "towncrier" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/45/f2/9657996684db90da96c91342c3edd2fff80be938c34a33cd4feab434efd0/mkdocs_towncrier-0.1.4.tar.gz", hash = "sha256:097020b94d0226228800d291bbdd0e96ace7fce9d65b694bd733d2e55876b5c6", size = 17448, upload-time = "2025-03-03T22:11:45.597Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/02/21/2b9ed48625a771310e9123b4f53c480bcea54731a40bee6af641b7ce2f04/mkdocs_towncrier-0.1.5.tar.gz", hash = "sha256:081dc80f3bc84035b9ee6994e0d8fb88acf3ccc123bcefb4cccabe0f515892de", size = 20321, upload-time = "2025-08-31T16:29:29.294Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/bc/f4cc3e1fb0a218794fa1408a390c350b621a448784c06f764a7d2426dde4/mkdocs_towncrier-0.1.4-py3-none-any.whl", hash = "sha256:6ac60250023d5fd4cee62a0b1681f0cec0ba9303ac25f3ef1f7ad1afa5d16b40", size = 4854, upload-time = "2025-03-03T22:11:44.085Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/c1/1b180400e8912d7ff477ce569ae1f2c0d80890d2558ab8fe18b2f07e95c1/mkdocs_towncrier-0.1.5-py3-none-any.whl", hash = "sha256:ea6819a5600912a4238890cf9b921d2933eea1a2d0e7e862861caf091ef4e4b4", size = 4855, upload-time = "2025-08-31T16:29:28.254Z" },
 ]
 
 [[package]]
@@ -2736,7 +2736,7 @@ wheels = [
 
 [[package]]
 name = "towncrier"
-version = "24.8.0"
+version = "25.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click", version = "8.1.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
@@ -2746,9 +2746,9 @@ dependencies = [
     { name = "jinja2" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/69/d7/a5183f788cf4fabf03f7c767ae0b968249b0c737eb64b4d87a07ae01fea7/towncrier-24.8.0.tar.gz", hash = "sha256:013423ee7eed102b2f393c287d22d95f66f1a3ea10a4baa82d298001a7f18af3", size = 61635, upload-time = "2024-08-23T14:52:28.197Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c2/eb/5bf25a34123698d3bbab39c5bc5375f8f8bcbcc5a136964ade66935b8b9d/towncrier-25.8.0.tar.gz", hash = "sha256:eef16d29f831ad57abb3ae32a0565739866219f1ebfbdd297d32894eb9940eb1", size = 76322, upload-time = "2025-08-30T11:41:55.393Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/93/1b/2f7b88506e22d9798c139261af4946865c0787cfa345514ca3c70173a9cc/towncrier-24.8.0-py3-none-any.whl", hash = "sha256:9343209592b839209cdf28c339ba45792fbfe9775b5f9c177462fd693e127d8d", size = 56981, upload-time = "2024-08-23T14:52:26.659Z" },
+    { url = "https://files.pythonhosted.org/packages/42/06/8ba22ec32c74ac1be3baa26116e3c28bc0e76a5387476921d20b6fdade11/towncrier-25.8.0-py3-none-any.whl", hash = "sha256:b953d133d98f9aeae9084b56a3563fd2519dfc6ec33f61c9cd2c61ff243fb513", size = 65101, upload-time = "2025-08-30T11:41:53.644Z" },
 ]
 
 [[package]]
