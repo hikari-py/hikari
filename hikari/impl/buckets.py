@@ -265,8 +265,8 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     __slots__: typing.Sequence[str] = (
         "_compiled_route",
         "_global_ratelimit",
-        "_is_fixed",
         "_initial_request_lock",
+        "_is_fixed",
         "_max_rate_limit",
         "_out_of_sync",
         "_transit_semaphore",
