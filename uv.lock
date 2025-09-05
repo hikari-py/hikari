@@ -943,26 +943,26 @@ wheels = [
 
 [[package]]
 name = "griffe"
-version = "1.12.1"
+version = "1.14.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/81/ca/29f36e00c74844ae50d139cf5a8b1751887b2f4d5023af65d460268ad7aa/griffe-1.12.1.tar.gz", hash = "sha256:29f5a6114c0aeda7d9c86a570f736883f8a2c5b38b57323d56b3d1c000565567", size = 411863, upload-time = "2025-08-14T21:08:15.38Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/d7/6c09dd7ce4c7837e4cdb11dce980cb45ae3cd87677298dc3b781b6bce7d3/griffe-1.14.0.tar.gz", hash = "sha256:9d2a15c1eca966d68e00517de5d69dd1bc5c9f2335ef6c1775362ba5b8651a13", size = 424684, upload-time = "2025-09-05T15:02:29.167Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/13/f2/4fab6c3e5bcaf38a44cc8a974d2752eaad4c129e45d6533d926a30edd133/griffe-1.12.1-py3-none-any.whl", hash = "sha256:2d7c12334de00089c31905424a00abcfd931b45b8b516967f224133903d302cc", size = 138940, upload-time = "2025-08-14T21:08:13.382Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/b1/9ff6578d789a89812ff21e4e0f80ffae20a65d5dd84e7a17873fe3b365be/griffe-1.14.0-py3-none-any.whl", hash = "sha256:0e9d52832cccf0f7188cfe585ba962d2674b241c01916d780925df34873bceb0", size = 144439, upload-time = "2025-09-05T15:02:27.511Z" },
 ]
 
 [[package]]
 name = "griffe-inherited-docstrings"
-version = "1.1.1"
+version = "1.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "griffe" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7c/9f/098599019b2715e1edad3618305b8acf253e2ee375cbd389507cb23a2a00/griffe_inherited_docstrings-1.1.1.tar.gz", hash = "sha256:d179b6a6b7dc260fb892ad5b857837afd6f9de6193fc26d14463c4e9975a0cd3", size = 24146, upload-time = "2024-11-05T13:46:05.394Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/28/02/36d9929bb8ad929941b27117aba4d850b8a9f2c12f982e2b59ab4bc4d80b/griffe_inherited_docstrings-1.1.2.tar.gz", hash = "sha256:0a489ac4bb6093a7789d014b23083b4cbb1ab139f0b8dd878c8f3a4f8e892624", size = 27541, upload-time = "2025-09-05T15:17:13.081Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/67/f9/51a3fd7460b95583ff470c7b4fd706bd21f3fda97d521f3770126dc6d1fc/griffe_inherited_docstrings-1.1.1-py3-none-any.whl", hash = "sha256:0cb613ade70793b3589c706269a2cc4ceb91cbc4cfdc651037839cb9506eabe6", size = 6008, upload-time = "2024-11-05T13:46:03.504Z" },
+    { url = "https://files.pythonhosted.org/packages/ad/12/4c67b644dc5965000874908dfa89d05ba878d5ca22a9b4ebfbfadc41467b/griffe_inherited_docstrings-1.1.2-py3-none-any.whl", hash = "sha256:b1cf61fff6e12a769db75de5718ddbbb5361b2cc4155af1f1ad86c13f56c197b", size = 6709, upload-time = "2025-09-05T15:17:11.853Z" },
 ]
 
 [[package]]
@@ -1069,7 +1069,7 @@ audit = [{ name = "uv-secure" }]
 codespell = [{ name = "codespell", specifier = "==2.4.1" }]
 coverage = [{ name = "coverage", extras = ["toml"], specifier = "==7.10.6" }]
 mkdocs = [
-    { name = "griffe-inherited-docstrings", specifier = "==1.1.1" },
+    { name = "griffe-inherited-docstrings", specifier = "==1.1.2" },
     { name = "mkdocs", specifier = "==1.6.1" },
     { name = "mkdocs-gen-files", specifier = "==0.5.0" },
     { name = "mkdocs-literate-nav", specifier = "==0.6.2" },
