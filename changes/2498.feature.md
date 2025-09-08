@@ -1,1 +1,0 @@
-Add `PIN_MESSAGES` permission.
