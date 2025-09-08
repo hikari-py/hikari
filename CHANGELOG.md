@@ -1,3 +1,10 @@
+## 2.4.1 (2025-09-08)
+
+### Bugfixes
+
+- Properly release initial bucket lock. ([#2529](https://github.com/hikari-py/hikari/issues/2529))
+
+---
 ## 2.4.0 (2025-09-08)
 
 ### Breaking Changes
