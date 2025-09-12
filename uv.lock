@@ -1110,7 +1110,7 @@ pytest = [
     { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-asyncio", specifier = "==1.1.0" },
     { name = "pytest-cov", specifier = "==7.0.0" },
-    { name = "pytest-randomly", specifier = "==4.0.0" },
+    { name = "pytest-randomly", specifier = "==4.0.1" },
 ]
 release = [{ name = "twine", specifier = "==6.2.0" }]
 ruff = [{ name = "ruff", specifier = "==0.12.12" }]
@@ -2449,15 +2449,15 @@ wheels = [
 
 [[package]]
 name = "pytest-randomly"
-version = "4.0.0"
+version = "4.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "importlib-metadata", marker = "python_full_version < '3.10'" },
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b6/dd/8a2a6e09378ba2b9e4753f1bf2718e5fb033bf62aab8eef6e59dc6aba869/pytest_randomly-4.0.0.tar.gz", hash = "sha256:521c216e94e8b40cccfa5da5e403e9c45a3071db6f9f1cb2d5658e9017def2a9", size = 14190, upload-time = "2025-09-10T12:49:42.759Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/1d/258a4bf1109258c00c35043f40433be5c16647387b6e7cd5582d638c116b/pytest_randomly-4.0.1.tar.gz", hash = "sha256:174e57bb12ac2c26f3578188490bd333f0e80620c3f47340158a86eca0593cd8", size = 14130, upload-time = "2025-09-12T15:23:00.085Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/5e/6a2cbada6dd533d79becf3f4e21ffcea86c820ce4ed4dda298e4b14cf6a8/pytest_randomly-4.0.0-py3-none-any.whl", hash = "sha256:50297deaa5f18bf0b7d2aadfb3332eb3b313628aff260b63210d03578d3691aa", size = 8498, upload-time = "2025-09-10T12:49:41.521Z" },
+    { url = "https://files.pythonhosted.org/packages/33/3e/a4a9227807b56869790aad3e24472a554b585974fe7e551ea350f50897ae/pytest_randomly-4.0.1-py3-none-any.whl", hash = "sha256:e0dfad2fd4f35e07beff1e47c17fbafcf98f9bf4531fd369d9260e2f858bfcb7", size = 8304, upload-time = "2025-09-12T15:22:58.946Z" },
 ]
 
 [[package]]
