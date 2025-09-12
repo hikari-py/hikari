@@ -105,7 +105,7 @@ pyright = ["pyright==1.1.405", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==8.4.2",
-    "pytest-asyncio==1.1.0",
+    "pytest-asyncio==1.2.0",
     "pytest-cov==7.0.0",
     "pytest-randomly==4.0.0",
     "async-timeout==5.0.1",
