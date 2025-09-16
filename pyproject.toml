@@ -105,7 +105,7 @@ pyright = ["pyright==1.1.405", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==8.4.2",
-    "pytest-asyncio==1.1.0",
+    "pytest-asyncio==1.2.0",
     "pytest-cov==7.0.0",
     "pytest-randomly==4.0.1",
     "async-timeout==5.0.1",
@@ -199,7 +199,7 @@ filterwarnings = [
     "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
 ]
 required_plugins = ["pytest-asyncio"]
-asyncio_default_fixture_loop_scope = "func"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.towncrier]
 package = "hikari"
