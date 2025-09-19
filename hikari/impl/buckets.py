@@ -350,6 +350,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         now = time.time()
 
         if self.remaining == 0 and self.move_at - now > self._max_rate_limit:
+            self._transit_semaphore.release()
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 is_global=False,
@@ -364,7 +365,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         global_ratelimit = self._global_ratelimit
         if global_ratelimit.reset_at and (global_ratelimit.reset_at - now) > self._max_rate_limit:
-            # Release lock before we error
+            self._transit_semaphore.release()
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 is_global=True,
