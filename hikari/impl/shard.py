@@ -322,7 +322,7 @@ class _GatewayTransport(abc.ABC):
 class _GatewayZlibStreamTransport(_GatewayTransport):
     __slots__ = ("_inflator",)
 
-    def __init__(self, *args: object, **kwargs: object) -> None:
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
         self._inflator = zlib.decompressobj()
 
@@ -359,7 +359,7 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
 class _GatewayZstdStreamTransport(_GatewayTransport):
     __slots__ = ("_inflator",)
 
-    def __init__(self, *args: object, **kwargs: object) -> None:
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
 
         try:
