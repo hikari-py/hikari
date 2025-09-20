@@ -342,7 +342,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
                 return
 
             # Mypy is wrong here, it is indeed reachable
-            self._initial_request_lock.release() # type: ignore[unreachable]
+            self._initial_request_lock.release()  # type: ignore[unreachable]
 
         assert self._transit_semaphore is not None
         await self._transit_semaphore.acquire()
