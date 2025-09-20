@@ -3657,11 +3657,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("mute", mute)
         body.put("deaf", deaf)
         body.put_snowflake_array("roles", roles)
-
-        if voice_channel is None:
-            body.put("channel_id", None)
-        else:
-            body.put_snowflake("channel_id", voice_channel)
+        body.put_snowflake("channel_id", voice_channel)
 
         if isinstance(communication_disabled_until, datetime.datetime):
             body.put("communication_disabled_until", communication_disabled_until.isoformat())
@@ -4039,10 +4035,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("enabled", enabled)
-        if channel is None:
-            body.put("channel", None)
-        elif channel is not undefined.UNDEFINED:
-            body.put_snowflake("channel", channel)
+        body.put_snowflake("channel", channel)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -4070,12 +4063,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body.put("description", description)
         body.put("enabled", enabled)
-
-        if channels is not None:
-            body.put_array("welcome_channels", channels, conversion=self._entity_factory.serialize_welcome_channel)
-
-        else:
-            body.put("welcome_channels", None)
+        body.put_array("welcome_channels", channels, conversion=self._entity_factory.serialize_welcome_channel)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
