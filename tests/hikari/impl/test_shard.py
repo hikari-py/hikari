@@ -259,7 +259,7 @@ class TestGatewayTransport:
             pytest.param(
                 shard_api.GatewayCompression.TRANSPORT_ZSTD_STREAM,
                 shard._GatewayZstdStreamTransport,
-                marks=pytest.mark.skipif(zstd_present, reason="ZSTD not present"),
+                marks=pytest.mark.skipif(not zstd_present, reason="ZSTD not present"),
             ),
             (shard_api.GatewayCompression.TRANSPORT_ZLIB_STREAM, shard._GatewayZlibStreamTransport),
             (shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM, shard._GatewayZlibMessageTransport),
