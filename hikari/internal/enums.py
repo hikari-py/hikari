@@ -237,7 +237,7 @@ class _EnumMeta(type):
 
         try:
             # Fails if Enum is not defined. We check this in `__new__` properly.
-            base, enum_type = bases
+            base, _enum_type = bases
 
             if isinstance(base, _EnumMeta):
                 msg = "First base to an enum must be the type to combine with, not _EnumMeta"
