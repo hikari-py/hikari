@@ -397,6 +397,9 @@ class _GatewayZlibMessageTransport(_GatewayTransport):
         if message.type == aiohttp.WSMsgType.BINARY:
             assert isinstance(message.data, bytes)
             return zlib.decompress(message.data)
+        if message.type == aiohttp.WSMsgType.TEXT:
+            assert isinstance(message.data, str)
+            return message.data.encode()
 
         self._handle_other_message(message)
 
@@ -534,7 +537,7 @@ class GatewayShardImpl(shard.GatewayShard):
     def __init__(
         self,
         *,
-        compression: shard.GatewayCompression | None = _DEFAULT_COMPRESS_TYPE,
+        compression: shard.GatewayCompression | None = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         initial_activity: presences.Activity | None = None,
