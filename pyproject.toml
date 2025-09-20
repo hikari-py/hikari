@@ -181,7 +181,6 @@ reportUntypedFunctionDecorator = "warning"
 reportOptionalMemberAccess = "warning"
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
 xfail_strict = true
 norecursedirs = [
     "docs",
@@ -201,7 +200,11 @@ filterwarnings = [
     "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
 ]
 required_plugins = ["pytest-asyncio"]
+
 asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+asyncio_debug = true
+asyncio_mode = "strict"
 
 [tool.towncrier]
 package = "hikari"
