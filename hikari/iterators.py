@@ -157,7 +157,7 @@ class AttrComparator(typing.Generic[ValueT]):
         return bool(real_item == self.expected_value)
 
 
-class LazyIterator(typing.Generic[ValueT], abc.ABC):
+class LazyIterator(abc.ABC, typing.Generic[ValueT]):
     """A set of results that are fetched asynchronously from the API as needed.
 
     This is a [`typing.AsyncIterable`][] and [`typing.AsyncIterator`][] with several
@@ -736,7 +736,7 @@ def _flatten(value: ValueT) -> ValueT:
     return value
 
 
-class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC):
+class BufferedLazyIterator(LazyIterator[ValueT], abc.ABC, typing.Generic[ValueT]):
     """A special kind of lazy iterator that is used by internal components.
 
     The purpose of this is to provide an interface to lazily deserialize
@@ -806,7 +806,7 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
         self._complete()
 
 
-class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class FlatLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     """A lazy iterator that has all items in-memory and ready.
 
     This can be iterated across as a normal iterator, or as an async iterator.
@@ -832,7 +832,7 @@ class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
             self._complete()
 
 
-class NOOPLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class NOOPLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     """A lazy iterator that uses an underlying async iterator and does nothing."""
 
     __slots__: typing.Sequence[str] = ("_iterator",)
@@ -845,7 +845,7 @@ class NOOPLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         return await self._iterator.__anext__()
 
 
-class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[tuple[int, ValueT]]):
+class _EnumeratedLazyIterator(LazyIterator[tuple[int, ValueT]], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_i", "_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], *, start: int) -> None:
@@ -859,7 +859,7 @@ class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[tuple[int, Va
         return pair
 
 
-class _LimitedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class _LimitedLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_count", "_iterator", "_limit")
 
     def __init__(self, iterator: LazyIterator[ValueT], limit: int) -> None:
@@ -880,7 +880,7 @@ class _LimitedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         return next_item
 
 
-class _DropCountLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class _DropCountLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_count", "_iterator", "_number")
 
     def __init__(self, iterator: LazyIterator[ValueT], number: int) -> None:
@@ -900,7 +900,7 @@ class _DropCountLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         return await self._iterator.__anext__()
 
 
-class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class _FilteredLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_iterator", "_predicate")
 
     def __init__(self, iterator: LazyIterator[ValueT], predicate: typing.Callable[[ValueT], bool]) -> None:
@@ -916,7 +916,7 @@ class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._complete()
 
 
-class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[ValueT]]):
+class _ChunkedLazyIterator(LazyIterator[typing.Sequence[ValueT]], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_chunk_size", "_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], chunk_size: int) -> None:
@@ -939,7 +939,7 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         self._complete()
 
 
-class _ReversedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class _ReversedLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_buffer", "_origin")
 
     def __init__(self, iterator: LazyIterator[ValueT]) -> None:
@@ -958,7 +958,7 @@ class _ReversedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
             self._complete()
 
 
-class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[ValueT]):
+class _MappingLazyIterator(LazyIterator[ValueT], typing.Generic[AnotherValueT, ValueT]):
     __slots__: typing.Sequence[str] = ("_iterator", "_transformation")
 
     def __init__(
@@ -972,7 +972,7 @@ class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[V
         return self._transformation(await self._iterator.__anext__())
 
 
-class _TakeWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class _TakeWhileLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_condition", "_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], condition: typing.Callable[[ValueT], bool]) -> None:
@@ -989,7 +989,7 @@ class _TakeWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._complete()
 
 
-class _DropWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class _DropWhileLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_condition", "_has_dropped", "_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], condition: typing.Callable[[ValueT], bool]) -> None:
@@ -1017,7 +1017,7 @@ _FlattenerT = typing.Union[
 ]
 
 
-class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[AnotherValueT]):
+class _FlatMapLazyIterator(LazyIterator[AnotherValueT], typing.Generic[ValueT, AnotherValueT]):
     __slots__: typing.Sequence[str] = ("_flattener", "_iterator", "_result_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], flattener: _FlattenerT[ValueT, AnotherValueT]) -> None:
@@ -1045,7 +1045,7 @@ class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[A
         return await self._result_iterator.__anext__()
 
 
-class _AwaitingLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class _AwaitingLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_buffer", "_iterator", "_window_size")
 
     def __init__(self, iterator: LazyIterator[typing.Awaitable[ValueT]], window_size: int) -> None:
