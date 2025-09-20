@@ -28,11 +28,18 @@ import warnings
 
 import pytest
 
+with warnings.catch_warnings():
+    # Event loop policies have been deprecated in 3.14, with removal set to 3.16
+    #
+    # Unfortunately, pytest-asyncio doesn't have proper support for the new
+    # runners, so we need to wait
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from asyncio import DefaultEventLoopPolicy
 
 #####################
 # Enable loop debug #
 #####################
-class TestingPolicy(asyncio.DefaultEventLoopPolicy):
+class TestingPolicy(DefaultEventLoopPolicy):
     def set_event_loop(self, loop: typing.Optional[asyncio.AbstractEventLoop]) -> None:
         # Close any old event loops to prevent them from raising warnings
         if self._local._loop:
@@ -44,7 +51,10 @@ class TestingPolicy(asyncio.DefaultEventLoopPolicy):
         super().set_event_loop(loop)
 
 
-asyncio.set_event_loop_policy(TestingPolicy())
+@pytest.fixture(scope="session")
+def event_loop_policy(request):
+    return TestingPolicy()
+
 sys.set_coroutine_origin_tracking_depth(100)
 
 ################################################################################
