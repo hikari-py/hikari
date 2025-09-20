@@ -23,8 +23,10 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
+import importlib.util
 import platform
 import re
+import sys
 
 import aiohttp
 import mock
@@ -37,11 +39,14 @@ from hikari import presences
 from hikari import urls
 from hikari.impl import config
 from hikari.impl import shard
+from hikari.api import shard as shard_api
 from hikari.internal import aio
 from hikari.internal import net
 from hikari.internal import time
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
+
+zstd_present = sys.version_info >= (3, 14) or importlib.util.find_spec("zstandard")
 
 
 def test_log_filterer():
@@ -113,41 +118,14 @@ class StubResponse:
 class TestGatewayTransport:
     @pytest.fixture
     def transport_impl(self):
-        return shard._GatewayTransport(
+        return hikari_test_helpers.mock_class_namespace(shard._GatewayTransport, slots_=False)(
             ws=mock.Mock(),
             exit_stack=mock.AsyncMock(),
             logger=mock.Mock(),
             log_filterer=mock.Mock(),
             loads=mock.Mock(return_value={}),
             dumps=mock.Mock(),
-            transport_compression=True,
         )
-
-    def test_init_when_transport_compression(self):
-        transport = shard._GatewayTransport(
-            ws=mock.Mock(),
-            exit_stack=mock.AsyncMock(),
-            logger=mock.Mock(),
-            log_filterer=mock.Mock(),
-            loads=mock.Mock(),
-            dumps=mock.Mock(),
-            transport_compression=True,
-        )
-
-        assert transport._receive_and_check == transport._receive_and_check_zlib
-
-    def test_init_when_no_transport_compression(self):
-        transport = shard._GatewayTransport(
-            ws=mock.Mock(),
-            exit_stack=mock.AsyncMock(),
-            logger=mock.Mock(isEnabledFor=mock.Mock(return_value=False)),
-            log_filterer=mock.Mock(),
-            loads=mock.Mock(),
-            dumps=mock.Mock(),
-            transport_compression=False,
-        )
-
-        assert transport._receive_and_check == transport._receive_and_check_text
 
     @pytest.mark.asyncio
     async def test_send_close(self, transport_impl):
@@ -275,74 +253,21 @@ class TestGatewayTransport:
 
         assert exc_info.value.__cause__ is exception
 
+    @pytest.mark.parametrize(
+        ("compression", "expected_instance"),
+        [
+            pytest.param(
+                shard_api.GatewayCompression.TRANSPORT_ZSTD_STREAM,
+                shard._GatewayZstdStreamTransport,
+                marks=pytest.mark.skipif(not zstd_present, reason="ZSTD not present"),
+            ),
+            (shard_api.GatewayCompression.TRANSPORT_ZLIB_STREAM, shard._GatewayZlibStreamTransport),
+            (shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM, shard._GatewayZlibMessageTransport),
+            (None, shard._GatewayBasicTransport),
+        ],
+    )
     @pytest.mark.asyncio
-    async def test__receive_and_check_text(self, transport_impl):
-        transport_impl._ws.receive = mock.AsyncMock(
-            return_value=StubResponse(type=aiohttp.WSMsgType.TEXT, data="some text")
-        )
-
-        assert await transport_impl._receive_and_check_text() == b"some text"
-
-        transport_impl._ws.receive.assert_awaited_once_with()
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_text_when_message_type_is_unknown(self, transport_impl):
-        transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.BINARY))
-
-        with pytest.raises(
-            errors.GatewayTransportError,
-            match="Gateway transport error: Unexpected message type received BINARY, expected TEXT",
-        ):
-            await transport_impl._receive_and_check_text()
-
-        transport_impl._ws.receive.assert_awaited_once_with()
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_payload_split_across_frames(self, transport_impl):
-        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
-        response2 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\xc9W(\xcf/\xcaIQ\x04\x00\x00")
-        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
-        transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
-
-        assert await transport_impl._receive_and_check_zlib() == b"Hello world!"
-
-        assert transport_impl._ws.receive.call_count == 3
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_full_payload_in_one_frame(self, transport_impl):
-        response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xdaJLD\x07\x00\x00\x00\x00\xff\xff")
-        transport_impl._ws.receive = mock.AsyncMock(return_value=response)
-
-        assert await transport_impl._receive_and_check_zlib() == b"aaaaaaaaaaaaaaaaaa"
-
-        transport_impl._ws.receive.assert_awaited_once_with()
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_message_type_is_unknown(self, transport_impl):
-        transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.TEXT))
-
-        with pytest.raises(
-            errors.GatewayTransportError,
-            match="Gateway transport error: Unexpected message type received TEXT, expected BINARY",
-        ):
-            await transport_impl._receive_and_check_zlib()
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_issue_during_reception_of_multiple_frames(self, transport_impl):
-        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
-        response2 = StubResponse(type=aiohttp.WSMsgType.ERROR, data="Something broke!")
-        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
-        transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
-        transport_impl._ws.exception = mock.Mock(return_value=None)
-
-        with pytest.raises(
-            errors.GatewayTransportError, match=r"Gateway transport error: 'Something broke!' \[extra=None, type=258\]"
-        ):
-            await transport_impl._receive_and_check_zlib()
-
-    @pytest.mark.parametrize("transport_compression", [True, False])
-    @pytest.mark.asyncio
-    async def test_connect(self, http_settings, proxy_settings, transport_compression):
+    async def test_connect(self, http_settings, proxy_settings, compression, expected_instance):
         logger = mock.Mock()
         log_filterer = mock.Mock()
         client_session = mock.Mock()
@@ -366,21 +291,16 @@ class TestGatewayTransport:
                 log_filterer=log_filterer,
                 loads=loads,
                 dumps=dumps,
-                transport_compression=transport_compression,
+                compression=compression,
             )
 
-        assert isinstance(ws, shard._GatewayTransport)
+        assert isinstance(ws, expected_instance)
         assert ws._ws is websocket
         assert ws._exit_stack is exit_stack
         assert ws._logger is logger
         assert ws._log_filterer is log_filterer
         assert ws._loads is loads
         assert ws._dumps is dumps
-
-        if transport_compression:
-            assert ws._receive_and_check == ws._receive_and_check_zlib
-        else:
-            assert ws._receive_and_check == ws._receive_and_check_text
 
         assert exit_stack.enter_async_context.call_count == 2
         exit_stack.enter_async_context.assert_has_calls(
@@ -428,7 +348,7 @@ class TestGatewayTransport:
                 log_filterer=log_filterer,
                 loads=object(),
                 dumps=object(),
-                transport_compression=True,
+                compression=True,
             )
 
         exit_stack.aclose.assert_awaited_once_with()
@@ -469,13 +389,104 @@ class TestGatewayTransport:
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
-                transport_compression=True,
+                compression=True,
                 loads=object(),
                 dumps=object(),
             )
 
         exit_stack.aclose.assert_awaited_once_with()
         sleep.assert_awaited_once_with(0.25)
+
+
+class TestGatewayBasicTransport:
+    @pytest.fixture
+    def transport_impl(self):
+        return shard._GatewayBasicTransport(
+            ws=mock.Mock(),
+            exit_stack=mock.AsyncMock(),
+            logger=mock.Mock(),
+            log_filterer=mock.Mock(),
+            loads=mock.Mock(return_value={}),
+            dumps=mock.Mock(),
+        )
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check(self, transport_impl):
+        transport_impl._ws.receive = mock.AsyncMock(
+            return_value=StubResponse(type=aiohttp.WSMsgType.TEXT, data="some text")
+        )
+
+        assert await transport_impl._receive_and_check() == b"some text"
+
+        transport_impl._ws.receive.assert_awaited_once_with()
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_message_type_is_unknown(self, transport_impl):
+        transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.BINARY))
+
+        with pytest.raises(
+            errors.GatewayTransportError,
+            match="Gateway transport error: Unexpected message type received BINARY, expected TEXT",
+        ):
+            await transport_impl._receive_and_check()
+
+        transport_impl._ws.receive.assert_awaited_once_with()
+
+
+class TestGatewayZlibStreamTransport:
+    @pytest.fixture
+    def transport_impl(self):
+        return shard._GatewayZlibStreamTransport(
+            ws=mock.Mock(),
+            exit_stack=mock.AsyncMock(),
+            logger=mock.Mock(),
+            log_filterer=mock.Mock(),
+            loads=mock.Mock(return_value={}),
+            dumps=mock.Mock(),
+        )
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_payload_split_across_frames(self, transport_impl):
+        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
+        response2 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\xc9W(\xcf/\xcaIQ\x04\x00\x00")
+        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
+        transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
+
+        assert await transport_impl._receive_and_check() == b"Hello world!"
+
+        assert transport_impl._ws.receive.call_count == 3
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_full_payload_in_one_frame(self, transport_impl):
+        response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xdaJLD\x07\x00\x00\x00\x00\xff\xff")
+        transport_impl._ws.receive = mock.AsyncMock(return_value=response)
+
+        assert await transport_impl._receive_and_check() == b"aaaaaaaaaaaaaaaaaa"
+
+        transport_impl._ws.receive.assert_awaited_once_with()
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_message_type_is_unknown(self, transport_impl):
+        transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.TEXT))
+
+        with pytest.raises(
+            errors.GatewayTransportError,
+            match="Gateway transport error: Unexpected message type received TEXT, expected BINARY",
+        ):
+            await transport_impl._receive_and_check()
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_issue_during_reception_of_multiple_frames(self, transport_impl):
+        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
+        response2 = StubResponse(type=aiohttp.WSMsgType.ERROR, data="Something broke!")
+        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
+        transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
+        transport_impl._ws.exception = mock.Mock(return_value=None)
+
+        with pytest.raises(
+            errors.GatewayTransportError, match=r"Gateway transport error: 'Something broke!' \[extra=None, type=258\]"
+        ):
+            await transport_impl._receive_and_check()
 
 
 @pytest.fixture
@@ -492,20 +503,6 @@ def client(http_settings, proxy_settings):
 
 
 class TestGatewayShardImpl:
-    def test__init__when_unsupported_compression_format(self):
-        with pytest.raises(NotImplementedError, match=r"Unsupported compression format something"):
-            shard.GatewayShardImpl(
-                event_manager=mock.Mock(),
-                event_factory=mock.Mock(),
-                http_settings=http_settings,
-                proxy_settings=proxy_settings,
-                intents=intents.Intents.ALL,
-                url="wss://gaytewhuy.discord.meh",
-                data_format="json",
-                compression="something",
-                token="12345",
-            )
-
     def test_using_etf_is_unsupported(self, http_settings, proxy_settings):
         with pytest.raises(NotImplementedError, match="Unsupported gateway data format: etf"):
             shard.GatewayShardImpl(
@@ -928,7 +925,7 @@ class TestGatewayShardImplAsync:
     async def test__connect_when_not_reconnecting(self, client, http_settings, proxy_settings):
         ws = mock.AsyncMock()
         ws.receive_json.return_value = {"op": 10, "d": {"heartbeat_interval": 10}}
-        client._transport_compression = False
+        client._compression = shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM
         client._shard_id = 20
         client._shard_count = 100
         client._gateway_url = "wss://somewhere.com?somewhere=true"
@@ -978,7 +975,7 @@ class TestGatewayShardImplAsync:
             log_filterer=log_filterer.return_value,
             logger=client._logger,
             proxy_settings=proxy_settings,
-            transport_compression=False,
+            compression=shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM,
             loads=client._loads,
             dumps=client._dumps,
             url="wss://somewhere.com?somewhere=true&v=400&encoding=json",
@@ -999,7 +996,7 @@ class TestGatewayShardImplAsync:
                 "op": 2,
                 "d": {
                     "token": "sometoken",
-                    "compress": False,
+                    "compress": True,
                     "large_threshold": "your mom",
                     "properties": {
                         "os": "Potato OS ARM64",
@@ -1022,7 +1019,7 @@ class TestGatewayShardImplAsync:
     async def test__connect_when_reconnecting(self, client, http_settings, proxy_settings):
         ws = mock.AsyncMock()
         ws.receive_json.return_value = {"op": 10, "d": {"heartbeat_interval": 10}}
-        client._transport_compression = True
+        client._compression = shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM
         client._shard_id = 20
         client._gateway_url = "wss://somewhere.com?somewhere=false"
         client._resume_gateway_url = "wss://notsomewhere.com?somewhere=true"
@@ -1065,8 +1062,8 @@ class TestGatewayShardImplAsync:
             proxy_settings=proxy_settings,
             loads=client._loads,
             dumps=client._dumps,
-            transport_compression=True,
-            url="wss://notsomewhere.com?somewhere=true&v=400&encoding=json&compress=zlib-stream",
+            compression=shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM,
+            url="wss://notsomewhere.com?somewhere=true&v=400&encoding=json",
         )
 
         assert create_task.call_count == 2

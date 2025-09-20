@@ -66,8 +66,9 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-speedups = ["aiohttp[speedups]~=3.11", "ciso8601~=2.3", "orjson~=3.10"]
-server = ["pynacl~=1.5"]
+speedups = ["aiohttp[speedups]", "hikari[zstd]", "ciso8601~=2.3", "orjson~=3.11"]
+server = ["pynacl~=1.6"]
+zstd = ["zstandard~=0.25"]
 
 [project.urls]
 "Documentation" = "https://docs.hikari-py.dev/en/stable"
