@@ -30,7 +30,7 @@ pattern = '__version__: typing\.Final\[str\] = \"(?P<version>[^\"]+)\"'
 dynamic = ["version"]
 name = "hikari"
 description = "A sane Discord API for Python 3 built on asyncio and good intentions"
-requires-python = ">=3.9.0,<3.14"
+requires-python = ">=3.9.0,<3.15"
 dependencies = [
     "aiohttp~=3.12",
     "attrs~=25.1",
@@ -59,6 +59,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Communications :: Chat",
     "Topic :: Internet :: WWW/HTTP",
@@ -180,7 +181,6 @@ reportUntypedFunctionDecorator = "warning"
 reportOptionalMemberAccess = "warning"
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
 xfail_strict = true
 norecursedirs = [
     "docs",
@@ -200,7 +200,11 @@ filterwarnings = [
     "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
 ]
 required_plugins = ["pytest-asyncio"]
+
 asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+asyncio_debug = true
+asyncio_mode = "strict"
 
 [tool.towncrier]
 package = "hikari"

@@ -31,6 +31,7 @@ __all__: typing.Sequence[str] = ("All", "AttrComparator", "BufferedLazyIterator"
 
 import abc
 import asyncio
+import inspect
 import typing
 
 from hikari.internal import spel
@@ -254,7 +255,7 @@ class LazyIterator(abc.ABC, typing.Generic[ValueT]):
 
     async def for_each(self, consumer: typing.Callable[[ValueT], object]) -> None:
         """Forward each value to a given consumer immediately."""
-        if asyncio.iscoroutinefunction(consumer):
+        if inspect.iscoroutinefunction(consumer):
             async for item in self:
                 await consumer(item)
         else:

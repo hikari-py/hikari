@@ -22,6 +22,7 @@
 
 from __future__ import annotations
 
+import sys
 import typing
 
 from pipelines import config
@@ -46,7 +47,7 @@ COVERAGE_FLAGS = [
 def pytest(session: nox.Session) -> None:
     """Run unit tests and measure code coverage.
 
-    Coverage can be disabled with the `--skip-coverage` flag.
+    Coverage can be enabled with the `--coverage` flag.
     """
     _pytest(session)
 
@@ -55,8 +56,12 @@ def pytest(session: nox.Session) -> None:
 def pytest_all_features(session: nox.Session) -> None:
     """Run unit tests and measure code coverage, using speedup modules.
 
-    Coverage can be disabled with the `--skip-coverage` flag.
+    Coverage can be enabled with the `--coverage` flag.
     """
+    if sys.version_info >= (3, 14):
+        session.log("pytest-all-features is disabled in 3.14+ due to https://github.com/pytest-dev/pytest/issues/13739")
+        return
+
     _pytest(session, extras_install=["speedups", "server"], python_flags=("-OO",))
 
 
