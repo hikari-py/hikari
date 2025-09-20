@@ -66,7 +66,7 @@ if sys.version_info >= (3, 14):
     _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 else:
     try:
-        import zstandard  # noqa: PLC0415
+        import zstandard  # noqa: F401
     except ModuleNotFoundError:
         _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM
     else:
@@ -141,7 +141,7 @@ class _GatewayTransport(abc.ABC):
     Payload logging is also performed here.
     """
 
-    __slots__ = ("_dumps", "_exit_stack", "_loads", "_log_filterer", "_logger", "_sent_close", "_ws", "_inflator")
+    __slots__ = ("_dumps", "_exit_stack", "_loads", "_log_filterer", "_logger", "_sent_close", "_ws")
 
     def __init__(
         self,
@@ -275,6 +275,7 @@ class _GatewayTransport(abc.ABC):
                     )
                 )
 
+                transport_cls: type[_GatewayTransport]
                 if compression == shard.GatewayCompression.TRANSPORT_ZSTD_STREAM:
                     transport_cls = _GatewayZstdStreamTransport
                 elif compression == shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
@@ -321,11 +322,12 @@ class _GatewayTransport(abc.ABC):
 class _GatewayZlibStreamTransport(_GatewayTransport):
     __slots__ = ("_inflator",)
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
         self._inflator = zlib.decompressobj()
 
-    async def _receive_and_check(self) -> bytes:  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.BINARY:
@@ -357,7 +359,7 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
 class _GatewayZstdStreamTransport(_GatewayTransport):
     __slots__ = ("_inflator",)
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs)
 
         try:
@@ -374,7 +376,8 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
             msg = "You must install the optional `hikari[zstd]` dependencies to use the zstd stream compression."
             raise RuntimeError(msg) from exc
 
-    async def _receive_and_check(self) -> bytes:  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.BINARY:
@@ -385,7 +388,10 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
 
 
 class _GatewayZlibMessageTransport(_GatewayTransport):
-    async def _receive_and_check(self) -> bytes:  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    __slots__ = ()
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.BINARY:
@@ -396,7 +402,10 @@ class _GatewayZlibMessageTransport(_GatewayTransport):
 
 
 class _GatewayBasicTransport(_GatewayTransport):
-    async def _receive_and_check(self) -> bytes:  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    __slots__ = ()
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.TEXT:
@@ -490,6 +499,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
+        "_compression",
         "_dumps",
         "_event_factory",
         "_event_manager",
@@ -517,7 +527,6 @@ class GatewayShardImpl(shard.GatewayShard):
         "_status",
         "_token",
         "_total_rate_limit",
-        "_compression",
         "_user_id",
         "_ws",
     )

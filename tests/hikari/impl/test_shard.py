@@ -23,6 +23,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
+import importlib.util
 import platform
 import re
 import sys
@@ -45,15 +46,7 @@ from hikari.internal import time
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
 
-if sys.version_info >= (3, 14):
-    zstd_present = True
-else:
-    try:
-        import zstandard  # noqa: PLC0415
-    except ModuleNotFoundError:
-        zstd_present = False
-    else:
-        zstd_present = True
+zstd_present = sys.version_info >= (3, 14) or importlib.util.find_spec("zstandard")
 
 
 def test_log_filterer():
