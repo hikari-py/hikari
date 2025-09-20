@@ -1338,7 +1338,11 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         elif self._embeds is None:
             data.put("embeds", None)
 
-        data.put_array("components", self._components, conversion=lambda component: component.build())
+        if self._components:
+            data.put_array("components", self._components, conversion=lambda component: component.build())
+        elif self._components is None:
+            data.put("components", None)
+
         data.put("flags", self.flags)
         data.put("tts", self.is_tts)
         data.put("poll", self.poll, conversion=lambda poll: poll.build())

@@ -296,6 +296,9 @@ class JSONObjectBuilder(dict[str, JSONish]):
         conversion
             The optional conversion to apply.
         """
+        if value is undefined.UNDEFINED:
+            return
+
         if not conversion or value is None:
             self[key] = value
         else:
@@ -340,12 +343,15 @@ class JSONObjectBuilder(dict[str, JSONish]):
         conversion
             The optional conversion to apply.
         """
-        if values:
+        if values is undefined.UNDEFINED:
+            return
+
+        if values is not None:
             if conversion:
                 self[key] = [conversion(value) for value in values]
             else:
                 self[key] = list(values)
-        elif values is None:
+        else:
             self[key] = None
 
     def put_snowflake(
@@ -364,9 +370,12 @@ class JSONObjectBuilder(dict[str, JSONish]):
             case, nothing is performed. This may also be [`None`][], in this
             case the value isn't cast and is stored as-is.
         """
-        if value:
+        if value is undefined.UNDEFINED:
+            return
+
+        if value is not None:
             self[key] = str(int(value))
-        elif value is None:
+        else:
             self[key] = None
 
     def put_snowflake_array(
@@ -390,9 +399,12 @@ class JSONObjectBuilder(dict[str, JSONish]):
             In the latter case, nothing is performed. This may also be [`None`][],
             in which case the value isn't cast and is stored as-is.
         """
-        if values:
+        if values is undefined.UNDEFINED:
+            return
+
+        if values is not None:
             self[key] = [str(int(value)) for value in values]
-        elif values is None:
+        else:
             self[key] = None
 
 
