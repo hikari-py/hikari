@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,16 +24,21 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "DEFERRED_RESPONSE_TYPES",
+    "MESSAGE_RESPONSE_TYPES",
     "DeferredResponseTypesT",
-    "InteractionMember",
+    "InteractionCallback",
+    "InteractionCallbackActivityInstance",
+    "InteractionCallbackResource",
+    "InteractionCallbackResponse",
     "InteractionChannel",
-    "ResolvedOptionData",
+    "InteractionMember",
     "InteractionType",
     "MessageResponseMixin",
-    "MESSAGE_RESPONSE_TYPES",
     "MessageResponseTypesT",
-    "PartialInteraction",
     "ModalResponseMixin",
+    "PartialInteraction",
+    "PartialInteractionMetadata",
+    "ResolvedOptionData",
     "ResponseType",
 )
 
@@ -45,17 +49,21 @@ import attrs
 from hikari import channels
 from hikari import guilds
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import webhooks
 from hikari.internal import attrs_extensions
 from hikari.internal import enums
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import applications
     from hikari import embeds as embeds_
     from hikari import files
+    from hikari import locales
     from hikari import messages
+    from hikari import monetization
     from hikari import permissions as permissions_
-    from hikari import traits
     from hikari import users
     from hikari.api import special_endpoints
 
@@ -141,16 +149,79 @@ class ResponseType(int, enums.Enum):
     * [`hikari.interactions.base_interactions.InteractionType.MODAL_SUBMIT`][]
     """
 
-    PREMIUM_REQUIRED = 10
-    """An immediate interaction response with a premium upsell button
-    Only available for apps with monetization enabled.
+    LAUNCH_ACTIVITY = 12
+    """An immediate interaction response launching the activity associated with the application.
 
-    This is valid for the following interaction types:
-
-    * `InteractionType.APPLICATION_COMMAND`
-    * `InteractionType.MESSAGE_COMPONENT`
-    * `InteractionType.MODAL_SUBMIT`
+    This response type is only available for applications with activities enabled.
     """
+
+
+@attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
+class InteractionCallbackResponse:
+    """The response to an interaction callback."""
+
+    interaction: InteractionCallback = attrs.field()
+    """The interaction object associated with the interaction response."""
+
+    resource: undefined.UndefinedOr[InteractionCallbackResource] = attrs.field()
+    """The resource that was created by the interaction response, if any."""
+
+
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class InteractionCallback(snowflakes.Unique):
+    """An interaction callback object."""
+
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    # <<inherited docstring from Unique>>.
+
+    type: InteractionType = attrs.field(hash=True, repr=True)
+    """The type of the interaction."""
+
+    activity_instance_id: undefined.UndefinedOr[str] = attrs.field(hash=False, repr=True)
+    """The instance ID of the activity if one was launched or joined."""
+
+    response_message_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(hash=False, repr=True)
+    """The ID of the message that was created by the interaction."""
+
+    response_message_loading: bool = attrs.field(hash=False, repr=True)
+    """Whether the created message is in a loading state.
+
+    Will always be [`False`][] if no message was created.
+    """
+
+    response_message_ephemeral: bool = attrs.field(hash=False, repr=True)
+    """The ID of the message that was created by the interaction.
+
+    Will always be [`False`][] if no message was created.
+    """
+
+
+@attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
+class InteractionCallbackResource:
+    """An interaction callback resources."""
+
+    type: ResponseType = attrs.field()
+    """The type of the interaction response."""
+
+    activity_instance: undefined.UndefinedOr[InteractionCallbackActivityInstance] = attrs.field()
+    """The activity launched by this interaction.
+
+    Will only be present if `type` is `LAUNCH_ACTIVITY`.
+    """
+
+    message: undefined.UndefinedOr[messages.Message] = attrs.field()
+    """The message created by the interaction.
+
+    Will only be present if `type` is `CHANNEL_MESSAGE_WITH_SOURCE` or `UPDATE_MESSAGE`.
+    """
+
+
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class InteractionCallbackActivityInstance:
+    """An interaction callback activity instance."""
+
+    id: str = attrs.field(hash=True, repr=True)
+    """The instance ID of the activity if one was launched or joined."""
 
 
 MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] = frozenset(
@@ -210,7 +281,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     application_id: snowflakes.Snowflake = attrs.field(eq=False, repr=False)
     """ID of the application this interaction belongs to."""
 
-    type: typing.Union[InteractionType, int] = attrs.field(eq=False, repr=True)
+    type: InteractionType = attrs.field(eq=False, repr=True)
     """The type of interaction this is."""
 
     token: str = attrs.field(eq=False, repr=False)
@@ -219,26 +290,81 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     version: int = attrs.field(eq=False, repr=True)
     """Version of the interaction system this interaction is under."""
 
+    app_permissions: permissions_.Permissions | None = attrs.field(eq=False, hash=False, repr=False)
+    """Permissions the bot has in this interaction's channel if it's in a guild."""
+
+    user: users.User = attrs.field(eq=False, hash=False, repr=True)
+    """The user who triggered this interaction."""
+
+    member: InteractionMember | None = attrs.field(eq=False, hash=False, repr=True)
+    """The member who triggered this interaction.
+
+    This will be [`None`][] for interactions triggered in DMs.
+
+    !!! note
+        This member object comes with the extra field `permissions` which
+        contains the member's permissions in the current channel.
+    """
+
+    channel: InteractionChannel = attrs.field(eq=False, repr=False)
+    """The channel this interaction was triggered in."""
+
+    guild_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
+    """ID of the guild this modal interaction event was triggered in.
+
+    This will be [`None`][] for modal interactions triggered in DMs.
+    """
+
+    guild_locale: str | locales.Locale | None = attrs.field(eq=False, hash=False, repr=True)
+    """The preferred language of the guild this component interaction was triggered in.
+
+    This will be [`None`][] for component interactions triggered in DMs.
+
+    !!! note
+        This value can usually only be changed if [COMMUNITY] is in [`hikari.guilds.Guild.features`][]
+        for the guild and will otherwise default to `en-US`.
+    """
+
+    locale: str | locales.Locale = attrs.field(eq=False, hash=False, repr=True)
+    """The selected language of the user who triggered this modal interaction."""
+
+    authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (
+        attrs.field(eq=False, repr=True)
+    )
+    """A mapping of the [applications.ApplicationIntegrationType] to the related guild or user ID."""
+
+    context: applications.ApplicationContextType = attrs.field(eq=False, repr=True)
+    """The interaction context."""
+
+    entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
+    """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
+
     @property
+    def channel_id(self) -> snowflakes.Snowflake:
+        """The ID of the channel this interaction was invoked in."""
+        return self.channel.id
+
+    @property
+    @typing_extensions.override
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.application_id
 
+    async def fetch_guild(self) -> guilds.RESTGuild | None:
+        """Fetch the guild this interaction happened in.
 
-class PremiumResponseMixin(PartialInteraction):
-    """Mixin' class for all interaction types which can be responded to with a premium upsell."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    async def create_premium_required_response(self) -> None:
-        """Create a response by sending a premium upsell.
+        Returns
+        -------
+        typing.Optional[hikari.guilds.RESTGuild]
+            Object of the guild this interaction happened in or [`None`][]
+            if this occurred within a DM channel.
 
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you cannot access the target interaction.
+            If you are not part of the guild.
         hikari.errors.NotFoundError
-            If the initial response isn't found.
+            If the guild is not found.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -247,7 +373,46 @@ class PremiumResponseMixin(PartialInteraction):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.create_premium_required_response(self, self.token)
+        if not self.guild_id:
+            return None
+
+        return await self.app.rest.fetch_guild(self.guild_id)
+
+    def get_guild(self) -> guilds.GatewayGuild | None:
+        """Get the object of the guild this interaction was triggered in from the cache.
+
+        Returns
+        -------
+        typing.Optional[hikari.guilds.GatewayGuild]
+            The object of the guild if found, else [`None`][].
+        """
+        if self.guild_id and isinstance(self.app, traits.CacheAware):
+            return self.app.cache.get_guild(self.guild_id)
+
+        return None
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class PartialInteractionMetadata:
+    """Metadata about the interaction, including the source of the interaction and relevant server and user IDs."""
+
+    interaction_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    """The ID for this message interaction."""
+
+    type: InteractionType | int = attrs.field(eq=False, repr=True)
+    """The type of this message interaction."""
+
+    user: users.User = attrs.field(eq=False, repr=True)
+    """The user who triggered the interaction."""
+
+    authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (
+        attrs.field(eq=False, repr=True)
+    )
+    """A mapping of the [applications.ApplicationIntegrationType] to the related guild or user ID."""
+
+    original_response_message_id: snowflakes.Snowflake | None = attrs.field(hash=True, repr=True)
+    """The ID of the original response message."""
 
 
 class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTypesT]):
@@ -284,7 +449,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         response_type: _CommandResponseTypesT,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        flags: typing.Union[int, messages.MessageFlag, undefined.UndefinedType] = undefined.UNDEFINED,
+        flags: int | messages.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         attachment: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
@@ -294,14 +459,15 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         ] = undefined.UNDEFINED,
         embed: undefined.UndefinedNoneOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> InteractionCallbackResponse:
         """Create the initial response for this interaction.
 
         !!! warning
@@ -338,6 +504,8 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to set on the message.
         flags
             If provided, the message flags this response should have.
 
@@ -391,7 +559,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        await self.app.rest.create_interaction_response(
+        return await self.app.rest.create_interaction_response(
             self.id,
             self.token,
             response_type,
@@ -403,6 +571,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             flags=flags,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
@@ -413,11 +582,9 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         self,
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedNoneOr[
-            typing.Union[files.Resourceish, messages.Attachment]
-        ] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish | messages.Attachment] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[
-            typing.Sequence[typing.Union[files.Resourceish, messages.Attachment]]
+            typing.Sequence[files.Resourceish | messages.Attachment]
         ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
@@ -427,10 +594,10 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
     ) -> messages.Message:
         """Edit the initial response of this command interaction.
@@ -593,7 +760,7 @@ class ModalResponseMixin(PartialInteraction):
         custom_id: str,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> InteractionCallbackResponse:
         """Create a response by sending a modal.
 
         Parameters
@@ -612,7 +779,7 @@ class ModalResponseMixin(PartialInteraction):
         ValueError
             If both `component` and `components` are specified or if none are specified.
         """
-        await self.app.rest.create_modal_response(
+        return await self.app.rest.create_modal_response(
             self.id, self.token, title=title, custom_id=custom_id, component=component, components=components
         )
 
@@ -653,6 +820,15 @@ class InteractionChannel(channels.PartialChannel):
 
     permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=True)
     """Permissions the command's executor has in this channel."""
+
+    parent_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
+    """The parent ID of the channel.
+
+    This will be [`None`][] for DM channels and guild channels that have no parent.
+    """
+
+    thread_metadata: channels.ThreadMetadata | None = attrs.field(eq=False, hash=False, repr=False)
+    """The thread metadata, if the channel is a thread."""
 
 
 @attrs_extensions.with_copy

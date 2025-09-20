@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -26,13 +25,14 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = ("EventManager", "EventStream")
 
 import abc
-import asyncio
 import typing
 
 from hikari import iterators
 from hikari.events import base_events
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
+    import asyncio
     import types
 
     from typing_extensions import Self
@@ -93,7 +93,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
         If called on an already closed streamer then this will do nothing.
 
         !!! note
-            [with streamer][] may be used as a short-cut for opening and
+            `with streamer` may be used as a short-cut for opening and
             closing a streamer.
         """
 
@@ -104,15 +104,14 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
         If called on an already started streamer then this will do nothing.
 
         !!! note
-            [with streamer][] may be used as a short-cut for opening and
+            `with streamer` may be used as a short-cut for opening and
             closing a stream.
         """
 
     @abc.abstractmethod
+    @typing_extensions.override
     def filter(
-        self,
-        *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[base_events.EventT], bool]],
-        **attrs: typing.Any,
+        self, *predicates: tuple[str, typing.Any] | typing.Callable[[base_events.EventT], bool], **attrs: object
     ) -> Self:
         """Filter the items by one or more conditions.
 
@@ -149,10 +148,7 @@ class EventStream(iterators.LazyIterator[base_events.EventT], abc.ABC):
 
     @abc.abstractmethod
     def __exit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         raise NotImplementedError
 
@@ -188,14 +184,29 @@ class EventManager(abc.ABC):
             If there is no consumer for the event.
         """
 
+    @typing.overload
+    def dispatch(self, event: base_events.Event, *, return_tasks: typing.Literal[False] = False) -> None: ...
+
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: typing.Literal[True] = True
+    ) -> asyncio.Future[typing.Any]: ...
+
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: bool = False
+    ) -> asyncio.Future[typing.Any] | None: ...
+
     @abc.abstractmethod
-    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
+    def dispatch(self, event: base_events.Event, *, return_tasks: bool = False) -> asyncio.Future[typing.Any] | None:
         """Dispatch an event.
 
         Parameters
         ----------
         event
             The event to dispatch.
+        return_tasks
+            Whether to return an asyncio future to wait for the listeners to finish.
 
         Examples
         --------
@@ -415,17 +426,13 @@ class EventManager(abc.ABC):
 
     @abc.abstractmethod
     def stream(
-        self,
-        event_type: type[base_events.EventT],
-        /,
-        timeout: typing.Union[float, int, None],
-        limit: typing.Optional[int] = None,
+        self, event_type: type[base_events.EventT], /, timeout: float | None, limit: int | None = None
     ) -> EventStream[base_events.EventT]:
         """Return a stream iterator for the given event and sub-events.
 
         !!! warning
-            If you use [await stream.open()][] to start the stream then you must
-            also close it with [await stream.close()][] otherwise it may queue
+            If you use `await stream.open()` to start the stream then you must
+            also close it with `await stream.close()` otherwise it may queue
             events in memory indefinitely.
 
         Parameters
@@ -485,8 +492,8 @@ class EventManager(abc.ABC):
         self,
         event_type: type[base_events.EventT],
         /,
-        timeout: typing.Union[float, int, None],
-        predicate: typing.Optional[PredicateT[base_events.EventT]] = None,
+        timeout: float | None,
+        predicate: PredicateT[base_events.EventT] | None = None,
     ) -> base_events.EventT:
         """Wait for a given event to occur once, then return the event.
 

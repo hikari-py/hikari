@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("RoleEvent", "RoleCreateEvent", "RoleUpdateEvent", "RoleDeleteEvent")
+__all__: typing.Sequence[str] = ("RoleCreateEvent", "RoleDeleteEvent", "RoleEvent", "RoleUpdateEvent")
 
 import abc
 import typing
@@ -34,6 +33,7 @@ from hikari import intents
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import guilds
@@ -72,16 +72,19 @@ class RoleCreateEvent(RoleEvent):
     """Role that was created."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.role.app
 
     @property
+    @typing_extensions.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.guild_id
 
     @property
+    @typing_extensions.override
     def role_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.id
@@ -96,7 +99,7 @@ class RoleUpdateEvent(RoleEvent):
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
-    old_role: typing.Optional[guilds.Role] = attrs.field()
+    old_role: guilds.Role | None = attrs.field()
     """The old role object.
 
     This will be [`None`][] if the role missing from the cache.
@@ -106,16 +109,19 @@ class RoleUpdateEvent(RoleEvent):
     """Role that was updated."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.role.app
 
     @property
+    @typing_extensions.override
     def guild_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.guild_id
 
     @property
+    @typing_extensions.override
     def role_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from RoleEvent>>.
         return self.role.id
@@ -139,7 +145,7 @@ class RoleDeleteEvent(RoleEvent):
     role_id: snowflakes.Snowflake = attrs.field()
     # <<inherited docstring from RoleEvent>>.
 
-    old_role: typing.Optional[guilds.Role] = attrs.field()
+    old_role: guilds.Role | None = attrs.field()
     """The old role object.
 
     This will be [`None`][] if the role was missing from the cache.

@@ -21,10 +21,12 @@
 from __future__ import annotations
 
 import datetime
+import typing
 
 import mock
 import pytest
 
+from hikari import auto_mod
 from hikari import channels as channel_models
 from hikari import emojis as emoji_models
 from hikari import traits
@@ -32,6 +34,7 @@ from hikari import undefined
 from hikari import users as user_models
 from hikari.api import shard
 from hikari.events import application_events
+from hikari.events import auto_mod_events
 from hikari.events import channel_events
 from hikari.events import guild_events
 from hikari.events import interaction_events
@@ -39,6 +42,7 @@ from hikari.events import lifetime_events
 from hikari.events import member_events
 from hikari.events import message_events
 from hikari.events import monetization_events
+from hikari.events import poll_events
 from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
@@ -48,6 +52,7 @@ from hikari.events import typing_events
 from hikari.events import user_events
 from hikari.events import voice_events
 from hikari.impl import event_factory as event_factory_
+from hikari.interactions import base_interactions
 
 
 class TestEventFactoryImpl:
@@ -184,14 +189,18 @@ class TestEventFactoryImpl:
     def test_deserialize_guild_thread_update_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: mock.Mock, mock_shard: shard.GatewayShard
     ):
+        mock_old_thread = object()
         mock_payload = mock.Mock()
 
-        event = event_factory.deserialize_guild_thread_update_event(mock_shard, mock_payload)
+        event = event_factory.deserialize_guild_thread_update_event(
+            mock_shard, mock_payload, old_thread=mock_old_thread
+        )
 
-        assert event.shard is mock_shard
-        assert event.thread is mock_app.entity_factory.deserialize_guild_thread.return_value
         mock_app.entity_factory.deserialize_guild_thread.assert_called_once_with(mock_payload)
         assert isinstance(event, channel_events.GuildThreadUpdateEvent)
+        assert event.shard is mock_shard
+        assert event.thread is mock_app.entity_factory.deserialize_guild_thread.return_value
+        assert event.old_thread is mock_old_thread
 
     def test_deserialize_guild_thread_delete_event(
         self, event_factory: event_factory_.EventFactoryImpl, mock_app: mock.Mock, mock_shard: shard.GatewayShard
@@ -733,15 +742,37 @@ class TestEventFactoryImpl:
     # INTERACTION EVENTS #
     ######################
 
-    def test_deserialize_interaction_create_event(self, event_factory, mock_app, mock_shard):
+    @pytest.mark.parametrize(
+        ("interaction_type", "expected"),
+        [
+            (base_interactions.InteractionType.APPLICATION_COMMAND, interaction_events.CommandInteractionCreateEvent),
+            (base_interactions.InteractionType.MESSAGE_COMPONENT, interaction_events.ComponentInteractionCreateEvent),
+            (base_interactions.InteractionType.AUTOCOMPLETE, interaction_events.AutocompleteInteractionCreateEvent),
+            (base_interactions.InteractionType.MODAL_SUBMIT, interaction_events.ModalInteractionCreateEvent),
+        ],
+    )
+    def test_deserialize_interaction_create_event(
+        self,
+        event_factory,
+        mock_app,
+        mock_shard,
+        interaction_type: typing.Optional[base_interactions.InteractionType],
+        expected: interaction_events.InteractionCreateEvent,
+    ):
         payload = {"id": "1561232344"}
-
+        if interaction_type:
+            mock_app.entity_factory.deserialize_interaction.return_value = mock.Mock(type=interaction_type)
         result = event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
         mock_app.entity_factory.deserialize_interaction.assert_called_once_with(payload)
         assert result.shard is mock_shard
         assert result.interaction is mock_app.entity_factory.deserialize_interaction.return_value
-        assert isinstance(result, interaction_events.InteractionCreateEvent)
+        assert isinstance(result, expected)
+
+    def test_deserialize_interaction_create_event_error(self, event_factory, mock_app, mock_shard):
+        payload = {"id": "1561232344"}
+        with pytest.raises(KeyError):
+            event_factory.deserialize_interaction_create_event(mock_shard, payload)
 
     #################
     # MEMBER EVENTS #
@@ -1571,3 +1602,130 @@ class TestEventFactoryImpl:
         assert event.shard is mock_shard
         assert event.app is event.stage_instance.app
         assert event.stage_instance == mock_app.entity_factory.deserialize_stage_instance.return_value
+
+    ###########
+    #  POLLS  #
+    ###########
+
+    def test_deserialize_poll_vote_create_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "user_id": "3847382",
+            "channel_id": "4598743",
+            "message_id": "458437954",
+            "guild_id": "3589273",
+            "answer_id": 1,
+        }
+
+        event = event_factory.deserialize_poll_vote_create_event(mock_shard, payload)
+
+        assert isinstance(event, poll_events.PollVoteCreateEvent)
+
+    def test_deserialize_poll_vote_delete_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "user_id": "3847382",
+            "channel_id": "4598743",
+            "message_id": "458437954",
+            "guild_id": "3589273",
+            "answer_id": 1,
+        }
+
+        event = event_factory.deserialize_poll_vote_delete_event(mock_shard, payload)
+
+        assert isinstance(event, poll_events.PollVoteDeleteEvent)
+
+    def test_deserialize_auto_mod_rule_create_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "49499494"}
+
+        event = event_factory.deserialize_auto_mod_rule_create_event(mock_shard, mock_payload)
+
+        assert isinstance(event, auto_mod_events.AutoModRuleCreateEvent)
+        assert event.shard is mock_shard
+        assert event.rule is mock_app.entity_factory.deserialize_auto_mod_rule.return_value
+        mock_app.entity_factory.deserialize_auto_mod_rule.assert_called_once_with(mock_payload)
+
+    def test_deserialize_auto_mod_rule_update_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "49499494"}
+
+        event = event_factory.deserialize_auto_mod_rule_update_event(mock_shard, mock_payload)
+
+        assert isinstance(event, auto_mod_events.AutoModRuleUpdateEvent)
+        assert event.shard is mock_shard
+        assert event.rule is mock_app.entity_factory.deserialize_auto_mod_rule.return_value
+        mock_app.entity_factory.deserialize_auto_mod_rule.assert_called_once_with(mock_payload)
+
+    def test_deserialize_auto_mod_rule_delete_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "49499494"}
+
+        event = event_factory.deserialize_auto_mod_rule_delete_event(mock_shard, mock_payload)
+
+        assert isinstance(event, auto_mod_events.AutoModRuleDeleteEvent)
+        assert event.shard is mock_shard
+        assert event.rule is mock_app.entity_factory.deserialize_auto_mod_rule.return_value
+        mock_app.entity_factory.deserialize_auto_mod_rule.assert_called_once_with(mock_payload)
+
+    def test_deserialize_auto_mod_action_execution_event(self, event_factory, mock_app, mock_shard):
+        mock_action_payload = {"type": "69"}
+
+        event = event_factory.deserialize_auto_mod_action_execution_event(
+            mock_shard,
+            {
+                "guild_id": "123321",
+                "action": mock_action_payload,
+                "rule_id": "4959595",
+                "rule_trigger_type": 3,
+                "user_id": "4949494",
+                "channel_id": "5423234",
+                "message_id": "49343292",
+                "alert_system_message_id": "49211123",
+                "content": "meow",
+                "matched_keyword": "fredf",
+                "matched_content": "dfofodofdodf",
+            },
+        )
+
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.guild_id == 123321
+        assert event.action is mock_app.entity_factory.deserialize_auto_mod_action.return_value
+        assert event.rule_id == 4959595
+        assert event.rule_trigger_type is auto_mod.AutoModTriggerType.SPAM
+        assert event.user_id == 4949494
+        assert event.channel_id == 5423234
+        assert event.message_id == 49343292
+        assert event.alert_system_message_id == 49211123
+        assert event.content == "meow"
+        assert event.matched_keyword == "fredf"
+        assert event.matched_content == "dfofodofdodf"
+        mock_app.entity_factory.deserialize_auto_mod_action.assert_called_once_with(mock_action_payload)
+
+    def test_deserialize_auto_mod_action_execution_event_when_partial(self, event_factory, mock_app, mock_shard):
+        mock_action_payload = {"type": "69"}
+
+        event = event_factory.deserialize_auto_mod_action_execution_event(
+            mock_shard,
+            {
+                "guild_id": "123321",
+                "action": mock_action_payload,
+                "rule_id": "4959595",
+                "rule_trigger_type": 3,
+                "user_id": "4949494",
+                "content": "",
+                "matched_keyword": None,
+                "matched_content": None,
+            },
+        )
+
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.guild_id == 123321
+        assert event.action is mock_app.entity_factory.deserialize_auto_mod_action.return_value
+        assert event.rule_id == 4959595
+        assert event.rule_trigger_type is auto_mod.AutoModTriggerType.SPAM
+        assert event.user_id == 4949494
+        assert event.channel_id is None
+        assert event.message_id is None
+        assert event.alert_system_message_id is None
+        assert event.content is None
+        assert event.matched_keyword is None
+        assert event.matched_content is None
+        mock_app.entity_factory.deserialize_auto_mod_action.assert_called_once_with(mock_action_payload)

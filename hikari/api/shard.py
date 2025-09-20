@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("GatewayDataFormat", "GatewayCompression", "GatewayShard")
+__all__: typing.Sequence[str] = ("GatewayCompression", "GatewayDataFormat", "GatewayShard")
 
 import abc
 import typing
@@ -58,6 +57,10 @@ class GatewayCompression(str, enums.Enum):
 
     TRANSPORT_ZLIB_STREAM = "transport_zlib_stream"
     """Transport compression using ZLIB."""
+
+    TRANSPORT_ZSTD_STREAM = "transport_zstd_stream"
+    """Transport compression using ZLIB."""
+
     PAYLOAD_ZLIB_STREAM = "payload_zlib_stream"
     """Payload compression using ZLIB."""
 
@@ -112,6 +115,11 @@ class GatewayShard(abc.ABC):
         -------
         hikari.snowflakes.Snowflake
             The user ID for the application user.
+
+        Raises
+        ------
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
 
     @abc.abstractmethod
@@ -158,13 +166,18 @@ class GatewayShard(abc.ABC):
             changed.
         status
             The web status to show. If undefined, this will not be changed.
+
+        Raises
+        ------
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
 
     @abc.abstractmethod
     async def update_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
+        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel] | None,
         *,
         self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         self_deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -185,6 +198,11 @@ class GatewayShard(abc.ABC):
         self_deaf
             If specified and [`True`][], the bot will deafen itself in that
             voice channel. If [`False`][], then it will undeafen itself.
+
+        Raises
+        ------
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """
 
     @abc.abstractmethod
@@ -227,4 +245,6 @@ class GatewayShard(abc.ABC):
         hikari.errors.MissingIntentError
             When trying to request presences without the [`hikari.intents.Intents.GUILD_MEMBERS`][] or when trying to
             request the full list of members without [`hikari.intents.Intents.GUILD_PRESENCES`][].
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """

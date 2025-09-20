@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,49 +18,47 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Wrapper around nox to give default job kwargs."""
 
 from __future__ import annotations
 
-import os as _os
-import typing as _typing
+import typing
 
-from nox import options as _options
-from nox import session as _session
-from nox.sessions import Session
+import nox
 
-from pipelines import config as _pipelines_config
-
-try:
-    import uv
-
-    del uv
-
-    venv_backend = "uv"
-except ModuleNotFoundError:
-    venv_backend = "venv"
-
+NoxCallbackSigT = typing.Callable[[nox.Session], None]
 
 # Default sessions should be defined here
-_options.sessions = ["reformat-code", "codespell", "pytest", "flake8", "slotscheck", "mypy", "verify-types"]
-_options.default_venv_backend = venv_backend
-
-_NoxCallbackSig = _typing.Callable[[Session], None]
+nox.options.sessions = ["reformat-code", "codespell", "pytest", "ruff", "slotscheck", "mypy", "verify-types"]
+nox.options.default_venv_backend = "uv"
 
 
-def session(**kwargs: _typing.Any) -> _typing.Callable[[_NoxCallbackSig], _NoxCallbackSig]:
-    def decorator(func: _NoxCallbackSig) -> _NoxCallbackSig:
+def session(**kwargs: typing.Any) -> typing.Callable[[NoxCallbackSigT], NoxCallbackSigT]:  # noqa: ANN401
+    """Session wrapper to give default job kwargs."""
+
+    def decorator(func: NoxCallbackSigT) -> NoxCallbackSigT:
         name = func.__name__.replace("_", "-")
         reuse_venv = kwargs.pop("reuse_venv", True)
-        return _session(name=name, reuse_venv=reuse_venv, **kwargs)(func)
+        return nox.session(name=name, reuse_venv=reuse_venv, **kwargs)(func)
 
     return decorator
 
 
-def dev_requirements(*dependencies: str) -> _typing.Sequence[str]:
-    args = []
+def sync(
+    session: nox.Session, /, *, self: bool = False, extras: typing.Sequence[str] = (), groups: typing.Sequence[str] = ()
+) -> None:
+    """Install session packages using `uv sync`."""
+    if extras and not self:
+        msg = "When specifying extras, set `self=True`."
+        raise RuntimeError(msg)
 
-    for dep in dependencies:
-        args.extend(("-r", _os.path.join(_pipelines_config.DEV_REQUIREMENTS_DIRECTORY, f"{dep}.txt")))
+    args: list[str] = []
+    for extra in extras:
+        args.extend(("--extra", extra))
 
-    return args
+    group_flag = "--group" if self else "--only-group"
+    for group in groups:
+        args.extend((group_flag, group))
+
+    session.run_install(
+        "uv", "sync", "--locked", *args, silent=True, env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
+    )

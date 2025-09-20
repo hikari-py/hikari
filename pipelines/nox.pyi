@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -19,36 +18,19 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from __future__ import annotations
 
-import typing
+import typing as _typing
 
-from pipelines import config
-from pipelines import nox
+import nox as _nox
 
+session = _nox.session
+Session = _nox.Session
 
-@nox.session()
-def flake8(session: nox.Session) -> None:
-    """Run code linting, SAST, and analysis."""
-    _flake8(session)
-
-
-@nox.session()
-def flake8_html(session: nox.Session) -> None:
-    """Run code linting, SAST, and analysis and generate an HTML report."""
-    _flake8(session, ("--format=html", f"--htmldir={config.FLAKE8_REPORT}"))
-
-
-def _flake8(session: nox.Session, extra_args: typing.Sequence[str] = ()) -> None:
-    session.install("-r", "requirements.txt", *nox.dev_requirements("flake8"))
-    session.run(
-        "flake8",
-        "--statistics",
-        "--show-source",
-        "--benchmark",
-        "--tee",
-        *extra_args,
-        config.MAIN_PACKAGE,
-        config.TEST_PACKAGE,
-        config.EXAMPLE_SCRIPTS,
-    )
+def sync(
+    session: _nox.Session,
+    /,
+    *,
+    self: bool = False,
+    extras: _typing.Sequence[str] = (),
+    groups: _typing.Sequence[str] = (),
+) -> None: ...

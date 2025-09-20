@@ -13,20 +13,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           # `towncrier check` runs `git diff --name-only origin/main...`, which
           # needs a non-shallow clone.
           fetch-depth: 0
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6.7.0
         with:
           python-version: 3.9
+          activate-environment: true
 
       - name: Check if changelog fragment was added
         run: |
-          pip install -r dev-requirements/towncrier.txt
+          uv sync --frozen --only-group towncrier
 
           if ! towncrier check --compare-with origin/${{ github.base_ref }}; then
             exit 1

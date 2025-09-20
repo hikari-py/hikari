@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,25 +23,29 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "InviteApplication",
     "Application",
+    "ApplicationContextType",
     "ApplicationFlags",
+    "ApplicationIntegrationConfiguration",
+    "ApplicationIntegrationType",
+    "ApplicationRoleConnectionMetadataRecord",
+    "ApplicationRoleConnectionMetadataRecordType",
     "AuthorizationApplication",
     "AuthorizationInformation",
     "ConnectionVisibility",
+    "InviteApplication",
     "OAuth2AuthorizationToken",
     "OAuth2ImplicitToken",
+    "OAuth2InstallParameters",
     "OAuth2Scope",
+    "OwnApplicationRoleConnection",
     "OwnConnection",
     "OwnGuild",
-    "OwnApplicationRoleConnection",
     "PartialOAuth2Token",
     "Team",
     "TeamMember",
     "TeamMembershipState",
     "TokenType",
-    "ApplicationRoleConnectionMetadataRecordType",
-    "ApplicationRoleConnectionMetadataRecord",
     "get_token_id",
 )
 
@@ -54,11 +57,14 @@ import attrs
 from hikari import guilds
 from hikari import locales
 from hikari import snowflakes
+from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -259,7 +265,7 @@ class ConnectionVisibility(int, enums.Enum):
 class OwnConnection:
     """Represents a user's connection with a third party account.
 
-    Returned by the [GET Current User Connections][] endpoint.
+    Returned by the `GET Current User Connections` endpoint.
     """
 
     id: str = attrs.field(hash=True, repr=True)
@@ -290,7 +296,7 @@ class OwnConnection:
     is_activity_visible: bool = attrs.field(eq=False, hash=False, repr=False)
     """[`True`][] if this connection's activities are shown in the user's presence."""
 
-    visibility: typing.Union[ConnectionVisibility, int] = attrs.field(eq=False, hash=False, repr=True)
+    visibility: ConnectionVisibility | int = attrs.field(eq=False, hash=False, repr=True)
     """The visibility of the connection."""
 
 
@@ -298,7 +304,7 @@ class OwnConnection:
 class OwnGuild(guilds.PartialGuild):
     """Represents a user bound partial guild object."""
 
-    features: typing.Sequence[typing.Union[str, guilds.GuildFeature]] = attrs.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[str | guilds.GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     is_owner: bool = attrs.field(eq=False, hash=False, repr=True)
@@ -318,10 +324,10 @@ class OwnGuild(guilds.PartialGuild):
 class OwnApplicationRoleConnection:
     """Represents an own application role connection."""
 
-    platform_name: typing.Optional[str] = attrs.field(eq=True, hash=True, repr=True)
+    platform_name: str | None = attrs.field(eq=True, hash=True, repr=True)
     """The name of the platform."""
 
-    platform_username: typing.Optional[str] = attrs.field(eq=True, hash=True, repr=True)
+    platform_username: str | None = attrs.field(eq=True, hash=True, repr=True)
     """The users name in the platform."""
 
     metadata: typing.Mapping[str, str] = attrs.field(eq=False, hash=False, repr=False)
@@ -354,7 +360,7 @@ class TeamMembershipState(int, enums.Enum):
 class TeamMember(users.User):
     """Represents a member of a Team."""
 
-    membership_state: typing.Union[TeamMembershipState, int] = attrs.field(repr=False)
+    membership_state: TeamMembershipState | int = attrs.field(repr=False)
     """The state of this user's membership."""
 
     permissions: typing.Sequence[str] = attrs.field(repr=False)
@@ -371,74 +377,136 @@ class TeamMember(users.User):
     """The user representation of this team member."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
 
     @property
-    def avatar_hash(self) -> typing.Optional[str]:
+    @typing_extensions.override
+    def avatar_decoration(self) -> users.AvatarDecoration | None:
+        return self.user.avatar_decoration
+
+    @property
+    @typing_extensions.override
+    def avatar_hash(self) -> str | None:
         return self.user.avatar_hash
 
     @property
-    def avatar_url(self) -> typing.Optional[files.URL]:
-        return self.user.avatar_url
+    @typing_extensions.override
+    @deprecation.deprecated("Use 'make_avatar_url' instead.")
+    def avatar_url(self) -> files.URL | None:
+        deprecation.warn_deprecated(
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
+        )
+        return self.user.make_avatar_url()
 
     @property
+    @typing_extensions.override
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
 
     @property
-    def banner_hash(self) -> typing.Optional[str]:
+    @typing_extensions.override
+    def banner_hash(self) -> str | None:
         return self.user.banner_hash
 
     @property
-    def banner_url(self) -> typing.Optional[files.URL]:
-        return self.user.banner_url
+    @typing_extensions.override
+    @deprecation.deprecated("Use 'make_banner_url' instead.")
+    def banner_url(self) -> files.URL | None:
+        deprecation.warn_deprecated(
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
+        )
+        return self.user.make_banner_url()
 
     @property
-    def accent_color(self) -> typing.Optional[colors.Color]:
+    @typing_extensions.override
+    def accent_color(self) -> colors.Color | None:
         return self.user.accent_color
 
     @property
+    @typing_extensions.override
     def discriminator(self) -> str:
         return self.user.discriminator
 
     @property
+    @typing_extensions.override
     def flags(self) -> users.UserFlag:
         return self.user.flags
 
     @property
+    @typing_extensions.override
     def id(self) -> snowflakes.Snowflake:
         return self.user.id
 
     @property
+    @typing_extensions.override
     def is_bot(self) -> bool:
         return self.user.is_bot
 
     @property
+    @typing_extensions.override
     def is_system(self) -> bool:
         return self.user.is_system
 
     @property
+    @typing_extensions.override
     def mention(self) -> str:
         return self.user.mention
 
     @property
+    @typing_extensions.override
     def username(self) -> str:
         return self.user.username
 
     @property
-    def global_name(self) -> typing.Optional[str]:
+    @typing_extensions.override
+    def global_name(self) -> str | None:
         return self.user.global_name
 
+    @property
+    @typing_extensions.override
+    def primary_guild(self) -> users.PrimaryGuild | None:
+        return self.user.primary_guild
+
+    @typing_extensions.override
     def __str__(self) -> str:
         return str(self.user)
 
+    @typing_extensions.override
     def __hash__(self) -> int:
         return hash(self.user)
 
+    @typing_extensions.override
     def __eq__(self, other: object) -> bool:
         return self.user == other
+
+    @typing_extensions.override
+    def make_avatar_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        return self.user.make_avatar_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
+
+    @typing_extensions.override
+    def make_banner_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        return self.user.make_banner_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
 
 
 @attrs_extensions.with_copy
@@ -457,7 +525,7 @@ class Team(snowflakes.Unique):
     name: str = attrs.field(hash=False, eq=False, repr=True)
     """The name of this team."""
 
-    icon_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    icon_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN hash of this team's icon.
 
     If no icon is provided, this will be [`None`][].
@@ -473,42 +541,73 @@ class Team(snowflakes.Unique):
     owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of this team's owner."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"Team {self.name} ({self.id})"
 
     @property
-    def icon_url(self) -> typing.Optional[files.URL]:
-        """Icon URL, or [`None`][] if no icon exists."""
+    @deprecation.deprecated("Use 'make_icon_url' instead.")
+    def icon_url(self) -> files.URL | None:
+        """Team icon URL, if there is one."""
+        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
         return self.make_icon_url()
 
-    def make_icon_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the icon URL for this team if set.
+    def make_icon_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the icon URL for this team, if set.
+
+        If no icon is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between 16 and 4096 inclusive.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [`None`][] if no icon exists.
+            The URL, or [`None`][] if no icon is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.icon_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_TEAM_ICON.compile_to_file(
-            urls.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=ext
+            urls.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
@@ -522,45 +621,82 @@ class InviteApplication(guilds.PartialApplication):
     )
     """Client application that models may use for procedures."""
 
-    cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    cover_image_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
     public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
     @property
-    def cover_image_url(self) -> typing.Optional[files.URL]:
+    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
+    def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
+        deprecation.warn_deprecated(
+            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
+        )
         return self.make_cover_image_url()
 
-    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_cover_image_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
+
+        If no cover image is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL, or [`None`][] if no cover image exists.
+            The URL, or [`None`][] if no cover image is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            urls.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            application_id=self.id,
+            hash=self.cover_image_hash,
+            size=size,
+            file_format=file_format,
+            lossless=lossless,
         )
 
 
@@ -595,7 +731,7 @@ class Application(guilds.PartialApplication):
     owner: users.User = attrs.field(eq=False, hash=False, repr=True)
     """The application's owner."""
 
-    rpc_origins: typing.Optional[typing.Sequence[str]] = attrs.field(eq=False, hash=False, repr=False)
+    rpc_origins: typing.Sequence[str] | None = attrs.field(eq=False, hash=False, repr=False)
     """A collection of this application's RPC origin URLs, if RPC is enabled."""
 
     flags: ApplicationFlags = attrs.field(eq=False, hash=False, repr=False)
@@ -604,52 +740,85 @@ class Application(guilds.PartialApplication):
     public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
-    team: typing.Optional[Team] = attrs.field(eq=False, hash=False, repr=False)
+    team: Team | None = attrs.field(eq=False, hash=False, repr=False)
     """The team this application belongs to.
 
     If the application is not part of a team, this will be [`None`][].
     """
 
-    cover_image_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    cover_image_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
-    terms_of_service_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    terms_of_service_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's terms of service."""
 
-    privacy_policy_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    privacy_policy_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's privacy policy."""
 
-    role_connections_verification_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    role_connections_verification_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's role connection verification entry point."""
 
-    custom_install_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    custom_install_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's custom authorization link."""
 
     tags: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of tags describing the content and functionality of the application."""
 
-    install_parameters: typing.Optional[ApplicationInstallParameters] = attrs.field(eq=False, hash=False, repr=False)
+    install_parameters: ApplicationInstallParameters | None = attrs.field(eq=False, hash=False, repr=False)
     """Settings for the application's default in-app authorization link, if enabled."""
 
     approximate_guild_count: int = attrs.field(eq=False, hash=False, repr=False)
     """The approximate number of guilds this application is part of."""
 
+    approximate_user_install_count: int = attrs.field(eq=False, hash=False, repr=False)
+    """The approximate number of users that have installed this application."""
+
+    integration_types_config: typing.Mapping[ApplicationIntegrationType, ApplicationIntegrationConfiguration] = (
+        attrs.field(eq=False, hash=False, repr=False)
+    )
+    """The default scopes and permissions for each integration type."""
+
     @property
-    def cover_image_url(self) -> typing.Optional[files.URL]:
+    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
+    def cover_image_url(self) -> files.URL | None:
         """Rich presence cover image URL for this application, if set."""
+        deprecation.warn_deprecated(
+            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
+        )
         return self.make_cover_image_url()
 
-    def make_cover_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
+    def make_cover_image_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
+
+        If no cover image is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
             Supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -658,15 +827,27 @@ class Application(guilds.PartialApplication):
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If the size is not an integer power of 2 between 16 and 4096
-            (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.cover_image_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.CDN_APPLICATION_COVER.compile_to_file(
-            urls.CDN_URL, application_id=self.id, hash=self.cover_image_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            application_id=self.id,
+            hash=self.cover_image_hash,
+            size=size,
+            file_format=file_format,
+            lossless=lossless,
         )
 
 
@@ -678,22 +859,22 @@ class AuthorizationApplication(guilds.PartialApplication):
     public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
-    is_bot_public: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=True)
+    is_bot_public: bool | None = attrs.field(eq=False, hash=False, repr=True)
     """[`True`][] if the bot associated with this application is public.
 
     Will be [`None`][] if this application doesn't have an associated bot.
     """
 
-    is_bot_code_grant_required: typing.Optional[bool] = attrs.field(eq=False, hash=False, repr=False)
+    is_bot_code_grant_required: bool | None = attrs.field(eq=False, hash=False, repr=False)
     """[`True`][] if this application's bot is requiring code grant for invites.
 
     Will be [`None`][] if this application doesn't have a bot.
     """
 
-    terms_of_service_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    terms_of_service_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's terms of service."""
 
-    privacy_policy_url: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    privacy_policy_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL of this application's privacy policy."""
 
 
@@ -708,10 +889,10 @@ class AuthorizationInformation:
     expires_at: datetime.datetime = attrs.field(hash=False, repr=True)
     """When the access token this data was retrieved with expires."""
 
-    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attrs.field(hash=False, repr=True)
+    scopes: typing.Sequence[OAuth2Scope | str] = attrs.field(hash=False, repr=True)
     """A sequence of the scopes the current user has authorized the application for."""
 
-    user: typing.Optional[users.User] = attrs.field(hash=False, repr=True)
+    user: users.User | None = attrs.field(hash=False, repr=True)
     """The user who has authorized this token.
 
     This will only be included if the token is authorized for the
@@ -731,15 +912,16 @@ class PartialOAuth2Token:
     access_token: str = attrs.field(hash=True, repr=False)
     """Access token issued by the authorization server."""
 
-    token_type: typing.Union[TokenType, str] = attrs.field(eq=False, hash=False, repr=True)
+    token_type: TokenType | str = attrs.field(eq=False, hash=False, repr=True)
     """Type of token issued by the authorization server."""
 
     expires_in: datetime.timedelta = attrs.field(eq=False, hash=False, repr=True)
     """Lifetime of this access token."""
 
-    scopes: typing.Sequence[typing.Union[OAuth2Scope, str]] = attrs.field(eq=False, hash=False, repr=True)
+    scopes: typing.Sequence[OAuth2Scope | str] = attrs.field(eq=False, hash=False, repr=True)
     """Scopes the access token has access to."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.access_token
 
@@ -749,17 +931,17 @@ class PartialOAuth2Token:
 class OAuth2AuthorizationToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the authorization grant flow."""
 
-    refresh_token: int = attrs.field(eq=False, hash=False, repr=False)
+    refresh_token: str = attrs.field(eq=False, hash=False, repr=False)
     """Refresh token used to obtain new access tokens with the same grant."""
 
-    webhook: typing.Optional[webhooks.IncomingWebhook] = attrs.field(eq=False, hash=False, repr=True)
+    webhook: webhooks.IncomingWebhook | None = attrs.field(eq=False, hash=False, repr=True)
     """Object of the webhook that was created.
 
     This will only be present if this token was authorized with the
     [`hikari.applications.OAuth2Scope.WEBHOOK_INCOMING`][] scope, otherwise this will be [`None`][].
     """
 
-    guild: typing.Optional[guilds.RESTGuild] = attrs.field(eq=False, hash=False, repr=True)
+    guild: guilds.RESTGuild | None = attrs.field(eq=False, hash=False, repr=True)
     """Object of the guild the user was added to.
 
     This will only be present if this token was authorized with the
@@ -772,7 +954,7 @@ class OAuth2AuthorizationToken(PartialOAuth2Token):
 class OAuth2ImplicitToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the implicit grant flow."""
 
-    state: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    state: str | None = attrs.field(eq=False, hash=False, repr=False)
     """State parameter that was present in the authorization request if provided."""
 
 
@@ -823,7 +1005,7 @@ class ApplicationRoleConnectionMetadataRecordType(int, enums.Enum):
 class ApplicationRoleConnectionMetadataRecord:
     """Represents a role connection metadata record."""
 
-    type: typing.Union[ApplicationRoleConnectionMetadataRecordType, int] = attrs.field(eq=False, hash=False, repr=False)
+    type: ApplicationRoleConnectionMetadataRecordType | int = attrs.field(eq=False, hash=False, repr=False)
     """The type of metadata value record."""
 
     key: str = attrs.field(eq=True, hash=True, repr=False)
@@ -835,15 +1017,61 @@ class ApplicationRoleConnectionMetadataRecord:
     description: str = attrs.field(eq=False, hash=False, repr=True)
     """The metadata's field description."""
 
-    name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
+    name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
         eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of name localizations for this metadata field."""
 
-    description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str] = attrs.field(
+    description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
         eq=False, hash=False, repr=False, factory=dict
     )
     """A mapping of description localizations for this metadata field."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ApplicationIntegrationConfiguration:
+    """The Application Integration Configuration for the related [ApplicationIntegrationType][]."""
+
+    oauth2_install_parameters: OAuth2InstallParameters | None = attrs.field(eq=False, hash=False, repr=True)
+    """The OAuth2 Install parameters for the Application Integration."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class OAuth2InstallParameters:
+    """OAuth2 Install Parameters."""
+
+    scopes: typing.Sequence[OAuth2Scope] = attrs.field(eq=False, hash=False, repr=True)
+    """The scopes the application will be added to the server with."""
+
+    permissions: permissions_.Permissions = attrs.field(eq=False, hash=False, repr=True)
+    """The permissions that will be requested for the bot role."""
+
+
+@typing.final
+class ApplicationIntegrationType(int, enums.Enum):
+    """Where an application can be installed."""
+
+    GUILD_INSTALL = 0
+    """Application is installable to all guilds."""
+
+    USER_INSTALL = 1
+    """Application is installable to all users."""
+
+
+@typing.final
+class ApplicationContextType(int, enums.Enum):
+    """The context in which to install the application."""
+
+    GUILD = 0
+    """Command can be ran inside servers."""
+
+    BOT_DM = 1
+    """Command can be ran inside the bot's DM."""
+
+    PRIVATE_CHANNEL = 2
+    """Command can be ran inside any of the user's DM or Group DM's, other than the bot's DM."""
 
 
 def get_token_id(token: str) -> snowflakes.Snowflake:
@@ -868,4 +1096,5 @@ def get_token_id(token: str) -> snowflakes.Snowflake:
         return snowflakes.Snowflake(base64.b64decode(segment))
 
     except (TypeError, ValueError, IndexError) as exc:
-        raise ValueError("Unexpected token format") from exc
+        msg = "Unexpected token format"
+        raise ValueError(msg) from exc

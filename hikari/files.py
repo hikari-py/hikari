@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,22 +23,22 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "URL",
+    "AsyncReader",
+    "AsyncReaderContextManager",
+    "Bytes",
+    "File",
+    "IteratorReader",
+    "LazyByteIteratorish",
+    "Pathish",
+    "Rawish",
+    "Resource",
+    "Resourceish",
+    "WebReader",
+    "WebResource",
     "ensure_path",
     "ensure_resource",
     "unwrap_bytes",
-    "Pathish",
-    "Rawish",
-    "Resourceish",
-    "LazyByteIteratorish",
-    "AsyncReader",
-    "AsyncReaderContextManager",
-    "Resource",
-    "File",
-    "WebResource",
-    "URL",
-    "WebReader",
-    "Bytes",
-    "IteratorReader",
 )
 
 import abc
@@ -62,8 +61,14 @@ import attrs
 from hikari.internal import net
 from hikari.internal import time
 
+if not typing.TYPE_CHECKING:
+    # This is insanely hacky, but it is needed for ruff to not complain until it gets type inference
+    from hikari.internal import typing_extensions
+
 if typing.TYPE_CHECKING:
     import types
+
+    import typing_extensions  # noqa: TC004
 
 _MAGIC: typing.Final[int] = 50 * 1024
 SPOILER_TAG: typing.Final[str] = "SPOILER_"
@@ -198,7 +203,7 @@ def ensure_resource(url_or_resource: Resourceish, /) -> Resource[AsyncReader]:
     return typing.cast("Resource[AsyncReader]", File(path, path.name))
 
 
-def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
+def guess_mimetype_from_filename(name: str, /) -> str | None:
     """Guess the mimetype of an object given a filename.
 
     Parameters
@@ -216,7 +221,7 @@ def guess_mimetype_from_filename(name: str, /) -> typing.Optional[str]:
     return guess
 
 
-def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
+def guess_mimetype_from_data(data: bytes, /) -> str | None:
     """Guess the mimetype of some data from the header.
 
     !!! warning
@@ -245,7 +250,7 @@ def guess_mimetype_from_data(data: bytes, /) -> typing.Optional[str]:
     return None
 
 
-def guess_file_extension(mimetype: str) -> typing.Optional[str]:
+def guess_file_extension(mimetype: str) -> str | None:
     """Guess the file extension for a given mimetype.
 
     Parameters
@@ -270,10 +275,7 @@ def guess_file_extension(mimetype: str) -> typing.Optional[str]:
 
 
 def generate_filename_from_details(
-    *,
-    mimetype: typing.Optional[str] = None,
-    extension: typing.Optional[str] = None,
-    data: typing.Optional[bytes] = None,
+    *, mimetype: str | None = None, extension: str | None = None, data: bytes | None = None
 ) -> str:
     """Given optional information about a resource, generate a filename.
 
@@ -306,7 +308,7 @@ def generate_filename_from_details(
     return time.uuid() + extension
 
 
-def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
+def to_data_uri(data: bytes, mimetype: str | None) -> str:
     """Convert the data and mimetype to a data URI.
 
     Parameters
@@ -325,7 +327,8 @@ def to_data_uri(data: bytes, mimetype: typing.Optional[str]) -> str:
         mimetype = guess_mimetype_from_data(data)
 
         if mimetype is None:
-            raise TypeError("Cannot infer mimetype from input data, specify it manually.")
+            msg = "Cannot infer mimetype from input data, specify it manually."
+            raise TypeError(msg)
 
     b64 = base64.b64encode(data).decode()
     return f"data:{mimetype};base64,{b64}"
@@ -342,7 +345,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
     filename: str = attrs.field(repr=True)
     """The filename of the resource."""
 
-    mimetype: typing.Optional[str] = attrs.field(repr=True)
+    mimetype: str | None = attrs.field(repr=True)
     """The mimetype of the resource. May be [`None`][] if not known."""
 
     async def data_uri(self) -> str:
@@ -357,7 +360,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
         buff = bytearray()
         async for chunk in self:
             buff.extend(chunk)
-        return buff
+        return bytes(buff)
 
 
 class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
@@ -370,10 +373,7 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
 
     @abc.abstractmethod
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None: ...
 
     # These are only included at runtime in-order to avoid the model being typed as a synchronous context manager.
@@ -382,7 +382,8 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
         def __enter__(self) -> typing.NoReturn:
             # This is async only.
             cls = type(self)
-            raise TypeError(f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?") from None
+            msg = f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async with'?"
+            raise TypeError(msg) from None
 
         def __exit__(self, exc_type: type[Exception], exc_val: Exception, exc_tb: types.TracebackType) -> None:
             return None
@@ -393,35 +394,35 @@ class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
 class _NoOpAsyncReaderContextManagerImpl(AsyncReaderContextManager[ReaderImplT]):
     impl: ReaderImplT = attrs.field()
 
+    @typing_extensions.override
     async def __aenter__(self) -> ReaderImplT:
         return self.impl
 
+    @typing_extensions.override
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         pass
 
 
-def _to_write_path(path: Pathish, default_filename: str, force: bool) -> pathlib.Path:
+def _to_write_path(path: Pathish, default_filename: str, *, force: bool) -> pathlib.Path:
     path = ensure_path(path)
     if path.is_dir():
         path = path.joinpath(default_filename)
 
     if not force and path.exists():
-        raise FileExistsError(f"file {path!r} already exists; use [force=True][] to overwrite")
+        msg = f"file {path!r} already exists; use [force=True][] to overwrite"
+        raise FileExistsError(msg)
 
     return path.expanduser()
 
 
-def _open_write_path(path: Pathish, default_filename: str, force: bool) -> typing.BinaryIO:
-    path = _to_write_path(path, default_filename, force)
+def _open_write_path(path: Pathish, default_filename: str, force: bool) -> typing.BinaryIO:  # noqa: FBT001
+    path = _to_write_path(path, default_filename, force=force)
     return path.open("wb")
 
 
-class Resource(typing.Generic[ReaderImplT], abc.ABC):
+class Resource(abc.ABC, typing.Generic[ReaderImplT]):
     """Base for any uploadable or downloadable representation of information.
 
     These representations can be streamed using bit inception for performance,
@@ -442,12 +443,12 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
         """Filename of the resource."""
 
     @property
-    def extension(self) -> typing.Optional[str]:
+    def extension(self) -> str | None:
         """File extension, if there is one."""
         _, _, ext = self.filename.rpartition(".")
         return ext if ext != self.filename else None
 
-    async def read(self, *, executor: typing.Optional[concurrent.futures.Executor] = None) -> bytes:
+    async def read(self, *, executor: concurrent.futures.Executor | None = None) -> bytes:
         """Read the entire resource at once into memory.
 
         ```py
@@ -480,7 +481,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
             return await reader.read()
 
     async def save(
-        self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
+        self, path: Pathish, *, executor: concurrent.futures.Executor | None = None, force: bool = False
     ) -> None:
         """Save this resource to disk.
 
@@ -511,7 +512,7 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
 
     @abc.abstractmethod
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> AsyncReaderContextManager[ReaderImplT]:
         """Produce a stream of data for the resource.
 
@@ -535,17 +536,21 @@ class Resource(typing.Generic[ReaderImplT], abc.ABC):
             This will error on enter if the target resource doesn't exist.
         """
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.url
 
+    @typing_extensions.override
     def __repr__(self) -> str:
         return f"{type(self).__name__}(url={self.url!r}, filename={self.filename!r})"
 
-    def __eq__(self, other: typing.Any) -> bool:
+    @typing_extensions.override
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Resource):
             return self.url == other.url
         return False
 
+    @typing_extensions.override
     def __hash__(self) -> int:
         return hash((self.__class__, self.url))
 
@@ -571,10 +576,10 @@ class WebReader(AsyncReader):
     reason: str = attrs.field()
     """The HTTP response status reason."""
 
-    charset: typing.Optional[str] = attrs.field()
+    charset: str | None = attrs.field()
     """Optional character set information, if known."""
 
-    size: typing.Optional[int] = attrs.field()
+    size: int | None = attrs.field()
     """The size of the resource, if known."""
 
     head_only: bool = attrs.field()
@@ -584,9 +589,11 @@ class WebReader(AsyncReader):
     byte string
     """
 
+    @typing_extensions.override
     async def read(self) -> bytes:
         return b"" if self.head_only else await self.stream.read()
 
+    @typing_extensions.override
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         if self.head_only:
             yield b""
@@ -598,66 +605,62 @@ class WebReader(AsyncReader):
 
 @typing.final
 class _WebReaderAsyncReaderContextManagerImpl(AsyncReaderContextManager[WebReader]):
-    __slots__: typing.Sequence[str] = ("_web_resource", "_head_only", "_client_response_ctx", "_client_session")
+    __slots__: typing.Sequence[str] = ("_client_response_ctx", "_client_session", "_head_only", "_web_resource")
 
-    def __init__(self, web_resource: WebResource, head_only: bool) -> None:
+    def __init__(self, web_resource: WebResource, *, head_only: bool) -> None:
         self._web_resource = web_resource
         self._head_only = head_only
         self._client_session: aiohttp.ClientSession = NotImplemented
         self._client_response_ctx: typing.AsyncContextManager[aiohttp.ClientResponse] = NotImplemented
 
+    @typing_extensions.override
     async def __aenter__(self) -> WebReader:
-        client_session = aiohttp.ClientSession()
-
         method = "HEAD" if self._head_only else "GET"
 
-        ctx = client_session.request(method, self._web_resource.url, raise_for_status=False)
+        ctx = None
+        client_session = aiohttp.ClientSession()
 
         try:
-            # Double try is needed to avoid calling __aexit__ if the __aenter__ raised the error
+            ctx = client_session.request(method, self._web_resource.url, raise_for_status=False)
             resp: aiohttp.ClientResponse = await ctx.__aenter__()
 
-            try:
-                if 200 <= resp.status < 400:
-                    mimetype = None
-                    filename = self._web_resource.filename
+            if not (200 <= resp.status < 400):
+                raise await net.generate_error_response(resp)  # noqa: TRY301 - We need the traceback to be set
 
-                    if resp.content_disposition is not None:
-                        mimetype = resp.content_disposition.type
+            filename = self._web_resource.filename
 
-                    if mimetype is None:
-                        mimetype = resp.content_type
+            mimetype = None
+            if resp.content_disposition is not None:
+                mimetype = resp.content_disposition.type
 
-                    self._client_response_ctx = ctx
-                    self._client_session = client_session
+            if mimetype is None:
+                mimetype = resp.content_type
 
-                    return WebReader(
-                        stream=resp.content,
-                        url=str(resp.real_url),
-                        status=resp.status,
-                        reason=str(resp.reason),
-                        filename=filename,
-                        charset=resp.charset,
-                        mimetype=mimetype,
-                        size=resp.content_length,
-                        head_only=self._head_only,
-                    )
-                else:
-                    raise await net.generate_error_response(resp)
+            self._client_response_ctx = ctx
+            self._client_session = client_session
 
-            except Exception as ex:
+            return WebReader(
+                stream=resp.content,
+                url=str(resp.real_url),
+                status=resp.status,
+                reason=str(resp.reason),
+                filename=filename,
+                charset=resp.charset,
+                mimetype=mimetype,
+                size=resp.content_length,
+                head_only=self._head_only,
+            )
+
+        except Exception as ex:
+            if ctx is not None:
                 await ctx.__aexit__(type(ex), ex, ex.__traceback__)
-                raise
 
-        except Exception:
             await client_session.close()
             raise
 
+    @typing_extensions.override
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         await self._client_response_ctx.__aexit__(exc_type, exc, exc_tb)
         await self._client_session.close()
@@ -679,8 +682,9 @@ class WebResource(Resource[WebReader], abc.ABC):
 
     __slots__: typing.Sequence[str] = ()
 
+    @typing_extensions.override
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> AsyncReaderContextManager[WebReader]:
         """Start streaming the content into memory by downloading it.
 
@@ -749,7 +753,7 @@ class WebResource(Resource[WebReader], abc.ABC):
         hikari.errors.HTTPResponseError
             If any other unexpected response code is returned.
         """
-        return _WebReaderAsyncReaderContextManagerImpl(self, head_only)
+        return _WebReaderAsyncReaderContextManagerImpl(self, head_only=head_only)
 
 
 @typing.final
@@ -774,23 +778,25 @@ class URL(WebResource):
         If not specified, it will be obtained from the url.
     """
 
-    __slots__: typing.Sequence[str] = ("_url", "_filename")
+    __slots__: typing.Sequence[str] = ("_filename", "_url")
 
-    def __init__(self, url: str, filename: typing.Optional[str] = None) -> None:
+    def __init__(self, url: str, filename: str | None = None) -> None:
         self._url = url
         self._filename = filename
 
     @property
+    @typing_extensions.override
     def url(self) -> str:
         return self._url
 
     @property
+    @typing_extensions.override
     def filename(self) -> str:
         if self._filename:
             return self._filename
 
         url = urllib.parse.urlparse(self._url)
-        return os.path.basename(url.path)
+        return os.path.basename(url.path)  # noqa: PTH119 - Use `Path.name`
 
 
 ########################################
@@ -807,9 +813,10 @@ class ThreadedFileReader(AsyncReader):
     do not need to be pickled to be communicated.
     """
 
-    _executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attrs.field(alias="executor")
+    _executor: concurrent.futures.ThreadPoolExecutor | None = attrs.field(alias="executor")
     _pointer: typing.BinaryIO = attrs.field(alias="pointer")
 
+    @typing_extensions.override
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         loop = asyncio.get_running_loop()
 
@@ -827,36 +834,37 @@ def _open_read_path(path: pathlib.Path) -> typing.BinaryIO:
 @attrs.define(weakref_slot=False)
 @typing.final
 class _ThreadedFileReaderContextManagerImpl(AsyncReaderContextManager[ThreadedFileReader]):
-    executor: typing.Optional[concurrent.futures.ThreadPoolExecutor] = attrs.field()
-    file: typing.Optional[typing.BinaryIO] = attrs.field(default=None, init=False)
+    executor: concurrent.futures.ThreadPoolExecutor | None = attrs.field()
+    file: typing.BinaryIO | None = attrs.field(default=None, init=False)
     filename: str = attrs.field()
     path: pathlib.Path = attrs.field()
 
+    @typing_extensions.override
     async def __aenter__(self) -> ThreadedFileReader:
         if self.file:
-            raise RuntimeError("File is already open")
+            msg = "File is already open"
+            raise RuntimeError(msg)
 
         loop = asyncio.get_running_loop()
         file = await loop.run_in_executor(self.executor, _open_read_path, self.path)
         self.file = file
         return ThreadedFileReader(self.filename, None, self.executor, file)
 
+    @typing_extensions.override
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         if not self.file:
-            raise RuntimeError("File isn't open")
+            msg = "File isn't open"
+            raise RuntimeError(msg)
 
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(self.executor, self.file.close)
         self.file = None
 
 
-def _copy_to_path(current_path: pathlib.Path, copy_to_path: Pathish, default_filename: str, force: bool) -> None:
-    copy_to_path = _to_write_path(copy_to_path, default_filename, force)
+def _copy_to_path(current_path: pathlib.Path, copy_to_path: Pathish, default_filename: str, force: bool) -> None:  # noqa: FBT001
+    copy_to_path = _to_write_path(copy_to_path, default_filename, force=force)
     shutil.copy2(current_path, copy_to_path)
 
 
@@ -881,7 +889,7 @@ class File(Resource[ThreadedFileReader]):
         Whether to mark the file as a spoiler in Discord.
     """
 
-    __slots__: typing.Sequence[str] = ("path", "_filename", "is_spoiler")
+    __slots__: typing.Sequence[str] = ("_filename", "is_spoiler", "path")
 
     path: pathlib.Path
     """The path to the file."""
@@ -889,19 +897,21 @@ class File(Resource[ThreadedFileReader]):
     is_spoiler: bool
     """Whether the file will be marked as a spoiler."""
 
-    _filename: typing.Optional[str]
+    _filename: str | None
 
-    def __init__(self, path: Pathish, /, filename: typing.Optional[str] = None, *, spoiler: bool = False) -> None:
+    def __init__(self, path: Pathish, /, filename: str | None = None, *, spoiler: bool = False) -> None:
         self.path = ensure_path(path)
         self.is_spoiler = spoiler
         self._filename = filename
 
     @property
     @typing.final
+    @typing_extensions.override
     def url(self) -> str:
         return f"attachment://{self.filename}"
 
     @property
+    @typing_extensions.override
     def filename(self) -> str:
         filename = self._filename if self._filename else self.path.name
 
@@ -910,8 +920,9 @@ class File(Resource[ThreadedFileReader]):
 
         return filename
 
+    @typing_extensions.override
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> AsyncReaderContextManager[ThreadedFileReader]:
         """Start streaming the resource using a thread pool executor.
 
@@ -944,10 +955,12 @@ class File(Resource[ThreadedFileReader]):
             # so this is safe enough to do:
             return _ThreadedFileReaderContextManagerImpl(executor, self.filename, self.path)
 
-        raise TypeError("The executor must be a ThreadPoolExecutor or None")
+        msg = "The executor must be a ThreadPoolExecutor or None"
+        raise TypeError(msg)
 
+    @typing_extensions.override
     async def save(
-        self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
+        self, path: Pathish, *, executor: concurrent.futures.Executor | None = None, force: bool = False
     ) -> None:
         # An optimization can be done here to avoid a lot of thread calls and streaming
         # by just copying the file
@@ -964,30 +977,32 @@ class File(Resource[ThreadedFileReader]):
 class IteratorReader(AsyncReader):
     """Asynchronous file reader that operates on in-memory data."""
 
-    data: typing.Union[bytes, LazyByteIteratorish] = attrs.field()
+    data: bytes | LazyByteIteratorish = attrs.field()
     """The data that will be yielded in chunks."""
 
+    @typing_extensions.override
     async def __aiter__(self) -> typing.AsyncGenerator[typing.Any, bytes]:
         buff = bytearray()
         iterator = self._wrap_iter()
 
-        while True:
-            try:
+        try:
+            while True:
                 while len(buff) < _MAGIC:
                     chunk = await iterator.__anext__()
                     buff.extend(chunk)
                 yield bytes(buff)
                 buff.clear()
-            except StopAsyncIteration:
-                break
+        except StopAsyncIteration:
+            pass
 
         if buff:
             yield bytes(buff)
 
-    async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:
+    # We rather keep everything we can here inline.
+    async def _wrap_iter(self) -> typing.AsyncGenerator[typing.Any, bytes]:  # noqa: PLR0912
         if isinstance(self.data, bytes):
             for i in range(0, len(self.data), _MAGIC):
-                yield self.data[i : i + _MAGIC]  # noqa: E203 - Whitespace before ":"
+                yield self.data[i : i + _MAGIC]
 
         elif isinstance(self.data, typing.AsyncIterator) or inspect.isasyncgen(self.data):
             try:
@@ -1025,19 +1040,23 @@ class IteratorReader(AsyncReader):
             self._assert_bytes(self.data)  # type: ignore[unreachable]
 
     @staticmethod
-    def _assert_bytes(data: typing.Any) -> bytes:
+    def _assert_bytes(data: object) -> bytes:
         if isinstance(data, str):
             return bytes(data, "utf-8")
 
         if not isinstance(data, bytes):
-            raise TypeError(f"Expected bytes but received {type(data).__name__}")
+            msg = f"Expected bytes but received {type(data).__name__}"
+            raise TypeError(msg)
         return data
 
 
 def _write_bytes(
-    path: Pathish, default_filename: str, force: bool, data: typing.Union[bytearray, bytes, memoryview]
+    path: Pathish,
+    default_filename: str,
+    data: bytearray | bytes | memoryview,
+    force: bool,  # noqa: FBT001
 ) -> None:
-    path = _to_write_path(path, default_filename, force)
+    path = _to_write_path(path, default_filename, force=force)
     path.write_bytes(data)
 
 
@@ -1058,12 +1077,12 @@ class Bytes(Resource[IteratorReader]):
         Whether to mark the file as a spoiler in Discord.
     """
 
-    __slots__: typing.Sequence[str] = ("data", "_filename", "mimetype", "is_spoiler")
+    __slots__: typing.Sequence[str] = ("_filename", "data", "is_spoiler", "mimetype")
 
-    data: typing.Union[bytes, LazyByteIteratorish]
+    data: bytes | LazyByteIteratorish
     """The raw data/provider of raw data to upload."""
 
-    mimetype: typing.Optional[str]
+    mimetype: str | None
     """The provided mimetype, if provided. Otherwise [`None`][]."""
 
     is_spoiler: bool
@@ -1071,10 +1090,10 @@ class Bytes(Resource[IteratorReader]):
 
     def __init__(
         self,
-        data: typing.Union[Rawish, LazyByteIteratorish],
+        data: Rawish | LazyByteIteratorish,
         filename: str,
         /,
-        mimetype: typing.Optional[str] = None,
+        mimetype: str | None = None,
         *,
         spoiler: bool = False,
     ) -> None:
@@ -1091,18 +1110,21 @@ class Bytes(Resource[IteratorReader]):
         self.is_spoiler = spoiler
 
     @property
+    @typing_extensions.override
     def url(self) -> str:
         return f"attachment://{self.filename}"
 
     @property
+    @typing_extensions.override
     def filename(self) -> str:
         if self.is_spoiler:
             return SPOILER_TAG + self._filename
 
         return self._filename
 
+    @typing_extensions.override
     def stream(
-        self, *, executor: typing.Optional[concurrent.futures.Executor] = None, head_only: bool = False
+        self, *, executor: concurrent.futures.Executor | None = None, head_only: bool = False
     ) -> AsyncReaderContextManager[IteratorReader]:
         """Start streaming the content in chunks.
 
@@ -1121,8 +1143,9 @@ class Bytes(Resource[IteratorReader]):
         """
         return _NoOpAsyncReaderContextManagerImpl(IteratorReader(self.filename, self.mimetype, self.data))
 
+    @typing_extensions.override
     async def save(
-        self, path: Pathish, *, executor: typing.Optional[concurrent.futures.Executor] = None, force: bool = False
+        self, path: Pathish, *, executor: concurrent.futures.Executor | None = None, force: bool = False
     ) -> None:
         if not isinstance(self.data, (bytes, bytearray, memoryview)):
             await super().save(path, executor=executor, force=force)
@@ -1131,10 +1154,10 @@ class Bytes(Resource[IteratorReader]):
         # An optimization can be done here to avoid a lot of thread calls and streaming
         # by just writing the whole data at once
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(executor, _write_bytes, path, self.filename, force, self.data)
+        await loop.run_in_executor(executor, _write_bytes, path, self.filename, self.data, force)
 
     @staticmethod
-    def from_data_uri(data_uri: str, filename: typing.Optional[str] = None) -> Bytes:
+    def from_data_uri(data_uri: str, filename: str | None = None) -> Bytes:
         """Parse a given data URI.
 
         Parameters
@@ -1156,16 +1179,18 @@ class Bytes(Resource[IteratorReader]):
             If the parsed argument is not a data URI.
         """
         if not data_uri.startswith("data:"):
-            raise ValueError("Invalid data URI passed")
+            msg = "Invalid data URI passed"
+            raise ValueError(msg)
 
         # This will not block for a data URI; if it was a URL, it would block, so
         # we guard against this with the check above.
         try:
-            with urllib.request.urlopen(data_uri) as response:  # noqa: S310   audit url open for permitted schemes
+            with urllib.request.urlopen(data_uri) as response:  # noqa: S310 - audit url open for permitted schemes
                 mimetype, _ = mimetypes.guess_type(data_uri)
                 data = response.read()
         except Exception as ex:
-            raise ValueError("Failed to decode data URI") from ex
+            msg = "Failed to decode data URI"
+            raise ValueError(msg) from ex
 
         if filename is None:
             filename = generate_filename_from_details(mimetype=mimetype, data=data)

@@ -38,12 +38,14 @@ def make_user(user_id):
         discriminator="0001",
         username="testing",
         global_name=None,
+        avatar_decoration=None,
         avatar_hash=None,
         banner_hash=None,
         accent_color=None,
         is_bot=False,
         is_system=False,
         flags=users.UserFlag.NONE,
+        primary_guild=mock.Mock(),
     )
 
 
@@ -66,7 +68,9 @@ def make_guild_member(user_id):
         joined_at=datetime.datetime.now(),
         nickname=user.username,
         premium_since=None,
+        guild_avatar_decoration=None,
         guild_avatar_hash="no",
+        guild_banner_hash="yes",
         is_deaf=False,
         is_mute=False,
         is_pending=False,

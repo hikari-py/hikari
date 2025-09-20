@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,12 +23,12 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
-    "init_logging",
-    "print_banner",
-    "warn_if_not_optimized",
-    "supports_color",
     "HikariVersion",
     "check_for_updates",
+    "init_logging",
+    "print_banner",
+    "supports_color",
+    "warn_if_not_optimized",
 )
 
 import importlib.resources
@@ -49,6 +48,7 @@ import colorlog.escape_codes
 from hikari import _about as about
 from hikari.internal import data_binding
 from hikari.internal import net
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari.impl import config
@@ -69,7 +69,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ux")
 
 
 def init_logging(
-    flavor: typing.Union[None, str, int, dict[str, typing.Any], os.PathLike[str]], allow_color: bool, force_color: bool
+    flavor: None | str | int | dict[str, typing.Any] | os.PathLike[str], *, allow_color: bool, force_color: bool
 ) -> None:
     """Initialize logging for the user.
 
@@ -182,7 +182,8 @@ def init_logging(
         try:
             logging.config.fileConfig(flavor)
         except Exception as ex:
-            raise RuntimeError("A problem occurred while trying to setup logging through file configuration") from ex
+            msg = "A problem occurred while trying to setup logging through file configuration"
+            raise RuntimeError(msg) from ex
         return
 
     # Config through dict
@@ -190,7 +191,8 @@ def init_logging(
         try:
             logging.config.dictConfig(flavor)
         except Exception as ex:
-            raise RuntimeError("A problem occurred while trying to setup logging through dict configuration") from ex
+            msg = "A problem occurred while trying to setup logging through dict configuration"
+            raise RuntimeError(msg) from ex
 
         if not flavor.get("incremental"):
             # Non-incremental setup, return
@@ -200,7 +202,7 @@ def init_logging(
 
     # Default config (stream)
     try:
-        if supports_color(allow_color, force_color):
+        if supports_color(allow_color=allow_color, force_color=force_color):
             logging.basicConfig(level=flavor, stream=sys.stdout)
             handler = logging.root.handlers[0]
             handler.setFormatter(
@@ -227,7 +229,8 @@ def init_logging(
             )
 
     except Exception as ex:
-        raise RuntimeError("A problem occurred while trying to setup default logging configuration") from ex
+        msg = "A problem occurred while trying to setup default logging configuration"
+        raise RuntimeError(msg) from ex
 
 
 _UNCONDITIONAL_ANSI_FLAGS: typing.Final[frozenset[str]] = frozenset(("PYCHARM_HOSTED", "WT_SESSION"))
@@ -240,10 +243,7 @@ def _read_banner(package: str) -> str:
 
 
 def print_banner(
-    package: typing.Optional[str],
-    allow_color: bool,
-    force_color: bool,
-    extra_args: typing.Optional[dict[str, str]] = None,
+    package: str | None, *, allow_color: bool, force_color: bool, extra_args: dict[str, str] | None = None
 ) -> None:
     """Print a banner of choice to [`sys.stdout`][].
 
@@ -292,7 +292,7 @@ def print_banner(
         "hikari_git_sha1": about.__git_sha1__[:8],
         "hikari_copyright": about.__copyright__,
         "hikari_license": about.__license__,
-        "hikari_install_location": os.path.abspath(os.path.dirname(about.__file__)),
+        "hikari_install_location": str(pathlib.Path(about.__file__).resolve().parent),
         "hikari_documentation_url": about.__docs__,
         "hikari_discord_invite": about.__discord_invite__,
         "hikari_source_url": about.__url__,
@@ -306,10 +306,11 @@ def print_banner(
     if extra_args:
         for key in extra_args:
             if key in args:
-                raise ValueError(f"Cannot overwrite $-substitution `{key}`. Please use a different key.")
+                msg = f"Cannot overwrite $-substitution `{key}`. Please use a different key."
+                raise ValueError(msg)
         args.update(extra_args)
 
-    if supports_color(allow_color, force_color):
+    if supports_color(allow_color=allow_color, force_color=force_color):
         args.update(colorlog.escape_codes.escape_codes)
     else:
         for code in colorlog.escape_codes.escape_codes:
@@ -320,7 +321,7 @@ def print_banner(
     sys.stdout.flush()
 
 
-def warn_if_not_optimized(suppress: bool) -> None:
+def warn_if_not_optimized(*, suppress: bool) -> None:
     """Log a warning if not running in optimization mode."""
     if __debug__ and not suppress:
         _LOGGER.warning(
@@ -330,7 +331,7 @@ def warn_if_not_optimized(suppress: bool) -> None:
         )
 
 
-def supports_color(allow_color: bool, force_color: bool) -> bool:
+def supports_color(*, allow_color: bool, force_color: bool) -> bool:  # noqa: PLR0911 - Too many return statements
     """Return [`True`][] if the terminal device supports color output.
 
     Parameters
@@ -375,7 +376,7 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
         return False
 
     if plat == "win32":
-        color_support = os.environ.get("TERM_PROGRAM") in ("mintty", "Terminus")
+        color_support = os.environ.get("TERM_PROGRAM") in {"mintty", "Terminus"}
         color_support |= "ANSICON" in os.environ
         color_support &= is_a_tty
     else:
@@ -385,22 +386,23 @@ def supports_color(allow_color: bool, force_color: bool) -> bool:
     return color_support
 
 
-_VERSION_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d+)\.(\d+)\.(\d+)(\.[a-z]+)?(\d+)?$", re.I)
+_VERSION_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"^(\d+)\.(\d+)\.(\d+)(\.[a-z]+)?(\d+)?$", re.IGNORECASE)
 
 
 # This is a modified version of packaging.version.Version to better suit our needs
 class HikariVersion:
     """Hikari strict version."""
 
-    __slots__: typing.Sequence[str] = ("version", "prerelease", "_cmp")
+    __slots__: typing.Sequence[str] = ("_cmp", "prerelease", "version")
 
     version: tuple[int, int, int]
-    prerelease: typing.Optional[tuple[str, int]]
+    prerelease: tuple[str, int] | None
 
     def __init__(self, vstring: str) -> None:
         match = _VERSION_REGEX.match(vstring)
         if not match:
-            raise ValueError(f"Invalid version: '{vstring}'")
+            msg = f"Invalid version: '{vstring}'"
+            raise ValueError(msg)
 
         (major, minor, patch, prerelease, prerelease_num) = match.group(1, 2, 3, 4, 5)
 
@@ -408,8 +410,9 @@ class HikariVersion:
         self.prerelease = (prerelease, int(prerelease_num) if prerelease_num else 0) if prerelease else None
 
         prerelease_num = int(prerelease_num) if prerelease else float("inf")
-        self._cmp = self.version + (prerelease_num,)
+        self._cmp = (*self.version, prerelease_num)
 
+    @typing_extensions.override
     def __str__(self) -> str:
         vstring = ".".join(map(str, self.version))
 
@@ -418,32 +421,51 @@ class HikariVersion:
 
         return vstring
 
+    @typing_extensions.override
+    def __hash__(self) -> int:
+        return hash(self.version)
+
+    @typing_extensions.override
     def __repr__(self) -> str:
-        return f"HikariVersion('{str(self)}')"
+        return f"HikariVersion('{self!s}')"
 
-    def __eq__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s == o)
-
-    def __ne__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s != o)
-
-    def __lt__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s < o)
-
-    def __le__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s <= o)
-
-    def __gt__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s > o)
-
-    def __ge__(self, other: typing.Any) -> bool:
-        return self._compare(other, lambda s, o: s >= o)
-
-    def _compare(self, other: typing.Any, method: typing.Callable[[CmpTuple, CmpTuple], bool]) -> bool:
+    @typing_extensions.override
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, HikariVersion):
             return NotImplemented
 
-        return method(self._cmp, other._cmp)
+        return self._cmp == other._cmp
+
+    @typing_extensions.override
+    def __ne__(self, other: object) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp != other._cmp
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp < other._cmp
+
+    def __le__(self, other: object) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp <= other._cmp
+
+    def __gt__(self, other: object) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp > other._cmp
+
+    def __ge__(self, other: object) -> bool:
+        if not isinstance(other, HikariVersion):
+            return NotImplemented
+
+        return self._cmp >= other._cmp
 
 
 async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings) -> None:
@@ -453,26 +475,28 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
         return
 
     try:
-        async with net.create_client_session(
-            connector=net.create_tcp_connector(dns_cache=False, limit=1, http_settings=http_settings),
-            connector_owner=True,
-            http_settings=http_settings,
-            raise_for_status=True,
-            trust_env=proxy_settings.trust_env,
-        ) as cs:
-            async with cs.get(
+        async with (
+            net.create_client_session(
+                connector=net.create_tcp_connector(dns_cache=False, http_settings=http_settings),
+                connector_owner=True,
+                http_settings=http_settings,
+                raise_for_status=True,
+                trust_env=proxy_settings.trust_env,
+            ) as cs,
+            cs.get(
                 "https://pypi.org/pypi/hikari/json",
                 allow_redirects=http_settings.max_redirects is not None,
                 max_redirects=http_settings.max_redirects if http_settings.max_redirects is not None else 10,
                 proxy=proxy_settings.url,
                 proxy_headers=proxy_settings.all_headers,
-            ) as resp:
-                data = data_binding.default_json_loads(await resp.read())
-                assert isinstance(data, dict)
+            ) as resp,
+        ):
+            data = data_binding.default_json_loads(await resp.read())
+            assert isinstance(data, dict)
 
         this_version = HikariVersion(about.__version__)
         is_dev = this_version.prerelease is not None
-        newest_version: typing.Optional[HikariVersion] = None
+        newest_version: HikariVersion | None = None
 
         for release_string, artifacts in data["releases"].items():
             if not all(artifact["yanked"] for artifact in artifacts):
@@ -488,5 +512,5 @@ async def check_for_updates(http_settings: config.HTTPSettings, proxy_settings: 
 
         if newest_version:
             _LOGGER.info("A newer version of hikari is available, consider upgrading to %s", newest_version)
-    except Exception as ex:
+    except Exception as ex:  # noqa: BLE001 - Do not catch blind exceptions (this will run as a headless task, so we want this)
         _LOGGER.warning("Failed to fetch hikari version details", exc_info=ex)

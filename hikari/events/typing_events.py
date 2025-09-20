@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("TypingEvent", "GuildTypingEvent", "DMTypingEvent")
+__all__: typing.Sequence[str] = ("DMTypingEvent", "GuildTypingEvent", "TypingEvent")
 
 import abc
 import typing
@@ -33,10 +32,10 @@ import attrs
 from hikari import channels
 from hikari import intents
 from hikari import traits
-from hikari.api import special_endpoints
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import attrs_extensions
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
@@ -45,6 +44,7 @@ if typing.TYPE_CHECKING:
     from hikari import snowflakes
     from hikari import users
     from hikari.api import shard as gateway_shard
+    from hikari.api import special_endpoints
 
 
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_TYPING, intents.Intents.DM_MESSAGE_TYPING)
@@ -80,7 +80,7 @@ class TypingEvent(shard_events.ShardEvent, abc.ABC):
         assert isinstance(channel, channels.TextableChannel)
         return channel
 
-    def get_user(self) -> typing.Optional[users.User]:
+    def get_user(self) -> users.User | None:
         """Get the cached user that is typing, if known.
 
         Returns
@@ -149,15 +149,18 @@ class GuildTypingEvent(TypingEvent):
     """Object of the member who triggered this typing event."""
 
     @property
+    @typing_extensions.override
     def app(self) -> traits.RESTAware:
         # <<inherited docstring from Event>>.
         return self.member.app
 
     @property
+    @typing_extensions.override
     def user_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from TypingEvent>>.
         return self.member.id
 
+    @typing_extensions.override
     async def fetch_channel(self) -> channels.TextableGuildChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 
@@ -167,9 +170,9 @@ class GuildTypingEvent(TypingEvent):
             The channel.
         """
         channel = await super().fetch_channel()
-        assert isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"expected TextableGuildChannel from API, got {channel}"
+        assert isinstance(channel, channels.TextableGuildChannel), (
+            f"expected TextableGuildChannel from API, got {channel}"
+        )
         return channel
 
     async def fetch_guild(self) -> guilds.Guild:
@@ -202,7 +205,7 @@ class GuildTypingEvent(TypingEvent):
         """
         return await self.app.rest.fetch_member(self.guild_id, self.user_id)
 
-    def get_channel(self) -> typing.Optional[channels.TextableGuildChannel]:
+    def get_channel(self) -> channels.TextableGuildChannel | None:
         """Get the cached channel object this typing event occurred in.
 
         Returns
@@ -214,12 +217,12 @@ class GuildTypingEvent(TypingEvent):
             return None
 
         channel = self.app.cache.get_guild_channel(self.channel_id)
-        assert channel is None or isinstance(
-            channel, channels.TextableGuildChannel
-        ), f"expected TextableGuildChannel from cache, got {channel}"
+        assert channel is None or isinstance(channel, channels.TextableGuildChannel), (
+            f"expected TextableGuildChannel from cache, got {channel}"
+        )
         return channel
 
-    def get_guild(self) -> typing.Optional[guilds.GatewayGuild]:
+    def get_guild(self) -> guilds.GatewayGuild | None:
         """Get the cached object of the guild this typing event occurred in.
 
         If the guild is not found then this will return [`None`][].
@@ -256,6 +259,7 @@ class DMTypingEvent(TypingEvent):
     timestamp: datetime.datetime = attrs.field(repr=False)
     # <<inherited docstring from TypingEvent>>.
 
+    @typing_extensions.override
     async def fetch_channel(self) -> channels.DMChannel:
         """Perform an API call to fetch an up-to-date image of this channel.
 

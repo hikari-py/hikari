@@ -26,25 +26,27 @@ from hikari import components
 class TestActionRowComponent:
     def test_getitem_operator_with_index(self):
         mock_component = object()
-        row = components.ActionRowComponent(type=1, components=[object(), mock_component, object()])
+        row = components.ActionRowComponent(type=1, id=5855932, components=[object(), mock_component, object()])
 
         assert row[1] is mock_component
 
     def test_getitem_operator_with_slice(self):
         mock_component_1 = object()
         mock_component_2 = object()
-        row = components.ActionRowComponent(type=1, components=[object(), mock_component_1, object(), mock_component_2])
+        row = components.ActionRowComponent(
+            type=1, id=5855932, components=[object(), mock_component_1, object(), mock_component_2]
+        )
 
         assert row[1:4:2] == [mock_component_1, mock_component_2]
 
     def test_iter_operator(self):
         mock_component_1 = object()
         mock_component_2 = object()
-        row = components.ActionRowComponent(type=1, components=[mock_component_1, mock_component_2])
+        row = components.ActionRowComponent(type=1, id=5855932, components=[mock_component_1, mock_component_2])
 
         assert list(row) == [mock_component_1, mock_component_2]
 
     def test_len_operator(self):
-        row = components.ActionRowComponent(type=1, components=[object(), object()])
+        row = components.ActionRowComponent(type=1, id=5855932, components=[object(), object()])
 
         assert len(row) == 2

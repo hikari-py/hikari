@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -28,13 +27,19 @@ wish to extend this API further!
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("LazyIterator", "FlatLazyIterator", "All", "AttrComparator", "BufferedLazyIterator")
+__all__: typing.Sequence[str] = ("All", "AttrComparator", "BufferedLazyIterator", "FlatLazyIterator", "LazyIterator")
 
 import abc
 import asyncio
+import inspect
 import typing
 
 from hikari.internal import spel
+from hikari.internal import typing_extensions
+
+if typing.TYPE_CHECKING:
+    from _typeshed import SupportsRichComparison
+
 
 ValueT = typing.TypeVar("ValueT")
 """Type-hint of the type of the value returned by a lazy iterator."""
@@ -109,9 +114,10 @@ class All(typing.Generic[ValueT]):
     def __invert__(self) -> typing.Callable[[ValueT], bool]:
         return lambda item: not self(item)
 
-    def __or__(self, other: typing.Any) -> All[ValueT]:
+    def __or__(self, other: object) -> All[ValueT]:
         if not isinstance(other, All):
-            raise TypeError(f"unsupported operand type(s) for |: {type(self).__name__!r} and {type(other).__name__!r}")
+            msg = f"unsupported operand type(s) for |: {type(self).__name__!r} and {type(other).__name__!r}"
+            raise TypeError(msg)
 
         return All((self, other))
 
@@ -135,24 +141,24 @@ class AttrComparator(typing.Generic[ValueT]):
         comparing it to the expected value but after accessing the attribute.
     """
 
-    __slots__: typing.Sequence[str] = ("attr_getter", "expected_value", "cast")
+    __slots__: typing.Sequence[str] = ("attr_getter", "cast", "expected_value")
 
     def __init__(
         self,
         attr_name: str,
-        expected_value: typing.Any,
-        cast: typing.Optional[typing.Callable[[ValueT], typing.Any]] = None,
+        expected_value: AnotherValueT,
+        cast: typing.Callable[[ValueT], AnotherValueT] | None = None,
     ) -> None:
         self.expected_value: typing.Any = expected_value
+        self.cast: typing.Callable[[ValueT], typing.Any] | None = cast
         self.attr_getter: spel.AttrGetter[ValueT, typing.Any] = spel.AttrGetter(attr_name)
-        self.cast: typing.Optional[typing.Callable[[ValueT], typing.Any]] = cast
 
     def __call__(self, item: ValueT) -> bool:
         real_item = self.cast(self.attr_getter(item)) if self.cast is not None else self.attr_getter(item)
         return bool(real_item == self.expected_value)
 
 
-class LazyIterator(typing.Generic[ValueT], abc.ABC):
+class LazyIterator(abc.ABC, typing.Generic[ValueT]):
     """A set of results that are fetched asynchronously from the API as needed.
 
     This is a [`typing.AsyncIterable`][] and [`typing.AsyncIterator`][] with several
@@ -227,9 +233,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         """
         return _ChunkedLazyIterator(self, chunk_size)
 
-    def map(
-        self, transformation: typing.Union[typing.Callable[[ValueT], AnotherValueT], str]
-    ) -> LazyIterator[AnotherValueT]:
+    def map(self, transformation: typing.Callable[[ValueT], AnotherValueT] | str) -> LazyIterator[AnotherValueT]:
         """Map the values to a different value.
 
         Parameters
@@ -249,9 +253,9 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         return _MappingLazyIterator(self, transformation)
 
-    async def for_each(self, consumer: typing.Callable[[ValueT], typing.Any]) -> None:
+    async def for_each(self, consumer: typing.Callable[[ValueT], object]) -> None:
         """Forward each value to a given consumer immediately."""
-        if asyncio.iscoroutinefunction(consumer):
+        if inspect.iscoroutinefunction(consumer):
             async for item in self:
                 await consumer(item)
         else:
@@ -259,7 +263,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
                 consumer(item)
 
     def filter(
-        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
+        self, *predicates: tuple[str, object] | typing.Callable[[ValueT], bool], **attrs: object
     ) -> LazyIterator[ValueT]:
         """Filter the items by one or more conditions.
 
@@ -294,7 +298,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _FilteredLazyIterator(self, conditions)
 
     def take_while(
-        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
+        self, *predicates: tuple[str, typing.Any] | typing.Callable[[ValueT], bool], **attrs: object
     ) -> LazyIterator[ValueT]:
         """Return each item until any conditions fail or the end is reached.
 
@@ -322,7 +326,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _TakeWhileLazyIterator(self, conditions)
 
     def take_until(
-        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
+        self, *predicates: tuple[str, typing.Any] | typing.Callable[[ValueT], bool], **attrs: object
     ) -> LazyIterator[ValueT]:
         """Return each item until any conditions pass or the end is reached.
 
@@ -350,7 +354,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _TakeWhileLazyIterator(self, ~conditions)
 
     def skip_while(
-        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
+        self, *predicates: tuple[str, typing.Any] | typing.Callable[[ValueT], bool], **attrs: object
     ) -> LazyIterator[ValueT]:
         """Discard items while all conditions are True.
 
@@ -380,7 +384,7 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         return _DropWhileLazyIterator(self, conditions)
 
     def skip_until(
-        self, *predicates: typing.Union[tuple[str, typing.Any], typing.Callable[[ValueT], bool]], **attrs: typing.Any
+        self, *predicates: tuple[str, object] | typing.Callable[[ValueT], bool], **attrs: object
     ) -> LazyIterator[ValueT]:
         """Discard items while all conditions are False.
 
@@ -510,7 +514,8 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         try:
             return await self.__anext__()
         except StopAsyncIteration:
-            raise LookupError("No elements were found") from None
+            msg = "No elements were found"
+            raise LookupError(msg) from None
 
     async def last(self) -> ValueT:
         """Return the last element of this iterator only.
@@ -539,6 +544,14 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
             The lazy iterator of this iterator's remaining values reversed.
         """
         return _ReversedLazyIterator(self)
+
+    @typing.overload
+    async def sort(self, *, key: None = None, reverse: bool = False) -> typing.Sequence[ValueT]: ...
+
+    @typing.overload
+    async def sort(
+        self, *, key: typing.Callable[[ValueT], SupportsRichComparison], reverse: bool = False
+    ) -> typing.Sequence[ValueT]: ...
 
     async def sort(self, *, key: typing.Any = None, reverse: bool = False) -> typing.Sequence[ValueT]:
         """Collect all results, then sort the collection before returning it."""
@@ -661,12 +674,11 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
     @staticmethod
     def _map_predicates_and_attr_getters(
-        alg_name: str,
-        *predicates: typing.Union[str, tuple[str, typing.Any], typing.Callable[[ValueT], bool]],
-        **attrs: typing.Any,
+        alg_name: str, *predicates: str | tuple[str, object] | typing.Callable[[ValueT], bool], **attrs: object
     ) -> All[ValueT]:
         if not predicates and not attrs:
-            raise TypeError(f"You should provide at least one predicate to {alg_name}()")
+            msg = f"You should provide at least one predicate to {alg_name}()"
+            raise TypeError(msg)
 
         conditions: list[typing.Callable[[ValueT], bool]] = []
 
@@ -687,8 +699,10 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
 
         return All(conditions)
 
-    def _complete(self) -> typing.NoReturn:
-        raise StopAsyncIteration("No more items exist in this iterator. It has been exhausted.") from None
+    @staticmethod
+    def _complete() -> typing.NoReturn:
+        msg = "No more items exist in this iterator. It has been exhausted."
+        raise StopAsyncIteration(msg) from None
 
     def __aiter__(self) -> LazyIterator[ValueT]:
         # We are our own async iterator.
@@ -697,7 +711,8 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
     def __iter__(self) -> LazyIterator[ValueT]:
         # This iterator is async only.
         cls = type(self)
-        raise TypeError(f"{cls.__module__}.{cls.__qualname__} is an async-only iterator, did you mean 'async for'?")
+        msg = f"{cls.__module__}.{cls.__qualname__} is an async-only iterator, did you mean 'async for'?"
+        raise TypeError(msg)
 
     async def _fetch_all(self) -> typing.Sequence[ValueT]:
         return [item async for item in self]
@@ -714,16 +729,15 @@ class LazyIterator(typing.Generic[ValueT], abc.ABC):
         def __next__(self) -> typing.NoReturn:
             # This is async only.
             cls = type(self)
-            raise TypeError(
-                f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async for' or `anext`?"
-            ) from None
+            msg = f"{cls.__module__}.{cls.__qualname__} is async-only, did you mean 'async for' or `anext`?"
+            raise TypeError(msg) from None
 
 
 def _flatten(value: ValueT) -> ValueT:
     return value
 
 
-class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC):
+class BufferedLazyIterator(LazyIterator[ValueT], abc.ABC, typing.Generic[ValueT]):
     """A special kind of lazy iterator that is used by internal components.
 
     The purpose of this is to provide an interface to lazily deserialize
@@ -770,13 +784,14 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
     __slots__: typing.Sequence[str] = ("_buffer",)
 
     def __init__(self) -> None:
-        self._buffer: typing.Optional[typing.Generator[ValueT, None, None]] = (_ for _ in ())
+        self._buffer: typing.Generator[ValueT, None, None] | None = (_ for _ in ())
 
     @abc.abstractmethod
-    async def _next_chunk(self) -> typing.Optional[typing.Generator[ValueT, None, None]]: ...
+    async def _next_chunk(self) -> typing.Generator[ValueT, None, None] | None: ...
 
+    @typing_extensions.override  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
     async def __anext__(self) -> ValueT:
-        # This sneaky snippet of code lets us use generators rather than lists.
+        # This sneaky snippet of code let's us use generators rather than lists.
         # This is important, as we can use this to make generators that
         # deserialize loads of items lazy. If we only want 10 messages of
         # history, we can use the same code and prefetch 100 without any
@@ -788,10 +803,11 @@ class BufferedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT], abc.ABC
             self._buffer = await self._next_chunk()
             if self._buffer is not None:
                 return next(self._buffer)
+
         self._complete()
 
 
-class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class FlatLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     """A lazy iterator that has all items in-memory and ready.
 
     This can be iterated across as a normal iterator, or as an async iterator.
@@ -802,12 +818,14 @@ class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
     def __init__(self, values: typing.Iterable[ValueT]) -> None:
         self._iter = iter(values)
 
+    @typing_extensions.override
     def __iter__(self) -> FlatLazyIterator[ValueT]:
         return self
 
     def __next__(self) -> ValueT:
         return next(self._iter)
 
+    @typing_extensions.override
     async def __anext__(self) -> ValueT:
         try:
             return next(self._iter)
@@ -815,7 +833,7 @@ class FlatLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
             self._complete()
 
 
-class NOOPLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class NOOPLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     """A lazy iterator that uses an underlying async iterator and does nothing."""
 
     __slots__: typing.Sequence[str] = ("_iterator",)
@@ -823,33 +841,37 @@ class NOOPLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
     def __init__(self, iterator: typing.AsyncIterable[ValueT]) -> None:
         self._iterator = iterator.__aiter__()
 
+    @typing_extensions.override
     async def __anext__(self) -> ValueT:
         return await self._iterator.__anext__()
 
 
-class _EnumeratedLazyIterator(typing.Generic[ValueT], LazyIterator[tuple[int, ValueT]]):
+class _EnumeratedLazyIterator(LazyIterator[tuple[int, ValueT]], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_i", "_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], *, start: int) -> None:
         self._i = start
         self._iterator = iterator
 
+    @typing_extensions.override
     async def __anext__(self) -> tuple[int, ValueT]:
         pair = self._i, await self._iterator.__anext__()
         self._i += 1
         return pair
 
 
-class _LimitedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
-    __slots__: typing.Sequence[str] = ("_iterator", "_count", "_limit")
+class _LimitedLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
+    __slots__: typing.Sequence[str] = ("_count", "_iterator", "_limit")
 
     def __init__(self, iterator: LazyIterator[ValueT], limit: int) -> None:
         if limit <= 0:
-            raise ValueError("limit must be positive and non-zero")
+            msg = "limit must be positive and non-zero"
+            raise ValueError(msg)
         self._iterator = iterator
         self._count = 0
         self._limit = limit
 
+    @typing_extensions.override
     async def __anext__(self) -> ValueT:
         if self._count >= self._limit:
             self._complete()
@@ -859,32 +881,34 @@ class _LimitedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         return next_item
 
 
-class _DropCountLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
-    __slots__: typing.Sequence[str] = ("_iterator", "_count", "_number")
+class _DropCountLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
+    __slots__: typing.Sequence[str] = ("_count", "_iterator", "_number")
 
     def __init__(self, iterator: LazyIterator[ValueT], number: int) -> None:
         if number <= 0:
-            raise ValueError("number must be positive and non-zero")
+            msg = "number must be positive and non-zero"
+            raise ValueError(msg)
         self._iterator = iterator
         self._count = 0
         self._number = number
 
+    @typing_extensions.override
     async def __anext__(self) -> ValueT:
         while self._count < self._number:
             self._count += 1
             await self._iterator.__anext__()
 
-        next_item = await self._iterator.__anext__()
-        return next_item
+        return await self._iterator.__anext__()
 
 
-class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class _FilteredLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_iterator", "_predicate")
 
     def __init__(self, iterator: LazyIterator[ValueT], predicate: typing.Callable[[ValueT], bool]) -> None:
         self._iterator = iterator
         self._predicate = predicate
 
+    @typing_extensions.override  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
     async def __anext__(self) -> ValueT:
         async for item in self._iterator:
             if self._predicate(item):
@@ -893,13 +917,14 @@ class _FilteredLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._complete()
 
 
-class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[ValueT]]):
-    __slots__: typing.Sequence[str] = ("_iterator", "_chunk_size")
+class _ChunkedLazyIterator(LazyIterator[typing.Sequence[ValueT]], typing.Generic[ValueT]):
+    __slots__: typing.Sequence[str] = ("_chunk_size", "_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], chunk_size: int) -> None:
         self._iterator = iterator
         self._chunk_size = chunk_size
 
+    @typing_extensions.override  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
     async def __anext__(self) -> typing.Sequence[ValueT]:
         chunk: list[ValueT] = []
 
@@ -915,13 +940,14 @@ class _ChunkedLazyIterator(typing.Generic[ValueT], LazyIterator[typing.Sequence[
         self._complete()
 
 
-class _ReversedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
+class _ReversedLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
     __slots__: typing.Sequence[str] = ("_buffer", "_origin")
 
     def __init__(self, iterator: LazyIterator[ValueT]) -> None:
         self._buffer: typing.MutableSequence[ValueT] = []
-        self._origin: typing.Optional[LazyIterator[ValueT]] = iterator
+        self._origin: LazyIterator[ValueT] | None = iterator
 
+    @typing_extensions.override
     async def __anext__(self) -> ValueT:
         if self._origin is not None:
             self._buffer.extend(await self._origin)
@@ -933,7 +959,7 @@ class _ReversedLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
             self._complete()
 
 
-class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[ValueT]):
+class _MappingLazyIterator(LazyIterator[ValueT], typing.Generic[AnotherValueT, ValueT]):
     __slots__: typing.Sequence[str] = ("_iterator", "_transformation")
 
     def __init__(
@@ -942,17 +968,19 @@ class _MappingLazyIterator(typing.Generic[AnotherValueT, ValueT], LazyIterator[V
         self._iterator = iterator
         self._transformation = transformation
 
+    @typing_extensions.override
     async def __anext__(self) -> ValueT:
         return self._transformation(await self._iterator.__anext__())
 
 
-class _TakeWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
-    __slots__: typing.Sequence[str] = ("_iterator", "_condition")
+class _TakeWhileLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
+    __slots__: typing.Sequence[str] = ("_condition", "_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], condition: typing.Callable[[ValueT], bool]) -> None:
         self._iterator = iterator
         self._condition = condition
 
+    @typing_extensions.override  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
     async def __anext__(self) -> ValueT:
         item = await self._iterator.__anext__()
 
@@ -962,14 +990,15 @@ class _TakeWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
         self._complete()
 
 
-class _DropWhileLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
-    __slots__: typing.Sequence[str] = ("_iterator", "_condition", "_has_dropped")
+class _DropWhileLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
+    __slots__: typing.Sequence[str] = ("_condition", "_has_dropped", "_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], condition: typing.Callable[[ValueT], bool]) -> None:
         self._iterator = iterator
         self._condition = condition
         self._has_dropped = False
 
+    @typing_extensions.override
     async def __anext__(self) -> ValueT:
         if not self._has_dropped:
             while not self._condition(item := await self._iterator.__anext__()):
@@ -989,13 +1018,13 @@ _FlattenerT = typing.Union[
 ]
 
 
-class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[AnotherValueT]):
-    __slots__: typing.Sequence[str] = ("_iterator", "_flattener", "_result_iterator")
+class _FlatMapLazyIterator(LazyIterator[AnotherValueT], typing.Generic[ValueT, AnotherValueT]):
+    __slots__: typing.Sequence[str] = ("_flattener", "_iterator", "_result_iterator")
 
     def __init__(self, iterator: LazyIterator[ValueT], flattener: _FlattenerT[ValueT, AnotherValueT]) -> None:
         self._iterator = iterator
         self._flattener = flattener
-        self._result_iterator: typing.Optional[typing.AsyncIterator[AnotherValueT]] = None
+        self._result_iterator: typing.AsyncIterator[AnotherValueT] | None = None
 
     async def _generator(self) -> typing.AsyncIterator[AnotherValueT]:
         async for input_item in self._iterator:
@@ -1009,6 +1038,7 @@ class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[A
                 async for output_item in result_iterator:
                     yield output_item
 
+    @typing_extensions.override
     async def __anext__(self) -> AnotherValueT:
         if self._result_iterator is None:
             self._result_iterator = self._generator()
@@ -1016,24 +1046,25 @@ class _FlatMapLazyIterator(typing.Generic[ValueT, AnotherValueT], LazyIterator[A
         return await self._result_iterator.__anext__()
 
 
-class _AwaitingLazyIterator(typing.Generic[ValueT], LazyIterator[ValueT]):
-    __slots__: typing.Sequence[str] = ("_iterator", "_window_size", "_buffer")
+class _AwaitingLazyIterator(LazyIterator[ValueT], typing.Generic[ValueT]):
+    __slots__: typing.Sequence[str] = ("_buffer", "_iterator", "_window_size")
 
     def __init__(self, iterator: LazyIterator[typing.Awaitable[ValueT]], window_size: int) -> None:
         self._iterator = iterator
         self._window_size = float("inf") if window_size <= 0 else window_size
         self._buffer: list[ValueT] = []
 
+    @typing_extensions.override
     async def __anext__(self) -> ValueT:
         if not self._buffer:
             coroutines: list[typing.Awaitable[ValueT]] = []
 
-            while len(coroutines) < self._window_size:
-                try:
+            try:
+                while len(coroutines) < self._window_size:
                     next_coroutine = await self._iterator.__anext__()
                     coroutines.append(next_coroutine)
-                except StopAsyncIteration:
-                    break
+            except StopAsyncIteration:
+                pass
 
             if not coroutines:
                 raise StopAsyncIteration

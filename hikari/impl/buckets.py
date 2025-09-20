@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -67,6 +66,18 @@ the bucket that Discord sends us in a response concatenated to the corresponding
 major parameters. This is used for quick bucket indexing internally in this
 module.
 
+It is important to note that, as of 2022-11-02 @ 14:30 PT, all buckets use a
+sliding window/leaky bucket implementation, which means that we can perform
+requests quickly and no longer have stick to a strict window timing. Discord
+does not unfortunately expose the rate at which buckets refill, so we need
+to do some maths to accurately calculate it, which you can find in this
+implementation.
+
+This implementation is also built for concurrency, so extra care is taken to
+update only specific information about the buckets, and under specific
+circumstances, as to avoid Discord changing running buckets, which shouldn't
+happen, but better safe than sorry!
+
 One issue that occurs from this is that we cannot effectively hash a
 `CompiledRoute` that has not yet been hit, meaning that
 until we receive a response from this endpoint, we have no idea what our rate
@@ -129,9 +140,12 @@ These headers are:
     limiting occurs in the current window.
 * `X-RateLimit-Bucket`:
     a [`str`][] containing the initial bucket hash.
+* `X-RateLimit-Reset`:
+    a [`float`][] containing the epoch in seconds (with decimal millisecond
+    precision) at which the current rate limit bucket will fully reset.
 * `X-RateLimit-Reset-After`:
-    a [`float`][] containing the number of seconds when the current rate
-    limit bucket will reset with decimal millisecond precision.
+    a [`float`][] containing the number of seconds (with decimal millisecond
+    precision) after which the current rate limit bucket will fully reset.
 
 Each of the above values should be passed to the
 [`hikari.impl.buckets.RESTBucketManager.update_rate_limits`][] method to
@@ -196,12 +210,14 @@ __all__: typing.Sequence[str] = ("UNKNOWN_HASH", "RESTBucket", "RESTBucketManage
 
 import asyncio
 import logging
+import math
 import typing
 
 from hikari import errors
 from hikari.impl import rate_limits
 from hikari.internal import routes
 from hikari.internal import time
+from hikari.internal import typing_extensions
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
@@ -213,14 +229,25 @@ UNKNOWN_HASH: typing.Final[str] = "UNKNOWN"
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.ratelimits")
 
 
+def _calculate_sliding_window(
+    *, remaining: int, limit: int, reset_at: float, reset_after: float
+) -> tuple[float, float]:
+    slide_period = reset_after / (limit - remaining)
+    next_slide_at = (reset_at - reset_after) + slide_period
+
+    return slide_period, next_slide_at
+
+
 class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     """Represents a rate limit for an HTTP endpoint.
 
     Component to represent an active rate limit bucket on a specific HTTP route
     with a specific major parameter combo.
 
-    This is somewhat similar to the [`hikari.impl.rate_limits.WindowedBurstRateLimiter`][] in how it
-    works.
+    This is somewhat similar to [`hikari.impl.rate_limits.WindowedBurstRateLimiter`][] in how it
+    works, except it uses a sliding window instead, which means that we will gain back the
+    ability to make a request based on a recovery rate, rather than being constraint to a full
+    window.
 
     This algorithm will use fixed-period time windows that have a given limit
     (capacity). Each time a task requests processing time, it will drip another
@@ -235,7 +262,34 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     which allows dynamically changing the enforced rate limits at any time.
     """
 
-    __slots__: typing.Sequence[str] = ("_compiled_route", "_max_rate_limit", "_global_ratelimit", "_lock")
+    __slots__: typing.Sequence[str] = (
+        "_compiled_route",
+        "_global_ratelimit",
+        "_initial_request_lock",
+        "_is_fixed",
+        "_max_rate_limit",
+        "_out_of_sync",
+        "_transit_semaphore",
+        "reset_at",
+    )
+
+    name: str
+    # <<inherited docstring from WindowedBurstRateLimiter>>.
+
+    move_at: float
+    # <<inherited docstring from WindowedBurstRateLimiter>>.
+
+    reset_at: float
+    """The [`time.monotonic`][] at which the timer will fully reset."""
+
+    remaining: int
+    # <<inherited docstring from WindowedBurstRateLimiter>>.
+
+    period: float
+    # <<inherited docstring from WindowedBurstRateLimiter>>.
+
+    limit: int
+    # <<inherited docstring from WindowedBurstRateLimiter>>.
 
     def __init__(
         self,
@@ -245,19 +299,20 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         max_rate_limit: float,
     ) -> None:
         super().__init__(name, 1, 1)
+        self.move_at = self.reset_at = time.time() + self.period
+        self._is_fixed = False
         self._compiled_route = compiled_route
         self._max_rate_limit = max_rate_limit
         self._global_ratelimit = global_ratelimit
-        self._lock = asyncio.Lock()
+        self._initial_request_lock = asyncio.Lock()
+        self._out_of_sync = False
+        self._transit_semaphore: asyncio.BoundedSemaphore | None = None
 
     async def __aenter__(self) -> None:
         await self.acquire()
 
     async def __aexit__(
-        self,
-        exc_type: typing.Optional[type[BaseException]],
-        exc: typing.Optional[BaseException],
-        exc_tb: typing.Optional[types.TracebackType],
+        self, exc_type: type[BaseException] | None, exc: BaseException | None, exc_tb: types.TracebackType | None
     ) -> None:
         self.release()
 
@@ -266,10 +321,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         """Whether it represents an UNKNOWN bucket."""
         return self.name.startswith(UNKNOWN_HASH)
 
-    def release(self) -> None:
-        """Release the lock on the bucket."""
-        self._lock.release()
-
+    @typing_extensions.override
     async def acquire(self) -> None:
         """Acquire time and the lock on this bucket.
 
@@ -283,23 +335,28 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         hikari.errors.RateLimitTooLongError
             If the rate limit is longer than `max_rate_limit`.
         """
-        await self._lock.acquire()
-
         if self.is_unknown:
-            return
+            await self._initial_request_lock.acquire()
 
-        now = time.monotonic()
-        retry_after = self.reset_at - now
+            if self.is_unknown:
+                return
 
-        if self.is_rate_limited(now) and retry_after > self._max_rate_limit:
-            # Release lock before we error
-            self._lock.release()
+            # Mypy is wrong here, it is indeed reachable
+            self._initial_request_lock.release()  # type: ignore[unreachable]
+
+        assert self._transit_semaphore is not None
+        await self._transit_semaphore.acquire()
+
+        now = time.time()
+
+        if self.remaining == 0 and self.move_at - now > self._max_rate_limit:
+            self._transit_semaphore.release()
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 is_global=False,
-                retry_after=retry_after,
+                retry_after=self.get_time_until_increase(time.time()),
                 max_retry_after=self._max_rate_limit,
-                reset_at=self.reset_at,
+                reset_at=self.move_at,
                 limit=self.limit,
                 period=self.period,
             )
@@ -308,8 +365,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         global_ratelimit = self._global_ratelimit
         if global_ratelimit.reset_at and (global_ratelimit.reset_at - now) > self._max_rate_limit:
-            # Release lock before we error
-            self._lock.release()
+            self._transit_semaphore.release()
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 is_global=True,
@@ -322,34 +378,130 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         await global_ratelimit.acquire()
 
-    def update_rate_limit(self, remaining: int, limit: int, reset_at: float) -> None:
-        """Update the rate limit information.
+    def release(self) -> None:
+        """Release the lock on the bucket."""
+        if self._initial_request_lock.locked():
+            self._initial_request_lock.release()
+        else:
+            assert self._transit_semaphore is not None
+            self._transit_semaphore.release()
 
-        !!! note
-            The `reset_at` epoch is expected to be a [`time.monotonic`][]
-            monotonic epoch, rather than a [`time.time`][] date-based epoch.
+    @typing_extensions.override
+    def move_window(self, now: float) -> None:
+        # If we are out of sync, we shouldn't slide the window along, as we will be off due to
+        # network latency.
+        # The second part of this 'if' is to account for some cases where there can be a race
+        # condition and we receive rate limit updates out of order, and we cannot update `_out_of_sync`
+        if not self._out_of_sync or (now - self.move_at > self.period):
+            if self._is_fixed:
+                # Fixed buckets just reset the remaining back to the limit
+                self.remaining = self.limit
+                self._out_of_sync = True
+                self.move_at = now + self.period
+            else:
+                # Slide the window along
+                gain = math.floor((now - self.move_at) / self.period) + 1
+                now_remaining = self.remaining + gain
+
+                self.remaining = min(self.limit, now_remaining)
+
+                if self.remaining == self.limit:
+                    self.move_at = now + self.period
+                    self._out_of_sync = True
+                else:
+                    self.move_at = self.move_at + gain * self.period
+
+    def update_rate_limit(self, remaining: int, limit: int, reset_at: float, reset_after: float) -> None:
+        """Update the rate limit information.
 
         Parameters
         ----------
         remaining
-            The calls remaining in this time window.
+            The `X-RateLimit-Remaining` header cast to an [`int`][].
         limit
-            The total calls allowed in this time window.
+            The `X-RateLimit-Limit` header cast to an [`int`][].
         reset_at
-            The epoch at which to reset the limit.
+            The `X-RateLimit-Reset` header cast to a [`float`][].
+        reset_after
+            The `X-RateLimit-Reset-After` header cast to a [`float`][].
         """
-        self.remaining: int = remaining
-        self.limit: int = limit
-        self.reset_at: float = reset_at
-        self.period: float = max(0.0, self.reset_at - time.monotonic())
+        if remaining == limit:
+            # This should never happen, but just in case
+            return
 
-    def resolve(self, real_bucket_hash: str) -> None:
-        """Resolve an unknown bucket.
+        if reset_at < self.reset_at:
+            # Old ratelimit information, ignore
+            return
+
+        if not self._out_of_sync:
+            reset_at_eq = math.isclose(self.reset_at, reset_at, rel_tol=0.0, abs_tol=0.05)
+            if not self._is_fixed and reset_at_eq:
+                _LOGGER.info("bucket '%s' detected to be a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
+                self._is_fixed = True
+                # Setting this here will have an effect below
+                self._out_of_sync = True
+
+            elif self._is_fixed and not reset_at_eq:
+                _LOGGER.info("bucket '%s' stopped being a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
+                self._is_fixed = False
+                # Setting this here will have an effect below
+                self._out_of_sync = True
+
+        self.reset_at = reset_at
+
+        if self._is_fixed:
+            # We want to update the period only, and only if:
+            #   1. The bucket is out of sync (ie, we reset the full window)
+            #   2. We receive the first usage of the bucket, which will always have correct period
+            if self._out_of_sync or remaining == limit - 1:
+                self.period = reset_after
+                self.move_at = reset_at
+                self._out_of_sync = False
+            return
+
+        slide_period, move_at = _calculate_sliding_window(
+            remaining=remaining, limit=limit, reset_at=reset_at, reset_after=reset_after
+        )
+        # We want to update the slide period only, and only if:
+        #   1. The bucket is out of sync (ie, we reset the full window)
+        #   2. We receive the first usage of the bucket, which will always have the most accurate slide period
+        #   3. The slide period increased
+        #   4. The slide period greatly changed
+        #      Note: 0.3 and 0.5 are chosen arbitrarily after some testing
+        if (
+            self._out_of_sync
+            or remaining == limit - 1
+            or slide_period > self.period
+            or not math.isclose(self.period, slide_period, abs_tol=0.3)
+        ):
+            if not math.isclose(self.period, slide_period, abs_tol=0.5):
+                _LOGGER.warning(
+                    "bucket '%s' greatly changed its slide period (%s -> %s). "
+                    "It is possible that you will see a small increase in 429s",
+                    self.name,
+                    self.period,
+                    slide_period,
+                )
+
+            self._out_of_sync = False
+            self.period = slide_period
+            self.move_at = move_at
+
+    def resolve(self, real_bucket_hash: str, remaining: int, limit: int, reset_at: float, reset_after: float) -> None:
+        """Set the ratelimit information for this bucket.
 
         Parameters
         ----------
         real_bucket_hash
             The real bucket hash for this bucket.
+        remaining
+            The `X-RateLimit-Remaining` header cast to an [`int`][].
+        limit
+            The `X-RateLimit-Limit` header cast to an [`int`][].
+        reset_at
+            The `X-RateLimit-Reset` header cast to a [`float`][].
+        reset_after
+            The `X-RateLimit-Reset-After` header cast to a [`float`][].
 
         Raises
         ------
@@ -357,17 +509,33 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             If the hash of the bucket is already known.
         """
         if not self.is_unknown:
-            raise RuntimeError("Cannot resolve known bucket")
+            msg = "Cannot resolve known bucket"
+            raise RuntimeError(msg)
 
-        self.name: str = real_bucket_hash
+        if remaining == limit:
+            # This should never happen, but just in case
+            return
+
+        slide_period, move_at = _calculate_sliding_window(
+            remaining=remaining, limit=limit, reset_at=reset_at, reset_after=reset_after
+        )
+
+        self.name = real_bucket_hash
+        self.remaining = remaining
+        self.limit = limit
+        self.reset_at = reset_at
+        self.period = slide_period
+        self.move_at = move_at
+        self._out_of_sync = False
+        self._transit_semaphore = asyncio.BoundedSemaphore(limit)
 
 
-def _create_authentication_hash(authentication: typing.Optional[str]) -> str:
+def _create_authentication_hash(authentication: str | None) -> str:
     return str(hash(authentication))
 
 
 def _create_unknown_hash(route: routes.CompiledRoute, authentication_hash: str) -> str:
-    return f"{UNKNOWN_HASH}{routes.HASH_SEPARATOR}{authentication_hash}{routes.HASH_SEPARATOR}{str(hash(route))}"
+    return f"{UNKNOWN_HASH}{routes.HASH_SEPARATOR}{authentication_hash}{routes.HASH_SEPARATOR}{hash(route.route)!s}"
 
 
 class RESTBucketManager:
@@ -385,17 +553,17 @@ class RESTBucketManager:
     """
 
     __slots__: typing.Sequence[str] = (
-        "_routes_to_hashes",
-        "_real_hashes_to_buckets",
-        "_global_ratelimit",
         "_gc_task",
+        "_global_ratelimit",
         "_max_rate_limit",
+        "_real_hashes_to_buckets",
+        "_route_hash_to_bucket_hash",
     )
 
     def __init__(self, max_rate_limit: float) -> None:
-        self._routes_to_hashes: dict[routes.Route, str] = {}
+        self._route_hash_to_bucket_hash: dict[int, str] = {}
         self._real_hashes_to_buckets: dict[str, RESTBucket] = {}
-        self._gc_task: typing.Optional[asyncio.Task[None]] = None
+        self._gc_task: asyncio.Task[None] | None = None
         self._max_rate_limit = max_rate_limit
         self._global_ratelimit = rate_limits.ManualRateLimiter()
 
@@ -427,7 +595,8 @@ class RESTBucketManager:
             as the rate limit has reset.
         """
         if self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot start an active bucket manager")
+            msg = "Cannot start an active bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         # Assert is in running loop
         asyncio.get_running_loop()
@@ -437,14 +606,15 @@ class RESTBucketManager:
     async def close(self) -> None:
         """Close the garbage collector and kill any tasks waiting on ratelimits."""
         if not self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
+            msg = "Cannot interact with an inactive bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         for bucket in self._real_hashes_to_buckets.values():
             bucket.close()
 
         self._global_ratelimit.close()
         self._real_hashes_to_buckets.clear()
-        self._routes_to_hashes.clear()
+        self._route_hash_to_bucket_hash.clear()
 
         self._gc_task.cancel()
 
@@ -468,7 +638,7 @@ class RESTBucketManager:
     def _purge_stale_buckets(self, expire_after: float) -> None:
         buckets_to_purge: list[str] = []
 
-        now = time.monotonic()
+        now = time.time()
 
         # We have three main states that a bucket can be in:
         # 1. active - the bucket is active and is not at risk of deallocation
@@ -484,8 +654,7 @@ class RESTBucketManager:
                 # If it is still running a throttle and is in memory, it will remain in memory
                 # but we will not know about it.
                 buckets_to_purge.append(full_hash)
-
-            if bucket.reset_at >= now:
+            elif now > bucket.reset_at:
                 active += 1
 
         dead = len(buckets_to_purge)
@@ -502,13 +671,14 @@ class RESTBucketManager:
             _LOGGER.log(ux.TRACE, "no buckets purged, %s remain in survival, %s active", survival, active)
 
     def acquire_bucket(
-        self, compiled_route: routes.CompiledRoute, authentication: typing.Optional[str]
+        self, compiled_route: routes.CompiledRoute, authentication: str | None
     ) -> typing.AsyncContextManager[None]:
         """Acquire a bucket for the given route.
 
         !!! note
             You MUST keep the context manager acquired during the full duration
-            of the request: from making the request until calling [`hikari.impl.buckets.RESTBucket.update_rate_limit`][].
+            of the request: from making the request until you call
+            [`hikari.impl.buckets.RESTBucket.update_rate_limit`][].
 
         Parameters
         ----------
@@ -523,11 +693,12 @@ class RESTBucketManager:
             The context manager to use during the duration of the request.
         """
         if not self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
+            msg = "Cannot interact with an inactive bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
         authentication_hash = _create_authentication_hash(authentication)
 
-        if bucket_hash := self._routes_to_hashes.get(compiled_route.route):
+        if bucket_hash := self._route_hash_to_bucket_hash.get(hash(compiled_route.route)):
             real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_hash, authentication_hash)
         else:
             real_bucket_hash = _create_unknown_hash(compiled_route, authentication_hash)
@@ -535,6 +706,8 @@ class RESTBucketManager:
         if bucket := self._real_hashes_to_buckets.get(real_bucket_hash):
             _LOGGER.debug("%s is being mapped to existing bucket %s", compiled_route, real_bucket_hash)
         else:
+            # Ensure new buckets always have an unknown hash
+            real_bucket_hash = _create_unknown_hash(compiled_route, authentication_hash)
             _LOGGER.debug("%s is being mapped to new bucket %s", compiled_route, real_bucket_hash)
             bucket = RESTBucket(real_bucket_hash, compiled_route, self._global_ratelimit, self._max_rate_limit)
             self._real_hashes_to_buckets[real_bucket_hash] = bucket
@@ -544,10 +717,11 @@ class RESTBucketManager:
     def update_rate_limits(
         self,
         compiled_route: routes.CompiledRoute,
-        authentication: typing.Optional[str],
+        authentication: str | None,
         bucket_header: str,
         remaining_header: int,
         limit_header: int,
+        reset_at: float,
         reset_after: float,
     ) -> None:
         """Update the rate limits for a bucket using info from a response.
@@ -564,21 +738,25 @@ class RESTBucketManager:
             The `X-RateLimit-Remaining` header cast to an [`int`][].
         limit_header
             The `X-RateLimit-Limit` header cast to an [`int`][].
+        reset_at
+            The `X-RateLimit-Reset` header cast to a [`float`][].
         reset_after
             The `X-RateLimit-Reset-After` header cast to a [`float`][].
         """
         if not self._gc_task:
-            raise errors.ComponentStateConflictError("Cannot interact with an inactive bucket manager")
+            msg = "Cannot interact with an inactive bucket manager"
+            raise errors.ComponentStateConflictError(msg)
 
-        self._routes_to_hashes[compiled_route.route] = bucket_header
+        self._route_hash_to_bucket_hash[hash(compiled_route.route)] = bucket_header
         authentication_hash = _create_authentication_hash(authentication)
         real_bucket_hash = compiled_route.create_real_bucket_hash(bucket_header, authentication_hash)
 
         if bucket := self._real_hashes_to_buckets.get(real_bucket_hash):
             _LOGGER.debug(
-                "updating %s with bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
+                "updating %s with bucket %s [reset-at: %s, reset-after:%ss, limit:%s, remaining:%s]",
                 compiled_route,
                 real_bucket_hash,
+                reset_at,
                 reset_after,
                 limit_header,
                 remaining_header,
@@ -587,31 +765,33 @@ class RESTBucketManager:
             unknown_bucket_hash = _create_unknown_hash(compiled_route, authentication_hash)
 
             if bucket := self._real_hashes_to_buckets.pop(unknown_bucket_hash, None):
-                bucket.resolve(real_bucket_hash)
                 _LOGGER.debug(
-                    "remapping %s with existing bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
+                    "remapping %s with existing bucket %s [reset-at: %s, reset-after:%ss, limit:%s, remaining:%s]",
                     compiled_route,
                     unknown_bucket_hash,
+                    reset_at,
                     reset_after,
                     limit_header,
                     remaining_header,
                 )
+
             else:
                 _LOGGER.debug(
-                    "remapping %s with new bucket %s [reset-after:%ss, limit:%s, remaining:%s]",
+                    "remapping %s with new bucket %s [reset-at: %s, reset-after:%ss, limit:%s, remaining:%s]",
                     compiled_route,
                     real_bucket_hash,
+                    reset_at,
                     reset_after,
                     limit_header,
                     remaining_header,
                 )
+                bucket = RESTBucket(UNKNOWN_HASH, compiled_route, self._global_ratelimit, self._max_rate_limit)
 
-                bucket = RESTBucket(real_bucket_hash, compiled_route, self._global_ratelimit, self._max_rate_limit)
-
+            bucket.resolve(real_bucket_hash, remaining_header, limit_header, reset_at, reset_after)
             self._real_hashes_to_buckets[real_bucket_hash] = bucket
+            return
 
-        reset_at_monotonic = time.monotonic() + reset_after
-        bucket.update_rate_limit(remaining_header, limit_header, reset_at_monotonic)
+        bucket.update_rate_limit(remaining_header, limit_header, reset_at, reset_after)
 
     def throttle(self, retry_after: float) -> None:
         """Throttle the global ratelimit for the buckets.

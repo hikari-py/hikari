@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -154,7 +153,7 @@ class Permissions(enums.Flag):
     """Allows for sending messages in a channel."""
 
     SEND_TTS_MESSAGES = 1 << 12
-    """Allows for sending of [/tts][] messages."""
+    """Allows for sending of Text-To-Speech (`/tts`) messages."""
 
     MANAGE_MESSAGES = 1 << 13
     """Allows for deletion of other users messages.
@@ -302,6 +301,20 @@ class Permissions(enums.Flag):
 
     SEND_VOICE_MESSAGES = 1 << 46
     """Allows sending voice messages."""
+
+    SEND_POLLS = 1 << 49
+    """Allows sending polls."""
+
+    USE_EXTERNAL_APPS = 1 << 50
+    """Allows user-installed apps to send public responses.
+
+    When disabled, users will still be allowed to use their apps but the responses will be ephemeral.
+
+    This only applies to apps not also installed to the server.
+    """
+
+    PIN_MESSAGES = 1 << 51
+    """Allows for pinning a message to a channel."""
 
     @classmethod
     def all_permissions(cls) -> Permissions:

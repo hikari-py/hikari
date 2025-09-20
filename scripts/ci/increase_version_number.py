@@ -22,10 +22,10 @@
 
 from __future__ import annotations
 
-import os
+import pathlib
 import sys
 
-sys.path.append(os.getcwd())
+sys.path.append(str(pathlib.Path.cwd()))
 
 from hikari.internal import ux
 
@@ -37,7 +37,9 @@ if version.prerelease is not None:
     version.prerelease = (prerelease_str, prerelease_num + 1)
 
 else:
-    # Or add it if missing
+    # Or add it if missing and bump patch version
+    major, minor, patch = version.version
+    version.version = (major, minor, patch + 1)
     version.prerelease = (".dev", 0)
 
 print(version)

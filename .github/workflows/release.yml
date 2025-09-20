@@ -11,13 +11,13 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: tibdex/github-app-token@v2
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.PRIVATE_KEY }}
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           token: ${{ steps.generate_token.outputs.token }}
 
@@ -26,28 +26,16 @@ jobs:
           git config --global user.name "hikari-bot"
           git config --global user.email "90276125+hikari-bot[bot]@users.noreply.github.com"
 
-      - name: Setup python
-        uses: actions/setup-python@v5
+      - name: Setup uv
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6.7.0
         with:
           python-version: 3.9
-
-      - name: Temporarily disable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@v1.1.2
-        with:
-          access_token: ${{ steps.generate_token.outputs.token }}
-          enforce_admins: false
+          activate-environment: true
 
       - name: Release
         env:
           VERSION: ${{ github.event.release.tag_name }}
           DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
-          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+          UV_PUBLISH_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          UV_PUBLISH_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
         run: bash scripts/ci/release.sh
-
-      - name: Re-enable "include administrators" branch protection
-        uses: benjefferies/branch-protection-bot@v1.1.2
-        if: always()
-        with:
-          access_token: ${{ steps.generate_token.outputs.token }}
-          enforce_admins: true

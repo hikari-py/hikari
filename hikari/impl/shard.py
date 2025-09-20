@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,6 +24,7 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("GatewayShardImpl",)
 
+import abc
 import asyncio
 import contextlib
 import logging
@@ -49,13 +49,11 @@ from hikari.internal import aio
 from hikari.internal import data_binding
 from hikari.internal import net
 from hikari.internal import time
+from hikari.internal import typing_extensions
 from hikari.internal import ux
 
 if typing.TYPE_CHECKING:
     import datetime
-
-    import aiohttp.http_websocket
-    import aiohttp.typedefs
 
     from hikari import channels
     from hikari import guilds
@@ -63,6 +61,16 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_factory as event_factory_
     from hikari.api import event_manager as event_manager_
     from hikari.impl import config
+
+if sys.version_info >= (3, 14):
+    _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
+else:
+    try:
+        import zstandard  # noqa: F401
+    except ModuleNotFoundError:
+        _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM
+    else:
+        _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 
 # Important attributes
 _D: typing.Final[str] = sys.intern("d")
@@ -101,7 +109,7 @@ _TOTAL_RATELIMIT: typing.Final[tuple[float, int]] = (60.0, 120)
 # to get around (leaving 3 slots for it).
 _NON_PRIORITY_RATELIMIT: typing.Final[tuple[float, int]] = (60.0, 117)
 # Used to identify the end of a ZLIB payload
-_ZLIB_SUFFIX: typing.Final[bytes] = b"\x00\x00\xff\xff"
+_ZLIB_SYNC_FLUSH: typing.Final[bytes] = b"\x00\x00\xff\xff"
 # Close codes which don't invalidate the current session.
 _RECONNECTABLE_CLOSE_CODES: frozenset[errors.ShardCloseCode] = frozenset(
     (
@@ -123,8 +131,7 @@ def _log_filterer(token: bytes) -> typing.Callable[[bytes], bytes]:
     return filterer
 
 
-@typing.final
-class _GatewayTransport:
+class _GatewayTransport(abc.ABC):
     """Internal component to handle lower-level communication logic.
 
     This includes translating aiohttp error conditions to hikari ones,
@@ -134,22 +141,12 @@ class _GatewayTransport:
     Payload logging is also performed here.
     """
 
-    __slots__ = (
-        "_zlib",
-        "_sent_close",
-        "_logger",
-        "_exit_stack",
-        "_log_filterer",
-        "_ws",
-        "_receive_and_check",
-        "_loads",
-        "_dumps",
-    )
+    __slots__ = ("_dumps", "_exit_stack", "_loads", "_log_filterer", "_logger", "_sent_close", "_ws")
 
     def __init__(
         self,
+        *,
         ws: aiohttp.ClientWebSocketResponse,
-        transport_compression: bool,
         exit_stack: contextlib.AsyncExitStack,
         logger: logging.Logger,
         log_filterer: typing.Callable[[bytes], bytes],
@@ -161,14 +158,8 @@ class _GatewayTransport:
         self._exit_stack = exit_stack
         self._sent_close = False
         self._ws = ws
-        self._zlib = zlib.decompressobj()
         self._loads = loads
         self._dumps = dumps
-
-        if transport_compression:
-            self._receive_and_check = self._receive_and_check_zlib
-        else:
-            self._receive_and_check = self._receive_and_check_text
 
     async def send_close(self, *, code: int, message: bytes) -> None:
         if self._sent_close:
@@ -186,18 +177,21 @@ class _GatewayTransport:
             await self._exit_stack.aclose()
 
             # We have to sleep to allow aiohttp time to close SSL transports...
-            # This code can be removed in aiohttp v4.0.0
+            # This code can be once aiohttp 3.12.6 is the minimum required version
             # https://github.com/aio-libs/aiohttp/issues/1925
             # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
             await asyncio.sleep(0.25)
 
-    async def receive_json(self) -> typing.Any:
+    async def receive_json(self) -> data_binding.JSONObject:
         pl = await self._receive_and_check()
+
         if self._logger.isEnabledFor(ux.TRACE):
             filtered = self._log_filterer(pl)
             self._logger.log(ux.TRACE, "received payload with size %s\n    %s", len(pl), filtered)
 
-        return self._loads(pl)
+        val = self._loads(pl)
+        assert isinstance(val, dict)
+        return val
 
     async def send_json(self, data: data_binding.JSONObject) -> None:
         pl = self._dumps(data)
@@ -209,10 +203,12 @@ class _GatewayTransport:
 
     def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
-            raise errors.GatewayTransportError("Unexpected message type received TEXT, expected BINARY")
+            msg = "Unexpected message type received TEXT, expected BINARY"
+            raise errors.GatewayTransportError(msg)
 
         if message.type == aiohttp.WSMsgType.BINARY:
-            raise errors.GatewayTransportError("Unexpected message type received BINARY, expected TEXT")
+            msg = "Unexpected message type received BINARY, expected TEXT"
+            raise errors.GatewayTransportError(msg)
 
         if message.type == aiohttp.WSMsgType.CLOSE:
             close_code = int(message.data)
@@ -221,50 +217,19 @@ class _GatewayTransport:
             # str(message.extra) is used to cast the possible None to a string
             raise errors.GatewayServerClosedConnectionError(str(message.extra), close_code, can_reconnect)
 
-        if message.type == aiohttp.WSMsgType.CLOSING or message.type == aiohttp.WSMsgType.CLOSED:
+        if message.type in {aiohttp.WSMsgType.CLOSING or message.type, aiohttp.WSMsgType.CLOSED}:
             # May be caused by the server shutting us down.
             # May be caused by Windows injecting an EOF if something disconnects, as some
             # network drivers appear to do this.
-            raise errors.GatewayConnectionError("Socket has closed")
+            msg = "Socket has closed"
+            raise errors.GatewayConnectionError(msg)
 
         # Assume exception for now.
         reason = f"{message.data!r} [extra={message.extra!r}, type={message.type}]"
         raise errors.GatewayTransportError(reason) from self._ws.exception()
 
-    async def _receive_and_check_text(self) -> bytes:
-        message = await self._ws.receive()
-
-        if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data.encode()
-
-        self._handle_other_message(message)
-
-    async def _receive_and_check_zlib(self) -> bytes:
-        message = await self._ws.receive()
-
-        if message.type == aiohttp.WSMsgType.BINARY:
-            if message.data.endswith(_ZLIB_SUFFIX):
-                # Hot and fast path: we already have the full message
-                # in a single frame
-                return self._zlib.decompress(message.data)
-
-            # Cold and slow path: we need to keep receiving frames to complete
-            # the whole message. Only then do we create a buffer
-            buff = bytearray(message.data)
-
-            while not buff.endswith(_ZLIB_SUFFIX):
-                message = await self._ws.receive()
-
-                if message.type == aiohttp.WSMsgType.BINARY:
-                    buff.extend(message.data)
-                    continue
-
-                self._handle_other_message(message)
-
-            return self._zlib.decompress(buff)
-
-        self._handle_other_message(message)
+    @abc.abstractmethod
+    async def _receive_and_check(self) -> bytes: ...
 
     @classmethod
     async def connect(
@@ -276,7 +241,7 @@ class _GatewayTransport:
         log_filterer: typing.Callable[[bytes], bytes],
         dumps: data_binding.JSONEncoder,
         loads: data_binding.JSONDecoder,
-        transport_compression: bool,
+        compression: shard.GatewayCompression | None,
         url: str,
     ) -> _GatewayTransport:
         """Generate a single-use websocket connection.
@@ -288,7 +253,7 @@ class _GatewayTransport:
 
         try:
             try:
-                connector = net.create_tcp_connector(http_settings=http_settings, dns_cache=False, limit=1)
+                connector = net.create_tcp_connector(http_settings=http_settings, dns_cache=False)
                 client_session = await exit_stack.enter_async_context(
                     net.create_client_session(
                         connector=connector,
@@ -310,9 +275,18 @@ class _GatewayTransport:
                     )
                 )
 
-                return cls(
+                transport_cls: type[_GatewayTransport]
+                if compression == shard.GatewayCompression.TRANSPORT_ZSTD_STREAM:
+                    transport_cls = _GatewayZstdStreamTransport
+                elif compression == shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
+                    transport_cls = _GatewayZlibStreamTransport
+                elif compression == shard.GatewayCompression.PAYLOAD_ZLIB_STREAM:
+                    transport_cls = _GatewayZlibMessageTransport
+                else:
+                    transport_cls = _GatewayBasicTransport
+
+                return transport_cls(
                     ws=web_socket,
-                    transport_compression=transport_compression,
                     exit_stack=exit_stack,
                     logger=logger,
                     log_filterer=log_filterer,
@@ -337,7 +311,7 @@ class _GatewayTransport:
             await exit_stack.aclose()
 
             # We have to sleep to allow aiohttp time to close SSL transports...
-            # This code can be removed in aiohttp v4.0.0
+            # This code can be once aiohttp 3.12.6 is the minimum required version
             # https://github.com/aio-libs/aiohttp/issues/1925
             # https://docs.aiohttp.org/en/stable/client_advanced.html#graceful-shutdown
             await asyncio.sleep(0.25)
@@ -345,19 +319,115 @@ class _GatewayTransport:
             raise
 
 
-def _serialize_datetime(dt: typing.Optional[datetime.datetime]) -> typing.Optional[int]:
+class _GatewayZlibStreamTransport(_GatewayTransport):
+    __slots__ = ("_inflator",)
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
+        super().__init__(*args, **kwargs)
+        self._inflator = zlib.decompressobj()
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
+        message = await self._ws.receive()
+
+        if message.type == aiohttp.WSMsgType.BINARY:
+            assert isinstance(message.data, bytes)
+            if message.data.endswith(_ZLIB_SYNC_FLUSH):
+                # Hot and fast path: we already have the full message
+                # in a single frame
+                return self._inflator.decompress(message.data)
+
+            # Cold and slow path: we need to keep receiving frames to complete
+            # the whole message. Only then do we create a buffer
+            buff = bytearray(message.data)
+
+            while not buff.endswith(_ZLIB_SYNC_FLUSH):
+                message = await self._ws.receive()
+
+                if message.type == aiohttp.WSMsgType.BINARY:
+                    assert isinstance(message.data, bytes)
+                    buff.extend(message.data)
+                    continue
+
+                self._handle_other_message(message)
+
+            return self._inflator.decompress(buff)
+
+        self._handle_other_message(message)
+
+
+class _GatewayZstdStreamTransport(_GatewayTransport):
+    __slots__ = ("_inflator",)
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
+        super().__init__(*args, **kwargs)
+
+        try:
+            import zstandard  # noqa: PLC0415
+
+            self._inflator = zstandard.ZstdDecompressor().decompressobj()
+        except ModuleNotFoundError as exc:
+            if sys.version_info >= (3, 14):
+                from compression import zstd  # noqa: PLC0415
+
+                self._inflator = zstd.ZstdDecompressor()
+                return
+
+            msg = "You must install the optional `hikari[zstd]` dependencies to use the zstd stream compression."
+            raise RuntimeError(msg) from exc
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
+        message = await self._ws.receive()
+
+        if message.type == aiohttp.WSMsgType.BINARY:
+            assert isinstance(message.data, bytes)
+            return self._inflator.decompress(message.data)
+
+        self._handle_other_message(message)
+
+
+class _GatewayZlibMessageTransport(_GatewayTransport):
+    __slots__ = ()
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
+        message = await self._ws.receive()
+
+        if message.type == aiohttp.WSMsgType.BINARY:
+            assert isinstance(message.data, bytes)
+            return zlib.decompress(message.data)
+
+        self._handle_other_message(message)
+
+
+class _GatewayBasicTransport(_GatewayTransport):
+    __slots__ = ()
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
+        message = await self._ws.receive()
+
+        if message.type == aiohttp.WSMsgType.TEXT:
+            assert isinstance(message.data, str)
+            return message.data.encode()
+
+        self._handle_other_message(message)
+
+
+def _serialize_datetime(dt: datetime.datetime | None) -> int | None:
     if dt is None:
         return None
 
     return int(dt.timestamp() * 1_000)
 
 
-def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_binding.JSONish:
+def _serialize_activity(activity: presences.Activity | None) -> data_binding.JSONish:
     if activity is None:
         return None
 
     # Syntactic sugar, treat `name` as state if using `CUSTOM` and `state` is not passed.
-    state: typing.Optional[str]
+    state: str | None
     if activity.type is presences.ActivityType.CUSTOM and activity.name and not activity.state:
         name = _CUSTOM_STATUS_NAME
         state = activity.name
@@ -365,8 +435,7 @@ def _serialize_activity(activity: typing.Optional[presences.Activity]) -> data_b
         name = activity.name
         state = activity.state
 
-    payload = {"name": name, "state": state, "type": int(activity.type), "url": activity.url}
-    return payload
+    return {"name": name, "state": state, "type": int(activity.type), "url": activity.url}
 
 
 class GatewayShardImpl(shard.GatewayShard):
@@ -430,9 +499,10 @@ class GatewayShardImpl(shard.GatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
+        "_compression",
         "_dumps",
-        "_event_manager",
         "_event_factory",
+        "_event_manager",
         "_gateway_url",
         "_handshake_event",
         "_heartbeat_latency",
@@ -457,7 +527,6 @@ class GatewayShardImpl(shard.GatewayShard):
         "_status",
         "_token",
         "_total_rate_limit",
-        "_transport_compression",
         "_user_id",
         "_ws",
     )
@@ -465,11 +534,11 @@ class GatewayShardImpl(shard.GatewayShard):
     def __init__(
         self,
         *,
-        compression: typing.Optional[str] = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM,
+        compression: shard.GatewayCompression | None = _DEFAULT_COMPRESS_TYPE,
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
-        initial_activity: typing.Optional[presences.Activity] = None,
-        initial_idle_since: typing.Optional[datetime.datetime] = None,
+        initial_activity: presences.Activity | None = None,
+        initial_idle_since: datetime.datetime | None = None,
         initial_is_afk: bool = False,
         initial_status: presences.Status = presences.Status.ONLINE,
         intents: intents_.Intents,
@@ -485,23 +554,21 @@ class GatewayShardImpl(shard.GatewayShard):
         url: str,
     ) -> None:
         if data_format != shard.GatewayDataFormat.JSON:
-            raise NotImplementedError(f"Unsupported gateway data format: {data_format}")
-
-        if compression and compression != shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
-            raise NotImplementedError(f"Unsupported compression format {compression}")
+            msg = f"Unsupported gateway data format: {data_format}"
+            raise NotImplementedError(msg)
 
         self._activity = initial_activity
         self._event_manager = event_manager
         self._event_factory = event_factory
         self._gateway_url = url
-        self._handshake_event: typing.Optional[asyncio.Event] = None
+        self._handshake_event: asyncio.Event | None = None
         self._heartbeat_latency = float("nan")
         self._http_settings = http_settings
         self._idle_since = initial_idle_since
         self._intents = intents
         self._is_afk = initial_is_afk
         self._is_closing = False
-        self._keep_alive_task: typing.Optional[asyncio.Task[None]] = None
+        self._keep_alive_task: asyncio.Task[None] | None = None
         self._large_threshold = large_threshold
         self._last_heartbeat_ack_received = float("nan")
         self._last_heartbeat_sent = float("nan")
@@ -510,9 +577,9 @@ class GatewayShardImpl(shard.GatewayShard):
             f"shard {shard_id} non-priority rate limit", *_NON_PRIORITY_RATELIMIT
         )
         self._proxy_settings = proxy_settings
-        self._resume_gateway_url: typing.Optional[str] = None
-        self._seq: typing.Optional[int] = None
-        self._session_id: typing.Optional[str] = None
+        self._resume_gateway_url: str | None = None
+        self._seq: int | None = None
+        self._session_id: str | None = None
         self._shard_count = shard_count
         self._shard_id = shard_id
         self._status = initial_status
@@ -520,39 +587,47 @@ class GatewayShardImpl(shard.GatewayShard):
         self._total_rate_limit = rate_limits.WindowedBurstRateLimiter(
             f"shard {shard_id} total rate limit", *_TOTAL_RATELIMIT
         )
-        self._transport_compression = compression is not None
+        self._compression = compression
         self._dumps = dumps
         self._loads = loads
-        self._user_id: typing.Optional[snowflakes.Snowflake] = None
-        self._ws: typing.Optional[_GatewayTransport] = None
+        self._user_id: snowflakes.Snowflake | None = None
+        self._ws: _GatewayTransport | None = None
 
     @property
+    @typing_extensions.override
     def heartbeat_latency(self) -> float:
         return self._heartbeat_latency
 
     @property
+    @typing_extensions.override
     def id(self) -> int:
         return self._shard_id
 
     @property
+    @typing_extensions.override
     def intents(self) -> intents_.Intents:
         return self._intents
 
     @property
+    @typing_extensions.override
     def is_alive(self) -> bool:
         return self._keep_alive_task is not None
 
     @property
+    @typing_extensions.override
     def is_connected(self) -> bool:
         return self._ws is not None and self._handshake_event is not None and self._handshake_event.is_set()
 
     @property
+    @typing_extensions.override
     def shard_count(self) -> int:
         return self._shard_count
 
+    @typing_extensions.override
     async def close(self) -> None:
         if not self._keep_alive_task:
-            raise errors.ComponentStateConflictError("Cannot close an inactive shard")
+            msg = "Cannot close an inactive shard"
+            raise errors.ComponentStateConflictError(msg)
 
         if self._is_closing:
             await self.join()
@@ -573,18 +648,21 @@ class GatewayShardImpl(shard.GatewayShard):
         self._is_closing = False
         self._logger.info("shard shutdown successfully")
 
+    @typing_extensions.override
     def get_user_id(self) -> snowflakes.Snowflake:
         self._check_if_connected()
         assert self._user_id is not None, "user_id was not known, this is probably a bug"
         return self._user_id
 
+    @typing_extensions.override
     async def join(self) -> None:
         if not self._keep_alive_task:
-            raise errors.ComponentStateConflictError("Cannot join an inactive shard")
+            msg = "Cannot join an inactive shard"
+            raise errors.ComponentStateConflictError(msg)
 
         await asyncio.wait_for(asyncio.shield(self._keep_alive_task), timeout=None)
 
-    async def _send_json(self, data: data_binding.JSONObject, /, priority: bool = False) -> None:
+    async def _send_json(self, data: data_binding.JSONObject, *, priority: bool = False) -> None:
         if not priority:
             await self._non_priority_rate_limit.acquire()
 
@@ -595,10 +673,10 @@ class GatewayShardImpl(shard.GatewayShard):
 
     def _check_if_connected(self) -> None:
         if not self.is_connected:
-            raise errors.ComponentStateConflictError(
-                f"shard {self._shard_id} is not connected so it cannot be interacted with"
-            )
+            msg = f"shard {self._shard_id} is not connected so it cannot be interacted with"
+            raise errors.ComponentStateConflictError(msg)
 
+    @typing_extensions.override
     async def request_guild_members(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -617,16 +695,20 @@ class GatewayShardImpl(shard.GatewayShard):
             raise errors.MissingIntentError(intents_.Intents.GUILD_PRESENCES)
 
         if users is not undefined.UNDEFINED and (query or limit):
-            raise ValueError("Cannot specify limit/query with users")
+            msg = "Cannot specify limit/query with users"
+            raise ValueError(msg)
 
         if not 0 <= limit <= 100:
-            raise ValueError("'limit' must be between 0 and 100, both inclusive")
+            msg = "'limit' must be between 0 and 100, both inclusive"
+            raise ValueError(msg)
 
         if users is not undefined.UNDEFINED and len(users) > 100:
-            raise ValueError("'users' is limited to 100 users")
+            msg = "'users' is limited to 100 users"
+            raise ValueError(msg)
 
         if nonce is not undefined.UNDEFINED and len(bytes(nonce, "utf-8")) > 32:
-            raise ValueError("'nonce' can be no longer than 32 byte characters long.")
+            msg = "'nonce' can be no longer than 32 byte characters long."
+            raise ValueError(msg)
 
         payload = data_binding.JSONObjectBuilder()
         payload.put_snowflake("guild_id", guild)
@@ -638,9 +720,11 @@ class GatewayShardImpl(shard.GatewayShard):
 
         await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
 
+    @typing_extensions.override
     async def start(self) -> None:
         if self._keep_alive_task or self._handshake_event:
-            raise errors.ComponentStateConflictError("Cannot run more than one instance of one shard concurrently")
+            msg = "Cannot run more than one instance of one shard concurrently"
+            raise errors.ComponentStateConflictError(msg)
 
         self._handshake_event = asyncio.Event()
         keep_alive_task = asyncio.create_task(self._keep_alive(), name=f"keep alive (shard {self._shard_id})")
@@ -652,10 +736,12 @@ class GatewayShardImpl(shard.GatewayShard):
             # This occurs if the run task finished before the handshake completion event,
             # which implies the shard died before it could become ready/resume...
             keep_alive_task.result()
-            raise RuntimeError(f"shard {self._shard_id} was closed before it could start successfully")
+            msg = f"shard {self._shard_id} was closed before it could start successfully"
+            raise RuntimeError(msg)
 
         self._keep_alive_task = keep_alive_task
 
+    @typing_extensions.override
     async def update_presence(
         self,
         *,
@@ -670,10 +756,11 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         await self._send_json({_OP: _PRESENCE_UPDATE, _D: presence_payload})
 
+    @typing_extensions.override
     async def update_voice_state(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        channel: typing.Optional[snowflakes.SnowflakeishOr[channels.GuildVoiceChannel]],
+        channel: snowflakes.SnowflakeishOr[channels.GuildVoiceChannel] | None,
         *,
         self_mute: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         self_deaf: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -691,11 +778,11 @@ class GatewayShardImpl(shard.GatewayShard):
     async def _send_heartbeat(self) -> None:
         self._logger.log(ux.TRACE, "sending HEARTBEAT [s:%s]", self._seq)
         await self._send_json({_OP: _HEARTBEAT, _D: self._seq}, priority=True)
-        self._last_heartbeat_sent = time.monotonic()
+        self._last_heartbeat_sent = time.time()
 
     async def _heartbeat(self, heartbeat_interval: float) -> None:
         # Prevent immediately zombie-ing.
-        self._last_heartbeat_ack_received = time.monotonic()
+        self._last_heartbeat_ack_received = time.time()
         self._logger.debug("starting heartbeat with interval %ss", heartbeat_interval)
 
         while True:
@@ -704,7 +791,7 @@ class GatewayShardImpl(shard.GatewayShard):
                 self._logger.error(
                     "connection has not received a HEARTBEAT_ACK for approx %.1fs and is being disconnected; "
                     "will attempt to reconnect",
-                    time.monotonic() - self._last_heartbeat_ack_received,
+                    time.time() - self._last_heartbeat_ack_received,
                 )
                 return
 
@@ -758,7 +845,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     self._logger.debug("ignoring unknown event %s:\n    %r", name, data)
 
             elif op == _HEARTBEAT_ACK:
-                now = time.monotonic()
+                now = time.time()
                 self._last_heartbeat_ack_received = now
                 self._heartbeat_latency = now - self._last_heartbeat_sent
                 self._logger.log(ux.TRACE, "received HEARTBEAT ACK in %.1fms", self._heartbeat_latency * 1_000)
@@ -788,7 +875,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
     async def _connect(self) -> tuple[asyncio.Task[None], ...]:
         if self._ws is not None:
-            raise errors.ComponentStateConflictError("Attempting to connect an already connected shard")
+            msg = "Attempting to connect an already connected shard"
+            raise errors.ComponentStateConflictError(msg)
 
         assert self._handshake_event is not None
 
@@ -798,8 +886,10 @@ class GatewayShardImpl(shard.GatewayShard):
         query["v"] = str(urls.VERSION)
         query["encoding"] = "json"
 
-        if self._transport_compression:
+        if self._compression == shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
             query["compress"] = "zlib-stream"
+        elif self._compression == shard.GatewayCompression.TRANSPORT_ZSTD_STREAM:
+            query["compress"] = "zstd-stream"
 
         url = urllib.parse.urlunparse(
             (url_parts.scheme, url_parts.netloc, url_parts.path, url_parts.params, urllib.parse.urlencode(query), "")
@@ -810,7 +900,7 @@ class GatewayShardImpl(shard.GatewayShard):
             log_filterer=_log_filterer(self._token.encode()),
             logger=self._logger,
             proxy_settings=self._proxy_settings,
-            transport_compression=self._transport_compression,
+            compression=self._compression,
             loads=self._loads,
             dumps=self._dumps,
             url=url,
@@ -838,7 +928,8 @@ class GatewayShardImpl(shard.GatewayShard):
                 initial_op,
             )
             await self._ws.send_close(code=errors.ShardCloseCode.PROTOCOL_ERROR, message=b"Expected HELLO op")
-            raise errors.GatewayError(f"Expected opcode {_HELLO} (HELLO), but received {initial_op}")
+            msg = f"Expected opcode {_HELLO} (HELLO), but received {initial_op}"
+            raise errors.GatewayError(msg)
 
         # Spawn lifetime tasks
         heartbeat_interval = float(hello_payload[_D]["heartbeat_interval"]) / 1_000.0
@@ -859,7 +950,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     _OP: _IDENTIFY,
                     _D: {
                         "token": self._token,
-                        "compress": False,
+                        "compress": self._compression == shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
                         "large_threshold": self._large_threshold,
                         "properties": {
                             "os": f"{platform.system()} {platform.architecture()[0]}",
@@ -884,7 +975,8 @@ class GatewayShardImpl(shard.GatewayShard):
 
         return lifetime_tasks
 
-    async def _keep_alive(self) -> None:
+    # We rather keep everything we can here inline.
+    async def _keep_alive(self) -> None:  # noqa: PLR0912, PLR0915
         assert self._handshake_event is not None
 
         lifetime_tasks: tuple[asyncio.Task[None], ...] = ()
@@ -894,19 +986,21 @@ class GatewayShardImpl(shard.GatewayShard):
         while True:
             self._handshake_event.clear()
 
-            if time.monotonic() - last_started_at < _BACKOFF_WINDOW:
+            if time.time() - last_started_at < _BACKOFF_WINDOW:
                 backoff_time = next(backoff)
                 self._logger.info("backing off reconnecting for %.2fs", backoff_time)
                 await asyncio.sleep(backoff_time)
 
             try:
-                last_started_at = time.monotonic()
+                last_started_at = time.time()
                 lifetime_tasks = await self._connect()
 
                 if not self._handshake_event.is_set():
                     continue
 
-                await self._event_manager.dispatch(self._event_factory.deserialize_connected_event(self))
+                await self._event_manager.dispatch(
+                    self._event_factory.deserialize_connected_event(self), return_tasks=True
+                )
                 await aio.first_completed(*lifetime_tasks)
 
                 # Since nothing went wrong, we can reset the backoff and try again
@@ -918,8 +1012,8 @@ class GatewayShardImpl(shard.GatewayShard):
             except errors.GatewayConnectionError as ex:
                 self._logger.warning("failed to communicate with server, reason was: %r. Will retry shortly", ex.reason)
 
-            except errors.GatewayTransportError as ex:
-                self._logger.error("encountered transport error. Will try to reconnect shorty", exc_info=ex)
+            except errors.GatewayTransportError:
+                self._logger.exception("encountered transport error. Will try to reconnect shorty")
 
             except errors.GatewayServerClosedConnectionError as ex:
                 if not ex.can_reconnect:
@@ -939,16 +1033,16 @@ class GatewayShardImpl(shard.GatewayShard):
                 # reconnect in large sharded bots for a very long period of time.
                 backoff.reset()
 
-            except errors.GatewayError as ex:
-                self._logger.error("encountered gateway error", exc_info=ex)
+            except errors.GatewayError:
+                self._logger.exception("encountered gateway error")
                 raise
 
             except asyncio.CancelledError:
                 self._is_closing = True
                 return
 
-            except Exception as ex:
-                self._logger.error("encountered some unhandled error", exc_info=ex)
+            except Exception:
+                self._logger.exception("encountered some unhandled error")
                 raise
 
             finally:
@@ -976,7 +1070,9 @@ class GatewayShardImpl(shard.GatewayShard):
 
                     if self._handshake_event.is_set():
                         # We dispatched the connected event, so we can dispatch the disconnected one too
-                        await self._event_manager.dispatch(self._event_factory.deserialize_disconnected_event(self))
+                        await self._event_manager.dispatch(
+                            self._event_factory.deserialize_disconnected_event(self), return_tasks=True
+                        )
 
     def _serialize_and_store_presence_payload(
         self,

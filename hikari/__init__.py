@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -50,7 +49,9 @@ from hikari._about import __maintainer__
 from hikari._about import __url__
 from hikari._about import __version__
 from hikari.applications import Application
+from hikari.applications import ApplicationContextType
 from hikari.applications import ApplicationFlags
+from hikari.applications import ApplicationIntegrationType
 from hikari.applications import ApplicationRoleConnectionMetadataRecord
 from hikari.applications import ApplicationRoleConnectionMetadataRecordType
 from hikari.applications import AuthorizationApplication
@@ -68,6 +69,7 @@ from hikari.applications import TeamMember
 from hikari.applications import TeamMembershipState
 from hikari.applications import TokenType
 from hikari.audit_logs import *
+from hikari.auto_mod import *
 from hikari.channels import *
 from hikari.colors import *
 from hikari.colours import *
@@ -85,6 +87,7 @@ from hikari.events.lifetime_events import *
 from hikari.events.member_events import *
 from hikari.events.message_events import *
 from hikari.events.monetization_events import *
+from hikari.events.poll_events import *
 from hikari.events.reaction_events import *
 from hikari.events.role_events import *
 from hikari.events.scheduled_events import *
@@ -115,6 +118,7 @@ from hikari.locales import *
 from hikari.messages import *
 from hikari.monetization import *
 from hikari.permissions import *
+from hikari.polls import *
 from hikari.presences import *
 from hikari.scheduled_events import *
 from hikari.sessions import *

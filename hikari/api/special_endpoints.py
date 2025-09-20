@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -24,41 +23,65 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "AutoModActionBuilder",
+    "AutoModBlockMemberInteractionActionBuilder",
+    "AutoModBlockMessageActionBuilder",
+    "AutoModKeywordPresetTriggerBuilder",
+    "AutoModKeywordTriggerBuilder",
+    "AutoModMemberProfileTriggerBuilder",
+    "AutoModMentionSpamTriggerBuilder",
+    "AutoModSendAlertMessageActionBuilder",
+    "AutoModSpamTriggerBuilder",
+    "AutoModTimeoutActionBuilder",
+    "AutoModTriggerBuilder",
     "AutocompleteChoiceBuilder",
     "ButtonBuilder",
+    "ChannelSelectMenuBuilder",
     "CommandBuilder",
-    "SlashCommandBuilder",
-    "ContextMenuCommandBuilder",
     "ComponentBuilder",
-    "TypingIndicator",
-    "GuildBuilder",
+    "ContainerComponentBuilder",
+    "ContextMenuCommandBuilder",
+    "FileComponentBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
-    "InteractionResponseBuilder",
     "InteractionMessageBuilder",
+    "InteractionModalBuilder",
+    "InteractionResponseBuilder",
     "InteractiveButtonBuilder",
     "LinkButtonBuilder",
-    "SelectMenuBuilder",
-    "TextSelectMenuBuilder",
-    "ChannelSelectMenuBuilder",
-    "SelectOptionBuilder",
-    "TextInputBuilder",
-    "InteractionModalBuilder",
+    "MediaGalleryComponentBuilder",
+    "MediaGalleryItemBuilder",
     "MessageActionRowBuilder",
     "ModalActionRowBuilder",
+    "PollAnswerBuilder",
+    "PollBuilder",
+    "SectionComponentBuilder",
+    "SelectMenuBuilder",
+    "SelectOptionBuilder",
+    "SeparatorComponentBuilder",
+    "SlashCommandBuilder",
+    "TextDisplayComponentBuilder",
+    "TextInputBuilder",
+    "TextSelectMenuBuilder",
+    "ThumbnailComponentBuilder",
+    "TypingIndicator",
 )
 
 import abc
 import typing
 
 from hikari import components as components_
+from hikari import polls
 from hikari import undefined
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import types
 
     from typing_extensions import Self
 
+    from hikari import applications
+    from hikari import auto_mod
     from hikari import channels
     from hikari import colors
     from hikari import commands
@@ -71,11 +94,9 @@ if typing.TYPE_CHECKING:
     from hikari import permissions as permissions_
     from hikari import snowflakes
     from hikari import users
-    from hikari import voices
     from hikari.api import entity_factory as entity_factory_
     from hikari.api import rest as rest_api
     from hikari.interactions import base_interactions
-    from hikari.internal import time
 
 _ParentT = typing.TypeVar("_ParentT")
 
@@ -103,398 +124,225 @@ class TypingIndicator(abc.ABC):
 
     @abc.abstractmethod
     async def __aexit__(
-        self, exception_type: type[BaseException], exception: BaseException, exception_traceback: types.TracebackType
+        self,
+        exception_type: type[BaseException] | None,
+        exception: BaseException | None,
+        exception_traceback: types.TracebackType | None,
     ) -> None: ...
 
 
-class GuildBuilder(abc.ABC):
-    """Result type of [`hikari.api.rest.RESTClient.guild_builder`][].
+class ChannelRepositioner(abc.ABC):
+    """Helper class used for repositioning channels in a guild.
 
-    This is used to create a guild in a tidy way using the HTTP API, since
-    the logic behind creating a guild on an API level is somewhat confusing
-    and detailed.
-
-    !!! note
-        If you call [`hikari.api.special_endpoints.GuildBuilder.add_role`][], the default roles provided by Discord will
-        be created. This also applies to the `add_` functions for
-        text channels/voice channels/categories.
+    This is an object that should be awaited to trigger the repositioning.
+    Only channels to be modified are required.
 
     !!! note
-        Functions that return a [`hikari.snowflakes.Snowflake`][] do
-        **not** provide the final ID that the object will have once the
-        API call is made. The returned IDs are only able to be used to
-        re-reference particular objects while building the guild format
-        to allow for the creation of channels within categories,
-        and to provide permission overwrites.
+        This class should only be initialized by [`hikari.api.rest.RESTClient.reposition_channels`][].
 
     Examples
     --------
-    Creating an empty guild:
-
+    Basic usage:
     ```py
-    guild = await rest.guild_builder("My Server!").create()
-    ```
-
-    Creating a guild with an icon:
-
-    ```py
-    from hikari.files import WebResourceStream
-
-    guild_builder = rest.guild_builder("My Server!")
-    guild_builder.icon = WebResourceStream("cat.png", "http://...")
-    guild = await guild_builder.create()
-    ```
-
-    Adding roles to your guild:
-
-    ```py
-    from hikari.permissions import Permissions
-
-    guild_builder = rest.guild_builder("My Server!")
-
-    everyone_role_id = guild_builder.add_role("@everyone")
-    admin_role_id = guild_builder.add_role(
-        "Admins", permissions=Permissions.ADMINISTRATOR
+    channel_repositioner = rest.reposition_channels(
+        guild=GUILD_ID, reason="The reason."
     )
+    channel_repositioner.add_reposition_channel(position=2, channel=CHANNEL_ID)
 
-    await guild_builder.create()
+    await channel_repositioner
     ```
-
-    !!! warning
-        The first role must always be the `@everyone` role.
-
-    Adding a text channel to your guild:
-
+    Change parent:
     ```py
-    guild_builder = rest.guild_builder("My Server!")
+    channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
+    channel_repositioner.add_reposition_channel(
+        position=1, channel=CHANNEL_ID, lock_permissions=True, parent=CATEGORY_ID
+    )
+    # when lock_permissions is set to True, the channels permissions will be synced
+    # with the new parent.
 
-    category_id = guild_builder.add_category("My safe place")
-    channel_id = guild_builder.add_text_channel("general", parent_id=category_id)
-
-    await guild_builder.create()
+    await channel_repositioner
     ```
+
+    Raises
+    ------
+    hikari.errors.UnauthorizedError
+        If you are unauthorized to make the request (invalid/missing token).
+    hikari.errors.ForbiddenError
+        If you cannot access the channel.
+    hikari.errors.NotFoundError
+        If the channel is not found.
+    hikari.errors.RateLimitTooLongError
+        Raised in the event that a rate limit occurs that is
+        longer than `max_rate_limit` when making a request.
+    hikari.errors.InternalServerError
+        If an internal error occurs on Discord while handling the request.
+
+
     """
 
     __slots__: typing.Sequence[str] = ()
 
     @property
     @abc.abstractmethod
-    def name(self) -> str:
-        """Name of the guild to create."""
-
-    @property
-    @abc.abstractmethod
-    def default_message_notifications(self) -> undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel]:
-        """Default message notification level that can be overwritten.
-
-        If not overridden, this will use the Discord default level.
-        """
-
-    @default_message_notifications.setter
-    def default_message_notifications(
-        self, default_message_notifications: undefined.UndefinedOr[guilds.GuildMessageNotificationsLevel], /
-    ) -> None:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def explicit_content_filter_level(self) -> undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel]:
-        """Explicit content filter level that can be overwritten.
-
-        If not overridden, this will use the Discord default level.
-        """
-
-    @explicit_content_filter_level.setter
-    def explicit_content_filter_level(
-        self, explicit_content_filter_level: undefined.UndefinedOr[guilds.GuildExplicitContentFilterLevel], /
-    ) -> None:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def icon(self) -> undefined.UndefinedOr[files.Resourceish]:
-        """Guild icon to use that can be overwritten.
-
-        If not overridden, the guild will not have an icon.
-        """
-
-    @icon.setter
-    def icon(self, icon: undefined.UndefinedOr[files.Resourceish], /) -> None:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractmethod
-    def verification_level(self) -> undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]]:
-        """Verification level required to join the guild."""
-
-    @verification_level.setter
-    def verification_level(
-        self, verification_level: undefined.UndefinedOr[typing.Union[guilds.GuildVerificationLevel, int]], /
-    ) -> None:
-        raise NotImplementedError
+    def guild(self) -> snowflakes.SnowflakeishOr[guilds.PartialGuild]:
+        """The guild."""
 
     @abc.abstractmethod
-    async def create(self) -> guilds.RESTGuild:
-        """Send the request to Discord to create the guild.
-
-        The application user will be added to this guild as soon as it is
-        created. All IDs that were provided when building this guild will
-        become invalid and will be replaced with real IDs.
+    def set_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> Self:
+        """Set the guild.
 
         Returns
         -------
-        hikari.guilds.RESTGuild
-            The created guild.
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @property
+    @abc.abstractmethod
+    def reason(self) -> undefined.UndefinedOr[str]:
+        """If provided, the reason that will be recorded in the audit logs.
+
+        Maximum of 512 characters.
+        """
+
+    @abc.abstractmethod
+    def set_reason(self, reason: undefined.UndefinedOr[str]) -> Self:
+        """Set the reason.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @property
+    @abc.abstractmethod
+    def positions(self) -> typing.Sequence[RepositionedChannel]:
+        """The positions."""
+
+    @abc.abstractmethod
+    def set_positions(self, positions: typing.Sequence[RepositionedChannel]) -> Self:
+        """Set the positions.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @abc.abstractmethod
+    def add_reposition_channel(
+        self,
+        position: int,
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        *,
+        lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a channel that should be repositioned to the channel repositioner.
+
+        Parameters
+        ----------
+        position
+            The new position for the channel.
+        channel
+            The channel that should be repositioned. This can either be a
+            `[hikari.channels.GuildChannel`][] or the id of the channel.
+        lock_permissions
+            Whether the channel should sync permissions to the new parent channel or not.
+            When set to `False` or `UNDEFINED` the channel will not sync its permissions
+            to the new parent. Only when set to `True` the channel will sync its
+            permissions to the new parent.
+        parent
+            The id of the parent where this channel should be repositioned under.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @abc.abstractmethod
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
+        """Reposition the channels in a guild.
 
         Raises
         ------
-        hikari.errors.BadRequestError
-            If any values set in the guild builder are invalid.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are already in 10 guilds.
+            If you cannot access the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
 
+
+class RepositionedChannel(abc.ABC):
+    __slots__: typing.Sequence[str] = ()
+
+    @property
     @abc.abstractmethod
-    def add_role(
-        self,
-        name: str,
-        /,
-        *,
-        permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a role.
+    def channel(self) -> snowflakes.SnowflakeishOr[channels.GuildChannel]:
+        """Channel property."""
 
-        !!! warning
-            The first role you create (i.e., position 0) must always be the
-            `@everyone` role.
-
-        Parameters
-        ----------
-        name
-            The role's name.
-        permissions
-            If provided, the permissions for the role.
-        color
-            If provided, the role's color.
-        colour
-            An alias for `color`.
-        hoist
-            If provided, whether to hoist the role.
-        mentionable
-            If provided, whether to make the role mentionable.
-        position
-            If provided, the position of the role.
+    @abc.abstractmethod
+    def set_channel(self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]) -> Self:
+        """Set the channel.
 
         Returns
         -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this role that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
-
-        Raises
-        ------
-        ValueError
-            If you are defining the first role, but did not name it `@everyone`.
-        TypeError
-            If you specify both `color` and `colour` together or if you try to
-            specify `color`, `colour`, `hoisted`, `mentionable` or `position` for
-            the `@everyone` role.
+        RepositionedChannel
+            The reposition channel helper.
         """
 
+    @property
     @abc.abstractmethod
-    def add_category(
-        self,
-        name: str,
-        /,
-        *,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[
-            typing.Collection[channels.PermissionOverwrite]
-        ] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a category channel.
+    def position(self) -> int:
+        """Position property."""
 
-        Parameters
-        ----------
-        name
-            The channels name. Must be between 2 and 1000 characters.
-        position
-            If provided, the position of the category.
-        permission_overwrites
-            If provided, the permission overwrites for the category.
+    @abc.abstractmethod
+    def set_position(self, position: int) -> Self:
+        """Set the position.
 
         Returns
         -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this channel that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
+        RepositionedChannel
+            The reposition channel helper.
         """
 
+    @property
     @abc.abstractmethod
-    def add_text_channel(
-        self,
-        name: str,
-        /,
-        *,
-        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[
-            typing.Collection[channels.PermissionOverwrite]
-        ] = undefined.UNDEFINED,
-        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a text channel.
+    def lock_permissions(self) -> undefined.UndefinedOr[bool]:
+        """Lock permissions property."""
 
-        Parameters
-        ----------
-        name
-            The channels name. Must be between 2 and 1000 characters.
-        position
-            If provided, the position of the channel (relative to the
-            category, if any).
-        topic
-            If provided, the channels topic. Maximum 1024 characters.
-        nsfw
-            If provided, whether to mark the channel as NSFW.
-        rate_limit_per_user
-            If provided, the amount of seconds a user has to wait
-            before being able to send another message in the channel.
-            Maximum 21600 seconds.
-        permission_overwrites
-            If provided, the permission overwrites for the channel.
-        parent_id
-            The ID of the category to create the channel under.
+    @abc.abstractmethod
+    def set_lock_permissions(self, lock: undefined.UndefinedOr[bool]) -> Self:
+        """Set the lock.
 
         Returns
         -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this channel that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
+        RepositionedChannel
+            The reposition channel helper.
         """
 
+    @property
     @abc.abstractmethod
-    def add_voice_channel(
-        self,
-        name: str,
-        /,
-        *,
-        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[typing.Union[channels.VideoQualityMode, int]] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[
-            typing.Collection[channels.PermissionOverwrite]
-        ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
-        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a voice channel.
+    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+        """Parent property."""
 
-        Parameters
-        ----------
-        name
-            The channels name. Must be between 2 and 1000 characters.
-        position
-            If provided, the position of the channel (relative to the
-            category, if any).
-        user_limit
-            If provided, the maximum users in the channel at once.
-            Must be between 0 and 99 with 0 meaning no limit.
-        bitrate
-            If provided, the bitrate for the channel. Must be
-            between 8000 and 96000 or 8000 and 128000 for VIP
-            servers.
-        video_quality_mode
-            If provided, the new video quality mode for the channel.
-        permission_overwrites
-            If provided, the permission overwrites for the channel.
-        region
-            If provided, the voice region to for this channel. Passing
-            [`None`][] here will set it to "auto" mode where the used
-            region will be decided based on the first person who connects to it
-            when it's empty.
-        parent_id
-            The ID of the category to create the channel under.
+    @abc.abstractmethod
+    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+        """Set the parent.
 
         Returns
         -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this channel that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
-        """
-
-    @abc.abstractmethod
-    def add_stage_channel(
-        self,
-        name: str,
-        /,
-        *,
-        parent_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
-        bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        permission_overwrites: undefined.UndefinedOr[
-            typing.Collection[channels.PermissionOverwrite]
-        ] = undefined.UNDEFINED,
-        region: undefined.UndefinedNoneOr[typing.Union[voices.VoiceRegion, str]],
-        user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> snowflakes.Snowflake:
-        """Create a stage channel.
-
-        Parameters
-        ----------
-        name
-            The channels name. Must be between 2 and 1000 characters.
-        position
-            If provided, the position of the channel (relative to the
-            category, if any).
-        user_limit
-            If provided, the maximum users in the channel at once.
-            Must be between 0 and 99 with 0 meaning no limit.
-        bitrate
-            If provided, the bitrate for the channel. Must be
-            between 8000 and 96000 or 8000 and 128000 for VIP
-            servers.
-        permission_overwrites
-            If provided, the permission overwrites for the channel.
-        region
-            If provided, the voice region to for this channel. Passing
-            [`None`][] here will set it to "auto" mode where the used
-            region will be decided based on the first person who connects to it
-            when it's empty.
-        parent_id
-            The ID of the category to create the channel under.
-
-        Returns
-        -------
-        hikari.snowflakes.Snowflake
-            The dummy ID for this channel that can be used temporarily to refer
-            to this object while designing the guild layout.
-
-            When the guild is created, this will be replaced with a different
-            ID.
+        RepositionedChannel
+            The reposition channel helper.
         """
 
 
@@ -505,7 +353,7 @@ class InteractionResponseBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> typing.Union[int, base_interactions.ResponseType]:
+    def type(self) -> int | base_interactions.ResponseType:
         """Type of this response."""
 
     @abc.abstractmethod
@@ -534,12 +382,13 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> base_interactions.DeferredResponseTypesT:
         """Type of this response."""
 
     @property
     @abc.abstractmethod
-    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
         """Message flags this response should have.
 
         !!! note
@@ -549,7 +398,7 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
         """Set message flags for this response.
 
         !!! note
@@ -569,6 +418,233 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
+class GuildOnboardingPromptOptionBuilder(abc.ABC):
+    """Interface of a guild onboarding prompt option used to edit guild onboardings."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_title(self, title: str, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def role_ids(self) -> snowflakes.SnowflakeishSequence[guilds.Role]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_role_ids(self, role_ids: snowflakes.SnowflakeishSequence[guilds.Role], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def channel_ids(self) -> snowflakes.SnowflakeishSequence[channels.GuildChannel]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_channel_ids(self, channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_description(self, title: undefined.UndefinedOr[str], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str]:
+        """Emoji which should appear on this option."""
+
+    @abc.abstractmethod
+    def set_emoji(self, emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str], /) -> Self:
+        """Set the emoji to display on this option.
+
+        Parameters
+        ----------
+        emoji
+            Object, ID or raw string of the emoji which should be displayed on
+            this option.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class GuildOnboardingPromptBuilder(abc.ABC):
+    """Interface of a guild onboarding prompt used to respond to edit guild onboardings.
+
+    !!! Note
+        You cannot set the type of the prompt. Discord will automatically do that
+        based on how many options the prompt has.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def id(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]]:
+        """The prompt's id."""
+
+    @abc.abstractmethod
+    def set_id(self, id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]], /) -> Self:
+        """Set this prompt's id.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_title(self, title: str, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def single_select(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_single_select(self, single_select: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def required(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def in_onboarding(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_in_onboarding(self, in_onboarding: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[GuildOnboardingPromptOptionBuilder]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_options(self, options: typing.Sequence[GuildOnboardingPromptOptionBuilder], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def add_option(
+        self,
+        title: str,
+        role_ids: undefined.UndefinedNoneOr[snowflakes.SnowflakeishSequence[guilds.Role]] = undefined.UNDEFINED,
+        channel_ids: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishSequence[channels.GuildChannel]
+        ] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
 class AutocompleteChoiceBuilder(abc.ABC):
     """Interface of an autocomplete choice used to respond to interactions."""
 
@@ -581,7 +657,7 @@ class AutocompleteChoiceBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def value(self) -> typing.Union[int, str, float]:
+    def value(self) -> int | str | float:
         """The choice's value."""
 
     @abc.abstractmethod
@@ -595,7 +671,7 @@ class AutocompleteChoiceBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_value(self, value: typing.Union[int, float, str], /) -> Self:
+    def set_value(self, value: float | str, /) -> Self:
         """Set this choice's value.
 
         Returns
@@ -655,6 +731,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> base_interactions.MessageResponseTypesT:
         """Type of this response."""
 
@@ -684,7 +761,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def flags(self) -> typing.Union[undefined.UndefinedType, int, messages.MessageFlag]:
+    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
         """Message flags this response should have.
 
         !!! note
@@ -706,9 +783,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def role_mentions(
-        self,
-    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]]:
+    def role_mentions(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool]:
         """Whether and what role mentions should be enabled for this response.
 
         Either a sequence of object/IDs of the roles mentions should be enabled
@@ -718,15 +793,18 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def user_mentions(
-        self,
-    ) -> undefined.UndefinedOr[typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]]:
+    def user_mentions(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users.PartialUser] | bool]:
         """Whether and what user mentions should be enabled for this response.
 
         Either a sequence of object/IDs of the users mentions should be enabled
         for, [`False`][] or [`hikari.undefined.UNDEFINED`][] to disallow any
         user mentions or [`True`][] to allow all user mentions.
         """
+
+    @property
+    @abc.abstractmethod
+    def poll(self) -> undefined.UndefinedOr[PollBuilder]:
+        """The poll to include with this response."""
 
     @abc.abstractmethod
     def clear_attachments(self, /) -> Self:
@@ -772,6 +850,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
+    def clear_components(self, /) -> Self:
+        """Clear the components set for this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
     def add_embed(self, embed: embeds_.Embed, /) -> Self:
         """Add an embed to this response.
 
@@ -779,6 +867,16 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         ----------
         embed
             Object of the embed to add to this response.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def clear_embeds(self, /) -> Self:
+        """Clear the embeds set for this embed.
 
         Returns
         -------
@@ -802,7 +900,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_flags(self, flags: typing.Union[undefined.UndefinedType, int, messages.MessageFlag], /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
         """Set message flags for this response.
 
         !!! note
@@ -854,7 +952,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     def set_role_mentions(
         self,
         mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
         /,
     ) -> Self:
@@ -877,7 +975,7 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
     def set_user_mentions(
         self,
         mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
         ] = undefined.UNDEFINED,
         /,
     ) -> Self:
@@ -889,6 +987,22 @@ class InteractionMessageBuilder(InteractionResponseBuilder, abc.ABC):
             Either a sequence of object/IDs of the users mentions should be enabled for,
             [`False`][] or [`hikari.undefined.UNDEFINED`][] to disallow any user
             mentions or [`True`][] to allow all user mentions.
+
+        Returns
+        -------
+        InteractionMessageBuilder
+            Object of this builder to allow for chained calls.
+        """
+
+    @abc.abstractmethod
+    def set_poll(self, poll: undefined.UndefinedOr[PollBuilder], /) -> Self:
+        """Set the poll to include with this response.
+
+        Parameters
+        ----------
+        poll
+            The poll to include with this response, or [`hikari.undefined.UNDEFINED`][]
+            to remove a previously added poll.
 
         Returns
         -------
@@ -909,6 +1023,7 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[base_interactions.ResponseType.MODAL]:
         """Type of this response."""
 
@@ -958,22 +1073,6 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         """
 
 
-class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
-    """Interface of an interaction premium required response builder used within REST servers.
-
-    This can be returned by the listener registered to
-    `hikari.api.interaction_server.InteractionServer` as a response to the interaction
-    create.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
-        """Type of this response."""
-
-
 class CommandBuilder(abc.ABC):
     """Interface of a command builder used when bulk creating commands over REST."""
 
@@ -1001,19 +1100,11 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_member_permissions(self) -> typing.Union[undefined.UndefinedType, permissions_.Permissions, int]:
+    def default_member_permissions(self) -> undefined.UndefinedType | permissions_.Permissions | int:
         """Member permissions necessary to utilize this command by default.
 
         If `0`, then it will be available for all members. Note that this doesn't affect
         administrators of the guild and overwrites.
-        """
-
-    @property
-    @abc.abstractmethod
-    def is_dm_enabled(self) -> undefined.UndefinedOr[bool]:
-        """Whether this command is enabled in DMs with the bot.
-
-        Only applicable to globally-scoped commands.
         """
 
     @property
@@ -1023,8 +1114,18 @@ class CommandBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def name_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def name_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
         """Name localizations set for this command."""
+
+    @property
+    @abc.abstractmethod
+    def integration_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]:
+        """The integration types allowed for this command."""
+
+    @property
+    @abc.abstractmethod
+    def context_types(self) -> undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]:
+        """The context types allowed for this command."""
 
     @abc.abstractmethod
     def set_name(self, name: str, /) -> Self:
@@ -1058,7 +1159,7 @@ class CommandBuilder(abc.ABC):
 
     @abc.abstractmethod
     def set_default_member_permissions(
-        self, default_member_permissions: typing.Union[undefined.UndefinedType, int, permissions_.Permissions], /
+        self, default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions, /
     ) -> Self:
         """Set the member permissions necessary to utilize this command by default.
 
@@ -1077,21 +1178,6 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_dm_enabled(self, state: undefined.UndefinedOr[bool], /) -> Self:
-        """Set whether this command will be enabled in DMs with the bot.
-
-        Parameters
-        ----------
-        state
-            Whether this command is enabled in DMs with the bot.
-
-        Returns
-        -------
-        CommandBuilder
-            Object of this command builder to allow for chained calls.
-        """
-
-    @abc.abstractmethod
     def set_is_nsfw(self, state: undefined.UndefinedOr[bool], /) -> Self:
         """Set whether this command will be age-restricted.
 
@@ -1107,15 +1193,47 @@ class CommandBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_name_localizations(
-        self, name_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
-    ) -> Self:
+    def set_name_localizations(self, name_localizations: typing.Mapping[locales.Locale | str, str], /) -> Self:
         """Set the name localizations for this command.
 
         Parameters
         ----------
         name_localizations
             The name localizations to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
+
+    @abc.abstractmethod
+    def set_integration_types(
+        self, integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]]
+    ) -> Self:
+        """Set the integration types for this command.
+
+        Parameters
+        ----------
+        integration_types
+            The integration types to set for this command.
+
+        Returns
+        -------
+        CommandBuilder
+            Object of this command builder.
+        """
+
+    @abc.abstractmethod
+    def set_context_types(
+        self, context_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationContextType]]
+    ) -> Self:
+        """Set the context types for this command.
+
+        Parameters
+        ----------
+        context_types
+            The context types to set for this command.
 
         Returns
         -------
@@ -1183,7 +1301,7 @@ class SlashCommandBuilder(CommandBuilder):
 
     @property
     @abc.abstractmethod
-    def description_localizations(self) -> typing.Mapping[typing.Union[locales.Locale, str], str]:
+    def description_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
         """Command's localised descriptions."""
 
     @property
@@ -1208,7 +1326,7 @@ class SlashCommandBuilder(CommandBuilder):
 
     @abc.abstractmethod
     def set_description_localizations(
-        self, description_localizations: typing.Mapping[typing.Union[locales.Locale, str], str], /
+        self, description_localizations: typing.Mapping[locales.Locale | str, str], /
     ) -> Self:
         """Set the localised descriptions for this command.
 
@@ -1242,6 +1360,7 @@ class SlashCommandBuilder(CommandBuilder):
         """
 
     @abc.abstractmethod
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1279,6 +1398,7 @@ class ContextMenuCommandBuilder(CommandBuilder):
     __slots__: typing.Sequence[str] = ()
 
     @abc.abstractmethod
+    @typing_extensions.override
     async def create(
         self,
         rest: rest_api.RESTClient,
@@ -1318,17 +1438,29 @@ class ComponentBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def type(self) -> typing.Union[int, components_.ComponentType]:
+    def type(self) -> int | components_.ComponentType:
         """Type of component this builder represents."""
 
+    @property
     @abc.abstractmethod
-    def build(self) -> typing.MutableMapping[str, typing.Any]:
-        """Build a JSON object from this builder.
+    def id(self) -> undefined.UndefinedOr[int]:
+        """ID of the component.
+
+        It will be used to order components in the layout.
+
+        If not provided, it will be auto populated through increment.
+        """
+
+    @abc.abstractmethod
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        """Build a JSON object from this builder and collects all attachments added as components.
 
         Returns
         -------
-        typing.MutableMapping[str, typing.Any]
-            The built json object representation of this builder.
+        tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]
+            The built json object representation of this builder, and the attachments added.
         """
 
 
@@ -1339,17 +1471,18 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.BUTTON]:
         """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
-    def style(self) -> typing.Union[components_.ButtonStyle, int]:
+    def style(self) -> components_.ButtonStyle | int:
         """Button's style."""
 
     @property
     @abc.abstractmethod
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
         """Emoji which should appear on this button."""
 
     @property
@@ -1368,9 +1501,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
         """Whether the button should be marked as disabled."""
 
     @abc.abstractmethod
-    def set_emoji(
-        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> Self:
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
         """Set the emoji to display on this button.
 
         Parameters
@@ -1403,7 +1534,7 @@ class ButtonBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this button should be disabled.
 
         Parameters
@@ -1427,6 +1558,17 @@ class LinkButtonBuilder(ButtonBuilder, abc.ABC):
     @abc.abstractmethod
     def url(self) -> str:
         """URL this button should link to when pressed."""
+
+
+class PremiumButtonBuilder(ButtonBuilder, abc.ABC):
+    """Builder interface for premium buttons."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def sku_id(self) -> int:
+        """The SKU ID this button should link to when pressed."""
 
 
 class InteractiveButtonBuilder(ButtonBuilder, abc.ABC):
@@ -1477,7 +1619,7 @@ class SelectOptionBuilder(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def emoji(self) -> typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType]:
+    def emoji(self) -> snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType:
         """Emoji which should appear on this option."""
 
     @property
@@ -1534,9 +1676,7 @@ class SelectOptionBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_emoji(
-        self, emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType], /
-    ) -> Self:
+    def set_emoji(self, emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType, /) -> Self:
         """Set the emoji to display on this option.
 
         Parameters
@@ -1552,7 +1692,7 @@ class SelectOptionBuilder(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_default(self, state: bool, /) -> Self:
+    def set_is_default(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this option should be selected by default.
 
         Parameters
@@ -1633,7 +1773,7 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_is_disabled(self, state: bool, /) -> Self:
+    def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this option is disabled.
 
         Parameters
@@ -1725,7 +1865,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, abc.ABC, typing.Generic[_ParentT]
         /,
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         is_default: bool = False,
     ) -> Self:
         """Add an option to this menu.
@@ -1785,6 +1925,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.TEXT_INPUT]:
         """Type of component this builder represents."""
 
@@ -1834,7 +1975,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """Maximum length the text should have."""
 
     @abc.abstractmethod
-    def set_style(self, style: typing.Union[components_.TextInputStyle, int], /) -> Self:
+    def set_style(self, style: components_.TextInputStyle | int, /) -> Self:
         """Set the style to use for the text input.
 
         Parameters
@@ -1909,7 +2050,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_required(self, required: bool, /) -> Self:
+    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this text input is required to be filled-in.
 
         Parameters
@@ -1961,16 +2102,17 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def components(self) -> typing.Sequence[MessageActionRowBuilderComponentsT]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(self, component: ComponentBuilder, /) -> Self:
+    def add_component(self, component: MessageActionRowBuilderComponentsT, /) -> Self:
         """Add a component to this action row builder.
 
         !!! warning
@@ -1997,9 +2139,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         custom_id: str,
         /,
         *,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add an interactive button component to this action row builder.
 
@@ -2019,6 +2162,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2032,9 +2179,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         url: str,
         /,
         *,
-        emoji: typing.Union[snowflakes.Snowflakeish, emojis.Emoji, str, undefined.UndefinedType] = undefined.UNDEFINED,
+        emoji: snowflakes.Snowflakeish | emojis.Emoji | str | undefined.UndefinedType = undefined.UNDEFINED,
         label: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a link button component to this action row builder.
 
@@ -2051,6 +2199,29 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ActionRowBuilder
+            The action row builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_premium_button(self, sku_id: int, /, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a premium button component to this action row builder.
+
+        Parameters
+        ----------
+        sku_id
+            The SKU ID that this button will link to.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2061,7 +2232,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
     @abc.abstractmethod
     def add_select_menu(
         self,
-        type_: typing.Union[components_.ComponentType, int],
+        type_: components_.ComponentType | int,
         custom_id: str,
         /,
         *,
@@ -2069,6 +2240,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a select menu component to this action row builder.
 
@@ -2091,6 +2263,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2114,6 +2290,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         """Add a channel select menu component to this action row builder.
 
@@ -2135,6 +2312,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2157,6 +2338,7 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> TextSelectMenuBuilder[Self]:
         """Add a select menu component to this action row builder.
 
@@ -2173,6 +2355,10 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The maximum amount of entries which can be selected.
         is_disabled
             Whether this select menu should be marked as disabled.
+        id
+            The ID to give to the menu.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
@@ -2198,16 +2384,17 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
+    @typing_extensions.override
     def type(self) -> typing.Literal[components_.ComponentType.ACTION_ROW]:
         """Type of component this builder represents."""
 
     @property
     @abc.abstractmethod
-    def components(self) -> typing.Sequence[ComponentBuilder]:
+    def components(self) -> typing.Sequence[ModalActionRowBuilderComponentsT]:
         """Sequence of the component builders registered within this action row."""
 
     @abc.abstractmethod
-    def add_component(self, component: ComponentBuilder, /) -> Self:
+    def add_component(self, component: ModalActionRowBuilderComponentsT, /) -> Self:
         """Add a component to this action row builder.
 
         !!! warning
@@ -2270,4 +2457,755 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
         -------
         ModalActionRowBuilder
             The modal action row builder to enable call chaining.
+        """
+
+
+class SectionComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for section components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.SECTION]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[SectionBuilderComponentsT]:
+        """The components attached to the section."""
+
+    @property
+    @abc.abstractmethod
+    def accessory(self) -> SectionBuilderAccessoriesT:
+        """The accessory attached to the section."""
+
+    @abc.abstractmethod
+    def add_component(self, component: SectionBuilderComponentsT) -> Self:
+        """Add a component to this section builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageSectionBuilder.add_text_display`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component
+            The component builder to add to the section.
+
+        Returns
+        -------
+        SectionComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a text display component to this section builder.
+
+        Parameters
+        ----------
+        content
+            The content for the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        SectionComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class TextDisplayComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for text display components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.TEXT_DISPLAY]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def content(self) -> str:
+        """The content for the text display."""
+
+
+class ThumbnailComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for thumbnail components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.THUMBNAIL]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def media(self) -> files.Resourceish:
+        """The media of this thumbnail."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The description for the thumbnails media."""
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the media is marked as a spoiler."""
+
+
+class MediaGalleryComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for media gallery components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.MEDIA_GALLERY]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def items(self) -> typing.Sequence[MediaGalleryItemBuilder]:
+        """The items in the media gallery."""
+
+    @abc.abstractmethod
+    def add_item(self, item: MediaGalleryItemBuilder) -> Self:
+        """Add a component to this media gallery builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageMediaGalleryBuilder.add_media_gallery_item`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        item
+            The media gallery item builder to add to the section.
+
+        Returns
+        -------
+        MediaGalleryComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_media_gallery_item(
+        self,
+        media: files.Resourceish,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        spoiler: bool = False,
+    ) -> Self:
+        """Add a media gallery item component to this media gallery builder.
+
+        Parameters
+        ----------
+        media
+            The media for the gallery item.
+        description
+            The description for the media gallery item.
+        spoiler
+            Whether the media has a spoiler.
+
+        Returns
+        -------
+        MediaGalleryComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class MediaGalleryItemBuilder(abc.ABC):
+    """Builder class for a media gallery item."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def media(self) -> files.Resourceish:
+        """The media for the gallery item."""
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The description for the media gallery item."""
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the media is marked as a spoiler."""
+
+    @abc.abstractmethod
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        """Build a JSON object from this builder and collects all attachments added as components.
+
+        Returns
+        -------
+        tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]
+            The built json object representation of this builder, and the attachments added.
+        """
+
+
+class SeparatorComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for separator components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.SEPARATOR]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def spacing(self) -> undefined.UndefinedOr[components_.SpacingType]:
+        """The spacing for the separator."""
+
+    @property
+    @abc.abstractmethod
+    def divider(self) -> undefined.UndefinedOr[bool]:
+        """Whether the separator has a divider."""
+
+
+class FileComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for file components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.FILE]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def file(self) -> files.Resourceish:
+        """The file to attach."""
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the file has a spoiler."""
+
+
+class ContainerComponentBuilder(ComponentBuilder, abc.ABC):
+    """Builder class for container components."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[components_.ComponentType.CONTAINER]:
+        """Type of component this builder represents."""
+
+    @property
+    @abc.abstractmethod
+    def accent_color(self) -> undefined.UndefinedOr[colors.Color]:
+        """The accent color for the container.
+
+        If undefined, the accent colour is hidden, if None, then no colour is set.
+        """
+
+    @property
+    @abc.abstractmethod
+    def is_spoiler(self) -> bool:
+        """Whether the container has a spoiler."""
+
+    @property
+    @abc.abstractmethod
+    def components(self) -> typing.Sequence[ContainerBuilderComponentsT]:
+        """The components attached to the container."""
+
+    @abc.abstractmethod
+    def add_component(self, component: ContainerBuilderComponentsT) -> Self:
+        """Add a component to this container builder.
+
+        !!! warning
+            It is generally better to use
+            [`hikari.api.special_endpoints.MessageContainerBuilder.add_action_row`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_text_display`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_media_gallery`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_separator`][]
+            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_file`][]
+            to add your component to the builder. Those methods utilize this one.
+
+        Parameters
+        ----------
+        component
+            The component builder to add to the container.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_action_row(
+        self,
+        components: typing.Sequence[MessageActionRowBuilderComponentsT],
+        *,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a action row component to this container builder.
+
+        Parameters
+        ----------
+        components
+            The components to add to the action row.
+        id
+            The ID to give to the action row.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_text_display(self, content: str, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a text display component to this container builder.
+
+        Parameters
+        ----------
+        content
+            The content of the text display.
+        id
+            The ID to give to the text display.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_media_gallery(
+        self, items: typing.Sequence[MediaGalleryItemBuilder], *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED
+    ) -> Self:
+        """Add a media gallery component to this container builder.
+
+        Parameters
+        ----------
+        items
+            The gallery media items to add to the media gallery.
+        id
+            The ID to give to the media gallery.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_separator(
+        self,
+        *,
+        spacing: components_.SpacingType = components_.SpacingType.SMALL,
+        divider: bool = False,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a separator component to this container builder.
+
+        Parameters
+        ----------
+        spacing
+            The spacing for the separator.
+        divider
+            Whether the separator has a divider.
+        id
+            The ID to give to the separator.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+        """
+
+    @abc.abstractmethod
+    def add_file(
+        self, file: files.Resourceish, *, spoiler: bool = False, id: undefined.UndefinedOr[int] = undefined.UNDEFINED
+    ) -> Self:
+        """Add a spoiler component to this container builder.
+
+        Parameters
+        ----------
+        file
+            The file.
+        spoiler
+            Whether the file has a spoiler.
+        id
+            The ID to give to the file.
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ContainerComponentBuilder
+            The builder object to enable chained calls.
+        """
+
+
+class PollBuilder(abc.ABC):
+    """Builder class for polls."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def question_text(self) -> str:
+        """The question text for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def answers(self) -> typing.Sequence[PollAnswerBuilder]:
+        """The answers for the poll."""
+
+    @property
+    @abc.abstractmethod
+    def duration(self) -> undefined.UndefinedOr[int]:
+        """The duration of the poll in hours."""
+
+    @property
+    @abc.abstractmethod
+    def allow_multiselect(self) -> bool:
+        """Whether a user can select multiple answers."""
+
+    @property
+    @abc.abstractmethod
+    def layout_type(self) -> undefined.UndefinedOr[polls.PollLayoutType]:
+        """The layout type for the poll."""
+
+    @abc.abstractmethod
+    def add_answer(
+        self,
+        *,
+        text: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[emojis.Emoji] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add an answer to the poll.
+
+        Parameters
+        ----------
+        text
+            The text for the answer.
+        emoji
+            The emoji for the answer.
+
+        Returns
+        -------
+        PollAnswerBuilder
+            The builder object to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class PollAnswerBuilder(abc.ABC):
+    """Builder class for poll answers."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def text(self) -> undefined.UndefinedOr[str]:
+        """The text for the media object."""
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> undefined.UndefinedOr[emojis.Emoji]:
+        """The emoji for the media object."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+if typing.TYPE_CHECKING:
+    MessageActionRowBuilderComponentsT = typing.Union[ButtonBuilder, SelectMenuBuilder]
+
+    ModalActionRowBuilderComponentsT = TextInputBuilder
+
+    ContainerBuilderComponentsT = typing.Union[
+        MessageActionRowBuilder,
+        TextDisplayComponentBuilder,
+        SectionComponentBuilder,
+        MediaGalleryComponentBuilder,
+        SeparatorComponentBuilder,
+        FileComponentBuilder,
+    ]
+
+    SectionBuilderAccessoriesT = typing.Union[ButtonBuilder, ThumbnailComponentBuilder]
+    SectionBuilderComponentsT = typing.Union[TextDisplayComponentBuilder]
+
+
+class AutoModActionBuilder(abc.ABC):
+    """Builder class for auto mod actions."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> auto_mod.AutoModActionType:
+        """Type of action this builder represents."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class AutoModBlockMessageActionBuilder(AutoModActionBuilder, abc.ABC):
+    """Builder class for auto mod block message action."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.BLOCK_MESSAGE]: ...
+
+    @property
+    @abc.abstractmethod
+    def custom_message(self) -> str | None:
+        """The custom message sent when a message is blocked."""
+
+
+class AutoModSendAlertMessageActionBuilder(AutoModActionBuilder, abc.ABC):
+    """Builder class for auto mod send alert message action."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.SEND_ALERT_MESSAGE]: ...
+
+    @property
+    @abc.abstractmethod
+    def channel_id(self) -> snowflakes.Snowflake:
+        """The channel to send the alert message to."""
+
+
+class AutoModTimeoutActionBuilder(AutoModActionBuilder, abc.ABC):
+    """Builder class for auto mod duration seconds action."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.TIMEOUT]: ...
+
+    @property
+    @abc.abstractmethod
+    def duration_seconds(self) -> int:
+        """The amount of seconds to time the user out for."""
+
+
+class AutoModBlockMemberInteractionActionBuilder(AutoModActionBuilder, abc.ABC):
+    """Builder class for auto mod block member interaction action."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION]: ...
+
+
+class AutoModTriggerBuilder(abc.ABC):
+    """Builder class for auto mod triggers."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> auto_mod.AutoModTriggerType:
+        """Type of trigger this builder represents."""
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class AutoModKeywordTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod keyword trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.KEYWORD]: ...
+
+    @property
+    @abc.abstractmethod
+    def keyword_filter(self) -> typing.Sequence[str]:
+        """The filter strings this trigger checks for.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
+        """
+
+    @property
+    @abc.abstractmethod
+    def regex_patterns(self) -> typing.Sequence[str]:
+        """The filter regexs this trigger checks for.
+
+        Currently, this only supports rust flavored regular expressions.
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata>
+        """
+
+    @property
+    @abc.abstractmethod
+    def allow_list(self) -> typing.Sequence[str]:
+        """A sequence of filters which will be exempt from triggering the preset trigger.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
+        """
+
+
+class AutoModSpamTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod spam trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.SPAM]: ...
+
+
+class AutoModKeywordPresetTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod keyword preset trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.KEYWORD_PRESET]: ...
+
+    @property
+    @abc.abstractmethod
+    def presets(self) -> typing.Sequence[auto_mod.AutoModKeywordPresetType]:
+        """The predefined presets provided by Discord to match against."""
+
+    @property
+    @abc.abstractmethod
+    def allow_list(self) -> typing.Sequence[str]:
+        """A sequence of filters which will be exempt from triggering the preset trigger.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
+        """
+
+
+class AutoModMentionSpamTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod mention spam trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.MENTION_SPAM]: ...
+
+    @property
+    @abc.abstractmethod
+    def mention_total_limit(self) -> int:
+        """Total number of unique role and user mentions allowed per message."""
+
+    @property
+    @abc.abstractmethod
+    def mention_raid_protection_enabled(self) -> bool:
+        """Whether to automatically detect mention raids."""
+
+
+class AutoModMemberProfileTriggerBuilder(AutoModTriggerBuilder, abc.ABC):
+    """Builder class for auto mod member profile trigger."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def type(self) -> typing.Literal[auto_mod.AutoModTriggerType.MEMBER_PROFILE]: ...
+
+    @property
+    @abc.abstractmethod
+    def keyword_filter(self) -> typing.Sequence[str]:
+        """The filter strings this trigger checks for.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
+        """
+
+    @property
+    @abc.abstractmethod
+    def regex_patterns(self) -> typing.Sequence[str]:
+        """The filter regexs this trigger checks for.
+
+        Currently, this only supports rust flavored regular expressions.
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-trigger-metadata>.
+        """
+
+    @property
+    @abc.abstractmethod
+    def allow_list(self) -> typing.Sequence[str]:
+        """A sequence of filters which will be exempt from triggering the preset trigger.
+
+        This supports a wildcard matching strategy which is documented at
+        <https://discord.com/developers/docs/resources/auto-moderation#auto-moderation-rule-object-keyword-matching-strategies>.
         """

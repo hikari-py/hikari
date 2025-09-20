@@ -19,23 +19,112 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 [build-system]
-requires = ["wheel", "setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.14"]
+build-backend = "hatchling.build"
 
-[tool.ruff]
-line-length = 120
-target-version = "py39"
+[tool.hatch.version]
+path = "hikari/_about.py"
+pattern = '__version__: typing\.Final\[str\] = \"(?P<version>[^\"]+)\"'
 
-[tool.ruff.format]
-docstring-code-format = true
-docstring-code-line-length = 80
-quote-style = "double"
-line-ending = "lf"
-skip-magic-trailing-comma = true
+[project]
+dynamic = ["version"]
+name = "hikari"
+description = "A sane Discord API for Python 3 built on asyncio and good intentions"
+requires-python = ">=3.9.0,<3.15"
+dependencies = [
+    "aiohttp~=3.12",
+    "attrs~=25.1",
+    "colorlog~=6.9",
+    "multidict~=6.1",
+]
+scripts = { "hikari" = "hikari.cli:main" }
 
-[tool.ruff.lint.isort]
-required-imports = ["from __future__ import annotations"]
-force-single-line = true
+license = { text = "MIT" }
+readme = "README.md"
+authors = [
+    { name = "Nekokatt" },
+    { name = "davfsa" },
+]
+maintainers = [{ name = "davfsa", email = "davfsa@hikari-py.dev" }]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Communications :: Chat",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries",
+]
+
+[project.optional-dependencies]
+speedups = ["aiohttp[speedups]", "hikari[zstd]", "ciso8601~=2.3", "orjson~=3.11"]
+server = ["pynacl~=1.6"]
+zstd = ["zstandard~=0.25"]
+
+[project.urls]
+"Documentation" = "https://docs.hikari-py.dev/en/stable"
+"Source (GitHub)" = "https://github.com/hikari-py/hikari"
+"Discord" = "https://discord.gg/Jx4cNGG"
+"Issue Tracker" = "https://github.com/hikari-py/hikari/issues"
+"CI" = "https://github.com/hikari-py/hikari/actions"
+
+[dependency-groups]
+nox = ["nox[uv]==2025.5.1"]
+
+audit = ["uv-secure"]
+codespell = ["codespell==2.4.1"]
+coverage = ["coverage[toml]==7.10.6"]
+mkdocs = [
+    "mkdocs==1.6.1",
+    # Mkdocs Material
+    "mkdocs-material==9.6.20",
+    # Docstring parsing for API reference
+    "mkdocstrings[python]==0.30.1",
+    "griffe-inherited-docstrings==1.1.2",
+    # Generate API reference pages dynamically
+    "mkdocs-gen-files==0.5.0",
+    "mkdocs-literate-nav==0.6.2",
+    # Minify
+    "mkdocs-minify-plugin==0.8.0",
+    # Towncrier draft changelogs
+    "mkdocs-towncrier==0.1.5",
+    # Image viewer ext
+    # "mkdocs-glightbox==0.3.7",
+]
+
+mypy = ["mypy[faster-cache]==1.18.2", { include-group = "types" }]
+pyright = ["pyright==1.1.405", { include-group = "types" }]
+pytest = [
+    "mock==5.2.0",
+    "pytest==8.4.2",
+    "pytest-asyncio==1.2.0",
+    "pytest-cov==7.0.0",
+    "pytest-randomly==4.0.1",
+    "async-timeout==5.0.1",
+    { include-group = "coverage" },
+]
+release = ["twine==6.2.0"]
+ruff = ["ruff==0.13.1"]
+slotscheck = ["slotscheck==0.19.1"]
+towncrier = ["towncrier==25.8.0"]
+types = [
+    # examples/voice_message/*
+    "pydub-stubs~=0.25.1.5"
+]
+
+
+[tool.uv]
+required-version = "~=0.7"
 
 [tool.coverage.run]
 relative_files = true
@@ -43,10 +132,7 @@ parallel = true
 branch = true
 timid = false
 source = ["hikari"]
-omit = [
-    "hikari/__main__.py",
-    "hikari/cli.py",
-]
+omit = ["hikari/__main__.py", "hikari/cli.py"]
 
 [tool.coverage.report]
 precision = 2
@@ -63,6 +149,7 @@ exclude_lines = [
     "^if __name__ == ['\"]__main__['\"]:$",
     "^\\s*\\.\\.\\.$",
     "^\\s*@abc.abstractmethod$",
+    "^\\s*@typing.overload$",
     "^\\s*if typing.TYPE_CHECKING:$",
     # Whatever is in inside `if not typing.TYPE_CHECKING:` is expected to be tested, but the branch will always run, making
     # coverage think that its only partial
@@ -71,16 +158,21 @@ exclude_lines = [
 
 [tool.pyright]
 include = ["hikari", "examples"]
-exclude = ["examples/simple_dashboard.py", "**/__init__.py", "hikari/internal/enums.py", "hikari/internal/fast_protocol.py"]
+exclude = [
+    "examples/simple_dashboard.py",
+    "**/__init__.py",
+    "hikari/internal/enums.py",
+    "hikari/internal/fast_protocol.py",
+]
 pythonVersion = "3.9"
 typeCheckingMode = "strict"
 
 reportUnnecessaryTypeIgnoreComment = "error"
 reportMissingTypeStubs = "none"
-reportImportCycles = "none" # Doesn't account for TYPE_CHECKING
-reportIncompatibleMethodOverride = "none"  # This relies on ordering for keyword-only arguments
-reportOverlappingOverload = "none" # Type-Vars in last overloads may interfere
-reportIncompatibleVariableOverride = "none" # Cannot overwrite abstract properties using attrs
+reportImportCycles = "none"                  # Doesn't account for TYPE_CHECKING
+reportIncompatibleMethodOverride = "none"    # This relies on ordering for keyword-only arguments
+reportOverlappingOverload = "none"           # Type-Vars in last overloads may interfere
+reportIncompatibleVariableOverride = "none"  # Cannot overwrite abstract properties using attrs
 
 # Attrs validators will always be unknown
 # https://github.com/python-attrs/attrs/issues/795
@@ -89,7 +181,6 @@ reportUntypedFunctionDecorator = "warning"
 reportOptionalMemberAccess = "warning"
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
 xfail_strict = true
 norecursedirs = [
     "docs",
@@ -103,11 +194,17 @@ norecursedirs = [
     "public",
     "ci",
 ]
+# Treat warnings as errors
 filterwarnings = [
-    "error", # Treat warnings as errors
+    "error",
     "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
 ]
 required_plugins = ["pytest-asyncio"]
+
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+asyncio_debug = true
+asyncio_mode = "strict"
 
 [tool.towncrier]
 package = "hikari"
@@ -119,25 +216,24 @@ issue_format = "[#{issue}](https://github.com/hikari-py/hikari/issues/{issue})"
 # We use these values for headers in the template
 underlines = [2, 3]
 type = [
-    { name = "Breaking Changes",            directory = "breaking",      showcontent = true },
-    { name = "Deprecation",                 directory = "deprecation",   showcontent = true },
-    { name = "Features",                    directory = "feature",       showcontent = true },
-    { name = "Bugfixes",                    directory = "bugfix",        showcontent = true },
-    { name = "Documentation Improvements",  directory = "documentation", showcontent = true },
+    { name = "Breaking Changes", directory = "breaking", showcontent = true },
+    { name = "Deprecation", directory = "deprecation", showcontent = true },
+    { name = "Features", directory = "feature", showcontent = true },
+    { name = "Optimizations", directory = "optimization", showcontent = true },
+    { name = "Bugfixes", directory = "bugfix", showcontent = true },
+    { name = "Documentation Improvements", directory = "documentation", showcontent = true },
 ]
-# TODO: Remove this when the next version to 24.7.1 is released
-# see: https://github.com/twisted/towncrier/pull/639
-ignore = [".template.md.jinja"]
 
 [tool.mypy]
 # general settings
 strict = true
 check_untyped_defs = true
+enable_error_code = "explicit-override"
 incremental = true
 namespace_packages = true
 no_implicit_optional = true
 pretty = true
-python_version = 3.9
+python_version = "3.9"
 show_column_numbers = true
 show_error_codes = true
 show_error_context = true
@@ -160,7 +256,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = 'rillrate.*'
+module = ["numpy.*"] # Numpy has already abonded py 3.9 and since we still support it we can't bring numpy into the project dependencies
 ignore_missing_imports = true
 
 [tool.slotscheck]

@@ -225,9 +225,9 @@ class TestGatewayBot:
             token_type=applications.TokenType.BOT,
         )
 
-        init_logging.assert_called_once_with("DEBUG", False, True)
-        print_banner.assert_called_once_with("testing", False, True)
-        warn_if_not_optimized.assert_called_once_with(True)
+        init_logging.assert_called_once_with("DEBUG", allow_color=False, force_color=True)
+        print_banner.assert_called_once_with("testing", allow_color=False, force_color=True)
+        warn_if_not_optimized.assert_called_once_with(suppress=True)
 
     def test_init_when_no_settings(self):
         stack = contextlib.ExitStack()
@@ -443,19 +443,19 @@ class TestGatewayBot:
         assert bot._shards == {}
         cache.clear.assert_called_once_with()
 
-        event_manager.dispatch.assert_has_calls(
+        event_manager.dispatch.assert_has_awaits(
             [
-                mock.call(event_factory.deserialize_stopping_event.return_value),
-                mock.call(event_factory.deserialize_stopped_event.return_value),
+                mock.call(event_factory.deserialize_stopping_event.return_value, return_tasks=True),
+                mock.call(event_factory.deserialize_stopped_event.return_value, return_tasks=True),
             ]
         )
 
     def test_dispatch(self, bot, event_manager):
-        event = object()
+        event = mock.Mock()
 
-        assert bot.dispatch(event) is event_manager.dispatch.return_value
+        assert bot.dispatch(event, return_tasks=True) is event_manager.dispatch.return_value
 
-        event_manager.dispatch.assert_called_once_with(event)
+        event_manager.dispatch.assert_called_once_with(event, return_tasks=True)
 
     def test_get_listeners(self, bot, event_manager):
         event = object()
@@ -488,9 +488,11 @@ class TestGatewayBot:
 
     def test_print_banner(self, bot):
         with mock.patch.object(ux, "print_banner") as print_banner:
-            bot.print_banner("testing", False, True, extra_args={"test_key": "test_value"})
+            bot.print_banner("testing", allow_color=True, force_color=False, extra_args={"test_key": "test_value"})
 
-        print_banner.assert_called_once_with("testing", False, True, extra_args={"test_key": "test_value"})
+        print_banner.assert_called_once_with(
+            "testing", allow_color=True, force_color=False, extra_args={"test_key": "test_value"}
+        )
 
     def test_run_when_already_running(self, bot):
         bot._closed_event = object()
@@ -602,6 +604,7 @@ class TestGatewayBot:
                 shard_ids=shard_ids,
                 shard_count=shard_count,
                 status=status,
+                startup_window_delay=15,
             )
 
         loop.run_until_complete.assert_has_calls(
@@ -617,6 +620,7 @@ class TestGatewayBot:
             shard_ids=shard_ids,
             shard_count=shard_count,
             status=status,
+            startup_window_delay=15,
         )
         handle_interrupts.assert_called_once_with(enabled=False, loop=loop, propagate_interrupts=False)
         handle_interrupts.return_value.assert_used_once()
@@ -679,6 +683,7 @@ class TestGatewayBot:
                 idle_since="some idle since",
                 status="some status",
                 large_threshold=500,
+                startup_window_delay=10,
             )
 
         check_for_updates.assert_called_once_with(http_settings, proxy_settings)
@@ -689,8 +694,8 @@ class TestGatewayBot:
         assert event_manager.dispatch.call_count == 2
         event_manager.dispatch.assert_has_awaits(
             [
-                mock.call(event_factory.deserialize_starting_event.return_value),
-                mock.call(event_factory.deserialize_started_event.return_value),
+                mock.call(event_factory.deserialize_starting_event.return_value, return_tasks=True),
+                mock.call(event_factory.deserialize_started_event.return_value, return_tasks=True),
             ]
         )
 
@@ -725,7 +730,7 @@ class TestGatewayBot:
                 # Shard 1
                 mock.call(closing_event_closing_wait, gather.return_value),
                 # Shard 2
-                mock.call(closing_event_closing_wait, shard1.join.return_value, timeout=5),
+                mock.call(closing_event_closing_wait, shard1.join.return_value, timeout=10),
                 mock.call(closing_event_closing_wait, gather.return_value),
             ]
         )

@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,20 +24,20 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "DISCORD_EPOCH",
+    "Intervalish",
     "datetime_to_discord_epoch",
     "discord_epoch_to_datetime",
-    "unix_epoch_to_datetime",
-    "Intervalish",
-    "timespan_to_int",
     "local_datetime",
+    "time",
+    "time_ns",
+    "timespan_to_int",
+    "unix_epoch_to_datetime",
     "utc_datetime",
-    "monotonic",
-    "monotonic_ns",
     "uuid",
 )
 
 import datetime
-import time
+import time as time_
 import typing
 import uuid as uuid_
 
@@ -84,7 +83,7 @@ def slow_iso8601_datetime_string_to_datetime(datetime_str: str) -> datetime.date
     return datetime.datetime.fromisoformat(datetime_str)
 
 
-fast_iso8601_datetime_string_to_datetime: typing.Optional[typing.Callable[[str], datetime.datetime]]
+fast_iso8601_datetime_string_to_datetime: typing.Callable[[str], datetime.datetime] | None
 try:
     # CISO8601 is around 600x faster than modules like dateutil, which is
     # going to be noticeable on big bots where you are parsing hundreds of
@@ -136,7 +135,7 @@ def datetime_to_discord_epoch(timestamp: datetime.datetime) -> int:
     return int((timestamp - DISCORD_EPOCH).timestamp() * 1_000)
 
 
-def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: bool = True) -> datetime.datetime:
+def unix_epoch_to_datetime(epoch: float, /, *, is_millis: bool = True) -> datetime.datetime:
     """Parse a UNIX epoch to a [`datetime.datetime`][] object.
 
     !!! note
@@ -164,9 +163,8 @@ def unix_epoch_to_datetime(epoch: typing.Union[int, float], /, *, is_millis: boo
         return datetime.datetime.fromtimestamp(epoch, datetime.timezone.utc)
     except (OSError, ValueError):
         if epoch > 0:
-            return datetime.datetime.max
-        else:
-            return datetime.datetime.min
+            return datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)
+        return datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
 
 
 def timespan_to_int(value: Intervalish, /) -> int:
@@ -198,29 +196,24 @@ def utc_datetime() -> datetime.datetime:
     return datetime.datetime.now(tz=datetime.timezone.utc)
 
 
-# time.monotonic_ns is no slower than time.monotonic, but is more accurate.
-# Also, fun fact that monotonic_ns appears to be 1µs faster on average than
-# monotonic on ARM64 architectures, but on x86, monotonic is around 1ns faster
-# than monotonic_ns. Just thought that was kind of interesting to note down.
-# (RPi 3B versus i7 6700)
 if typing.TYPE_CHECKING:
 
-    def monotonic() -> float:
-        """Performance counter for benchmarking."""  # noqa: D401 - Imperative mood
+    def time() -> float:
+        """Epoch time in seconds (since 00:00:00 UTC on January 1, 1970)."""
         raise NotImplementedError
 
-    def monotonic_ns() -> int:
-        """Performance counter for benchmarking as nanoseconds."""  # noqa: D401 - Imperative mood
+    def time_ns() -> int:
+        """Epoch time in nanoseconds (since 00:00:00 UTC on January 1, 1970)."""
         raise NotImplementedError
 
 else:
-    monotonic = time.perf_counter
-    """Performance counter for benchmarking."""
+    time = time_.time
+    """Epoch time in seconds (since 00:00:00 UTC on January 1, 1970)."""
 
-    monotonic_ns = time.perf_counter_ns
-    """Performance counter for benchmarking as nanoseconds."""
+    time_ns = time_.time_ns
+    """Epoch time in nanoseconds (since 00:00:00 UTC on January 1, 1970)."""
 
 
 def uuid() -> str:
     """Generate a unique UUID (1ns precision)."""
-    return uuid_.uuid1(None, monotonic_ns()).hex
+    return uuid_.uuid1(None, time_ns()).hex

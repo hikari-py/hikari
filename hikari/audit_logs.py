@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -39,7 +38,6 @@ __all__: typing.Sequence[str] = (
     "MessagePinEntryInfo",
 )
 
-import abc
 import typing
 
 import attrs
@@ -49,10 +47,12 @@ from hikari import snowflakes
 from hikari.internal import attrs_extensions
 from hikari.internal import collections
 from hikari.internal import enums
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import auto_mod
     from hikari import guilds
     from hikari import messages
     from hikari import traits
@@ -280,13 +280,13 @@ class AuditLogChangeKey(str, enums.Enum):
 class AuditLogChange:
     """Represents a change made to an audit log entry's target entity."""
 
-    new_value: typing.Optional[typing.Any] = attrs.field(repr=True)
+    new_value: typing.Any | None = attrs.field(repr=True)
     """The new value of the key, if something was added or changed."""
 
-    old_value: typing.Optional[typing.Any] = attrs.field(repr=True)
+    old_value: typing.Any | None = attrs.field(repr=True)
     """The old value of the key, if something was removed or changed."""
 
-    key: typing.Union[AuditLogChangeKey, str] = attrs.field(repr=True)
+    key: AuditLogChangeKey | str = attrs.field(repr=True)
     """The name of the audit log change's key."""
 
 
@@ -295,59 +295,206 @@ class AuditLogEventType(int, enums.Enum):
     """The type of event that occurred."""
 
     GUILD_UPDATE = 1
+    """Indicates that guild settings were updated."""
+
     CHANNEL_CREATE = 10
+    """Indicates that a channel was created."""
+
     CHANNEL_UPDATE = 11
+    """Indicates that a channel's settings were updated."""
+
     CHANNEL_DELETE = 12
+    """Indicates that a channel was deleted."""
+
     CHANNEL_OVERWRITE_CREATE = 13
+    """Indicates that a permission overwrite was added to a channel."""
+
     CHANNEL_OVERWRITE_UPDATE = 14
+    """Indicates that a permission overwrite was updated for a channel."""
+
     CHANNEL_OVERWRITE_DELETE = 15
+    """Indicates that a permission overwrite was deleted from a channel."""
+
     MEMBER_KICK = 20
+    """Indicates that a member was kicked from guild."""
+
     MEMBER_PRUNE = 21
+    """Indicates that members were pruned from guild."""
+
     MEMBER_BAN_ADD = 22
+    """Indicates that a member was banned from guild."""
+
     MEMBER_BAN_REMOVE = 23
+    """Indicates that guild ban was lifted for a member."""
+
     MEMBER_UPDATE = 24
+    """Indicates that a member was updated in guild."""
+
     MEMBER_ROLE_UPDATE = 25
+    """Indicates that a member was added or removed from a role."""
+
     MEMBER_MOVE = 26
+    """Indicates that a member was moved to a different voice channel."""
+
     MEMBER_DISCONNECT = 27
+    """Indicates that a member was disconnected from a voice channel."""
+
     BOT_ADD = 28
+    """Indicates a bot user was added to guild."""
+
     ROLE_CREATE = 30
+    """Indicates that a role was created."""
+
     ROLE_UPDATE = 31
+    """Indicates that a role was edited."""
+
     ROLE_DELETE = 32
+    """Indicates that a role was deleted."""
+
     INVITE_CREATE = 40
+    """Indicates that a guild invite was created."""
+
     INVITE_UPDATE = 41
+    """Indicates that a guild invite was updated."""
+
     INVITE_DELETE = 42
+    """Indicates that a guild invite was deleted."""
+
     WEBHOOK_CREATE = 50
+    """Indicates that a webhook was created."""
+
     WEBHOOK_UPDATE = 51
+    """Indicates that a webhook properties or channel were updated."""
+
     WEBHOOK_DELETE = 52
+    """Indicates that a webhook was deleted."""
+
     EMOJI_CREATE = 60
+    """Indicates that an emoji was created."""
+
     EMOJI_UPDATE = 61
+    """Indicates that an emoji name was updated."""
+
     EMOJI_DELETE = 62
+    """Indicates that an emoji was deleted."""
+
     MESSAGE_DELETE = 72
+    """Indicates that a single message was deleted."""
+
     MESSAGE_BULK_DELETE = 73
+    """Indicates that multiple messages were deleted."""
+
     MESSAGE_PIN = 74
+    """Indicates that a message was pinned to a channel."""
+
     MESSAGE_UNPIN = 75
+    """Indicates that a message was unpinned from a channel."""
+
     INTEGRATION_CREATE = 80
+    """Indicates that an app was added to guild."""
+
     INTEGRATION_UPDATE = 81
+    """Indicates that an app was updated (i.e., it's scopes were updated)."""
+
     INTEGRATION_DELETE = 82
+    """Indicates that an app was removed from guild."""
+
     STAGE_INSTANCE_CREATE = 83
+    """Indicates that a stage instance was created (stage channel went live)."""
+
     STAGE_INSTANCE_UPDATE = 84
+    """Indicates that a stage instance's details were updated."""
+
     STAGE_INSTANCE_DELETE = 85
+    """Indicates that a stage instance was deleted (stage channel no longer live)."""
+
     STICKER_CREATE = 90
+    """Indicates that a sticker was created."""
+
     STICKER_UPDATE = 91
+    """Indicates that a sticker's details were updated."""
+
     STICKER_DELETE = 92
+    """Indicates that a sticker was deleted."""
+
     GUILD_SCHEDULED_EVENT_CREATE = 100
+    """Indicates that a guild event was created"""
+
     GUILD_SCHEDULED_EVENT_UPDATE = 101
+    """Indicates that a guild event was updated."""
+
     GUILD_SCHEDULED_EVENT_DELETE = 102
-    APPLICATION_COMMAND_PERMISSION_UPDATE = 121
+    """Indicates thata guild event was cancelled."""
+
     THREAD_CREATE = 110
+    """Indicates that a thread was created in a channel."""
+
     THREAD_UPDATE = 111
+    """Indicates that a thread was updated."""
+
     THREAD_DELETE = 112
+    """Indicates that a thread was deleted."""
+
+    APPLICATION_COMMAND_PERMISSION_UPDATE = 121
+    """Indicates that permissions were updated for a command."""
+
+    SOUNDBOARD_SOUND_CREATE = 130
+    """Indicates that a soundboard sound was created."""
+
+    SOUNDBOARD_SOUND_UPDATE = 131
+    """Indicates that a soundboard sound was updated"""
+
+    SOUNDBOARD_SOUND_DELETE = 132
+    """Indicates that a soundboard sound was deleted."""
+
+    AUTO_MODERATION_RULE_CREATE = 140
+    """Indicates that an automod rule was created."""
+
+    AUTO_MODERATION_RULE_UPDATE = 141
+    """Indicates that an automod rule was updated."""
+
+    AUTO_MODERATION_RULE_DELETE = 142
+    """Indicates that an automod rule was deleted."""
+
+    AUTO_MODERATION_BLOCK_MESSAGE = 143
+    """Indicates that a message was blocked by automod."""
+
+    AUTO_MODERATION_FLAG_TO_CHANNEL = 144
+    """Indicates that a message was flagged by automod."""
+
+    AUTO_MODERATION_USER_COMMUNICATION_DISABLED = 145
+    """Indicates that a member was timed out by automod."""
+
     CREATOR_MONETIZATION_REQUEST_CREATED = 150
+    """Indicates that creator monetization request was created."""
+
     CREATOR_MONETIZATION_TERMS_ACCEPTED = 151
+    """Indicates that creator monetization terms were accepted."""
+
+    ONBOARDING_PROMPT_CREATE = 163
+    """Indicates that a guild onboarding question was created."""
+
+    ONBOARDING_PROMPT_UPDATE = 164
+    """Indicates that a guild onboarding question was updated."""
+
+    ONBOARDING_PROMPT_DELETE = 165
+    """Indicates that a guild onboarding question was deleted."""
+
+    ONBOARDING_CREATE = 166
+    """Indicates that guild onboarding was created."""
+
+    ONBOARDING_UPDATE = 167
+    """Indicates that guild onboarding was updated."""
+
+    HOME_SETTINGS_CREATE = 190
+    """Indicates that guild server guide was created."""
+
+    HOME_SETTINGS_UPDATE = 191
+    """Indicates that guild server guide was uodated."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class BaseAuditLogEntryInfo(abc.ABC):
+class BaseAuditLogEntryInfo:
     """A base object that all audit log entry info objects will inherit from."""
 
     app: traits.RESTAware = attrs.field(repr=False, eq=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True})
@@ -366,10 +513,10 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[channels.PermissionOverwriteType, int] = attrs.field(repr=True)
+    type: channels.PermissionOverwriteType | int = attrs.field(repr=True)
     """The type of entity this overwrite targets."""
 
-    role_name: typing.Optional[str] = attrs.field(repr=True)
+    role_name: str | None = attrs.field(repr=True)
     """The name of the role this overwrite targets, if it targets a role."""
 
 
@@ -555,25 +702,25 @@ class AuditLogEntry(snowflakes.Unique):
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """ID of the guild this audit log entry is for."""
 
-    target_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    target_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the entity affected by this change, if applicable."""
 
     changes: typing.Sequence[AuditLogChange] = attrs.field(eq=False, hash=False, repr=False)
     """A sequence of the changes made to [`hikari.audit_logs.AuditLogEntry.target_id`][]."""
 
-    user_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    user_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the user who made this change."""
 
-    action_type: typing.Union[AuditLogEventType, int] = attrs.field(eq=False, hash=False, repr=True)
+    action_type: AuditLogEventType | int = attrs.field(eq=False, hash=False, repr=True)
     """The type of action this entry represents."""
 
-    options: typing.Optional[BaseAuditLogEntryInfo] = attrs.field(eq=False, hash=False, repr=False)
+    options: BaseAuditLogEntryInfo | None = attrs.field(eq=False, hash=False, repr=False)
     """Extra information about this entry. Only be provided for certain `event_type`."""
 
-    reason: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    reason: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The reason for this change, if set (between 0-512 characters)."""
 
-    async def fetch_user(self) -> typing.Optional[users_.User]:
+    async def fetch_user(self) -> users_.User | None:
         """Fetch the user who made this change.
 
         Returns
@@ -603,6 +750,9 @@ class AuditLogEntry(snowflakes.Unique):
 class AuditLog(typing.Sequence[AuditLogEntry]):
     """Represents a guilds audit log's page."""
 
+    auto_mod_rules: typing.Mapping[snowflakes.Snowflake, auto_mod.AutoModRule] = attrs.field(repr=False)
+    """A mapping of auto-moderation rule objects referenced in this audit log."""
+
     entries: typing.Mapping[snowflakes.Snowflake, AuditLogEntry] = attrs.field(repr=False)
     """A mapping of snowflake IDs to the audit log's entries."""
 
@@ -624,13 +774,14 @@ class AuditLog(typing.Sequence[AuditLogEntry]):
     @typing.overload
     def __getitem__(self, slice_: slice, /) -> typing.Sequence[AuditLogEntry]: ...
 
-    def __getitem__(
-        self, index_or_slice: typing.Union[int, slice], /
-    ) -> typing.Union[AuditLogEntry, typing.Sequence[AuditLogEntry]]:
+    @typing_extensions.override
+    def __getitem__(self, index_or_slice: int | slice, /) -> AuditLogEntry | typing.Sequence[AuditLogEntry]:
         return collections.get_index_or_slice(self.entries, index_or_slice)
 
+    @typing_extensions.override
     def __iter__(self) -> typing.Iterator[AuditLogEntry]:
         return iter(self.entries.values())
 
+    @typing_extensions.override
     def __len__(self) -> int:
         return len(self.entries)
