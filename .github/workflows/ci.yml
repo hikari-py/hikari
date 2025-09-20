@@ -18,8 +18,8 @@ jobs:
       # Allows for matrix sub-jobs to fail without cancelling the rest
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ 3.9, "3.10", 3.11, 3.12, 3.13.5, 3.14 ]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.9, "3.10", 3.11, 3.12, 3.13.5, 3.14]
 
     runs-on: ${{ matrix.os }}
 
@@ -64,7 +64,7 @@ jobs:
           include-hidden-files: true
 
   upload-coverage:
-    needs: [ test ]
+    needs: [test]
     runs-on: ubuntu-latest
 
     steps:
@@ -220,7 +220,7 @@ jobs:
 
   # Allows us to add this as a required check in Github branch rules, as all the other jobs are subject to change
   ci-done:
-    needs: [ upload-coverage, linting, twemoji, docs ]
+    needs: [upload-coverage, linting, twemoji, docs]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest
