@@ -37,24 +37,36 @@ from tests.hikari import hikari_test_helpers
 class TestTeamMember:
     @pytest.fixture
     def model(self):
-        return applications.TeamMember(membership_state=4, permissions=["*"], team_id=34123, user=mock.Mock(users.User))
+        user = mock.Mock(users.User)
+        user.avatar_hash = "a_test"
+        user.banner_hash = "a_test2"
+        return applications.TeamMember(membership_state=4, permissions=["*"], team_id=34123, user=user)
 
     def test_app_property(self, model):
         assert model.app is model.user.app
+
+    def test_avatar_decoration_property(self, model):
+        assert model.avatar_decoration is model.user.avatar_decoration
 
     def test_avatar_hash_property(self, model):
         assert model.avatar_hash is model.user.avatar_hash
 
     def test_avatar_url_property(self, model):
-        assert model.avatar_url is model.user.avatar_url
+        assert model.avatar_url is model.user.make_avatar_url()
 
     def test_banner_hash_property(self, model):
         assert model.banner_hash is model.user.banner_hash
 
-    def test_banner_url_propert(self, model):
-        assert model.banner_url is model.user.banner_url
+    def test_banner_url_property(self, model):
+        assert model.banner_url is model.user.make_banner_url()
 
-    def test_accent_color_propert(self, model):
+    def test_make_avatar_url(self, model):
+        assert model.make_avatar_url() is model.user.make_avatar_url()
+
+    def test_make_banner_url(self, model):
+        assert model.make_banner_url() is model.user.make_banner_url()
+
+    def test_accent_color_property(self, model):
         assert model.accent_color is model.user.accent_color
 
     def test_default_avatar_url_property(self, model):
@@ -99,6 +111,16 @@ class TestTeam:
         team = applications.Team(id=696969, app=object(), name="test", icon_hash="", members=[], owner_id=0)
         assert str(team) == "Team test (696969)"
 
+    def test_make_icon_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
+        with mock.patch.object(
+            routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_icon_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, team_id=123, hash="ahashicon", size=4096, file_format="JPEG", lossless=True
+        )
+
     def test_icon_url_property(self, model):
         model.make_icon_url = mock.Mock(return_value="url")
 
@@ -112,7 +134,7 @@ class TestTeam:
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(ext="jpeg", size=1) is None
+            assert model.make_icon_url(file_format="JPEG", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
@@ -120,10 +142,10 @@ class TestTeam:
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(ext="jpeg", size=1) == "file"
+            assert model.make_icon_url(file_format="JPEG", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, team_id=123, hash="ahashicon", size=1, file_format="jpeg"
+            urls.CDN_URL, team_id=123, hash="ahashicon", size=1, file_format="JPEG", lossless=True
         )
 
 
@@ -139,6 +161,16 @@ class TestApplication:
             cover_image_hash="ahashcover",
         )()
 
+    def test_make_icon_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
+        with mock.patch.object(
+            routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_cover_image_url(ext="JPEG") == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, application_id=123, hash="ahashcover", size=4096, file_format="JPEG", lossless=True
+        )
+
     def test_cover_image_url_property(self, model):
         model.make_cover_image_url = mock.Mock(return_value="url")
 
@@ -152,7 +184,7 @@ class TestApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_cover_image_url(ext="jpeg", size=1) is None
+            assert model.make_cover_image_url(file_format="JPEG", size=1) is None
 
         route.compile_to_file.assert_not_called()
 
@@ -160,10 +192,10 @@ class TestApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_cover_image_url(ext="jpeg", size=1) == "file"
+            assert model.make_cover_image_url(file_format="JPEG", size=1) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="jpeg"
+            urls.CDN_URL, application_id=123, hash="ahashcover", size=1, file_format="JPEG", lossless=True
         )
 
     @pytest.mark.asyncio

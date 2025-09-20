@@ -187,11 +187,11 @@ class TestManualRateLimiter:
 
         async def mock_sleep(_):
             nonlocal slept_at
-            slept_at = time.perf_counter()
+            slept_at = time.time()
 
         class MockList(list):
             def pop(self, _=-1):
-                popped_at.append(time.perf_counter())
+                popped_at.append(time.time())
                 return event_loop.create_future()
 
         with hikari_test_helpers.mock_class_namespace(rate_limits.ManualRateLimiter, slots_=False)() as limiter:
@@ -229,21 +229,21 @@ class TestWindowedBurstRateLimiter:
     async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
+        ratelimiter.remaining = 10
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
         event_loop.create_future = mock.Mock()
 
         await ratelimiter.acquire()
 
-        ratelimiter.drip.assert_called_once_with()
+        assert ratelimiter.remaining == 9
         event_loop.create_future.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_no_drip_if_throttle_task_is_not_None(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
+        ratelimiter.remaining = 10
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
         future = MockFuture()
@@ -251,13 +251,13 @@ class TestWindowedBurstRateLimiter:
 
         await ratelimiter.acquire()
 
-        ratelimiter.drip.assert_not_called()
+        assert ratelimiter.remaining == 10
 
     @pytest.mark.asyncio
     async def test_no_drip_if_rate_limited(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
+        ratelimiter.remaining = 10
         ratelimiter.throttle_task = False
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
         future = MockFuture()
@@ -265,13 +265,12 @@ class TestWindowedBurstRateLimiter:
 
         await ratelimiter.acquire()
 
-        ratelimiter.drip.assert_not_called()
+        assert ratelimiter.remaining == 10
 
     @pytest.mark.asyncio
     async def test_task_scheduled_if_rate_limited_and_throttle_task_is_None(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.throttle = mock.AsyncMock()
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
@@ -287,7 +286,6 @@ class TestWindowedBurstRateLimiter:
     async def test_task_not_scheduled_if_rate_limited_and_throttle_task_not_None(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = event_loop.create_future()
         old_task = ratelimiter.throttle_task
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
@@ -301,7 +299,6 @@ class TestWindowedBurstRateLimiter:
     async def test_future_is_added_to_queue_if_throttle_task_is_not_None(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = asyncio.get_running_loop().create_future()
         ratelimiter.is_rate_limited = mock.Mock(return_value=False)
         future = MockFuture()
@@ -316,7 +313,6 @@ class TestWindowedBurstRateLimiter:
     async def test_future_is_added_to_queue_if_rate_limited(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
 
-        ratelimiter.drip = mock.Mock()
         ratelimiter.throttle_task = None
         ratelimiter.is_rate_limited = mock.Mock(return_value=True)
         future = MockFuture()
@@ -352,7 +348,7 @@ class TestWindowedBurstRateLimiter:
         futures = [event_loop.create_future() for _ in range(20)]
         reset_time_iter = iter(range(int(len(futures) / window)))
 
-        def mock_get_time_until_reset(_self, _):
+        def mock_get_time_until_increase(_self, _):
             nonlocal loop_count
 
             for i, future in enumerate(futures):
@@ -371,14 +367,14 @@ class TestWindowedBurstRateLimiter:
         rl = stack.enter_context(rate_limits.WindowedBurstRateLimiter(__name__, 0, window))
         stack.enter_context(
             mock.patch.object(
-                rate_limits.WindowedBurstRateLimiter, "get_time_until_reset", new=mock_get_time_until_reset
+                rate_limits.WindowedBurstRateLimiter, "get_time_until_increase", new=mock_get_time_until_increase
             )
         )
         stack.enter_context(mock.patch.object(asyncio, "sleep"))
 
         with stack:
             rl.queue = list(futures)
-            rl.reset_at = time.perf_counter()
+            rl.move_at = time.time()
             await rl.throttle()
             # die if we take too long...
             await asyncio.wait(futures, timeout=3)
@@ -398,37 +394,37 @@ class TestWindowedBurstRateLimiter:
             await rl.throttle()
         assert rl.throttle_task is None
 
-    def test_get_time_until_reset_if_not_rate_limited(self):
+    def test_get_time_until_increase_if_not_rate_limited(self):
         with hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
             __name__, 0.01, 1
         ) as rl:
             rl.is_rate_limited = mock.Mock(return_value=False)
-            assert rl.get_time_until_reset(420) == 0.0
+            assert rl.get_time_until_increase(420) == 0.0
 
-    def test_get_time_until_reset_if_rate_limited(self):
+    def test_get_time_until_increase_if_rate_limited(self):
         with hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
             __name__, 0.01, 1
         ) as rl:
             rl.is_rate_limited = mock.Mock(return_value=True)
-            rl.reset_at = 420.4
-            assert rl.get_time_until_reset(69.8) == 420.4 - 69.8
+            rl.move_at = 420.4
+            assert rl.get_time_until_increase(69.8) == 420.4 - 69.8
 
-    def test_is_rate_limited_when_rate_limit_expired_resets_self(self):
-        with rate_limits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
+    def test_is_rate_limited_when_rate_limit_expired(self):
+        with rate_limits.WindowedBurstRateLimiter(__name__, 27, 27) as rl:
             now = 180
-            rl.reset_at = 80
-            rl.remaining = 4
+            rl.move_at = 80
+            rl.remaining = 3
 
             assert not rl.is_rate_limited(now)
 
-            assert rl.reset_at == now + 403
+            assert rl.move_at == 207
             assert rl.remaining == 27
 
     @pytest.mark.parametrize("remaining", [-1, 0, 1])
-    def test_is_rate_limited_when_rate_limit_not_expired_only_returns_False(self, remaining):
+    def test_is_rate_limited_when_rate_limit_not_expired(self, remaining):
         with rate_limits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
             now = 420
-            rl.reset_at = now + 69
+            rl.move_at = now + 69
             rl.remaining = remaining
             assert rl.is_rate_limited(now) is (remaining <= 0)
 

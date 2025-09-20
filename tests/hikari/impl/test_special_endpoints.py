@@ -26,7 +26,9 @@ import mock
 import pytest
 
 from hikari import applications
+from hikari import auto_mod
 from hikari import channels
+from hikari import colors
 from hikari import commands
 from hikari import components
 from hikari import emojis
@@ -34,6 +36,7 @@ from hikari import files
 from hikari import locales
 from hikari import messages
 from hikari import permissions
+from hikari import polls
 from hikari import snowflakes
 from hikari import undefined
 from hikari.api import special_endpoints as special_endpoints_api
@@ -49,7 +52,7 @@ class TestTypingIndicator:
         return hikari_test_helpers.mock_class_namespace(special_endpoints.TypingIndicator, init_=False)
 
     def test___enter__(self, typing_indicator):
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        # ruff gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             typing_indicator().__enter__()
 
@@ -58,6 +61,79 @@ class TestTypingIndicator:
             typing_indicator().__exit__(None, None, None)
         except AttributeError as exc:
             pytest.fail(exc)
+
+
+class TestChannelRepositioner:
+    """Test class for ChannelRepositioner.
+
+    We don't need to test any of the `reposition_channel` or `__await__` functions,
+    since they get called by the `RESTClient` tests, testing `RESTClient.reposition_channels`.
+    """
+
+    @pytest.fixture
+    def channel_repositioner(self) -> special_endpoints_api.ChannelRepositioner:
+        return special_endpoints.ChannelRepositioner(guild=123, request_call=mock.AsyncMock(), reason="TEST")
+
+    @pytest.fixture
+    def reposition_channel_helper(self) -> special_endpoints_api.RepositionedChannel:
+        return special_endpoints.RepositionedChannel(channel=123, position=1, lock_permissions=False, parent=321)
+
+    def test_set_guild(self, channel_repositioner: special_endpoints_api.ChannelRepositioner) -> None:
+        channel_repositioner.set_guild(187)
+
+        assert channel_repositioner.guild == 187
+
+    def test_set_reason(self, channel_repositioner: special_endpoints_api.ChannelRepositioner) -> None:
+        channel_repositioner.set_reason("TEST2")
+
+        assert channel_repositioner.reason == "TEST2"
+
+    def test_set_positions(
+        self,
+        channel_repositioner: special_endpoints_api.ChannelRepositioner,
+        reposition_channel_helper: special_endpoints_api.RepositionedChannel,
+    ) -> None:
+        channel_repositioner.set_positions((reposition_channel_helper,))
+        # also test if the Sequence gets correctly converted to list, that's why we pass a tuple and check for a list.
+        assert channel_repositioner.positions == [reposition_channel_helper]
+
+
+class TestRepositionChannelHelper:
+    @pytest.fixture
+    def reposition_channel_helper(self) -> special_endpoints_api.RepositionedChannel:
+        return special_endpoints.RepositionedChannel(channel=123, position=1, lock_permissions=False, parent=321)
+
+    def test_set_channel(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_channel(187)
+
+        assert reposition_channel_helper.channel == 187
+
+    def test_set_position(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_position(187)
+
+        assert reposition_channel_helper.position == 187
+
+    def test_set_lock_permissions(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_lock_permissions(True)
+
+        assert reposition_channel_helper.lock_permissions == True
+
+    def test_set_lock_permissions_undefined(
+        self, reposition_channel_helper: special_endpoints_api.RepositionedChannel
+    ) -> None:
+        reposition_channel_helper.set_lock_permissions(undefined.UNDEFINED)
+
+        assert reposition_channel_helper.lock_permissions == undefined.UNDEFINED
+
+    def test_set_parent(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_parent(187)
+
+        assert reposition_channel_helper.parent == 187
+
+    def test_set_parent_undefined(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_parent(undefined.UNDEFINED)
+
+        assert reposition_channel_helper.parent == undefined.UNDEFINED
 
 
 class TestOwnGuildIterator:
@@ -85,7 +161,9 @@ class TestOwnGuildIterator:
         mock_request = mock.AsyncMock(
             side_effect=[[mock_payload_1, mock_payload_2, mock_payload_3], [mock_payload_4, mock_payload_5], []]
         )
-        iterator = special_endpoints.OwnGuildIterator(mock_entity_factory, mock_request, False, first_id="123321")
+        iterator = special_endpoints.OwnGuildIterator(
+            mock_entity_factory, mock_request, newest_first=False, first_id="123321"
+        )
 
         result = await iterator
 
@@ -132,7 +210,7 @@ class TestOwnGuildIterator:
             side_effect=[[mock_payload_3, mock_payload_4, mock_payload_5], [mock_payload_1, mock_payload_2], []]
         )
         iterator = special_endpoints.OwnGuildIterator(
-            mock_entity_factory, mock_request, True, first_id="55555555555555555"
+            mock_entity_factory, mock_request, newest_first=True, first_id="55555555555555555"
         )
 
         result = await iterator
@@ -162,7 +240,7 @@ class TestOwnGuildIterator:
         mock_entity_factory = mock.Mock()
         mock_request = mock.AsyncMock(return_value=[])
         iterator = special_endpoints.OwnGuildIterator(
-            mock_entity_factory, mock_request, newest_first, first_id="123321"
+            mock_entity_factory, mock_request, newest_first=newest_first, first_id="123321"
         )
 
         result = await iterator
@@ -756,6 +834,163 @@ class TestAutocompleteChoiceBuilder:
         assert choice.build() == {"name": "atlantic", "value": "slow"}
 
 
+class TestGuildOnboardingPromptOptionBuilder:
+    DEFAULT_ROLE_ID = 123
+    DEFAULT_CHANNEL_ID = 456
+    DEFAULT_EMOJI_ID = 789
+
+    @pytest.fixture
+    def prompt_option(self) -> special_endpoints_api.GuildOnboardingPromptOptionBuilder:
+        return special_endpoints.GuildOnboardingPromptOptionBuilder(
+            title="Title",
+            description="Description",
+            role_ids=[self.DEFAULT_ROLE_ID],
+            channel_ids=[self.DEFAULT_CHANNEL_ID],
+            emoji=self.DEFAULT_EMOJI_ID,
+        )
+
+    def test_default_prompt_option(
+        self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder
+    ) -> None:
+        assert prompt_option.title == "Title"
+        assert prompt_option.description == "Description"
+        assert prompt_option.channel_ids == [self.DEFAULT_CHANNEL_ID]
+        assert prompt_option.role_ids == [self.DEFAULT_ROLE_ID]
+        assert prompt_option.emoji == self.DEFAULT_EMOJI_ID
+
+    def test_set_title(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_title("1")
+        assert prompt_option.title == "1"
+
+    def test_set_description(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_description("1")
+        assert prompt_option.description == "1"
+
+    def test_set_channel_ids(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_channel_ids([187])
+        assert prompt_option.channel_ids == [187]
+
+    def test_set_role_ids(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_role_ids([187])
+        assert prompt_option.role_ids == [187]
+
+    def test_set_emoji(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_emoji(187)
+        assert prompt_option.emoji == 187
+
+    def test_build(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        assert prompt_option.build() == {
+            "title": "Title",
+            "description": "Description",
+            "channel_ids": ["456"],
+            "role_ids": ["123"],
+            "emoji_id": "789",
+        }
+
+    def test_build_no_emoji(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        body = prompt_option.set_emoji(undefined.UNDEFINED).build()
+
+        assert body == {"title": "Title", "description": "Description", "channel_ids": ["456"], "role_ids": ["123"]}
+
+    def test_build_unicode_emoji(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        body = prompt_option.set_emoji("❤️").build()
+
+        assert body == {
+            "title": "Title",
+            "description": "Description",
+            "channel_ids": ["456"],
+            "role_ids": ["123"],
+            "emoji_name": "❤️",
+        }
+
+
+class TestGuildOnboardingPromptBuilder:
+    @pytest.fixture
+    def prompt_option(self) -> special_endpoints_api.GuildOnboardingPromptOptionBuilder:
+        return special_endpoints.GuildOnboardingPromptOptionBuilder(title="Title")
+
+    @pytest.fixture
+    def prompt(
+        self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder
+    ) -> special_endpoints_api.GuildOnboardingPromptBuilder:
+        return special_endpoints.GuildOnboardingPromptBuilder(
+            title="Title", in_onboarding=True, single_select=True, required=True, options=[prompt_option]
+        )
+
+    def test_prompt(
+        self,
+        prompt: special_endpoints_api.GuildOnboardingPromptBuilder,
+        prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder,
+    ) -> None:
+        assert prompt.id == undefined.UNDEFINED
+        assert prompt.title == "Title"
+        assert prompt.in_onboarding == True
+        assert prompt.single_select == True
+        assert prompt.required == True
+        assert prompt.options == [prompt_option]
+
+    def test_set_id(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_id(1)
+        assert prompt.id == 1
+
+    def test_set_title(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_title("1")
+        assert prompt.title == "1"
+
+    def test_set_in_onboarding(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_in_onboarding(False)
+        assert prompt.in_onboarding == False
+
+    def test_set_single_select(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_single_select(False)
+        assert prompt.single_select == False
+
+    def test_set_required(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_required(False)
+        assert prompt.required == False
+
+    def test_set_options(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_options([])
+        assert prompt.options == []
+
+    def test_set_options_tuple(
+        self,
+        prompt: special_endpoints_api.GuildOnboardingPromptBuilder,
+        prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder,
+    ) -> None:
+        prompt.set_options((prompt_option,))
+        assert prompt.options == [prompt_option]
+
+    def test_add_option(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_options([]).add_option(title="Test Title", description="Test Description", role_ids=[123], emoji=789)
+        assert prompt.options == [
+            special_endpoints.GuildOnboardingPromptOptionBuilder(
+                title="Test Title", description="Test Description", role_ids=[123], channel_ids=[], emoji=789
+            )
+        ]
+
+    def test_build(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        assert prompt.build() == {
+            "in_onboarding": True,
+            "options": [{"channel_ids": [], "role_ids": [], "title": "Title"}],
+            "required": True,
+            "single_select": True,
+            "title": "Title",
+        }
+
+    def test_build_id(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        body = prompt.set_id(1).build()
+
+        assert body == {
+            "in_onboarding": True,
+            "options": [{"channel_ids": [], "role_ids": [], "title": "Title"}],
+            "required": True,
+            "single_select": True,
+            "title": "Title",
+            "id": "1",
+        }
+
+
 class TestInteractionDeferredBuilder:
     def test_type_property(self):
         builder = special_endpoints.InteractionDeferredBuilder(5)
@@ -1235,16 +1470,21 @@ class TestContextMenuBuilder:
 
 
 @pytest.mark.parametrize("emoji", ["UNICORN", emojis.UnicodeEmoji("UNICORN")])
-def test__build_emoji_with_unicode_emoji(emoji):
+def test__build_emoji_with_unicode_emoji(emoji: str | emojis.UnicodeEmoji):
     result = special_endpoints._build_emoji(emoji)
 
     assert result == (undefined.UNDEFINED, "UNICORN")
 
 
 @pytest.mark.parametrize(
-    "emoji", [snowflakes.Snowflake(54123123), 54123123, emojis.CustomEmoji(id=54123123, name=None, is_animated=None)]
+    "emoji",
+    [
+        snowflakes.Snowflake(54123123),
+        54123123,
+        emojis.CustomEmoji(id=snowflakes.Snowflake(54123123), name="test", is_animated=True),
+    ],
 )
-def test__build_emoji_with_custom_emoji(emoji):
+def test__build_emoji_with_custom_emoji(emoji: int | str | emojis.CustomEmoji):
     result = special_endpoints._build_emoji(emoji)
 
     assert result == ("54123123", undefined.UNDEFINED)
@@ -1255,16 +1495,14 @@ def test__build_emoji_when_undefined():
 
 
 class Test_ButtonBuilder:
+    class ButtonBuilder(special_endpoints._ButtonBuilder):
+        @property
+        def style(self) -> components.ButtonStyle:
+            return components.ButtonStyle.DANGER
+
     @pytest.fixture
     def button(self):
-        return special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.DANGER,
-            custom_id="sfdasdasd",
-            url="hi there",
-            emoji=543123,
-            label="a lebel",
-            is_disabled=True,
-        )
+        return Test_ButtonBuilder.ButtonBuilder(id=5855932, emoji=543123, label="a lebel", is_disabled=True)
 
     def test_type_property(self, button):
         assert button.type is components.ComponentType.BUTTON
@@ -1309,49 +1547,47 @@ class Test_ButtonBuilder:
         assert button.set_is_disabled(False)
         assert button.is_disabled is False
 
-    def test_build(self):
-        button = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.DANGER,
-            url="https://example.com",
-            label="no u",
-            custom_id="ooga booga",
-            emoji="emoji_name",
-            is_disabled=True,
-        )
+    def test_build(self, button):
+        payload, attachments = button.build()
 
-        assert button.build() == {
+        assert payload == {
+            "id": 5855932,
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.DANGER,
-            "url": "https://example.com",
-            "emoji": {"name": "emoji_name"},
-            "label": "no u",
-            "custom_id": "ooga booga",
+            "emoji": {"id": "543123"},
+            "label": "a lebel",
             "disabled": True,
         }
 
+        assert attachments == []
+
     @pytest.mark.parametrize("emoji", [123321, emojis.CustomEmoji(id=123321, name="", is_animated=True)])
     def test_build_with_custom_emoji(self, emoji: typing.Union[int, emojis.Emoji]):
-        button = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.DANGER, emoji=emoji, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
-        )
+        button = Test_ButtonBuilder.ButtonBuilder(emoji=emoji)
 
-        assert button.build() == {
+        payload, attachments = button.build()
+
+        assert payload == {
             "type": components.ComponentType.BUTTON,
             "style": components.ButtonStyle.DANGER,
             "emoji": {"id": "123321"},
             "disabled": False,
         }
 
-    def test_build_without_optional_fields(self):
-        button = special_endpoints._ButtonBuilder(
-            style=components.ButtonStyle.LINK, url=undefined.UNDEFINED, custom_id=undefined.UNDEFINED
-        )
+        assert attachments == []
 
-        assert button.build() == {
+    def test_build_without_optional_fields(self):
+        button = Test_ButtonBuilder.ButtonBuilder()
+
+        payload, attachments = button.build()
+
+        assert payload == {
             "type": components.ComponentType.BUTTON,
-            "style": components.ButtonStyle.LINK,
+            "style": components.ButtonStyle.DANGER,
             "disabled": False,
         }
+
+        assert attachments == []
 
 
 class TestLinkButtonBuilder:
@@ -1359,6 +1595,24 @@ class TestLinkButtonBuilder:
         button = special_endpoints.LinkButtonBuilder(url="hihihihi", label="no u", is_disabled=True)
 
         assert button.url == "hihihihi"
+
+    def test_build(self):
+        button = special_endpoints.LinkButtonBuilder(
+            id=5855932, url="hihihihi", label="no u", emoji="emoji_name", is_disabled=True
+        )
+
+        payload, attachments = button.build()
+
+        assert payload == {
+            "id": 5855932,
+            "style": components.ButtonStyle.LINK,
+            "type": components.ComponentType.BUTTON,
+            "disabled": True,
+            "emoji": {"name": "emoji_name"},
+            "label": "no u",
+            "url": "hihihihi",
+        }
+        assert attachments == []
 
 
 class TestInteractiveButtonBuilder:
@@ -1368,6 +1622,29 @@ class TestInteractiveButtonBuilder:
         ).set_custom_id("eeeeee")
 
         assert button.custom_id == "eeeeee"
+
+    def test_build(self):
+        button = special_endpoints.InteractiveButtonBuilder(
+            id=5855932,
+            style=components.ButtonStyle.PRIMARY,
+            label="no u",
+            emoji="emoji_name",
+            is_disabled=True,
+            custom_id="oogie",
+        )
+
+        payload, attachments = button.build()
+
+        assert payload == {
+            "id": 5855932,
+            "style": components.ButtonStyle.PRIMARY,
+            "type": components.ComponentType.BUTTON,
+            "custom_id": "oogie",
+            "disabled": True,
+            "emoji": {"name": "emoji_name"},
+            "label": "no u",
+        }
+        assert attachments == []
 
 
 class TestSelectOptionBuilder:
@@ -1488,6 +1765,7 @@ class TestSelectMenuBuilder:
 
     def test_build(self):
         menu = special_endpoints.SelectMenuBuilder(
+            id=5855932,
             custom_id="45234fsdf",
             type=components.ComponentType.USER_SELECT_MENU,
             placeholder="meep",
@@ -1496,7 +1774,10 @@ class TestSelectMenuBuilder:
             is_disabled=True,
         )
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
+            "id": 5855932,
             "type": components.ComponentType.USER_SELECT_MENU,
             "custom_id": "45234fsdf",
             "placeholder": "meep",
@@ -1505,16 +1786,22 @@ class TestSelectMenuBuilder:
             "max_values": 23,
         }
 
+        assert attachments == []
+
     def test_build_without_optional_fields(self):
         menu = special_endpoints.SelectMenuBuilder(custom_id="o2o2o2", type=components.ComponentType.ROLE_SELECT_MENU)
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
             "type": components.ComponentType.ROLE_SELECT_MENU,
             "custom_id": "o2o2o2",
             "disabled": False,
             "min_values": 0,
             "max_values": 1,
         }
+
+        assert attachments == []
 
 
 class TestTextSelectMenuBuilder:
@@ -1557,6 +1844,7 @@ class TestTextSelectMenuBuilder:
 
     def test_build(self):
         menu = special_endpoints.TextSelectMenuBuilder(
+            id=5855932,
             custom_id="o2o2o2",
             placeholder="hi",
             min_values=22,
@@ -1565,7 +1853,10 @@ class TestTextSelectMenuBuilder:
             options=[special_endpoints.SelectOptionBuilder("meow", "vault")],
         )
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
+            "id": 5855932,
             "type": components.ComponentType.TEXT_SELECT_MENU,
             "custom_id": "o2o2o2",
             "placeholder": "hi",
@@ -1575,10 +1866,14 @@ class TestTextSelectMenuBuilder:
             "options": [{"label": "meow", "value": "vault", "default": False}],
         }
 
+        assert attachments == []
+
     def test_build_without_optional_fields(self):
         menu = special_endpoints.TextSelectMenuBuilder(custom_id="fds  qw")
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
             "type": components.ComponentType.TEXT_SELECT_MENU,
             "custom_id": "fds  qw",
             "min_values": 0,
@@ -1586,6 +1881,8 @@ class TestTextSelectMenuBuilder:
             "disabled": False,
             "options": [],
         }
+
+        assert attachments == []
 
 
 class TestChannelSelectMenuBuilder:
@@ -1602,6 +1899,7 @@ class TestChannelSelectMenuBuilder:
 
     def test_build(self):
         menu = special_endpoints.ChannelSelectMenuBuilder(
+            id=5855932,
             custom_id="o2o2o2",
             placeholder="hi",
             min_values=22,
@@ -1610,7 +1908,10 @@ class TestChannelSelectMenuBuilder:
             channel_types=[channels.ChannelType.GUILD_CATEGORY],
         )
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
+            "id": 5855932,
             "type": components.ComponentType.CHANNEL_SELECT_MENU,
             "custom_id": "o2o2o2",
             "placeholder": "hi",
@@ -1620,10 +1921,14 @@ class TestChannelSelectMenuBuilder:
             "channel_types": [channels.ChannelType.GUILD_CATEGORY],
         }
 
+        assert attachments == []
+
     def test_build_without_optional_fields(self):
         menu = special_endpoints.ChannelSelectMenuBuilder(custom_id="42312312")
 
-        assert menu.build() == {
+        payload, attachments = menu.build()
+
+        assert payload == {
             "type": components.ComponentType.CHANNEL_SELECT_MENU,
             "custom_id": "42312312",
             "min_values": 0,
@@ -1631,6 +1936,8 @@ class TestChannelSelectMenuBuilder:
             "disabled": False,
             "channel_types": [],
         }
+
+        assert attachments == []
 
 
 class TestTextInput:
@@ -1676,7 +1983,9 @@ class TestTextInput:
     def test_build_partial(self):
         text_input = special_endpoints.TextInputBuilder(custom_id="o2o2o2", label="label")
 
-        assert text_input.build() == {
+        payload, attachments = text_input.build()
+
+        assert payload == {
             "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
@@ -1686,8 +1995,11 @@ class TestTextInput:
             "max_length": 4000,
         }
 
+        assert attachments == []
+
     def test_build(self):
         text_input = special_endpoints.TextInputBuilder(
+            id=5855932,
             custom_id="o2o2o2",
             label="label",
             placeholder="placeholder",
@@ -1697,7 +2009,10 @@ class TestTextInput:
             max_length=250,
         )
 
-        assert text_input.build() == {
+        payload, attachments = text_input.build()
+
+        assert payload == {
+            "id": 5855932,
             "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
@@ -1708,6 +2023,8 @@ class TestTextInput:
             "min_length": 10,
             "max_length": 250,
         }
+
+        assert attachments == []
 
 
 class TestMessageActionRowBuilder:
@@ -1802,19 +2119,499 @@ class TestMessageActionRowBuilder:
         assert component.is_disabled is True
 
     def test_build(self):
-        mock_component_1 = mock.Mock(type=components.ComponentType.BUTTON)
-        mock_component_2 = mock.Mock(type=components.ComponentType.BUTTON)
-
-        row = (
-            special_endpoints.MessageActionRowBuilder().add_component(mock_component_1).add_component(mock_component_2)
+        mock_component_1 = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.BUTTON), ())),
+        )
+        mock_component_2 = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.BUTTON), ())),
         )
 
-        assert row.build() == {
+        row = special_endpoints.MessageActionRowBuilder(id=5855932, components=[mock_component_1, mock_component_2])
+
+        payload, attachments = row.build()
+
+        assert payload == {
             "type": components.ComponentType.ACTION_ROW,
-            "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
+            "id": 5855932,
+            "components": [mock_component_1.build.return_value[0], mock_component_2.build.return_value[0]],
         }
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+        assert attachments == []
+
+
+class TestSectionComponentBuilder:
+    def test_type_property(self):
+        section = special_endpoints.SectionComponentBuilder(accessory=mock.Mock())
+
+        assert section.type is components.ComponentType.SECTION
+
+    def test_add_component(self):
+        section = special_endpoints.SectionComponentBuilder(accessory=mock.Mock())
+
+        assert section.components == []
+
+        text_display = special_endpoints.TextDisplayComponentBuilder(content="test content")
+
+        section.add_component(text_display)
+
+        assert section.components == [text_display]
+
+    def test_add_text_display(self):
+        section = special_endpoints.SectionComponentBuilder(accessory=mock.Mock())
+
+        assert section.components == []
+
+        section.add_text_display("test content")
+
+        assert len(section.components) == 1
+
+        assert section.components[0].content == "test content"
+
+    def test_build(self):
+        accessory = special_endpoints.ThumbnailComponentBuilder(
+            id=2193485, media="some-test-file.png", description="a cool image", spoiler=False
+        )
+
+        section = special_endpoints.SectionComponentBuilder(id=5855932, accessory=accessory)
+        section.add_text_display("A display?", id=4893723)
+        section.add_text_display("Yes, a display.", id=9018345)
+
+        payload, attachments = section.build()
+
+        assert payload == {
+            "type": components.ComponentType.SECTION,
+            "id": 5855932,
+            "accessory": {
+                "type": components.ComponentType.THUMBNAIL,
+                "id": 2193485,
+                "media": {"url": "attachment://some-test-file.png"},
+                "description": "a cool image",
+                "spoiler": False,
+            },
+            "components": [
+                {"type": components.ComponentType.TEXT_DISPLAY, "id": 4893723, "content": "A display?"},
+                {"type": components.ComponentType.TEXT_DISPLAY, "id": 9018345, "content": "Yes, a display."},
+            ],
+        }
+        assert attachments == [files.ensure_resource("some-test-file.png")]
+
+    def test_build_without_optional_fields(self):
+        section = special_endpoints.SectionComponentBuilder(
+            accessory=special_endpoints.ThumbnailComponentBuilder(
+                media="some-test-file.png", description="a cool image", spoiler=False
+            )
+        )
+
+        payload, attachments = section.build()
+
+        assert payload == {
+            "type": components.ComponentType.SECTION,
+            "accessory": {
+                "type": components.ComponentType.THUMBNAIL,
+                "media": {"url": "attachment://some-test-file.png"},
+                "description": "a cool image",
+                "spoiler": False,
+            },
+            "components": [],
+        }
+        assert attachments == [files.ensure_resource("some-test-file.png")]
+
+
+class TestTextDisplayComponentBuilder:
+    def test_type_property(self):
+        text_display = special_endpoints.TextDisplayComponentBuilder(content="A display?")
+
+        assert text_display.type is components.ComponentType.TEXT_DISPLAY
+
+    def test_build(self):
+        text_display = special_endpoints.TextDisplayComponentBuilder(id=5855932, content="A display?")
+
+        payload, attachments = text_display.build()
+
+        assert payload == {"type": components.ComponentType.TEXT_DISPLAY, "id": 5855932, "content": "A display?"}
+
+        assert attachments == ()
+
+
+class TestThumbnailComponentBuilder:
+    def test_type_property(self):
+        thumbnail = special_endpoints.ThumbnailComponentBuilder(media=mock.Mock())
+
+        assert thumbnail.type is components.ComponentType.THUMBNAIL
+
+    def test_build(self):
+        thumbnail = special_endpoints.ThumbnailComponentBuilder(
+            id=5855932, media="some-test-file.png", description="a cool image", spoiler=False
+        )
+
+        payload, attachments = thumbnail.build()
+
+        assert payload == {
+            "type": components.ComponentType.THUMBNAIL,
+            "id": 5855932,
+            "media": {"url": "attachment://some-test-file.png"},
+            "description": "a cool image",
+            "spoiler": False,
+        }
+
+        assert attachments == (files.ensure_resource("some-test-file.png"),)
+
+    def test_build_without_optional_fields(self):
+        thumbnail = special_endpoints.ThumbnailComponentBuilder(media="some-test-file.png")
+
+        payload, attachments = thumbnail.build()
+
+        assert payload == {
+            "type": components.ComponentType.THUMBNAIL,
+            "media": {"url": "attachment://some-test-file.png"},
+            "spoiler": False,
+        }
+
+        assert attachments == (files.ensure_resource("some-test-file.png"),)
+
+
+class TestMediaGalleryComponentBuilder:
+    def test_type_property(self):
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder()
+
+        assert media_gallery.type is components.ComponentType.MEDIA_GALLERY
+
+    def test_add_item(self):
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder()
+
+        assert media_gallery.items == []
+
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(
+            media="some-test-file.png", description="Some description", spoiler=False
+        )
+
+        media_gallery.add_item(media_gallery_item)
+
+        assert media_gallery.items == [media_gallery_item]
+
+    def test_add_media_gallery_item(self):
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder()
+
+        assert media_gallery.items == []
+
+        media_gallery.add_media_gallery_item("some-test-file.png", description="Some description", spoiler=False)
+
+        assert len(media_gallery.items) == 1
+
+        assert media_gallery.items[0].media == "some-test-file.png"
+        assert media_gallery.items[0].description == "Some description"
+        assert media_gallery.items[0].is_spoiler is False
+
+    def test_build(self):
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder(id=5855932)
+
+        media_gallery.add_media_gallery_item("some-test-file.png", description="Some description", spoiler=False)
+
+        media_gallery.add_media_gallery_item("some-test-file2.png", description="Some description 2", spoiler=True)
+
+        payload, attachments = media_gallery.build()
+
+        assert payload == {
+            "type": components.ComponentType.MEDIA_GALLERY,
+            "id": 5855932,
+            "items": [
+                {
+                    "media": {"url": "attachment://some-test-file.png"},
+                    "description": "Some description",
+                    "spoiler": False,
+                },
+                {
+                    "media": {"url": "attachment://some-test-file2.png"},
+                    "description": "Some description 2",
+                    "spoiler": True,
+                },
+            ],
+        }
+
+        assert attachments == [
+            files.ensure_resource("some-test-file.png"),
+            files.ensure_resource("some-test-file2.png"),
+        ]
+
+    def test_build_without_optional_fields(self):
+        media_gallery = special_endpoints.MediaGalleryComponentBuilder()
+
+        payload, attachments = media_gallery.build()
+
+        assert payload == {"type": components.ComponentType.MEDIA_GALLERY, "items": []}
+
+        assert attachments == []
+
+
+class TestMediaGalleryItemBuilder:
+    def test_build(self):
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(
+            media="some-test-file.png", description="Some description", spoiler=False
+        )
+
+        payload, attachments = media_gallery_item.build()
+
+        assert payload == {
+            "media": {"url": "attachment://some-test-file.png"},
+            "description": "Some description",
+            "spoiler": False,
+        }
+        assert attachments == (files.ensure_resource("attachment://some-test-file.png"),)
+
+    def test_build_without_optional_fields(self):
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(media="some-test-file.png")
+
+        payload, attachments = media_gallery_item.build()
+
+        assert payload == {"media": {"url": "attachment://some-test-file.png"}, "spoiler": False}
+        assert attachments == (files.ensure_resource("some-test-file.png"),)
+
+
+class TestSeparatorComponentBuilder:
+    def test_type_property(self):
+        separator = special_endpoints.SeparatorComponentBuilder()
+
+        assert separator.type is components.ComponentType.SEPARATOR
+
+    def test_build(self):
+        separator = special_endpoints.SeparatorComponentBuilder(
+            id=5855932, spacing=components.SpacingType.SMALL, divider=True
+        )
+
+        payload, attachments = separator.build()
+
+        assert payload == {
+            "type": components.ComponentType.SEPARATOR,
+            "id": 5855932,
+            "spacing": components.SpacingType.SMALL,
+            "divider": True,
+        }
+        assert attachments == ()
+
+    def test_build_without_optional_fields(self):
+        separator = special_endpoints.SeparatorComponentBuilder()
+
+        payload, attachments = separator.build()
+
+        assert payload == {"type": components.ComponentType.SEPARATOR}
+        assert attachments == ()
+
+
+class TestFileComponentBuilder:
+    def test_type_property(self):
+        file = special_endpoints.FileComponentBuilder(file=mock.Mock())
+
+        assert file.type is components.ComponentType.FILE
+
+    def test_build(self):
+        file = special_endpoints.FileComponentBuilder(
+            id=5855932, file="https://example.com/some-test-file.png", spoiler=True
+        )
+
+        payload, attachments = file.build()
+
+        assert payload == {
+            "type": components.ComponentType.FILE,
+            "id": 5855932,
+            "file": {"url": "https://example.com/some-test-file.png"},
+            "spoiler": True,
+        }
+        assert attachments == (files.ensure_resource("https://example.com/some-test-file.png"),)
+
+    def test_build_without_optional_fields(self):
+        file = special_endpoints.FileComponentBuilder(file="some-test-file.png")
+
+        payload, attachments = file.build()
+
+        assert payload == {
+            "type": components.ComponentType.FILE,
+            "file": {"url": "attachment://some-test-file.png"},
+            "spoiler": False,
+        }
+        assert attachments == (files.ensure_resource("some-test-file.png"),)
+
+
+class TestMessageContainerBuilder:
+    def test_type_property(self):
+        container = special_endpoints.ContainerComponentBuilder()
+
+        assert container.type is components.ComponentType.CONTAINER
+
+    def test_add_component(self):
+        container = special_endpoints.ContainerComponentBuilder()
+
+        assert container.components == []
+
+        component = special_endpoints.SeparatorComponentBuilder()
+
+        container.add_component(component)
+
+        assert container.components == [component]
+
+    def test_add_action_row(self):
+        container = special_endpoints.ContainerComponentBuilder()
+
+        assert container.components == []
+
+        button = special_endpoints.InteractiveButtonBuilder(
+            style=components.ButtonStyle.DANGER, custom_id="button", label="test button"
+        )
+
+        container.add_action_row([button])
+
+        assert len(container.components) == 1
+
+        component = container.components[0]
+
+        assert isinstance(component, special_endpoints.MessageActionRowBuilder)
+
+        assert component.components == [button]
+
+    def test_add_text_display(self):
+        container = special_endpoints.ContainerComponentBuilder()
+
+        assert container.components == []
+
+        container.add_text_display("A text display!")
+
+        assert len(container.components) == 1
+
+        component = container.components[0]
+
+        assert isinstance(component, special_endpoints.TextDisplayComponentBuilder)
+
+        assert component.content == "A text display!"
+
+    def test_add_media_gallery(self):
+        container = special_endpoints.ContainerComponentBuilder()
+
+        assert container.components == []
+
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(
+            media="some-test-file.png", description="Some description", spoiler=False
+        )
+        container.add_media_gallery([media_gallery_item])
+
+        assert len(container.components) == 1
+        component = container.components[0]
+        assert isinstance(component, special_endpoints.MediaGalleryComponentBuilder)
+        assert component.items == [media_gallery_item]
+
+    def test_add_separator(self):
+        container = special_endpoints.ContainerComponentBuilder()
+
+        assert container.components == []
+
+        container.add_separator(spacing=components.SpacingType.LARGE, divider=False)
+
+        assert len(container.components) == 1
+
+        component = container.components[0]
+
+        assert isinstance(component, special_endpoints.SeparatorComponentBuilder)
+
+        assert component.spacing == components.SpacingType.LARGE
+        assert component.divider is False
+
+    def test_add_file(self):
+        container = special_endpoints.ContainerComponentBuilder()
+
+        assert container.components == []
+
+        container.add_file(file="some-test-file.png", spoiler=True)
+
+        assert len(container.components) == 1
+        component = container.components[0]
+        assert isinstance(component, special_endpoints.FileComponentBuilder)
+        assert component.file == "some-test-file.png"
+        assert component.is_spoiler is True
+
+    def test_build(self):
+        accent_color = colors.Color.from_hex_code("#FFB123")
+        mock_button = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.BUTTON), ())),
+        )
+        media_gallery_item = special_endpoints.MediaGalleryItemBuilder(
+            media="some-test-file.png", description="Some description", spoiler=False
+        )
+
+        container = special_endpoints.ContainerComponentBuilder(id=5855932, accent_color=accent_color, spoiler=True)
+        container.add_action_row([mock_button], id=3204958)
+        container.add_text_display("A text display!", id=8944352)
+        container.add_media_gallery([media_gallery_item], id=1098573)
+        container.add_separator(spacing=components.SpacingType.LARGE, divider=False, id=9542323)
+        container.add_file(file="file.txt", spoiler=True, id=2339534)
+
+        payload, attachments = container.build()
+
+        assert payload == {
+            "type": components.ComponentType.CONTAINER,
+            "id": 5855932,
+            "accent_color": accent_color,
+            "spoiler": True,
+            "components": [
+                {
+                    "type": components.ComponentType.ACTION_ROW,
+                    "id": 3204958,
+                    "components": [mock_button.build.return_value[0]],
+                },
+                {"type": components.ComponentType.TEXT_DISPLAY, "id": 8944352, "content": "A text display!"},
+                {
+                    "type": components.ComponentType.MEDIA_GALLERY,
+                    "id": 1098573,
+                    "items": [
+                        {
+                            "media": {"url": "attachment://some-test-file.png"},
+                            "description": "Some description",
+                            "spoiler": False,
+                        }
+                    ],
+                },
+                {
+                    "type": components.ComponentType.SEPARATOR,
+                    "id": 9542323,
+                    "spacing": components.SpacingType.LARGE,
+                    "divider": False,
+                },
+                {
+                    "type": components.ComponentType.FILE,
+                    "id": 2339534,
+                    "file": {"url": "attachment://file.txt"},
+                    "spoiler": True,
+                },
+            ],
+        }
+
+        mock_button.build.assert_called_once_with()
+
+        assert attachments == [files.ensure_resource("some-test-file.png"), files.ensure_resource("file.txt")]
+
+    def test_build_without_optional_fields(self):
+        container = special_endpoints.ContainerComponentBuilder(accent_color=None)
+
+        payload, attachments = container.build()
+
+        assert payload == {
+            "type": components.ComponentType.CONTAINER,
+            "accent_color": None,
+            "spoiler": False,
+            "components": [],
+        }
+
+        assert attachments == []
+
+    def test_build_without_undefined_fields(self):
+        container = special_endpoints.ContainerComponentBuilder()
+
+        payload, attachments = container.build()
+
+        assert payload == {"type": components.ComponentType.CONTAINER, "spoiler": False, "components": []}
+        assert attachments == []
 
 
 class TestModalActionRow:
@@ -1849,16 +2646,249 @@ class TestModalActionRow:
         assert menu.max_length == 447
 
     def test_build(self):
-        mock_component_1 = mock.Mock(type=components.ComponentType.TEXT_INPUT)
-        mock_component_2 = mock.Mock(type=components.ComponentType.TEXT_INPUT)
+        mock_component_1 = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.TEXT_INPUT), ())),
+        )
+        mock_component_2 = mock.Mock(
+            special_endpoints.InteractiveButtonBuilder,
+            build=mock.Mock(return_value=(mock.Mock(type=components.ComponentType.TEXT_INPUT), ())),
+        )
 
-        row = special_endpoints.ModalActionRowBuilder().add_component(mock_component_1).add_component(mock_component_2)
+        row = special_endpoints.ModalActionRowBuilder(id=5855932, components=[mock_component_1, mock_component_2])
 
-        result = row.build()
+        payload, attachments = row.build()
 
-        assert result == {
+        assert payload == {
             "type": components.ComponentType.ACTION_ROW,
-            "components": [mock_component_1.build.return_value, mock_component_2.build.return_value],
+            "id": 5855932,
+            "components": [mock_component_1.build.return_value[0], mock_component_2.build.return_value[0]],
         }
+
         mock_component_1.build.assert_called_once_with()
         mock_component_2.build.assert_called_once_with()
+
+        assert attachments == []
+
+
+class TestPollBuilder:
+    def test_add_answer(self):
+        poll_builder = special_endpoints.PollBuilder(question_text="A cool question", allow_multiselect=False)
+
+        assert poll_builder.answers == []
+
+        poll_builder.add_answer(text="Beanos", emoji=emojis.UnicodeEmoji("👌"))
+
+        assert len(poll_builder.answers) == 1
+
+        assert poll_builder.answers[0].text == "Beanos"
+        assert poll_builder.answers[0].emoji == emojis.UnicodeEmoji("👌")
+
+    def test_build(self):
+        poll_builder = special_endpoints.PollBuilder(
+            question_text="question_text",
+            answers=[
+                special_endpoints.PollAnswerBuilder(
+                    text="answer_1_text",
+                    emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(456), name="question_emoji", is_animated=False),
+                ),
+                special_endpoints.PollAnswerBuilder(text="answer_2_text"),
+                special_endpoints.PollAnswerBuilder(emoji=emojis.UnicodeEmoji("👀")),
+            ],
+            duration=9,
+            allow_multiselect=True,
+            layout_type=polls.PollLayoutType.DEFAULT,
+        )
+
+        assert poll_builder.build() == {
+            "question": {"text": "question_text"},
+            "answers": [
+                {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456"}}},
+                {"poll_media": {"text": "answer_2_text"}},
+                {"poll_media": {"emoji": {"name": "👀"}}},
+            ],
+            "duration": 9,
+            "allow_multiselect": True,
+            "layout_type": polls.PollLayoutType.DEFAULT,
+        }
+
+    def test_build_without_optional_fields(self):
+        poll_builder = special_endpoints.PollBuilder(question_text="question_text", allow_multiselect=True)
+
+        assert poll_builder.build() == {"question": {"text": "question_text"}, "answers": [], "allow_multiselect": True}
+
+
+class TestPollAnswerBuilder:
+    def test_build(self):
+        poll_answer = special_endpoints.PollAnswerBuilder(
+            text="answer_1_text",
+            emoji=emojis.CustomEmoji(id=snowflakes.Snowflake(456), name="question_emoji", is_animated=False),
+        )
+
+        assert poll_answer.build() == {"poll_media": {"text": "answer_1_text", "emoji": {"id": "456"}}}
+
+
+class TestAutoModBlockMessageActionBuilder:
+    def test_type_property(self):
+        block_message_action = special_endpoints.AutoModBlockMessageActionBuilder(custom_message="beanos")
+
+        assert block_message_action.type == auto_mod.AutoModActionType.BLOCK_MESSAGE
+        assert block_message_action.custom_message == "beanos"
+
+    def test_build(self):
+        block_message_action = special_endpoints.AutoModBlockMessageActionBuilder(custom_message="hello world!")
+
+        assert block_message_action.build() == {
+            "type": auto_mod.AutoModActionType.BLOCK_MESSAGE,
+            "metadata": {"custom_message": "hello world!"},
+        }
+
+
+class TestAutoModSendAlertMessageActionBuilder:
+    def test_type_property(self):
+        send_alert_message_action = special_endpoints.AutoModSendAlertMessageActionBuilder(
+            channel_id=snowflakes.Snowflake(123)
+        )
+
+        assert send_alert_message_action.type == auto_mod.AutoModActionType.SEND_ALERT_MESSAGE
+        assert send_alert_message_action.channel_id == snowflakes.Snowflake(123)
+
+    def test_build(self):
+        send_alert_message_action = special_endpoints.AutoModSendAlertMessageActionBuilder(
+            channel_id=snowflakes.Snowflake(456)
+        )
+
+        assert send_alert_message_action.build() == {
+            "type": auto_mod.AutoModActionType.SEND_ALERT_MESSAGE,
+            "metadata": {"channel_id": 456},
+        }
+
+
+class TestAutoModTimeoutActionBuilder:
+    def test_type_property(self):
+        timeout_action = special_endpoints.AutoModTimeoutActionBuilder(duration_seconds=3)
+
+        assert timeout_action.type == auto_mod.AutoModActionType.TIMEOUT
+        assert timeout_action.duration_seconds == 3
+
+    def test_build(self):
+        timeout_action = special_endpoints.AutoModTimeoutActionBuilder(duration_seconds=5)
+
+        assert timeout_action.build() == {
+            "type": auto_mod.AutoModActionType.TIMEOUT,
+            "metadata": {"duration_seconds": 5},
+        }
+
+
+class TestAutoModBlockMemberInteractionActionBuilder:
+    def test_type_property(self):
+        block_member_interaction_action = special_endpoints.AutoModBlockMemberInteractionActionBuilder()
+
+        assert block_member_interaction_action.type == auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION
+
+    def test_build(self):
+        block_member_interaction_action = special_endpoints.AutoModBlockMemberInteractionActionBuilder()
+
+        assert block_member_interaction_action.build() == {
+            "type": auto_mod.AutoModActionType.BLOCK_MEMBER_INTERACTION,
+            "metadata": {},
+        }
+
+
+class TestAutoModKeywordTriggerBuilder:
+    def test_type_property(self):
+        keyword_trigger = special_endpoints.AutoModKeywordTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert keyword_trigger.type == auto_mod.AutoModTriggerType.KEYWORD
+        assert keyword_trigger.keyword_filter == ["keyword", "filter"]
+        assert keyword_trigger.regex_patterns == ["regex", "patterns"]
+        assert keyword_trigger.allow_list == ["allow", "list"]
+
+    def test_build(self):
+        keyword_trigger = special_endpoints.AutoModKeywordTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert keyword_trigger.build() == {
+            "keyword_filter": ["keyword", "filter"],
+            "regex_patterns": ["regex", "patterns"],
+            "allow_list": ["allow", "list"],
+        }
+
+
+class TestAutoModSpamTriggerBuilder:
+    def test_type_property(self):
+        spam_trigger = special_endpoints.AutoModSpamTriggerBuilder()
+
+        assert spam_trigger.type == auto_mod.AutoModTriggerType.SPAM
+
+    def test_build(self):
+        spam_trigger = special_endpoints.AutoModSpamTriggerBuilder()
+
+        assert spam_trigger.build() == {}
+
+
+class TestAutoModKeywordPresetTriggerBuilder:
+    def test_type_property(self):
+        keyword_preset_trigger = special_endpoints.AutoModKeywordPresetTriggerBuilder(
+            presets=[auto_mod.AutoModKeywordPresetType.PROFANITY, auto_mod.AutoModKeywordPresetType.SLURS],
+            allow_list=["allow", "list"],
+        )
+
+        assert keyword_preset_trigger.type == auto_mod.AutoModTriggerType.KEYWORD_PRESET
+        assert keyword_preset_trigger.presets == [
+            auto_mod.AutoModKeywordPresetType.PROFANITY,
+            auto_mod.AutoModKeywordPresetType.SLURS,
+        ]
+        assert keyword_preset_trigger.allow_list == ["allow", "list"]
+
+    def test_build(self):
+        keyword_preset_trigger = special_endpoints.AutoModKeywordPresetTriggerBuilder(
+            presets=[auto_mod.AutoModKeywordPresetType.PROFANITY, auto_mod.AutoModKeywordPresetType.SLURS],
+            allow_list=["allow", "list"],
+        )
+
+        assert keyword_preset_trigger.build() == {"presets": [1, 3], "allow_list": ["allow", "list"]}
+
+
+class TestAutoModMentionSpamTriggerBuilder:
+    def test_type_property(self):
+        mention_spam_trigger = special_endpoints.AutoModMentionSpamTriggerBuilder(
+            mention_total_limit=3, mention_raid_protection_enabled=True
+        )
+
+        assert mention_spam_trigger.type == auto_mod.AutoModTriggerType.MENTION_SPAM
+        assert mention_spam_trigger.mention_total_limit == 3
+        assert mention_spam_trigger.mention_raid_protection_enabled is True
+
+    def test_build(self):
+        mention_spam_trigger = special_endpoints.AutoModMentionSpamTriggerBuilder(
+            mention_total_limit=5, mention_raid_protection_enabled=False
+        )
+
+        assert mention_spam_trigger.build() == {"mention_total_limit": 5, "mention_raid_protection_enabled": False}
+
+
+class TestAutoModMemberProfileTriggerBuilder:
+    def test_type_property(self):
+        member_profile_trigger = special_endpoints.AutoModMemberProfileTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert member_profile_trigger.type == auto_mod.AutoModTriggerType.MEMBER_PROFILE
+        assert member_profile_trigger.keyword_filter == ["keyword", "filter"]
+        assert member_profile_trigger.regex_patterns == ["regex", "patterns"]
+        assert member_profile_trigger.allow_list == ["allow", "list"]
+
+    def test_build(self):
+        member_profile_trigger = special_endpoints.AutoModMemberProfileTriggerBuilder(
+            keyword_filter=["keyword", "filter"], regex_patterns=["regex", "patterns"], allow_list=["allow", "list"]
+        )
+
+        assert member_profile_trigger.build() == {
+            "keyword_filter": ["keyword", "filter"],
+            "regex_patterns": ["regex", "patterns"],
+            "allow_list": ["allow", "list"],
+        }

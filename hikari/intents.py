@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -42,9 +41,9 @@ class Intents(enums.Flag):
 
     !!! note
         Discord now places limits on certain events you can receive without
-        whitelisting your bot first. On the `Bot` tab in the [developer's portal]
-        (https://discord.com/developers/applications/) for your bot, you should
-        now have the option to enable functionality for receiving these events.
+        whitelisting your bot first. On the `Bot` tab in the
+        [developer's portal](https://discord.com/developers/applications/) for your bot,
+        you should now have the option to enable functionality for receiving these events.
 
         If you attempt to request an intent type that you have not whitelisted
         your bot for, you will be disconnected on startup with a `4014` closure
@@ -334,6 +333,34 @@ class Intents(enums.Flag):
     * `GUILD_SCHEDULED_EVENT_USER_REMOVE`
     """
 
+    AUTO_MODERATION_CONFIGURATION = 1 << 20
+    """Subscribes to the events listed below.
+
+    * `AUTO_MODERATION_RULE_CREATE`
+    * `AUTO_MODERATION_RULE_UPDATE`
+    * `AUTO_MODERATION_RULE_DELETE`
+    """
+
+    AUTO_MODERATION_EXECUTION = 1 << 21
+    """Subscribes to the events listed below.
+
+    * `AUTO_MODERATION_ACTION_EXECUTION`
+    """
+
+    GUILD_MESSAGE_POLLS = 1 << 24
+    """Subscribes to the events listed below.
+
+    * `MESSAGE_POLL_VOTE_ADD` (in guilds only)
+    * `MESSAGE_POLL_VOTE_REMOVE` (in guilds only)
+    """
+
+    DIRECT_MESSAGE_POLLS = 1 << 25
+    """Subscribes to the events listed below.
+
+    * `MESSAGE_POLL_VOTE_ADD` (in direct message channels (non-guild bound) only)
+    * `MESSAGE_POLL_VOTE_REMOVE` (in direct message channels (non-guild bound) only)
+    """
+
     # Annoyingly, enums hide classmethods and staticmethods from __dir__ in
     # EnumMeta which means if I make methods to generate these, then stuff
     # will not be documented by pdoc. Alas, my dream of being smart with
@@ -351,6 +378,7 @@ class Intents(enums.Flag):
         | GUILD_MESSAGE_TYPING
         | GUILD_MODERATION
         | GUILD_SCHEDULED_EVENTS
+        | GUILD_MESSAGE_POLLS
     )
     """All unprivileged guild-related intents."""
 
@@ -373,11 +401,14 @@ class Intents(enums.Flag):
         use.
     """
 
-    ALL_DMS = DM_MESSAGES | DM_MESSAGE_TYPING | DM_MESSAGE_REACTIONS
+    ALL_DMS = DM_MESSAGES | DM_MESSAGE_TYPING | DM_MESSAGE_REACTIONS | DIRECT_MESSAGE_POLLS
     """All direct message channel (non-guild bound) intents."""
 
     ALL_MESSAGES = DM_MESSAGES | GUILD_MESSAGES
     """All message intents."""
+
+    ALL_POLLS = GUILD_MESSAGE_POLLS | DIRECT_MESSAGE_POLLS
+    """All poll intents."""
 
     ALL_MESSAGE_REACTIONS = DM_MESSAGE_REACTIONS | GUILD_MESSAGE_REACTIONS
     """All message reaction intents."""
@@ -385,7 +416,10 @@ class Intents(enums.Flag):
     ALL_MESSAGE_TYPING = DM_MESSAGE_TYPING | GUILD_MESSAGE_TYPING
     """All typing indicator intents."""
 
-    ALL_UNPRIVILEGED = ALL_GUILDS_UNPRIVILEGED | ALL_DMS
+    ALL_AUTO_MODERATION = AUTO_MODERATION_CONFIGURATION | AUTO_MODERATION_EXECUTION
+    """All auto-moderation intents."""
+
+    ALL_UNPRIVILEGED = ALL_GUILDS_UNPRIVILEGED | ALL_DMS | ALL_AUTO_MODERATION
     """All unprivileged intents."""
 
     ALL_PRIVILEGED = ALL_GUILDS_PRIVILEGED | MESSAGE_CONTENT

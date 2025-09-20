@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("CompiledRoute", "Route", "CDNRoute")
+__all__: typing.Sequence[str] = ("CDNRoute", "CompiledRoute", "Route")
 
 import math
 import re
@@ -33,8 +32,10 @@ import urllib.parse
 import attrs
 
 from hikari import files
+from hikari import undefined
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import typing_extensions
 
 HASH_SEPARATOR: typing.Final[str] = ";"
 PARAM_REGEX: typing.Final[typing.Pattern[str]] = re.compile(r"{(\w+)}")
@@ -109,12 +110,13 @@ class CompiledRoute:
         """
         return f"{initial_bucket_hash}{HASH_SEPARATOR}{authentication_hash}{HASH_SEPARATOR}{self.major_param_hash}"
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return f"{self.method} {self.compiled_path}"
 
 
 @attrs_extensions.with_copy
-@attrs.define(unsafe_hash=True, init=False, weakref_slot=False)
+@attrs.define(hash=False, eq=False, weakref_slot=False)
 @typing.final
 class Route:
     """A template used to create compiled routes for specific parameters.
@@ -136,10 +138,13 @@ class Route:
     path_template: str = attrs.field()
     """The template string used for the path."""
 
-    major_params: typing.Optional[frozenset[str]] = attrs.field(hash=False, eq=False, repr=False)
+    major_params: frozenset[str] | None = attrs.field(repr=False, init=False, default=None)
     """The optional major parameter name combination for this endpoint."""
 
-    has_ratelimits: bool = attrs.field(hash=False, eq=False, repr=False)
+    ratelimit_hash: int | None = attrs.field(repr=False, default=None)
+    """The rate limit hash for this endpoint."""
+
+    has_ratelimits: bool = attrs.field(repr=False, default=True)
     """Whether this route is affected by ratelimits.
 
     This should be left as [`True`][] (the default) for most routes. This
@@ -147,19 +152,14 @@ class Route:
     be a bit more efficient with them.
     """
 
-    def __init__(self, method: str, path_template: str, *, has_ratelimits: bool = True) -> None:
-        self.method = method
-        self.path_template = path_template
-        self.has_ratelimits = has_ratelimits
-
-        self.major_params = None
-        match = PARAM_REGEX.findall(path_template)
-        for major_param_combo in MAJOR_PARAM_COMBOS.keys():
+    def __attrs_post_init__(self) -> None:
+        match = PARAM_REGEX.findall(self.path_template)
+        for major_param_combo in MAJOR_PARAM_COMBOS:
             if major_param_combo.issubset(match):
                 self.major_params = major_param_combo
                 break
 
-    def compile(self, **kwargs: typing.Any) -> CompiledRoute:
+    def compile(self, **kwargs: data_binding.Stringish) -> CompiledRoute:
         """Generate a formatted [`CompiledRoute`][] for this route.
 
         This takes into account any URL parameters that have been passed.
@@ -184,12 +184,17 @@ class Route:
             major_param_hash=MAJOR_PARAM_COMBOS[self.major_params](data) if self.major_params else "-",
         )
 
+    @typing_extensions.override
+    def __hash__(self) -> int:
+        return self.ratelimit_hash or hash((self.method, self.path_template))
+
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.method + " " + self.path_template
 
 
 def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> frozenset[str]:
-    return frozenset(v.lower() for v in values)
+    return frozenset(v.upper() for v in values)
 
 
 @attrs_extensions.with_copy
@@ -209,13 +214,17 @@ class CDNRoute:
     @valid_formats.validator
     def _(self, _: attrs.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
         if not values:
-            raise ValueError(f"{self.path_template} must have at least one valid format set")
-
-    is_sizable: bool = attrs.field(default=True, kw_only=True, repr=False, hash=False, eq=False)
-    """Whether a `size` param can be specified."""
+            msg = f"{self.path_template} must have at least one valid format set"
+            raise ValueError(msg)
 
     def compile(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
+        self,
+        base_url: str,
+        *,
+        file_format: str,
+        lossless: bool = True,
+        size: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        **kwargs: object,
     ) -> str:
         """Generate a full CDN url from this endpoint.
 
@@ -226,8 +235,10 @@ class CDNRoute:
             this.
         file_format
             The file format to use for the asset.
+        lossless
+            Whether to request a lossless image. Defaults to [`True`][].
         size
-            The custom size query parameter to set. If [`None`][],
+            The custom size query parameter to set. If unspecified,
             it is not passed.
         **kwargs
             Parameters to interpolate into the path template.
@@ -240,14 +251,12 @@ class CDNRoute:
         Raises
         ------
         TypeError
-            If a GIF is requested, but the asset is not animated;
-            if an invalid file format for the endpoint is passed; or if a `size`
-            is passed but the route is not sizable.
+            If an invalid file format for the endpoint is passed;
+            If an animated format is requested for a static asset.
         ValueError
-            If `size` is specified, but is not an integer power of `2` between
-            `16` and `4096` inclusive or is negative.
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
-        file_format = file_format.lower()
+        file_format = file_format.upper()
 
         if file_format not in self.valid_formats:
             raise TypeError(
@@ -255,34 +264,54 @@ class CDNRoute:
                 + ", ".join(self.valid_formats)
             )
 
-        if "hash" in kwargs and not kwargs["hash"].startswith("a_") and file_format == GIF:
-            raise TypeError("This asset is not animated, so cannot be retrieved as a GIF")
+        if "hash" in kwargs and not str(kwargs["hash"]).startswith("a_") and file_format in {AWEBP, GIF, APNG}:
+            msg = f"This asset is not animated, so it cannot be retrieved as {file_format}."
+            raise TypeError(msg)
+
+        query = data_binding.StringMapBuilder()
+
+        if file_format in {WEBP, AWEBP}:
+            query.put("lossless", lossless)
+
+        if size is not undefined.UNDEFINED:
+            if size < 0:
+                msg = "size must be positive"
+                raise ValueError(msg)
+
+            size_power = math.log2(size)
+            if not (size_power.is_integer() and 4 <= size_power <= 12):
+                msg = "size must be an integer power of 2 between 16 and 4096 inclusive"
+                raise ValueError(msg)
+
+            query.put("size", size)
+
+        if file_format == AWEBP:
+            query.put("animated", True)
+        elif file_format == PNG and APNG in self.valid_formats:
+            # We want to ensure that if a PNG is requested, then it will never be an APNG
+            query.put("passthrough", False)
 
         # Make URL-safe first.
         kwargs = {k: urllib.parse.quote(str(v)) for k, v in kwargs.items()}
-        url = base_url + self.path_template.format(**kwargs) + f".{file_format}"
+        ext = CDN_FORMAT_TRANSFORM.get(file_format, file_format).lower()
+        url = base_url + self.path_template.format(**kwargs) + f".{ext}"
 
-        if size is not None:
-            if not self.is_sizable:
-                raise TypeError("This asset cannot be resized.")
-
-            if size < 0:
-                raise ValueError("size must be positive")
-
-            size_power = math.log2(size)
-            if size_power.is_integer() and 2 <= size_power <= 16:
-                url += "?"
-                url += urllib.parse.urlencode({"size": str(size)})
-            else:
-                raise ValueError("size must be an integer power of 2 between 16 and 4096 inclusive")
+        if query:
+            url += "?" + urllib.parse.urlencode(query)
 
         return url
 
     def compile_to_file(
-        self, base_url: str, *, file_format: str, size: typing.Optional[int] = None, **kwargs: typing.Any
+        self,
+        base_url: str,
+        *,
+        file_format: str,
+        lossless: bool = True,
+        size: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        **kwargs: object,
     ) -> files.URL:
         """Perform the same as `compile`, but return the URL as a [`hikari.files.URL`][]."""
-        return files.URL(self.compile(base_url, file_format=file_format, size=size, **kwargs))
+        return files.URL(self.compile(base_url, file_format=file_format, size=size, lossless=lossless, **kwargs))
 
 
 GET: typing.Final[str] = "GET"
@@ -290,6 +319,10 @@ POST: typing.Final[str] = "POST"
 PATCH: typing.Final[str] = "PATCH"
 DELETE: typing.Final[str] = "DELETE"
 PUT: typing.Final[str] = "PUT"
+
+# PUT/DELETE /reactions/ are a special case because you pass arguments as part of the route,
+# so we need to join them
+_JOINED_REACTIONS_HASH = hash("PUT/DELETE REACTIONS")
 
 # Channels
 GET_CHANNEL: typing.Final[Route] = Route(GET, "/channels/{channel}")
@@ -330,9 +363,9 @@ POST_DELETE_CHANNEL_MESSAGES_BULK: typing.Final[Route] = Route(POST, "/channels/
 PUT_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(PUT, "/channels/{channel}/permissions/{overwrite}")
 DELETE_CHANNEL_PERMISSIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/permissions/{overwrite}")
 
-GET_CHANNEL_PINS: typing.Final[Route] = Route(GET, "/channels/{channel}/pins")
-PUT_CHANNEL_PINS: typing.Final[Route] = Route(PUT, "/channels/{channel}/pins/{message}")
-DELETE_CHANNEL_PIN: typing.Final[Route] = Route(DELETE, "/channels/{channel}/pins/{message}")
+GET_CHANNEL_PINS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/pins")
+PUT_CHANNEL_PINS: typing.Final[Route] = Route(PUT, "/channels/{channel}/messages/pins/{message}")
+DELETE_CHANNEL_PIN: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/pins/{message}")
 
 POST_CHANNEL_TYPING: typing.Final[Route] = Route(POST, "/channels/{channel}/typing")
 
@@ -345,12 +378,20 @@ GET_STAGE_INSTANCE: typing.Final[Route] = Route(GET, "/stage-instances/{channel}
 PATCH_STAGE_INSTANCE: typing.Final[Route] = Route(PATCH, "/stage-instances/{channel}")
 DELETE_STAGE_INSTANCE: typing.Final[Route] = Route(DELETE, "/stage-instances/{channel}")
 
+# Polls
+GET_POLL_ANSWER: typing.Final[Route] = Route(GET, "/channels/{channel}/polls/{message}/answer/{answer}")
+POST_EXPIRE_POLL: typing.Final[Route] = Route(POST, "/channels/{channel}/polls/{message}/expire")
+
 # Reactions
 GET_REACTIONS: typing.Final[Route] = Route(GET, "/channels/{channel}/messages/{message}/reactions/{emoji}")
-DELETE_ALL_REACTIONS: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions")
-DELETE_REACTION_EMOJI: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}")
+DELETE_ALL_REACTIONS: typing.Final[Route] = Route(
+    DELETE, "/channels/{channel}/messages/{message}/reactions", ratelimit_hash=_JOINED_REACTIONS_HASH
+)
+DELETE_REACTION_EMOJI: typing.Final[Route] = Route(
+    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}", ratelimit_hash=_JOINED_REACTIONS_HASH
+)
 DELETE_REACTION_USER: typing.Final[Route] = Route(
-    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/{user}"
+    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/{user}", ratelimit_hash=_JOINED_REACTIONS_HASH
 )
 
 # Guilds
@@ -360,6 +401,8 @@ PATCH_GUILD: typing.Final[Route] = Route(PATCH, "/guilds/{guild}")
 DELETE_GUILD: typing.Final[Route] = Route(DELETE, "/guilds/{guild}")
 
 GET_GUILD_AUDIT_LOGS: typing.Final[Route] = Route(GET, "/guilds/{guild}/audit-logs")
+
+PUT_GUILD_INCIDENT_ACTIONS: typing.Final[Route] = Route(PUT, "/guilds/{guild}/incident-actions")
 
 GET_GUILD_BAN: typing.Final[Route] = Route(GET, "/guilds/{guild}/bans/{user}")
 PUT_GUILD_BAN: typing.Final[Route] = Route(PUT, "/guilds/{guild}/bans/{user}")
@@ -376,6 +419,9 @@ PATCH_GUILD_WIDGET: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/widget")
 
 GET_GUILD_WELCOME_SCREEN: typing.Final[Route] = Route(GET, "/guilds/{guild}/welcome-screen")
 PATCH_GUILD_WELCOME_SCREEN: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/welcome-screen")
+
+GET_GUILD_ONBOARDING: typing.Final[Route] = Route(GET, "/guilds/{guild}/onboarding")
+PUT_GUILD_ONBOARDING: typing.Final[Route] = Route(PUT, "/guilds/{guild}/onboarding")
 
 GET_GUILD_MEMBER_VERIFICATION: typing.Final[Route] = Route(GET, "/guilds/{guild}/member-verification")
 PATCH_GUILD_MEMBER_VERIFICATION: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/member-verification")
@@ -454,6 +500,12 @@ GET_GUILD_VOICE_REGIONS: typing.Final[Route] = Route(GET, "/guilds/{guild}/regio
 
 GET_GUILD_WEBHOOKS: typing.Final[Route] = Route(GET, "/guilds/{guild}/webhooks")
 
+GET_GUILD_AUTO_MODERATION_RULES: typing.Final[Route] = Route(GET, "/guilds/{guild}/auto-moderation/rules")
+GET_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(GET, "/guilds/{guild}/auto-moderation/rules/{rule}")
+POST_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(POST, "/guilds/{guild}/auto-moderation/rules")
+PATCH_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/auto-moderation/rules/{rule}")
+DELETE_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/auto-moderation/rules/{rule}")
+
 # Stickers
 GET_STICKER_PACKS: typing.Final[Route] = Route(GET, "/sticker-packs")
 GET_STICKER: typing.Final[Route] = Route(GET, "/stickers/{sticker}")
@@ -491,8 +543,12 @@ GET_MY_GUILDS: typing.Final[Route] = Route(GET, "/users/@me/guilds")
 GET_MY_USER: typing.Final[Route] = Route(GET, "/users/@me")
 PATCH_MY_USER: typing.Final[Route] = Route(PATCH, "/users/@me")
 
-PUT_MY_REACTION: typing.Final[Route] = Route(PUT, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me")
-DELETE_MY_REACTION: typing.Final[Route] = Route(DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me")
+PUT_MY_REACTION: typing.Final[Route] = Route(
+    PUT, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me", ratelimit_hash=_JOINED_REACTIONS_HASH
+)
+DELETE_MY_REACTION: typing.Final[Route] = Route(
+    DELETE, "/channels/{channel}/messages/{message}/reactions/{emoji}/@me", ratelimit_hash=_JOINED_REACTIONS_HASH
+)
 
 # Voice
 GET_VOICE_REGIONS: typing.Final[Route] = Route(GET, "/voice/regions")
@@ -552,7 +608,7 @@ PUT_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/role-connections/metadata"
 )
 
-# Entitlements (monetization)
+# Entitlements (also known as Monetization)
 GET_APPLICATION_SKUS: typing.Final[Route] = Route(GET, "/applications/{application}/skus")
 GET_APPLICATION_ENTITLEMENTS: typing.Final[Route] = Route(GET, "/applications/{application}/entitlements")
 POST_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(POST, "/applications/{application}/entitlements")
@@ -580,27 +636,40 @@ POST_TOKEN_REVOKE: typing.Final[Route] = Route(POST, "/oauth2/token/revoke", has
 GET_GATEWAY: typing.Final[Route] = Route(GET, "/gateway")
 GET_GATEWAY_BOT: typing.Final[Route] = Route(GET, "/gateway/bot")
 
-PNG: typing.Final[str] = "png"
-JPEG_JPG: typing.Final[tuple[str, str]] = ("jpeg", "jpg")
-WEBP: typing.Final[str] = "webp"
-GIF: typing.Final[str] = "gif"
-LOTTIE: typing.Final[str] = "json"  # https://airbnb.io/lottie/
+PNG: typing.Final[str] = "PNG"
+JPEG_JPG: typing.Final[tuple[str, str]] = ("JPEG", "JPG")
+WEBP: typing.Final[str] = "WEBP"
+APNG: typing.Final[str] = "APNG"
+AWEBP: typing.Final[str] = "AWEBP"
+GIF: typing.Final[str] = "GIF"
+LOTTIE: typing.Final[str] = "LOTTIE"  # https://airbnb.io/lottie/
+
+CDN_FORMAT_TRANSFORM: typing.Final[dict[str, str]] = {APNG: "png", AWEBP: "webp", LOTTIE: "json"}
 
 # CDN specific endpoints. These reside on a different server.
-CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute("/emojis/{emoji_id}", {PNG, GIF})
+CDN_CUSTOM_EMOJI: typing.Final[CDNRoute] = CDNRoute("/emojis/{emoji_id}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
 
-CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute("/icons/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
+CDN_GUILD_ICON: typing.Final[CDNRoute] = CDNRoute("/icons/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
 CDN_GUILD_SPLASH: typing.Final[CDNRoute] = CDNRoute("/splashes/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 CDN_GUILD_DISCOVERY_SPLASH: typing.Final[CDNRoute] = CDNRoute(
     "/discovery-splashes/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
 )
-CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
+CDN_GUILD_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
 
-CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{style}", {PNG}, is_sizable=False)
-CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
-CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, GIF})
+CDN_AVATAR_DECORATION: typing.Final[CDNRoute] = CDNRoute(
+    "/avatar-decoration-presets/{hash}", {PNG, *JPEG_JPG, WEBP, APNG}
+)
+CDN_PRIMARY_GUILD_BADGE: typing.Final[CDNRoute] = CDNRoute(
+    "/guild-tag-badges/{guild_id}/{hash}", {PNG, *JPEG_JPG, WEBP}
+)
+CDN_DEFAULT_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/embed/avatars/{style}", {PNG})
+CDN_USER_AVATAR: typing.Final[CDNRoute] = CDNRoute("/avatars/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
+CDN_USER_BANNER: typing.Final[CDNRoute] = CDNRoute("/banners/{user_id}/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF})
 CDN_MEMBER_AVATAR: typing.Final[CDNRoute] = CDNRoute(
-    "/guilds/{guild_id}/users/{user_id}/avatars/{hash}", {PNG, *JPEG_JPG, WEBP, GIF}
+    "/guilds/{guild_id}/users/{user_id}/avatars/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF}
+)
+CDN_MEMBER_BANNER: typing.Final[CDNRoute] = CDNRoute(
+    "/guilds/{guild_id}/users/{user_id}/banners/{hash}", {PNG, *JPEG_JPG, WEBP, AWEBP, GIF}
 )
 CDN_ROLE_ICON: typing.Final[CDNRoute] = CDNRoute("/role-icons/{role_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 
@@ -616,7 +685,9 @@ CDN_TEAM_ICON: typing.Final[CDNRoute] = CDNRoute("/team-icons/{team_id}/{hash}",
 # undocumented on the Discord docs.
 CDN_CHANNEL_ICON: typing.Final[CDNRoute] = CDNRoute("/channel-icons/{channel_id}/{hash}", {PNG, *JPEG_JPG, WEBP})
 
-CDN_STICKER: typing.Final[CDNRoute] = CDNRoute("/stickers/{sticker_id}", {PNG, LOTTIE, GIF}, is_sizable=False)
+CDN_STICKER: typing.Final[CDNRoute] = CDNRoute(
+    "/stickers/{sticker_id}", {PNG, *JPEG_JPG, LOTTIE, WEBP, AWEBP, APNG, GIF}
+)
 CDN_STICKER_PACK_BANNER: typing.Final[CDNRoute] = CDNRoute(
     "/app-assets/710982414301790216/store/{hash}", {PNG, *JPEG_JPG, WEBP}
 )

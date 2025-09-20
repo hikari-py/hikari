@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,13 +24,13 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "EventPrivacyLevel",
-    "ScheduledEventType",
-    "ScheduledEventStatus",
     "ScheduledEvent",
+    "ScheduledEventStatus",
+    "ScheduledEventType",
+    "ScheduledEventUser",
     "ScheduledExternalEvent",
     "ScheduledStageEvent",
     "ScheduledVoiceEvent",
-    "ScheduledEventUser",
 )
 
 import typing
@@ -39,8 +38,10 @@ import typing
 import attrs
 
 from hikari import snowflakes
+from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -114,13 +115,13 @@ class ScheduledEvent(snowflakes.Unique):
     name: str = attrs.field(hash=False, repr=True)
     """Name of the scheduled event."""
 
-    description: typing.Optional[str] = attrs.field(hash=False, repr=False)
+    description: str | None = attrs.field(hash=False, repr=False)
     """Description of the scheduled event."""
 
     start_time: datetime.datetime = attrs.field(hash=False, repr=False)
     """When the event is scheduled to start."""
 
-    end_time: typing.Optional[datetime.datetime] = attrs.field(hash=False, repr=False)
+    end_time: datetime.datetime | None = attrs.field(hash=False, repr=False)
     """When the event is scheduled to end, if set."""
 
     privacy_level: EventPrivacyLevel = attrs.field(hash=False, repr=False)
@@ -135,38 +136,63 @@ class ScheduledEvent(snowflakes.Unique):
     entity_type: ScheduledEventType = attrs.field(hash=False, repr=True)
     """The type of entity this scheduled event is associated with."""
 
-    creator: typing.Optional[users.User] = attrs.field(hash=False, repr=False)
+    creator: users.User | None = attrs.field(hash=False, repr=False)
     """The user who created the scheduled event.
 
     This will only be set for event created after 2021-10-25.
     """
 
-    user_count: typing.Optional[int] = attrs.field(hash=False, repr=False)
+    user_count: int | None = attrs.field(hash=False, repr=False)
     """The number of users that have subscribed to the event.
 
     This will be [`None`][] on gateway events when creating and
     editing a scheduled event.
     """
 
-    image_hash: typing.Optional[str] = attrs.field(hash=False, repr=False)
+    image_hash: str | None = attrs.field(hash=False, repr=False)
     """Hash of the image used for the scheduled event, if set."""
 
     @property
-    def image_url(self) -> typing.Optional[files.URL]:
+    @deprecation.deprecated("Use 'make_image_url' instead.")
+    def image_url(self) -> files.URL | None:
         """Cover image for this scheduled event, if set."""
+        deprecation.warn_deprecated(
+            "image_url", removal_version="2.5.0", additional_info="Use 'make_image_url' instead."
+        )
         return self.make_image_url()
 
-    def make_image_url(self, *, ext: str = "png", size: int = 4096) -> typing.Optional[files.URL]:
-        """Generate the cover image for this scheduled event, if set.
+    def make_image_url(
+        self,
+        *,
+        file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the cover image URL for this scheduled event, if set.
+
+        If no cover image is set, this returns [`None`][].
 
         Parameters
         ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            Can be any power of two between `16` and `4096`;
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
         ext
             The extension to use for this URL.
-            supports `png`, `jpeg`, `jpg` and `webp`.
-        size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -175,14 +201,27 @@ class ScheduledEvent(snowflakes.Unique):
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`.
         ValueError
-            If `size` is not a power of two between 16 and 4096 (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.image_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
         return routes.SCHEDULED_EVENT_COVER.compile_to_file(
-            urls.CDN_URL, scheduled_event_id=self.id, hash=self.image_hash, size=size, file_format=ext
+            urls.CDN_URL,
+            scheduled_event_id=self.id,
+            hash=self.image_hash,
+            size=size,
+            file_format=file_format,
+            lossless=lossless,
         )
 
 
@@ -232,5 +271,5 @@ class ScheduledEventUser:
     user: users.User = attrs.field(hash=True, repr=True)
     """Object representing the user."""
 
-    member: typing.Optional[guilds.Member] = attrs.field(hash=False, repr=False)
+    member: guilds.Member | None = attrs.field(hash=False, repr=False)
     """Their guild member object if they're in the event's guild."""

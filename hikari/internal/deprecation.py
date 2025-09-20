@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,13 +22,27 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("deprecated", "warn_deprecated", "check_if_past_removal")
+__all__: typing.Sequence[str] = ("check_if_past_removal", "deprecated", "warn_deprecated")
 
 import typing
 import warnings
 
 from hikari import _about as hikari_about
 from hikari.internal import ux
+
+if typing.TYPE_CHECKING:
+    Func = typing.TypeVar("Func")
+
+if typing.TYPE_CHECKING:
+    from typing_extensions import deprecated
+else:
+
+    def deprecated(*args: object, **kwargs: object) -> typing.Callable[[Func], Func]:  # noqa: ARG001
+        """Mark a function, overload, or class as deprecated for type-checkers.
+
+        This has no runtime side-effects, unlike [`warnings.deprecated`][]..
+        """
+        return lambda func: func
 
 
 def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
@@ -48,7 +61,8 @@ def check_if_past_removal(what: str, /, *, removal_version: str) -> None:
         If the deprecated item is past its removal version.
     """
     if ux.HikariVersion(hikari_about.__version__) >= ux.HikariVersion(removal_version):
-        raise DeprecationWarning(f"{what} is passed its removal version ({removal_version})")
+        msg = f"{what} is passed its removal version ({removal_version})"
+        raise DeprecationWarning(msg)
 
 
 def warn_deprecated(
@@ -86,16 +100,3 @@ def warn_deprecated(
         category=DeprecationWarning,
         stacklevel=stack_level,
     )
-
-
-if typing.TYPE_CHECKING:
-    from typing_extensions import deprecated
-
-else:
-
-    def deprecated(*args, **kwargs):
-        """Mark a function, overload, or class as deprecated for type-checkers.
-
-        This has no runtime side-effects.
-        """
-        return lambda value: value

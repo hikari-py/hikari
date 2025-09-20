@@ -134,7 +134,7 @@ class TestEventStream:
     async def test___anext___when_stream_closed(self):
         streamer = event_manager_base.EventStream(mock.Mock(), event_type=base_events.Event, timeout=float("inf"))
 
-        # flake8 gets annoyed if we use "with" here so here's a hacky alternative
+        # ruff gets annoyed if we use "with" here so here's a hacky alternative
         with pytest.raises(TypeError):
             await streamer.__anext__()
 
@@ -481,13 +481,11 @@ class TestEventManagerBase:
         event_manager._enabled_for_event = mock.Mock(return_value=True)
         mock_payload = {"id": "3123123123"}
         mock_shard = mock.Mock(id=123)
-        event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
 
         with pytest.raises(LookupError):
             event_manager.consume_raw_event("UNEXISTING_EVENT", mock_shard, mock_payload)
 
-        event_manager._handle_dispatch.assert_not_called()
         event_manager.dispatch.assert_called_once_with(
             event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
@@ -499,20 +497,35 @@ class TestEventManagerBase:
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager):
         event_manager._enabled_for_event = mock.Mock(return_value=True)
-        event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
-        on_existing_event = object()
+        on_existing_event = mock.Mock(is_enabled=True, callback=mock.Mock(__name__="testing"))
         event_manager._consumers = {"existing_event": on_existing_event}
         shard = object()
         payload = {"berp": "baz"}
 
-        with mock.patch("asyncio.create_task") as create_task:
-            event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
+        event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
 
-        event_manager._handle_dispatch.assert_called_once_with(on_existing_event, shard, {"berp": "baz"})
-        create_task.assert_called_once_with(
-            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}), name="dispatch EXISTING_EVENT"
+        on_existing_event.callback.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_called_once_with(
+            event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
+        event_manager._event_factory.deserialize_shard_payload_event.assert_called_once_with(
+            shard, payload, name="EXISTING_EVENT"
+        )
+        event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
+
+    @pytest.mark.asyncio
+    async def test_consume_raw_event_skips_consumer_callback_when_not_enabled(self, event_manager):
+        event_manager._enabled_for_event = mock.Mock(return_value=True)
+        event_manager.dispatch = mock.Mock()
+        on_existing_event = mock.Mock(is_enabled=False, callback=mock.Mock(__name__="testing"))
+        event_manager._consumers = {"existing_event": on_existing_event}
+        shard = object()
+        payload = {"berp": "baz"}
+
+        event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
+
+        on_existing_event.callback.assert_not_called()
         event_manager.dispatch.assert_called_once_with(
             event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
@@ -524,62 +537,28 @@ class TestEventManagerBase:
     @pytest.mark.asyncio
     async def test_consume_raw_event_skips_raw_dispatch_when_not_enabled(self, event_manager):
         event_manager._enabled_for_event = mock.Mock(return_value=False)
-        event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
-        on_existing_event = object()
+        on_existing_event = mock.Mock(is_enabled=False, callback=mock.Mock(__name__="testing"))
         event_manager._consumers = {"existing_event": on_existing_event}
         shard = object()
         payload = {"berp": "baz"}
 
-        with mock.patch("asyncio.create_task") as create_task:
-            event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
+        event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
 
-        event_manager._handle_dispatch.assert_called_once_with(on_existing_event, shard, {"berp": "baz"})
-        create_task.assert_called_once_with(
-            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}), name="dispatch EXISTING_EVENT"
-        )
         event_manager.dispatch.assert_not_called()
-        event_manager._event_factory.deserialize_shard_payload_event.vassert_not_called()
+        event_manager._event_factory.deserialize_shard_payload_event.assert_not_called()
         event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
     @pytest.mark.asyncio
-    async def test_handle_dispatch_invokes_callback(self, event_manager):
-        event_manager._enabled_for_consumer = mock.Mock(return_value=True)
-        consumer = mock.AsyncMock()
-        error_handler = mock.MagicMock()
-        event_loop = asyncio.get_running_loop()
-        event_loop.set_exception_handler(error_handler)
-        shard = object()
-        pl = {"foo": "bar"}
-
-        await event_manager._handle_dispatch(consumer, shard, pl)
-
-        consumer.callback.assert_awaited_once_with(shard, pl)
-        error_handler.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_handle_dispatch_ignores_cancelled_errors(self, event_manager):
-        event_manager._enabled_for_consumer = mock.Mock(return_value=True)
-        consumer = mock.AsyncMock(side_effect=asyncio.CancelledError)
-        error_handler = mock.MagicMock()
-        event_loop = asyncio.get_running_loop()
-        event_loop.set_exception_handler(error_handler)
-        shard = object()
-        pl = {"lorem": "ipsum"}
-
-        await event_manager._handle_dispatch(consumer, shard, pl)
-
-        error_handler.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_handle_dispatch_handles_exceptions(self, event_manager):
+    async def test_consume_raw_event_handles_exceptions(self, event_manager):
         mock_task = mock.Mock()
         # On Python 3.12+ Asyncio uses this to get the task's context if set to call the
         # error handler in. We want to avoid for this test for simplicity.
         mock_task.get_context.return_value = None
-        event_manager._enabled_for_consumer = mock.Mock(return_value=True)
         exc = Exception("aaaa!")
-        consumer = mock.Mock(callback=mock.AsyncMock(side_effect=exc))
+        consumer = mock.Mock(callback=mock.Mock(__name__="testing", side_effect=exc))
+        event_manager._consumers = {"existing_event": consumer}
+
         error_handler = mock.MagicMock()
         event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
@@ -587,7 +566,7 @@ class TestEventManagerBase:
         pl = {"i like": "cats"}
 
         with mock.patch.object(asyncio, "current_task", return_value=mock_task):
-            await event_manager._handle_dispatch(consumer, shard, pl)
+            event_manager.consume_raw_event("EXISTING_EVENT", shard, pl)
 
         error_handler.assert_called_once_with(
             event_loop,
@@ -598,20 +577,6 @@ class TestEventManagerBase:
                 "task": mock_task,
             },
         )
-
-    @pytest.mark.asyncio
-    async def test_handle_dispatch_invokes_when_consumer_not_enabled(self, event_manager):
-        consumer = mock.Mock(callback=mock.AsyncMock(__name__="ok"), is_enabled=False)
-        error_handler = mock.MagicMock()
-        event_loop = asyncio.get_running_loop()
-        event_loop.set_exception_handler(error_handler)
-        shard = object()
-        pl = {"foo": "bar"}
-
-        await event_manager._handle_dispatch(consumer, shard, pl)
-
-        consumer.callback.assert_not_called()
-        error_handler.assert_not_called()
 
     def test_subscribe_when_class_call(self, event_manager):
         class Foo:

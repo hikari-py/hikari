@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -23,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("StageInstancePrivacyLevel", "StageInstance")
+__all__: typing.Sequence[str] = ("StageInstance", "StageInstancePrivacyLevel")
 
 import typing
 
@@ -74,7 +73,7 @@ class StageInstance(snowflakes.Unique):
     discoverable_disabled: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether or not stage discovery is disabled."""
 
-    scheduled_event_id: typing.Optional[snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]] = attrs.field(
+    scheduled_event_id: snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent] | None = attrs.field(
         eq=False, hash=False, repr=False
     )
     """The ID of the scheduled event for this stage instance, if it exists."""

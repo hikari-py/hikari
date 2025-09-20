@@ -45,6 +45,7 @@ from hikari.applications import TeamMember as TeamMember
 from hikari.applications import TeamMembershipState as TeamMembershipState
 from hikari.applications import TokenType as TokenType
 from hikari.audit_logs import *
+from hikari.auto_mod import *
 from hikari.channels import *
 from hikari.colors import *
 from hikari.colours import *
@@ -62,6 +63,7 @@ from hikari.events.lifetime_events import *
 from hikari.events.member_events import *
 from hikari.events.message_events import *
 from hikari.events.monetization_events import *
+from hikari.events.poll_events import *
 from hikari.events.reaction_events import *
 from hikari.events.role_events import *
 from hikari.events.scheduled_events import *
@@ -92,6 +94,7 @@ from hikari.locales import *
 from hikari.messages import *
 from hikari.monetization import *
 from hikari.permissions import *
+from hikari.polls import *
 from hikari.presences import *
 from hikari.scheduled_events import *
 from hikari.sessions import *

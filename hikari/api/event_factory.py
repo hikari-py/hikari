@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -41,6 +40,7 @@ if typing.TYPE_CHECKING:
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
     from hikari.events import application_events
+    from hikari.events import auto_mod_events
     from hikari.events import channel_events
     from hikari.events import guild_events
     from hikari.events import interaction_events
@@ -48,6 +48,7 @@ if typing.TYPE_CHECKING:
     from hikari.events import member_events
     from hikari.events import message_events
     from hikari.events import monetization_events
+    from hikari.events import poll_events
     from hikari.events import reaction_events
     from hikari.events import role_events
     from hikari.events import scheduled_events
@@ -116,7 +117,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_channel: typing.Optional[channel_models.PermissibleGuildChannel] = None,
+        old_channel: channel_models.PermissibleGuildChannel | None = None,
     ) -> channel_events.GuildChannelUpdateEvent:
         """Parse a raw payload from Discord into a channel update event object.
 
@@ -213,7 +214,11 @@ class EventFactory(abc.ABC):
 
     @abc.abstractmethod
     def deserialize_guild_thread_update_event(
-        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+        self,
+        shard: gateway_shard.GatewayShard,
+        payload: data_binding.JSONObject,
+        *,
+        old_thread: channel_models.GuildThreadChannel | None = None,
     ) -> channel_events.GuildThreadUpdateEvent:
         """Parse a raw payload from Discord into a guild thread update event object.
 
@@ -223,6 +228,8 @@ class EventFactory(abc.ABC):
             The shard that emitted this event.
         payload
             The dict payload to parse.
+        old_thread
+            The guild thread channel object or [`None`][].
 
         Returns
         -------
@@ -331,7 +338,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_invite: typing.Optional[invite_models.InviteWithMetadata] = None,
+        old_invite: invite_models.InviteWithMetadata | None = None,
     ) -> channel_events.InviteDeleteEvent:
         """Parse a raw payload from Discord into an invite delete event object.
 
@@ -421,7 +428,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_guild: typing.Optional[guild_models.GatewayGuild] = None,
+        old_guild: guild_models.GatewayGuild | None = None,
     ) -> guild_events.GuildUpdateEvent:
         """Parse a raw payload from Discord into a guild update event object.
 
@@ -446,7 +453,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_guild: typing.Optional[guild_models.GatewayGuild] = None,
+        old_guild: guild_models.GatewayGuild | None = None,
     ) -> guild_events.GuildLeaveEvent:
         """Parse a raw payload from Discord into a guild leave event object.
 
@@ -528,7 +535,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_emojis: typing.Optional[typing.Sequence[emojis_models.KnownCustomEmoji]] = None,
+        old_emojis: typing.Sequence[emojis_models.KnownCustomEmoji] | None = None,
     ) -> guild_events.EmojisUpdateEvent:
         """Parse a raw payload from Discord into a guild emojis update event object.
 
@@ -553,7 +560,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_stickers: typing.Optional[typing.Sequence[sticker_models.GuildSticker]] = None,
+        old_stickers: typing.Sequence[sticker_models.GuildSticker] | None = None,
     ) -> guild_events.StickersUpdateEvent:
         """Parse a raw payload from Discord into a guild stickers update event object.
 
@@ -635,7 +642,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_presence: typing.Optional[presences_models.MemberPresence] = None,
+        old_presence: presences_models.MemberPresence | None = None,
     ) -> guild_events.PresenceUpdateEvent:
         """Parse a raw payload from Discord into a presence update event object.
 
@@ -725,7 +732,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_member: typing.Optional[guild_models.Member] = None,
+        old_member: guild_models.Member | None = None,
     ) -> member_events.MemberUpdateEvent:
         """Parse a raw payload from Discord into a guild member update event object.
 
@@ -750,7 +757,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_member: typing.Optional[guild_models.Member] = None,
+        old_member: guild_models.Member | None = None,
     ) -> member_events.MemberDeleteEvent:
         """Parse a raw payload from Discord into a guild member remove event object.
 
@@ -798,7 +805,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_role: typing.Optional[guild_models.Role] = None,
+        old_role: guild_models.Role | None = None,
     ) -> role_events.RoleUpdateEvent:
         """Parse a raw payload from Discord into a guild role update event object.
 
@@ -823,7 +830,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_role: typing.Optional[guild_models.Role] = None,
+        old_role: guild_models.Role | None = None,
     ) -> role_events.RoleDeleteEvent:
         """Parse a raw payload from Discord into a guild role delete event object.
 
@@ -1014,7 +1021,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_message: typing.Optional[messages_models.PartialMessage] = None,
+        old_message: messages_models.PartialMessage | None = None,
     ) -> message_events.MessageUpdateEvent:
         """Parse a raw payload from Discord into a message update event object.
 
@@ -1039,7 +1046,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_message: typing.Optional[messages_models.Message] = None,
+        old_message: messages_models.Message | None = None,
     ) -> message_events.MessageDeleteEvent:
         """Parse a raw payload from Discord into a message delete event object.
 
@@ -1064,7 +1071,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_messages: typing.Optional[typing.Mapping[snowflakes.Snowflake, messages_models.Message]] = None,
+        old_messages: typing.Mapping[snowflakes.Snowflake, messages_models.Message] | None = None,
     ) -> message_events.GuildBulkMessageDeleteEvent:
         """Parse a raw payload from Discord into a guild message delete bulk event object.
 
@@ -1281,7 +1288,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_user: typing.Optional[user_models.OwnUser] = None,
+        old_user: user_models.OwnUser | None = None,
     ) -> user_events.OwnUserUpdateEvent:
         """Parse a raw payload from Discord into a own user update event object.
 
@@ -1310,7 +1317,7 @@ class EventFactory(abc.ABC):
         shard: gateway_shard.GatewayShard,
         payload: data_binding.JSONObject,
         *,
-        old_state: typing.Optional[voices_models.VoiceState] = None,
+        old_state: voices_models.VoiceState | None = None,
     ) -> voice_events.VoiceStateUpdateEvent:
         """Parse a raw payload from Discord into a voice state update event object.
 
@@ -1346,6 +1353,82 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.voice_events.VoiceServerUpdateEvent
             The parsed voice server update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_rule_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModRuleCreateEvent:
+        """Parse a raw payload from Discord into an auto-mod rule create event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.AutoModRuleCreateEvent
+            The parsed auto-mod rule create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_rule_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModRuleUpdateEvent:
+        """Parse a raw payload from Discord into an auto-mod rule update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.AutoModRuleUpdateEvent
+            The parsed auto-mod rule update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_rule_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModRuleDeleteEvent:
+        """Parse a raw payload from Discord into an auto-mod rule delete event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.AutoModRuleDeleteEvent
+            The parsed auto-mod rule delete event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_auto_mod_action_execution_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> auto_mod_events.AutoModActionExecutionEvent:
+        """Parse a raw payload from Discord into an auto-mod action execution event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.AutoModActionExecutionEvent
+            The parsed auto-mod action execution event object.
         """
 
     ##################
@@ -1468,4 +1551,46 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.stage_events.StageInstanceDeleteEvent
             The parsed stage instance delete event object.
+        """
+
+    ################
+    #  POLL EVENTS #
+    ################
+
+    @abc.abstractmethod
+    def deserialize_poll_vote_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteCreateEvent:
+        """Parse a raw payload from Discord into a poll vote create event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.poll_events.PollVoteCreateEvent
+            The parsed poll vote create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_poll_vote_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> poll_events.PollVoteDeleteEvent:
+        """Parse a raw payload from Discord into a poll vote delete event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.poll_events.PollVoteDeleteEvent
+            The parsed poll vote delete event object.
         """

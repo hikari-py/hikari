@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -27,9 +26,9 @@ __all__: typing.Sequence[str] = (
     "ApplicationWebhook",
     "ChannelFollowerWebhook",
     "ExecutableWebhook",
+    "IncomingWebhook",
     "PartialWebhook",
     "WebhookType",
-    "IncomingWebhook",
 )
 
 import abc
@@ -42,8 +41,10 @@ from hikari import snowflakes
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
+from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
+from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import embeds as embeds_
@@ -88,7 +89,7 @@ class ExecutableWebhook(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def token(self) -> typing.Optional[str]:
+    def token(self) -> str | None:
         """Webhook's token.
 
         !!! note
@@ -101,7 +102,7 @@ class ExecutableWebhook(abc.ABC):
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        avatar_url: typing.Union[undefined.UndefinedType, str, files.URL] = undefined.UNDEFINED,
+        avatar_url: undefined.UndefinedType | str | files.URL = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         attachment: undefined.UndefinedOr[files_.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedOr[typing.Sequence[files_.Resourceish]] = undefined.UNDEFINED,
@@ -109,14 +110,15 @@ class ExecutableWebhook(abc.ABC):
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
         embed: undefined.UndefinedOr[embeds_.Embed] = undefined.UNDEFINED,
         embeds: undefined.UndefinedOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
+        poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds_.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds_.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: typing.Union[undefined.UndefinedType, int, messages_.MessageFlag] = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 
@@ -168,6 +170,8 @@ class ExecutableWebhook(abc.ABC):
             If provided, the message embed.
         embeds
             If provided, the message embeds.
+        poll
+            If provided, the poll to set on the message.
         mentions_everyone
             If provided, whether the message should parse @everyone/@here
             mentions.
@@ -213,7 +217,8 @@ class ExecutableWebhook(abc.ABC):
             or `embed` and `embeds` are specified.
         """
         if not self.token:
-            raise ValueError("Cannot send a message using a webhook where we don't know the token")
+            msg = "Cannot send a message using a webhook where we don't know the token"
+            raise ValueError(msg)
 
         return await self.app.rest.execute_webhook(
             webhook=self.webhook_id,
@@ -228,6 +233,7 @@ class ExecutableWebhook(abc.ABC):
             components=components,
             embed=embed,
             embeds=embeds,
+            poll=poll,
             mentions_everyone=mentions_everyone,
             user_mentions=user_mentions,
             role_mentions=role_mentions,
@@ -263,7 +269,8 @@ class ExecutableWebhook(abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
         if self.token is None:
-            raise ValueError("Cannot fetch a message using a webhook where we don't know the token")
+            msg = "Cannot fetch a message using a webhook where we don't know the token"
+            raise ValueError(msg)
 
         return await self.app.rest.fetch_webhook_message(self.webhook_id, token=self.token, message=message)
 
@@ -272,11 +279,9 @@ class ExecutableWebhook(abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.Message],
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        attachment: undefined.UndefinedNoneOr[
-            typing.Union[files.Resourceish, messages_.Attachment]
-        ] = undefined.UNDEFINED,
+        attachment: undefined.UndefinedNoneOr[files.Resourceish | messages_.Attachment] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[
-            typing.Sequence[typing.Union[files.Resourceish, messages_.Attachment]]
+            typing.Sequence[files.Resourceish | messages_.Attachment]
         ] = undefined.UNDEFINED,
         component: undefined.UndefinedNoneOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedNoneOr[
@@ -286,10 +291,10 @@ class ExecutableWebhook(abc.ABC):
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[users_.PartialUser], bool]
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
-            typing.Union[snowflakes.SnowflakeishSequence[guilds_.PartialRole], bool]
+            snowflakes.SnowflakeishSequence[guilds_.PartialRole] | bool
         ] = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Edit a message sent by a webhook.
@@ -414,7 +419,8 @@ class ExecutableWebhook(abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
         if self.token is None:
-            raise ValueError("Cannot edit a message using a webhook where we don't know the token")
+            msg = "Cannot edit a message using a webhook where we don't know the token"
+            raise ValueError(msg)
 
         return await self.app.rest.edit_webhook_message(
             self.webhook_id,
@@ -456,7 +462,8 @@ class ExecutableWebhook(abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
         if self.token is None:
-            raise ValueError("Cannot delete a message using a webhook where we don't know the token")
+            msg = "Cannot delete a message using a webhook where we don't know the token"
+            raise ValueError(msg)
 
         await self.app.rest.delete_webhook_message(self.webhook_id, token=self.token, message=message)
 
@@ -474,18 +481,19 @@ class PartialWebhook(snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    type: typing.Union[WebhookType, int] = attrs.field(eq=False, hash=False, repr=True)
+    type: WebhookType | int = attrs.field(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
-    avatar_hash: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The avatar hash of the webhook."""
 
-    application_id: typing.Optional[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    application_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """The ID of the application that created this webhook."""
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
 
@@ -508,12 +516,16 @@ class PartialWebhook(snowflakes.Unique):
         return f"<@{self.id}>"
 
     @property
-    def avatar_url(self) -> typing.Optional[files_.URL]:
+    @deprecation.deprecated("Use 'make_avatar_url' instead")
+    def avatar_url(self) -> files_.URL | None:
         """URL for this webhook's avatar, if set.
 
         May be [`None`][] if no avatar is set. In this case, you should use
         `default_avatar_url` instead.
         """
+        deprecation.warn_deprecated(
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
+        )
         return self.make_avatar_url()
 
     @property
@@ -521,38 +533,72 @@ class PartialWebhook(snowflakes.Unique):
         """Default avatar URL for the user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(urls.CDN_URL, style=0, file_format="png")
 
-    def make_avatar_url(self, ext: str = "png", size: int = 4096) -> typing.Optional[files_.URL]:
-        """Generate the avatar URL for this webhook's custom avatar if set.
+    def make_avatar_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[
+            typing.Literal["PNG", "JPEG", "JPG", "WEBP", "AWEBP", "GIF"]
+        ] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
+    ) -> files.URL | None:
+        """Generate the avatar URL for this webhook, if set.
 
-        If no avatar is specified, return [`None`][]. In this case, you should
-        use `default_avatar` instead.
+        If no avatar is set, this returns [`None`][].
 
         Parameters
         ----------
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, `WEBP`, `AWEBP` and `GIF`.
+
+            If not specified, the format will be determined based on
+            whether the avatar is animated or not.
         size
-            The size to set for the URL.
-            Can be any power of two between `16` and `4096`.
-            Will be ignored for default avatars.
+            The size to set for the URL. Can be any power of two between `16` and `4096`.
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP` or `AWEBP`.
+        ext
+            The ext to use for this URL.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated).
+
+            If [`None`][], then the correct default extension is
+            determined based on whether the avatar is animated or not.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
         typing.Optional[hikari.files.URL]
-            The URL of the resource. [`None`][] if no avatar is set (in
-            this case, use the `default_avatar` instead).
+            The URL, or [`None`][] if no avatar is set.
 
         Raises
         ------
+        TypeError
+            If an invalid format is passed for `file_format`;
+            If an animated format is requested for a static avatar.
         ValueError
-            If `size` is not a power of two between 16 and 4096 (inclusive).
+            If `size` is specified but is not a power of two or not between 16 and 4096.
         """
         if self.avatar_hash is None:
             return None
 
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
+
+        if not file_format:
+            file_format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"
+
         return routes.CDN_USER_AVATAR.compile_to_file(
-            urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=ext
+            urls.CDN_URL, user_id=self.id, hash=self.avatar_hash, size=size, file_format=file_format, lossless=lossless
         )
 
 
@@ -571,7 +617,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
+    author: users_.User | None = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
     !!! note
@@ -579,7 +625,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         rather than bot authorization or when received within audit logs.
     """
 
-    token: typing.Optional[str] = attrs.field(eq=False, hash=False, repr=False)
+    token: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The token for the webhook.
 
     !!! note
@@ -588,6 +634,7 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
     """
 
     @property
+    @typing_extensions.override
     def webhook_id(self) -> snowflakes.Snowflake:
         # <<inherited docstring from ExecutableWebhook>>.
         return self.id
@@ -617,7 +664,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
         if use_token:
             if self.token is None:
-                raise ValueError("This webhook's token is unknown, so cannot be used")
+                msg = "This webhook's token is unknown, so cannot be used"
+                raise ValueError(msg)
             token = self.token
 
         elif use_token is undefined.UNDEFINED and self.token:
@@ -684,7 +732,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
         if use_token:
             if self.token is None:
-                raise ValueError("This webhook's token is unknown, so cannot be used")
+                msg = "This webhook's token is unknown, so cannot be used"
+                raise ValueError(msg)
             token = self.token
 
         elif use_token is undefined.UNDEFINED and self.token:
@@ -759,7 +808,8 @@ class IncomingWebhook(PartialWebhook, ExecutableWebhook):
         token: undefined.UndefinedOr[str] = undefined.UNDEFINED
         if use_token:
             if self.token is None:
-                raise ValueError("This webhook's token is unknown, so cannot be used")
+                msg = "This webhook's token is unknown, so cannot be used"
+                raise ValueError(msg)
             token = self.token
 
         elif use_token is undefined.UNDEFINED and self.token:
@@ -780,21 +830,21 @@ class ChannelFollowerWebhook(PartialWebhook):
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The guild ID of the webhook."""
 
-    author: typing.Optional[users_.User] = attrs.field(eq=False, hash=False, repr=True)
+    author: users_.User | None = attrs.field(eq=False, hash=False, repr=True)
     """The user that created the webhook.
 
     !!! note
         This will be [`None`][] when received within an audit log.
     """
 
-    source_channel: typing.Optional[channels_.PartialChannel] = attrs.field(eq=False, hash=False, repr=True)
+    source_channel: channels_.PartialChannel | None = attrs.field(eq=False, hash=False, repr=True)
     """The partial object of the channel this webhook is following.
 
     This will be [`None`][] when the user that followed the channel is no
     longer in the source guild or has lost access to the source channel.
     """
 
-    source_guild: typing.Optional[guilds_.PartialGuild] = attrs.field(eq=False, hash=False, repr=True)
+    source_guild: guilds_.PartialGuild | None = attrs.field(eq=False, hash=False, repr=True)
     """The partial object of the guild this webhook is following.
 
     This will be [`None`][] when the user that followed the channel is no

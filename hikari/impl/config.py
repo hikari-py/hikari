@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -25,11 +24,11 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "BasicAuthHeader",
-    "ProxySettings",
-    "HTTPTimeoutSettings",
-    "HTTPSettings",
     "CacheComponents",
     "CacheSettings",
+    "HTTPSettings",
+    "HTTPTimeoutSettings",
+    "ProxySettings",
 )
 
 import base64
@@ -41,12 +40,13 @@ import attrs
 from hikari.api import config
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
+from hikari.internal import typing_extensions
 
-_BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # nosec
+_BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # noqa: S105
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
 
 
-def _ssl_factory(value: typing.Union[bool, ssl_.SSLContext]) -> ssl_.SSLContext:
+def _ssl_factory(value: bool | ssl_.SSLContext) -> ssl_.SSLContext:  # noqa: FBT001
     if not isinstance(value, bool):
         return value
 
@@ -87,6 +87,7 @@ class BasicAuthHeader:
         token_part = base64.b64encode(raw_token).decode(self.charset)
         return f"{_BASICAUTH_TOKEN_PREFIX} {token_part}"
 
+    @typing_extensions.override
     def __str__(self) -> str:
         return self.header
 
@@ -110,10 +111,10 @@ class ProxySettings(config.ProxySettings):
     result in no authentication being provided.
     """
 
-    headers: typing.Optional[data_binding.Headers] = attrs.field(default=None)
+    headers: data_binding.Headers | None = attrs.field(default=None)
     """Additional headers to use for requests via a proxy, if required."""
 
-    url: typing.Union[None, str] = attrs.field(default=None)
+    url: None | str = attrs.field(default=None)
     """Proxy URL to use.
 
     Defaults to [`None`][] which disables the use of an explicit proxy.
@@ -136,7 +137,7 @@ class ProxySettings(config.ProxySettings):
     """
 
     @property
-    def all_headers(self) -> typing.Optional[data_binding.Headers]:
+    def all_headers(self) -> data_binding.Headers | None:
         """Return all proxy headers.
 
         Will be [`None`][] if no headers are to be send with any request.
@@ -156,28 +157,28 @@ class ProxySettings(config.ProxySettings):
 class HTTPTimeoutSettings:
     """Settings to control HTTP request timeouts."""
 
-    acquire_and_connect: typing.Optional[float] = attrs.field(default=None)
+    acquire_and_connect: float | None = attrs.field(default=None)
     """Timeout for `request_socket_connect` PLUS connection acquisition.
 
     By default, this has no timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
-    request_socket_connect: typing.Optional[float] = attrs.field(default=None)
+    request_socket_connect: float | None = attrs.field(default=None)
     """Timeout for connecting a socket.
 
     By default, this has no timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
-    request_socket_read: typing.Optional[float] = attrs.field(default=None)
+    request_socket_read: float | None = attrs.field(default=None)
     """Timeout for reading a socket.
 
     By default, this has no timeout allocated. Setting it to [`None`][]
     will disable it.
     """
 
-    total: typing.Optional[float] = attrs.field(default=30.0)
+    total: float | None = attrs.field(default=30.0)
     """Total timeout for entire request.
 
     By default, this has a 30 second timeout allocated. Setting it to [`None`][]
@@ -188,11 +189,12 @@ class HTTPTimeoutSettings:
     @request_socket_connect.validator
     @request_socket_read.validator
     @total.validator
-    def _(self, attrsib: attrs.Attribute[typing.Optional[float]], value: typing.Any) -> None:
+    def _(self, attrsib: attrs.Attribute[float | None], value: object) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, (float, int)) or value <= 0):
-            raise ValueError(f"HTTPTimeoutSettings.{attrsib.name} must be None, or a POSITIVE float/int")
+            msg = f"HTTPTimeoutSettings.{attrsib.name} must be None, or a POSITIVE float/int"
+            raise ValueError(msg)
 
 
 @attrs_extensions.with_copy
@@ -218,7 +220,7 @@ class HTTPSettings(config.HTTPSettings):
     behavior internally.
     """
 
-    max_redirects: typing.Optional[int] = attrs.field(default=10)
+    max_redirects: int | None = attrs.field(default=10)
     """Behavior for handling redirect HTTP responses.
 
     If a [`int`][], allow following redirects from `3xx` HTTP responses
@@ -238,12 +240,21 @@ class HTTPSettings(config.HTTPSettings):
         by any value set here.
     """
 
+    connection_limit: int = attrs.field(default=0)
+    """The maximum number of concurrent connections to allow per connector.
+
+    If `0`, then there will be no limit.
+
+    The default is to not have any limit.
+    """
+
     @max_redirects.validator
-    def _(self, _: attrs.Attribute[typing.Optional[int]], value: typing.Any) -> None:
+    def _(self, _: attrs.Attribute[int | None], value: object) -> None:
         # This error won't occur until some time in the future where it will be annoying to
         # try and determine the root cause, so validate it NOW.
         if value is not None and (not isinstance(value, int) or value <= 0):
-            raise ValueError("http_settings.max_redirects must be None or a POSITIVE integer")
+            msg = "http_settings.max_redirects must be None or a POSITIVE integer"
+            raise ValueError(msg)
 
     ssl: ssl_.SSLContext = attrs.field(
         factory=lambda: _ssl_factory(True),

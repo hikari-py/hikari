@@ -63,7 +63,6 @@ theme:
     - navigation.tabs
     - navigation.indexes
     - navigation.top
-    - toc.follow
 
 markdown_extensions:
   - abbr
@@ -104,42 +103,42 @@ plugins:
   - minify:
       minify_html: true
       htmlmin_opts:
-          remove_comments: true
+        remove_comments: true
       cache_safe: true
-#  - glightbox:
-#      touchNavigation: true
-#      loop: false
-#      effect: zoom
-#      slide_effect: slide
-#      width: 100%
-#      height: auto
-#      zoomable: true
-#      draggable: true
-#      auto_caption: false
-#      caption_position: bottom
-#      skip_classes:
-#         - no-lightbox
+  #  - glightbox:
+  #      touchNavigation: true
+  #      loop: false
+  #      effect: zoom
+  #      slide_effect: slide
+  #      width: 100%
+  #      height: auto
+  #      zoomable: true
+  #      draggable: true
+  #      auto_caption: false
+  #      caption_position: bottom
+  #      skip_classes:
+  #         - no-lightbox
   - towncrier:
-      hide_if_empty: !ENV [HIDE_EMPTY_TOWNCRIER_DRAFT, true]
+      hide_if_empty: !ENV [ HIDE_EMPTY_TOWNCRIER_DRAFT, true ]
   - gen-files:
       scripts:
-      - scripts/docs/gen_ref_pages.py
+        - scripts/docs/gen_ref_pages.py
   - literate-nav:
       nav_file: summary.md
   - mkdocstrings:
-      enabled: !ENV [ENABLE_MKDOCSTRINGS, true]
+      enabled: !ENV [ ENABLE_MKDOCSTRINGS, true ]
       default_handler: python
       enable_inventory: true
       handlers:
         python:
-          import:
+          inventories:
             - https://docs.python.org/3/objects.inv
             - https://docs.aiohttp.org/en/stable/objects.inv
             - https://www.attrs.org/en/stable/objects.inv
             - https://multidict.readthedocs.io/en/stable/objects.inv
             - https://yarl.readthedocs.io/en/stable/objects.inv
           options:
-            filters: ["!^_"]
+            filters: [ "!^_" ]
             heading_level: 3
             annotations_path: brief
             docstring_section_style: spacy
@@ -153,7 +152,7 @@ plugins:
             signature_crossrefs: true
             show_symbol_type_heading: true
             show_symbol_type_toc: true
-#            show_root_toc_entry: false
+            show_if_no_docstring: true
             find_stubs_package: true
             extensions:
-                - griffe_inherited_docstrings
+              - griffe_inherited_docstrings

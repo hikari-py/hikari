@@ -18,15 +18,11 @@ bot = hikari.GatewayBot(token=os.environ["BOT_TOKEN"])
 
 # Set this to the guild to create the slash commands in.
 # To create global commands, set to `hikari.UNDEFINED`.
-#
-# It is important to note that global commands can take up to an hour to show in the client
-# and should only be used when "publishing" commands after they are built. For testing
-# use guild based commands as they are instant.
 COMMAND_GUILD_ID = 0
 
 
 @bot.listen()
-async def register_commands(event: hikari.StartingEvent) -> None:
+async def register_commands(_: hikari.StartingEvent) -> None:
     """Register ping and info commands."""
     application = await bot.rest.fetch_application()
 
@@ -40,12 +36,8 @@ async def register_commands(event: hikari.StartingEvent) -> None:
 
 
 @bot.listen()
-async def handle_interactions(event: hikari.InteractionCreateEvent) -> None:
+async def handle_interactions(event: hikari.CommandInteractionCreateEvent) -> None:
     """Listen for slash commands being executed."""
-    if not isinstance(event.interaction, hikari.CommandInteraction):
-        # only listen to command interactions, no others!
-        return
-
     if event.interaction.command_name == "ping":
         await event.interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE, f"Pong! {bot.heartbeat_latency * 1_000:.0f}ms"

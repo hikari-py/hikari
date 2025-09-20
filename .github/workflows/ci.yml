@@ -18,19 +18,20 @@ jobs:
       # Allows for matrix sub-jobs to fail without cancelling the rest
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.9, "3.10", 3.11, 3.12, 3.13, 3.14]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ 3.9, "3.10", 3.11, 3.12, 3.13.5, 3.14 ]
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@f94ec6bedd8674c4426838e6b50417d36b6ab231 # v5.3.1
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6.7.0
         with:
           python-version: ${{ matrix.python-version }}
+          activate-environment: true
           # TODO(https://github.com/astral-sh/setup-uv/issues/226): Remove this.
           prune-cache: ${{ matrix.os != 'windows-latest' }}
 
@@ -54,7 +55,7 @@ jobs:
           python scripts/ci/normalize_coverage.py
 
       - name: Upload coverage
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: .coverage.${{ matrix.os }}.${{ matrix.python-version }}
           path: .coverage
@@ -63,20 +64,21 @@ jobs:
           include-hidden-files: true
 
   upload-coverage:
-    needs: [test]
+    needs: [ test ]
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@f94ec6bedd8674c4426838e6b50417d36b6ab231 # v5.3.1
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6.7.0
         with:
           python-version: "3.10"
+          activate-environment: true
 
       - name: Download coverage
-        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           path: coverages/
           # Not specifying any name will lead to the download of all available artifacts
@@ -105,24 +107,21 @@ jobs:
           coverage xml
           coverage report
 
-      - name: Upload coverage to codeclimate
-        uses: paambaati/codeclimate-action@f429536ee076d758a24705203199548125a28ca7 # v9.0.0
-        env:
-          CC_TEST_REPORTER_ID: d40e64ea0ff74713f79365fea4378ab51a2141ad4fcf0fb118496bbf560d4192
-        with:
-          coverageLocations: .coverage.xml:coverage.py
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
 
   linting:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@f94ec6bedd8674c4426838e6b50417d36b6ab231 # v5.3.1
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6.7.0
         with:
-          python-version: 3.9
+          python-version: "3.10"
+          activate-environment: true
 
       - name: Install nox
         run: |
@@ -152,16 +151,10 @@ jobs:
         run: |
           nox -s verify-types
 
-      - name: Flake8
+      - name: Ruff
         if: always() && !cancelled()
         run: |
-          nox -s flake8
-
-      # Temporary until we use ruff for linting too
-      - name: Ruff format check
-        if: always() && !cancelled()
-        run: |
-          nox -s check-reformat-code
+          nox -s ruff -- --output-format=github
 
       - name: Slotscheck
         if: always() && !cancelled()
@@ -183,12 +176,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@f94ec6bedd8674c4426838e6b50417d36b6ab231 # v5.3.1
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6.7.0
         with:
           python-version: 3.9
+          activate-environment: true
 
       - name: Test twemoji mapping
         run: |
@@ -201,13 +195,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@f94ec6bedd8674c4426838e6b50417d36b6ab231 # v5.3.1
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6.7.0
         with:
           # NOTE: This should be kept up to date with .readthedocs.yaml
           python-version: 3.11
+          activate-environment: true
 
       - name: Build documentation
         run: |
@@ -216,7 +211,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: docs
           path: public/docs
@@ -225,7 +220,7 @@ jobs:
 
   # Allows us to add this as a required check in Github branch rules, as all the other jobs are subject to change
   ci-done:
-    needs: [upload-coverage, linting, twemoji, docs]
+    needs: [ upload-coverage, linting, twemoji, docs ]
     if: always() && !cancelled()
 
     runs-on: ubuntu-latest

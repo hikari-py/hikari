@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -32,9 +31,9 @@ PyIntFlag = None
 HikariIntFlag = None
 
 
-def build_enums():
-    global PyIntFlag
-    global HikariIntFlag
+def build_enums() -> None:
+    global PyIntFlag  # noqa: PLW0603
+    global HikariIntFlag  # noqa: PLW0603
 
     class PyIntFlag(py_enum.IntFlag):
         a = 1
@@ -58,23 +57,12 @@ def build_enums():
         ab = 3
         cde = 28
 
-    # we do this otherwise we never gc the old class objects before a new
-    # run, which takes up more and more RAM until none is left. Not ideal but
-    # hopefully given how nothing else is running in the process, this count
-    # will eventually be the same roughly on each iteration and be roughly the
-    # same for each average collected offset.
-    # gc.enable()
-    # gc.collect(0)
-    # gc.collect(1)
-    # gc.collect(2)
-    # gc.disable()
-
 
 if os.name != "nt":
     print("Making highest priority, os.SCHED_RR")
     try:
         pid = os.getpid()
-        niceValue = os.nice(-20)
+        nice_value = os.nice(-20)
         sys.setswitchinterval(0.5)
         print("sys.getswitchinterval", sys.getswitchinterval())
         os.sched_setaffinity(pid, [(os.cpu_count() or 1) - 1])

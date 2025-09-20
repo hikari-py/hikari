@@ -30,6 +30,7 @@ from hikari import emojis
 from hikari import guilds
 from hikari import invites
 from hikari import messages
+from hikari import polls
 from hikari import snowflakes
 from hikari import stickers
 from hikari import undefined
@@ -1860,7 +1861,9 @@ class TestCacheImpl:
             user=cache_utilities.RefCell(mock_user),
             guild_id=snowflakes.Snowflake(6434435234),
             nickname="NICK",
+            guild_avatar_decoration=None,
             guild_avatar_hash="only slightly gay",
+            guild_banner_hash="ok maybe alotta gay",
             role_ids=(snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123)),
             joined_at=datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
             premium_since=datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc),
@@ -1880,6 +1883,7 @@ class TestCacheImpl:
         assert member.guild_id == 6434435234
         assert member.nickname == "NICK"
         assert member.guild_avatar_hash == "only slightly gay"
+        assert member.guild_banner_hash == "ok maybe alotta gay"
         assert member.role_ids == (snowflakes.Snowflake(65234), snowflakes.Snowflake(654234123))
         assert member.joined_at == datetime.datetime(2020, 7, 9, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
         assert member.premium_since == datetime.datetime(2020, 7, 17, 13, 11, 18, 384554, tzinfo=datetime.timezone.utc)
@@ -2216,7 +2220,9 @@ class TestCacheImpl:
             joined_at=datetime.datetime(2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc),
             premium_since=datetime.datetime(2020, 7, 1, 2, 0, 12, 501602, tzinfo=datetime.timezone.utc),
             is_deaf=True,
+            guild_avatar_decoration=None,
             guild_avatar_hash="gay",
+            guild_banner_hash="gayge",
             is_mute=False,
             is_pending=True,
             raw_communication_disabled_until=datetime.datetime(
@@ -2242,6 +2248,7 @@ class TestCacheImpl:
         assert member_entry.object.role_ids == (65345234, 123123)
         assert member_entry.object.role_ids is not member_model.role_ids
         assert member_entry.object.guild_avatar_hash == "gay"
+        assert member_entry.object.guild_banner_hash == "gayge"
         assert isinstance(member_entry.object.role_ids, tuple)
         assert member_entry.object.joined_at == datetime.datetime(
             2020, 7, 15, 23, 30, 59, 501602, tzinfo=datetime.timezone.utc
@@ -2760,12 +2767,14 @@ class TestCacheImpl:
         mock_attachment = mock.MagicMock(messages.Attachment)
         mock_embed_field = mock.MagicMock(embeds.EmbedField)
         mock_embed = mock.MagicMock(embeds.Embed, fields=(mock_embed_field,))
+        mock_poll = mock.MagicMock(polls.Poll)
         mock_sticker = mock.MagicMock(stickers.PartialSticker)
         mock_reaction = mock.MagicMock(messages.Reaction)
         mock_activity = mock.MagicMock(messages.MessageActivity)
         mock_application = mock.MagicMock(messages.MessageApplication)
         mock_reference = mock.MagicMock(messages.MessageReference)
         mock_referenced_message = object()
+        mock_message_snapshots = mock.MagicMock()
         mock_component = object()
         mock_referenced_message_data = mock.Mock(
             cache_utilities.MessageData, build_entity=mock.Mock(return_value=mock_referenced_message)
@@ -2789,6 +2798,7 @@ class TestCacheImpl:
             mentions_everyone=False,
             attachments=(mock_attachment,),
             embeds=(mock_embed,),
+            poll=mock_poll,
             reactions=(mock_reaction,),
             is_pinned=False,
             webhook_id=snowflakes.Snowflake(3123123),
@@ -2796,6 +2806,7 @@ class TestCacheImpl:
             activity=mock_activity,
             application=mock_application,
             message_reference=mock_reference,
+            message_snapshots=mock_message_snapshots,
             flags=messages.MessageFlag.CROSSPOSTED,
             nonce="aNonce",
             referenced_message=cache_utilities.RefCell(mock_referenced_message_data),
@@ -2878,6 +2889,7 @@ class TestCacheImpl:
             mentions_everyone=undefined.UNDEFINED,
             attachments=(),
             embeds=(),
+            poll=None,
             reactions=(),
             is_pinned=False,
             webhook_id=None,
@@ -2885,6 +2897,7 @@ class TestCacheImpl:
             activity=None,
             application=None,
             message_reference=None,
+            message_snapshots=None,
             flags=messages.MessageFlag.CROSSPOSTED,
             nonce=None,
             referenced_message=None,

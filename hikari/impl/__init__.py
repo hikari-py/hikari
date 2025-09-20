@@ -1,4 +1,3 @@
-# cython: language_level=3
 # Copyright (c) 2020 Nekokatt
 # Copyright (c) 2021-present davfsa
 #
@@ -33,6 +32,7 @@ from hikari.impl.buckets import *
 from hikari.impl.cache import *
 from hikari.impl.config import *
 from hikari.impl.entity_factory import *
+from hikari.impl.event_factory import *
 from hikari.impl.event_manager import *
 from hikari.impl.event_manager_base import *
 from hikari.impl.gateway_bot import *

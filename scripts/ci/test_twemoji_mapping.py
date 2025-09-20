@@ -18,7 +18,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""A CI-used script that tests all the Twemoji URLs generated
+"""Test twemoji mapping.
+
+A CI-used script that tests all the Twemoji URLs generated
 by Discord emojis are actually legitimate URLs, since Discord
 does not map these on a 1-to-1 basis.
 """
@@ -26,10 +28,14 @@ does not map these on a 1-to-1 basis.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
+import shutil
 import subprocess
 import sys
 import time
+import traceback
+import urllib.error
 import urllib.request
 
 sys.path.append("..")
@@ -37,6 +43,7 @@ sys.path.append("..")
 
 from hikari import emojis
 
+IN_CI = bool(os.getenv("CI"))
 TWEMOJI_REPO_BASE_URL = "https://github.com/discord/twemoji.git"
 DISCORD_EMOJI_MAPPING_URL = "https://emzi0767.mzgit.io/discord-emoji/discordEmojiMap-canary.min.json"
 
@@ -44,40 +51,52 @@ try:
     tempdir = pathlib.Path(sys.argv[1])
 except IndexError:
     print("Argument 1 must be the path to the temporary directory")
-    exit(2)
+    sys.exit(2)
 
+git = shutil.which("git")
+
+if not git:
+    print("Git not detected, please ensure it is installed properly before continuing")
+    sys.exit(3)
 
 start = time.perf_counter()
 
 print("Fetching emoji mapping")
-with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL) as request:
-    mapping = json.loads(request.read())["emojiDefinitions"]
+try:
+    with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL, timeout=30) as request:  # noqa: S310
+        mapping = json.loads(request.read())["emojiDefinitions"]
+except urllib.error.URLError:
+    if not IN_CI:
+        raise
+
+    print(f"Failed to retrieve emoji mapping: {traceback.format_exc()}")
+    sys.exit(0)
 
 has_items = next(tempdir.iterdir(), False)
 if has_items:
     print("Updating twemoji collection")
-    subprocess.check_call("git pull", shell=True, cwd=tempdir)
+    subprocess.check_call(f"{git} pull", shell=True, cwd=tempdir)
 else:
     print("Cloning twemoji collection")
-    subprocess.check_call(f"git clone {TWEMOJI_REPO_BASE_URL} {tempdir} --depth=1", shell=True)
+    subprocess.check_call(f"{git} clone {TWEMOJI_REPO_BASE_URL} {tempdir} --depth=1", shell=True)
 
 assets_path = tempdir / "assets" / "72x72"
 
-invalid_emojis = []
+invalid_emojis: list[str] = []
 total = len(mapping)
 for i, emoji in enumerate(mapping, start=1):
     name = emoji["primaryName"]
     emoji_surrogates = emoji["surrogates"]
-    emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
-    line_repr = f"{i}/{total} {name} {' '.join(map(hex, map(ord, emoji_surrogates)))} {emoji.url}"
+    hikari_emoji = emojis.UnicodeEmoji.parse(emoji_surrogates)
+    line_repr = f"{i}/{total} {name} {' '.join(map(hex, map(ord, emoji_surrogates)))} {hikari_emoji.url}"
 
-    if (assets_path / emoji.filename).exists():
+    if (assets_path / hikari_emoji.filename).exists():
         print(f"[  OK  ] {line_repr}")
     else:
         invalid_emojis.append(line_repr)
         print(f"[ FAIL ] {line_repr}")
 
-print("")
+print()
 print("Results")
 print("-------")
 print(f"Valid emojis: {total - len(invalid_emojis)}")
@@ -89,4 +108,4 @@ for line_repr in invalid_emojis:
 print(f"Took {time.perf_counter() - start} seconds")
 
 if invalid_emojis or total == 0:
-    exit(1)
+    sys.exit(1)

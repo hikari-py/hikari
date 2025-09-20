@@ -52,7 +52,7 @@ class TestInitLogging:
         colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
 
         with stack:
-            ux.init_logging("LOGGING_LEVEL", True, False)
+            ux.init_logging("LOGGING_LEVEL", allow_color=True, force_color=False)
 
         logging_dict_config.assert_not_called()
         logging_basic_config.assert_not_called()
@@ -66,7 +66,7 @@ class TestInitLogging:
         colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
 
         with stack:
-            ux.init_logging(None, True, False)
+            ux.init_logging(None, allow_color=True, force_color=False)
 
         logging_dict_config.assert_not_called()
         logging_basic_config.assert_not_called()
@@ -82,7 +82,7 @@ class TestInitLogging:
         colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
 
         with stack:
-            ux.init_logging({"hikari": {"level": "INFO"}}, True, False)
+            ux.init_logging({"hikari": {"level": "INFO"}}, allow_color=True, force_color=False)
 
         logging_file_config.assert_not_called()
         logging_dict_config.assert_called_once_with({"hikari": {"level": "INFO"}})
@@ -106,7 +106,7 @@ class TestInitLogging:
         colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
 
         with stack:
-            ux.init_logging({"incremental": True, "hikari": {"level": "INFO"}}, True, False)
+            ux.init_logging({"incremental": True, "hikari": {"level": "INFO"}}, allow_color=True, force_color=False)
 
         logging_file_config.assert_not_called()
         logging_dict_config.assert_called_once_with({"incremental": True, "hikari": {"level": "INFO"}})
@@ -133,7 +133,7 @@ class TestInitLogging:
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
 
         with stack:
-            ux.init_logging("LOGGING_LEVEL", True, False)
+            ux.init_logging("LOGGING_LEVEL", allow_color=True, force_color=False)
 
         logging_file_config.assert_not_called()
         logging_dict_config.assert_not_called()
@@ -143,7 +143,7 @@ class TestInitLogging:
             "%(thin)s%(message)s%(reset)s",
             force_color=True,
         )
-        supports_color.assert_called_once_with(True, False)
+        supports_color.assert_called_once_with(allow_color=True, force_color=False)
         handler.setFormatter.assert_called_once_with(colored_formatter.return_value)
 
     def test_when_doesnt_support_color(self):
@@ -156,7 +156,7 @@ class TestInitLogging:
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
 
         with stack:
-            ux.init_logging("LOGGING_LEVEL", True, False)
+            ux.init_logging("LOGGING_LEVEL", allow_color=True, force_color=False)
 
         logging_dict_config.assert_not_called()
         logging_file_config.assert_not_called()
@@ -164,7 +164,7 @@ class TestInitLogging:
             level="LOGGING_LEVEL", format="%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s", stream=sys.stdout
         )
         colored_formatter.assert_not_called()
-        supports_color.assert_called_once_with(True, False)
+        supports_color.assert_called_once_with(allow_color=True, force_color=False)
 
     def test_when_flavour_is_pathlike(self):
         path = pathlib.Path("some/path/to/somewhere.ini")
@@ -179,7 +179,7 @@ class TestInitLogging:
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
 
         with stack:
-            ux.init_logging(path, True, False)
+            ux.init_logging(path, allow_color=True, force_color=False)
 
         pathlib_path.assert_not_called()
         logging_dict_config.assert_not_called()
@@ -199,7 +199,7 @@ class TestInitLogging:
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
 
         with stack:
-            ux.init_logging("some/path/to/somewhere.ini", True, False)
+            ux.init_logging("some/path/to/somewhere.ini", allow_color=True, force_color=False)
 
         pathlib_path.assert_called_once_with("some/path/to/somewhere.ini")
         logging_dict_config.assert_not_called()
@@ -258,29 +258,32 @@ def test_read_banner():
 class TestPrintBanner:
     def test_when_package_is_none(self):
         with mock.patch.object(sys.stdout, "write") as write:
-            ux.print_banner(None, True, False)
+            ux.print_banner(None, allow_color=True, force_color=False)
 
         write.assert_not_called()
 
     @pytest.fixture
     def mock_args(self):
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(platform, "release", return_value="1.0.0"))
-        stack.enter_context(mock.patch.object(platform, "system", return_value="Potato"))
-        stack.enter_context(mock.patch.object(platform, "machine", return_value="Machine"))
-        stack.enter_context(mock.patch.object(platform, "python_implementation", return_value="CPython"))
-        stack.enter_context(mock.patch.object(platform, "python_version", return_value="4.0.0"))
+        _about_path = str(pathlib.Path("/", "somewhere", "..", "coding", "hikari", "_about.py"))
 
-        stack.enter_context(mock.patch.object(_about, "__version__", new="2.2.2"))
-        stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="12345678901234567890"))
-        stack.enter_context(mock.patch.object(_about, "__copyright__", new="2020, Nekokatt"))
-        stack.enter_context(mock.patch.object(_about, "__license__", new="MIT"))
-        stack.enter_context(mock.patch.object(_about, "__file__", new="~/hikari"))
-        stack.enter_context(mock.patch.object(_about, "__docs__", new="https://nekokatt.github.io/hikari/docs"))
-        stack.enter_context(mock.patch.object(_about, "__discord_invite__", new="https://discord.gg/Jx4cNGG"))
-        stack.enter_context(mock.patch.object(_about, "__url__", new="https://nekokatt.github.io/hikari"))
+        stack = contextlib.ExitStack()
 
         with stack:
+            stack.enter_context(mock.patch.object(platform, "release", return_value="1.0.0"))
+            stack.enter_context(mock.patch.object(platform, "system", return_value="Potato"))
+            stack.enter_context(mock.patch.object(platform, "machine", return_value="Machine"))
+            stack.enter_context(mock.patch.object(platform, "python_implementation", return_value="CPython"))
+            stack.enter_context(mock.patch.object(platform, "python_version", return_value="4.0.0"))
+
+            stack.enter_context(mock.patch.object(_about, "__version__", new="2.2.2"))
+            stack.enter_context(mock.patch.object(_about, "__git_sha1__", new="12345678901234567890"))
+            stack.enter_context(mock.patch.object(_about, "__copyright__", new="2020, Nekokatt"))
+            stack.enter_context(mock.patch.object(_about, "__license__", new="MIT"))
+            stack.enter_context(mock.patch.object(_about, "__file__", new=_about_path))
+            stack.enter_context(mock.patch.object(_about, "__docs__", new="https://nekokatt.github.io/hikari/docs"))
+            stack.enter_context(mock.patch.object(_about, "__discord_invite__", new="https://discord.gg/Jx4cNGG"))
+            stack.enter_context(mock.patch.object(_about, "__url__", new="https://nekokatt.github.io/hikari"))
+
             yield None
 
     def test_when_supports_color(self, mock_args):
@@ -292,12 +295,10 @@ class TestPrintBanner:
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
         read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
-        abspath = stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
-        dirname = stack.enter_context(mock.patch.object(os.path, "dirname"))
         stdout = stack.enter_context(mock.patch.object(sys, "stdout"))
 
         with stack:
-            ux.print_banner("hikaru", True, False)
+            ux.print_banner("hikaru", allow_color=True, force_color=False)
 
         args = {
             # Hikari stuff.
@@ -305,7 +306,7 @@ class TestPrintBanner:
             "hikari_git_sha1": "12345678",
             "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
-            "hikari_install_location": "some path",
+            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari").resolve()),
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
             "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
             "hikari_source_url": "https://nekokatt.github.io/hikari",
@@ -321,9 +322,7 @@ class TestPrintBanner:
         template.assert_called_once_with(read_banner.return_value)
         safe_substitute = template.return_value.safe_substitute
         safe_substitute.assert_called_once_with(args)
-        dirname.assert_called_once_with("~/hikari")
-        abspath.assert_called_once_with(dirname())
-        supports_color.assert_called_once_with(True, False)
+        supports_color.assert_called_once_with(allow_color=True, force_color=False)
         stdout.buffer.write.assert_called_once_with(safe_substitute.return_value.encode.return_value)
         stdout.flush.assert_called_once_with()
 
@@ -336,12 +335,10 @@ class TestPrintBanner:
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=False))
         read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
-        abspath = stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
-        dirname = stack.enter_context(mock.patch.object(os.path, "dirname"))
         stdout = stack.enter_context(mock.patch.object(sys, "stdout"))
 
         with stack:
-            ux.print_banner("hikaru", True, False)
+            ux.print_banner("hikaru", allow_color=True, force_color=False)
 
         args = {
             # Hikari stuff.
@@ -349,7 +346,7 @@ class TestPrintBanner:
             "hikari_git_sha1": "12345678",
             "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
-            "hikari_install_location": "some path",
+            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari").resolve()),
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
             "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
             "hikari_source_url": "https://nekokatt.github.io/hikari",
@@ -364,9 +361,7 @@ class TestPrintBanner:
         template.assert_called_once_with(read_banner.return_value)
         safe_substitute = template.return_value.safe_substitute
         safe_substitute.assert_called_once_with(args)
-        dirname.assert_called_once_with("~/hikari")
-        abspath.assert_called_once_with(dirname())
-        supports_color.assert_called_once_with(True, False)
+        supports_color.assert_called_once_with(allow_color=True, force_color=False)
         stdout.buffer.write.assert_called_once_with(safe_substitute.return_value.encode.return_value)
         stdout.flush.assert_called_once_with()
 
@@ -376,13 +371,12 @@ class TestPrintBanner:
         stack.enter_context(mock.patch.object(time, "sleep"))
         read_banner = stack.enter_context(mock.patch.object(ux, "_read_banner"))
         template = stack.enter_context(mock.patch.object(string, "Template"))
-        stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
         stdout = stack.enter_context(mock.patch.object(sys, "stdout"))
 
         extra_args = {"extra_argument_1": "one", "extra_argument_2": "two"}
 
         with stack:
-            ux.print_banner("hikaru", True, False, extra_args=extra_args)
+            ux.print_banner("hikaru", allow_color=True, force_color=False, extra_args=extra_args)
 
         args = {
             # Hikari stuff.
@@ -390,7 +384,7 @@ class TestPrintBanner:
             "hikari_git_sha1": "12345678",
             "hikari_copyright": "2020, Nekokatt",
             "hikari_license": "MIT",
-            "hikari_install_location": "some path",
+            "hikari_install_location": str(pathlib.Path("/", "coding", "hikari").resolve()),
             "hikari_documentation_url": "https://nekokatt.github.io/hikari/docs",
             "hikari_discord_invite": "https://discord.gg/Jx4cNGG",
             "hikari_source_url": "https://nekokatt.github.io/hikari",
@@ -417,13 +411,13 @@ class TestPrintBanner:
         stack.enter_context(mock.patch.object(sys.stdout, "write"))
         stack.enter_context(mock.patch.object(os.path, "abspath", return_value="some path"))
 
-        extra_args = {"hikari_version": "overwrite"}
-
         with stack:
             with pytest.raises(
                 ValueError, match=r"Cannot overwrite \$-substitution `hikari_version`. Please use a different key."
             ):
-                ux.print_banner("hikari", True, False, extra_args=extra_args)
+                ux.print_banner(
+                    "hikari", allow_color=True, force_color=False, extra_args={"hikari_version": "overwrite"}
+                )
 
 
 class TestWarnIfNotOptimized:
@@ -451,30 +445,30 @@ class TestWarnIfNotOptimized:
 
 class TestSupportsColor:
     def test_when_not_allow_color(self):
-        assert ux.supports_color(False, True) is False
+        assert ux.supports_color(allow_color=False, force_color=True) is False
 
     def test_when_CLICOLOR_FORCE_in_env(self):
         with mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "1"}, clear=True):
-            assert ux.supports_color(True, False) is True
+            assert ux.supports_color(allow_color=True, force_color=False) is True
 
     def test_when_force_color(self):
         with mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "0"}, clear=True):
-            assert ux.supports_color(True, True) is True
+            assert ux.supports_color(allow_color=True, force_color=True) is True
 
     def test_when_CLICOLOR_and_is_a_tty(self):
         with mock.patch.object(sys.stdout, "isatty", return_value=True):
             with mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "0", "CLICOLOR": "1"}, clear=True):
-                assert ux.supports_color(True, False) is True
+                assert ux.supports_color(allow_color=True, force_color=False) is True
 
     def test_when_CLICOLOR_is_0(self):
         with mock.patch.object(sys.stdout, "isatty", return_value=True):
             with mock.patch.dict(os.environ, {"CLICOLOR_FORCE": "0", "CLICOLOR": "0"}, clear=True):
-                assert ux.supports_color(True, False) is False
+                assert ux.supports_color(allow_color=True, force_color=False) is False
 
     @pytest.mark.parametrize("colorterm", ["truecolor", "24bit", "TRUECOLOR", "24BIT"])
     def test_when_COLORTERM_has_correct_value(self, colorterm):
         with mock.patch.dict(os.environ, {"COLORTERM": colorterm}, clear=True):
-            assert ux.supports_color(True, False) is True
+            assert ux.supports_color(allow_color=True, force_color=False) is True
 
     def test_when_plat_is_Pocket_PC(self):
         stack = contextlib.ExitStack()
@@ -482,7 +476,7 @@ class TestSupportsColor:
         stack.enter_context(mock.patch.object(sys, "platform", new="Pocket PC"))
 
         with stack:
-            assert ux.supports_color(True, False) is False
+            assert ux.supports_color(allow_color=True, force_color=False) is False
 
     @pytest.mark.parametrize(
         ("term_program", "ansicon", "isatty", "expected"),
@@ -507,7 +501,7 @@ class TestSupportsColor:
         stack.enter_context(mock.patch.object(sys, "platform", new="win32"))
 
         with stack:
-            assert ux.supports_color(True, False) is expected
+            assert ux.supports_color(allow_color=True, force_color=False) is expected
 
     @pytest.mark.parametrize("isatty", [True, False])
     def test_when_plat_is_not_win32(self, isatty):
@@ -517,7 +511,7 @@ class TestSupportsColor:
         stack.enter_context(mock.patch.object(sys, "platform", new="linux"))
 
         with stack:
-            assert ux.supports_color(True, False) is isatty
+            assert ux.supports_color(allow_color=True, force_color=False) is isatty
 
     @pytest.mark.parametrize("isatty", [True, False])
     @pytest.mark.parametrize("plat", ["linux", "win32"])
@@ -528,7 +522,7 @@ class TestSupportsColor:
         stack.enter_context(mock.patch.object(sys, "platform", new=plat))
 
         with stack:
-            assert ux.supports_color(True, False) is True
+            assert ux.supports_color(allow_color=True, force_color=False) is True
 
     @pytest.mark.parametrize("isatty", [True, False])
     @pytest.mark.parametrize("plat", ["linux", "win32"])
@@ -539,7 +533,7 @@ class TestSupportsColor:
         stack.enter_context(mock.patch.object(sys, "platform", new=plat))
 
         with stack:
-            assert ux.supports_color(True, False) is True
+            assert ux.supports_color(allow_color=True, force_color=False) is True
 
 
 class TestHikariVersion:
@@ -671,7 +665,7 @@ class TestCheckForUpdates:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
         logger.warning.assert_called_once_with("Failed to fetch hikari version details", exc_info=ex)
-        create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
+        create_tcp_connector.assert_called_once_with(dns_cache=False, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
             connector_owner=True,
@@ -710,7 +704,7 @@ class TestCheckForUpdates:
         logger.info.assert_not_called()
 
         json_loads.assert_called_once_with(_request.read.return_value)
-        create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
+        create_tcp_connector.assert_called_once_with(dns_cache=False, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
             connector_owner=True,
@@ -759,7 +753,7 @@ class TestCheckForUpdates:
             "A newer version of hikari is available, consider upgrading to %s", ux.HikariVersion(v)
         )
         json_loads.assert_called_once_with(_request.read.return_value)
-        create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
+        create_tcp_connector.assert_called_once_with(dns_cache=False, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
             connector_owner=True,

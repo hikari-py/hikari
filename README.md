@@ -1,16 +1,19 @@
 <div align="center">
-<h1>hikari</h1>
+<a href="https://github.com/hikari-py/hikari"><img src="https://www.hikari-py.dev/logo.png" height="100px;" alt="Invite Tracker"/></a>
+<h3>hikari</h3>
 <a href="https://pypi.org/project/hikari"><img height="20" alt="Supported python versions" src="https://img.shields.io/pypi/pyversions/hikari"></a>
 <a href="https://pypi.org/project/hikari"><img height="20" alt="PyPI version" src="https://img.shields.io/pypi/v/hikari"></a>
 <br>
 <a href="https://github.com/hikari-py/hikari/actions"><img height="20" alt="CI status" src="https://github.com/hikari-py/hikari/actions/workflows/ci.yml/badge.svg?branch=master&event=push"></a>
 <a href="https://pypi.org/project/mypy/"><img height="20" alt="Mypy badge" src="https://img.shields.io/badge/mypy-checked-blue"></a>
 <a href="https://pypi.org/project/ruff"><img height="20" alt="Ruff badge" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json"></a>
-<a href="https://codeclimate.com/github/hikari-py/hikari/test_coverage"><img height="20" alt="Test coverage" src="https://api.codeclimate.com/v1/badges/f95070b25136a69b0589/test_coverage"></a>
+<a href="https://codecov.io/github/hikari-py/hikari"><img src="https://codecov.io/github/hikari-py/hikari/graph/badge.svg?token=FPNSBOP2VG"/></a>
 <br>
 <a href="https://discord.gg/Jx4cNGG"><img height="20" alt="Discord invite" src="https://discord.com/api/guilds/574921006817476608/widget.png"></a>
 <a href="https://docs.hikari-py.dev/en/stable"><img height="20" alt="Documentation Status" src="https://readthedocs.org/projects/hikari-py/badge/?version=latest"></a>
 </div>
+
+---
 
 An opinionated, static typed Discord microframework for Python3 and asyncio that supports Discord's v10 REST and
 Gateway APIs.
@@ -30,9 +33,22 @@ python -m pip install -U hikari
 py -3 -m pip install -U hikari
 ```
 
----
+## Large bots
 
-## Bots
+Hikari is used in the wild to run some large bots! Here are some examples:
+
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://invite-tracker.com"><img src="https://cdn.invite-tracker.com/logo.png" width="100px;" height="100px;" alt="Invite Tracker"/><br /><sub><b>Invite Tracker</b></sub></a>
+      <td align="center" valign="top" width="14.28%"><a href="https://nmarkov.xyz"><img src="https://nmarkov.xyz/logo.png" width="100px;" alt="nMarkov"/><br /><sub><b>nMarkov</b></sub></a>
+    </tr>
+  </tbody>
+</table>
+
+If you want to add your large bot to the list, please contact `@davfsa` on our [Discord server](https://discord.gg/hikari) or submit a pull request to add it to the list!
+
+## Getting started
 
 Hikari provides two different default bot implementations to suit your needs:
 
@@ -199,8 +215,6 @@ below:
 - [GatewayBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/gateway_bot/#hikari.impl.gateway_bot.GatewayBot.run)
 - [RESTBot.run](https://docs.hikari-py.dev/en/stable/reference/hikari/impl/rest_bot/#hikari.impl.rest_bot.RESTBot.run)
 
----
-
 ## REST-only applications
 
 You may only want to integrate with the REST API, for example if writing a web dashboard.
@@ -227,25 +241,6 @@ async def print_my_user(token):
 asyncio.run(print_my_user("user token acquired through OAuth here"))
 ```
 
----
-
-## Optional Features
-
-Optional features can be specified when installing hikari:
-
-- `server` - Install dependencies required to enable Hikari's standard interaction server (RESTBot) functionality.
-- `speedups` - Detailed in [`hikari[speedups]`](#hikarispeedups).
-
-Example:
-
-```bash
-# To install hikari with the speedups feature:
-python -m pip install -U hikari[speedups]
-
-# To install hikari with both the speedups and server features:
-python -m pip install -U hikari[speedups, server]
-```
-
 ## Additional resources
 
 You may wish to use a command framework on top of hikari so that you can start writing a bot quickly without
@@ -263,8 +258,6 @@ There are also third party libraries to help you manage components:
 - [`yuyo`](https://github.com/FasterSpeeding/Yuyo) - A collection of utility classes and functions designed to expand Hikari.
 - [`miru`](https://github.com/hypergonial/hikari-miru) - A component handler for hikari, inspired by discord.py's views.
 - [`flare`](https://github.com/brazier-dev/hikari-flare/) - a component manager designed to write simple interactions with persistent data.
-
----
 
 ## Making your application more efficient
 
@@ -306,28 +299,26 @@ if os.name != "nt":
 # Your code goes here
 ```
 
-### Compiled extensions
+## Show your support!
 
-Eventually, we will start providing the option to use compiled components of this library over pure Python ones if it
-suits your use case. This should also enable further scalability of your application, should
-[_PEP 554 -- Multiple Interpreters in the Stdlib_](https://www.python.org/dev/peps/pep-0554/#abstract) be accepted.
-
-Currently, this functionality does not yet exist.
-
----
+If you made it this far into the readme, leave us a ⭐ on our GitHub repository. It really helps us out ❤️
 
 ## Developing hikari
 
-To familiarize yourself a bit with the project, we recommend reading our
+To familiarize yourself with the project, you should read our
 [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
 
 If you wish to contribute something, you should first start by cloning the repository.
 
-In the repository, make a virtual environment (`python -m venv .venv`) and enter it (`source .venv/bin/activate` on
-Linux, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
+> [!NOTE]
+> We are using the package manager `uv` here. If you don't know how to use `uv`, we have a more detailed
+> section about that in the [contributing manual](https://github.com/hikari-py/hikari/blob/master/CONTRIBUTING.md).
+
+In the repository, make a virtual environment (`uv venv`) and enter it (`source .venv/bin/activate` on
+Linux or macOS, or for Windows use one of `.venv\Scripts\activate.ps1`, `.venv\Scripts\activate.bat`,
 `source .venv/Scripts/activate`).
 
-The first thing you should run is `pip install --group nox` to install nox.
+The first thing you should run is `uv sync --group nox` to install nox.
 This handles running predefined tasks and pipelines.
 
 Once this is complete, you can run `nox` without any arguments to ensure everything builds and is correct.
