@@ -537,7 +537,7 @@ class GatewayShardImpl(shard.GatewayShard):
     def __init__(
         self,
         *,
-        compression: shard.GatewayCompression | None = shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
+        compression: shard.GatewayCompression | None = _DEFAULT_COMPRESS_TYPE,
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         initial_activity: presences.Activity | None = None,
