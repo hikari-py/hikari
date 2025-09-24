@@ -124,7 +124,7 @@ types = [
 
 
 [tool.uv]
-required-version = "~=0.7"
+required-version = "~=0.8"
 
 [tool.coverage.run]
 relative_files = true
