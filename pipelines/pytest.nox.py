@@ -58,10 +58,6 @@ def pytest_all_features(session: nox.Session) -> None:
 
     Coverage can be enabled with the `--coverage` flag.
     """
-    if sys.version_info >= (3, 14):
-        session.log("pytest-all-features is disabled in 3.14+ due to https://github.com/pytest-dev/pytest/issues/13739")
-        return
-
     _pytest(session, extras_install=["speedups", "server"], python_flags=("-OO",))
 
 
