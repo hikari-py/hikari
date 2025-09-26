@@ -163,7 +163,7 @@ class UnicodeEmoji(str, Emoji):
         if codepoints[1:2] == [0xFE0F] and len(codepoints) <= 4 and codepoints[2:3] != [0x200D]:
             codepoints = [codepoints[0], *codepoints[2:]]
 
-        return "-".join(hex(c)[2:] for c in codepoints) + ".png"
+        return "-".join(hex(c)[2:] for c in codepoints) + ".png"  # noqa: FURB116
 
     @property
     @typing_extensions.override

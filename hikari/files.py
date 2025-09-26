@@ -422,7 +422,7 @@ def _open_write_path(path: Pathish, default_filename: str, force: bool) -> typin
     return path.open("wb")
 
 
-class Resource(typing.Generic[ReaderImplT], abc.ABC):
+class Resource(abc.ABC, typing.Generic[ReaderImplT]):
     """Base for any uploadable or downloadable representation of information.
 
     These representations can be streamed using bit inception for performance,

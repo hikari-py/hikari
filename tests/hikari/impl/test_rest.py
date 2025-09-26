@@ -871,6 +871,21 @@ class TestRESTClientImpl:
                 emoji="rooYay:123",
             )
 
+    def test_fetch_pins_with_before(self, rest_client):
+        channel = StubModel(123)
+        time = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "PinnedMessageIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_pins(channel, before=time) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                channel=channel,
+                first_id=str(int(time.timestamp())),
+            )
+
     def test_fetch_my_guilds_when_start_at_is_undefined(self, rest_client):
         stub_iterator = mock.Mock()
 
@@ -2741,20 +2756,6 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="cause why not :)")
-
-    async def test_fetch_pins(self, rest_client):
-        message1 = StubModel(456)
-        message2 = StubModel(789)
-        expected_route = routes.GET_CHANNEL_PINS.compile(channel=123)
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
-        rest_client._entity_factory.deserialize_message = mock.Mock(side_effect=[message1, message2])
-
-        assert await rest_client.fetch_pins(StubModel(123)) == [message1, message2]
-        rest_client._request.assert_awaited_once_with(expected_route)
-        assert rest_client._entity_factory.deserialize_message.call_count == 2
-        rest_client._entity_factory.deserialize_message.assert_has_calls(
-            [mock.call({"id": "456"}), mock.call({"id": "789"})]
-        )
 
     async def test_pin_message(self, rest_client):
         expected_route = routes.PUT_CHANNEL_PINS.compile(channel=123, message=456)
@@ -5857,6 +5858,23 @@ class TestRESTClientImplAsync:
         invite2 = StubModel(789)
         expected_route = routes.GET_GUILD_INVITES.compile(guild=123)
         rest_client._request = mock.AsyncMock(return_value=[{"id": "456"}, {"id": "789"}])
+        rest_client._entity_factory.deserialize_invite = mock.Mock(side_effect=[invite1, invite2])
+
+        assert await rest_client.fetch_guild_invites(StubModel(123)) == [invite1, invite2]
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        assert rest_client._entity_factory.deserialize_invite.call_count == 2
+        rest_client._entity_factory.deserialize_invite.assert_has_calls(
+            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+        )
+
+    async def test_fetch_guild_invites_with_metadata(self, rest_client):
+        invite1 = StubModel(456)
+        invite2 = StubModel(789)
+        expected_route = routes.GET_GUILD_INVITES.compile(guild=123)
+        rest_client._request = mock.AsyncMock(
+            return_value=[{"id": "456", "created_at": "metadata"}, {"id": "789", "created_at": "metadata"}]
+        )
         rest_client._entity_factory.deserialize_invite_with_metadata = mock.Mock(side_effect=[invite1, invite2])
 
         assert await rest_client.fetch_guild_invites(StubModel(123)) == [invite1, invite2]
@@ -5864,7 +5882,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         assert rest_client._entity_factory.deserialize_invite_with_metadata.call_count == 2
         rest_client._entity_factory.deserialize_invite_with_metadata.assert_has_calls(
-            [mock.call({"id": "456"}), mock.call({"id": "789"})]
+            [mock.call({"id": "456", "created_at": "metadata"}), mock.call({"id": "789", "created_at": "metadata"})]
         )
 
     async def test_fetch_integrations(self, rest_client):

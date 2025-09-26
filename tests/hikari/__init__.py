@@ -20,32 +20,26 @@
 # SOFTWARE.
 from __future__ import annotations
 
-import asyncio
 import inspect
+import asyncio
 import sys
-import typing
 import warnings
 
 import pytest
 
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    class TestingPolicy(asyncio.DefaultEventLoopPolicy):
+        def set_event_loop(self, loop: asyncio.AbstractEventLoop | None) -> None:
+            # Close any old event loops to prevent them from raising warnings
+            # see: https://github.com/pytest-dev/pytest-asyncio/issues/724
+            if self._local._loop:
+                self._local._loop.close()
 
-#####################
-# Enable loop debug #
-#####################
-class TestingPolicy(asyncio.DefaultEventLoopPolicy):
-    def set_event_loop(self, loop: typing.Optional[asyncio.AbstractEventLoop]) -> None:
-        # Close any old event loops to prevent them from raising warnings
-        if self._local._loop:
-            self._local._loop.close()
+            super().set_event_loop(loop)
 
-        if loop is not None:
-            loop.set_debug(True)
-
-        super().set_event_loop(loop)
-
-
-asyncio.set_event_loop_policy(TestingPolicy())
-sys.set_coroutine_origin_tracking_depth(100)
+    asyncio.set_event_loop_policy(TestingPolicy())
+    sys.set_coroutine_origin_tracking_depth(100)
 
 ################################################################################
 # Force ids in parametrize to be stringified by default for better readability #

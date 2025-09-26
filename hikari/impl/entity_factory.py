@@ -3735,6 +3735,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     @typing_extensions.override
+    def deserialize_pinned_message(self, payload: data_binding.JSONObject) -> message_models.PinnedMessage:
+        return message_models.PinnedMessage(
+            pinned_at=time.iso8601_datetime_string_to_datetime(payload["pinned_at"]),
+            message=self.deserialize_message(payload["message"]),
+        )
+
+    @typing_extensions.override
     def deserialize_partial_message(  # noqa: C901, PLR0912, PLR0915
         self, payload: data_binding.JSONObject
     ) -> message_models.PartialMessage:

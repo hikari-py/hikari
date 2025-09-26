@@ -842,21 +842,33 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_pins(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
-    ) -> typing.Sequence[messages_.Message]:
+    def fetch_pins(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[messages_.PinnedMessage]:
         """Fetch the pinned messages in this text channel.
+
+        !!! note
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See [`hikari.iterators`][] for the full API for this iterator type.
 
         Parameters
         ----------
         channel
             The channel to fetch pins from. This may be the object or
             the ID of an existing channel.
+        before
+            If provided, fetch pins before this time.
 
         Returns
         -------
-        typing.Sequence[hikari.messages.Message]
-            The pinned messages in this text channel.
+        hikari.iterators.LazyIterator[hikari.messages.PinnedMessage]
+            An iterator to fetch the pinned messages.
 
         Raises
         ------
@@ -3246,6 +3258,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         client_secret: str,
         code: str,
         redirect_uri: str,
+        *,
+        code_verifier: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> applications.OAuth2AuthorizationToken:
         """Authorize an OAuth2 token using the authorize code grant type.
 
@@ -3259,6 +3273,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The authorization code to exchange for an OAuth2 access token.
         redirect_uri
             The redirect uri that was included in the authorization request.
+        code_verifier
+            If provided, the random string generated for PKCE, required to
+            securely validate the authorization code exchange.
 
         Returns
         -------
@@ -6752,7 +6769,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_guild_invites(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[invites.InviteWithMetadata]:
+    ) -> typing.Sequence[invites.InviteWithMetadata] | typing.Sequence[invites.Invite]:
         """Fetch the guild's invites.
 
         Parameters
@@ -6763,13 +6780,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.invites.InviteWithMetadata]
+        typing.Sequence[hikari.invites.InviteWithMetadata] | typing.Sequence[hikari.invites.Invite]
             The invites for the guild.
+
+            Will contain the metadata if you have the [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+            permission.
 
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+            or [`hikari.permissions.Permissions.VIEW_AUDIT_LOG`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError

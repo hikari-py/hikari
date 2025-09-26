@@ -1292,6 +1292,7 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.GET_CHANNEL_INVITES.compile(channel=channel)
         response = await self._request(route)
         assert isinstance(response, list)
+
         return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
 
     @typing_extensions.override
@@ -1336,13 +1337,17 @@ class RESTClientImpl(rest_api.RESTClient):
         )
 
     @typing_extensions.override
-    async def fetch_pins(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
-    ) -> typing.Sequence[messages_.Message]:
-        route = routes.GET_CHANNEL_PINS.compile(channel=channel)
-        response = await self._request(route)
-        assert isinstance(response, list)
-        return [self._entity_factory.deserialize_message(message_pl) for message_pl in response]
+    def fetch_pins(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[messages_.PinnedMessage]:
+        first_id = str(int(before.timestamp())) if before is not undefined.UNDEFINED else undefined.UNDEFINED
+
+        return special_endpoints_impl.PinnedMessageIterator(
+            entity_factory=self._entity_factory, request_call=self._request, channel=channel, first_id=first_id
+        )
 
     @typing_extensions.override
     async def pin_message(
@@ -2493,12 +2498,17 @@ class RESTClientImpl(rest_api.RESTClient):
         client_secret: str,
         code: str,
         redirect_uri: str,
+        *,
+        code_verifier: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> applications.OAuth2AuthorizationToken:
         route = routes.POST_TOKEN.compile()
         form_builder = data_binding.URLEncodedFormBuilder()
         form_builder.add_field("grant_type", "authorization_code")
         form_builder.add_field("code", code)
         form_builder.add_field("redirect_uri", redirect_uri)
+
+        if code_verifier is not undefined.UNDEFINED:
+            form_builder.add_field("code_verifier", code_verifier)
 
         response = await self._request(
             route, form_builder=form_builder, auth=self._gen_oauth2_token(client, client_secret)
@@ -3647,11 +3657,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("mute", mute)
         body.put("deaf", deaf)
         body.put_snowflake_array("roles", roles)
-
-        if voice_channel is None:
-            body.put("channel_id", None)
-        else:
-            body.put_snowflake("channel_id", voice_channel)
+        body.put_snowflake("channel_id", voice_channel)
 
         if isinstance(communication_disabled_until, datetime.datetime):
             body.put("communication_disabled_until", communication_disabled_until.isoformat())
@@ -4010,11 +4016,21 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing_extensions.override
     async def fetch_guild_invites(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[invites.InviteWithMetadata]:
+    ) -> typing.Sequence[invites.InviteWithMetadata] | typing.Sequence[invites.Invite]:
         route = routes.GET_GUILD_INVITES.compile(guild=guild)
         response = await self._request(route)
         assert isinstance(response, list)
-        return [self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response]
+
+        # If we are missing MANAGE_GUILD, we will only get normal invites (no metadata)
+        if not response:
+            return []
+
+        if "created_at" in response[0]:
+            return [
+                self._entity_factory.deserialize_invite_with_metadata(invite_payload) for invite_payload in response
+            ]
+
+        return [self._entity_factory.deserialize_invite(invite_payload) for invite_payload in response]
 
     @typing_extensions.override
     async def fetch_integrations(
@@ -4049,10 +4065,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("enabled", enabled)
-        if channel is None:
-            body.put("channel", None)
-        elif channel is not undefined.UNDEFINED:
-            body.put_snowflake("channel", channel)
+        body.put_snowflake("channel", channel)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
@@ -4080,12 +4093,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body.put("description", description)
         body.put("enabled", enabled)
-
-        if channels is not None:
-            body.put_array("welcome_channels", channels, conversion=self._entity_factory.serialize_welcome_channel)
-
-        else:
-            body.put("welcome_channels", None)
+        body.put_array("welcome_channels", channels, conversion=self._entity_factory.serialize_welcome_channel)
 
         response = await self._request(route, json=body)
         assert isinstance(response, dict)
