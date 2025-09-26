@@ -3668,11 +3668,41 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        bio: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
         route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=guild)
         body = data_binding.JSONObjectBuilder()
         body.put("nick", nickname)
+        body.put("bio", bio)
+
+        stack = contextlib.AsyncExitStack()
+        tasks: list[asyncio.Task[str]] = []
+
+        async with stack:
+            if avatar is None:
+                body.put("avatar", None)
+            elif avatar is not undefined.UNDEFINED:
+                avatar_resource = files.ensure_resource(avatar)
+                stream = await stack.enter_async_context(avatar_resource.stream(executor=self._executor))
+
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("avatar", future.result()))
+                tasks.append(task)
+
+            if banner is None:
+                body.put("banner", None)
+            elif banner is not undefined.UNDEFINED:
+                banner_resource = files.ensure_resource(banner)
+                stream = await stack.enter_async_context(banner_resource.stream(executor=self._executor))
+
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("banner", future.result()))
+                tasks.append(task)
+
+            await asyncio.gather(*tasks)
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)

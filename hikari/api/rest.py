@@ -5976,6 +5976,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        bio: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
         """Edit the current user's member in a guild.
@@ -5992,6 +5995,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Requires the [`hikari.permissions.Permissions.CHANGE_NICKNAME`][] permission.
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
+        avatar
+            If provided, the new avatar for the member. If,
+            [`None`][], will remove the members avatar.
+        banner
+            If provided, the new banner for the member. If,
+            [`None`][], will remove the members banner.
+        bio
+            If provided, the new bio for the member. If,
+            [`None`][], will remove the members bio.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
