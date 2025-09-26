@@ -5546,13 +5546,25 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
 
-    async def test_my_edit_member(self, rest_client):
+    async def test_edit_my_member(self, rest_client, file_resource):
         expected_route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=123)
-        expected_json = {"nick": "test"}
+        expected_json = {"nick": "test", "avatar": "avatar data", "banner": "banner data", "bio": "do not the beanos."}
         rest_client._request = mock.AsyncMock(return_value={"id": "789"})
 
-        result = await rest_client.edit_my_member(StubModel(123), nickname="test", reason="because i can")
-        assert result is rest_client._entity_factory.deserialize_member.return_value
+        avatar_resource = file_resource("avatar data")
+        banner_resource = file_resource("banner data")
+
+        with mock.patch.object(files, "ensure_resource", side_effect=[avatar_resource, banner_resource]):
+            result = await rest_client.edit_my_member(
+                StubModel(123),
+                nickname="test",
+                avatar=avatar_resource,
+                banner=banner_resource,
+                bio="do not the beanos.",
+                reason="because i can",
+            )
+
+            assert result is rest_client._entity_factory.deserialize_member.return_value
 
         rest_client._entity_factory.deserialize_member.assert_called_once_with(
             rest_client._request.return_value, guild_id=123
@@ -5570,6 +5582,19 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value, guild_id=123
         )
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
+
+    async def test_edit_my_member_with_nulls(self, rest_client):
+        expected_route = routes.PATCH_MY_GUILD_MEMBER.compile(guild=123)
+        expected_json = {"nick": None, "avatar": None, "banner": None, "bio": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "789"})
+
+        result = await rest_client.edit_my_member(StubModel(123), nickname=None, avatar=None, banner=None, bio=None)
+        assert result is rest_client._entity_factory.deserialize_member.return_value
+
+        rest_client._entity_factory.deserialize_member.assert_called_once_with(
+            rest_client._request.return_value, guild_id=123
+        )
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
     async def test_add_role_to_member(self, rest_client):
         expected_route = routes.PUT_GUILD_MEMBER_ROLE.compile(guild=123, user=456, role=789)
