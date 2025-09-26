@@ -6013,13 +6013,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
         avatar
-            If provided, the new avatar for the member. If,
+            If provided, the new guild specific avatar for the member. If,
             [`None`][], will remove the members avatar.
         banner
-            If provided, the new banner for the member. If,
+            If provided, the new guild specific banner for the member. If,
             [`None`][], will remove the members banner.
         bio
-            If provided, the new bio for the member. If,
+            If provided, the new guild specific bio for the member. If,
             [`None`][], will remove the members bio.
         reason
             If provided, the reason that will be recorded in the audit logs.
