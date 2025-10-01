@@ -265,11 +265,13 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     __slots__: typing.Sequence[str] = (
         "_compiled_route",
         "_global_ratelimit",
-        "_initial_request_lock",
+        "_in_transit",
         "_is_fixed",
+        "_is_unknown",
         "_max_rate_limit",
         "_out_of_sync",
-        "_transit_semaphore",
+        "_transit_complete_event",
+        "_transit_event_lock",
         "reset_at",
     )
 
@@ -304,9 +306,12 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         self._compiled_route = compiled_route
         self._max_rate_limit = max_rate_limit
         self._global_ratelimit = global_ratelimit
-        self._initial_request_lock = asyncio.Lock()
         self._out_of_sync = False
-        self._transit_semaphore: asyncio.BoundedSemaphore | None = None
+        self._is_unknown = True
+
+        self._in_transit = 0
+        self._transit_event_lock = asyncio.Lock()
+        self._transit_complete_event: asyncio.Event | None = None
 
     async def __aenter__(self) -> None:
         await self.acquire()
@@ -319,38 +324,36 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     @property
     def is_unknown(self) -> bool:
         """Whether it represents an UNKNOWN bucket."""
-        return self.name.startswith(UNKNOWN_HASH)
+        return self._is_unknown
 
     @typing_extensions.override
     async def acquire(self) -> None:
-        """Acquire time and the lock on this bucket.
+        """Acquire time on this bucket.
 
         !!! note
             You should afterwards invoke [`hikari.impl.buckets.RESTBucket.update_rate_limit`][] to
             update any rate limit information you are made aware of and
-            [`hikari.impl.buckets.RESTBucket.release`][] to release the lock.
+            [`hikari.impl.buckets.RESTBucket.release`][] to release the bucket.
 
         Raises
         ------
         hikari.errors.RateLimitTooLongError
             If the rate limit is longer than `max_rate_limit`.
         """
-        if self.is_unknown:
-            await self._initial_request_lock.acquire()
+        if self._in_transit >= self.limit:
+            async with self._transit_event_lock:
+                self._transit_complete_event = asyncio.Event()
+                await self._transit_complete_event.wait()
 
-            if self.is_unknown:
-                return
+        self._in_transit += 1
 
-            # Mypy is wrong here, it is indeed reachable
-            self._initial_request_lock.release()  # type: ignore[unreachable]
-
-        assert self._transit_semaphore is not None
-        await self._transit_semaphore.acquire()
+        if self._is_unknown:
+            return
 
         now = time.time()
 
         if self.remaining == 0 and self.move_at - now > self._max_rate_limit:
-            self._transit_semaphore.release()
+            self._in_transit -= 1
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 is_global=False,
@@ -365,7 +368,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
 
         global_ratelimit = self._global_ratelimit
         if global_ratelimit.reset_at and (global_ratelimit.reset_at - now) > self._max_rate_limit:
-            self._transit_semaphore.release()
+            self._in_transit -= 1
             raise errors.RateLimitTooLongError(
                 route=self._compiled_route,
                 is_global=True,
@@ -379,12 +382,13 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         await global_ratelimit.acquire()
 
     def release(self) -> None:
-        """Release the lock on the bucket."""
-        if self._initial_request_lock.locked():
-            self._initial_request_lock.release()
-        else:
-            assert self._transit_semaphore is not None
-            self._transit_semaphore.release()
+        """Release the bucket."""
+        if self._transit_complete_event and self._in_transit <= self.limit:
+            self._transit_complete_event.set()
+            self._transit_complete_event = None
+
+        if self._in_transit > 0:
+            self._in_transit -= 1
 
     @typing_extensions.override
     def move_window(self, now: float) -> None:
@@ -436,18 +440,33 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         if not self._out_of_sync:
             reset_at_eq = math.isclose(self.reset_at, reset_at, rel_tol=0.0, abs_tol=0.05)
             if not self._is_fixed and reset_at_eq:
-                _LOGGER.info("bucket '%s' detected to be a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
+                _LOGGER.debug(
+                    "bucket '%s' detected to be a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at
+                )
                 self._is_fixed = True
                 # Setting this here will have an effect below
                 self._out_of_sync = True
 
             elif self._is_fixed and not reset_at_eq:
-                _LOGGER.info("bucket '%s' stopped being a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
+                _LOGGER.debug("bucket '%s' stopped being a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
                 self._is_fixed = False
                 # Setting this here will have an effect below
                 self._out_of_sync = True
 
         self.reset_at = reset_at
+
+        if self.limit != limit:
+            if self.limit > limit:
+                _LOGGER.warning(
+                    "bucket '%s' decreased its limit (%s -> %s). "
+                    "It is possible that you will see a small increase in 429s",
+                    self.name,
+                    self.limit,
+                    limit,
+                )
+
+            self.limit = limit
+            self.remaining = min(self.remaining, limit)
 
         if self._is_fixed:
             # We want to update the period only, and only if:
@@ -527,7 +546,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         self.period = slide_period
         self.move_at = move_at
         self._out_of_sync = False
-        self._transit_semaphore = asyncio.BoundedSemaphore(limit)
+        self._is_unknown = False
 
 
 def _create_authentication_hash(authentication: str | None) -> str:
