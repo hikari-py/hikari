@@ -29,6 +29,7 @@ import pytest
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", DeprecationWarning)
+
     class TestingPolicy(asyncio.DefaultEventLoopPolicy):
         def set_event_loop(self, loop: asyncio.AbstractEventLoop | None) -> None:
             # Close any old event loops to prevent them from raising warnings

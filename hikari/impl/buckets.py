@@ -265,13 +265,13 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     __slots__: typing.Sequence[str] = (
         "_compiled_route",
         "_global_ratelimit",
-        "_is_unknown",
+        "_in_transit",
         "_is_fixed",
+        "_is_unknown",
         "_max_rate_limit",
         "_out_of_sync",
-        "_in_transit",
-        "_transit_event_lock",
         "_transit_complete_event",
+        "_transit_event_lock",
         "reset_at",
     )
 
@@ -440,18 +440,33 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         if not self._out_of_sync:
             reset_at_eq = math.isclose(self.reset_at, reset_at, rel_tol=0.0, abs_tol=0.05)
             if not self._is_fixed and reset_at_eq:
-                _LOGGER.info("bucket '%s' detected to be a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
+                _LOGGER.debug(
+                    "bucket '%s' detected to be a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at
+                )
                 self._is_fixed = True
                 # Setting this here will have an effect below
                 self._out_of_sync = True
 
             elif self._is_fixed and not reset_at_eq:
-                _LOGGER.info("bucket '%s' stopped being a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
+                _LOGGER.debug("bucket '%s' stopped being a fixed bucket (%f vs %f)", self.name, self.reset_at, reset_at)
                 self._is_fixed = False
                 # Setting this here will have an effect below
                 self._out_of_sync = True
 
         self.reset_at = reset_at
+
+        if self.limit != limit:
+            if self.limit > limit:
+                _LOGGER.warning(
+                    "bucket '%s' decreased its limit (%s -> %s). "
+                    "It is possible that you will see a small increase in 429s",
+                    self.name,
+                    self.limit,
+                    limit,
+                )
+
+            self.limit = limit
+            self.remaining = min(self.remaining, limit)
 
         if self._is_fixed:
             # We want to update the period only, and only if:
@@ -532,6 +547,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
         self.move_at = move_at
         self._out_of_sync = False
         self._is_unknown = False
+
 
 def _create_authentication_hash(authentication: str | None) -> str:
     return str(hash(authentication))
