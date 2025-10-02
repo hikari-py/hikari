@@ -103,7 +103,7 @@ mkdocs = [
 ]
 
 mypy = ["mypy[faster-cache]==1.18.2", { include-group = "types" }]
-pyright = ["pyright==1.1.405", { include-group = "types" }]
+pyright = ["pyright==1.1.406", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==8.4.2",
