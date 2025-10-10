@@ -447,7 +447,7 @@ class PinnedMessageIterator(iterators.BufferedLazyIterator["messages.PinnedMessa
 class ThreadMembersIterator(iterators.BufferedLazyIterator["channels.ThreadMember"]):
     """Implementation of an iterator for message history."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_has_more", "_last_id", "_request_call", "_route")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_last_id", "_request_call", "_route")
 
     def __init__(
         self,
