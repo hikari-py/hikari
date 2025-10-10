@@ -5391,24 +5391,19 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(routes.GET_THREAD_MEMBER.compile(channel=55445454, user=45454454))
 
     async def test_fetch_thread_members(self, rest_client: rest.RESTClientImpl):
-        mock_payload_1 = mock.Mock()
-        mock_payload_2 = mock.Mock()
-        mock_payload_3 = mock.Mock()
-        mock_member_1 = mock.Mock()
-        mock_member_2 = mock.Mock()
-        mock_member_3 = mock.Mock()
-        rest_client._request = mock.AsyncMock(return_value=[mock_payload_1, mock_payload_2, mock_payload_3])
-        rest_client._entity_factory.deserialize_thread_member = mock.Mock(
-            side_effect=[mock_member_1, mock_member_2, mock_member_3]
-        )
+        channel = StubModel(123)
+        id = 123
+        stub_iterator = mock.Mock()
 
-        result = await rest_client.fetch_thread_members(StubModel(110101010101))
+        with mock.patch.object(special_endpoints, "ThreadMembersIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_thread_members(channel, after=id) == stub_iterator
 
-        assert result == [mock_member_1, mock_member_2, mock_member_3]
-        rest_client._request.assert_awaited_once_with(routes.GET_THREAD_MEMBERS.compile(channel=110101010101))
-        rest_client._entity_factory.deserialize_thread_member.assert_has_calls(
-            [mock.call(mock_payload_1), mock.call(mock_payload_2), mock.call(mock_payload_3)]
-        )
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                channel=channel,
+                last_id=id,
+            )
 
     async def test_fetch_active_threads(self, rest_client: rest.RESTClientImpl): ...
 

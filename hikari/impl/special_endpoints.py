@@ -62,6 +62,7 @@ __all__: typing.Sequence[str] = (
     "TextDisplayComponentBuilder",
     "TextInputBuilder",
     "TextSelectMenuBuilder",
+    "ThreadMembersIterator",
     "ThumbnailComponentBuilder",
     "TypingIndicator",
 )
@@ -438,6 +439,44 @@ class PinnedMessageIterator(iterators.BufferedLazyIterator["messages.PinnedMessa
 
         self._first_id = chunk[-1]["pinned_at"]
         return (self._entity_factory.deserialize_pinned_message(m) for m in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class ThreadMembersIterator(iterators.BufferedLazyIterator["channels.ThreadMember"]):
+    """Implementation of an iterator for thread members."""
+
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_last_id", "_request_call", "_route")
+
+    def __init__(
+        self,
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: _RequestCallSig,
+        channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
+        last_id: undefined.UndefinedOr[snowflakes.Snowflakeish],
+    ) -> None:
+        super().__init__()
+        self._entity_factory = entity_factory
+        self._request_call = request_call
+        self._last_id = last_id
+        self._route = routes.GET_THREAD_MEMBERS.compile(channel=channel)
+
+    @typing_extensions.override
+    async def _next_chunk(self) -> typing.Generator[channels.ThreadMember, typing.Any, None] | None:
+        query = data_binding.StringMapBuilder()
+        query.put("after", self._last_id)
+        query.put("limit", 100)
+        query.put("with_member", True)
+
+        response = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(response, list)
+
+        if not response:
+            return None
+
+        self._last_id = response[-1]["id"]
+        return (self._entity_factory.deserialize_thread_member(m) for m in response)
 
 
 # We use an explicit forward reference for this, since this breaks potential
