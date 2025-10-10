@@ -42,7 +42,6 @@ from hikari.api import config
 from hikari.api import event_manager as event_manager_
 from hikari.events import base_events
 from hikari.events import shard_events
-from hikari.internal import aio
 from hikari.internal import fast_protocol
 from hikari.internal import reflect
 from hikari.internal import typing_extensions
@@ -56,9 +55,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import shard as gateway_shard
     from hikari.internal import data_binding
 
-    _ConsumerT = typing.Callable[
-        [gateway_shard.GatewayShard, data_binding.JSONObject], typing.Coroutine[typing.Any, typing.Any, None]
-    ]
+    _ConsumerT = typing.Callable[[gateway_shard.GatewayShard, data_binding.JSONObject], None]
     _ListenerMapT = dict[type[base_events.EventT], list[event_manager_.CallbackT[base_events.EventT]]]
     _WaiterT = tuple[
         typing.Optional[event_manager_.PredicateT[base_events.EventT]], "asyncio.Future[base_events.EventT]"
@@ -66,10 +63,7 @@ if typing.TYPE_CHECKING:
     _WaiterMapT = dict[type[base_events.EventT], set[_WaiterT[base_events.EventT]]]
 
     _EventManagerBaseT = typing.TypeVar("_EventManagerBaseT", bound="EventManagerBase")
-    _UnboundMethodT = typing.Callable[
-        [_EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject],
-        typing.Coroutine[typing.Any, typing.Any, None],
-    ]
+    _UnboundMethodT = typing.Callable[[_EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject], None]
 
 
 if sys.version_info >= (3, 10):
@@ -85,7 +79,7 @@ _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager"
 class _FilteredMethodT(fast_protocol.FastProtocolChecking, typing.Protocol):
     __slots__: typing.Sequence[str] = ()
 
-    async def __call__(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject, /) -> None:
+    def __call__(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         raise NotImplementedError
 
     @property
@@ -328,8 +322,8 @@ class EventManagerBase(event_manager_.EventManager):
 
     __slots__: typing.Sequence[str] = (
         "_consumers",
+        "_dispatched_tasks",
         "_event_factory",
-        "_handling_dispatch_tasks",
         "_intents",
         "_listeners",
         "_waiters",
@@ -347,7 +341,7 @@ class EventManagerBase(event_manager_.EventManager):
         self._intents = intents
         self._listeners: _ListenerMapT[base_events.Event] = {}
         self._waiters: _WaiterMapT[base_events.Event] = {}
-        self._handling_dispatch_tasks: set[asyncio.Task[None]] = set()
+        self._dispatched_tasks: set[asyncio.Task[None]] = set()
 
         for name, member in inspect.getmembers(self):
             if name.startswith("on_"):
@@ -420,12 +414,28 @@ class EventManagerBase(event_manager_.EventManager):
         if self._enabled_for_event(shard_events.ShardPayloadEvent):
             payload_event = self._event_factory.deserialize_shard_payload_event(shard, payload, name=event_name)
             self.dispatch(payload_event)
+
         consumer = self._consumers[event_name.lower()]
+        if not consumer.is_enabled:
+            name = consumer.callback.__name__
+            _LOGGER.log(
+                ux.TRACE, "Skipping raw dispatch for %s due to lack of any registered listeners or cache need", name
+            )
+            return
 
-        task = asyncio.create_task(self._handle_dispatch(consumer, shard, payload), name=f"dispatch {event_name}")
-
-        self._handling_dispatch_tasks.add(task)
-        task.add_done_callback(self._handling_dispatch_tasks.discard)
+        try:
+            consumer.callback(shard, payload)
+        except errors.UnrecognisedEntityError:
+            _LOGGER.debug("Event referenced an unrecognised entity, discarding")
+        except Exception as ex:  # noqa: BLE001 - Do not catch blind exception
+            asyncio.get_running_loop().call_exception_handler(
+                {
+                    "message": "Exception occurred in raw event dispatch conduit",
+                    "payload": payload,
+                    "exception": ex,
+                    "task": asyncio.current_task(),
+                }
+            )
 
     # Yes, this is not generic. The reason for this is MyPy complains about
     # using ABCs that are not concrete in generic types passed to functions.
@@ -536,12 +546,37 @@ class EventManagerBase(event_manager_.EventManager):
 
         return decorator
 
+    @typing.overload
+    def dispatch(self, event: base_events.Event, *, return_tasks: typing.Literal[False] = False) -> None: ...
+
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: typing.Literal[True] = True
+    ) -> asyncio.Future[typing.Any]: ...
+
+    @typing.overload
+    def dispatch(
+        self, event: base_events.Event, *, return_tasks: bool = False
+    ) -> asyncio.Future[typing.Any] | None: ...
+
     @typing_extensions.override
-    def dispatch(self, event: base_events.Event) -> asyncio.Future[typing.Any]:
-        tasks: list[typing.Coroutine[None, typing.Any, None]] = []
+    def dispatch(  # noqa: PLR0912 - Too many branches
+        self, event: base_events.Event, *, return_tasks: bool = False
+    ) -> asyncio.Future[typing.Any] | None:
+        tasks: list[asyncio.Task[None]] = []
 
         for cls in event.dispatches():
-            tasks.extend(self._invoke_callback(c, event) for c in self._listeners.get(cls, ()))
+            if cls in self._listeners:
+                for c in self._listeners[cls]:
+                    task = asyncio.create_task(
+                        self._invoke_callback(c, event), name=f"handler '{c.__name__}' for '{type(event).__name__}'"
+                    )
+
+                    if return_tasks:
+                        tasks.append(task)
+                    else:
+                        self._dispatched_tasks.add(task)
+                        task.add_done_callback(self._dispatched_tasks.discard)
 
             if cls not in self._waiters:
                 continue
@@ -565,10 +600,10 @@ class EventManagerBase(event_manager_.EventManager):
                 del self._waiters[cls]
                 self._increment_waiter_group_count(cls, -1)
 
-        if tasks:
+        if return_tasks:
             return asyncio.gather(*tasks)
 
-        return aio.completed_future()
+        return None
 
     @typing_extensions.override
     def stream(
@@ -610,33 +645,6 @@ class EventManagerBase(event_manager_.EventManager):
 
             raise
 
-    async def _handle_dispatch(
-        self, consumer: _Consumer, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
-    ) -> None:
-        if not consumer.is_enabled:
-            name = consumer.callback.__name__
-            _LOGGER.log(
-                ux.TRACE, "Skipping raw dispatch for %s due to lack of any registered listeners or cache need", name
-            )
-            return
-
-        try:
-            await consumer.callback(shard, payload)
-        except asyncio.CancelledError:
-            # Skip cancelled errors, likely caused by the event loop being shut down.
-            pass
-        except errors.UnrecognisedEntityError:
-            _LOGGER.debug("Event referenced an unrecognised entity, discarding")
-        except Exception as ex:  # noqa: BLE001 - Do not catch blind exception
-            asyncio.get_running_loop().call_exception_handler(
-                {
-                    "message": "Exception occurred in raw event dispatch conduit",
-                    "payload": payload,
-                    "exception": ex,
-                    "task": asyncio.current_task(),
-                }
-            )
-
     async def _invoke_callback(
         self, callback: event_manager_.CallbackT[base_events.EventT], event: base_events.EventT
     ) -> None:
@@ -656,4 +664,4 @@ class EventManagerBase(event_manager_.EventManager):
 
                 log = _LOGGER.debug if self.get_listeners(type(exception_event), polymorphic=True) else _LOGGER.error
                 log("an exception occurred handling an event (%s)", type(event).__name__, exc_info=trio)
-                await self.dispatch(exception_event)
+                self.dispatch(exception_event)

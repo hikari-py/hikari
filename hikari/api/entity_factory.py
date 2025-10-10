@@ -822,6 +822,45 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_media_channel(
+        self,
+        payload: data_binding.JSONObject,
+        *,
+        guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = undefined.UNDEFINED,
+    ) -> channel_models.GuildMediaChannel:
+        """Parse a raw payload from Discord into a guild media channel object.
+
+        Parameters
+        ----------
+        payload : hikari.internal.data_binding.JSONObject
+            The JSON payload to deserialize.
+
+        Other Parameters
+        ----------------
+        guild_id : hikari.undefined.UndefinedOr[hikari.snowflakes.Snowflake]
+            The ID of the guild this channel belongs to. This will be ignored
+            for DM and group DM channels and will be prioritised over
+            `"guild_id"` in the payload when passed.
+
+            This is necessary in GUILD_CREATE events, where `"guild_id"` is not
+            included in the channel's payload
+
+        Returns
+        -------
+        hikari.channels.GuildMediaChannel
+            The deserialized guild media channel object.
+
+        Raises
+        ------
+        KeyError
+            If `guild_id` is left as `hikari.undefined.UNDEFINED` when
+            `"guild_id"` is not present in the passed payload of a guild
+            channel.
+        hikari.errors.UnrecognisedEntityError
+            If the channel type is unknown.
+        """
+
+    @abc.abstractmethod
     def deserialize_channel(
         self,
         payload: data_binding.JSONObject,
@@ -1043,6 +1082,21 @@ class EntityFactory(abc.ABC):
         -------
         hikari.internal.data_binding.JSONObject
             The serialized representation of the welcome channel.
+        """
+
+    @abc.abstractmethod
+    def deserialize_guild_onboarding(self, payload: data_binding.JSONObject) -> guild_models.GuildOnboarding:
+        """Parse a raw payload from Discord into a guild onboarding object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.GuildOnboarding
+            The deserialized guild onboarding object.
         """
 
     @abc.abstractmethod
@@ -1440,6 +1494,23 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_interaction_callback_response(
+        self, payload: data_binding.JSONObject
+    ) -> base_interactions.InteractionCallbackResponse:
+        """Parse a raw payload from Discord into an interaction callback response object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.base_interactions.InteractionCallbackResponse
+            The deserialized interaction callback response object.
+        """
+
+    @abc.abstractmethod
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
         """Serialize a command option object to a json serializable dict.
 
@@ -1587,6 +1658,36 @@ class EntityFactory(abc.ABC):
     ##################
     # MESSAGE MODELS #
     ##################
+
+    @abc.abstractmethod
+    def deserialize_message_snapshot(self, payload: data_binding.JSONObject) -> message_models.MessageSnapshot:
+        """Parse a raw payload from Discord into a snapshot object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.MessageSnapshot
+            The deserialized message snapshot object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_pinned_message(self, payload: data_binding.JSONObject) -> message_models.PinnedMessage:
+        """Parse a raw payload from Discord into a pinned message object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.PinnedMessage
+            The deserialized pinned message object.
+        """
 
     @abc.abstractmethod
     def deserialize_partial_message(self, payload: data_binding.JSONObject) -> message_models.PartialMessage:

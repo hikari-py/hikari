@@ -453,26 +453,28 @@ class TestGatewayBot:
         assert bot._shards == {}
         cache.clear.assert_called_once_with()
 
-        event_manager.dispatch.assert_has_calls(
+        event_manager.dispatch.assert_has_awaits(
             [
-                mock.call(event_factory.deserialize_stopping_event.return_value),
-                mock.call(event_factory.deserialize_stopped_event.return_value),
+                mock.call(event_factory.deserialize_stopping_event.return_value, return_tasks=True),
+                mock.call(event_factory.deserialize_stopped_event.return_value, return_tasks=True),
             ]
         )
 
     def test_dispatch(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
         event = mock.Mock()
 
-        assert bot.dispatch(event) is event_manager.dispatch.return_value
+        with mock.patch.object(event_manager, "dispatch") as patched_dispatch:
+            assert bot.dispatch(event, return_tasks=True) is patched_dispatch.return_value
 
-        event_manager.dispatch.assert_called_once_with(event)
+        patched_dispatch.assert_called_once_with(event, return_tasks=True)
 
     def test_get_listeners(self, bot: bot_impl.GatewayBot, event_manager: event_manager_impl.EventManagerImpl):
         event = mock.Mock
 
-        assert bot.get_listeners(event, polymorphic=False) is event_manager.get_listeners.return_value
+        with mock.patch.object(event_manager, "get_listeners") as patched_get_listeners:
+            assert bot.get_listeners(event, polymorphic=False) is patched_get_listeners.return_value
 
-        event_manager.get_listeners.assert_called_once_with(event, polymorphic=False)
+        patched_get_listeners.assert_called_once_with(event, polymorphic=False)
 
     @pytest.mark.asyncio
     async def test_join(self, bot: bot_impl.GatewayBot):
@@ -606,6 +608,7 @@ class TestGatewayBot:
                 shard_ids=shard_ids,
                 shard_count=shard_count,
                 status=status,
+                startup_window_delay=15,
             )
 
         loop.run_until_complete.assert_has_calls(
@@ -621,6 +624,7 @@ class TestGatewayBot:
             shard_ids=shard_ids,
             shard_count=shard_count,
             status=status,
+            startup_window_delay=15,
         )
         handle_interrupts.assert_called_once_with(enabled=False, loop=loop, propagate_interrupts=False)
         handle_interrupts.return_value.assert_used_once()
@@ -691,6 +695,7 @@ class TestGatewayBot:
                 idle_since=datetime.datetime.fromtimestamp(0),
                 status=presences.Status.IDLE,
                 large_threshold=500,
+                startup_window_delay=10,
             )
 
         check_for_updates.assert_called_once_with(http_settings, proxy_settings)
@@ -701,8 +706,8 @@ class TestGatewayBot:
         assert event_manager.dispatch.call_count == 2
         event_manager.dispatch.assert_has_awaits(
             [
-                mock.call(event_factory.deserialize_starting_event.return_value),
-                mock.call(event_factory.deserialize_started_event.return_value),
+                mock.call(event_factory.deserialize_starting_event.return_value, return_tasks=True),
+                mock.call(event_factory.deserialize_started_event.return_value, return_tasks=True),
             ]
         )
 
@@ -737,7 +742,7 @@ class TestGatewayBot:
                 # Shard 1
                 mock.call(closing_event_closing_wait, gather.return_value),
                 # Shard 2
-                mock.call(closing_event_closing_wait, shard1.join.return_value, timeout=5),
+                mock.call(closing_event_closing_wait, shard1.join.return_value, timeout=10),
                 mock.call(closing_event_closing_wait, gather.return_value),
             ]
         )

@@ -480,13 +480,11 @@ class TestEventManagerBase:
         event_manager._enabled_for_event = mock.Mock(return_value=True)
         mock_payload = {"id": "3123123123"}
         mock_shard = mock.Mock(id=123)
-        event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
 
         with pytest.raises(LookupError):
             event_manager.consume_raw_event("UNEXISTING_EVENT", mock_shard, mock_payload)
 
-        event_manager._handle_dispatch.assert_not_called()
         event_manager.dispatch.assert_called_once_with(
             event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
@@ -498,20 +496,37 @@ class TestEventManagerBase:
     @pytest.mark.asyncio
     async def test_consume_raw_event_when_found(self, event_manager: EventManagerBaseImpl):
         event_manager._enabled_for_event = mock.Mock(return_value=True)
-        event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
-        on_existing_event = mock.Mock()
+        on_existing_event = mock.Mock(is_enabled=True, callback=mock.Mock(__name__="testing"))
         event_manager._consumers = {"existing_event": on_existing_event}
         shard = mock.Mock()
         payload = {"berp": "baz"}
 
-        with mock.patch("asyncio.create_task") as create_task:
-            event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
+        event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
 
-        event_manager._handle_dispatch.assert_called_once_with(on_existing_event, shard, {"berp": "baz"})
-        create_task.assert_called_once_with(
-            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}), name="dispatch EXISTING_EVENT"
+        on_existing_event.callback.assert_called_once_with(shard, payload)
+        event_manager.dispatch.assert_called_once_with(
+            event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
+        event_manager._event_factory.deserialize_shard_payload_event.assert_called_once_with(
+            shard, payload, name="EXISTING_EVENT"
+        )
+        event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
+
+    @pytest.mark.asyncio
+    async def test_consume_raw_event_skips_consumer_callback_when_not_enabled(
+        self, event_manager: EventManagerBaseImpl
+    ):
+        event_manager._enabled_for_event = mock.Mock(return_value=True)
+        event_manager.dispatch = mock.Mock()
+        on_existing_event = mock.Mock(is_enabled=False, callback=mock.Mock(__name__="testing"))
+        event_manager._consumers = {"existing_event": on_existing_event}
+        shard = mock.Mock()
+        payload = {"berp": "baz"}
+
+        event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
+
+        on_existing_event.callback.assert_not_called()
         event_manager.dispatch.assert_called_once_with(
             event_manager._event_factory.deserialize_shard_payload_event.return_value
         )
@@ -523,62 +538,28 @@ class TestEventManagerBase:
     @pytest.mark.asyncio
     async def test_consume_raw_event_skips_raw_dispatch_when_not_enabled(self, event_manager: EventManagerBaseImpl):
         event_manager._enabled_for_event = mock.Mock(return_value=False)
-        event_manager._handle_dispatch = mock.Mock()
         event_manager.dispatch = mock.Mock()
-        on_existing_event = mock.Mock()
+        on_existing_event = mock.Mock(is_enabled=False, callback=mock.Mock(__name__="testing"))
         event_manager._consumers = {"existing_event": on_existing_event}
-        shard = mock.Mock()
+        shard = object()
         payload = {"berp": "baz"}
 
-        with mock.patch("asyncio.create_task") as create_task:
-            event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
+        event_manager.consume_raw_event("EXISTING_EVENT", shard, payload)
 
-        event_manager._handle_dispatch.assert_called_once_with(on_existing_event, shard, {"berp": "baz"})
-        create_task.assert_called_once_with(
-            event_manager._handle_dispatch(on_existing_event, shard, {"berp": "baz"}), name="dispatch EXISTING_EVENT"
-        )
         event_manager.dispatch.assert_not_called()
-        event_manager._event_factory.deserialize_shard_payload_event.vassert_not_called()
+        event_manager._event_factory.deserialize_shard_payload_event.assert_not_called()
         event_manager._enabled_for_event.assert_called_once_with(shard_events.ShardPayloadEvent)
 
     @pytest.mark.asyncio
-    async def test_handle_dispatch_invokes_callback(self, event_manager: EventManagerBaseImpl):
-        event_manager._enabled_for_consumer = mock.Mock(return_value=True)
-        consumer = mock.AsyncMock()
-        error_handler = mock.MagicMock()
-        event_loop = asyncio.get_running_loop()
-        event_loop.set_exception_handler(error_handler)
-        shard = mock.Mock()
-        pl = {"foo": "bar"}
-
-        await event_manager._handle_dispatch(consumer, shard, pl)
-
-        consumer.callback.assert_awaited_once_with(shard, pl)
-        error_handler.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_handle_dispatch_ignores_cancelled_errors(self, event_manager: EventManagerBaseImpl):
-        event_manager._enabled_for_consumer = mock.Mock(return_value=True)
-        consumer = mock.AsyncMock(side_effect=asyncio.CancelledError)
-        error_handler = mock.MagicMock()
-        event_loop = asyncio.get_running_loop()
-        event_loop.set_exception_handler(error_handler)
-        shard = mock.Mock()
-        pl = {"lorem": "ipsum"}
-
-        await event_manager._handle_dispatch(consumer, shard, pl)
-
-        error_handler.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_handle_dispatch_handles_exceptions(self, event_manager: EventManagerBaseImpl):
+    async def test_consume_raw_event_handles_exceptions(self, event_manager: EventManagerBaseImpl):
         mock_task = mock.Mock()
         # On Python 3.12+ Asyncio uses this to get the task's context if set to call the
         # error handler in. We want to avoid for this test for simplicity.
         mock_task.get_context.return_value = None
-        event_manager._enabled_for_consumer = mock.Mock()
         exc = Exception("aaaa!")
-        consumer = mock.Mock(callback=mock.AsyncMock(side_effect=exc))
+        consumer = mock.Mock(callback=mock.Mock(__name__="testing", side_effect=exc))
+        event_manager._consumers = {"existing_event": consumer}
+
         error_handler = mock.MagicMock()
         event_loop = asyncio.get_running_loop()
         event_loop.set_exception_handler(error_handler)
@@ -586,7 +567,7 @@ class TestEventManagerBase:
         pl = {"i like": "cats"}
 
         with mock.patch.object(asyncio, "current_task", return_value=mock_task):
-            await event_manager._handle_dispatch(consumer, shard, pl)
+            event_manager.consume_raw_event("EXISTING_EVENT", shard, pl)
 
         error_handler.assert_called_once_with(
             event_loop,
@@ -597,20 +578,6 @@ class TestEventManagerBase:
                 "task": mock_task,
             },
         )
-
-    @pytest.mark.asyncio
-    async def test_handle_dispatch_invokes_when_consumer_not_enabled(self, event_manager: EventManagerBaseImpl):
-        consumer = mock.Mock(callback=mock.AsyncMock(__name__="ok"), is_enabled=False)
-        error_handler = mock.MagicMock()
-        event_loop = asyncio.get_running_loop()
-        event_loop.set_exception_handler(error_handler)
-        shard = mock.Mock()
-        pl = {"foo": "bar"}
-
-        await event_manager._handle_dispatch(consumer, shard, pl)
-
-        consumer.callback.assert_not_called()
-        error_handler.assert_not_called()
 
     def test_subscribe_when_class_call(self, event_manager: EventManagerBaseImpl):
         class Foo:
@@ -724,7 +691,7 @@ class TestEventManagerBase:
         assert event_manager.get_listeners(base_events.Event) == []
 
     def test_get_listeners_polymorphic(self, event_manager: EventManagerBaseImpl):
-        event_manager._listeners = {
+        listeners = {
             base_events.Event: ["coroutine0"],
             member_events.MemberEvent: ["coroutine1"],
             member_events.MemberCreateEvent: ["hi", "i am"],
@@ -732,26 +699,29 @@ class TestEventManagerBase:
             base_events.ExceptionEvent: ["so you won't see me"],
         }
 
-        assert event_manager.get_listeners(member_events.MemberEvent) == ["coroutine1", "coroutine0"]
+        with mock.patch.object(event_manager, "_listeners", listeners):
+            assert event_manager.get_listeners(member_events.MemberEvent) == ["coroutine1", "coroutine0"]
 
     def test_get_listeners_monomorphic_and_no_results(self, event_manager: EventManagerBaseImpl):
-        event_manager._listeners = {
+        listeners = {
             member_events.MemberCreateEvent: ["coroutine1", "coroutine2"],
             member_events.MemberUpdateEvent: ["coroutine3"],
             member_events.MemberDeleteEvent: ["coroutine4", "coroutine5"],
         }
 
-        assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == ()
+        with mock.patch.object(event_manager, "_listeners", listeners):
+            assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == ()
 
     def test_get_listeners_monomorphic_and_results(self, event_manager: EventManagerBaseImpl):
-        event_manager._listeners = {
+        listeners = {
             member_events.MemberEvent: ["coroutine0"],
             member_events.MemberCreateEvent: ["coroutine1", "coroutine2"],
             member_events.MemberUpdateEvent: ["coroutine3"],
             member_events.MemberDeleteEvent: ["coroutine4", "coroutine5"],
         }
 
-        assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == ["coroutine0"]
+        with mock.patch.object(event_manager, "_listeners", listeners):
+            assert event_manager.get_listeners(member_events.MemberEvent, polymorphic=False) == ["coroutine0"]
 
     def test_unsubscribe_when_event_type_not_in_listeners(self, event_manager: EventManagerBaseImpl):
         async def test(): ...
@@ -770,29 +740,34 @@ class TestEventManagerBase:
         async def test2(): ...
 
         event_manager._increment_listener_group_count = mock.Mock()
-        event_manager._listeners = {
-            member_events.MemberCreateEvent: [test, test2],
-            member_events.MemberDeleteEvent: [test],
-        }
+        listeners = {member_events.MemberCreateEvent: [test, test2], member_events.MemberDeleteEvent: [test]}
 
-        event_manager.unsubscribe(member_events.MemberCreateEvent, test)
+        with (
+            mock.patch.object(event_manager, "_listeners", listeners) as patched__listeners,
+            mock.patch.object(
+                event_manager, "_increment_listener_group_count"
+            ) as patched__increment_listener_group_count,
+        ):
+            event_manager.unsubscribe(member_events.MemberCreateEvent, test)
 
-        assert event_manager._listeners == {
-            member_events.MemberCreateEvent: [test2],
-            member_events.MemberDeleteEvent: [test],
-        }
-        event_manager._increment_listener_group_count.assert_not_called()
+        assert patched__listeners == {member_events.MemberCreateEvent: [test2], member_events.MemberDeleteEvent: [test]}
+        patched__increment_listener_group_count.assert_not_called()
 
     def test_unsubscribe_when_event_type_when_list_empty_after_delete(self, event_manager: EventManagerBaseImpl):
         async def test(): ...
 
-        event_manager._increment_listener_group_count = mock.Mock()
-        event_manager._listeners = {member_events.MemberCreateEvent: [test], member_events.MemberDeleteEvent: [test]}
+        listeners = {member_events.MemberCreateEvent: [test], member_events.MemberDeleteEvent: [test]}
 
-        event_manager.unsubscribe(member_events.MemberCreateEvent, test)
+        with (
+            mock.patch.object(event_manager, "_listeners", listeners) as patched__listeners,
+            mock.patch.object(
+                event_manager, "_increment_listener_group_count"
+            ) as patched__increment_listener_group_count,
+        ):
+            event_manager.unsubscribe(member_events.MemberCreateEvent, test)
 
-        assert event_manager._listeners == {member_events.MemberDeleteEvent: [test]}
-        event_manager._increment_listener_group_count.assert_called_once_with(member_events.MemberCreateEvent, -1)
+        assert patched__listeners == {member_events.MemberDeleteEvent: [test]}
+        patched__increment_listener_group_count.assert_called_once_with(member_events.MemberCreateEvent, -1)
 
     def test_listen_when_no_params(self, event_manager: EventManagerBaseImpl):
         with pytest.raises(TypeError):

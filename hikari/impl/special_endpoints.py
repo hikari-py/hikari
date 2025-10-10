@@ -53,6 +53,7 @@ __all__: typing.Sequence[str] = (
     "ModalActionRowBuilder",
     "PollAnswerBuilder",
     "PollBuilder",
+    "PremiumButtonBuilder",
     "SectionComponentBuilder",
     "SelectMenuBuilder",
     "SelectOptionBuilder",
@@ -226,6 +227,133 @@ class TypingIndicator(special_endpoints.TypingIndicator):
             pass
 
 
+@attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
+class ChannelRepositioner(special_endpoints.ChannelRepositioner):
+    """Standard implementation of [`hikari.api.special_endpoints.ChannelRepositioner`][]."""
+
+    _guild: snowflakes.SnowflakeishOr[guilds.PartialGuild] = attrs.field(repr=True, alias="guild")
+    _request_call: _RequestCallSig = attrs.field(alias="request_call", metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    _positions: list[special_endpoints.RepositionedChannel] = attrs.field(
+        repr=True, alias="positions", factory=list, init=False
+    )
+    _reason: undefined.UndefinedOr[str] = attrs.field(alias="reason", repr=True, default=undefined.UNDEFINED)
+
+    @property
+    @typing_extensions.override
+    def reason(self) -> undefined.UndefinedOr[str]:
+        return self._reason
+
+    @typing_extensions.override
+    def set_reason(self, reason: undefined.UndefinedOr[str]) -> Self:
+        self._reason = reason
+        return self
+
+    @property
+    @typing_extensions.override
+    def guild(self) -> snowflakes.SnowflakeishOr[guilds.PartialGuild]:
+        return self._guild
+
+    @typing_extensions.override
+    def set_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> Self:
+        self._guild = guild
+        return self
+
+    @property
+    @typing_extensions.override
+    def positions(self) -> typing.Sequence[special_endpoints.RepositionedChannel]:
+        return self._positions
+
+    @typing_extensions.override
+    def set_positions(self, positions: typing.Sequence[special_endpoints.RepositionedChannel]) -> Self:
+        self._positions = list(positions)
+        return self
+
+    @typing_extensions.override
+    def add_reposition_channel(
+        self,
+        position: int,
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        *,
+        lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+    ) -> Self:
+        self._positions.append(
+            RepositionedChannel(channel=channel, position=position, lock_permissions=lock_permissions, parent=parent)
+        )
+        return self
+
+    @typing_extensions.override
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
+        route = routes.PATCH_GUILD_CHANNELS.compile(guild=self._guild)
+
+        body = []
+        for channel in self._positions:
+            channel_payload = data_binding.JSONObjectBuilder()
+            channel_payload.put_snowflake("id", channel.channel)
+            channel_payload.put("position", channel.position)
+            channel_payload.put("lock_permissions", channel.lock_permissions)
+            channel_payload.put_snowflake("parent_id", channel.parent)
+            body.append(channel_payload)
+
+        return self._request_call(route, json=body, reason=self._reason).__await__()
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
+class RepositionedChannel(special_endpoints.RepositionedChannel):
+    """Standard implementation of [`hikari.api.special_endpoints.RepositionedChannel`][]."""
+
+    _channel: snowflakes.SnowflakeishOr[channels.GuildChannel] = attrs.field(repr=True, alias="channel")
+    _position: int = attrs.field(repr=True, alias="position")
+    _lock_permissions: undefined.UndefinedOr[bool] = attrs.field(
+        repr=True, default=undefined.UNDEFINED, alias="lock_permissions"
+    )
+    _parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = attrs.field(
+        repr=True, default=undefined.UNDEFINED, alias="parent"
+    )
+
+    @property
+    @typing_extensions.override
+    def channel(self) -> snowflakes.SnowflakeishOr[channels.GuildChannel]:
+        return self._channel
+
+    @typing_extensions.override
+    def set_channel(self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]) -> Self:
+        self._channel = channel
+        return self
+
+    @property
+    @typing_extensions.override
+    def position(self) -> int:
+        return self._position
+
+    @typing_extensions.override
+    def set_position(self, position: int) -> Self:
+        self._position = position
+        return self
+
+    @property
+    @typing_extensions.override
+    def lock_permissions(self) -> undefined.UndefinedOr[bool]:
+        return self._lock_permissions
+
+    @typing_extensions.override
+    def set_lock_permissions(self, lock: undefined.UndefinedOr[bool]) -> Self:
+        self._lock_permissions = lock
+        return self
+
+    @property
+    @typing_extensions.override
+    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+        return self._parent
+
+    @typing_extensions.override
+    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+        self._parent = parent
+        return self
+
+
 # We use an explicit forward reference for this, since this breaks potential
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).
@@ -265,6 +393,51 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
 
         self._first_id = chunk[-1]["id"]
         return (self._entity_factory.deserialize_message(m) for m in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class PinnedMessageIterator(iterators.BufferedLazyIterator["messages.PinnedMessage"]):
+    """Implementation of an iterator for message history."""
+
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_has_more", "_request_call", "_route")
+
+    def __init__(
+        self,
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: _RequestCallSig,
+        channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
+        first_id: undefined.UndefinedOr[str],
+    ) -> None:
+        super().__init__()
+        self._entity_factory = entity_factory
+        self._request_call = request_call
+        self._first_id = first_id
+        self._route = routes.GET_CHANNEL_PINS.compile(channel=channel)
+        self._has_more = True
+
+    @typing_extensions.override
+    async def _next_chunk(self) -> typing.Generator[messages.PinnedMessage, typing.Any, None] | None:
+        if not self._has_more:
+            return None
+
+        query = data_binding.StringMapBuilder()
+        query.put("before", self._first_id)
+        query.put("limit", 50)
+
+        response = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(response, dict)
+
+        chunk = response["items"]
+        if not chunk:
+            self._has_more = False
+            return None
+
+        self._has_more = response["has_more"]
+
+        self._first_id = chunk[-1]["pinned_at"]
+        return (self._entity_factory.deserialize_pinned_message(m) for m in chunk)
 
 
 # We use an explicit forward reference for this, since this breaks potential
@@ -663,6 +836,203 @@ class AutocompleteChoiceBuilder(special_endpoints.AutocompleteChoiceBuilder):
 
 
 @attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
+class GuildOnboardingPromptOptionBuilder(special_endpoints.GuildOnboardingPromptOptionBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.GuildOnboardingPromptOptionBuilder`][]."""
+
+    _title: str = attrs.field(alias="title")
+    _role_ids: snowflakes.SnowflakeishSequence[guilds.Role] = attrs.field(alias="role_ids", kw_only=True, factory=tuple)
+    _channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel] = attrs.field(
+        alias="channel_ids", kw_only=True, factory=tuple
+    )
+    _description: undefined.UndefinedOr[str] = attrs.field(
+        alias="description", kw_only=True, default=undefined.UNDEFINED
+    )
+    _emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str] = attrs.field(
+        alias="emoji", default=undefined.UNDEFINED, kw_only=True
+    )
+    _emoji_id: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
+    _emoji_name: undefined.UndefinedOr[str] = attrs.field(init=False, default=undefined.UNDEFINED)
+
+    def __attrs_post_init__(self) -> None:
+        self._emoji_id, self._emoji_name = _build_emoji(self._emoji)
+
+    @property
+    @typing_extensions.override
+    def title(self) -> str:
+        return self._title
+
+    @typing_extensions.override
+    def set_title(self, title: str, /) -> Self:
+        self._title = title
+        return self
+
+    @property
+    @typing_extensions.override
+    def role_ids(self) -> snowflakes.SnowflakeishSequence[guilds.Role]:
+        return self._role_ids
+
+    @typing_extensions.override
+    def set_role_ids(self, role_ids: snowflakes.SnowflakeishSequence[guilds.Role], /) -> Self:
+        self._role_ids = role_ids
+        return self
+
+    @typing_extensions.override
+    def set_channel_ids(self, channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel], /) -> Self:
+        self._channel_ids = channel_ids
+        return self
+
+    @property
+    @typing_extensions.override
+    def channel_ids(self) -> snowflakes.SnowflakeishSequence[channels.GuildChannel]:
+        return self._channel_ids
+
+    @property
+    @typing_extensions.override
+    def description(self) -> undefined.UndefinedOr[str]:
+        return self._description
+
+    @typing_extensions.override
+    def set_description(self, description: undefined.UndefinedOr[str], /) -> Self:
+        self._description = description
+        return self
+
+    @property
+    @typing_extensions.override
+    def emoji(self) -> undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str]:
+        return self._emoji
+
+    @typing_extensions.override
+    def set_emoji(self, emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str], /) -> Self:
+        self._emoji_id, self._emoji_name = _build_emoji(emoji)
+        self._emoji = emoji
+        return self
+
+    @typing_extensions.override
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        body = data_binding.JSONObjectBuilder()
+        body.put("title", self._title)
+        body.put("description", self._description)
+        body.put_snowflake_array("channel_ids", self._channel_ids)
+        body.put_snowflake_array("role_ids", self._role_ids)
+
+        body.put("emoji_name", self._emoji_name)
+        body.put("emoji_id", self._emoji_id)
+
+        return body
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=False, weakref_slot=False)
+class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.GuildOnboardingPromptBuilder`][]."""
+
+    _title: str = attrs.field(alias="title")
+    _single_select: bool = attrs.field(alias="single_select")
+    _required: bool = attrs.field(alias="required")
+    _in_onboarding: bool = attrs.field(alias="in_onboarding")
+    _options: list[special_endpoints.GuildOnboardingPromptOptionBuilder] = attrs.field(alias="options", factory=list)
+    _id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]] = attrs.field(
+        alias="id",
+        default=undefined.UNDEFINED,
+        init=False,  # We do not need to allow the user to specify an id here. Discord ignores the id anyway.
+    )
+
+    @property
+    @typing_extensions.override
+    def id(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]]:
+        return self._id
+
+    @typing_extensions.override
+    def set_id(self, id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]], /) -> Self:
+        self._id = id
+        return self
+
+    @property
+    @typing_extensions.override
+    def title(self) -> str:
+        return self._title
+
+    @typing_extensions.override
+    def set_title(self, title: str, /) -> Self:
+        self._title = title
+        return self
+
+    @property
+    @typing_extensions.override
+    def single_select(self) -> bool:
+        return self._single_select
+
+    @typing_extensions.override
+    def set_single_select(self, single_select: bool, /) -> Self:
+        self._single_select = single_select
+        return self
+
+    @property
+    @typing_extensions.override
+    def required(self) -> bool:
+        return self._required
+
+    @typing_extensions.override
+    def set_required(self, required: bool, /) -> Self:
+        self._required = required
+        return self
+
+    @property
+    @typing_extensions.override
+    def in_onboarding(self) -> bool:
+        return self._in_onboarding
+
+    @typing_extensions.override
+    def set_in_onboarding(self, in_onboarding: bool, /) -> Self:
+        self._in_onboarding = in_onboarding
+        return self
+
+    @property
+    @typing_extensions.override
+    def options(self) -> typing.Sequence[special_endpoints.GuildOnboardingPromptOptionBuilder]:
+        return self._options
+
+    @typing_extensions.override
+    def set_options(self, options: typing.Sequence[special_endpoints.GuildOnboardingPromptOptionBuilder], /) -> Self:
+        self._options = list(options)
+        return self
+
+    @typing_extensions.override
+    def add_option(
+        self,
+        title: str,
+        role_ids: undefined.UndefinedNoneOr[snowflakes.SnowflakeishSequence[guilds.Role]] = undefined.UNDEFINED,
+        channel_ids: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishSequence[channels.GuildChannel]
+        ] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedNoneOr[snowflakes.Snowflakeish | emojis.Emoji | str] = undefined.UNDEFINED,
+    ) -> Self:
+        self._options.append(
+            GuildOnboardingPromptOptionBuilder(
+                title=title,
+                role_ids=role_ids or [],
+                channel_ids=channel_ids or [],
+                description=description or undefined.UNDEFINED,
+                emoji=emoji or undefined.UNDEFINED,
+            )
+        )
+        return self
+
+    @typing_extensions.override
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        body = data_binding.JSONObjectBuilder()
+        body.put_array("options", self._options, conversion=lambda option: option.build())
+        body.put("title", self._title)
+        body.put("single_select", self._single_select)
+        body.put("required", self._required)
+        body.put("in_onboarding", self._in_onboarding)
+        body.put_snowflake("id", self._id)
+        return body
+
+
+@attrs_extensions.with_copy
 @attrs.define(weakref_slot=False)
 class InteractionAutocompleteBuilder(special_endpoints.InteractionAutocompleteBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.InteractionAutocompleteBuilder`][]."""
@@ -1044,23 +1414,7 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
 
 @attrs.define(kw_only=False, weakref_slot=False)
-class InteractionPremiumRequiredBuilder(special_endpoints.InteractionPremiumRequiredBuilder):
-    """Standard implementation of `hikari.api.special_endpoints.InteractionPremiumRequiredBuilder`."""
-
-    @property
-    @typing_extensions.override
-    def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
-        return base_interactions.ResponseType.PREMIUM_REQUIRED
-
-    @typing_extensions.override
-    def build(
-        self, entity_factory: entity_factory_.EntityFactory, /
-    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
-        return {"type": self.type}, ()
-
-
-@attrs.define(kw_only=False, weakref_slot=False)
-class CommandBuilder(special_endpoints.CommandBuilder):
+class CommandBuilder(special_endpoints.CommandBuilder, abc.ABC):
     """Standard implementation of [`hikari.api.special_endpoints.CommandBuilder`][]."""
 
     _name: str = attrs.field(alias="name")
@@ -1425,6 +1779,34 @@ class LinkButtonBuilder(_ButtonBuilder, special_endpoints.LinkButtonBuilder):
         data, attachments = super().build()
 
         data["url"] = self._url
+
+        return data, attachments
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PremiumButtonBuilder(_ButtonBuilder, special_endpoints.PremiumButtonBuilder):
+    """Builder class for premium buttons."""
+
+    _custom_id: undefined.UndefinedType = attrs.field(init=False, default=undefined.UNDEFINED)
+    _sku_id: int = attrs.field(alias="sku_id")
+
+    @property
+    @typing_extensions.override
+    def sku_id(self) -> int:
+        return self._sku_id
+
+    @property
+    @typing_extensions.override
+    def style(self) -> typing.Literal[component_models.ButtonStyle.PREMIUM]:
+        return component_models.ButtonStyle.PREMIUM
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        data, attachments = super().build()
+
+        data["sku_id"] = self._sku_id
 
         return data, attachments
 
@@ -1973,6 +2355,10 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(LinkButtonBuilder(id=id, url=url, label=label, emoji=emoji, is_disabled=is_disabled))
+
+    @typing_extensions.override
+    def add_premium_button(self, sku_id: int, /, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        return self.add_component(PremiumButtonBuilder(id=id, sku_id=sku_id))
 
     @typing_extensions.override
     def add_select_menu(

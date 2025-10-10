@@ -129,6 +129,7 @@ def message(hikari_app: traits.RESTAware) -> messages.Message:
         application=None,
         message_reference=None,
         flags=messages.MessageFlag.NONE,
+        message_snapshots=[],
         nonce=None,
         referenced_message=None,
         stickers=[],
@@ -159,6 +160,7 @@ def message_reference(hikari_app: traits.RESTAware) -> messages.MessageReference
         guild_id=snowflakes.Snowflake(123),
         channel_id=snowflakes.Snowflake(456),
         id=snowflakes.Snowflake(789),
+        type=messages.MessageReferenceType.DEFAULT,
     )
 
 

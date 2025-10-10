@@ -161,7 +161,7 @@ class ManualRateLimiter(BurstRateLimiter):
     # <<inherited docstring from BurstRateLimiter>>.
 
     reset_at: float | None
-    """The monotonic [`time.monotonic`][] timestamp at which the ratelimit gets lifted."""
+    """The monotonic [`time.time`][] timestamp at which the ratelimit gets lifted."""
 
     def __init__(self) -> None:
         super().__init__("global")
@@ -235,7 +235,7 @@ class ManualRateLimiter(BurstRateLimiter):
         """
         _LOGGER.warning("you are being globally rate limited for %ss", retry_after)
 
-        self.reset_at = time.monotonic() + retry_after
+        self.reset_at = time.time() + retry_after
         await asyncio.sleep(retry_after)
         self.reset_at = None
 
@@ -250,7 +250,7 @@ class ManualRateLimiter(BurstRateLimiter):
         Parameters
         ----------
         now
-            The monotonic [`time.monotonic`][] timestamp.
+            The [`time.time`][] timestamp.
 
         Returns
         -------
@@ -293,12 +293,12 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     that a unit has been placed into the bucket.
     """
 
-    __slots__: typing.Sequence[str] = ("limit", "period", "remaining", "reset_at")
+    __slots__: typing.Sequence[str] = ("limit", "move_at", "period", "remaining")
 
     throttle_task: asyncio.Task[typing.Any] | None
     # <<inherited docstring from BurstRateLimiter>>.
 
-    reset_at: float
+    move_at: float
     """The [`time.monotonic`][] that the limit window ends at."""
 
     remaining: int
@@ -314,7 +314,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
     def __init__(self, name: str, period: float, limit: int) -> None:
         super().__init__(name)
-        self.reset_at = 0.0
+        self.move_at = 0.0
         self.remaining = 0
         self.limit = limit
         self.period = period
@@ -330,7 +330,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         # if it hasn't started. Likewise, if the throttle task is still running, we should
         # delegate releasing the future to the throttler task so that we still process
         # first-come-first-serve
-        if self.throttle_task is not None or self.is_rate_limited(time.monotonic()):
+        if self.throttle_task is not None or self.is_rate_limited(time.time()):
             loop = asyncio.get_running_loop()
             future = loop.create_future()
 
@@ -340,9 +340,9 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
             await future
         else:
-            self.drip()
+            self.remaining -= 1
 
-    def get_time_until_reset(self, now: float) -> float:
+    def get_time_until_increase(self, now: float) -> float:
         """Determine how long until the current rate limit is reset.
 
         !!! warning
@@ -365,7 +365,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         """
         if not self.is_rate_limited(now):
             return 0.0
-        return self.reset_at - now
+        return self.move_at - now
 
     def is_rate_limited(self, now: float) -> bool:
         """Determine if we are under a rate limit at the given time.
@@ -387,16 +387,19 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         bool
             Whether the bucket is ratelimited.
         """
-        if self.reset_at <= now:
-            self.remaining = self.limit
-            self.reset_at = now + self.period
-            return False
+        if now >= self.move_at:
+            self.move_window(now)
 
         return self.remaining <= 0
 
-    def drip(self) -> None:
-        """Decrement the remaining counter."""
-        self.remaining -= 1
+    def move_window(self, now: float) -> None:
+        """Move the window along.
+
+        !!! note
+            You should usually not need to invoke this directly!
+        """
+        self.remaining = self.limit
+        self.move_at = now + self.period
 
     async def throttle(self) -> None:
         """Perform the throttling rate limiter logic.
@@ -416,14 +419,14 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
             is occurring by checking if it is not [`None`][].
         """
         while self.queue:
-            sleep_for = self.get_time_until_reset(time.monotonic())
+            sleep_for = self.get_time_until_increase(time.time())
 
             if sleep_for > 0:
                 _LOGGER.debug("you are being rate limited on bucket %s, backing off for %ss", self.name, sleep_for)
                 await asyncio.sleep(sleep_for)
 
             while self.remaining > 0 and self.queue:
-                self.drip()
+                self.remaining -= 1
                 self.queue.pop(0).set_result(None)
 
         self.throttle_task = None

@@ -1,3 +1,125 @@
+## 2.4.1 (2025-09-08)
+
+### Bugfixes
+
+- Properly release initial bucket lock. ([#2529](https://github.com/hikari-py/hikari/issues/2529))
+
+---
+## 2.4.0 (2025-09-08)
+
+### Breaking Changes
+
+- Remove `PREMIUM_REQUIRED` response support
+    - Use `PREMIUM` button components instead ([#2454](https://github.com/hikari-py/hikari/issues/2454))
+
+### Features
+
+- Add `parent_id` and `lock_permissions` to `rest.reposition_channels` ([#2238](https://github.com/hikari-py/hikari/issues/2238))
+- Add support for fetching and editing guild onboarding (`rest.fetch_guild_onboarding`, `rest.edit_guild_onboarding`) ([#2337](https://github.com/hikari-py/hikari/issues/2337))
+- Add `PREMIUM` button support ([#2454](https://github.com/hikari-py/hikari/issues/2454))
+- Add `primary_guild` user feature. ([#2469](https://github.com/hikari-py/hikari/issues/2469))
+- Add `InteractionCallbackResponse` object that gets returned in the initial response to an interaction ([#2479](https://github.com/hikari-py/hikari/issues/2479))
+- Add `PIN_MESSAGES` permission. ([#2498](https://github.com/hikari-py/hikari/issues/2498))
+- Add iterator pins feature. ([#2501](https://github.com/hikari-py/hikari/issues/2501))
+- Add `code_verifier` field to `authorize_access_token` for PKCE use-cases ([#2510](https://github.com/hikari-py/hikari/issues/2510))
+- Further improve ratelimiting to track in-flight requests ([#2515](https://github.com/hikari-py/hikari/issues/2515))
+
+### Bugfixes
+
+- Always send `allowed_mentions` when editing a message to match functionality that documentation mentions ([#2447](https://github.com/hikari-py/hikari/issues/2447))
+- Improve ratelimit handling when starting bot in the middle of a ratelimit window ([#2452](https://github.com/hikari-py/hikari/issues/2452))
+- Fix `OAuth2AuthorizationToken.refresh_token` typehint being `int` instead of `str` ([#2493](https://github.com/hikari-py/hikari/issues/2493))
+- Properly handle ratelimit buckets with fixed periods ([#2506](https://github.com/hikari-py/hikari/issues/2506))
+- `fetch_guild_invites` will now return a sequence of invites (no metadata) if you only have the `VIEW_AUDIT_LOG` permission ([#2509](https://github.com/hikari-py/hikari/issues/2509))
+
+### Documentation Improvements
+
+- Improve documentation for `GuildReactionDeleteEmojiEvent` and `DMReactionDeleteEmojiEvent` ([#2450](https://github.com/hikari-py/hikari/issues/2450))
+
+---
+## 2.3.5 (2025-06-25)
+
+### Bugfixes
+
+- Fix enum `__getitem__` not properly returning items with a falsy value ([#2434](https://github.com/hikari-py/hikari/issues/2434))
+- Fix deserializing message snapshots ([#2435](https://github.com/hikari-py/hikari/issues/2435))
+
+---
+## 2.3.4 (2025-06-24)
+
+### Features
+
+- Add `THREAD_CREATED`, `THREAD_STARTER_MESSAGE`, `INTERACTION_PREMIUM_UPSELL`, `STAGE_START`, `STAGE_END`, `STAGE_SPEAKER`, `STAGE_TOPIC`, `GUILD_APPLICATION_PREMIUM_SUBSCRIPTION`, and `PURCHASE_NOTIFICATION` to `MessageType` enum. ([#2382](https://github.com/hikari-py/hikari/issues/2382))
+- Add `SOUNDBOARD_SOUND_CREATE`, `SOUNDBOARD_SOUND_UPDATE`, and `SOUNDBOARD_SOUND_CREATE` to `AuditLogEventType` enum. ([#2384](https://github.com/hikari-py/hikari/issues/2384))
+- Re-export `hikari.impl.event_factory` as part of `hikari.impl` ([#2388](https://github.com/hikari-py/hikari/issues/2388))
+- Add naming to dispatch tasks to allow to identify them in the event loop ([#2394](https://github.com/hikari-py/hikari/issues/2394))
+- Allow setting HTTP concurrent connection limit through `HTTPSettings.connection_limit` ([#2395](https://github.com/hikari-py/hikari/issues/2395))
+- Add `HAS_THREAD` member to `MessageFlag`. ([#2398](https://github.com/hikari-py/hikari/issues/2398))
+- Add message forwarding support. ([#2399](https://github.com/hikari-py/hikari/issues/2399))
+- Add support for guild media channels. ([#2409](https://github.com/hikari-py/hikari/issues/2409))
+- Add reason to error log when hitting a subratelimit, if available ([#2416](https://github.com/hikari-py/hikari/issues/2416))
+
+### Optimizations
+
+- Optimize request flow ([#2393](https://github.com/hikari-py/hikari/issues/2393))
+- Sligly optimize memory usage when dispatching tasks ([#2394](https://github.com/hikari-py/hikari/issues/2394))
+- Switch ratelimiting logic to a sliding window implementation to better match Discord's side. This will allow maximum throughput that Discord would allow ([#2427](https://github.com/hikari-py/hikari/issues/2427))
+
+### Bugfixes
+
+- Fix typing inconsistency for `PartialInteraction.locale` ([#2401](https://github.com/hikari-py/hikari/issues/2401))
+
+### Documentation Improvements
+
+- Add items with missing docstrings (mainly enum values) ([#2381](https://github.com/hikari-py/hikari/issues/2381))
+- Document members of `ShardCloseCode` and `AuditLogEventType` enums. ([#2383](https://github.com/hikari-py/hikari/issues/2383))
+
+---
+## 2.3.4.dev1 (2025-06-24)
+
+### Features
+
+- Add `THREAD_CREATED`, `THREAD_STARTER_MESSAGE`, `INTERACTION_PREMIUM_UPSELL`, `STAGE_START`, `STAGE_END`, `STAGE_SPEAKER`, `STAGE_TOPIC`, `GUILD_APPLICATION_PREMIUM_SUBSCRIPTION`, and `PURCHASE_NOTIFICATION` to `MessageType` enum. ([#2382](https://github.com/hikari-py/hikari/issues/2382))
+- Add `SOUNDBOARD_SOUND_CREATE`, `SOUNDBOARD_SOUND_UPDATE`, and `SOUNDBOARD_SOUND_CREATE` to `AuditLogEventType` enum. ([#2384](https://github.com/hikari-py/hikari/issues/2384))
+- Re-export `hikari.impl.event_factory` as part of `hikari.impl` ([#2388](https://github.com/hikari-py/hikari/issues/2388))
+- Add naming to dispatch tasks to allow to identify them in the event loop ([#2394](https://github.com/hikari-py/hikari/issues/2394))
+- Allow setting HTTP concurrent connection limit through `HTTPSettings.connection_limit` ([#2395](https://github.com/hikari-py/hikari/issues/2395))
+- Add `HAS_THREAD` member to `MessageFlag`. ([#2398](https://github.com/hikari-py/hikari/issues/2398))
+- Add message forwarding support. ([#2399](https://github.com/hikari-py/hikari/issues/2399))
+- Add support for guild media channels. ([#2409](https://github.com/hikari-py/hikari/issues/2409))
+- Add reason to error log when hitting a subratelimit, if available ([#2416](https://github.com/hikari-py/hikari/issues/2416))
+
+### Optimizations
+
+- Optimize request flow ([#2393](https://github.com/hikari-py/hikari/issues/2393))
+- Sligly optimize memory usage when dispatching tasks ([#2394](https://github.com/hikari-py/hikari/issues/2394))
+- Switch ratelimiting logic to a sliding window implementation to better match Discord's side. This will allow maximum throughput that Discord would allow ([#2427](https://github.com/hikari-py/hikari/issues/2427))
+
+### Bugfixes
+
+- Fix typing inconsistency for `PartialInteraction.locale` ([#2401](https://github.com/hikari-py/hikari/issues/2401))
+
+### Documentation Improvements
+
+- Add items with missing docstrings (mainly enum values) ([#2381](https://github.com/hikari-py/hikari/issues/2381))
+- Document members of `ShardCloseCode` and `AuditLogEventType` enums. ([#2383](https://github.com/hikari-py/hikari/issues/2383))
+
+---
+## 2.3.3 (2025-05-18)
+
+### Features
+
+- Add `startup_window_delay` argument to `.run` and `.start` to customize the time in between startup windows for shards ([#2369](https://github.com/hikari-py/hikari/issues/2369))
+
+### Optimizations
+
+- Greatly optimize event managers memory management by avoiding unnecessary tasks creations and reducing lifetime of objects ([#2368](https://github.com/hikari-py/hikari/issues/2368))
+
+### Bugfixes
+
+- Fix error when attempting to stringify http request with a non-ascii character ([#2365](https://github.com/hikari-py/hikari/issues/2365))
+
+---
 ## 2.3.2 (2025-05-09)
 
 ### Deprecation

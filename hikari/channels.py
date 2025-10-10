@@ -34,6 +34,7 @@ __all__: typing.Sequence[str] = (
     "GuildCategory",
     "GuildChannel",
     "GuildForumChannel",
+    "GuildMediaChannel",
     "GuildNewsChannel",
     "GuildNewsThread",
     "GuildPrivateThread",
@@ -43,18 +44,11 @@ __all__: typing.Sequence[str] = (
     "GuildThreadChannel",
     "GuildVoiceChannel",
     "PartialChannel",
-    "PartialChannel",
-    "PermissibleGuildChannel",
     "PermissibleGuildChannel",
     "PermissionOverwrite",
-    "PermissionOverwrite",
-    "PermissionOverwriteType",
     "PermissionOverwriteType",
     "PrivateChannel",
-    "PrivateChannel",
     "TextableChannel",
-    "TextableChannel",
-    "TextableGuildChannel",
     "TextableGuildChannel",
     "ThreadMember",
     "ThreadMetadata",
@@ -136,6 +130,9 @@ class ChannelType(int, enums.Enum):
 
     GUILD_FORUM = 15
     """A channel consisting of a collection of public guild threads."""
+
+    GUILD_MEDIA = 16
+    """A channel of threads, quite similar to GUILD_FORUM, for media."""
 
 
 @typing.final
@@ -702,12 +699,12 @@ class TextableChannel(PartialChannel):
         """
         return self.app.rest.trigger_typing(self.id)
 
-    async def fetch_pins(self) -> typing.Sequence[messages_.Message]:
+    def fetch_pins(self) -> iterators.LazyIterator[messages_.PinnedMessage]:
         """Fetch the pinned messages in this text channel.
 
         Returns
         -------
-        typing.Sequence[hikari.messages.Message]
+        iterators.LazyIterator[hikari.messages.PinnedMessage]
             The pinned messages in this text channel.
 
         Raises
@@ -725,7 +722,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_pins(self.id)
+        return self.app.rest.fetch_pins(self.id)
 
     async def pin_message(self, message: snowflakes.SnowflakeishOr[messages_.PartialMessage]) -> None:
         """Pin an existing message in the text channel.
@@ -741,7 +738,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] in the channel.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -767,7 +764,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
@@ -1798,3 +1795,74 @@ class GuildPrivateThread(GuildThreadChannel):
         This only applies to private threads.
         """
         return self.metadata.is_invitable
+
+
+@attrs.define(hash=True, kw_only=True, weakref_slot=False)
+class GuildMediaChannel(PermissibleGuildChannel):
+    """Represents a guild media channel."""
+
+    topic: str | None = attrs.field(eq=False, hash=False, repr=False)
+    """The guidelines for the channel."""
+
+    last_thread_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the last thread created in this channel.
+
+    .. warning::
+        This might point to an invalid or deleted message. Do not assume that
+        this will always be valid.
+    """
+
+    rate_limit_per_user: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
+    """The delay (in seconds) between a user can create threads in this channel.
+
+    If there is no rate limit, this will be 0 seconds.
+
+    .. note::
+        Any user that has permissions allowing `MANAGE_MESSAGES`,
+        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
+        will not be affected by this rate limit.
+    """
+
+    default_thread_rate_limit_per_user: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
+    """The default delay (in seconds) between a user can send a message in created threads.
+
+    If there is no rate limit, this will be 0 seconds.
+
+    .. note::
+        Any user that has permissions allowing `MANAGE_MESSAGES`,
+        `MANAGE_CHANNEL`, `ADMINISTRATOR` will not be limited. Likewise, bots
+        will not be affected by this rate limit.
+    """
+
+    default_auto_archive_duration: datetime.timedelta = attrs.field(eq=False, hash=False, repr=False)
+    """The auto archive duration Discord's client defaults to for threads in this channel.
+
+    This may be be either 1 hour, 1 day, 3 days or 1 week.
+    """
+
+    flags: ChannelFlag = attrs.field(eq=False, hash=False, repr=False)
+    """The channel flags for this channel.
+
+    .. note::
+        As of writing, the only flag that can be set is `ChannelFlag.REQUIRE_TAG`.
+    """
+
+    available_tags: typing.Sequence[ForumTag] = attrs.field(eq=False, hash=False, repr=False)
+    """The available tags to select from when creating a thread."""
+
+    default_sort_order: ForumSortOrderType = attrs.field(eq=False, hash=False, repr=False)
+    """The default sort order for the forum."""
+
+    default_layout: ForumLayoutType = attrs.field(eq=False, hash=False, repr=False)
+    """The default layout of a thread-only channel."""
+
+    default_reaction_emoji_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the default reaction emoji."""
+
+    default_reaction_emoji_name: str | emojis.UnicodeEmoji | None = attrs.field(eq=False, hash=False, repr=False)
+    """Name of the default reaction emoji.
+
+    Either the string name of the custom emoji, the object
+    of the `hikari.emojis.UnicodeEmoji` or `None` when the relevant
+    custom emoji's data is not available (e.g. the emoji has been deleted).
+    """

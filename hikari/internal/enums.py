@@ -48,13 +48,13 @@ class _DeprecatedAlias(typing.Generic[_T]):
         self._removal_version = removal_version
 
         # Import kept in-line due to circular import issues
-        from hikari.internal import deprecation
+        from hikari.internal import deprecation  # noqa: PLC0415
 
         deprecation.check_if_past_removal(self._name, removal_version=removal_version)
 
     def __get__(self, instance: _T | None, owner_enum: _T) -> _T:
         # Import kept in-line due to circular import issues
-        from hikari.internal import deprecation
+        from hikari.internal import deprecation  # noqa: PLC0415
 
         deprecation.warn_deprecated(
             self._name, removal_version=self._removal_version, additional_info=f"Use '{self._alias}' instead."
@@ -156,7 +156,7 @@ class _EnumMeta(type):
         return cls._value_to_member_map_.get(value, value)
 
     def __getitem__(cls, name: str) -> Enum:
-        if member := getattr(cls, name, None):
+        if (member := getattr(cls, name, None)) is not None:
             return member
 
         raise KeyError(name)
@@ -237,7 +237,7 @@ class _EnumMeta(type):
 
         try:
             # Fails if Enum is not defined. We check this in `__new__` properly.
-            base, enum_type = bases
+            base, _enum_type = bases
 
             if isinstance(base, _EnumMeta):
                 msg = "First base to an enum must be the type to combine with, not _EnumMeta"
@@ -412,7 +412,7 @@ class _FlagMeta(type):
                 return pseudomember
 
     def __getitem__(cls, name: str) -> Flag:
-        if member := getattr(cls, name, None):
+        if (member := getattr(cls, name, None)) is not None:
             return member
 
         raise KeyError(name)

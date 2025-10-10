@@ -465,6 +465,11 @@ class TeamMember(users.User):
     def global_name(self) -> str | None:
         return self.user.global_name
 
+    @property
+    @typing_extensions.override
+    def primary_guild(self) -> users.PrimaryGuild | None:
+        return self.user.primary_guild
+
     @typing_extensions.override
     def __str__(self) -> str:
         return str(self.user)
@@ -926,7 +931,7 @@ class PartialOAuth2Token:
 class OAuth2AuthorizationToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the authorization grant flow."""
 
-    refresh_token: int = attrs.field(eq=False, hash=False, repr=False)
+    refresh_token: str = attrs.field(eq=False, hash=False, repr=False)
     """Refresh token used to obtain new access tokens with the same grant."""
 
     webhook: webhooks.IncomingWebhook | None = attrs.field(eq=False, hash=False, repr=True)

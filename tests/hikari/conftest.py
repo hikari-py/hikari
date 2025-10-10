@@ -85,6 +85,7 @@ def hikari_user() -> users.User:
         is_bot=False,
         is_system=False,
         flags=users.UserFlag.NONE,
+        primary_guild=None,
     )
 
 
@@ -119,6 +120,7 @@ def hikari_message() -> messages.Message:
         stickers=[],
         nonce=None,
         referenced_message=None,
+        message_snapshots=[],
         application_id=None,
         components=[],
         thread=None,

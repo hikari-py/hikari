@@ -131,6 +131,221 @@ class TypingIndicator(abc.ABC):
     ) -> None: ...
 
 
+class ChannelRepositioner(abc.ABC):
+    """Helper class used for repositioning channels in a guild.
+
+    This is an object that should be awaited to trigger the repositioning.
+    Only channels to be modified are required.
+
+    !!! note
+        This class should only be initialized by [`hikari.api.rest.RESTClient.reposition_channels`][].
+
+    Examples
+    --------
+    Basic usage:
+    ```py
+    channel_repositioner = rest.reposition_channels(
+        guild=GUILD_ID, reason="The reason."
+    )
+    channel_repositioner.add_reposition_channel(position=2, channel=CHANNEL_ID)
+
+    await channel_repositioner
+    ```
+    Change parent:
+    ```py
+    channel_repositioner = rest.reposition_channels(guild=GUILD_ID)
+    channel_repositioner.add_reposition_channel(
+        position=1, channel=CHANNEL_ID, lock_permissions=True, parent=CATEGORY_ID
+    )
+    # when lock_permissions is set to True, the channels permissions will be synced
+    # with the new parent.
+
+    await channel_repositioner
+    ```
+
+    Raises
+    ------
+    hikari.errors.UnauthorizedError
+        If you are unauthorized to make the request (invalid/missing token).
+    hikari.errors.ForbiddenError
+        If you cannot access the channel.
+    hikari.errors.NotFoundError
+        If the channel is not found.
+    hikari.errors.RateLimitTooLongError
+        Raised in the event that a rate limit occurs that is
+        longer than `max_rate_limit` when making a request.
+    hikari.errors.InternalServerError
+        If an internal error occurs on Discord while handling the request.
+
+
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def guild(self) -> snowflakes.SnowflakeishOr[guilds.PartialGuild]:
+        """The guild."""
+
+    @abc.abstractmethod
+    def set_guild(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> Self:
+        """Set the guild.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @property
+    @abc.abstractmethod
+    def reason(self) -> undefined.UndefinedOr[str]:
+        """If provided, the reason that will be recorded in the audit logs.
+
+        Maximum of 512 characters.
+        """
+
+    @abc.abstractmethod
+    def set_reason(self, reason: undefined.UndefinedOr[str]) -> Self:
+        """Set the reason.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @property
+    @abc.abstractmethod
+    def positions(self) -> typing.Sequence[RepositionedChannel]:
+        """The positions."""
+
+    @abc.abstractmethod
+    def set_positions(self, positions: typing.Sequence[RepositionedChannel]) -> Self:
+        """Set the positions.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @abc.abstractmethod
+    def add_reposition_channel(
+        self,
+        position: int,
+        channel: snowflakes.SnowflakeishOr[channels.GuildChannel],
+        *,
+        lock_permissions: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]] = undefined.UNDEFINED,
+    ) -> Self:
+        """Add a channel that should be repositioned to the channel repositioner.
+
+        Parameters
+        ----------
+        position
+            The new position for the channel.
+        channel
+            The channel that should be repositioned. This can either be a
+            `[hikari.channels.GuildChannel`][] or the id of the channel.
+        lock_permissions
+            Whether the channel should sync permissions to the new parent channel or not.
+            When set to `False` or `UNDEFINED` the channel will not sync its permissions
+            to the new parent. Only when set to `True` the channel will sync its
+            permissions to the new parent.
+        parent
+            The id of the parent where this channel should be repositioned under.
+
+        Returns
+        -------
+        ChannelRepositioner
+            The channel repositioner.
+        """
+
+    @abc.abstractmethod
+    def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
+        """Reposition the channels in a guild.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you cannot access the channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+
+class RepositionedChannel(abc.ABC):
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def channel(self) -> snowflakes.SnowflakeishOr[channels.GuildChannel]:
+        """Channel property."""
+
+    @abc.abstractmethod
+    def set_channel(self, channel: snowflakes.SnowflakeishOr[channels.GuildChannel]) -> Self:
+        """Set the channel.
+
+        Returns
+        -------
+        RepositionedChannel
+            The reposition channel helper.
+        """
+
+    @property
+    @abc.abstractmethod
+    def position(self) -> int:
+        """Position property."""
+
+    @abc.abstractmethod
+    def set_position(self, position: int) -> Self:
+        """Set the position.
+
+        Returns
+        -------
+        RepositionedChannel
+            The reposition channel helper.
+        """
+
+    @property
+    @abc.abstractmethod
+    def lock_permissions(self) -> undefined.UndefinedOr[bool]:
+        """Lock permissions property."""
+
+    @abc.abstractmethod
+    def set_lock_permissions(self, lock: undefined.UndefinedOr[bool]) -> Self:
+        """Set the lock.
+
+        Returns
+        -------
+        RepositionedChannel
+            The reposition channel helper.
+        """
+
+    @property
+    @abc.abstractmethod
+    def parent(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]:
+        """Parent property."""
+
+    @abc.abstractmethod
+    def set_parent(self, parent: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels.GuildCategory]]) -> Self:
+        """Set the parent.
+
+        Returns
+        -------
+        RepositionedChannel
+            The reposition channel helper.
+        """
+
+
 class InteractionResponseBuilder(abc.ABC):
     """Base class for all interaction response builders used in the interaction server."""
 
@@ -200,6 +415,233 @@ class InteractionDeferredBuilder(InteractionResponseBuilder, abc.ABC):
         -------
         InteractionMessageBuilder
             Object of this builder.
+        """
+
+
+class GuildOnboardingPromptOptionBuilder(abc.ABC):
+    """Interface of a guild onboarding prompt option used to edit guild onboardings."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_title(self, title: str, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def role_ids(self) -> snowflakes.SnowflakeishSequence[guilds.Role]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_role_ids(self, role_ids: snowflakes.SnowflakeishSequence[guilds.Role], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def channel_ids(self) -> snowflakes.SnowflakeishSequence[channels.GuildChannel]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_channel_ids(self, channel_ids: snowflakes.SnowflakeishSequence[channels.GuildChannel], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def description(self) -> undefined.UndefinedOr[str]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_description(self, title: undefined.UndefinedOr[str], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def emoji(self) -> undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str]:
+        """Emoji which should appear on this option."""
+
+    @abc.abstractmethod
+    def set_emoji(self, emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str], /) -> Self:
+        """Set the emoji to display on this option.
+
+        Parameters
+        ----------
+        emoji
+            Object, ID or raw string of the emoji which should be displayed on
+            this option.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
+        """
+
+
+class GuildOnboardingPromptBuilder(abc.ABC):
+    """Interface of a guild onboarding prompt used to respond to edit guild onboardings.
+
+    !!! Note
+        You cannot set the type of the prompt. Discord will automatically do that
+        based on how many options the prompt has.
+    """
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def id(self) -> undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]]:
+        """The prompt's id."""
+
+    @abc.abstractmethod
+    def set_id(self, id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]], /) -> Self:
+        """Set this prompt's id.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def title(self) -> str:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_title(self, title: str, /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def single_select(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_single_select(self, single_select: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def required(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_required(self, required: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def in_onboarding(self) -> bool:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_in_onboarding(self, in_onboarding: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @property
+    @abc.abstractmethod
+    def options(self) -> typing.Sequence[GuildOnboardingPromptOptionBuilder]:
+        """The prompt's title."""
+
+    @abc.abstractmethod
+    def set_options(self, options: typing.Sequence[GuildOnboardingPromptOptionBuilder], /) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def add_option(
+        self,
+        title: str,
+        role_ids: undefined.UndefinedNoneOr[snowflakes.SnowflakeishSequence[guilds.Role]] = undefined.UNDEFINED,
+        channel_ids: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishSequence[channels.GuildChannel]
+        ] = undefined.UNDEFINED,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        emoji: undefined.UndefinedOr[snowflakes.Snowflakeish | emojis.Emoji | str] = undefined.UNDEFINED,
+    ) -> Self:
+        """Set this prompt's title.
+
+        Returns
+        -------
+        GuildOnboardingPromptBuilder
+            The guild onboarding builder.
+        """
+
+    @abc.abstractmethod
+    def build(self) -> typing.MutableMapping[str, typing.Any]:
+        """Build a JSON object from this builder.
+
+        Returns
+        -------
+        typing.MutableMapping[str, typing.Any]
+            The built json object representation of this builder.
         """
 
 
@@ -629,23 +1071,6 @@ class InteractionModalBuilder(InteractionResponseBuilder, abc.ABC):
         component
             The component builder to add to this modal.
         """
-
-
-class InteractionPremiumRequiredBuilder(InteractionResponseBuilder, abc.ABC):
-    """Interface of an interaction premium required response builder used within REST servers.
-
-    This can be returned by the listener registered to
-    `hikari.api.interaction_server.InteractionServer` as a response to the interaction
-    create.
-    """
-
-    __slots__: typing.Sequence[str] = ()
-
-    @property
-    @abc.abstractmethod
-    @typing_extensions.override
-    def type(self) -> typing.Literal[base_interactions.ResponseType.PREMIUM_REQUIRED]:
-        """Type of this response."""
 
 
 class CommandBuilder(abc.ABC):
@@ -1133,6 +1558,17 @@ class LinkButtonBuilder(ButtonBuilder, abc.ABC):
     @abc.abstractmethod
     def url(self) -> str:
         """URL this button should link to when pressed."""
+
+
+class PremiumButtonBuilder(ButtonBuilder, abc.ABC):
+    """Builder interface for premium buttons."""
+
+    __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def sku_id(self) -> int:
+        """The SKU ID this button should link to when pressed."""
 
 
 class InteractiveButtonBuilder(ButtonBuilder, abc.ABC):
@@ -1763,6 +2199,25 @@ class MessageActionRowBuilder(ComponentBuilder, abc.ABC):
             The button's display label.
         is_disabled
             Whether the button should be marked as disabled.
+        id
+            The ID to give to the button.
+
+            If not provided, auto populated through increment.
+
+        Returns
+        -------
+        ActionRowBuilder
+            The action row builder to enable chained calls.
+        """
+
+    @abc.abstractmethod
+    def add_premium_button(self, sku_id: int, /, *, id: undefined.UndefinedOr[int] = undefined.UNDEFINED) -> Self:
+        """Add a premium button component to this action row builder.
+
+        Parameters
+        ----------
+        sku_id
+            The SKU ID that this button will link to.
         id
             The ID to give to the button.
 

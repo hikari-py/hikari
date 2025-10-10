@@ -23,8 +23,10 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import datetime
+import importlib.util
 import platform
 import re
+import sys
 import typing
 
 import aiohttp
@@ -35,15 +37,17 @@ from hikari import _about
 from hikari import errors
 from hikari import intents
 from hikari import presences
-from hikari import snowflakes
 from hikari import urls
 from hikari.impl import config
 from hikari.impl import shard
+from hikari.api import shard as shard_api
 from hikari.internal import aio
 from hikari.internal import net
 from hikari.internal import time
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
+
+zstd_present = sys.version_info >= (3, 14) or importlib.util.find_spec("zstandard")
 
 
 def test_log_filterer():
@@ -96,23 +100,17 @@ def test__serialize_datetime_when_datetime_is_not_None():
 
 
 @pytest.fixture
-def http_settings() -> config.HTTPSettings:
+def http_settings():
     return mock.Mock(spec_set=config.HTTPSettings)
 
 
 @pytest.fixture
-def proxy_settings() -> config.ProxySettings:
+def proxy_settings():
     return mock.Mock(spec_set=config.ProxySettings)
 
 
 class StubResponse:
-    def __init__(
-        self,
-        *,
-        type: aiohttp.WSMsgType | None = None,
-        data: str | int | aiohttp.WSCloseCode | None = None,
-        extra: str | None = None,
-    ):
+    def __init__(self, *, type=None, data=None, extra=None):
         self.type = type
         self.data = data
         self.extra = extra
@@ -121,51 +119,22 @@ class StubResponse:
 class TestGatewayTransport:
     @pytest.fixture
     def transport_impl(self) -> shard._GatewayTransport:
-        return shard._GatewayTransport(
+        return hikari_test_helpers.mock_class_namespace(shard._GatewayTransport, slots_=False)(
             ws=mock.Mock(),
             exit_stack=mock.AsyncMock(),
             logger=mock.Mock(),
             log_filterer=mock.Mock(),
             loads=mock.Mock(return_value={}),
             dumps=mock.Mock(),
-            transport_compression=True,
         )
-
-    def test_init_when_transport_compression(self):
-        transport = shard._GatewayTransport(
-            ws=mock.Mock(),
-            exit_stack=mock.AsyncMock(),
-            logger=mock.Mock(),
-            log_filterer=mock.Mock(),
-            loads=mock.Mock(),
-            dumps=mock.Mock(),
-            transport_compression=True,
-        )
-
-        assert transport._receive_and_check == transport._receive_and_check_zlib
-
-    def test_init_when_no_transport_compression(self):
-        transport = shard._GatewayTransport(
-            ws=mock.Mock(),
-            exit_stack=mock.AsyncMock(),
-            logger=mock.Mock(isEnabledFor=mock.Mock(return_value=False)),
-            log_filterer=mock.Mock(),
-            loads=mock.Mock(),
-            dumps=mock.Mock(),
-            transport_compression=False,
-        )
-
-        assert transport._receive_and_check == transport._receive_and_check_text
 
     @pytest.mark.asyncio
     async def test_send_close(self, transport_impl: shard._GatewayTransport):
         transport_impl._sent_close = False
 
-        with (
-            mock.patch.object(asyncio, "wait_for", return_value=mock.AsyncMock()) as wait_for,
-            mock.patch.object(asyncio, "sleep") as sleep,
-        ):
-            await transport_impl.send_close(code=1234, message=b"some message")
+        with mock.patch.object(asyncio, "wait_for", return_value=mock.AsyncMock()) as wait_for:
+            with mock.patch.object(asyncio, "sleep") as sleep:
+                await transport_impl.send_close(code=1234, message=b"some message")
 
         wait_for.assert_awaited_once_with(transport_impl._ws.close.return_value, timeout=5)
         transport_impl._ws.close.assert_called_once_with(code=1234, message=b"some message")
@@ -217,14 +186,14 @@ class TestGatewayTransport:
 
     @pytest.mark.asyncio
     async def test__handle_other_message_when_TEXT(self, transport_impl: shard._GatewayTransport):
-        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.TEXT)
+        stub_response = StubResponse(type=aiohttp.WSMsgType.TEXT)
 
         with pytest.raises(errors.GatewayError, match="Unexpected message type received TEXT, expected BINARY"):
             transport_impl._handle_other_message(stub_response)
 
     @pytest.mark.asyncio
     async def test__handle_other_message_when_BINARY(self, transport_impl: shard._GatewayTransport):
-        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY)
+        stub_response = StubResponse(type=aiohttp.WSMsgType.BINARY)
 
         with pytest.raises(errors.GatewayError, match="Unexpected message type received BINARY, expected TEXT"):
             transport_impl._handle_other_message(stub_response)
@@ -243,7 +212,7 @@ class TestGatewayTransport:
     def test__handle_other_message_when_message_type_is_CLOSE_and_should_reconnect(
         self, code: int | errors.ShardCloseCode, transport_impl: shard._GatewayTransport
     ):
-        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.CLOSE, extra="some error extra", data=code)
+        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="some error extra", data=code)
 
         with pytest.raises(errors.GatewayServerClosedConnectionError) as exinfo:
             transport_impl._handle_other_message(stub_response)
@@ -257,7 +226,7 @@ class TestGatewayTransport:
     def test__handle_other_message_when_message_type_is_CLOSE_and_should_not_reconnect(
         self, code: int, transport_impl: shard._GatewayTransport
     ):
-        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.CLOSE, extra="don't reconnect", data=code)
+        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSE, extra="don't reconnect", data=code)
 
         with pytest.raises(errors.GatewayServerClosedConnectionError) as exinfo:
             transport_impl._handle_other_message(stub_response)
@@ -268,13 +237,13 @@ class TestGatewayTransport:
         assert exception.can_reconnect is False
 
     def test__handle_other_message_when_message_type_is_CLOSING(self, transport_impl: shard._GatewayTransport):
-        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.CLOSING)
+        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSING)
 
         with pytest.raises(errors.GatewayError, match="Socket has closed"):
             transport_impl._handle_other_message(stub_response)
 
     def test__handle_other_message_when_message_type_is_CLOSED(self, transport_impl: shard._GatewayTransport):
-        stub_response = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.CLOSED)
+        stub_response = StubResponse(type=aiohttp.WSMsgType.CLOSED)
 
         with pytest.raises(errors.GatewayError, match="Socket has closed"):
             transport_impl._handle_other_message(stub_response)
@@ -289,83 +258,26 @@ class TestGatewayTransport:
 
         assert exc_info.value.__cause__ is exception
 
-    @pytest.mark.asyncio
-    async def test__receive_and_check_text(self, transport_impl: shard._GatewayTransport):
-        transport_impl._ws.receive = mock.AsyncMock(
-            return_value=StubResponse(type=aiohttp.WSMsgType.TEXT, data="some text")
-        )
-
-        assert await transport_impl._receive_and_check_text() == b"some text"
-
-        transport_impl._ws.receive.assert_awaited_once_with()
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_text_when_message_type_is_unknown(self, transport_impl: shard._GatewayTransport):
-        transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.BINARY))
-
-        with pytest.raises(
-            errors.GatewayTransportError,
-            match="Gateway transport error: Unexpected message type received BINARY, expected TEXT",
-        ):
-            await transport_impl._receive_and_check_text()
-
-        transport_impl._ws.receive.assert_awaited_once_with()
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_payload_split_across_frames(
-        self, transport_impl: shard._GatewayTransport
-    ):
-        response1 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
-        response2 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"\xc9W(\xcf/\xcaIQ\x04\x00\x00")
-        response3 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
-        transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
-
-        assert await transport_impl._receive_and_check_zlib() == b"Hello world!"
-
-        assert transport_impl._ws.receive.call_count == 3
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_full_payload_in_one_frame(
-        self, transport_impl: shard._GatewayTransport
-    ):
-        response = mock.Mock(
-            aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"x\xdaJLD\x07\x00\x00\x00\x00\xff\xff"
-        )
-        transport_impl._ws.receive = mock.AsyncMock(return_value=response)
-
-        assert await transport_impl._receive_and_check_zlib() == b"aaaaaaaaaaaaaaaaaa"
-
-        transport_impl._ws.receive.assert_awaited_once_with()
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_message_type_is_unknown(self, transport_impl: shard._GatewayTransport):
-        transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.TEXT))
-
-        with pytest.raises(
-            errors.GatewayTransportError,
-            match="Gateway transport error: Unexpected message type received TEXT, expected BINARY",
-        ):
-            await transport_impl._receive_and_check_zlib()
-
-    @pytest.mark.asyncio
-    async def test__receive_and_check_zlib_when_issue_during_reception_of_multiple_frames(
-        self, transport_impl: shard._GatewayTransport
-    ):
-        response1 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
-        response2 = StubResponse(type=aiohttp.WSMsgType.ERROR, data="Something broke!")
-        response3 = mock.Mock(aiohttp.WSMessage, type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
-        transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
-        transport_impl._ws.exception = mock.Mock(return_value=None)
-
-        with pytest.raises(
-            errors.GatewayTransportError, match=r"Gateway transport error: 'Something broke!' \[extra=None, type=258\]"
-        ):
-            await transport_impl._receive_and_check_zlib()
-
-    @pytest.mark.parametrize("transport_compression", [True, False])
+    @pytest.mark.parametrize(
+        ("compression", "expected_instance"),
+        [
+            pytest.param(
+                shard_api.GatewayCompression.TRANSPORT_ZSTD_STREAM,
+                shard._GatewayZstdStreamTransport,
+                marks=pytest.mark.skipif(not zstd_present, reason="ZSTD not present"),
+            ),
+            (shard_api.GatewayCompression.TRANSPORT_ZLIB_STREAM, shard._GatewayZlibStreamTransport),
+            (shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM, shard._GatewayZlibMessageTransport),
+            (None, shard._GatewayBasicTransport),
+        ],
+    )
     @pytest.mark.asyncio
     async def test_connect(
-        self, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings, transport_compression: bool
+        self,
+        http_settings: mock.Mock,
+        proxy_settings: mock.Mock,
+        compression: shard_api.GatewayCompression,
+        expected_instance: typing.Any,
     ):
         logger = mock.Mock()
         log_filterer = mock.Mock()
@@ -390,10 +302,10 @@ class TestGatewayTransport:
                 log_filterer=log_filterer,
                 loads=loads,
                 dumps=dumps,
-                transport_compression=transport_compression,
+                compression=compression,
             )
 
-        assert isinstance(ws, shard._GatewayTransport)
+        assert isinstance(ws, expected_instance)
         assert ws._ws is websocket
         assert ws._exit_stack is exit_stack
         assert ws._logger is logger
@@ -401,17 +313,12 @@ class TestGatewayTransport:
         assert ws._loads is loads
         assert ws._dumps is dumps
 
-        if transport_compression:
-            assert ws._receive_and_check == ws._receive_and_check_zlib
-        else:
-            assert ws._receive_and_check == ws._receive_and_check_text
-
         assert exit_stack.enter_async_context.call_count == 2
         exit_stack.enter_async_context.assert_has_calls(
             [mock.call(create_client_session.return_value), mock.call(client_session.ws_connect.return_value)]
         )
 
-        create_tcp_connector.assert_called_once_with(http_settings=http_settings, dns_cache=False, limit=1)
+        create_tcp_connector.assert_called_once_with(http_settings=http_settings, dns_cache=False)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector.return_value,
             connector_owner=True,
@@ -430,21 +337,20 @@ class TestGatewayTransport:
         sleep.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_connect_when_error_while_connecting(
-        self, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
-    ):
+    async def test_connect_when_error_while_connecting(self, http_settings: mock.Mock, proxy_settings: mock.Mock):
         logger = mock.Mock()
         log_filterer = mock.Mock()
         client_session = mock.Mock()
         websocket = mock.Mock()
         exit_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[client_session, websocket]))
 
-        with (
-            mock.patch.object(asyncio, "sleep") as sleep,
-            mock.patch.object(net, "create_tcp_connector", side_effect=RuntimeError),
-            mock.patch.object(contextlib, "AsyncExitStack", return_value=exit_stack),
-            pytest.raises(RuntimeError),
-        ):
+        stack = contextlib.ExitStack()
+        sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
+        stack.enter_context(mock.patch.object(net, "create_tcp_connector", side_effect=RuntimeError))
+        stack.enter_context(mock.patch.object(contextlib, "AsyncExitStack", return_value=exit_stack))
+        stack.enter_context(pytest.raises(RuntimeError))
+
+        with stack:
             await shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
@@ -453,7 +359,7 @@ class TestGatewayTransport:
                 log_filterer=log_filterer,
                 loads=mock.Mock(),
                 dumps=mock.Mock(),
-                transport_compression=True,
+                compression=True,
             )
 
         exit_stack.aclose.assert_awaited_once_with()
@@ -464,9 +370,7 @@ class TestGatewayTransport:
         ("error", "reason"),
         [
             (
-                aiohttp.WSServerHandshakeError(
-                    status=123, message="some error", request_info=None, history=None
-                ),  # FIXME: I have no clue how to change this one. I think the easiest way to do this would be to just type ignore, but otherwise the proper objects could be built.
+                aiohttp.WSServerHandshakeError(status=123, message="some error", request_info=None, history=None),
                 "WSServerHandshakeError(None, None, status=123, message='some error')",
             ),
             (aiohttp.ClientOSError("some os error"), "some os error"),
@@ -475,11 +379,7 @@ class TestGatewayTransport:
         ],
     )
     async def test_connect_when_expected_error_while_connecting(
-        self,
-        http_settings: config.HTTPSettings,
-        proxy_settings: config.ProxySettings,
-        error: aiohttp.ClientError,
-        reason: str,
+        self, http_settings: mock.Mock, proxy_settings: mock.Mock, error: Exception, reason: str
     ):
         logger = mock.Mock()
         log_filterer = mock.Mock()
@@ -487,19 +387,22 @@ class TestGatewayTransport:
         websocket = mock.Mock()
         exit_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[client_session, websocket]))
 
-        with (
-            mock.patch.object(asyncio, "sleep") as sleep,
-            mock.patch.object(net, "create_tcp_connector", side_effect=error),
-            mock.patch.object(contextlib, "AsyncExitStack", return_value=exit_stack),
-            pytest.raises(errors.GatewayConnectionError, match=re.escape(f"Failed to connect to server: {reason!r}")),
-        ):
+        stack = contextlib.ExitStack()
+        sleep = stack.enter_context(mock.patch.object(asyncio, "sleep"))
+        stack.enter_context(mock.patch.object(net, "create_tcp_connector", side_effect=error))
+        stack.enter_context(mock.patch.object(contextlib, "AsyncExitStack", return_value=exit_stack))
+        stack.enter_context(
+            pytest.raises(errors.GatewayConnectionError, match=re.escape(f"Failed to connect to server: {reason!r}"))
+        )
+
+        with stack:
             await shard._GatewayTransport.connect(
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 logger=logger,
                 url="https://some.url",
                 log_filterer=log_filterer,
-                transport_compression=True,
+                compression=True,
                 loads=mock.Mock(),
                 dumps=mock.Mock(),
             )
@@ -508,8 +411,107 @@ class TestGatewayTransport:
         sleep.assert_awaited_once_with(0.25)
 
 
+class TestGatewayBasicTransport:
+    @pytest.fixture
+    def transport_impl(self) -> shard._GatewayBasicTransport:
+        return shard._GatewayBasicTransport(
+            ws=mock.Mock(),
+            exit_stack=mock.AsyncMock(),
+            logger=mock.Mock(),
+            log_filterer=mock.Mock(),
+            loads=mock.Mock(return_value={}),
+            dumps=mock.Mock(),
+        )
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check(self, transport_impl: shard._GatewayBasicTransport):
+        transport_impl._ws.receive = mock.AsyncMock(
+            return_value=StubResponse(type=aiohttp.WSMsgType.TEXT, data="some text")
+        )
+
+        assert await transport_impl._receive_and_check() == b"some text"
+
+        transport_impl._ws.receive.assert_awaited_once_with()
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_message_type_is_unknown(self, transport_impl: shard._GatewayBasicTransport):
+        transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.BINARY))
+
+        with pytest.raises(
+            errors.GatewayTransportError,
+            match="Gateway transport error: Unexpected message type received BINARY, expected TEXT",
+        ):
+            await transport_impl._receive_and_check()
+
+        transport_impl._ws.receive.assert_awaited_once_with()
+
+
+class TestGatewayZlibStreamTransport:
+    @pytest.fixture
+    def transport_impl(self):
+        return shard._GatewayZlibStreamTransport(
+            ws=mock.Mock(),
+            exit_stack=mock.AsyncMock(),
+            logger=mock.Mock(),
+            log_filterer=mock.Mock(),
+            loads=mock.Mock(return_value={}),
+            dumps=mock.Mock(),
+        )
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_payload_split_across_frames(
+        self, transport_impl: shard._GatewayZlibStreamTransport
+    ):
+        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
+        response2 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\xc9W(\xcf/\xcaIQ\x04\x00\x00")
+        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
+        transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
+
+        assert await transport_impl._receive_and_check() == b"Hello world!"
+
+        assert transport_impl._ws.receive.call_count == 3
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_full_payload_in_one_frame(
+        self, transport_impl: shard._GatewayZlibStreamTransport
+    ):
+        response = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xdaJLD\x07\x00\x00\x00\x00\xff\xff")
+        transport_impl._ws.receive = mock.AsyncMock(return_value=response)
+
+        assert await transport_impl._receive_and_check() == b"aaaaaaaaaaaaaaaaaa"
+
+        transport_impl._ws.receive.assert_awaited_once_with()
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_message_type_is_unknown(
+        self, transport_impl: shard._GatewayZlibStreamTransport
+    ):
+        transport_impl._ws.receive = mock.AsyncMock(return_value=StubResponse(type=aiohttp.WSMsgType.TEXT))
+
+        with pytest.raises(
+            errors.GatewayTransportError,
+            match="Gateway transport error: Unexpected message type received TEXT, expected BINARY",
+        ):
+            await transport_impl._receive_and_check()
+
+    @pytest.mark.asyncio
+    async def test__receive_and_check_when_issue_during_reception_of_multiple_frames(
+        self, transport_impl: shard._GatewayZlibStreamTransport
+    ):
+        response1 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"x\xda\xf2H\xcd\xc9")
+        response2 = StubResponse(type=aiohttp.WSMsgType.ERROR, data="Something broke!")
+        response3 = StubResponse(type=aiohttp.WSMsgType.BINARY, data=b"\x00\xff\xff")
+        transport_impl._ws.receive = mock.AsyncMock(side_effect=[response1, response2, response3])
+        transport_impl._ws.exception = mock.Mock(return_value=None)
+
+        with pytest.raises(
+            errors.GatewayTransportError, match=r"Gateway transport error: 'Something broke!' \[extra=None, type=258\]"
+        ):
+            await transport_impl._receive_and_check()
+
+
 @pytest.fixture
-def client(http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings) -> shard.GatewayShardImpl:
+def client(http_settings: mock.Mock, proxy_settings: mock.Mock):
     return shard.GatewayShardImpl(
         event_manager=mock.Mock(),
         event_factory=mock.Mock(),
@@ -522,23 +524,7 @@ def client(http_settings: config.HTTPSettings, proxy_settings: config.ProxySetti
 
 
 class TestGatewayShardImpl:
-    def test__init__when_unsupported_compression_format(
-        self, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
-    ):
-        with pytest.raises(NotImplementedError, match=r"Unsupported compression format something"):
-            shard.GatewayShardImpl(
-                event_manager=mock.Mock(),
-                event_factory=mock.Mock(),
-                http_settings=http_settings,
-                proxy_settings=proxy_settings,
-                intents=intents.Intents.ALL,
-                url="wss://gaytewhuy.discord.meh",
-                data_format="json",
-                compression="something",
-                token="12345",
-            )
-
-    def test_using_etf_is_unsupported(self, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings):
+    def test_using_etf_is_unsupported(self, http_settings: mock.Mock, proxy_settings: mock.Mock):
         with pytest.raises(NotImplementedError, match="Unsupported gateway data format: etf"):
             shard.GatewayShardImpl(
                 event_manager=mock.Mock(),
@@ -561,13 +547,13 @@ class TestGatewayShardImpl:
         assert client.id == 101
 
     def test_intents_property(self, client: shard.GatewayShardImpl):
-        mock_intents = mock.Mock()
+        mock_intents = object()
         client._intents = mock_intents
         assert client.intents is mock_intents
 
-    @pytest.mark.parametrize(("keep_alive_task", "expected"), [(None, False), (mock.Mock(asyncio.Task), True)])
+    @pytest.mark.parametrize(("keep_alive_task", "expected"), [(None, False), ("some", True)])
     def test_is_alive_property(
-        self, client: shard.GatewayShardImpl, keep_alive_task: asyncio.Task[None] | None, expected: bool
+        self, client: shard.GatewayShardImpl, keep_alive_task: typing.Any | None, expected: bool
     ):
         client._keep_alive_task = keep_alive_task
 
@@ -579,17 +565,13 @@ class TestGatewayShardImpl:
             (None, None, False),
             (None, True, False),
             (None, False, False),
-            (mock.Mock(shard._GatewayTransport), None, False),
-            (mock.Mock(shard._GatewayTransport), True, True),
-            (mock.Mock(shard._GatewayTransport), False, False),
+            ("something", None, False),
+            ("something", True, True),
+            ("something", False, False),
         ],
     )
     def test_is_connected_property(
-        self,
-        client: shard.GatewayShardImpl,
-        ws: shard._GatewayTransport | None,
-        handshake_event: bool | None,
-        expected: bool,
+        self, client: shard.GatewayShardImpl, ws: typing.Any | None, handshake_event: bool | None, expected: bool
     ):
         client._ws = ws
         client._handshake_event = (
@@ -680,7 +662,7 @@ class TestGatewayShardImpl:
         assert client._status == status
 
     def test_get_user_id(self, client: shard.GatewayShardImpl):
-        client._user_id = snowflakes.Snowflake(123)
+        client._user_id = 123
 
         with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
             assert client.get_user_id() == 123
@@ -748,7 +730,7 @@ class TestGatewayShardImplAsync:
             await client.join()
 
     async def test_join(self, client: shard.GatewayShardImpl):
-        client._keep_alive_task = mock.Mock()
+        client._keep_alive_task = object()
 
         with mock.patch.object(asyncio, "wait_for") as wait_for:
             with mock.patch.object(asyncio, "shield", new=mock.Mock()) as shield:
@@ -761,7 +743,7 @@ class TestGatewayShardImplAsync:
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
-        data = mock.Mock()
+        data = object()
 
         await client._send_json(data)
 
@@ -773,7 +755,7 @@ class TestGatewayShardImplAsync:
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
-        data = mock.Mock()
+        data = object()
 
         await client._send_json(data, priority=True)
 
@@ -875,7 +857,7 @@ class TestGatewayShardImplAsync:
 
     @pytest.mark.parametrize("attr", ["_keep_alive_task", "_handshake_event"])
     async def test_start_when_already_running(self, client: shard.GatewayShardImpl, attr: str):
-        setattr(client, attr, mock.Mock())
+        setattr(client, attr, object())
 
         with pytest.raises(errors.ComponentStateConflictError):
             await client.start()
@@ -885,14 +867,15 @@ class TestGatewayShardImplAsync:
         client._shard_id = 20
         handshake_event = mock.Mock(is_set=mock.Mock(return_value=False))
 
-        with (
-            mock.patch.object(aio, "first_completed"),
-            mock.patch.object(asyncio, "shield"),
-            mock.patch.object(asyncio, "create_task"),
-            mock.patch.object(shard.GatewayShardImpl, "_keep_alive", new=mock.Mock()),
-            mock.patch.object(asyncio, "Event", return_value=handshake_event),
-            pytest.raises(RuntimeError, match="shard 20 was closed before it could start successfully"),
-        ):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(aio, "first_completed"))
+        stack.enter_context(mock.patch.object(asyncio, "shield"))
+        stack.enter_context(mock.patch.object(asyncio, "create_task"))
+        stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_keep_alive", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(asyncio, "Event", return_value=handshake_event))
+        stack.enter_context(pytest.raises(RuntimeError, match="shard 20 was closed before it could start successfully"))
+
+        with stack:
             await client.start()
 
         assert client._keep_alive_task is None
@@ -903,13 +886,14 @@ class TestGatewayShardImplAsync:
         handshake_event = mock.Mock(is_set=mock.Mock(return_value=True))
         keep_alive_task = mock.Mock()
 
-        with (
-            mock.patch.object(aio, "first_completed") as first_completed,
-            mock.patch.object(asyncio, "shield") as shield,
-            mock.patch.object(asyncio, "create_task", return_value=keep_alive_task) as create_task,
-            mock.patch.object(shard.GatewayShardImpl, "_keep_alive", new=mock.Mock()) as keep_alive,
-            mock.patch.object(asyncio, "Event", return_value=handshake_event),
-        ):
+        stack = contextlib.ExitStack()
+        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
+        shield = stack.enter_context(mock.patch.object(asyncio, "shield"))
+        create_task = stack.enter_context(mock.patch.object(asyncio, "create_task", return_value=keep_alive_task))
+        keep_alive = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_keep_alive", new=mock.Mock()))
+        stack.enter_context(mock.patch.object(asyncio, "Event", return_value=handshake_event))
+
+        with stack:
             await client.start()
 
         assert client._keep_alive_task is keep_alive_task
@@ -919,24 +903,20 @@ class TestGatewayShardImplAsync:
         first_completed.assert_awaited_once_with(handshake_event.wait.return_value, shield.return_value)
 
     async def test_update_presence(self, client: shard.GatewayShardImpl):
-        with (
-            mock.patch.object(shard.GatewayShardImpl, "_serialize_and_store_presence_payload") as presence,
-            mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive,
-            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
-        ):
-            await client.update_presence(
-                idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None
-            )
+        with mock.patch.object(shard.GatewayShardImpl, "_serialize_and_store_presence_payload") as presence:
+            with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
+                with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
+                    await client.update_presence(
+                        idle_since=datetime.datetime.now(), afk=True, status=presences.Status.IDLE, activity=None
+                    )
 
         send_json.assert_awaited_once_with({"op": 3, "d": presence.return_value})
         check_if_alive.assert_called_once_with()
 
     async def test_update_voice_state(self, client: shard.GatewayShardImpl):
-        with (
-            mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive,
-            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
-        ):
-            await client.update_voice_state(123456, 6969420, self_mute=False, self_deaf=True)
+        with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
+            with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
+                await client.update_voice_state(123456, 6969420, self_mute=False, self_deaf=True)
 
         send_json.assert_awaited_once_with(
             {"op": 4, "d": {"guild_id": "123456", "channel_id": "6969420", "self_mute": False, "self_deaf": True}}
@@ -944,11 +924,9 @@ class TestGatewayShardImplAsync:
         check_if_alive.assert_called_once_with()
 
     async def test_update_voice_state_without_optionals(self, client: shard.GatewayShardImpl):
-        with (
-            mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive,
-            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
-        ):
-            await client.update_voice_state(123456, 6969420)
+        with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
+            with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
+                await client.update_voice_state(123456, 6969420)
 
         send_json.assert_awaited_once_with({"op": 4, "d": {"guild_id": "123456", "channel_id": "6969420"}})
         check_if_alive.assert_called_once_with()
@@ -960,12 +938,13 @@ class TestGatewayShardImplAsync:
 
         class ExitException(Exception): ...
 
-        with (
-            mock.patch.object(asyncio, "sleep", side_effect=[None, ExitException]) as sleep,
-            mock.patch.object(time, "monotonic", return_value=10),
-            mock.patch.object(shard.GatewayShardImpl, "_send_heartbeat") as send_heartbeat,
-            pytest.raises(ExitException),
-        ):
+        stack = contextlib.ExitStack()
+        sleep = stack.enter_context(mock.patch.object(asyncio, "sleep", side_effect=[None, ExitException]))
+        stack.enter_context(mock.patch.object(time, "time", return_value=10))
+        send_heartbeat = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_send_heartbeat"))
+        stack.enter_context(pytest.raises(ExitException))
+
+        with stack:
             await client._heartbeat(20)
 
         assert send_heartbeat.await_count == 2
@@ -978,24 +957,24 @@ class TestGatewayShardImplAsync:
         client._last_heartbeat_sent = 10
         client._logger = mock.Mock()
 
-        with mock.patch.object(time, "monotonic", return_value=5):
+        with mock.patch.object(time, "time", return_value=5):
             with mock.patch.object(asyncio, "sleep") as sleep:
                 await client._heartbeat(20)
 
         sleep.assert_not_called()
 
     async def test__connect_when_ws(self, client: shard.GatewayShardImpl):
-        client._ws = mock.Mock()
+        client._ws = object()
 
         with pytest.raises(errors.ComponentStateConflictError):
             await client._connect()
 
     async def test__connect_when_not_reconnecting(
-        self, client: shard.GatewayShardImpl, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
+        self, client: shard.GatewayShardImpl, http_settings: mock.Mock, proxy_settings: mock.Mock
     ):
         ws = mock.AsyncMock()
         ws.receive_json.return_value = {"op": 10, "d": {"heartbeat_interval": 10}}
-        client._transport_compression = False
+        client._compression = shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM
         client._shard_id = 20
         client._shard_count = 100
         client._gateway_url = "wss://somewhere.com?somewhere=true"
@@ -1004,34 +983,39 @@ class TestGatewayShardImplAsync:
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
         client._seq = None
-        client._large_threshold = 3784598347
-        client._intents = intents.Intents.GUILD_EMOJIS | intents.Intents.GUILDS
+        client._large_threshold = "your mom"
+        client._intents = 9
 
-        heartbeat_task = mock.Mock()
-        poll_events_task = mock.Mock()
-        shielded_heartbeat_task = mock.Mock()
-        shielded_poll_events_task = mock.Mock()
+        heartbeat_task = object()
+        poll_events_task = object()
+        shielded_heartbeat_task = object()
+        shielded_poll_events_task = object()
 
-        with (
-            mock.patch.object(asyncio, "create_task", side_effect=[heartbeat_task, poll_events_task]) as create_task,
-            mock.patch.object(
-                asyncio, "shield", side_effect=[shielded_heartbeat_task, shielded_poll_events_task]
-            ) as shield,
-            mock.patch.object(aio, "first_completed") as first_completed,
-            mock.patch.object(shard, "_log_filterer") as log_filterer,
-            mock.patch.object(
-                shard.GatewayShardImpl, "_serialize_and_store_presence_payload"
-            ) as serialize_and_store_presence_payload,
-            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
-            mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()) as heartbeat,
-            mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()) as poll_events,
-            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws) as gateway_transport_connect,
-            mock.patch.object(urls, "VERSION", new=400),
-            mock.patch.object(platform, "system", return_value="Potato OS"),
-            mock.patch.object(platform, "architecture", return_value=["ARM64"]),
-            mock.patch.object(aiohttp, "__version__", new="4.0"),
-            mock.patch.object(_about, "__version__", new="1.0.0"),
-        ):
+        stack = contextlib.ExitStack()
+        create_task = stack.enter_context(
+            mock.patch.object(asyncio, "create_task", side_effect=[heartbeat_task, poll_events_task])
+        )
+        shield = stack.enter_context(
+            mock.patch.object(asyncio, "shield", side_effect=[shielded_heartbeat_task, shielded_poll_events_task])
+        )
+        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
+        log_filterer = stack.enter_context(mock.patch.object(shard, "_log_filterer"))
+        serialize_and_store_presence_payload = stack.enter_context(
+            mock.patch.object(shard.GatewayShardImpl, "_serialize_and_store_presence_payload")
+        )
+        send_json = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_send_json"))
+        heartbeat = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()))
+        poll_events = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()))
+        gateway_transport_connect = stack.enter_context(
+            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
+        )
+        stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
+        stack.enter_context(mock.patch.object(platform, "system", return_value="Potato OS"))
+        stack.enter_context(mock.patch.object(platform, "architecture", return_value=["ARM64"]))
+        stack.enter_context(mock.patch.object(aiohttp, "__version__", new="4.0"))
+        stack.enter_context(mock.patch.object(_about, "__version__", new="1.0.0"))
+
+        with stack:
             assert await client._connect() == (heartbeat_task, poll_events_task)
 
         log_filterer.assert_called_once_with(b"sometoken")
@@ -1040,7 +1024,7 @@ class TestGatewayShardImplAsync:
             log_filterer=log_filterer.return_value,
             logger=client._logger,
             proxy_settings=proxy_settings,
-            transport_compression=False,
+            compression=shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM,
             loads=client._loads,
             dumps=client._dumps,
             url="wss://somewhere.com?somewhere=true&v=400&encoding=json",
@@ -1061,8 +1045,8 @@ class TestGatewayShardImplAsync:
                 "op": 2,
                 "d": {
                     "token": "sometoken",
-                    "compress": False,
-                    "large_threshold": 3784598347,
+                    "compress": True,
+                    "large_threshold": "your mom",
                     "properties": {
                         "os": "Potato OS ARM64",
                         "browser": "hikari (1.0.0, aiohttp 4.0)",
@@ -1082,11 +1066,11 @@ class TestGatewayShardImplAsync:
         )
 
     async def test__connect_when_reconnecting(
-        self, client: shard.GatewayShardImpl, http_settings: config.HTTPSettings, proxy_settings: config.ProxySettings
+        self, client: shard.GatewayShardImpl, http_settings: mock.Mock, proxy_settings: mock.Mock
     ):
         ws = mock.AsyncMock()
         ws.receive_json.return_value = {"op": 10, "d": {"heartbeat_interval": 10}}
-        client._transport_compression = True
+        client._compression = shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM
         client._shard_id = 20
         client._gateway_url = "wss://somewhere.com?somewhere=false"
         client._resume_gateway_url = "wss://notsomewhere.com?somewhere=true"
@@ -1096,24 +1080,29 @@ class TestGatewayShardImplAsync:
         client._seq = 1234
         client._session_id = "some session id"
 
-        heartbeat_task = mock.Mock()
-        poll_events_task = mock.Mock()
-        shielded_heartbeat_task = mock.Mock()
-        shielded_poll_events_task = mock.Mock()
+        heartbeat_task = object()
+        poll_events_task = object()
+        shielded_heartbeat_task = object()
+        shielded_poll_events_task = object()
 
-        with (
-            mock.patch.object(asyncio, "create_task", side_effect=[heartbeat_task, poll_events_task]) as create_task,
-            mock.patch.object(
-                asyncio, "shield", side_effect=[shielded_heartbeat_task, shielded_poll_events_task]
-            ) as shield,
-            mock.patch.object(aio, "first_completed") as first_completed,
-            mock.patch.object(shard, "_log_filterer") as log_filterer,
-            mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json,
-            mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()) as heartbeat,
-            mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()) as poll_events,
-            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws) as gateway_transport_connect,
-            mock.patch.object(urls, "VERSION", new=400),
-        ):
+        stack = contextlib.ExitStack()
+        create_task = stack.enter_context(
+            mock.patch.object(asyncio, "create_task", side_effect=[heartbeat_task, poll_events_task])
+        )
+        shield = stack.enter_context(
+            mock.patch.object(asyncio, "shield", side_effect=[shielded_heartbeat_task, shielded_poll_events_task])
+        )
+        first_completed = stack.enter_context(mock.patch.object(aio, "first_completed"))
+        log_filterer = stack.enter_context(mock.patch.object(shard, "_log_filterer"))
+        send_json = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_send_json"))
+        heartbeat = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()))
+        poll_events = stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()))
+        gateway_transport_connect = stack.enter_context(
+            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
+        )
+        stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
+
+        with stack:
             assert await client._connect() == (heartbeat_task, poll_events_task)
 
         log_filterer.assert_called_once_with(b"sometoken")
@@ -1124,8 +1113,8 @@ class TestGatewayShardImplAsync:
             proxy_settings=proxy_settings,
             loads=client._loads,
             dumps=client._dumps,
-            transport_compression=True,
-            url="wss://notsomewhere.com?somewhere=true&v=400&encoding=json&compress=zlib-stream",
+            compression=shard_api.GatewayCompression.PAYLOAD_ZLIB_STREAM,
+            url="wss://notsomewhere.com?somewhere=true&v=400&encoding=json",
         )
 
         assert create_task.call_count == 2
@@ -1153,12 +1142,15 @@ class TestGatewayShardImplAsync:
         ws.receive_json.return_value = {"op": 0, "d": {"not": "hello"}}
         client._gateway_url = "somewhere.com"
         client._logger = mock.Mock()
-        client._handshake_event = mock.Mock()
+        client._handshake_event = object()
 
-        with (
-            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws) as gateway_transport_connect,
-            pytest.raises(errors.GatewayError),
-        ):
+        stack = contextlib.ExitStack()
+        stack.enter_context(pytest.raises(errors.GatewayError))
+        gateway_transport_connect = stack.enter_context(
+            mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
+        )
+
+        with stack:
             assert await client._connect()
 
         gateway_transport_connect.return_value.send_close.assert_awaited_once_with(
@@ -1168,12 +1160,12 @@ class TestGatewayShardImplAsync:
     @pytest.mark.skip("TODO")
     async def test__keep_alive(self, client: shard.GatewayShardImpl): ...
 
-    async def test__send_heartbeat(self, client: shard.GatewayShardImpl):
+    async def test__send_heartbeat(self, client: shard.GatewayShardImpl) -> None:
         client._last_heartbeat_sent = 0
         client._seq = 10
 
         with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
-            with mock.patch.object(time, "monotonic", return_value=200):
+            with mock.patch.object(time, "time", return_value=200):
                 await client._send_heartbeat()
 
         send_json.assert_awaited_once_with({"op": 1, "d": 10}, priority=True)
@@ -1250,7 +1242,7 @@ class TestGatewayShardImplAsync:
         client._last_heartbeat_sent = 1.5
         client._handshake_event = mock.Mock()
 
-        with mock.patch.object(time, "monotonic", return_value=3):
+        with mock.patch.object(time, "time", return_value=3):
             with pytest.raises(RuntimeError):
                 await client._poll_events()
 
@@ -1288,7 +1280,7 @@ class TestGatewayShardImplAsync:
         payload = {"op": 9, "d": True}
 
         client._seq = 123
-        client._session_id = "a cool session id"
+        client._session_id = 456
         client._ws = mock.Mock(receive_json=mock.AsyncMock(side_effect=[payload, RuntimeError]))
         client._handshake_event = mock.Mock()
 
@@ -1296,14 +1288,14 @@ class TestGatewayShardImplAsync:
 
         assert client._ws.receive_json.await_count == 1
         assert client._seq == 123
-        assert client._session_id == "a cool session id"
+        assert client._session_id == 456
         client._handshake_event.set.assert_not_called()
 
     async def test__poll_events_on_invalid_session_when_cant_resume(self, client: shard.GatewayShardImpl):
         payload = {"op": 9, "d": False}
 
         client._seq = 123
-        client._session_id = "a cool session id"
+        client._session_id = 456
         client._ws = mock.Mock(receive_json=mock.AsyncMock(side_effect=[payload, RuntimeError]))
         client._handshake_event = mock.Mock()
 
@@ -1314,7 +1306,7 @@ class TestGatewayShardImplAsync:
         assert client._session_id is None
         client._handshake_event.set.assert_not_called()
 
-    async def test__poll_events_on_unknown_op(self, client: shard.GatewayShardImpl):
+    async def test__poll_events_on_unknown_op(self, client):
         payload = {"op": 69, "d": "DATA"}
 
         client._logger = mock.Mock()

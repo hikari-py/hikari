@@ -51,6 +51,9 @@ class TestPartialUser:
             self._is_system = False
             self._flags = users.UserFlag.NONE
             self._mention = "mention"
+            self._primary_guild = users.PrimaryGuild(
+                identity_guild_id=snowflakes.Snowflake(1234), identity_enabled=True, tag="HKRI", badge_hash="1234"
+            )
 
         @property
         def app(self) -> traits.RESTAware:
@@ -107,6 +110,10 @@ class TestPartialUser:
         @property
         def mention(self) -> str:
             return self._mention
+
+        @property
+        def primary_guild(self) -> users.PrimaryGuild | None:
+            return self._primary_guild
 
     @pytest.fixture
     def partial_user(self, hikari_app: traits.RESTAware) -> users.PartialUser:
@@ -295,6 +302,9 @@ class TestUser:
             self._is_system = False
             self._flags = users.UserFlag.NONE
             self._mention = "mention"
+            self._primary_guild = users.PrimaryGuild(
+                identity_guild_id=snowflakes.Snowflake(123), identity_enabled=True, tag="HKRI", badge_hash="amogus"
+            )
 
         @property
         def app(self) -> traits.RESTAware:
@@ -351,6 +361,10 @@ class TestUser:
         @property
         def mention(self) -> str:
             return self._mention
+
+        @property
+        def primary_guild(self) -> users.PrimaryGuild | None:
+            return self._primary_guild
 
     @pytest.fixture
     def user(self, hikari_app: traits.RESTAware) -> users.User:
@@ -546,6 +560,7 @@ class TestPartialUserImpl:
             is_bot=False,
             is_system=False,
             flags=users.UserFlag.DISCORD_EMPLOYEE,
+            primary_guild=None,
         )
 
     def test_str_operator(self, partial_user: users.PartialUserImpl):
@@ -596,6 +611,7 @@ class TestOwnUser:
             is_verified=False,
             email="someone@example.com",
             premium_type=None,
+            primary_guild=None,
         )
 
     async def test_fetch_self(self, own_user: users.OwnUser):
@@ -611,3 +627,31 @@ class TestOwnUser:
     async def test_send(self, own_user: users.OwnUser):
         with pytest.raises(TypeError, match=r"Unable to send a DM to yourself"):
             await own_user.send()
+
+
+class TestPrimaryGuild:
+    @pytest.fixture
+    def primary_guild(self) -> users.PrimaryGuild:
+        return users.PrimaryGuild(
+            identity_guild_id=snowflakes.Snowflake(1234), identity_enabled=True, tag="HKRI", badge_hash="abcd1234"
+        )
+
+    def test_make_url(self, primary_guild: users.PrimaryGuild):
+        with mock.patch.object(
+            routes, "CDN_PRIMARY_GUILD_BADGE", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert primary_guild.make_url() == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, guild_id=1234, hash="abcd1234", size=4096, file_format="PNG", lossless=True
+        )
+
+    def test_make_url_with_all_args(self, primary_guild: users.PrimaryGuild):
+        with mock.patch.object(
+            routes, "CDN_PRIMARY_GUILD_BADGE", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert primary_guild.make_url(file_format="WEBP", size=280, lossless=False) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, guild_id=1234, hash="abcd1234", size=280, file_format="WEBP", lossless=False
+        )

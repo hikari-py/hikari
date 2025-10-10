@@ -46,7 +46,7 @@ _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # noqa: S105
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
 
 
-def _ssl_factory(value: bool | ssl_.SSLContext) -> ssl_.SSLContext:
+def _ssl_factory(value: bool | ssl_.SSLContext) -> ssl_.SSLContext:  # noqa: FBT001
     if not isinstance(value, bool):
         return value
 
@@ -238,6 +238,14 @@ class HTTPSettings(config.HTTPSettings):
     !!! note
         This will only apply to the REST API. WebSockets remain unaffected
         by any value set here.
+    """
+
+    connection_limit: int = attrs.field(default=0)
+    """The maximum number of concurrent connections to allow per connector.
+
+    If `0`, then there will be no limit.
+
+    The default is to not have any limit.
     """
 
     @max_redirects.validator

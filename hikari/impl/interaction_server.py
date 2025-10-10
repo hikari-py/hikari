@@ -64,9 +64,7 @@ if typing.TYPE_CHECKING:
 
     _InteractionT_co = typing.TypeVar("_InteractionT_co", bound=base_interactions.PartialInteraction, covariant=True)
     _MessageResponseBuilderT = typing.Union[
-        special_endpoints.InteractionDeferredBuilder,
-        special_endpoints.InteractionMessageBuilder,
-        special_endpoints.InteractionPremiumRequiredBuilder,
+        special_endpoints.InteractionDeferredBuilder, special_endpoints.InteractionMessageBuilder
     ]
     _ModalOrMessageResponseBuilderT = typing.Union[_MessageResponseBuilderT, special_endpoints.InteractionModalBuilder]
 
@@ -239,8 +237,8 @@ class InteractionServer(interaction_server.InteractionServer):
     ) -> None:
         # This is kept inline as pynacl is an optional dependency.
         try:
-            import nacl.exceptions
-            import nacl.signing
+            import nacl.exceptions  # noqa: PLC0415
+            import nacl.signing  # noqa: PLC0415
 
         except ModuleNotFoundError as exc:
             msg = "You must install the optional `hikari[server]` dependencies to use the default interaction server."
@@ -510,6 +508,7 @@ class InteractionServer(interaction_server.InteractionServer):
 
     async def start(
         self,
+        *,
         backlog: int = 128,
         host: str | typing.Sequence[str] | None = None,
         port: int | None = None,

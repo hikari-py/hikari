@@ -57,6 +57,10 @@ class GatewayCompression(str, enums.Enum):
 
     TRANSPORT_ZLIB_STREAM = "transport_zlib_stream"
     """Transport compression using ZLIB."""
+
+    TRANSPORT_ZSTD_STREAM = "transport_zstd_stream"
+    """Transport compression using ZLIB."""
+
     PAYLOAD_ZLIB_STREAM = "payload_zlib_stream"
     """Payload compression using ZLIB."""
 

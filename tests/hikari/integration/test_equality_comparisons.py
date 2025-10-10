@@ -45,6 +45,7 @@ def make_user(user_id: int) -> users.UserImpl:
         is_bot=False,
         is_system=False,
         flags=users.UserFlag.NONE,
+        primary_guild=mock.Mock(),
     )
 
 

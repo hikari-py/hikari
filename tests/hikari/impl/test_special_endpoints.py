@@ -63,6 +63,79 @@ class TestTypingIndicator:
             pytest.fail(exc)
 
 
+class TestChannelRepositioner:
+    """Test class for ChannelRepositioner.
+
+    We don't need to test any of the `reposition_channel` or `__await__` functions,
+    since they get called by the `RESTClient` tests, testing `RESTClient.reposition_channels`.
+    """
+
+    @pytest.fixture
+    def channel_repositioner(self) -> special_endpoints_api.ChannelRepositioner:
+        return special_endpoints.ChannelRepositioner(guild=123, request_call=mock.AsyncMock(), reason="TEST")
+
+    @pytest.fixture
+    def reposition_channel_helper(self) -> special_endpoints_api.RepositionedChannel:
+        return special_endpoints.RepositionedChannel(channel=123, position=1, lock_permissions=False, parent=321)
+
+    def test_set_guild(self, channel_repositioner: special_endpoints_api.ChannelRepositioner) -> None:
+        channel_repositioner.set_guild(187)
+
+        assert channel_repositioner.guild == 187
+
+    def test_set_reason(self, channel_repositioner: special_endpoints_api.ChannelRepositioner) -> None:
+        channel_repositioner.set_reason("TEST2")
+
+        assert channel_repositioner.reason == "TEST2"
+
+    def test_set_positions(
+        self,
+        channel_repositioner: special_endpoints_api.ChannelRepositioner,
+        reposition_channel_helper: special_endpoints_api.RepositionedChannel,
+    ) -> None:
+        channel_repositioner.set_positions((reposition_channel_helper,))
+        # also test if the Sequence gets correctly converted to list, that's why we pass a tuple and check for a list.
+        assert channel_repositioner.positions == [reposition_channel_helper]
+
+
+class TestRepositionChannelHelper:
+    @pytest.fixture
+    def reposition_channel_helper(self) -> special_endpoints_api.RepositionedChannel:
+        return special_endpoints.RepositionedChannel(channel=123, position=1, lock_permissions=False, parent=321)
+
+    def test_set_channel(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_channel(187)
+
+        assert reposition_channel_helper.channel == 187
+
+    def test_set_position(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_position(187)
+
+        assert reposition_channel_helper.position == 187
+
+    def test_set_lock_permissions(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_lock_permissions(True)
+
+        assert reposition_channel_helper.lock_permissions == True
+
+    def test_set_lock_permissions_undefined(
+        self, reposition_channel_helper: special_endpoints_api.RepositionedChannel
+    ) -> None:
+        reposition_channel_helper.set_lock_permissions(undefined.UNDEFINED)
+
+        assert reposition_channel_helper.lock_permissions == undefined.UNDEFINED
+
+    def test_set_parent(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_parent(187)
+
+        assert reposition_channel_helper.parent == 187
+
+    def test_set_parent_undefined(self, reposition_channel_helper: special_endpoints_api.RepositionedChannel) -> None:
+        reposition_channel_helper.set_parent(undefined.UNDEFINED)
+
+        assert reposition_channel_helper.parent == undefined.UNDEFINED
+
+
 class TestOwnGuildIterator:
     @pytest.mark.asyncio
     async def test_aiter(self):
@@ -761,6 +834,163 @@ class TestAutocompleteChoiceBuilder:
         assert choice.build() == {"name": "atlantic", "value": "slow"}
 
 
+class TestGuildOnboardingPromptOptionBuilder:
+    DEFAULT_ROLE_ID = 123
+    DEFAULT_CHANNEL_ID = 456
+    DEFAULT_EMOJI_ID = 789
+
+    @pytest.fixture
+    def prompt_option(self) -> special_endpoints_api.GuildOnboardingPromptOptionBuilder:
+        return special_endpoints.GuildOnboardingPromptOptionBuilder(
+            title="Title",
+            description="Description",
+            role_ids=[self.DEFAULT_ROLE_ID],
+            channel_ids=[self.DEFAULT_CHANNEL_ID],
+            emoji=self.DEFAULT_EMOJI_ID,
+        )
+
+    def test_default_prompt_option(
+        self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder
+    ) -> None:
+        assert prompt_option.title == "Title"
+        assert prompt_option.description == "Description"
+        assert prompt_option.channel_ids == [self.DEFAULT_CHANNEL_ID]
+        assert prompt_option.role_ids == [self.DEFAULT_ROLE_ID]
+        assert prompt_option.emoji == self.DEFAULT_EMOJI_ID
+
+    def test_set_title(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_title("1")
+        assert prompt_option.title == "1"
+
+    def test_set_description(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_description("1")
+        assert prompt_option.description == "1"
+
+    def test_set_channel_ids(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_channel_ids([187])
+        assert prompt_option.channel_ids == [187]
+
+    def test_set_role_ids(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_role_ids([187])
+        assert prompt_option.role_ids == [187]
+
+    def test_set_emoji(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        prompt_option.set_emoji(187)
+        assert prompt_option.emoji == 187
+
+    def test_build(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        assert prompt_option.build() == {
+            "title": "Title",
+            "description": "Description",
+            "channel_ids": ["456"],
+            "role_ids": ["123"],
+            "emoji_id": "789",
+        }
+
+    def test_build_no_emoji(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        body = prompt_option.set_emoji(undefined.UNDEFINED).build()
+
+        assert body == {"title": "Title", "description": "Description", "channel_ids": ["456"], "role_ids": ["123"]}
+
+    def test_build_unicode_emoji(self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder) -> None:
+        body = prompt_option.set_emoji("❤️").build()
+
+        assert body == {
+            "title": "Title",
+            "description": "Description",
+            "channel_ids": ["456"],
+            "role_ids": ["123"],
+            "emoji_name": "❤️",
+        }
+
+
+class TestGuildOnboardingPromptBuilder:
+    @pytest.fixture
+    def prompt_option(self) -> special_endpoints_api.GuildOnboardingPromptOptionBuilder:
+        return special_endpoints.GuildOnboardingPromptOptionBuilder(title="Title")
+
+    @pytest.fixture
+    def prompt(
+        self, prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder
+    ) -> special_endpoints_api.GuildOnboardingPromptBuilder:
+        return special_endpoints.GuildOnboardingPromptBuilder(
+            title="Title", in_onboarding=True, single_select=True, required=True, options=[prompt_option]
+        )
+
+    def test_prompt(
+        self,
+        prompt: special_endpoints_api.GuildOnboardingPromptBuilder,
+        prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder,
+    ) -> None:
+        assert prompt.id == undefined.UNDEFINED
+        assert prompt.title == "Title"
+        assert prompt.in_onboarding == True
+        assert prompt.single_select == True
+        assert prompt.required == True
+        assert prompt.options == [prompt_option]
+
+    def test_set_id(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_id(1)
+        assert prompt.id == 1
+
+    def test_set_title(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_title("1")
+        assert prompt.title == "1"
+
+    def test_set_in_onboarding(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_in_onboarding(False)
+        assert prompt.in_onboarding == False
+
+    def test_set_single_select(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_single_select(False)
+        assert prompt.single_select == False
+
+    def test_set_required(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_required(False)
+        assert prompt.required == False
+
+    def test_set_options(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_options([])
+        assert prompt.options == []
+
+    def test_set_options_tuple(
+        self,
+        prompt: special_endpoints_api.GuildOnboardingPromptBuilder,
+        prompt_option: special_endpoints_api.GuildOnboardingPromptOptionBuilder,
+    ) -> None:
+        prompt.set_options((prompt_option,))
+        assert prompt.options == [prompt_option]
+
+    def test_add_option(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        prompt.set_options([]).add_option(title="Test Title", description="Test Description", role_ids=[123], emoji=789)
+        assert prompt.options == [
+            special_endpoints.GuildOnboardingPromptOptionBuilder(
+                title="Test Title", description="Test Description", role_ids=[123], channel_ids=[], emoji=789
+            )
+        ]
+
+    def test_build(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        assert prompt.build() == {
+            "in_onboarding": True,
+            "options": [{"channel_ids": [], "role_ids": [], "title": "Title"}],
+            "required": True,
+            "single_select": True,
+            "title": "Title",
+        }
+
+    def test_build_id(self, prompt: special_endpoints_api.GuildOnboardingPromptBuilder) -> None:
+        body = prompt.set_id(1).build()
+
+        assert body == {
+            "in_onboarding": True,
+            "options": [{"channel_ids": [], "role_ids": [], "title": "Title"}],
+            "required": True,
+            "single_select": True,
+            "title": "Title",
+            "id": "1",
+        }
+
+
 class TestInteractionDeferredBuilder:
     def test_type_property(self):
         builder = special_endpoints.InteractionDeferredBuilder(5)
@@ -1251,10 +1481,10 @@ def test__build_emoji_with_unicode_emoji(emoji: str | emojis.UnicodeEmoji):
     [
         snowflakes.Snowflake(54123123),
         54123123,
-        emojis.CustomEmoji(id=snowflakes.Snowflake(54123123), name="", is_animated=False),
+        emojis.CustomEmoji(id=snowflakes.Snowflake(54123123), name="test", is_animated=True),
     ],
 )
-def test__build_emoji_with_custom_emoji(emoji: int | snowflakes.Snowflake | emojis.CustomEmoji):
+def test__build_emoji_with_custom_emoji(emoji: int | str | emojis.CustomEmoji):
     result = special_endpoints._build_emoji(emoji)
 
     assert result == ("54123123", undefined.UNDEFINED)

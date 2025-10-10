@@ -26,6 +26,10 @@ __all__: typing.Sequence[str] = (
     "DEFERRED_RESPONSE_TYPES",
     "MESSAGE_RESPONSE_TYPES",
     "DeferredResponseTypesT",
+    "InteractionCallback",
+    "InteractionCallbackActivityInstance",
+    "InteractionCallbackResource",
+    "InteractionCallbackResponse",
     "InteractionChannel",
     "InteractionMember",
     "InteractionType",
@@ -145,16 +149,79 @@ class ResponseType(int, enums.Enum):
     * [`hikari.interactions.base_interactions.InteractionType.MODAL_SUBMIT`][]
     """
 
-    PREMIUM_REQUIRED = 10
-    """An immediate interaction response with a premium upsell button
-    Only available for apps with monetization enabled.
+    LAUNCH_ACTIVITY = 12
+    """An immediate interaction response launching the activity associated with the application.
 
-    This is valid for the following interaction types:
-
-    * `InteractionType.APPLICATION_COMMAND`
-    * `InteractionType.MESSAGE_COMPONENT`
-    * `InteractionType.MODAL_SUBMIT`
+    This response type is only available for applications with activities enabled.
     """
+
+
+@attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
+class InteractionCallbackResponse:
+    """The response to an interaction callback."""
+
+    interaction: InteractionCallback = attrs.field()
+    """The interaction object associated with the interaction response."""
+
+    resource: undefined.UndefinedOr[InteractionCallbackResource] = attrs.field()
+    """The resource that was created by the interaction response, if any."""
+
+
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class InteractionCallback(snowflakes.Unique):
+    """An interaction callback object."""
+
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    # <<inherited docstring from Unique>>.
+
+    type: InteractionType = attrs.field(hash=True, repr=True)
+    """The type of the interaction."""
+
+    activity_instance_id: undefined.UndefinedOr[str] = attrs.field(hash=False, repr=True)
+    """The instance ID of the activity if one was launched or joined."""
+
+    response_message_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(hash=False, repr=True)
+    """The ID of the message that was created by the interaction."""
+
+    response_message_loading: bool = attrs.field(hash=False, repr=True)
+    """Whether the created message is in a loading state.
+
+    Will always be [`False`][] if no message was created.
+    """
+
+    response_message_ephemeral: bool = attrs.field(hash=False, repr=True)
+    """The ID of the message that was created by the interaction.
+
+    Will always be [`False`][] if no message was created.
+    """
+
+
+@attrs.define(unsafe_hash=False, kw_only=True, weakref_slot=False)
+class InteractionCallbackResource:
+    """An interaction callback resources."""
+
+    type: ResponseType = attrs.field()
+    """The type of the interaction response."""
+
+    activity_instance: undefined.UndefinedOr[InteractionCallbackActivityInstance] = attrs.field()
+    """The activity launched by this interaction.
+
+    Will only be present if `type` is `LAUNCH_ACTIVITY`.
+    """
+
+    message: undefined.UndefinedOr[messages.Message] = attrs.field()
+    """The message created by the interaction.
+
+    Will only be present if `type` is `CHANNEL_MESSAGE_WITH_SOURCE` or `UPDATE_MESSAGE`.
+    """
+
+
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class InteractionCallbackActivityInstance:
+    """An interaction callback activity instance."""
+
+    id: str = attrs.field(hash=True, repr=True)
+    """The instance ID of the activity if one was launched or joined."""
 
 
 MESSAGE_RESPONSE_TYPES: typing.Final[typing.AbstractSet[MessageResponseTypesT]] = frozenset(
@@ -258,7 +325,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
         for the guild and will otherwise default to `en-US`.
     """
 
-    locale: str = attrs.field(eq=False, hash=False, repr=True)
+    locale: str | locales.Locale = attrs.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this modal interaction."""
 
     authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (
@@ -348,31 +415,6 @@ class PartialInteractionMetadata:
     """The ID of the original response message."""
 
 
-class PremiumResponseMixin(PartialInteraction):
-    """Mixin' class for all interaction types which can be responded to with a premium upsell."""
-
-    __slots__: typing.Sequence[str] = ()
-
-    async def create_premium_required_response(self) -> None:
-        """Create a response by sending a premium upsell.
-
-        Raises
-        ------
-        hikari.errors.ForbiddenError
-            If you cannot access the target interaction.
-        hikari.errors.NotFoundError
-            If the initial response isn't found.
-        hikari.errors.UnauthorizedError
-            If you are unauthorized to make the request (invalid/missing token).
-        hikari.errors.RateLimitTooLongError
-            Raised in the event that a rate limit occurs that is
-            longer than `max_rate_limit` when making a request.
-        hikari.errors.InternalServerError
-            If an internal error occurs on Discord while handling the request.
-        """
-        return await self.app.rest.create_premium_required_response(self, self.token)
-
-
 class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTypesT]):
     """Mixin' class for all interaction types which can be responded to with a message."""
 
@@ -425,7 +467,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> InteractionCallbackResponse:
         """Create the initial response for this interaction.
 
         !!! warning
@@ -517,7 +559,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        await self.app.rest.create_interaction_response(
+        return await self.app.rest.create_interaction_response(
             self.id,
             self.token,
             response_type,
@@ -718,7 +760,7 @@ class ModalResponseMixin(PartialInteraction):
         custom_id: str,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> InteractionCallbackResponse:
         """Create a response by sending a modal.
 
         Parameters
@@ -737,7 +779,7 @@ class ModalResponseMixin(PartialInteraction):
         ValueError
             If both `component` and `components` are specified or if none are specified.
         """
-        await self.app.rest.create_modal_response(
+        return await self.app.rest.create_modal_response(
             self.id, self.token, title=title, custom_id=custom_id, component=component, components=components
         )
 

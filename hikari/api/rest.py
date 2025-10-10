@@ -234,8 +234,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the new name for the channel.
         flags
             If provided, the new channel flags to use for the channel. This can
-            only be used on a forum channel to apply [`hikari.channels.ChannelFlag.REQUIRE_TAG`][], or
-            on a forum thread to apply [`hikari.channels.ChannelFlag.PINNED`][].
+            only be used on a forum or media channel to apply [`hikari.channels.ChannelFlag.REQUIRE_TAG`][], or
+            on a forum or media thread to apply [`hikari.channels.ChannelFlag.PINNED`][].
         position
             If provided, the new position for the channel.
         topic
@@ -270,7 +270,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If provided, the ratelimit that should be set in threads derived
             from this channel.
 
-            This only applies to forum channels.
+            This only applies to forum and media channels.
         default_forum_layout
             If provided, the default forum layout to show in the client.
         default_sort_order
@@ -278,11 +278,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         available_tags
             If provided, the new available tags to select from when creating a thread.
 
-            This only applies to forum channels.
+            This only applies to forum and media channels.
         default_reaction_emoji
-            If provided, the new default reaction emoji for threads created in a forum channel.
+            If provided, the new default reaction emoji for threads created in a forum or media channel.
 
-            This only applies to forum channels.
+            This only applies to forum and media channels.
         archived
             If provided, the new archived state for the thread. This only
             applies to threads.
@@ -302,7 +302,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             writing.
         applied_tags
             If provided, the new tags to apply to the thread. This only applies
-            to threads in a forum channel.
+            to threads in a forum or media channel.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -842,21 +842,33 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_pins(
-        self, channel: snowflakes.SnowflakeishOr[channels_.TextableChannel]
-    ) -> typing.Sequence[messages_.Message]:
+    def fetch_pins(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        *,
+        before: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[messages_.PinnedMessage]:
         """Fetch the pinned messages in this text channel.
+
+        !!! note
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See [`hikari.iterators`][] for the full API for this iterator type.
 
         Parameters
         ----------
         channel
             The channel to fetch pins from. This may be the object or
             the ID of an existing channel.
+        before
+            If provided, fetch pins before this time.
 
         Returns
         -------
-        typing.Sequence[hikari.messages.Message]
-            The pinned messages in this text channel.
+        hikari.iterators.LazyIterator[hikari.messages.PinnedMessage]
+            An iterator to fetch the pinned messages.
 
         Raises
         ------
@@ -895,7 +907,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] in the channel.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -928,7 +940,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
@@ -1371,6 +1383,49 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def forward_message(
+        self,
+        channel_to: snowflakes.SnowflakeishOr[channels_.TextableChannel],
+        message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
+        channel_from: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.TextableChannel]] = undefined.UNDEFINED,
+    ) -> messages_.Message:
+        """Forward a message.
+
+        Parameters
+        ----------
+        channel_to
+            The object or ID of the channel to forward the message to.
+        message
+            The object or ID of the message to forward.
+        channel_from
+            The object or ID of the message's channel of origin.
+            This field will be ignored if the message provided
+              is of type [`hikari.messages.PartialMessage`][] rather than [`hikari.snowflakes.Snowflakeish`][].
+
+        Returns
+        -------
+        hikari.messages.Message
+            The message object that was forwarded.
+
+        Raises
+        ------
+        ValueError
+            If the message is of type [`hikari.snowflakes.Snowflakeish`][] and `channel_from` was not provided.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.ForbiddenError
+            If you tried to forward a message without the [`hikari.permissions.Permissions.VIEW_CHANNEL`][]
+              or [`hikari.permissions.Permissions.SEND_MESSAGES`][] permissions.
+        hikari.errors.NotFoundError
+            If the channel or message was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discords side while handling the request.
+        """
+
+    @abc.abstractmethod
     async def edit_message(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
@@ -1473,36 +1528,29 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Otherwise, the new embeds that were provided will be used as the
             replacement.
         mentions_everyone
-            If provided, sanitation for `@everyone` mentions. If
-            [`hikari.undefined.UNDEFINED`][], then the previous setting is
-            not changed. If [`True`][], then `@everyone`/`@here` mentions
-            in the message content will show up as mentioning everyone that can
-            view the chat.
+            If provided, whether the message should parse @everyone/@here
+            mentions.
         mentions_reply
             If provided, whether to mention the author of the message
             that is being replied to.
 
-            This will not do anything if `message` is not a reply message.
+            This will not do anything if not being used with `reply`.
         user_mentions
-            If provided, sanitation for user mentions. If
-            [`hikari.undefined.UNDEFINED`][], then the previous setting is
-            not changed. If [`True`][], all valid user mentions will behave
-            as mentions. If [`False`][], all valid user mentions will not
-            behave as mentions.
-
-            You may alternatively pass a collection of
-            [`hikari.snowflakes.Snowflake`][] user IDs, or
-            [`hikari.users.PartialUser`][]-derived objects.
+            If provided, and [`True`][], all user mentions will be detected.
+            If not provided or [`False`][], all user mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.users.PartialUser`][] derivatives to enforce mentioning
+            specific users.
         role_mentions
-            If provided, sanitation for role mentions. If
-            [`hikari.undefined.UNDEFINED`][], then the previous setting is
-            not changed. If [`True`][], all valid role mentions will behave
-            as mentions. If [`False`][], all valid role mentions will not
-            behave as mentions.
-
-            You may alternatively pass a collection of
-            [hikari.snowflakes.Snowflake] role IDs, or
-            [hikari.guilds.PartialRole]-derived objects.
+            If provided, and [`True`][], all role mentions will be detected.
+            If not provided or [`False`][], all role mentions will be ignored
+            if appearing in the message body.
+            Alternatively this may be a collection of
+            [`hikari.snowflakes.Snowflake`][], or
+            [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
+            specific roles.
         flags
             If provided, optional flags to set on the message. If
             [`hikari.undefined.UNDEFINED`][], then nothing is changed.
@@ -3210,6 +3258,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         client_secret: str,
         code: str,
         redirect_uri: str,
+        *,
+        code_verifier: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> applications.OAuth2AuthorizationToken:
         """Authorize an OAuth2 token using the authorize code grant type.
 
@@ -3223,6 +3273,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The authorization code to exchange for an OAuth2 access token.
         redirect_uri
             The redirect uri that was included in the authorization request.
+        code_verifier
+            If provided, the random string generated for PKCE, required to
+            securely validate the authorization code exchange.
 
         Returns
         -------
@@ -4691,6 +4744,99 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def create_guild_media_channel(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        name: str,
+        *,
+        position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+        category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
+        permission_overwrites: undefined.UndefinedOr[
+            typing.Sequence[channels_.PermissionOverwrite]
+        ] = undefined.UNDEFINED,
+        topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
+        default_reaction_emoji: str
+        | emojis.Emoji
+        | undefined.UndefinedType
+        | snowflakes.Snowflake = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> channels_.GuildMediaChannel:
+        """Create a media channel in a guild.
+
+        Parameters
+        ----------
+        guild
+            The guild to create the channel in. This may be the
+            object or the ID of an existing guild.
+        name
+            The channels name. Must be between 2 and 1000 characters.
+        position
+            If provided, the position of the category.
+        category
+            The category to create the channel under. This may be the
+            object or the ID of an existing category.
+        permission_overwrites
+            If provided, the permission overwrites for the category.
+        topic
+            If provided, the channels topic. Maximum 1024 characters.
+        nsfw
+            If provided, whether to mark the channel as NSFW.
+        rate_limit_per_user
+            If provided, the amount of seconds a user has to wait
+            before being able to send another message in the channel.
+            Maximum 21600 seconds.
+        default_auto_archive_duration
+            If provided, the auto archive duration Discord's end user client
+            should default to when creating threads in this channel.
+
+            This should be either 60, 1440, 4320 or 10080 minutes and, as of
+            writing, ignores the parent channel's set default_auto_archive_duration
+            when passed as [`hikari.undefined.UNDEFINED`][].
+        default_thread_rate_limit_per_user
+            If provided, the ratelimit that should be set in threads created
+            from the forum.
+        default_forum_layout
+            If provided, the default forum layout to show in the client.
+        default_sort_order
+            If provided, the default sort order to show in the client.
+        available_tags
+            If provided, the available tags to select from when creating a thread.
+        default_reaction_emoji
+            If provided, the new default reaction emoji for threads created in the media channel.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.channels.GuildMediaChannel
+            The created media channel.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def create_guild_voice_channel(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
@@ -5053,12 +5199,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         tags: undefined.UndefinedOr[typing.Sequence[snowflakes.Snowflake]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> channels_.GuildPublicThread:
-        """Create a post in a forum channel.
+        """Create a post in a forum or media channel.
 
         Parameters
         ----------
         channel
-            Object or ID of the forum channel to create a post in.
+            Object or ID of the forum or media channel to create a post in.
         name
             Name of the post.
         content
@@ -5566,13 +5712,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def reposition_channels(
+    def reposition_channels(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        positions: typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]],
+        positions: undefined.UndefinedOr[
+            typing.Mapping[int, snowflakes.SnowflakeishOr[channels_.GuildChannel]]
+        ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> None:
-        """Reposition the channels in a guild.
+    ) -> special_endpoints.ChannelRepositioner:
+        """Return a [`hikari.api.special_endpoints.ChannelRepositioner`][], used to reposition channels in a guild.
+
+        See [`hikari.api.special_endpoints.ChannelRepositioner`][] for more functionality on this endpoint
 
         Parameters
         ----------
@@ -5580,8 +5730,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The guild to reposition the channels in. This may be the
             object or the ID of an existing guild.
         positions
-            A mapping of of the object or the ID of an existing channel to
-            the new position, relative to their parent category, if any.
+            A mapping of the new position to the object or the ID of an existing channel,
+            relative to their parent category, if any.
+
+            !!! note
+                Instead of using the `positions` parameter, you should make
+                use of the returned [`hikari.api.special_endpoints.ChannelRepositioner`][].
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -5599,6 +5753,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             longer than `max_rate_limit` when making a request.
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
+
+        Returns
+        -------
+        hikari.api.special_endpoints.ChannelRepositioner
+            The channel repositioner.
+
         """
 
     @abc.abstractmethod
@@ -5833,6 +5993,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        bio: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Member:
         """Edit the current user's member in a guild.
@@ -5849,6 +6012,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             Requires the [`hikari.permissions.Permissions.CHANGE_NICKNAME`][] permission.
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
+        avatar
+            If provided, the new guild specific avatar for the member. If,
+            [`None`][], will remove the members avatar.
+        banner
+            If provided, the new guild specific banner for the member. If,
+            [`None`][], will remove the members banner.
+        bio
+            If provided, the new guild specific bio for the member. If,
+            [`None`][], will remove the members bio.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -6597,7 +6769,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def fetch_guild_invites(
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
-    ) -> typing.Sequence[invites.InviteWithMetadata]:
+    ) -> typing.Sequence[invites.InviteWithMetadata] | typing.Sequence[invites.Invite]:
         """Fetch the guild's invites.
 
         Parameters
@@ -6608,13 +6780,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        typing.Sequence[hikari.invites.InviteWithMetadata]
+        typing.Sequence[hikari.invites.InviteWithMetadata] | typing.Sequence[hikari.invites.Invite]
             The invites for the guild.
+
+            Will contain the metadata if you have the [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+            permission.
 
         Raises
         ------
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][]
+            or [`hikari.permissions.Permissions.VIEW_AUDIT_LOG`][] permission.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
@@ -6807,6 +6983,87 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission, are not part of
             the guild or the guild doesn't have access to the community welcome
             screen feature.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_guild_onboarding(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.GuildOnboarding:
+        """Fetch a guild's onboarding object.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to fetch the onboarding object for.
+
+        Returns
+        -------
+        hikari.guilds.GuildOnboarding
+            The requested onboarding object.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_guild_onboarding(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        default_channel_ids: undefined.UndefinedOr[
+            snowflakes.SnowflakeishSequence[channels_.GuildChannel]
+        ] = undefined.UNDEFINED,
+        enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        mode: undefined.UndefinedOr[guilds.GuildOnboardingMode] = undefined.UNDEFINED,
+        prompts: undefined.UndefinedOr[
+            typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder]
+        ] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.GuildOnboarding:
+        """Edit a guilds onboarding flow.
+
+        Parameters
+        ----------
+        guild
+            Object or ID of the guild to fetch the onboarding object for.
+        default_channel_ids
+            Sequence of channel ids that a user get opted into by default.
+        enabled
+            If the onboarding flow should be enabled in this guild.
+        mode
+            The onboarding mode for the guild. For further information look at [`hikari.guilds.GuildOnboardingMode`][].
+        prompts
+            The prompts of the onboarding flow.
+            For further information look at [`hikari.api.special_endpoints.GuildOnboardingPromptBuilder`][].
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.GuildOnboarding
+            The requested onboarding object.
+
+        Raises
+        ------
         hikari.errors.NotFoundError
             If the guild is not found.
         hikari.errors.UnauthorizedError
@@ -7642,16 +7899,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    def interaction_premium_required_builder(self) -> special_endpoints.InteractionPremiumRequiredBuilder:
-        """Create a builder for a premium required interaction response.
-
-        Returns
-        -------
-        hikari.api.special_endpoints.InteractionPremiumRequiredBuilder
-            The interaction premium required response builder object.
-        """
-
-    @abc.abstractmethod
     async def fetch_interaction_response(
         self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], token: str
     ) -> messages_.Message:
@@ -7710,7 +7957,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         """Create the initial response for a interaction.
 
         !!! warning
@@ -7784,6 +8031,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             [`hikari.guilds.PartialRole`][] derivatives to enforce mentioning
             specific roles.
 
+        Returns
+        -------
+        hikari.interactions.base_interactions.InteractionCallbackResponse
+            The interaction callback response.
+
         Raises
         ------
         ValueError
@@ -7818,7 +8070,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         duration: float,
         *,
         flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         """Create the a initial voice message response for a interaction.
 
         !!! warning
@@ -7859,6 +8111,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             [`hikari.messages.MessageFlag.EPHEMERAL`][],
             [`hikari.messages.MessageFlag.SUPPRESS_NOTIFICATIONS`][]
             and [`hikari.messages.MessageFlag.SUPPRESS_EMBEDS`][].
+
+        Returns
+        -------
+        hikari.interactions.base_interactions.InteractionCallbackResponse
+            The interaction callback response.
 
         Raises
         ------
@@ -8118,7 +8375,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
         choices: typing.Sequence[special_endpoints.AutocompleteChoiceBuilder],
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         """Create the initial response for an autocomplete interaction.
 
         Parameters
@@ -8129,6 +8386,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The interaction's token.
         choices
             The autocomplete choices themselves.
+
+        Returns
+        -------
+        hikari.interactions.base_interactions.InteractionCallbackResponse
+            The interaction callback response.
 
         Raises
         ------
@@ -8154,7 +8416,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         custom_id: str,
         component: undefined.UndefinedOr[special_endpoints.ComponentBuilder] = undefined.UNDEFINED,
         components: undefined.UndefinedOr[typing.Sequence[special_endpoints.ComponentBuilder]] = undefined.UNDEFINED,
-    ) -> None:
+    ) -> base_interactions.InteractionCallbackResponse:
         """Create a response by sending a modal.
 
         Parameters
@@ -8176,22 +8438,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         ValueError
             If both `component` and `components` are specified or if none are specified.
-        """
-
-    @abc.abstractmethod
-    async def create_premium_required_response(
-        self, interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction], token: str
-    ) -> None:
-        """Create an ephemeral response indicating that the user needs premium features.
-
-        This is only available to monetized applications.
-
-        Parameters
-        ----------
-        interaction
-            Object or ID of the interaction this response is for.
-        token
-            The interaction's token.
         """
 
     @abc.abstractmethod

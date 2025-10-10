@@ -210,12 +210,13 @@ class TestResource:
 
 
 def test_copy_to_path():
+    original_path = pathlib.Path("original_path")
     with mock.patch.object(files, "_to_write_path") as to_write_path:
         with mock.patch.object(shutil, "copy2") as copy2:
-            files._copy_to_path("original_path", "path", "some_filename.png", False)
+            files._copy_to_path(original_path, "path", "some_filename.png", False)
 
     to_write_path.assert_called_once_with("path", "some_filename.png", force=False)
-    copy2.assert_called_once_with("original_path", to_write_path.return_value)
+    copy2.assert_called_once_with(original_path, to_write_path.return_value)
 
 
 class TestFile:

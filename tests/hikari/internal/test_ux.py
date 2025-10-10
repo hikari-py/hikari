@@ -671,7 +671,7 @@ class TestCheckForUpdates:
             await ux.check_for_updates(http_settings=http_settings, proxy_settings=proxy_settings)
 
         logger.warning.assert_called_once_with("Failed to fetch hikari version details", exc_info=ex)
-        create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
+        create_tcp_connector.assert_called_once_with(dns_cache=False, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
             connector_owner=True,
@@ -712,7 +712,7 @@ class TestCheckForUpdates:
         logger.info.assert_not_called()
 
         json_loads.assert_called_once_with(_request.read.return_value)
-        create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
+        create_tcp_connector.assert_called_once_with(dns_cache=False, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
             connector_owner=True,
@@ -763,7 +763,7 @@ class TestCheckForUpdates:
             "A newer version of hikari is available, consider upgrading to %s", ux.HikariVersion(v)
         )
         json_loads.assert_called_once_with(_request.read.return_value)
-        create_tcp_connector.assert_called_once_with(dns_cache=False, limit=1, http_settings=http_settings)
+        create_tcp_connector.assert_called_once_with(dns_cache=False, http_settings=http_settings)
         create_client_session.assert_called_once_with(
             connector=create_tcp_connector(),
             connector_owner=True,

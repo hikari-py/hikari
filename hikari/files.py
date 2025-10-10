@@ -360,7 +360,7 @@ class AsyncReader(typing.AsyncIterable[bytes], abc.ABC):
         buff = bytearray()
         async for chunk in self:
             buff.extend(chunk)
-        return buff
+        return bytes(buff)
 
 
 class AsyncReaderContextManager(abc.ABC, typing.Generic[ReaderImplT]):
@@ -422,7 +422,7 @@ def _open_write_path(path: Pathish, default_filename: str, force: bool) -> typin
     return path.open("wb")
 
 
-class Resource(typing.Generic[ReaderImplT], abc.ABC):
+class Resource(abc.ABC, typing.Generic[ReaderImplT]):
     """Base for any uploadable or downloadable representation of information.
 
     These representations can be streamed using bit inception for performance,
@@ -1185,7 +1185,7 @@ class Bytes(Resource[IteratorReader]):
         # This will not block for a data URI; if it was a URL, it would block, so
         # we guard against this with the check above.
         try:
-            with urllib.request.urlopen(data_uri) as response:  # noqa: S310   audit url open for permitted schemes
+            with urllib.request.urlopen(data_uri) as response:  # noqa: S310 - audit url open for permitted schemes
                 mimetype, _ = mimetypes.guess_type(data_uri)
                 data = response.read()
         except Exception as ex:

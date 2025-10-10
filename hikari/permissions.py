@@ -313,6 +313,9 @@ class Permissions(enums.Flag):
     This only applies to apps not also installed to the server.
     """
 
+    PIN_MESSAGES = 1 << 51
+    """Allows for pinning a message to a channel."""
+
     @classmethod
     def all_permissions(cls) -> Permissions:
         """Get an instance of [`hikari.permissions.Permissions`][] with all the known permissions.

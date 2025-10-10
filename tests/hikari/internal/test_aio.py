@@ -308,6 +308,7 @@ def test_get_or_make_loop():
     mock_loop.is_closed = mock.Mock(return_value=True)
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_get_or_make_loop_handles_runtime_error():
     asyncio.set_event_loop(None)
     mock_loop = mock.Mock(asyncio.AbstractEventLoop)
@@ -320,6 +321,7 @@ def test_get_or_make_loop_handles_runtime_error():
     assert asyncio.get_event_loop_policy().get_event_loop() is mock_loop
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_get_or_make_loop_handles_closed_loop():
     asyncio.set_event_loop(mock.Mock(asyncio.AbstractEventLoop, is_closed=mock.Mock(return_value=True)))
     mock_loop = mock.Mock(asyncio.AbstractEventLoop)
