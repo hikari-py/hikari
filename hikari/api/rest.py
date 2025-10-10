@@ -5522,8 +5522,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.iterators.LazyIterator[hikari.messages.PinnedMessage]
-            An iterator to fetch the pinned messages.
+        hikari.iterators.LazyIterator[hikari.channels.ThreadMember]
+            An iterator to fetch the thread members.
 
         Raises
         ------
