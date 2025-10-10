@@ -475,7 +475,7 @@ class ThreadMembersIterator(iterators.BufferedLazyIterator["channels.ThreadMembe
         if not response:
             return None
 
-        self._last_id = response[0]["id"]
+        self._last_id = response[-1]["id"]
         return (self._entity_factory.deserialize_thread_member(m) for m in response)
 
 
