@@ -3482,13 +3482,15 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_thread_member(response)
 
     @typing_extensions.override
-    async def fetch_thread_members(
-        self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel], /
-    ) -> typing.Sequence[channels_.ThreadMember]:
-        route = routes.GET_THREAD_MEMBERS.compile(channel=channel)
-        response = await self._request(route)
-        assert isinstance(response, list)
-        return [self._entity_factory.deserialize_thread_member(member) for member in response]
+    def fetch_thread_members(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        /,
+        after: undefined.UndefinedOr[snowflakes.Snowflakeish] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.ThreadMember]:
+        return special_endpoints_impl.ThreadMembersIterator(
+            entity_factory=self._entity_factory, request_call=self._request, channel=channel, last_id=after
+        )
 
     @typing_extensions.override
     async def fetch_active_threads(
