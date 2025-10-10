@@ -23,6 +23,7 @@ from __future__ import annotations
 import asyncio
 import pathlib
 import shutil
+import typing
 
 import mock
 import pytest
@@ -45,14 +46,14 @@ class TestURL:
 
 class TestAsyncReaderContextManager:
     @pytest.fixture
-    def reader(self):
+    def reader(self) -> typing.Type[files.AsyncReaderContextManager[files.AsyncReader]]:
         return hikari_test_helpers.mock_class_namespace(files.AsyncReaderContextManager)
 
-    def test___enter__(self, reader):
+    def test___enter__(self, reader: files.AsyncReaderContextManager[files.AsyncReader]):
         with pytest.raises(TypeError, match=" is async-only, did you mean 'async with'?"):
             reader().__enter__()
 
-    def test___exit__(self, reader):
+    def test___exit__(self, reader: files.AsyncReaderContextManager[files.AsyncReader]):
         try:
             reader().__exit__(None, None, None)
         except AttributeError as exc:
@@ -86,7 +87,7 @@ class TestThreadedFileReaderContextManagerImpl:
     @pytest.mark.asyncio
     async def test_context_manager(self):
         mock_file = mock.Mock()
-        executor = object()
+        executor = mock.Mock()
         path = pathlib.Path("test/path/")
 
         loop = mock.Mock(run_in_executor=mock.AsyncMock(side_effect=[mock_file, None]))
@@ -152,14 +153,14 @@ def test_open_write_path():
 
 class TestResource:
     @pytest.fixture
-    def resource(self):
+    def resource(self) -> files.Resource[files.AsyncReader]:
         class MockReader:
             data = iter(("never", "gonna", "give", "you", "up"))
 
             async def __aenter__(self):
                 return self
 
-            async def __aexit__(self, *args, **kwargs):
+            async def __aexit__(self, *args: typing.Any, **kwargs: typing.Any):
                 return
 
             def __aiter__(self):
@@ -171,16 +172,22 @@ class TestResource:
                 except StopIteration:
                     raise StopAsyncIteration from None
 
-        class ResourceImpl(files.Resource):
+        class ResourceImpl(files.Resource[typing.Any]):
             stream = mock.Mock(return_value=MockReader())
-            url = "https://myspace.com/rickastley/lyrics.txt"
-            filename = "lyrics.txt"
+
+            @property
+            def url(self) -> str:
+                return "https://myspace.com/rickastley/lyrics.txt"
+
+            @property
+            def filename(self) -> str:
+                return "lyrics.txt"
 
         return ResourceImpl()
 
     @pytest.mark.asyncio
-    async def test_save(self, resource):
-        executor = object()
+    async def test_save(self, resource: files.Resource[files.AsyncReader]):
+        executor = mock.Mock()
         file_open = mock.Mock()
         file_open.write = mock.Mock()
         loop = mock.Mock(run_in_executor=mock.AsyncMock(side_effect=[file_open, None, None, None, None, None, None]))
@@ -203,12 +210,13 @@ class TestResource:
 
 
 def test_copy_to_path():
+    original_path = pathlib.Path("original_path")
     with mock.patch.object(files, "_to_write_path") as to_write_path:
         with mock.patch.object(shutil, "copy2") as copy2:
-            files._copy_to_path("original_path", "path", "some_filename.png", False)
+            files._copy_to_path(original_path, "path", "some_filename.png", False)
 
     to_write_path.assert_called_once_with("path", "some_filename.png", force=False)
-    copy2.assert_called_once_with("original_path", to_write_path.return_value)
+    copy2.assert_called_once_with(original_path, to_write_path.return_value)
 
 
 class TestFile:
@@ -217,8 +225,8 @@ class TestFile:
         return files.File("one/path/something.txt")
 
     @pytest.mark.asyncio
-    async def test_save(self, file_obj):
-        mock_executor = object()
+    async def test_save(self, file_obj: files.File):
+        mock_executor = mock.Mock()
         loop = mock.Mock(run_in_executor=mock.AsyncMock())
 
         with mock.patch.object(asyncio, "get_running_loop", return_value=loop):
@@ -246,14 +254,16 @@ def test_write_bytes():
 
 class TestBytes:
     @pytest.fixture
-    def bytes_obj(self):
+    def bytes_obj(self) -> files.Bytes:
         return files.Bytes(b"some data", "something.txt")
 
     @pytest.mark.parametrize("data_type", [bytes, bytearray, memoryview])
     @pytest.mark.asyncio
-    async def test_save(self, bytes_obj, data_type):
+    async def test_save(
+        self, bytes_obj: files.Bytes, data_type: type[bytes] | type[bytearray] | type[memoryview[typing.Any]]
+    ):
         bytes_obj.data = mock.Mock(data_type)
-        mock_executor = object()
+        mock_executor = mock.Mock()
         loop = mock.Mock(run_in_executor=mock.AsyncMock())
 
         with mock.patch.object(asyncio, "get_running_loop", return_value=loop):
@@ -266,9 +276,9 @@ class TestBytes:
         )
 
     @pytest.mark.asyncio
-    async def test_save_when_data_is_not_bytes(self, bytes_obj):
-        bytes_obj.data = object()
-        mock_executor = object()
+    async def test_save_when_data_is_not_bytes(self, bytes_obj: files.Bytes):
+        bytes_obj.data = mock.Mock()
+        mock_executor = mock.Mock()
 
         with mock.patch.object(asyncio, "get_running_loop") as get_running_loop:
             with mock.patch.object(files.Resource, "save") as super_save:

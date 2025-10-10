@@ -157,9 +157,7 @@ exclude_lines = [
 ]
 
 [tool.pyright]
-include = ["hikari", "examples"]
-exclude = [
-    "examples/simple_dashboard.py",
+ignore = [
     "**/__init__.py",
     "hikari/internal/enums.py",
     "hikari/internal/fast_protocol.py",
@@ -180,6 +178,11 @@ reportUnknownMemberType = "warning"
 reportUntypedFunctionDecorator = "warning"
 reportOptionalMemberAccess = "warning"
 
+executionEnvironments = [
+  { root = "hikari" },
+  { root = "tests/hikari", reportPrivateUsage = "none" },
+]
+
 [tool.pytest.ini_options]
 xfail_strict = true
 norecursedirs = [
@@ -192,7 +195,7 @@ norecursedirs = [
     ".venv",
     "venv",
     "public",
-    "ci",
+    "pipelines",
 ]
 # Treat warnings as errors
 filterwarnings = [

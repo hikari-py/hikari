@@ -155,20 +155,20 @@ tuple_str_sad_test_data = [
 
 class TestColor:
     @pytest.mark.parametrize("i", [0, 0x1, 0x11, 0x111, 0x1111, 0x11111, 0xFFFFFF])
-    def test_Color_validates_constructor_and_passes_for_valid_values(self, i):
+    def test_Color_validates_constructor_and_passes_for_valid_values(self, i: int):
         assert colors.Color(i) is not None
 
     @pytest.mark.parametrize("i", [-1, 0x1000000])
-    def test_Color_validates_constructor_and_fails_for_out_of_range_values(self, i):
+    def test_Color_validates_constructor_and_fails_for_out_of_range_values(self, i: int):
         with pytest.raises(ValueError, match=r"raw_rgb must be in the exclusive range of 0 and 16777215"):
             colors.Color(i)
 
     @pytest.mark.parametrize("i", [0, 0x1, 0x11, 0x111, 0x1111, 0x11111, 0xFFFFFF])
-    def test_Color_from_int_passes_for_valid_values(self, i):
+    def test_Color_from_int_passes_for_valid_values(self, i: int):
         assert colors.Color.from_int(i) is not None
 
     @pytest.mark.parametrize("i", [-1, 0x1000000])
-    def test_Color_from_int_fails_for_out_of_range_values(self, i):
+    def test_Color_from_int_fails_for_out_of_range_values(self, i: int):
         with pytest.raises(ValueError, match=r"raw_rgb must be in the exclusive range of 0 and 16777215"):
             colors.Color.from_int(i)
 
@@ -181,29 +181,29 @@ class TestColor:
     @pytest.mark.parametrize(
         ("i", "string"), [(0x1A2B3C, "Color(r=0x1a, g=0x2b, b=0x3c)"), (0x1A2, "Color(r=0x0, g=0x1, b=0xa2)")]
     )
-    def test_Color_repr_operator(self, i, string):
+    def test_Color_repr_operator(self, i: int, string: str):
         assert repr(colors.Color(i)) == string
 
     @pytest.mark.parametrize(("i", "string"), [(0x1A2B3C, "#1A2B3C"), (0x1A2, "#0001A2")])
-    def test_Color_str_operator(self, i, string):
+    def test_Color_str_operator(self, i: int, string: str):
         assert str(colors.Color(i)) == string
 
     @pytest.mark.parametrize(("i", "string"), [(0x1A2B3C, "#1A2B3C"), (0x1A2, "#0001A2")])
-    def test_Color_hex_code(self, i, string):
+    def test_Color_hex_code(self, i: int, string: str):
         assert colors.Color(i).hex_code == string
 
     @pytest.mark.parametrize(("i", "string"), [(0x1A2B3C, "1A2B3C"), (0x1A2, "0001A2")])
-    def test_Color_raw_hex_code(self, i, string):
+    def test_Color_raw_hex_code(self, i: int, string: str):
         assert colors.Color(i).raw_hex_code == string
 
     @pytest.mark.parametrize(
         ("i", "expected_outcome"), [(0x1A2B3C, False), (0x1AAA2B, False), (0x0, True), (0x11AA33, True)]
     )
-    def test_Color_is_web_safe(self, i, expected_outcome):
+    def test_Color_is_web_safe(self, i: int, expected_outcome: bool):
         assert colors.Color(i).is_web_safe is expected_outcome
 
     @pytest.mark.parametrize(("r", "g", "b", "expected"), [(0x9, 0x18, 0x27, 0x91827), (0x55, 0x1A, 0xFF, 0x551AFF)])
-    def test_Color_from_rgb(self, r, g, b, expected):
+    def test_Color_from_rgb(self, r: int, g: int, b: int, expected: int):
         assert colors.Color.from_rgb(r, g, b) == expected
 
     def test_color_from_rgb_raises_value_error_on_invalid_red(self):
@@ -222,7 +222,7 @@ class TestColor:
         ("r", "g", "b", "expected"),
         [(0x09 / 0xFF, 0x18 / 0xFF, 0x27 / 0xFF, 0x91827), (0x55 / 0xFF, 0x1A / 0xFF, 0xFF / 0xFF, 0x551AFF)],
     )
-    def test_Color_from_rgb_float(self, r, g, b, expected):
+    def test_Color_from_rgb_float(self, r: int, g: int, b: int, expected: int):
         assert math.isclose(colors.Color.from_rgb_float(r, g, b), expected, abs_tol=1)
 
     def test_color_from_rgb_float_raises_value_error_on_invalid_red(self):
@@ -238,21 +238,21 @@ class TestColor:
             colors.Color.from_rgb_float(0.5, 0.5, 1.5)
 
     @pytest.mark.parametrize(("input", "r", "g", "b"), [(0x91827, 0x9, 0x18, 0x27), (0x551AFF, 0x55, 0x1A, 0xFF)])
-    def test_Color_rgb(self, input, r, g, b):
+    def test_Color_rgb(self, input: int, r: int, g: int, b: int):
         assert colors.Color(input).rgb == (r, g, b)
 
     @pytest.mark.parametrize(
         ("input", "r", "g", "b"),
         [(0x91827, 0x09 / 0xFF, 0x18 / 0xFF, 0x27 / 0xFF), (0x551AFF, 0x55 / 0xFF, 0x1A / 0xFF, 0xFF / 0xFF)],
     )
-    def test_Color_rgb_float(self, input, r, g, b):
+    def test_Color_rgb_float(self, input: int, r: int, g: int, b: int):
         assert colors.Color(input).rgb_float == (r, g, b)
 
     @pytest.mark.parametrize("prefix", ["0x", "0X", "#", ""])
     @pytest.mark.parametrize(
         ("expected", "string"), [(0x1A2B3C, "1A2B3C"), (0x1A2, "0001A2"), (0xAABBCC, "ABC"), (0x00AA00, "0A0")]
     )
-    def test_Color_from_hex_code(self, prefix, string, expected):
+    def test_Color_from_hex_code(self, prefix: str, string: str, expected: int):
         actual_string = prefix + string
         assert colors.Color.from_hex_code(actual_string) == expected
 
@@ -292,13 +292,15 @@ class TestColor:
             *tuple_str_happy_test_data,
         ],
     )
-    def test_Color_of_happy_path(self, input, expected_result):
+    def test_Color_of_happy_path(
+        self, input: colors.Color | int | str | tuple[int | float], expected_result: colors.Color
+    ):
         result = colors.Color.of(input)
         assert result == expected_result, f"{input}"
 
     @pytest.mark.parametrize(
         ("input_string", "value_error_match"),
-        [
+        [  # FIXME: This is a weird issue. It does not like the one with set().
             ("blah", r"Could not transform 'blah' into a Color object"),
             ("0xfff1", r"Color code is invalid length\. Must be 3 or 6 digits"),
             (lambda: 22, r"Could not transform <function TestColor\.<lambda> at 0x[a-zA-Z0-9]+> into a Color object"),
@@ -318,7 +320,7 @@ class TestColor:
             *tuple_str_sad_test_data,
         ],
     )
-    def test_Color_of_sad_path(self, input_string, value_error_match):
+    def test_Color_of_sad_path(self, input_string: str, value_error_match: str):
         with pytest.raises(ValueError, match=value_error_match):
             colors.Color.of(input_string)
 
@@ -327,10 +329,10 @@ class TestColor:
         assert result == colors.Color(0xFF051A)
 
     @pytest.mark.parametrize(("input_string", "expected_color"), tuple_str_happy_test_data)
-    def test_from_tuple_string_happy_path(self, input_string, expected_color):
+    def test_from_tuple_string_happy_path(self, input_string: str, expected_color: colors.Color):
         assert colors.Color.from_tuple_string(input_string) == expected_color
 
     @pytest.mark.parametrize(("input_string", "value_error_match"), tuple_str_sad_test_data)
-    def test_from_tuple_string_sad_path(self, input_string, value_error_match):
+    def test_from_tuple_string_sad_path(self, input_string: str, value_error_match: str):
         with pytest.raises(ValueError, match=value_error_match):
             colors.Color.from_tuple_string(input_string)

@@ -20,34 +20,37 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import mock
 import pytest
 
+from hikari import applications
 from hikari import snowflakes
 from hikari.events import shard_events
 
 
 class TestShardReadyEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> shard_events.ShardReadyEvent:
         return shard_events.ShardReadyEvent(
             my_user=mock.Mock(),
             resume_gateway_url="testing",
-            shard=None,
+            shard=mock.Mock(),
             actual_gateway_version=1,
             session_id="ok",
-            application_id=1,
-            application_flags=1,
+            application_id=snowflakes.Snowflake(1),
+            application_flags=applications.ApplicationFlags.EMBEDDED,
             unavailable_guilds=[],
         )
 
-    def test_app_property(self, event):
+    def test_app_property(self, event: shard_events.ShardReadyEvent):
         assert event.app is event.my_user.app
 
 
 class TestMemberChunkEvent:
     @pytest.fixture
-    def event(self):
+    def event(self) -> shard_events.MemberChunkEvent:
         return shard_events.MemberChunkEvent(
             app=mock.Mock(),
             shard=mock.Mock(),
@@ -65,26 +68,34 @@ class TestMemberChunkEvent:
             nonce="blah",
         )
 
-    def test___getitem___with_slice(self, event):
-        mock_member_0 = object()
-        mock_member_1 = object()
-        event.members = {1: object(), 55: object(), 99: mock_member_0, 455: object(), 5444: mock_member_1}
+    def test___getitem___with_slice(self, event: shard_events.MemberChunkEvent):
+        mock_member_0 = mock.Mock()
+        mock_member_1 = mock.Mock()
+        event.members = {
+            snowflakes.Snowflake(1): mock.Mock(),
+            snowflakes.Snowflake(55): mock.Mock(),
+            snowflakes.Snowflake(99): mock_member_0,
+            snowflakes.Snowflake(455): mock.Mock(),
+            snowflakes.Snowflake(5444): mock_member_1,
+        }
 
         assert event[2:5:2] == (mock_member_0, mock_member_1)
 
-    def test___getitem___with_valid_index(self, event):
-        mock_member = object()
+    def test___getitem___with_valid_index(self, event: shard_events.MemberChunkEvent):
+        mock_member = mock.Mock()
+        assert isinstance(event.members, typing.MutableMapping)  # FIXME: This seems hacky
+
         event.members[snowflakes.Snowflake(99)] = mock_member
         assert event[2] is mock_member
 
         with pytest.raises(IndexError):
             assert event[55]
 
-    def test___getitem___with_invalid_index(self, event):
+    def test___getitem___with_invalid_index(self, event: shard_events.MemberChunkEvent):
         with pytest.raises(IndexError):
             assert event[123]
 
-    def test___iter___(self, event):
+    def test___iter___(self, event: shard_events.MemberChunkEvent):
         member_0 = mock.Mock()
         member_1 = mock.Mock()
         member_2 = mock.Mock()
@@ -97,5 +108,5 @@ class TestMemberChunkEvent:
 
         assert list(event) == [member_0, member_1, member_2]
 
-    def test___len___(self, event):
+    def test___len___(self, event: shard_events.MemberChunkEvent):
         assert len(event) == 4

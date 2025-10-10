@@ -26,94 +26,107 @@ import pytest
 from hikari import audit_logs
 from hikari import channels
 from hikari import snowflakes
+from hikari import traits
 
 
 @pytest.mark.asyncio
 class TestMessagePinEntryInfo:
-    async def test_fetch_channel(self):
-        app = mock.AsyncMock()
-        app.rest.fetch_channel.return_value = mock.Mock(spec_set=channels.GuildTextChannel)
-        model = audit_logs.MessagePinEntryInfo(app=app, channel_id=123, message_id=456)
+    @pytest.fixture
+    def message_pin_entry_info(hikari_app: traits.RESTAware) -> audit_logs.MessagePinEntryInfo:
+        return audit_logs.MessagePinEntryInfo(
+            app=hikari_app, channel_id=snowflakes.Snowflake(123), message_id=snowflakes.Snowflake(456)
+        )
 
-        assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
+    async def test_fetch_channel(self, message_pin_entry_info: audit_logs.MessagePinEntryInfo):
+        with (
+            mock.patch.object(message_pin_entry_info, "app") as patched_app,
+            mock.patch.object(
+                patched_app.rest,
+                "fetch_channel",
+                mock.AsyncMock(return_value=mock.Mock(spec_set=channels.GuildTextChannel)),
+            ) as patched_fetch_channel,
+        ):
+            assert await message_pin_entry_info.fetch_channel() is patched_fetch_channel.return_value
+            patched_fetch_channel.assert_awaited_once_with(123)
 
-        model.app.rest.fetch_channel.assert_awaited_once_with(123)
-
-    async def test_fetch_message(self):
-        model = audit_logs.MessagePinEntryInfo(app=mock.AsyncMock(), channel_id=123, message_id=456)
-
-        assert await model.fetch_message() is model.app.rest.fetch_message.return_value
-
-        model.app.rest.fetch_message.assert_awaited_once_with(123, 456)
+    async def test_fetch_message(self, message_pin_entry_info: audit_logs.MessagePinEntryInfo):
+        with (
+            mock.patch.object(message_pin_entry_info, "app") as patched_app,
+            mock.patch.object(patched_app.rest, "fetch_message", new_callable=mock.AsyncMock) as patched_fetch_message,
+        ):
+            assert await message_pin_entry_info.fetch_message() is patched_fetch_message.return_value
+            patched_fetch_message.assert_awaited_once_with(123, 456)
 
 
 @pytest.mark.asyncio
 class TestMessageDeleteEntryInfo:
     async def test_fetch_channel(self):
         app = mock.AsyncMock()
-        app.rest.fetch_channel.return_value = mock.Mock(spec_set=channels.GuildTextChannel)
-        model = audit_logs.MessageDeleteEntryInfo(app=app, count=1, channel_id=123)
+        model = audit_logs.MessageDeleteEntryInfo(app=app, count=1, channel_id=snowflakes.Snowflake(123))
 
-        assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
+        with mock.patch.object(
+            app.rest, "fetch_channel", new=mock.AsyncMock(return_value=mock.Mock(spec_set=channels.GuildTextChannel))
+        ) as patched_fetch_channel:
+            assert await model.fetch_channel() is patched_fetch_channel.return_value
 
-        model.app.rest.fetch_channel.assert_awaited_once_with(123)
+            patched_fetch_channel.assert_awaited_once_with(123)
 
 
 @pytest.mark.asyncio
 class TestMemberMoveEntryInfo:
     async def test_fetch_channel(self):
         app = mock.AsyncMock()
-        app.rest.fetch_channel.return_value = mock.Mock(spec_set=channels.GuildVoiceChannel)
-        model = audit_logs.MemberMoveEntryInfo(app=app, count=1, channel_id=123)
+        model = audit_logs.MemberMoveEntryInfo(app=app, count=1, channel_id=snowflakes.Snowflake(123))
 
-        assert await model.fetch_channel() is model.app.rest.fetch_channel.return_value
+        with mock.patch.object(
+            app.rest, "fetch_channel", new=mock.AsyncMock(return_value=mock.Mock(spec_set=channels.GuildVoiceChannel))
+        ) as patched_fetch_channel:
+            assert await model.fetch_channel() is patched_fetch_channel.return_value
 
-        model.app.rest.fetch_channel.assert_awaited_once_with(123)
+            patched_fetch_channel.assert_awaited_once_with(123)
 
 
 class TestAuditLogEntry:
-    @pytest.mark.asyncio
-    async def test_fetch_user_when_no_user(self):
-        model = audit_logs.AuditLogEntry(
-            app=mock.AsyncMock(),
-            id=123,
+    @pytest.fixture
+    def audit_log_entry(hikari_app: traits.RESTAware) -> audit_logs.AuditLogEntry:
+        return audit_logs.AuditLogEntry(
+            app=hikari_app,
+            id=snowflakes.Snowflake(123),
             target_id=None,
             changes=[],
-            user_id=None,
+            user_id=snowflakes.Snowflake(456),
             action_type=0,
             options=None,
             reason=None,
             guild_id=snowflakes.Snowflake(34123123),
         )
 
-        assert await model.fetch_user() is None
+    @pytest.mark.asyncio
+    async def test_fetch_user_when_no_user(self, audit_log_entry: audit_logs.AuditLogEntry):
+        with (
+            mock.patch.object(audit_log_entry, "user_id", None),
+            mock.patch.object(audit_log_entry, "app") as patched_app,
+            mock.patch.object(patched_app.rest, "fetch_user") as patched_fetch_user,
+        ):
+            assert await audit_log_entry.fetch_user() is None
 
-        model.app.rest.fetch_user.assert_not_called()
+            patched_fetch_user.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_fetch_user_when_user(self):
-        model = audit_logs.AuditLogEntry(
-            app=mock.AsyncMock(),
-            id=123,
-            target_id=None,
-            changes=[],
-            user_id=456,
-            action_type=0,
-            options=None,
-            reason=None,
-            guild_id=snowflakes.Snowflake(123321123),
-        )
-
-        assert await model.fetch_user() is model.app.rest.fetch_user.return_value
-
-        model.app.rest.fetch_user.assert_awaited_once_with(456)
+    async def test_fetch_user_when_user(self, audit_log_entry: audit_logs.AuditLogEntry):
+        with (
+            mock.patch.object(audit_log_entry, "app") as patched_app,
+            mock.patch.object(patched_app.rest, "fetch_user", new_callable=mock.AsyncMock) as patched_fetch_user,
+        ):
+            assert await audit_log_entry.fetch_user() is patched_fetch_user.return_value
+            patched_fetch_user.assert_awaited_once_with(456)
 
 
 class TestAuditLog:
     def test_iter(self):
-        entry_1 = object()
-        entry_2 = object()
-        entry_3 = object()
+        entry_1 = mock.Mock()
+        entry_2 = mock.Mock()
+        entry_3 = mock.Mock()
         audit_log = audit_logs.AuditLog(
             auto_mod_rules={},
             entries={
@@ -129,15 +142,15 @@ class TestAuditLog:
         assert list(audit_log) == [entry_1, entry_2, entry_3]
 
     def test_get_item_with_index(self):
-        entry = object()
-        entry_2 = object()
+        entry = mock.Mock()
+        entry_2 = mock.Mock()
         audit_log = audit_logs.AuditLog(
             auto_mod_rules={},
             entries={
-                snowflakes.Snowflake(432123): object(),
+                snowflakes.Snowflake(432123): mock.Mock(),
                 snowflakes.Snowflake(432654): entry,
-                snowflakes.Snowflake(432888): object(),
-                snowflakes.Snowflake(677777): object(),
+                snowflakes.Snowflake(432888): mock.Mock(),
+                snowflakes.Snowflake(677777): mock.Mock(),
                 snowflakes.Snowflake(999999): entry_2,
             },
             integrations={},
@@ -149,16 +162,16 @@ class TestAuditLog:
         assert audit_log[4] is entry_2
 
     def test_get_item_with_slice(self):
-        entry_1 = object()
-        entry_2 = object()
+        entry_1 = mock.Mock()
+        entry_2 = mock.Mock()
         audit_log = audit_logs.AuditLog(
             auto_mod_rules={},
             entries={
-                snowflakes.Snowflake(432123): object(),
+                snowflakes.Snowflake(432123): mock.Mock(),
                 snowflakes.Snowflake(432654): entry_1,
-                snowflakes.Snowflake(432888): object(),
+                snowflakes.Snowflake(432888): mock.Mock(),
                 snowflakes.Snowflake(666666): entry_2,
-                snowflakes.Snowflake(783452): object(),
+                snowflakes.Snowflake(783452): mock.Mock(),
             },
             integrations={},
             threads={},
@@ -171,10 +184,10 @@ class TestAuditLog:
         audit_log = audit_logs.AuditLog(
             auto_mod_rules={},
             entries={
-                snowflakes.Snowflake(432123): object(),
-                snowflakes.Snowflake(432654): object(),
-                snowflakes.Snowflake(432888): object(),
-                snowflakes.Snowflake(783452): object(),
+                snowflakes.Snowflake(432123): mock.Mock(),
+                snowflakes.Snowflake(432654): mock.Mock(),
+                snowflakes.Snowflake(432888): mock.Mock(),
+                snowflakes.Snowflake(783452): mock.Mock(),
             },
             integrations={},
             threads={},
