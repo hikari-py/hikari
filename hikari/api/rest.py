@@ -5518,7 +5518,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         channel
             Object or ID of the thread channel to fetch the members of.
         after
-            If provided, fetch messages before this time.
+            If provided, fetch thread members after this time.
 
         Returns
         -------
