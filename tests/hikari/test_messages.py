@@ -29,6 +29,7 @@ from hikari import emojis
 from hikari import guilds
 from hikari import messages
 from hikari import snowflakes
+from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari import users
@@ -38,7 +39,7 @@ from hikari.internal import routes
 class TestAttachment:
     def test_str_operator(self):
         attachment = messages.Attachment(
-            id=123,
+            id=snowflakes.Snowflake(123),
             filename="super_cool_file.cool",
             title="other title",
             description="description!",
@@ -63,12 +64,14 @@ class TestReaction:
 
 class TestMessageApplication:
     @pytest.fixture
-    def message_application(self):
+    def message_application(self) -> messages.MessageApplication:
         return messages.MessageApplication(
-            id=123, name="test app", description="", icon_hash="123abc", cover_image_hash="abc123"
+            id=snowflakes.Snowflake(123), name="test app", description="", icon_hash="123abc", cover_image_hash="abc123"
         )
 
-    def test_make_cover_url_format_set_to_deprecated_ext_argument_if_provided(self, message_application):
+    def test_make_cover_url_format_set_to_deprecated_ext_argument_if_provided(
+        self, message_application: messages.MessageApplication
+    ):
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -78,16 +81,16 @@ class TestMessageApplication:
             urls.CDN_URL, application_id=123, hash="abc123", size=4096, file_format="JPEG", lossless=True
         )
 
-    def test_cover_image_url(self, message_application):
+    def test_cover_image_url(self, message_application: messages.MessageApplication):
         with mock.patch.object(messages.MessageApplication, "make_cover_image_url") as mock_cover_image:
             assert message_application.cover_image_url is mock_cover_image()
 
-    def test_make_cover_image_url_when_hash_is_none(self, message_application):
+    def test_make_cover_image_url_when_hash_is_none(self, message_application: messages.MessageApplication):
         message_application.cover_image_hash = None
 
         assert message_application.make_cover_image_url() is None
 
-    def test_make_cover_image_url_when_hash_is_not_none(self, message_application):
+    def test_make_cover_image_url_when_hash_is_not_none(self, message_application: messages.MessageApplication):
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -99,9 +102,9 @@ class TestMessageApplication:
 
 
 @pytest.fixture
-def message():
+def message(hikari_app: traits.RESTAware) -> messages.Message:
     return messages.Message(
-        app=None,
+        app=hikari_app,
         id=snowflakes.Snowflake(1234),
         channel_id=snowflakes.Snowflake(5678),
         guild_id=snowflakes.Snowflake(910112),
@@ -117,7 +120,7 @@ def message():
         mentions_everyone=False,
         attachments=(),
         embeds=(),
-        poll=object(),
+        poll=None,
         reactions=(),
         is_pinned=True,
         webhook_id=None,
@@ -125,12 +128,12 @@ def message():
         activity=None,
         application=None,
         message_reference=None,
-        message_snapshots=None,
-        flags=None,
+        flags=messages.MessageFlag.NONE,
+        message_snapshots=[],
         nonce=None,
         referenced_message=None,
         stickers=[],
-        application_id=123123,
+        application_id=snowflakes.Snowflake(123123),
         components=[],
         thread=None,
         interaction_metadata=None,
@@ -138,22 +141,22 @@ def message():
 
 
 class TestMessage:
-    def test_make_link_when_guild_is_not_none(self, message):
-        message.id = 789
-        message.channel_id = 456
+    def test_make_link_when_guild_is_not_none(self, message: messages.Message):
+        message.id = snowflakes.Snowflake(789)
+        message.channel_id = snowflakes.Snowflake(456)
         assert message.make_link(123) == "https://discord.com/channels/123/456/789"
 
-    def test_make_link_when_guild_is_none(self, message):
+    def test_make_link_when_guild_is_none(self, message: messages.Message):
         message.app = mock.Mock()
-        message.id = 789
-        message.channel_id = 456
+        message.id = snowflakes.Snowflake(789)
+        message.channel_id = snowflakes.Snowflake(456)
         assert message.make_link(None) == "https://discord.com/channels/@me/456/789"
 
 
 @pytest.fixture
-def message_reference():
+def message_reference(hikari_app: traits.RESTAware) -> messages.MessageReference:
     return messages.MessageReference(
-        app=None,
+        app=hikari_app,
         guild_id=snowflakes.Snowflake(123),
         channel_id=snowflakes.Snowflake(456),
         id=snowflakes.Snowflake(789),
@@ -162,16 +165,16 @@ def message_reference():
 
 
 class TestMessageReference:
-    def test_make_link_when_guild_is_not_none(self, message_reference):
+    def test_make_link_when_guild_is_not_none(self, message_reference: messages.MessageReference):
         assert message_reference.message_link == "https://discord.com/channels/123/456/789"
         assert message_reference.channel_link == "https://discord.com/channels/123/456"
 
-    def test_make_link_when_guild_is_none(self, message_reference):
+    def test_make_link_when_guild_is_none(self, message_reference: messages.MessageReference):
         message_reference.guild_id = None
         assert message_reference.message_link == "https://discord.com/channels/@me/456/789"
         assert message_reference.channel_link == "https://discord.com/channels/@me/456"
 
-    def test_make_link_when_id_is_none(self, message_reference):
+    def test_make_link_when_id_is_none(self, message_reference: messages.MessageReference):
         message_reference.id = None
         assert message_reference.message_link is None
         assert message_reference.channel_link == "https://discord.com/channels/123/456"
@@ -179,22 +182,22 @@ class TestMessageReference:
 
 @pytest.mark.asyncio
 class TestAsyncMessage:
-    async def test_fetch_channel(self, message):
+    async def test_fetch_channel(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.channel_id = 123
+        message.channel_id = snowflakes.Snowflake(123)
         await message.fetch_channel()
         message.app.rest.fetch_channel.assert_awaited_once_with(123)
 
-    async def test_edit(self, message):
+    async def test_edit(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.id = 123
-        message.channel_id = 456
-        embed = object()
-        embeds = [object(), object()]
-        component = object()
-        components = object(), object()
-        attachment = object()
-        roles = [object()]
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
+        embed = mock.Mock()
+        embeds = [mock.Mock(), mock.Mock()]
+        component = mock.Mock()
+        components = mock.Mock(), mock.Mock()
+        attachment = mock.Mock()
+        roles = [mock.Mock()]
         await message.edit(
             content="test content",
             embed=embed,
@@ -226,19 +229,20 @@ class TestAsyncMessage:
             flags=messages.MessageFlag.URGENT,
         )
 
-    async def test_respond(self, message):
+    async def test_respond(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.id = 123
-        message.channel_id = 456
-        embed = object()
-        embeds = [object(), object()]
-        poll = object()
-        roles = [object()]
-        attachment = object()
-        attachments = [object()]
-        component = object()
-        components = object(), object()
-        reference_messsage = object()
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
+        embed = mock.Mock()
+        embeds = [mock.Mock(), mock.Mock()]
+        roles = [mock.Mock()]
+        attachment = mock.Mock()
+        attachments = [mock.Mock()]
+        component = mock.Mock()
+        components = mock.Mock(), mock.Mock()
+        reference_messsage = mock.Mock()
+        poll = mock.Mock()
+
         await message.respond(
             content="test content",
             embed=embed,
@@ -259,6 +263,7 @@ class TestAsyncMessage:
             mentions_reply=True,
             flags=321123,
         )
+
         message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
             content="test content",
@@ -281,10 +286,10 @@ class TestAsyncMessage:
             flags=321123,
         )
 
-    async def test_respond_when_reply_is_True(self, message):
+    async def test_respond_when_reply_is_True(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.id = 123
-        message.channel_id = 456
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
         await message.respond(reply=True)
         message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
@@ -308,10 +313,10 @@ class TestAsyncMessage:
             flags=undefined.UNDEFINED,
         )
 
-    async def test_respond_when_reply_is_False(self, message):
+    async def test_respond_when_reply_is_False(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.id = 123
-        message.channel_id = 456
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
         await message.respond(reply=False)
         message.app.rest.create_message.assert_awaited_once_with(
             channel=456,
@@ -335,50 +340,50 @@ class TestAsyncMessage:
             flags=undefined.UNDEFINED,
         )
 
-    async def test_delete(self, message):
+    async def test_delete(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.id = 123
-        message.channel_id = 456
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
         await message.delete()
         message.app.rest.delete_message.assert_awaited_once_with(456, 123)
 
-    async def test_add_reaction(self, message):
+    async def test_add_reaction(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.id = 123
-        message.channel_id = 456
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
         await message.add_reaction("👌", 123123)
         message.app.rest.add_reaction.assert_awaited_once_with(channel=456, message=123, emoji="👌", emoji_id=123123)
 
-    async def test_remove_reaction(self, message):
+    async def test_remove_reaction(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.id = 123
-        message.channel_id = 456
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
         await message.remove_reaction("👌", 341231)
         message.app.rest.delete_my_reaction.assert_awaited_once_with(
             channel=456, message=123, emoji="👌", emoji_id=341231
         )
 
-    async def test_remove_reaction_with_user(self, message):
+    async def test_remove_reaction_with_user(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        user = object()
-        message.id = 123
-        message.channel_id = 456
+        user = mock.Mock()
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
         await message.remove_reaction("👌", 31231, user=user)
         message.app.rest.delete_reaction.assert_awaited_once_with(
             channel=456, message=123, emoji="👌", emoji_id=31231, user=user
         )
 
-    async def test_remove_all_reactions(self, message):
+    async def test_remove_all_reactions(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.id = 123
-        message.channel_id = 456
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
         await message.remove_all_reactions()
         message.app.rest.delete_all_reactions.assert_awaited_once_with(channel=456, message=123)
 
-    async def test_remove_all_reactions_with_emoji(self, message):
+    async def test_remove_all_reactions_with_emoji(self, message: messages.Message):
         message.app = mock.AsyncMock()
-        message.id = 123
-        message.channel_id = 456
+        message.id = snowflakes.Snowflake(123)
+        message.channel_id = snowflakes.Snowflake(456)
         await message.remove_all_reactions("👌", emoji_id=65655)
         message.app.rest.delete_all_reactions_for_emoji.assert_awaited_once_with(
             channel=456, message=123, emoji="👌", emoji_id=65655

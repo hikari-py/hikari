@@ -21,7 +21,9 @@
 from __future__ import annotations
 
 import ssl
+import typing
 
+import mock
 import pytest
 
 from hikari.impl import config as config_
@@ -41,7 +43,7 @@ class TestSSLFactory:
         assert returned.verify_mode is ssl.CERT_NONE
 
     def test_when_value_is_non_bool(self):
-        value = object()
+        value = mock.Mock()
         assert config_._ssl_factory(value) is value
 
 
@@ -50,46 +52,46 @@ class TestBasicAuthHeader:
     def config(self):
         return config_.BasicAuthHeader(username="davfsa", password="securepassword123")
 
-    def test_header_property(self, config):
+    def test_header_property(self, config: config_.BasicAuthHeader):
         assert config.header == f"{config_._BASICAUTH_TOKEN_PREFIX} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
 
-    def test_str(self, config):
+    def test_str(self, config: config_.BasicAuthHeader):
         assert str(config) == f"{config_._BASICAUTH_TOKEN_PREFIX} ZGF2ZnNhOnNlY3VyZXBhc3N3b3JkMTIz"
 
 
 class TestHTTPTimeoutSettings:
     @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
-    def test_max_redirects_validator_when_not_None_nor_int_nor_float(self, arg):
+    def test_max_redirects_validator_when_not_None_nor_int_nor_float(self, arg: str):
         with pytest.raises(ValueError, match=rf"HTTPTimeoutSettings.{arg} must be None, or a POSITIVE float/int"):
-            config_.HTTPTimeoutSettings(**{arg: object()})
+            config_.HTTPTimeoutSettings(**{arg: mock.Mock()})
 
     @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
-    def test_max_redirects_validator_when_negative_int(self, arg):
+    def test_max_redirects_validator_when_negative_int(self, arg: str):
         with pytest.raises(ValueError, match=rf"HTTPTimeoutSettings.{arg} must be None, or a POSITIVE float/int"):
             config_.HTTPTimeoutSettings(**{arg: -1})
 
     @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
-    def test_max_redirects_validator_when_negative_float(self, arg):
+    def test_max_redirects_validator_when_negative_float(self, arg: str):
         with pytest.raises(ValueError, match=rf"HTTPTimeoutSettings.{arg} must be None, or a POSITIVE float/int"):
             config_.HTTPTimeoutSettings(**{arg: -1.1})
 
     @pytest.mark.parametrize("arg", ["acquire_and_connect", "request_socket_connect", "request_socket_read", "total"])
     @pytest.mark.parametrize("value", [1, 1.1, None])
-    def test_max_redirects_validator(self, arg, value):
+    def test_max_redirects_validator(self, arg: str, value: typing.Optional[typing.Union[float, int]]):
         config_.HTTPTimeoutSettings(**{arg: value})
 
 
 class TestHTTPSettings:
     def test_max_redirects_validator_when_not_None_nor_int(self):
         with pytest.raises(ValueError, match=r"http_settings.max_redirects must be None or a POSITIVE integer"):
-            config_.HTTPSettings(max_redirects=object())
+            config_.HTTPSettings(max_redirects=mock.Mock())
 
     def test_max_redirects_validator_when_negative(self):
         with pytest.raises(ValueError, match=r"http_settings.max_redirects must be None or a POSITIVE integer"):
             config_.HTTPSettings(max_redirects=-1)
 
     @pytest.mark.parametrize("value", [1, None])
-    def test_max_redirects_validator(self, value):
+    def test_max_redirects_validator(self, value: typing.Optional[int]):
         config_.HTTPSettings(max_redirects=value)
 
     def test_ssl(self):

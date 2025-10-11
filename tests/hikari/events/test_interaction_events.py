@@ -27,6 +27,6 @@ from hikari.events import interaction_events
 
 class TestInteractionCreateEvent:
     def test_app_property(self):
-        mock_event = interaction_events.InteractionCreateEvent(shard=object(), interaction=mock.Mock())
+        mock_event = interaction_events.InteractionCreateEvent(shard=mock.Mock(), interaction=mock.Mock())
 
         assert mock_event.app is mock_event.interaction.app

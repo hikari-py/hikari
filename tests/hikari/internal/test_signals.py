@@ -20,7 +20,6 @@
 # SOFTWARE.
 from __future__ import annotations
 
-import contextlib
 import signal
 
 import mock
@@ -37,7 +36,7 @@ def test__raise_interrupt():
 
 
 @pytest.mark.parametrize("trace", [True, False])
-def test__interrupt_handler(trace):
+def test__interrupt_handler(trace: bool):
     loop = mock.Mock()
 
     with mock.patch.object(signals, "_LOGGER", new=mock.Mock(isEnabledFor=mock.Mock(return_value=trace))):
@@ -50,16 +49,15 @@ def test__interrupt_handler(trace):
 
 class TestHandleInterrupt:
     def test_behaviour(self):
-        loop = object()
+        loop = mock.Mock()
 
-        stack = contextlib.ExitStack()
-        register_signal_handler = stack.enter_context(mock.patch.object(signal, "signal"))
-        interrupt_handler = stack.enter_context(mock.patch.object(signals, "_interrupt_handler"))
-        stack.enter_context(mock.patch.object(signal, "SIGINT", new=2, create=True))
-        stack.enter_context(mock.patch.object(signal, "SIGTERM", new=15, create=True))
-        stack.enter_context(mock.patch.object(signals, "_INTERRUPT_SIGNALS", ("SIGINT", "SIGTERM", "UNIMPLEMENTED")))
-
-        with stack:
+        with (
+            mock.patch.object(signal, "signal") as register_signal_handler,
+            mock.patch.object(signals, "_interrupt_handler") as interrupt_handler,
+            mock.patch.object(signal, "SIGINT", new=2, create=True),
+            mock.patch.object(signal, "SIGTERM", new=15, create=True),
+            mock.patch.object(signals, "_INTERRUPT_SIGNALS", ("SIGINT", "SIGTERM", "UNIMPLEMENTED")),
+        ):
             with signals.handle_interrupts(loop, propagate_interrupts=True, enabled=True):
                 interrupt_handler.assert_called_once_with(loop)
 

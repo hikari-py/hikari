@@ -31,7 +31,7 @@ from hikari import snowflakes
 from hikari import users
 
 
-def make_user(user_id):
+def make_user(user_id: int) -> users.UserImpl:
     return users.UserImpl(
         app=mock.Mock(),
         id=snowflakes.Snowflake(user_id),
@@ -49,7 +49,7 @@ def make_user(user_id):
     )
 
 
-def make_team_member(user_id):
+def make_team_member(user_id: int) -> applications.TeamMember:
     user = make_user(user_id)
     return applications.TeamMember(
         membership_state=applications.TeamMembershipState.ACCEPTED,
@@ -59,7 +59,7 @@ def make_team_member(user_id):
     )
 
 
-def make_guild_member(user_id):
+def make_guild_member(user_id: int) -> guilds.Member:
     user = make_user(user_id)
     return guilds.Member(
         user=user,
@@ -79,15 +79,15 @@ def make_guild_member(user_id):
     )
 
 
-def make_unicode_emoji():
+def make_unicode_emoji() -> emojis.UnicodeEmoji:
     return emojis.UnicodeEmoji("\N{OK HAND SIGN}")
 
 
-def make_custom_emoji(emoji_id):
+def make_custom_emoji(emoji_id: snowflakes.Snowflake) -> emojis.CustomEmoji:
     return emojis.CustomEmoji(id=emoji_id, name="testing", is_animated=False)
 
 
-def make_known_custom_emoji(emoji_id):
+def make_known_custom_emoji(emoji_id: snowflakes.Snowflake) -> emojis.KnownCustomEmoji:
     return emojis.KnownCustomEmoji(
         app=mock.Mock(),
         id=emoji_id,
@@ -111,10 +111,10 @@ def make_known_custom_emoji(emoji_id):
         (make_user(1), make_guild_member(2), False),
         (make_team_member(1), make_guild_member(1), True),
         (make_team_member(1), make_guild_member(2), False),
-        (make_custom_emoji(1), make_known_custom_emoji(1), True),
-        (make_custom_emoji(1), make_known_custom_emoji(2), False),
-        (make_unicode_emoji(), make_custom_emoji(1), False),
-        (make_unicode_emoji(), make_known_custom_emoji(2), False),
+        (make_custom_emoji(snowflakes.Snowflake(1)), make_known_custom_emoji(snowflakes.Snowflake(1)), True),
+        (make_custom_emoji(snowflakes.Snowflake(1)), make_known_custom_emoji(snowflakes.Snowflake(2)), False),
+        (make_unicode_emoji(), make_custom_emoji(snowflakes.Snowflake(1)), False),
+        (make_unicode_emoji(), make_known_custom_emoji(snowflakes.Snowflake(2)), False),
     ],
     ids=[
         "User == Team Member",
@@ -129,7 +129,7 @@ def make_known_custom_emoji(emoji_id):
         "Unicode Emoji != Known Custom Emoji",
     ],
 )
-def test_comparison(a: object, b: object, eq: bool) -> None:
+def test_comparison(a: users.UserImpl, b: applications.TeamMember, eq: bool) -> None:
     if eq:
         assert a == b
         assert b == a

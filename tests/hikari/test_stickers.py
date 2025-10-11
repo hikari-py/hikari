@@ -31,18 +31,18 @@ from hikari.internal import routes
 
 class TestStickerPack:
     @pytest.fixture
-    def model(self):
+    def model(self) -> stickers.StickerPack:
         return stickers.StickerPack(
-            id=123,
+            id=snowflakes.Snowflake(123),
             name="testing",
             description="testing description",
             cover_sticker_id=snowflakes.Snowflake(6541234),
             stickers=[],
-            sku_id=123,
+            sku_id=snowflakes.Snowflake(123),
             banner_asset_id=snowflakes.Snowflake(541231),
         )
 
-    def test_make_banner_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
+    def test_make_banner_url_format_set_to_deprecated_ext_argument_if_provided(self, model: stickers.StickerPack):
         with mock.patch.object(
             routes, "CDN_STICKER_PACK_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
@@ -52,34 +52,36 @@ class TestStickerPack:
             urls.CDN_URL, hash=541231, size=4096, file_format="JPEG", lossless=True
         )
 
-    def test_banner_url(self, model):
+    def test_banner_url(self, model: stickers.StickerPack):
         banner = object()
 
         with mock.patch.object(stickers.StickerPack, "make_banner_url", return_value=banner):
             assert model.banner_url is banner
 
-    def test_make_banner_url(self, model):
+    def test_make_banner_url(self, model: stickers.StickerPack):
         with mock.patch.object(
             routes, "CDN_STICKER_PACK_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_banner_url(file_format="URL", size=512) == "file"
+            assert model.make_banner_url(file_format="PNG", size=512) == "file"
 
         route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, hash=541231, size=512, file_format="URL", lossless=True
+            urls.CDN_URL, hash=541231, size=512, file_format="PNG", lossless=True
         )
 
-    def test_make_banner_url_when_no_banner_asset(self, model):
+    def test_make_banner_url_when_no_banner_asset(self, model: stickers.StickerPack):
         model.banner_asset_id = None
 
-        assert model.make_banner_url(file_format="URL", size=512) is None
+        assert model.make_banner_url(file_format="PNG", size=512) is None
 
 
 class TestPartialSticker:
     @pytest.fixture
-    def model(self):
-        return stickers.PartialSticker(id=123, name="testing", format_type="some")
+    def model(self) -> stickers.PartialSticker:
+        return stickers.PartialSticker(
+            id=snowflakes.Snowflake(123), name="testing", format_type=stickers.StickerFormatType.PNG
+        )
 
-    def test_make_url_uses_CDN_when_LOTTIE(self, model):
+    def test_make_url_uses_CDN_when_LOTTIE(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.LOTTIE
 
         with mock.patch.object(
@@ -91,7 +93,7 @@ class TestPartialSticker:
             urls.CDN_URL, sticker_id=123, file_format="LOTTIE", size=4096, lossless=True
         )
 
-    def test_make_url_uses_MEDIA_PROXY_when_not_LOTTIE(self, model):
+    def test_make_url_uses_MEDIA_PROXY_when_not_LOTTIE(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.GIF
 
         with mock.patch.object(
@@ -103,13 +105,15 @@ class TestPartialSticker:
             urls.MEDIA_PROXY_URL, sticker_id=123, file_format="GIF", size=4096, lossless=True
         )
 
-    def test_make_url_raises_TypeError_when_GIF_sticker_requested_as_APNG(self, model):
+    def test_make_url_raises_TypeError_when_GIF_sticker_requested_as_APNG(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.GIF
 
         with pytest.raises(TypeError):
             model.make_url(file_format="APNG")
 
-    def test_make_url_raises_TypeError_when_APNG_sticker_requested_as_AWEBP_or_GIF(self, model):
+    def test_make_url_raises_TypeError_when_APNG_sticker_requested_as_AWEBP_or_GIF(
+        self, model: stickers.PartialSticker
+    ):
         model.format_type = stickers.StickerFormatType.APNG
 
         with pytest.raises(TypeError):
@@ -118,7 +122,9 @@ class TestPartialSticker:
         with pytest.raises(TypeError):
             model.make_url(file_format="GIF")
 
-    def test_make_url_raises_TypeError_when_PNG_sticker_requested_as_animated_format(self, model):
+    def test_make_url_raises_TypeError_when_PNG_sticker_requested_as_animated_format(
+        self, model: stickers.PartialSticker
+    ):
         model.format_type = stickers.StickerFormatType.PNG
 
         with pytest.raises(TypeError):
@@ -130,19 +136,23 @@ class TestPartialSticker:
         with pytest.raises(TypeError):
             model.make_url(file_format="GIF")
 
-    def test_make_url_raises_TypeError_when_LOTTIE_sticker_requested_as_non_LOTTIE_format(self, model):
+    def test_make_url_raises_TypeError_when_LOTTIE_sticker_requested_as_non_LOTTIE_format(
+        self, model: stickers.PartialSticker
+    ):
         model.format_type = stickers.StickerFormatType.LOTTIE
 
         with pytest.raises(TypeError):
             model.make_url(file_format="PNG")
 
-    def test_make_url_raises_TypeError_when_non_LOTTIE_sticker_requested_as_LOTTIE(self, model):
+    def test_make_url_raises_TypeError_when_non_LOTTIE_sticker_requested_as_LOTTIE(
+        self, model: stickers.PartialSticker
+    ):
         model.format_type = stickers.StickerFormatType.PNG
 
         with pytest.raises(TypeError):
             model.make_url(file_format="LOTTIE")
 
-    def test_make_url_applies_correct_settings_for_APNG(self, model):
+    def test_make_url_applies_correct_settings_for_APNG(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.APNG
 
         with mock.patch.object(
@@ -154,7 +164,7 @@ class TestPartialSticker:
             urls.MEDIA_PROXY_URL, sticker_id=123, file_format="PNG", size=4096, lossless=True
         )
 
-    def test_make_url_applies_correct_settings_for_AWEBP(self, model):
+    def test_make_url_applies_correct_settings_for_AWEBP(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.GIF
 
         with mock.patch.object(
@@ -166,7 +176,7 @@ class TestPartialSticker:
             urls.MEDIA_PROXY_URL, sticker_id=123, file_format="AWEBP", size=4096, lossless=True
         )
 
-    def test_make_url_applies_correct_settings_for_WEBP_lossless(self, model):
+    def test_make_url_applies_correct_settings_for_WEBP_lossless(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.PNG
 
         with mock.patch.object(
@@ -178,7 +188,7 @@ class TestPartialSticker:
             urls.MEDIA_PROXY_URL, sticker_id=123, file_format="WEBP", size=4096, lossless=True
         )
 
-    def test_make_url_applies_correct_settings_for_WEBP_lossy(self, model):
+    def test_make_url_applies_correct_settings_for_WEBP_lossy(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.PNG
 
         with mock.patch.object(
@@ -190,7 +200,7 @@ class TestPartialSticker:
             urls.MEDIA_PROXY_URL, sticker_id=123, file_format="WEBP", size=4096, lossless=False
         )
 
-    def test_make_url_applies_no_extra_settings_for_non_special_formats(self, model):
+    def test_make_url_applies_no_extra_settings_for_non_special_formats(self, model: stickers.PartialSticker):
         model.format_type = stickers.StickerFormatType.PNG
 
         with mock.patch.object(

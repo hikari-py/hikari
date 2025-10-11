@@ -25,27 +25,27 @@ import pytest
 
 from hikari import applications
 from hikari import commands
+from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
 from hikari import undefined
 from tests.hikari import hikari_test_helpers
 
-
-@pytest.fixture
-def mock_app():
-    return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
+# @pytest.fixture
+# def hikari_app() -> traits.RESTAware:
+#    return mock.Mock(traits.CacheAware, rest=mock.AsyncMock())
 
 
 class TestPartialCommand:
     @pytest.fixture
-    def mock_command(self, mock_app):
+    def mock_command(self, hikari_app: traits.RESTAware) -> commands.PartialCommand:
         return hikari_test_helpers.mock_class_namespace(commands.PartialCommand)(
-            app=mock_app,
+            app=hikari_app,
             id=snowflakes.Snowflake(34123123),
             type=commands.CommandType.SLASH,
             application_id=snowflakes.Snowflake(65234123),
             name="Name",
-            default_member_permissions=None,
+            default_member_permissions=permissions.Permissions.NONE,
             is_nsfw=True,
             guild_id=snowflakes.Snowflake(31231235),
             version=snowflakes.Snowflake(43123123),
@@ -55,91 +55,135 @@ class TestPartialCommand:
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_self(self, mock_command, mock_app):
-        result = await mock_command.fetch_self()
+    async def test_fetch_self(self, hikari_app: traits.RESTAware, mock_command: commands.PartialCommand):
+        with mock.patch.object(
+            hikari_app.rest, "fetch_application_command", mock.AsyncMock()
+        ) as patched_fetch_application_command:
+            result = await mock_command.fetch_self()
 
-        assert result is mock_app.rest.fetch_application_command.return_value
-        mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
+            assert result is patched_fetch_application_command.return_value
+            patched_fetch_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
     @pytest.mark.asyncio
-    async def test_fetch_self_when_guild_id_is_none(self, mock_command, mock_app):
+    async def test_fetch_self_when_guild_id_is_none(
+        self, hikari_app: traits.RESTAware, mock_command: commands.PartialCommand
+    ):
+        with (
+            mock.patch.object(mock_command, "guild_id", None),
+            mock.patch.object(
+                hikari_app.rest, "fetch_application_command", mock.AsyncMock()
+            ) as patched_fetch_application_command,
+        ):
+            result = await mock_command.fetch_self()
+
+            assert result is patched_fetch_application_command.return_value
+            patched_fetch_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
+
+    @pytest.mark.asyncio
+    async def test_edit_without_optional_args(
+        self, hikari_app: traits.RESTAware, mock_command: commands.PartialCommand
+    ):
+        with mock.patch.object(
+            hikari_app.rest, "edit_application_command", mock.AsyncMock()
+        ) as patched_edit_application_command:
+            result = await mock_command.edit()
+
+            assert result is patched_edit_application_command.return_value
+            patched_edit_application_command.assert_awaited_once_with(
+                65234123,
+                34123123,
+                31231235,
+                name=undefined.UNDEFINED,
+                description=undefined.UNDEFINED,
+                options=undefined.UNDEFINED,
+            )
+
+    @pytest.mark.asyncio
+    async def test_edit_with_optional_args(self, hikari_app: traits.RESTAware, mock_command: commands.PartialCommand):
+        mock_option = mock.Mock()
+
+        with mock.patch.object(
+            hikari_app.rest, "edit_application_command", mock.AsyncMock()
+        ) as patched_edit_application_command:
+            result = await mock_command.edit(name="new name", description="very descrypt", options=[mock_option])
+
+            assert result is patched_edit_application_command.return_value
+            patched_edit_application_command.assert_awaited_once_with(
+                65234123, 34123123, 31231235, name="new name", description="very descrypt", options=[mock_option]
+            )
+
+    @pytest.mark.asyncio
+    async def test_edit_when_guild_id_is_none(
+        self, hikari_app: traits.RESTAware, mock_command: commands.PartialCommand
+    ):
         mock_command.guild_id = None
 
-        result = await mock_command.fetch_self()
+        with (
+            mock.patch.object(mock_command, "guild_id", None),
+            mock.patch.object(
+                hikari_app.rest, "edit_application_command", mock.AsyncMock()
+            ) as patched_edit_application_command,
+        ):
+            result = await mock_command.edit()
 
-        assert result is mock_app.rest.fetch_application_command.return_value
-        mock_app.rest.fetch_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
-
-    @pytest.mark.asyncio
-    async def test_edit_without_optional_args(self, mock_command, mock_app):
-        result = await mock_command.edit()
-
-        assert result is mock_app.rest.edit_application_command.return_value
-        mock_app.rest.edit_application_command.assert_awaited_once_with(
-            65234123,
-            34123123,
-            31231235,
-            name=undefined.UNDEFINED,
-            description=undefined.UNDEFINED,
-            options=undefined.UNDEFINED,
-        )
-
-    @pytest.mark.asyncio
-    async def test_edit_with_optional_args(self, mock_command, mock_app):
-        mock_option = object()
-        result = await mock_command.edit(name="new name", description="very descrypt", options=[mock_option])
-
-        assert result is mock_app.rest.edit_application_command.return_value
-        mock_app.rest.edit_application_command.assert_awaited_once_with(
-            65234123, 34123123, 31231235, name="new name", description="very descrypt", options=[mock_option]
-        )
+            assert result is patched_edit_application_command.return_value
+            patched_edit_application_command.assert_awaited_once_with(
+                65234123,
+                34123123,
+                undefined.UNDEFINED,
+                name=undefined.UNDEFINED,
+                description=undefined.UNDEFINED,
+                options=undefined.UNDEFINED,
+            )
 
     @pytest.mark.asyncio
-    async def test_edit_when_guild_id_is_none(self, mock_command, mock_app):
-        mock_command.guild_id = None
+    async def test_delete(self, hikari_app: traits.RESTAware, mock_command: commands.PartialCommand):
+        with mock.patch.object(
+            hikari_app.rest, "delete_application_command", mock.AsyncMock()
+        ) as patched_delete_application_command:
+            await mock_command.delete()
 
-        result = await mock_command.edit()
-
-        assert result is mock_app.rest.edit_application_command.return_value
-        mock_app.rest.edit_application_command.assert_awaited_once_with(
-            65234123,
-            34123123,
-            undefined.UNDEFINED,
-            name=undefined.UNDEFINED,
-            description=undefined.UNDEFINED,
-            options=undefined.UNDEFINED,
-        )
+            patched_delete_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
 
     @pytest.mark.asyncio
-    async def test_delete(self, mock_command, mock_app):
-        await mock_command.delete()
+    async def test_delete_when_guild_id_is_none(
+        self, hikari_app: traits.RESTAware, mock_command: commands.PartialCommand
+    ):
+        with (
+            mock.patch.object(mock_command, "guild_id", None),
+            mock.patch.object(
+                hikari_app.rest, "delete_application_command", mock.AsyncMock()
+            ) as patched_delete_application_command,
+        ):
+            await mock_command.delete()
 
-        mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, 31231235)
-
-    @pytest.mark.asyncio
-    async def test_delete_when_guild_id_is_none(self, mock_command, mock_app):
-        mock_command.guild_id = None
-
-        await mock_command.delete()
-
-        mock_app.rest.delete_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
-
-    @pytest.mark.asyncio
-    async def test_fetch_guild_permissions(self, mock_command, mock_app):
-        result = await mock_command.fetch_guild_permissions(123321)
-
-        assert result is mock_app.rest.fetch_application_command_permissions.return_value
-        mock_app.rest.fetch_application_command_permissions.assert_awaited_once_with(
-            application=mock_command.application_id, guild=123321, command=mock_command.id
-        )
+            patched_delete_application_command.assert_awaited_once_with(65234123, 34123123, undefined.UNDEFINED)
 
     @pytest.mark.asyncio
-    async def test_set_guild_permissions(self, mock_command, mock_app):
-        mock_permissions = object()
+    async def test_fetch_guild_permissions(self, hikari_app: traits.RESTAware, mock_command: commands.PartialCommand):
+        with mock.patch.object(
+            hikari_app.rest, "fetch_application_command_permissions", mock.AsyncMock()
+        ) as patched_fetch_application_command_permissions:
+            result = await mock_command.fetch_guild_permissions(123321)
 
-        result = await mock_command.set_guild_permissions(312123, mock_permissions)
+            assert result is patched_fetch_application_command_permissions.return_value
+            patched_fetch_application_command_permissions.assert_awaited_once_with(
+                application=mock_command.application_id, guild=123321, command=mock_command.id
+            )
 
-        assert result is mock_app.rest.set_application_command_permissions.return_value
-        mock_app.rest.set_application_command_permissions.assert_awaited_once_with(
-            application=mock_command.application_id, guild=312123, command=mock_command.id, permissions=mock_permissions
-        )
+    @pytest.mark.asyncio
+    async def test_set_guild_permissions(self, hikari_app: traits.RESTAware, mock_command: commands.PartialCommand):
+        mock_permissions = mock.Mock()
+
+        with mock.patch.object(
+            hikari_app.rest, "set_application_command_permissions", mock.AsyncMock()
+        ) as patched_set_application_command_permissions:
+            result = await mock_command.set_guild_permissions(312123, mock_permissions)
+
+            assert result is patched_set_application_command_permissions.return_value
+            patched_set_application_command_permissions.assert_awaited_once_with(
+                application=mock_command.application_id,
+                guild=312123,
+                command=mock_command.id,
+                permissions=mock_permissions,
+            )

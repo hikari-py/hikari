@@ -20,6 +20,8 @@
 # SOFTWARE.
 from __future__ import annotations
 
+import typing
+
 import pytest
 
 from hikari import undefined
@@ -40,7 +42,7 @@ from hikari.internal import mentions
         ),
     ],
 )
-def test_generate_allowed_mentions(function_input, expected_output):
+def test_generate_allowed_mentions(function_input: tuple[bool, ...], expected_output: dict[str, typing.Any]):
     returned = mentions.generate_allowed_mentions(*function_input)
     for k, v in expected_output.items():
         if isinstance(v, list):

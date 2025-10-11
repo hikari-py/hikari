@@ -28,22 +28,22 @@ from hikari import templates
 
 class TestTemplate:
     @pytest.fixture
-    def obj(self):
+    def obj(self) -> templates.Template:
         return templates.Template(
             app=mock.Mock(),
             code="abc123",
             name="Test Template",
             description="Template used for testing",
             usage_count=101,
-            creator=object(),
-            created_at=object(),
-            updated_at=object(),
+            creator=mock.Mock(),
+            created_at=mock.Mock(),
+            updated_at=mock.Mock(),
             source_guild=mock.Mock(id=123),
             is_unsynced=True,
         )
 
     @pytest.mark.asyncio
-    async def test_fetch_self(self, obj):
+    async def test_fetch_self(self, obj: templates.Template):
         obj.app.rest.fetch_template = mock.AsyncMock()
 
         assert await obj.fetch_self() is obj.app.rest.fetch_template.return_value
@@ -51,7 +51,7 @@ class TestTemplate:
         obj.app.rest.fetch_template.assert_awaited_once_with("abc123")
 
     @pytest.mark.asyncio
-    async def test_edit(self, obj):
+    async def test_edit(self, obj: templates.Template):
         obj.app.rest.edit_template = mock.AsyncMock()
 
         returned = await obj.edit(name="Test Template 2", description="Electric Boogaloo")
@@ -62,7 +62,7 @@ class TestTemplate:
         )
 
     @pytest.mark.asyncio
-    async def test_delete(self, obj):
+    async def test_delete(self, obj: templates.Template):
         obj.app.rest.delete_template = mock.AsyncMock()
 
         await obj.delete()
@@ -70,12 +70,12 @@ class TestTemplate:
         obj.app.rest.delete_template.assert_awaited_once_with(obj.source_guild, obj)
 
     @pytest.mark.asyncio
-    async def test_sync(self, obj):
+    async def test_sync(self, obj: templates.Template):
         obj.app.rest.sync_guild_template = mock.AsyncMock()
 
         assert await obj.sync() is obj.app.rest.sync_guild_template.return_value
 
         obj.app.rest.sync_guild_template.assert_awaited_once_with(123, "abc123")
 
-    def test_str(self, obj):
+    def test_str(self, obj: templates.Template):
         assert str(obj) == "https://discord.new/abc123"

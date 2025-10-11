@@ -22,8 +22,8 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import contextlib
 import random
+import typing
 
 import mock
 import pytest
@@ -33,8 +33,11 @@ from hikari import errors
 from hikari import intents
 from hikari import presences
 from hikari.api import event_factory as event_factory_
+from hikari.api import shard as shard_api
 from hikari.events import guild_events
 from hikari.impl import config
+from hikari.impl import entity_factory as entity_factory_impl
+from hikari.impl import event_factory as event_factory_impl
 from hikari.impl import event_manager
 from hikari.internal import time
 from tests.hikari import hikari_test_helpers
@@ -49,12 +52,12 @@ def test_fixed_size_nonce():
 
 
 @pytest.fixture
-def shard():
+def shard() -> shard_api.GatewayShard:
     return mock.Mock(id=987)
 
 
 @pytest.mark.asyncio
-async def test__request_guild_members(shard):
+async def test__request_guild_members(shard: shard_api.GatewayShard):
     shard.request_guild_members = mock.AsyncMock()
 
     await event_manager._request_guild_members(shard, 123, include_presences=True, nonce="okokok")
@@ -63,7 +66,7 @@ async def test__request_guild_members(shard):
 
 
 @pytest.mark.asyncio
-async def test__request_guild_members_handles_state_conflict_error(shard):
+async def test__request_guild_members_handles_state_conflict_error(shard: shard_api.GatewayShard):
     shard.request_guild_members = mock.AsyncMock(side_effect=errors.ComponentStateConflictError(reason="OK"))
 
     await event_manager._request_guild_members(shard, 123, include_presences=True, nonce="okokok")
@@ -73,15 +76,17 @@ async def test__request_guild_members_handles_state_conflict_error(shard):
 
 class TestEventManagerImpl:
     @pytest.fixture
-    def entity_factory(self):
+    def entity_factory(self) -> entity_factory_impl.EntityFactoryImpl:
         return mock.Mock()
 
     @pytest.fixture
-    def event_factory(self):
+    def event_factory(self) -> event_factory_impl.EventFactoryImpl:
         return mock.Mock()
 
     @pytest.fixture
-    def event_manager_impl(self, entity_factory, event_factory):
+    def event_manager_impl(
+        self, entity_factory: entity_factory_impl.EntityFactoryImpl, event_factory: event_factory_impl.EventFactoryImpl
+    ) -> event_manager.EventManagerImpl:
         obj = hikari_test_helpers.mock_class_namespace(event_manager.EventManagerImpl, slots_=False)(
             entity_factory, event_factory, intents.Intents.ALL, cache=mock.Mock(settings=config.CacheSettings())
         )
@@ -90,7 +95,9 @@ class TestEventManagerImpl:
         return obj
 
     @pytest.fixture
-    def stateless_event_manager_impl(self, event_factory, entity_factory):
+    def stateless_event_manager_impl(
+        self, event_factory: event_factory_impl.EventFactoryImpl, entity_factory: entity_factory_impl.EntityFactoryImpl
+    ) -> event_manager.EventManagerImpl:
         obj = hikari_test_helpers.mock_class_namespace(event_manager.EventManagerImpl, slots_=False)(
             entity_factory, event_factory, intents.Intents.ALL, cache=None
         )
@@ -98,170 +105,305 @@ class TestEventManagerImpl:
         obj.dispatch = mock.Mock()
         return obj
 
-    def test_on_ready_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_ready_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(my_user=mock.Mock())
 
-        event_factory.deserialize_ready_event.return_value = event
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "update_me") as patched_update_me,
+            mock.patch.object(
+                event_factory, "deserialize_ready_event", return_value=event
+            ) as patched_deserialize_ready_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_ready(shard, payload)
 
-        event_manager_impl.on_ready(shard, payload)
+        patched_update_me.assert_called_once_with(event.my_user)
+        patched_deserialize_ready_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.update_me.assert_called_once_with(event.my_user)
-        event_factory.deserialize_ready_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
+    def test_on_ready_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-    def test_on_ready_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+        with (
+            mock.patch.object(event_factory, "deserialize_ready_event") as patched_deserialize_ready_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_ready(shard, payload)
 
-        stateless_event_manager_impl.on_ready(shard, payload)
+        patched_deserialize_ready_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_ready_event.return_value)
 
-        event_factory.deserialize_ready_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_ready_event.return_value
+    def test_on_resumed(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
+
+        with (
+            mock.patch.object(event_factory, "deserialize_resumed_event") as patched_deserialize_resumed_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_resumed(shard, payload)
+
+        patched_deserialize_resumed_event.assert_called_once_with(shard)
+        patched_dispatch.assert_called_once_with(patched_deserialize_resumed_event.return_value)
+
+    def test_on_application_command_permissions_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
+
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_application_command_permission_update_event"
+            ) as patched_deserialize_application_command_permission_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_application_command_permissions_update(shard, payload)
+
+        patched_deserialize_application_command_permission_update_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(
+            patched_deserialize_application_command_permission_update_event.return_value
         )
 
-    def test_on_resumed(self, event_manager_impl, shard, event_factory):
-        payload = {}
-
-        event_manager_impl.on_resumed(shard, payload)
-
-        event_factory.deserialize_resumed_event.assert_called_once_with(shard)
-        event_manager_impl.dispatch.assert_called_once_with(event_factory.deserialize_resumed_event.return_value)
-
-    def test_on_application_command_permissions_update(self, event_manager_impl, shard, event_factory):
-        payload = {}
-
-        event_manager_impl.on_application_command_permissions_update(shard, payload)
-
-        event_factory.deserialize_application_command_permission_update_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_application_command_permission_update_event.return_value
-        )
-
-    def test_on_channel_create_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_channel_create_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(channel=mock.Mock(channels.GuildChannel))
 
-        event_factory.deserialize_guild_channel_create_event.return_value = event
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_guild_channel") as patched_set_guild_channel,
+            mock.patch.object(
+                event_factory, "deserialize_guild_channel_create_event", return_value=event
+            ) as patched_deserialize_guild_channel_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_channel_create(shard, payload)
 
-        event_manager_impl.on_channel_create(shard, payload)
+        patched_set_guild_channel.assert_called_once_with(event.channel)
+        patched_deserialize_guild_channel_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.set_guild_channel.assert_called_once_with(event.channel)
-        event_factory.deserialize_guild_channel_create_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
+    def test_on_channel_create_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-    def test_on_channel_create_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_channel_create_event"
+            ) as patched_deserialize_guild_channel_create_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_channel_create(shard, payload)
 
-        stateless_event_manager_impl.on_channel_create(shard, payload)
+        patched_deserialize_guild_channel_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_channel_create_event.return_value)
 
-        event_factory.deserialize_guild_channel_create_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_channel_create_event.return_value
-        )
-
-    def test_on_channel_update_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {"id": 123}
+    def test_on_channel_update_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {"id": 123}
         old_channel = object()
         event = mock.Mock(channel=mock.Mock(channels.GuildChannel))
 
-        event_factory.deserialize_guild_channel_update_event.return_value = event
-        event_manager_impl._cache.get_guild_channel.return_value = old_channel
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(
+                patched__cache, "get_guild_channel", return_value=old_channel
+            ) as patched_get_guild_channel,
+            mock.patch.object(patched__cache, "update_guild_channel") as patched_update_guild_channel,
+            mock.patch.object(
+                event_factory, "deserialize_guild_channel_update_event", return_value=event
+            ) as patched_deserialize_guild_channel_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_channel_update(shard, payload)
 
-        event_manager_impl.on_channel_update(shard, payload)
+        patched_get_guild_channel.assert_called_once_with(123)
+        patched_update_guild_channel.assert_called_once_with(event.channel)
+        patched_deserialize_guild_channel_update_event.assert_called_once_with(shard, payload, old_channel=old_channel)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.get_guild_channel.assert_called_once_with(123)
-        event_manager_impl._cache.update_guild_channel.assert_called_once_with(event.channel)
-        event_factory.deserialize_guild_channel_update_event.assert_called_once_with(
-            shard, payload, old_channel=old_channel
-        )
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_channel_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_channel_update_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"id": 123}
 
-        stateless_event_manager_impl.on_channel_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_channel_update_event"
+            ) as patched_deserialize_guild_channel_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_channel_update(shard, payload)
 
-        event_factory.deserialize_guild_channel_update_event.assert_called_once_with(shard, payload, old_channel=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_channel_update_event.return_value
-        )
+        patched_deserialize_guild_channel_update_event.assert_called_once_with(shard, payload, old_channel=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_channel_update_event.return_value)
 
-    def test_on_channel_delete_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_channel_delete_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(channel=mock.Mock(id=123))
 
-        event_factory.deserialize_guild_channel_delete_event.return_value = event
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_guild_channel") as patched_delete_guild_channel,
+            mock.patch.object(
+                event_factory, "deserialize_guild_channel_delete_event", return_value=event
+            ) as patched_deserialize_guild_channel_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_channel_delete(shard, payload)
 
-        event_manager_impl.on_channel_delete(shard, payload)
+        patched_delete_guild_channel.assert_called_once_with(123)
+        patched_deserialize_guild_channel_delete_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.delete_guild_channel.assert_called_once_with(123)
-        event_factory.deserialize_guild_channel_delete_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
+    def test_on_channel_delete_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-    def test_on_channel_delete_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_channel_delete_event"
+            ) as patched_deserialize_guild_channel_delete_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_channel_delete(shard, payload)
 
-        stateless_event_manager_impl.on_channel_delete(shard, payload)
+        patched_deserialize_guild_channel_delete_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_channel_delete_event.return_value)
 
-        event_factory.deserialize_guild_channel_delete_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_channel_delete_event.return_value
-        )
+    def test_on_channel_pins_update(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-    def test_on_channel_pins_update(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_channel_pins_update_event"
+            ) as patched_deserialize_channel_pins_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_channel_pins_update(shard, payload)
 
-        stateless_event_manager_impl.on_channel_pins_update(shard, payload)
-
-        event_factory.deserialize_channel_pins_update_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_channel_pins_update_event.return_value
-        )
+        patched_deserialize_channel_pins_update_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_channel_pins_update_event.return_value)
 
     def test_on_thread_create_when_create_stateful(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321", "newly_created": True}
-        event_manager_impl.on_thread_create(shard, mock_payload)
 
-        event = event_factory.deserialize_guild_thread_create_event.return_value
-        event_manager_impl._cache.set_thread.assert_called_once_with(event.thread)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-        event_factory.deserialize_guild_thread_create_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_thread") as patched_set_thread,
+            mock.patch.object(
+                event_factory, "deserialize_guild_thread_create_event"
+            ) as patched_deserialize_guild_thread_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_thread_create(shard, mock_payload)
+
+        event = patched_deserialize_guild_thread_create_event.return_value
+        patched_set_thread.assert_called_once_with(event.thread)
+        patched_dispatch.assert_called_once_with(event)
+        patched_deserialize_guild_thread_create_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_create_stateless(
         self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321", "newly_created": True}
-        stateless_event_manager_impl.on_thread_create(shard, mock_payload)
 
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_thread_create_event.return_value
-        )
-        event_factory.deserialize_guild_thread_create_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_thread_create_event"
+            ) as patched_deserialize_guild_thread_create_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_thread_create(shard, mock_payload)
+
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_thread_create_event.return_value)
+        patched_deserialize_guild_thread_create_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_create_for_access_stateful(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321"}
-        event_manager_impl.on_thread_create(shard, mock_payload)
 
-        event = event_factory.deserialize_guild_thread_access_event.return_value
-        event_manager_impl._cache.set_thread.assert_called_once_with(event.thread)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-        event_factory.deserialize_guild_thread_access_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_thread") as patched_set_thread,
+            mock.patch.object(
+                event_factory, "deserialize_guild_thread_access_event"
+            ) as patched_deserialize_guild_thread_access_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_thread_create(shard, mock_payload)
+
+        event = patched_deserialize_guild_thread_access_event.return_value
+        patched_set_thread.assert_called_once_with(event.thread)
+        patched_dispatch.assert_called_once_with(event)
+        patched_deserialize_guild_thread_access_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_create_for_access_stateless(
         self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = {"id": "123321"}
-        stateless_event_manager_impl.on_thread_create(shard, mock_payload)
 
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_thread_access_event.return_value
-        )
-        event_factory.deserialize_guild_thread_access_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_thread_access_event"
+            ) as patched_deserialize_guild_thread_access_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_thread_create(shard, mock_payload)
+
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_thread_access_event.return_value)
+        patched_deserialize_guild_thread_access_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_update_stateful(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
@@ -271,167 +413,259 @@ class TestEventManagerImpl:
         event = mock.Mock(thread=mock.Mock(channels.GuildThreadChannel))
 
         event_factory.deserialize_guild_thread_update_event.return_value = event
-        event_manager_impl._cache.get_thread.return_value = old_thread
 
-        event_manager_impl.on_thread_update(shard, payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "get_thread", return_value=old_thread) as patched_get_thread,
+            mock.patch.object(patched__cache, "update_thread") as patched_update_thread,
+            mock.patch.object(
+                event_factory, "deserialize_guild_thread_update_event", return_value=event
+            ) as patched_deserialize_guild_thread_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_thread_update(shard, payload)
 
-        event_manager_impl._cache.get_thread.assert_called_once_with(123)
-        event_manager_impl._cache.update_thread.assert_called_once_with(event.thread)
-        event_factory.deserialize_guild_thread_update_event.assert_called_once_with(
-            shard, payload, old_thread=old_thread
-        )
-        event_manager_impl.dispatch.assert_called_once_with(event)
+        patched_get_thread.assert_called_once_with(123)
+        patched_update_thread.assert_called_once_with(event.thread)
+        patched_deserialize_guild_thread_update_event.assert_called_once_with(shard, payload, old_thread=old_thread)
+        patched_dispatch.assert_called_once_with(event)
 
     def test_on_thread_update_stateless(
         self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         payload = {"id": 123}
 
-        stateless_event_manager_impl.on_thread_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_thread_update_event"
+            ) as patched_deserialize_guild_thread_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_thread_update(shard, payload)
 
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_thread_update_event.return_value
-        )
-        event_factory.deserialize_guild_thread_update_event.assert_called_once_with(shard, payload, old_thread=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_thread_update_event.return_value)
+        patched_deserialize_guild_thread_update_event.assert_called_once_with(shard, payload, old_thread=None)
 
     def test_on_thread_delete_stateful(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
-        event_manager_impl.on_thread_delete(shard, mock_payload)
 
-        event = event_factory.deserialize_guild_thread_delete_event.return_value
-        event_manager_impl._cache.delete_thread.assert_called_once_with(event.thread_id)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-        event_factory.deserialize_guild_thread_delete_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_thread") as patched_delete_thread,
+            mock.patch.object(
+                event_factory, "deserialize_guild_thread_delete_event"
+            ) as patched_deserialize_guild_thread_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_thread_delete(shard, mock_payload)
+
+        event = patched_deserialize_guild_thread_delete_event.return_value
+        patched_delete_thread.assert_called_once_with(event.thread_id)
+        patched_dispatch.assert_called_once_with(event)
+        patched_deserialize_guild_thread_delete_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_delete_stateless(
         self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
-        stateless_event_manager_impl.on_thread_delete(shard, mock_payload)
 
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_thread_delete_event.return_value
-        )
-        event_factory.deserialize_guild_thread_delete_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_thread_delete_event"
+            ) as patched_deserialize_guild_thread_delete_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_thread_delete(shard, mock_payload)
+
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_thread_delete_event.return_value)
+        patched_deserialize_guild_thread_delete_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_list_sync_stateful_when_channel_ids(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
-        event = event_factory.deserialize_thread_list_sync_event.return_value
+        event = mock.Mock()
         event.channel_ids = ["1", "2"]
         event.threads = {1: "thread1"}
 
         mock_payload = mock.Mock()
-        event_manager_impl.on_thread_list_sync(shard, mock_payload)
 
-        assert event_manager_impl._cache.clear_threads_for_channel.call_count == 2
-        event_manager_impl._cache.clear_threads_for_channel.assert_has_calls(
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_thread") as patched_set_thread,
+            mock.patch.object(patched__cache, "clear_threads_for_channel") as patched_clear_threads_for_channel,
+            mock.patch.object(
+                event_factory, "deserialize_thread_list_sync_event", return_value=event
+            ) as patched_deserialize_thread_list_sync_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_thread_list_sync(shard, mock_payload)
+
+        assert patched_clear_threads_for_channel.call_count == 2
+        patched_clear_threads_for_channel.assert_has_calls(
             [mock.call(event.guild_id, "1"), mock.call(event.guild_id, "2")]
         )
-        event_manager_impl._cache.set_thread("thread1")
-        event_manager_impl.dispatch.assert_called_once_with(event)
-        event_factory.deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
+        patched_set_thread("thread1")
+        patched_dispatch.assert_called_once_with(event)
+        patched_deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_list_sync_stateful_when_not_channel_ids(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
-        event = event_factory.deserialize_thread_list_sync_event.return_value
+        event = mock.Mock()
         event.channel_ids = None
         event.threads = {1: "thread1"}
 
         mock_payload = mock.Mock()
-        event_manager_impl.on_thread_list_sync(shard, mock_payload)
 
-        event_manager_impl._cache.clear_threads_for_guild.assert_called_once_with(event.guild_id)
-        event_manager_impl._cache.set_thread("thread1")
-        event_manager_impl.dispatch.assert_called_once_with(event)
-        event_factory.deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_thread") as patched_set_thread,
+            mock.patch.object(patched__cache, "clear_threads_for_guild") as patched_clear_threads_for_guild,
+            mock.patch.object(
+                event_factory, "deserialize_thread_list_sync_event", return_value=event
+            ) as patched_deserialize_thread_list_sync_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_thread_list_sync(shard, mock_payload)
+
+        patched_clear_threads_for_guild.assert_called_once_with(event.guild_id)
+        patched_set_thread("thread1")
+        patched_dispatch.assert_called_once_with(event)
+        patched_deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_list_sync_stateless(
         self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
-        stateless_event_manager_impl.on_thread_list_sync(shard, mock_payload)
 
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_thread_list_sync_event.return_value
-        )
-        event_factory.deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_thread_list_sync_event"
+            ) as patched_deserialize_thread_list_sync_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_thread_list_sync(shard, mock_payload)
+
+        patched_dispatch.assert_called_once_with(patched_deserialize_thread_list_sync_event.return_value)
+        patched_deserialize_thread_list_sync_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_members_update_stateful_when_id_in_removed(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
-        event = event_factory.deserialize_thread_members_update_event.return_value
+        event = mock.Mock()
         event.removed_member_ids = [1, 2, 3]
         event.shard.get_user_id.return_value = 1
         mock_payload = mock.Mock()
-        event_manager_impl.on_thread_members_update(shard, mock_payload)
 
-        event_manager_impl._cache.delete_thread.assert_called_once_with(event.thread_id)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-        event_factory.deserialize_thread_members_update_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_thread") as patched_delete_thread,
+            mock.patch.object(
+                event_factory, "deserialize_thread_members_update_event", return_value=event
+            ) as patched_deserialize_thread_members_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_thread_members_update(shard, mock_payload)
+
+        patched_delete_thread.assert_called_once_with(event.thread_id)
+        patched_dispatch.assert_called_once_with(event)
+        patched_deserialize_thread_members_update_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_members_update_stateful_when_id_not_in_removed(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
-        event = event_factory.deserialize_thread_members_update_event.return_value
+        event = mock.Mock()
         event.removed_member_ids = [1, 2, 3]
         event.shard.get_user_id.return_value = 69
         mock_payload = mock.Mock()
-        event_manager_impl.on_thread_members_update(shard, mock_payload)
 
-        event_manager_impl._cache.delete_thread.assert_not_called()
-        event_manager_impl.dispatch.assert_called_once_with(event)
-        event_factory.deserialize_thread_members_update_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_thread") as patched_delete_thread,
+            mock.patch.object(
+                event_factory, "deserialize_thread_members_update_event", return_value=event
+            ) as patched_deserialize_thread_members_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_thread_members_update(shard, mock_payload)
+
+        patched_delete_thread.assert_not_called()
+        patched_dispatch.assert_called_once_with(event)
+        patched_deserialize_thread_members_update_event.assert_called_once_with(shard, mock_payload)
 
     def test_on_thread_members_update_stateless(
         self, stateless_event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
         mock_payload = mock.Mock()
-        stateless_event_manager_impl.on_thread_members_update(shard, mock_payload)
 
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_thread_members_update_event.return_value
-        )
-        event_factory.deserialize_thread_members_update_event.assert_called_once_with(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_thread_members_update_event"
+            ) as patched_deserialize_thread_members_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_thread_members_update(shard, mock_payload)
 
-    def test_on_guild_create_when_unavailable_guild(self, event_manager_impl, shard, event_factory, entity_factory):
+        patched_dispatch.assert_called_once_with(patched_deserialize_thread_members_update_event.return_value)
+        patched_deserialize_thread_members_update_event.assert_called_once_with(shard, mock_payload)
+
+    def test_on_guild_create_when_unavailable_guild(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
+    ):
         payload = {"unavailable": True}
-        event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
-        event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
 
-        with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+            mock.patch.object(
+                event_manager_impl, "_enabled_for_event", return_value=True
+            ) as patched__enabled_for_event,
+            mock.patch.object(event_manager_impl, "_cache_enabled_for", return_value=True),
+            mock.patch.object(
+                entity_factory, "deserialize_guild_available_event"
+            ) as patched_deserialize_guild_available_event,
+            mock.patch.object(entity_factory, "deserialized_guild_join_event") as patched_deserialize_guild_join_event,
+            mock.patch.object(event_manager, "_request_guild_members") as patched__request_guild_members,
+        ):
             event_manager_impl.on_guild_create(shard, payload)
 
-        event_manager_impl._enabled_for_event.assert_not_called()
-        event_factory.deserialize_guild_available_event.assert_not_called()
-        event_factory.deserialize_guild_join_event.assert_not_called()
+        patched__enabled_for_event.assert_not_called()
+        patched_deserialize_guild_available_event.assert_not_called()
+        patched_deserialize_guild_join_event.assert_not_called()
 
-        event_manager_impl._cache.update_guild.assert_not_called()
-        event_manager_impl._cache.clear_guild_channels_for_guild.assert_not_called()
-        event_manager_impl._cache.set_guild_channel.assert_not_called()
-        event_manager_impl._cache.clear_emojis_for_guild.assert_not_called()
-        event_manager_impl._cache.set_emoji.assert_not_called()
-        event_manager_impl._cache.clear_stickers_for_guild.assert_not_called()
-        event_manager_impl._cache.set_sticker.assert_not_called()
-        event_manager_impl._cache.clear_roles_for_guild.assert_not_called()
-        event_manager_impl._cache.set_role.assert_not_called()
-        event_manager_impl._cache.clear_members_for_guild.assert_not_called()
-        event_manager_impl._cache.set_member.assert_not_called()
-        event_manager_impl._cache.clear_presences_for_guild.assert_not_called()
-        event_manager_impl._cache.set_presence.assert_not_called()
-        event_manager_impl._cache.clear_voice_states_for_guild.assert_not_called()
-        event_manager_impl._cache.set_voice_state.assert_not_called()
-        request_guild_members.assert_not_called()
+        patched__cache.update_guild.assert_not_called()
+        patched__cache.clear_guild_channels_for_guild.assert_not_called()
+        patched__cache.set_guild_channel.assert_not_called()
+        patched__cache.clear_emojis_for_guild.assert_not_called()
+        patched__cache.set_emoji.assert_not_called()
+        patched__cache.clear_stickers_for_guild.assert_not_called()
+        patched__cache.set_sticker.assert_not_called()
+        patched__cache.clear_roles_for_guild.assert_not_called()
+        patched__cache.set_role.assert_not_called()
+        patched__cache.clear_members_for_guild.assert_not_called()
+        patched__cache.set_member.assert_not_called()
+        patched__cache.clear_presences_for_guild.assert_not_called()
+        patched__cache.set_presence.assert_not_called()
+        patched__cache.clear_voice_states_for_guild.assert_not_called()
+        patched__cache.set_voice_state.assert_not_called()
+        patched__request_guild_members.assert_not_called()
 
-        event_manager_impl.dispatch.assert_not_called()
+        patched_dispatch.assert_not_called()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("include_unavailable", [True, False])
     async def test_on_guild_create_when_dispatching_and_not_caching(
-        self, event_manager_impl, shard, event_factory, entity_factory, include_unavailable
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        include_unavailable: bool,
     ):
         payload = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
@@ -473,7 +707,12 @@ class TestEventManagerImpl:
 
     @pytest.mark.parametrize("include_unavailable", [True, False])
     def test_on_guild_create_when_not_dispatching_and_not_caching(
-        self, event_manager_impl, shard, event_factory, entity_factory, include_unavailable
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
+        include_unavailable: bool,
     ):
         payload = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
@@ -519,7 +758,13 @@ class TestEventManagerImpl:
         ("include_unavailable", "only_my_member"), [(True, True), (True, False), (False, True), (False, False)]
     )
     def test_on_guild_create_when_not_dispatching_and_caching(
-        self, event_manager_impl, shard, event_factory, entity_factory, include_unavailable, only_my_member
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
+        include_unavailable: bool,
+        only_my_member: bool,
     ):
         payload = {"unavailable": False} if include_unavailable else {}
         event_manager_impl._intents = intents.Intents.NONE
@@ -578,50 +823,72 @@ class TestEventManagerImpl:
 
     @pytest.mark.parametrize("include_unavailable", [True, False])
     def test_on_guild_create_when_stateless(
-        self, stateless_event_manager_impl, shard, event_factory, entity_factory, include_unavailable
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
+        include_unavailable: bool,
     ):
-        payload = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
         if include_unavailable:
             payload["unavailable"] = False
 
-        stateless_event_manager_impl._intents = intents.Intents.NONE
-        stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
-        stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
+        with (
+            mock.patch.object(event_factory, "deserialize_guild_join_event") as patched_deserialize_guild_join_event,
+            mock.patch.object(
+                event_factory, "deserialize_guild_available_event"
+            ) as patched_deserialize_guild_available_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl._intents = intents.Intents.NONE
+            stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
+            stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
 
         with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
             stateless_event_manager_impl.on_guild_create(shard, payload)
 
-        if include_unavailable:
-            stateless_event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildAvailableEvent)
-        else:
-            stateless_event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildJoinEvent)
+            if include_unavailable:
+                stateless_event_manager_impl._enabled_for_event.assert_called_once_with(
+                    guild_events.GuildAvailableEvent
+                )
+            else:
+                stateless_event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildJoinEvent)
 
-        event_factory.deserialize_guild_join_event.assert_not_called()
-        event_factory.deserialize_guild_available_event.assert_not_called()
-        request_guild_members.assert_not_called()
+            patched_deserialize_guild_join_event.assert_not_called()
+            patched_deserialize_guild_available_event.assert_not_called()
+            request_guild_members.assert_not_called()
 
-        stateless_event_manager_impl.dispatch.assert_not_called()
+            patched_dispatch.assert_not_called()
 
     def test_on_guild_create_when_members_declared_and_member_cache_enabled_but_only_my_member_not_enabled(
-        self, event_manager_impl, shard, event_factory, entity_factory
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
-        def cache_enabled_for_members_only(component):
+        def cache_enabled_for_members_only(component: typing.Any):
             return component == config.CacheComponents.MEMBERS
 
-        shard.id = 123
-        event_manager_impl._cache.settings.only_my_member = False
         event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
         event_manager_impl._cache_enabled_for = cache_enabled_for_members_only
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
-        gateway_guild = entity_factory.deserialize_gateway_guild.return_value
+        gateway_guild = mock.Mock()
         gateway_guild.id = 456
         gateway_guild.members.return_value = {1: "member1", 2: "member2"}
         mock_request_guild_members = mock.Mock()
 
-        with mock.patch.object(asyncio, "create_task") as create_task:
-            with mock.patch.object(event_manager, "_fixed_size_nonce", return_value="abc"):
-                with mock.patch.object(event_manager, "_request_guild_members", new=mock_request_guild_members):
-                    event_manager_impl.on_guild_create(shard, {"id": 456, "large": False})
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache.settings, "only_my_member", False),
+            mock.patch.object(asyncio, "create_task") as create_task,
+            mock.patch.object(event_manager, "_fixed_size_nonce", return_value="abc"),
+            mock.patch.object(event_manager, "_request_guild_members", new=mock_request_guild_members),
+            mock.patch.object(entity_factory, "deserialize_gateway_guild", return_value=gateway_guild),
+            mock.patch.object(shard, "id", 123),
+        ):
+            event_manager_impl.on_guild_create(shard, {"id": 456, "large": False})
 
         mock_request_guild_members.assert_called_once_with(shard, 456, include_presences=False, nonce="123.abc")
         create_task.assert_called_once_with(
@@ -629,85 +896,123 @@ class TestEventManagerImpl:
         )
 
     def test_on_guild_create_when_members_declared_and_member_cache_but_only_my_member_enabled(
-        self, event_manager_impl, shard, event_factory, entity_factory
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
-        def cache_enabled_for_members_only(component):
+        def cache_enabled_for_members_only(component: typing.Any):
             return component == config.CacheComponents.MEMBERS
 
-        shard.id = 123
-        shard.get_user_id.return_value = 1
-        event_manager_impl._cache.settings.only_my_member = True
         event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
         event_manager_impl._cache_enabled_for = cache_enabled_for_members_only
         event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
-        gateway_guild = entity_factory.deserialize_gateway_guild.return_value
+        gateway_guild = mock.Mock()
         gateway_guild.members.return_value = {1: "member1", 2: "member2"}
 
         mock_request_guild_members = mock.Mock()
 
-        with mock.patch.object(asyncio, "create_task") as create_task:
-            with mock.patch.object(event_manager, "_fixed_size_nonce", return_value="abc"):
-                with mock.patch.object(event_manager, "_request_guild_members", new=mock_request_guild_members):
-                    event_manager_impl.on_guild_create(shard, {"id": 456, "large": False})
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache.settings, "only_my_member", True),
+            mock.patch.object(asyncio, "create_task") as create_task,
+            mock.patch.object(event_manager, "_fixed_size_nonce", return_value="abc"),
+            mock.patch.object(event_manager, "_request_guild_members", new=mock_request_guild_members),
+            mock.patch.object(entity_factory, "deserialize_gateway_guild", return_value=gateway_guild),
+            mock.patch.object(shard, "id", 123),
+            mock.patch.object(shard, "get_user_id", return_value=1),
+        ):
+            event_manager_impl.on_guild_create(shard, {"id": 456, "large": False})
 
         mock_request_guild_members.assert_not_called()
         create_task.assert_not_called()
 
     def test_on_guild_create_when_members_declared_and_enabled_for_member_chunk_event(
-        self, stateless_event_manager_impl, shard, event_factory, entity_factory
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
-        shard.id = 123
         stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
         stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=False)
         stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
         mock_event = mock.Mock()
         mock_event.guild.id = 456
-        event_factory.deserialize_guild_join_event.return_value = mock_event
 
         mock_request_guild_members = mock.Mock()
 
-        with mock.patch.object(asyncio, "create_task") as create_task:
-            with mock.patch.object(event_manager, "_fixed_size_nonce", return_value="abc"):
-                with mock.patch.object(event_manager, "_request_guild_members", new=mock_request_guild_members):
-                    stateless_event_manager_impl.on_guild_create(shard, {"large": True})
+        with (
+            mock.patch.object(asyncio, "create_task") as create_task,
+            mock.patch.object(event_manager, "_fixed_size_nonce", return_value="abc"),
+            mock.patch.object(event_manager, "_request_guild_members", new=mock_request_guild_members),
+            mock.patch.object(event_factory, "deserialize_guild_join_event", return_value=mock_event),
+            mock.patch.object(shard, "id", 123),
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_create(shard, {"large": True})
 
         mock_request_guild_members.assert_called_once_with(shard, 456, include_presences=False, nonce="123.abc")
         create_task.assert_called_once_with(
             mock_request_guild_members.return_value, name="123:456 guild create members request"
         )
         assert mock_event.chunk_nonce == "123.abc"
-        stateless_event_manager_impl.dispatch.assert_called_once_with(mock_event)
+        patched_dispatch.assert_called_once_with(mock_event)
 
     @pytest.mark.parametrize("cache_enabled", [True, False])
     @pytest.mark.parametrize("large", [True, False])
     @pytest.mark.parametrize("enabled_for_event", [True, False])
     def test_on_guild_create_when_chunk_members_disabled(
-        self, stateless_event_manager_impl, shard, large, cache_enabled, enabled_for_event
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        large: bool,
+        cache_enabled: bool,
+        enabled_for_event: bool,
     ):
-        shard.id = 123
-        stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
-        stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=cache_enabled)
-        stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=enabled_for_event)
-        stateless_event_manager_impl._auto_chunk_members = False
+        with mock.patch.object(shard, "id", 123):
+            stateless_event_manager_impl._intents = intents.Intents.GUILD_MEMBERS
+            stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=cache_enabled)
+            stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=enabled_for_event)
+            stateless_event_manager_impl._auto_chunk_members = False
 
         with mock.patch.object(event_manager, "_request_guild_members") as request_guild_members:
             stateless_event_manager_impl.on_guild_create(shard, {"id": 456, "large": large})
 
-        request_guild_members.assert_not_called()
+            request_guild_members.assert_not_called()
 
-    def test_on_guild_update_when_stateless(self, stateless_event_manager_impl, shard, event_factory, entity_factory):
+    def test_on_guild_update_when_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
+    ):
         stateless_event_manager_impl._intents = intents.Intents.NONE
         stateless_event_manager_impl._cache_enabled_for = mock.Mock(return_value=True)
         stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=False)
 
-        stateless_event_manager_impl.on_guild_update(shard, {})
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_update_event"
+            ) as patched_deserialize_guild_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_update(shard, {})
 
         stateless_event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildUpdateEvent)
-        event_factory.deserialize_guild_update_event.assert_not_called()
+        patched_deserialize_guild_update_event.assert_not_called()
 
-        stateless_event_manager_impl.dispatch.assert_not_called()
+        patched_dispatch.assert_not_called()
 
-    def test_on_guild_update_stateful_and_dispatching(self, event_manager_impl, shard, event_factory, entity_factory):
+    def test_on_guild_update_stateful_and_dispatching(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
+    ):
         payload = {"id": 123}
         old_guild = object()
         mock_role = object()
@@ -738,7 +1043,11 @@ class TestEventManagerImpl:
         shard.get_user_id.assert_not_called()
 
     def test_on_guild_update_all_cache_components_and_not_dispatching(
-        self, event_manager_impl, shard, event_factory, entity_factory
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
         payload = {"id": 123}
         mock_role = object()
@@ -772,7 +1081,11 @@ class TestEventManagerImpl:
         guild_definition.guild.assert_called_once_with()
 
     def test_on_guild_update_no_cache_components_and_not_dispatching(
-        self, event_manager_impl, shard, event_factory, entity_factory
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
         payload = {"id": 123}
         event_manager_impl._cache_enabled_for = mock.Mock(return_value=False)
@@ -800,22 +1113,35 @@ class TestEventManagerImpl:
         shard.get_user_id.assert_called_once_with()
 
     def test_on_guild_update_stateless_and_dispatching(
-        self, stateless_event_manager_impl, shard, event_factory, entity_factory
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+        entity_factory: entity_factory_impl.EntityFactoryImpl,
     ):
-        payload = {"id": 123}
+        payload: dict[str, typing.Any] = {"id": 123}
         stateless_event_manager_impl._enabled_for_event = mock.Mock(return_value=True)
 
-        stateless_event_manager_impl.on_guild_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_update_event"
+            ) as patched_deserialize_guild_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_update(shard, payload)
 
         stateless_event_manager_impl._enabled_for_event.assert_called_once_with(guild_events.GuildUpdateEvent)
-        shard.get_user_id.deserialize_gateway_guild.assert_not_called()
-        shard.user_id.assert_not_called()
-        event_factory.deserialize_guild_update_event.assert_called_once_with(shard, payload, old_guild=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_update_event.return_value
-        )
+        shard.get_user_id.deserialize_gateway_guild.assert_not_called()  # FIXME: I don't think this is logically correct.
+        shard.user_id.assert_not_called()  # FIXME: This does not seem to even exist.
+        patched_deserialize_guild_update_event.assert_called_once_with(shard, payload, old_guild=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_update_event.return_value)
 
-    def test_on_guild_delete_stateful_when_available(self, event_manager_impl, shard, event_factory):
+    def test_on_guild_delete_stateful_when_available(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"unavailable": False, "id": "123"}
         event = mock.Mock(guild_id=123)
 
@@ -838,753 +1164,1303 @@ class TestEventManagerImpl:
         )
         event_manager_impl.dispatch.assert_called_once_with(event)
 
-    def test_on_guild_delete_stateful_when_unavailable(self, event_manager_impl, shard, event_factory):
+    def test_on_guild_delete_stateful_when_unavailable(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"unavailable": True, "id": "123"}
         event = mock.Mock(guild_id=123)
 
-        event_factory.deserialize_guild_unavailable_event.return_value = event
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_guild_availability") as patched_set_guild_availability,
+            mock.patch.object(
+                event_factory, "deserialize_guild_unavailable_event", return_value=event
+            ) as patched_deserialize_guild_unavailable_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_delete(shard, payload)
 
-        event_manager_impl.on_guild_delete(shard, payload)
+        patched_set_guild_availability.assert_called_once_with(event.guild_id, False)
+        patched_deserialize_guild_unavailable_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.set_guild_availability.assert_called_once_with(event.guild_id, False)
-        event_factory.deserialize_guild_unavailable_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_guild_delete_stateless_when_available(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_guild_delete_stateless_when_available(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"unavailable": False, "id": "123"}
 
-        stateless_event_manager_impl.on_guild_delete(shard, payload)
+        with (
+            mock.patch.object(event_factory, "deserialize_guild_leave_event") as patched_deserialize_guild_leave_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_delete(shard, payload)
 
-        event_factory.deserialize_guild_leave_event.assert_called_once_with(shard, payload, old_guild=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_leave_event.return_value
-        )
+        patched_deserialize_guild_leave_event.assert_called_once_with(shard, payload, old_guild=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_leave_event.return_value)
 
-    def test_on_guild_delete_stateless_when_unavailable(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_guild_delete_stateless_when_unavailable(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"unavailable": True}
 
-        stateless_event_manager_impl.on_guild_delete(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_unavailable_event"
+            ) as patched_deserialize_guild_unavailable_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_delete(shard, payload)
 
-        event_factory.deserialize_guild_unavailable_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_unavailable_event.return_value
-        )
+        patched_deserialize_guild_unavailable_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_unavailable_event.return_value)
 
-    def test_on_guild_ban_add(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_guild_ban_add(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_guild_ban_add_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_ban_add_event", return_value=event
+            ) as patched_deserialize_guild_ban_add_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_ban_add(shard, payload)
 
-        event_manager_impl.on_guild_ban_add(shard, payload)
+        patched_deserialize_guild_ban_add_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_guild_ban_add_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_guild_ban_remove(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_guild_ban_remove(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_guild_ban_remove_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_ban_remove_event", return_value=event
+            ) as patched_deserialize_guild_ban_remove_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_ban_remove(shard, payload)
 
-        event_manager_impl.on_guild_ban_remove(shard, payload)
+        patched_deserialize_guild_ban_remove_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_guild_ban_remove_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_guild_emojis_update_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_guild_emojis_update_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"guild_id": 123}
         old_emojis = {"Test": 123}
-        mock_emoji = object()
+        mock_emoji = mock.Mock()
         event = mock.Mock(emojis=[mock_emoji], guild_id=123)
 
-        event_factory.deserialize_guild_emojis_update_event.return_value = event
-        event_manager_impl._cache.clear_emojis_for_guild.return_value = old_emojis
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_emoji") as patched_set_emoji,
+            mock.patch.object(
+                patched__cache, "clear_emojis_for_guild", return_value=old_emojis
+            ) as patched_clear_emojis_for_guild,
+            mock.patch.object(
+                event_factory, "deserialize_guild_emojis_update_event", return_value=event
+            ) as patched_deserialize_guild_emojis_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_emojis_update(shard, payload)
 
-        event_manager_impl.on_guild_emojis_update(shard, payload)
+        patched_clear_emojis_for_guild.assert_called_once_with(123)
+        patched_set_emoji.assert_called_once_with(mock_emoji)
+        patched_deserialize_guild_emojis_update_event.assert_called_once_with(shard, payload, old_emojis=[123])
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.clear_emojis_for_guild.assert_called_once_with(123)
-        event_manager_impl._cache.set_emoji.assert_called_once_with(mock_emoji)
-        event_factory.deserialize_guild_emojis_update_event.assert_called_once_with(shard, payload, old_emojis=[123])
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_guild_emojis_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_guild_emojis_update_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"guild_id": 123}
 
-        stateless_event_manager_impl.on_guild_emojis_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_emojis_update_event"
+            ) as patched_deserialize_guild_emojis_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_emojis_update(shard, payload)
 
-        event_factory.deserialize_guild_emojis_update_event.assert_called_once_with(shard, payload, old_emojis=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_emojis_update_event.return_value
-        )
+        patched_deserialize_guild_emojis_update_event.assert_called_once_with(shard, payload, old_emojis=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_emojis_update_event.return_value)
 
-    def test_on_guild_stickers_update_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_guild_stickers_update_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"guild_id": 720}
         old_stickers = {700: 123}
-        mock_sticker = object()
+        mock_sticker = mock.Mock()
         event = mock.Mock(stickers=[mock_sticker], guild_id=123)
 
-        event_factory.deserialize_guild_stickers_update_event.return_value = event
-        event_manager_impl._cache.clear_stickers_for_guild.return_value = old_stickers
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_sticker") as patched_set_sticker,
+            mock.patch.object(
+                patched__cache, "clear_stickers_for_guild", return_value=old_stickers
+            ) as patched_clear_stickers_for_guild,
+            mock.patch.object(
+                event_factory, "deserialize_guild_stickers_update_event", return_value=event
+            ) as patched_deserialize_guild_stickers_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_stickers_update(shard, payload)
 
-        event_manager_impl.on_guild_stickers_update(shard, payload)
+        patched_clear_stickers_for_guild.assert_called_once_with(720)
+        patched_set_sticker.assert_called_once_with(mock_sticker)
+        patched_deserialize_guild_stickers_update_event.assert_called_once_with(shard, payload, old_stickers=[123])
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.clear_stickers_for_guild.assert_called_once_with(720)
-        event_manager_impl._cache.set_sticker.assert_called_once_with(mock_sticker)
-        event_factory.deserialize_guild_stickers_update_event.assert_called_once_with(
-            shard, payload, old_stickers=[123]
-        )
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_guild_stickers_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_guild_stickers_update_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"guild_id": 123}
 
-        stateless_event_manager_impl.on_guild_stickers_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_stickers_update_event"
+            ) as patched_deserialize_guild_stickers_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_stickers_update(shard, payload)
 
-        event_factory.deserialize_guild_stickers_update_event.assert_called_once_with(shard, payload, old_stickers=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_stickers_update_event.return_value
-        )
+        patched_deserialize_guild_stickers_update_event.assert_called_once_with(shard, payload, old_stickers=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_stickers_update_event.return_value)
 
-    def test_on_guild_integrations_update(self, event_manager_impl, shard):
-        with pytest.raises(NotImplementedError):
+    def test_on_guild_integrations_update(
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: shard_api.GatewayShard
+    ):
+        with mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch, pytest.raises(NotImplementedError):
             event_manager_impl.on_guild_integrations_update(shard, {})
 
-        event_manager_impl.dispatch.assert_not_called()
+        patched_dispatch.assert_not_called()
 
-    def test_on_integration_create(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_integration_create(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_integration_create_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_integration_create_event", return_value=event
+            ) as patched_deserialize_integration_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_integration_create(shard, payload)
 
-        event_manager_impl.on_integration_create(shard, payload)
+        patched_deserialize_integration_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_integration_create_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_integration_delete(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_integration_delete(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_integration_delete_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_integration_delete_event", return_value=event
+            ) as patched_deserialize_integration_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_integration_delete(shard, payload)
 
-        event_manager_impl.on_integration_delete(shard, payload)
+        patched_deserialize_integration_delete_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_integration_delete_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_integration_update(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_integration_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_integration_update_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_integration_update_event", return_value=event
+            ) as patched_deserialize_integration_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_integration_update(shard, payload)
 
-        event_manager_impl.on_integration_update(shard, payload)
+        patched_deserialize_integration_update_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_integration_update_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_guild_member_add_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_guild_member_add_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(user=object(), member=object())
 
-        event_factory.deserialize_guild_member_add_event.return_value = event
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "update_member") as patched_update_member,
+            mock.patch.object(
+                event_factory, "deserialize_guild_member_add_event", return_value=event
+            ) as patched_deserialize_guild_member_add_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_member_add(shard, payload)
 
-        event_manager_impl.on_guild_member_add(shard, payload)
+        patched_update_member.assert_called_once_with(event.member)
+        patched_deserialize_guild_member_add_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.update_member.assert_called_once_with(event.member)
-        event_factory.deserialize_guild_member_add_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
+    def test_on_guild_member_add_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-    def test_on_guild_member_add_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_member_add_event"
+            ) as patched_deserialize_guild_member_add_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_member_add(shard, payload)
 
-        stateless_event_manager_impl.on_guild_member_add(shard, payload)
+        patched_deserialize_guild_member_add_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_member_add_event.return_value)
 
-        event_factory.deserialize_guild_member_add_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_member_add_event.return_value
-        )
-
-    def test_on_guild_member_remove_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_guild_member_remove_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"guild_id": "456", "user": {"id": "123"}}
 
-        event_manager_impl.on_guild_member_remove(shard, payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_member") as patched_delete_member,
+            mock.patch.object(
+                event_factory, "deserialize_guild_member_remove_event"
+            ) as patched_deserialize_guild_member_remove_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_member_remove(shard, payload)
 
-        event_manager_impl._cache.delete_member.assert_called_once_with(456, 123)
-        event_factory.deserialize_guild_member_remove_event.assert_called_once_with(
-            shard, payload, old_member=event_manager_impl._cache.delete_member.return_value
+        patched_delete_member.assert_called_once_with(456, 123)
+        patched_deserialize_guild_member_remove_event.assert_called_once_with(
+            shard, payload, old_member=patched_delete_member.return_value
         )
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_member_remove_event.return_value
-        )
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_member_remove_event.return_value)
 
-    def test_on_guild_member_remove_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_guild_member_remove_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-        stateless_event_manager_impl.on_guild_member_remove(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_member_remove_event"
+            ) as patched_deserialize_guild_member_remove_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_member_remove(shard, payload)
 
-        event_factory.deserialize_guild_member_remove_event.assert_called_once_with(shard, payload, old_member=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_member_remove_event.return_value
-        )
+        patched_deserialize_guild_member_remove_event.assert_called_once_with(shard, payload, old_member=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_member_remove_event.return_value)
 
-    def test_on_guild_member_update_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_guild_member_update_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"user": {"id": 123}, "guild_id": 456}
         old_member = object()
         event = mock.Mock(member=mock.Mock())
 
-        event_factory.deserialize_guild_member_update_event.return_value = event
-        event_manager_impl._cache.get_member.return_value = old_member
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "update_member") as patched_update_member,
+            mock.patch.object(patched__cache, "get_member", return_value=old_member) as patched_get_member,
+            mock.patch.object(
+                event_factory, "deserialize_guild_member_update_event", return_value=event
+            ) as patched_deserialize_guild_member_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_member_update(shard, payload)
 
-        event_manager_impl.on_guild_member_update(shard, payload)
+        patched_get_member.assert_called_once_with(456, 123)
+        patched_update_member.assert_called_once_with(event.member)
+        patched_deserialize_guild_member_update_event.assert_called_once_with(shard, payload, old_member=old_member)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.get_member.assert_called_once_with(456, 123)
-        event_manager_impl._cache.update_member.assert_called_once_with(event.member)
-        event_factory.deserialize_guild_member_update_event.assert_called_once_with(
-            shard, payload, old_member=old_member
-        )
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_guild_member_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_guild_member_update_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"user": {"id": 123}, "guild_id": 456}
 
-        stateless_event_manager_impl.on_guild_member_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_member_update_event"
+            ) as patched_deserialize_guild_member_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_member_update(shard, payload)
 
-        event_factory.deserialize_guild_member_update_event.assert_called_once_with(shard, payload, old_member=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_member_update_event.return_value
-        )
+        patched_deserialize_guild_member_update_event.assert_called_once_with(shard, payload, old_member=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_member_update_event.return_value)
 
-    def test_on_guild_members_chunk_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_guild_members_chunk_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(members={"TestMember": 123}, presences={"TestPresences": 456})
-        event_factory.deserialize_guild_member_chunk_event.return_value = event
 
-        event_manager_impl.on_guild_members_chunk(shard, payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_member") as patched_set_member,
+            mock.patch.object(patched__cache, "set_presence") as patched_set_presence,
+            mock.patch.object(
+                event_factory, "deserialize_guild_member_chunk_event", return_value=event
+            ) as patched_deserialize_guild_member_chunk_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_members_chunk(shard, payload)
 
-        event_manager_impl._cache.set_member.assert_called_once_with(123)
-        event_manager_impl._cache.set_presence.assert_called_once_with(456)
-        event_factory.deserialize_guild_member_chunk_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
+        patched_set_member.assert_called_once_with(123)
+        patched_set_presence.assert_called_once_with(456)
+        patched_deserialize_guild_member_chunk_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-    def test_on_guild_members_chunk_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_guild_members_chunk_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-        stateless_event_manager_impl.on_guild_members_chunk(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_member_chunk_event"
+            ) as patched_deserialize_guild_member_chunk_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_members_chunk(shard, payload)
 
-        event_factory.deserialize_guild_member_chunk_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_member_chunk_event.return_value
-        )
+        patched_deserialize_guild_member_chunk_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_member_chunk_event.return_value)
 
-    def test_on_guild_role_create_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_guild_role_create_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(role=object())
 
-        event_factory.deserialize_guild_role_create_event.return_value = event
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_role") as patched_set_role,
+            mock.patch.object(
+                event_factory, "deserialize_guild_role_create_event", return_value=event
+            ) as patched_deserialize_guild_role_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_role_create(shard, payload)
 
-        event_manager_impl.on_guild_role_create(shard, payload)
+        patched_set_role.assert_called_once_with(event.role)
+        patched_deserialize_guild_role_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.set_role.assert_called_once_with(event.role)
-        event_factory.deserialize_guild_role_create_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
+    def test_on_guild_role_create_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-    def test_on_guild_role_create_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_role_create_event"
+            ) as patched_deserialize_guild_role_create_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_role_create(shard, payload)
 
-        stateless_event_manager_impl.on_guild_role_create(shard, payload)
+        patched_deserialize_guild_role_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_role_create_event.return_value)
 
-        event_factory.deserialize_guild_role_create_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_role_create_event.return_value
-        )
-
-    def test_on_guild_role_update_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_guild_role_update_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"role": {"id": 123}}
         old_role = object()
         event = mock.Mock(role=mock.Mock())
 
-        event_factory.deserialize_guild_role_update_event.return_value = event
-        event_manager_impl._cache.get_role.return_value = old_role
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "get_role", return_value=old_role) as patched_get_role,
+            mock.patch.object(patched__cache, "update_role") as patched_update_role,
+            mock.patch.object(
+                event_factory, "deserialize_guild_role_update_event", return_value=event
+            ) as patched_deserialize_guild_role_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_role_update(shard, payload)
 
-        event_manager_impl.on_guild_role_update(shard, payload)
+        patched_get_role.assert_called_once_with(123)
+        patched_update_role.assert_called_once_with(event.role)
+        patched_deserialize_guild_role_update_event.assert_called_once_with(shard, payload, old_role=old_role)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.get_role.assert_called_once_with(123)
-        event_manager_impl._cache.update_role.assert_called_once_with(event.role)
-        event_factory.deserialize_guild_role_update_event.assert_called_once_with(shard, payload, old_role=old_role)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_guild_role_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_guild_role_update_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"role": {"id": 123}}
 
-        stateless_event_manager_impl.on_guild_role_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_role_update_event"
+            ) as patched_deserialize_guild_role_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_role_update(shard, payload)
 
-        event_factory.deserialize_guild_role_update_event.assert_called_once_with(shard, payload, old_role=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_role_update_event.return_value
-        )
+        patched_deserialize_guild_role_update_event.assert_called_once_with(shard, payload, old_role=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_role_update_event.return_value)
 
-    def test_on_guild_role_delete_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_guild_role_delete_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"role_id": "123"}
 
-        event_manager_impl.on_guild_role_delete(shard, payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_role") as patched_delete_role,
+            mock.patch.object(
+                event_factory, "deserialize_guild_role_delete_event"
+            ) as patched_deserialize_guild_role_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_role_delete(shard, payload)
 
-        event_manager_impl._cache.delete_role.assert_called_once_with(123)
-        event_factory.deserialize_guild_role_delete_event.assert_called_once_with(
-            shard, payload, old_role=event_manager_impl._cache.delete_role.return_value
+        patched_delete_role.assert_called_once_with(123)
+        patched_deserialize_guild_role_delete_event.assert_called_once_with(
+            shard, payload, old_role=patched_delete_role.return_value
         )
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_role_delete_event.return_value
-        )
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_role_delete_event.return_value)
 
-    def test_on_guild_role_delete_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_guild_role_delete_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-        stateless_event_manager_impl.on_guild_role_delete(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_role_delete_event"
+            ) as patched_deserialize_guild_role_delete_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_guild_role_delete(shard, payload)
 
-        event_factory.deserialize_guild_role_delete_event.assert_called_once_with(shard, payload, old_role=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_role_delete_event.return_value
-        )
+        patched_deserialize_guild_role_delete_event.assert_called_once_with(shard, payload, old_role=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_role_delete_event.return_value)
 
-    def test_on_invite_create_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_invite_create_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(invite="qwerty")
 
-        event_factory.deserialize_invite_create_event.return_value = event
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_invite") as patched_set_invite,
+            mock.patch.object(
+                event_factory, "deserialize_invite_create_event", return_value=event
+            ) as patched_deserialize_invite_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_invite_create(shard, payload)
 
-        event_manager_impl.on_invite_create(shard, payload)
+        patched_set_invite.assert_called_once_with("qwerty")
+        patched_deserialize_invite_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.set_invite.assert_called_once_with("qwerty")
-        event_factory.deserialize_invite_create_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
+    def test_on_invite_create_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-    def test_on_invite_create_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_invite_create_event"
+            ) as patched_deserialize_invite_create_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_invite_create(shard, payload)
 
-        stateless_event_manager_impl.on_invite_create(shard, payload)
+        patched_deserialize_invite_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_invite_create_event.return_value)
 
-        event_factory.deserialize_invite_create_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_invite_create_event.return_value
-        )
-
-    def test_on_invite_delete_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_invite_delete_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"code": "qwerty"}
 
-        event_manager_impl.on_invite_delete(shard, payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_invite") as patched_delete_invite,
+            mock.patch.object(
+                event_factory, "deserialize_invite_delete_event"
+            ) as patched_deserialize_invite_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_invite_delete(shard, payload)
 
-        event_manager_impl._cache.delete_invite.assert_called_once_with("qwerty")
-        event_factory.deserialize_invite_delete_event.assert_called_once_with(
-            shard, payload, old_invite=event_manager_impl._cache.delete_invite.return_value
+        patched_delete_invite.assert_called_once_with("qwerty")
+        patched_deserialize_invite_delete_event.assert_called_once_with(
+            shard, payload, old_invite=patched_delete_invite.return_value
         )
-        event_manager_impl.dispatch.assert_called_once_with(event_factory.deserialize_invite_delete_event.return_value)
+        patched_dispatch.assert_called_once_with(patched_deserialize_invite_delete_event.return_value)
 
-    def test_on_invite_delete_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_invite_delete_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-        stateless_event_manager_impl.on_invite_delete(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_invite_delete_event"
+            ) as patched_deserialize_invite_delete_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_invite_delete(shard, payload)
 
-        event_factory.deserialize_invite_delete_event.assert_called_once_with(shard, payload, old_invite=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_invite_delete_event.return_value
-        )
+        patched_deserialize_invite_delete_event.assert_called_once_with(shard, payload, old_invite=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_invite_delete_event.return_value)
 
-    def test_on_message_create_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_message_create_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock(message=object())
 
-        event_factory.deserialize_message_create_event.return_value = event
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "set_message") as patched_set_message,
+            mock.patch.object(
+                event_factory, "deserialize_message_create_event", return_value=event
+            ) as patched_deserialize_message_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_create(shard, payload)
 
-        event_manager_impl.on_message_create(shard, payload)
+        patched_set_message.assert_called_once_with(event.message)
+        patched_deserialize_message_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.set_message.assert_called_once_with(event.message)
-        event_factory.deserialize_message_create_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
+    def test_on_message_create_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-    def test_on_message_create_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_message_create_event"
+            ) as patched_deserialize_message_create_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_message_create(shard, payload)
 
-        stateless_event_manager_impl.on_message_create(shard, payload)
+        patched_deserialize_message_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_message_create_event.return_value)
 
-        event_factory.deserialize_message_create_event.assert_called_once_with(shard, payload)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_message_create_event.return_value
-        )
-
-    def test_on_message_update_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_message_update_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"id": 123}
         old_message = object()
         event = mock.Mock(message=mock.Mock())
 
-        event_factory.deserialize_message_update_event.return_value = event
-        event_manager_impl._cache.get_message.return_value = old_message
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "update_message") as patched_update_message,
+            mock.patch.object(patched__cache, "get_message", return_value=old_message) as patched_get_message,
+            mock.patch.object(
+                event_factory, "deserialize_message_update_event", return_value=event
+            ) as patched_deserialize_message_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_update(shard, payload)
 
-        event_manager_impl.on_message_update(shard, payload)
+        patched_get_message.assert_called_once_with(123)
+        patched_update_message.assert_called_once_with(event.message)
+        patched_deserialize_message_update_event.assert_called_once_with(shard, payload, old_message=old_message)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.get_message.assert_called_once_with(123)
-        event_manager_impl._cache.update_message.assert_called_once_with(event.message)
-        event_factory.deserialize_message_update_event.assert_called_once_with(shard, payload, old_message=old_message)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_message_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_message_update_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"id": 123}
 
-        stateless_event_manager_impl.on_message_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_message_update_event"
+            ) as patched_deserialize_message_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_message_update(shard, payload)
 
-        event_factory.deserialize_message_update_event.assert_called_once_with(shard, payload, old_message=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_message_update_event.return_value
-        )
+        patched_deserialize_message_update_event.assert_called_once_with(shard, payload, old_message=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_message_update_event.return_value)
 
-    def test_on_message_delete_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_message_delete_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"id": 123}
 
-        event_manager_impl.on_message_delete(shard, payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_message") as patched_delete_message,
+            mock.patch.object(
+                event_factory, "deserialize_message_delete_event"
+            ) as patched_deserialize_message_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_delete(shard, payload)
 
-        event_manager_impl._cache.delete_message.assert_called_once_with(123)
-        event_factory.deserialize_message_delete_event.assert_called_once_with(
-            shard, payload, old_message=event_manager_impl._cache.delete_message.return_value
+        patched_delete_message.assert_called_once_with(123)
+        patched_deserialize_message_delete_event.assert_called_once_with(
+            shard, payload, old_message=patched_delete_message.return_value
         )
-        event_manager_impl.dispatch.assert_called_once_with(event_factory.deserialize_message_delete_event.return_value)
+        patched_dispatch.assert_called_once_with(patched_deserialize_message_delete_event.return_value)
 
-    def test_on_message_delete_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_message_delete_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-        stateless_event_manager_impl.on_message_delete(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_message_delete_event"
+            ) as patched_deserialize_message_delete_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_message_delete(shard, payload)
 
-        event_factory.deserialize_message_delete_event.assert_called_once_with(shard, payload, old_message=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_message_delete_event.return_value
-        )
+        patched_deserialize_message_delete_event.assert_called_once_with(shard, payload, old_message=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_message_delete_event.return_value)
 
-    def test_on_message_delete_bulk_stateful(self, event_manager_impl, shard, event_factory):
+    def test_on_message_delete_bulk_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"ids": [123, 456, 789, 987]}
         message1 = object()
         message2 = object()
         message3 = object()
-        event_manager_impl._cache.delete_message.side_effect = [message1, message2, message3, None]
 
-        event_manager_impl.on_message_delete_bulk(shard, payload)
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(
+                patched__cache, "delete_message", side_effect=[message1, message2, message3, None]
+            ) as patched_delete_message,
+            mock.patch.object(
+                event_factory, "deserialize_guild_message_delete_bulk_event"
+            ) as patched_deserialize_guild_message_delete_bulk_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_delete_bulk(shard, payload)
 
-        event_manager_impl._cache.delete_message.assert_has_calls(
-            [mock.call(123), mock.call(456), mock.call(789), mock.call(987)]
-        )
-        event_factory.deserialize_guild_message_delete_bulk_event.assert_called_once_with(
+        patched_delete_message.assert_has_calls([mock.call(123), mock.call(456), mock.call(789), mock.call(987)])
+        patched_deserialize_guild_message_delete_bulk_event.assert_called_once_with(
             shard, payload, old_messages={123: message1, 456: message2, 789: message3}
         )
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_message_delete_bulk_event.return_value
-        )
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_message_delete_bulk_event.return_value)
 
-    def test_on_message_delete_bulk_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_message_delete_bulk_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-        stateless_event_manager_impl.on_message_delete_bulk(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_guild_message_delete_bulk_event"
+            ) as patched_deserialize_guild_message_delete_bulk_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_message_delete_bulk(shard, payload)
 
-        event_factory.deserialize_guild_message_delete_bulk_event.assert_called_once_with(
-            shard, payload, old_messages={}
-        )
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_guild_message_delete_bulk_event.return_value
-        )
+        patched_deserialize_guild_message_delete_bulk_event.assert_called_once_with(shard, payload, old_messages={})
+        patched_dispatch.assert_called_once_with(patched_deserialize_guild_message_delete_bulk_event.return_value)
 
-    def test_on_message_reaction_add(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_message_reaction_add(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_message_reaction_add_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_message_reaction_add_event", return_value=event
+            ) as patched_deserialize_message_reaction_add_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_reaction_add(shard, payload)
 
-        event_manager_impl.on_message_reaction_add(shard, payload)
+        patched_deserialize_message_reaction_add_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_message_reaction_add_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_message_reaction_remove(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_message_reaction_remove(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_message_reaction_remove_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_message_reaction_remove_event", return_value=event
+            ) as patched_deserialize_message_reaction_remove_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_reaction_remove(shard, payload)
 
-        event_manager_impl.on_message_reaction_remove(shard, payload)
+        patched_deserialize_message_reaction_remove_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_message_reaction_remove_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_message_reaction_remove_all(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_message_reaction_remove_all(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_message_reaction_remove_all_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_message_reaction_remove_all_event", return_value=event
+            ) as patched_deserialize_message_reaction_remove_all_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_reaction_remove_all(shard, payload)
 
-        event_manager_impl.on_message_reaction_remove_all(shard, payload)
+        patched_deserialize_message_reaction_remove_all_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_message_reaction_remove_all_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_message_reaction_remove_emoji(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_message_reaction_remove_emoji(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_message_reaction_remove_emoji_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_message_reaction_remove_emoji_event", return_value=event
+            ) as patched_deserialize_message_reaction_remove_emoji_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_reaction_remove_emoji(shard, payload)
 
-        event_manager_impl.on_message_reaction_remove_emoji(shard, payload)
+        patched_deserialize_message_reaction_remove_emoji_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_message_reaction_remove_emoji_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_presence_update_stateful_update(self, event_manager_impl, shard, event_factory):
+    def test_on_presence_update_stateful_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"user": {"id": 123}, "guild_id": 456}
         old_presence = object()
         event = mock.Mock(presence=mock.Mock(visible_status=presences.Status.ONLINE))
 
-        event_factory.deserialize_presence_update_event.return_value = event
-        event_manager_impl._cache.get_presence.return_value = old_presence
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "update_presence") as patched_update_presence,
+            mock.patch.object(patched__cache, "get_presence", return_value=old_presence) as patched_get_presence,
+            mock.patch.object(
+                event_factory, "deserialize_presence_update_event", return_value=event
+            ) as patched_deserialize_presence_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_presence_update(shard, payload)
 
-        event_manager_impl.on_presence_update(shard, payload)
+        patched_get_presence.assert_called_once_with(456, 123)
+        patched_update_presence.assert_called_once_with(event.presence)
+        patched_deserialize_presence_update_event.assert_called_once_with(shard, payload, old_presence=old_presence)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.get_presence.assert_called_once_with(456, 123)
-        event_manager_impl._cache.update_presence.assert_called_once_with(event.presence)
-        event_factory.deserialize_presence_update_event.assert_called_once_with(
-            shard, payload, old_presence=old_presence
-        )
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_presence_update_stateful_delete(self, event_manager_impl, shard, event_factory):
+    def test_on_presence_update_stateful_delete(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"user": {"id": 123}, "guild_id": 456}
         old_presence = object()
         event = mock.Mock(presence=mock.Mock(visible_status=presences.Status.OFFLINE))
 
-        event_factory.deserialize_presence_update_event.return_value = event
-        event_manager_impl._cache.get_presence.return_value = old_presence
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_presence") as patched_delete_presence,
+            mock.patch.object(patched__cache, "get_presence", return_value=old_presence) as patched_get_presence,
+            mock.patch.object(
+                event_factory, "deserialize_presence_update_event", return_value=event
+            ) as patched_deserialize_presence_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_presence_update(shard, payload)
 
-        event_manager_impl.on_presence_update(shard, payload)
+        patched_get_presence.assert_called_once_with(456, 123)
+        patched_delete_presence.assert_called_once_with(event.presence.guild_id, event.presence.user_id)
+        patched_deserialize_presence_update_event.assert_called_once_with(shard, payload, old_presence=old_presence)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.get_presence.assert_called_once_with(456, 123)
-        event_manager_impl._cache.delete_presence.assert_called_once_with(
-            event.presence.guild_id, event.presence.user_id
-        )
-        event_factory.deserialize_presence_update_event.assert_called_once_with(
-            shard, payload, old_presence=old_presence
-        )
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_presence_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_presence_update_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"user": {"id": 123}, "guild_id": 456}
 
-        stateless_event_manager_impl.on_presence_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_presence_update_event"
+            ) as patched_deserialize_presence_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_presence_update(shard, payload)
 
-        event_factory.deserialize_presence_update_event.assert_called_once_with(shard, payload, old_presence=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_presence_update_event.return_value
-        )
+        patched_deserialize_presence_update_event.assert_called_once_with(shard, payload, old_presence=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_presence_update_event.return_value)
 
-    def test_on_typing_start(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_typing_start(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_typing_start_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_typing_start_event", return_value=event
+            ) as patched_deserialize_typing_start_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_typing_start(shard, payload)
 
-        event_manager_impl.on_typing_start(shard, payload)
+        patched_deserialize_typing_start_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_typing_start_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_user_update_stateful(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_user_update_stateful(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         old_user = object()
         event = mock.Mock(user=mock.Mock())
 
-        event_factory.deserialize_own_user_update_event.return_value = event
-        event_manager_impl._cache.get_me.return_value = old_user
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "update_me") as patched_update_me,
+            mock.patch.object(patched__cache, "get_me", return_value=old_user) as patched_get_me,
+            mock.patch.object(
+                event_factory, "deserialize_own_user_update_event", return_value=event
+            ) as patched_deserialize_own_user_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_user_update(shard, payload)
 
-        event_manager_impl.on_user_update(shard, payload)
+        patched_get_me.assert_called_once()
+        patched_update_me.assert_called_once_with(event.user)
+        patched_deserialize_own_user_update_event.assert_called_once_with(shard, payload, old_user=old_user)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.update_me.assert_called_once_with(event.user)
-        event_factory.deserialize_own_user_update_event.assert_called_once_with(shard, payload, old_user=old_user)
-        event_manager_impl.dispatch.assert_called_once_with(event)
+    def test_on_user_update_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
 
-    def test_on_user_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
-        payload = {}
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_own_user_update_event"
+            ) as patched_deserialize_own_user_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_user_update(shard, payload)
 
-        stateless_event_manager_impl.on_user_update(shard, payload)
+        patched_deserialize_own_user_update_event.assert_called_once_with(shard, payload, old_user=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_own_user_update_event.return_value)
 
-        event_factory.deserialize_own_user_update_event.assert_called_once_with(shard, payload, old_user=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_own_user_update_event.return_value
-        )
-
-    def test_on_voice_state_update_stateful_update(self, event_manager_impl, shard, event_factory):
+    def test_on_voice_state_update_stateful_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"user_id": 123, "guild_id": 456}
         old_state = object()
         event = mock.Mock(state=mock.Mock(channel_id=123))
 
-        event_factory.deserialize_voice_state_update_event.return_value = event
-        event_manager_impl._cache.get_voice_state.return_value = old_state
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "update_voice_state") as patched_update_voice_state,
+            mock.patch.object(patched__cache, "get_voice_state", return_value=old_state) as patched_get_voice_state,
+            mock.patch.object(
+                event_factory, "deserialize_voice_state_update_event", return_value=event
+            ) as patched_deserialize_voice_state_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_voice_state_update(shard, payload)
 
-        event_manager_impl.on_voice_state_update(shard, payload)
+        patched_get_voice_state.assert_called_once_with(456, 123)
+        patched_update_voice_state.assert_called_once_with(event.state)
+        patched_deserialize_voice_state_update_event.assert_called_once_with(shard, payload, old_state=old_state)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.get_voice_state.assert_called_once_with(456, 123)
-        event_manager_impl._cache.update_voice_state.assert_called_once_with(event.state)
-        event_factory.deserialize_voice_state_update_event.assert_called_once_with(shard, payload, old_state=old_state)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_voice_state_update_stateful_delete(self, event_manager_impl, shard, event_factory):
+    def test_on_voice_state_update_stateful_delete(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"user_id": 123, "guild_id": 456}
         old_state = object()
         event = mock.Mock(state=mock.Mock(channel_id=None))
 
-        event_factory.deserialize_voice_state_update_event.return_value = event
-        event_manager_impl._cache.get_voice_state.return_value = old_state
+        with (
+            mock.patch.object(event_manager_impl, "_cache") as patched__cache,
+            mock.patch.object(patched__cache, "delete_voice_state") as patched_delete_voice_state,
+            mock.patch.object(patched__cache, "get_voice_state", return_value=old_state) as patched_get_voice_state,
+            mock.patch.object(
+                event_factory, "deserialize_voice_state_update_event", return_value=event
+            ) as patched_deserialize_voice_state_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_voice_state_update(shard, payload)
 
-        event_manager_impl.on_voice_state_update(shard, payload)
+        patched_get_voice_state.assert_called_once_with(456, 123)
+        patched_delete_voice_state.assert_called_once_with(event.state.guild_id, event.state.user_id)
+        patched_deserialize_voice_state_update_event.assert_called_once_with(shard, payload, old_state=old_state)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_manager_impl._cache.get_voice_state.assert_called_once_with(456, 123)
-        event_manager_impl._cache.delete_voice_state.assert_called_once_with(event.state.guild_id, event.state.user_id)
-        event_factory.deserialize_voice_state_update_event.assert_called_once_with(shard, payload, old_state=old_state)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_voice_state_update_stateless(self, stateless_event_manager_impl, shard, event_factory):
+    def test_on_voice_state_update_stateless(
+        self,
+        stateless_event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"user_id": 123, "guild_id": 456}
 
-        stateless_event_manager_impl.on_voice_state_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_voice_state_update_event"
+            ) as patched_deserialize_voice_state_update_event,
+            mock.patch.object(stateless_event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            stateless_event_manager_impl.on_voice_state_update(shard, payload)
 
-        event_factory.deserialize_voice_state_update_event.assert_called_once_with(shard, payload, old_state=None)
-        stateless_event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_voice_state_update_event.return_value
-        )
+        patched_deserialize_voice_state_update_event.assert_called_once_with(shard, payload, old_state=None)
+        patched_dispatch.assert_called_once_with(patched_deserialize_voice_state_update_event.return_value)
 
-    def test_on_voice_server_update(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_voice_server_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_voice_server_update_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_voice_server_update_event", return_value=event
+            ) as patched_deserialize_voice_server_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_voice_server_update(shard, payload)
 
-        event_manager_impl.on_voice_server_update(shard, payload)
+        patched_deserialize_voice_server_update_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_voice_server_update_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_webhooks_update(self, event_manager_impl, shard, event_factory):
-        payload = {}
+    def test_on_webhooks_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
+        payload: dict[str, typing.Any] = {}
         event = mock.Mock()
 
-        event_factory.deserialize_webhook_update_event.return_value = event
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_webhook_update_event", return_value=event
+            ) as patched_deserialize_webhook_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_webhooks_update(shard, payload)
 
-        event_manager_impl.on_webhooks_update(shard, payload)
+        patched_deserialize_webhook_update_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(event)
 
-        event_factory.deserialize_webhook_update_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(event)
-
-    def test_on_interaction_create(self, event_manager_impl, shard, event_factory):
+    def test_on_interaction_create(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: shard_api.GatewayShard,
+        event_factory: event_factory_impl.EventFactoryImpl,
+    ):
         payload = {"id": "123"}
 
-        event_manager_impl.on_interaction_create(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_interaction_create_event"
+            ) as patched_deserialize_interaction_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_interaction_create(shard, payload)
 
-        event_factory.deserialize_interaction_create_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_interaction_create_event.return_value
-        )
+        patched_deserialize_interaction_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_interaction_create_event.return_value)
 
     def test_on_guild_scheduled_event_create(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
+        shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
-        event_manager_impl.on_guild_scheduled_event_create(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_scheduled_event_create_event"
+            ) as patched_deserialize_scheduled_event_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_scheduled_event_create(shard, mock_payload)
 
-        event_factory.deserialize_scheduled_event_create_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_scheduled_event_create_event.return_value
-        )
+        patched_deserialize_scheduled_event_create_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_scheduled_event_create_event.return_value)
 
     def test_on_guild_scheduled_event_delete(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
+        shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
-        event_manager_impl.on_guild_scheduled_event_delete(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_scheduled_event_delete_event"
+            ) as patched_deserialize_scheduled_event_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_scheduled_event_delete(shard, mock_payload)
 
-        event_factory.deserialize_scheduled_event_delete_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_scheduled_event_delete_event.return_value
-        )
+        patched_deserialize_scheduled_event_delete_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_scheduled_event_delete_event.return_value)
 
     def test_on_guild_scheduled_event_update(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
+        shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
-        event_manager_impl.on_guild_scheduled_event_update(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_scheduled_event_update_event"
+            ) as patched_deserialize_scheduled_event_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_scheduled_event_update(shard, mock_payload)
 
-        event_factory.deserialize_scheduled_event_update_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_scheduled_event_update_event.return_value
-        )
+        patched_deserialize_scheduled_event_update_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_scheduled_event_update_event.return_value)
 
     def test_on_guild_scheduled_event_user_add(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
+        shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
-        event_manager_impl.on_guild_scheduled_event_user_add(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_scheduled_event_user_add_event"
+            ) as patched_deserialize_scheduled_event_user_add_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_scheduled_event_user_add(shard, mock_payload)
 
-        event_factory.deserialize_scheduled_event_user_add_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_scheduled_event_user_add_event.return_value
-        )
+        patched_deserialize_scheduled_event_user_add_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_scheduled_event_user_add_event.return_value)
 
     def test_on_guild_scheduled_event_user_remove(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
+        shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
-        event_manager_impl.on_guild_scheduled_event_user_remove(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_scheduled_event_user_remove_event"
+            ) as patched_deserialize_scheduled_event_user_remove_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_scheduled_event_user_remove(shard, mock_payload)
 
-        event_factory.deserialize_scheduled_event_user_remove_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_scheduled_event_user_remove_event.return_value
-        )
+        patched_deserialize_scheduled_event_user_remove_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_scheduled_event_user_remove_event.return_value)
 
     def test_on_guild_audit_log_entry_create(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
+        shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        mock_payload = mock.Mock()
+        mock_payload: dict[str, typing.Any] = mock.Mock()
 
-        event_manager_impl.on_guild_audit_log_entry_create(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_audit_log_entry_create_event"
+            ) as patched_deserialize_audit_log_entry_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_guild_audit_log_entry_create(shard, mock_payload)
 
-        event_factory.deserialize_audit_log_entry_create_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_audit_log_entry_create_event.return_value
-        )
+        patched_deserialize_audit_log_entry_create_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_audit_log_entry_create_event.return_value)
 
     def test_on_stage_instance_create(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
+        shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        payload = {
+        payload: dict[str, typing.Any] = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
             "channel_id": "733488538393510049",
@@ -1593,20 +2469,24 @@ class TestEventManagerImpl:
             "discoverable_disabled": False,
         }
 
-        event_manager_impl.on_stage_instance_create(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_stage_instance_create_event"
+            ) as patched_deserialize_stage_instance_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_stage_instance_create(shard, payload)
 
-        event_factory.deserialize_stage_instance_create_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_stage_instance_create_event.return_value
-        )
+        patched_deserialize_stage_instance_create_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_stage_instance_create_event.return_value)
 
     def test_on_stage_instance_update(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
+        shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        payload = {
+        payload: dict[str, typing.Any] = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
             "channel_id": "733488538393510049",
@@ -1615,20 +2495,24 @@ class TestEventManagerImpl:
             "discoverable_disabled": False,
         }
 
-        event_manager_impl.on_stage_instance_update(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_stage_instance_update_event"
+            ) as patched_deserialize_stage_instance_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_stage_instance_update(shard, payload)
 
-        event_factory.deserialize_stage_instance_update_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_stage_instance_update_event.return_value
-        )
+        patched_deserialize_stage_instance_update_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_stage_instance_update_event.return_value)
 
     def test_on_stage_instance_delete(
         self,
         event_manager_impl: event_manager.EventManagerImpl,
-        shard: mock.Mock,
+        shard: shard_api.GatewayShard,
         event_factory: event_factory_.EventFactory,
     ):
-        payload = {
+        payload: dict[str, typing.Any] = {
             "id": "840647391636226060",
             "guild_id": "197038439483310086",
             "channel_id": "733488538393510049",
@@ -1637,12 +2521,16 @@ class TestEventManagerImpl:
             "discoverable_disabled": False,
         }
 
-        event_manager_impl.on_stage_instance_delete(shard, payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_stage_instance_delete_event"
+            ) as patched_deserialize_stage_instance_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_stage_instance_delete(shard, payload)
 
-        event_factory.deserialize_stage_instance_delete_event.assert_called_once_with(shard, payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_stage_instance_delete_event.return_value
-        )
+        patched_deserialize_stage_instance_delete_event.assert_called_once_with(shard, payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_stage_instance_delete_event.return_value)
 
     def test_on_message_poll_vote_create(
         self,
@@ -1652,12 +2540,16 @@ class TestEventManagerImpl:
     ):
         mock_payload = mock.Mock()
 
-        event_manager_impl.on_message_poll_vote_add(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_poll_vote_create_event"
+            ) as patched_deserialize_poll_vote_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_poll_vote_add(shard, mock_payload)
 
-        event_factory.deserialize_poll_vote_create_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_poll_vote_create_event.return_value
-        )
+        patched_deserialize_poll_vote_create_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_poll_vote_create_event.return_value)
 
     def test_on_message_poll_vote_delete(
         self,
@@ -1667,12 +2559,16 @@ class TestEventManagerImpl:
     ):
         mock_payload = mock.Mock()
 
-        event_manager_impl.on_message_poll_vote_remove(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_poll_vote_delete_event"
+            ) as patched_deserialize_poll_vote_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_message_poll_vote_remove(shard, mock_payload)
 
-        event_factory.deserialize_poll_vote_delete_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_poll_vote_delete_event.return_value
-        )
+        patched_deserialize_poll_vote_delete_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_poll_vote_delete_event.return_value)
 
     def test_on_auto_moderation_rule_create(
         self,
@@ -1682,12 +2578,16 @@ class TestEventManagerImpl:
     ):
         mock_payload = mock.Mock()
 
-        event_manager_impl.on_auto_moderation_rule_create(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_auto_mod_rule_create_event"
+            ) as patched_deserialize_auto_mod_rule_create_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_auto_moderation_rule_create(shard, mock_payload)
 
-        event_factory.deserialize_auto_mod_rule_create_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_auto_mod_rule_create_event.return_value
-        )
+        patched_deserialize_auto_mod_rule_create_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_auto_mod_rule_create_event.return_value)
 
     def test_on_auto_moderation_rule_update(
         self,
@@ -1697,12 +2597,16 @@ class TestEventManagerImpl:
     ):
         mock_payload = mock.Mock()
 
-        event_manager_impl.on_auto_moderation_rule_update(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_auto_mod_rule_update_event"
+            ) as patched_deserialize_auto_mod_rule_update_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_auto_moderation_rule_update(shard, mock_payload)
 
-        event_factory.deserialize_auto_mod_rule_update_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_auto_mod_rule_update_event.return_value
-        )
+        patched_deserialize_auto_mod_rule_update_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_auto_mod_rule_update_event.return_value)
 
     def test_on_auto_moderation_rule_delete(
         self,
@@ -1712,12 +2616,16 @@ class TestEventManagerImpl:
     ):
         mock_payload = mock.Mock()
 
-        event_manager_impl.on_auto_moderation_rule_delete(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_auto_mod_rule_delete_event"
+            ) as patched_deserialize_auto_mod_rule_delete_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_auto_moderation_rule_delete(shard, mock_payload)
 
-        event_factory.deserialize_auto_mod_rule_delete_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_auto_mod_rule_delete_event.return_value
-        )
+        patched_deserialize_auto_mod_rule_delete_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_auto_mod_rule_delete_event.return_value)
 
     def test_on_auto_moderation_action_execution(
         self,
@@ -1727,9 +2635,13 @@ class TestEventManagerImpl:
     ):
         mock_payload = mock.Mock()
 
-        event_manager_impl.on_auto_moderation_action_execution(shard, mock_payload)
+        with (
+            mock.patch.object(
+                event_factory, "deserialize_auto_mod_action_execution_event"
+            ) as patched_deserialize_auto_mod_action_execution_event,
+            mock.patch.object(event_manager_impl, "dispatch") as patched_dispatch,
+        ):
+            event_manager_impl.on_auto_moderation_action_execution(shard, mock_payload)
 
-        event_factory.deserialize_auto_mod_action_execution_event.assert_called_once_with(shard, mock_payload)
-        event_manager_impl.dispatch.assert_called_once_with(
-            event_factory.deserialize_auto_mod_action_execution_event.return_value
-        )
+        patched_deserialize_auto_mod_action_execution_event.assert_called_once_with(shard, mock_payload)
+        patched_dispatch.assert_called_once_with(patched_deserialize_auto_mod_action_execution_event.return_value)

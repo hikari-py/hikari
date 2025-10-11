@@ -40,10 +40,10 @@ class MyUnique(snowflakes.Unique):
 
 class TestURLEncodedFormBuilder:
     @pytest.fixture
-    def form_builder(self):
+    def form_builder(self) -> data_binding.URLEncodedFormBuilder:
         return data_binding.URLEncodedFormBuilder()
 
-    def test_add_field(self, form_builder):
+    def test_add_field(self, form_builder: data_binding.URLEncodedFormBuilder):
         class TestBytesPayload:
             def __init__(self, value: bytes) -> None:
                 self.inner = value
@@ -67,15 +67,15 @@ class TestURLEncodedFormBuilder:
             ("test_name2", TestBytesPayload(b"test_data2"), "mimetype2"),
         ]
 
-    def test_add_resource(self, form_builder):
-        mock_resource = object()
+    def test_add_resource(self, form_builder: data_binding.URLEncodedFormBuilder):
+        mock_resource = mock.Mock()
 
         form_builder.add_resource("lick", mock_resource)
 
         assert form_builder._resources == [("lick", mock_resource)]
 
     @pytest.mark.asyncio
-    async def test_build(self, form_builder):
+    async def test_build(self, form_builder: data_binding.URLEncodedFormBuilder):
         resource1 = mock.Mock()
         resource2 = mock.Mock()
         stream1 = mock.Mock(filename="testing1", mimetype="text")
@@ -83,7 +83,7 @@ class TestURLEncodedFormBuilder:
         data1 = aiohttp.BytesPayload(b"data1")
         data2 = aiohttp.BytesPayload(b"data2")
         mock_stack = mock.AsyncMock(enter_async_context=mock.AsyncMock(side_effect=[stream1, stream2]))
-        executor = object()
+        executor = mock.Mock()
         form_builder._fields = [("test_name", data1, "mimetype"), ("test_name2", data2, "mimetype2")]
         form_builder._resources = [("aye", resource1), ("lmao", resource2)]
 
@@ -150,13 +150,13 @@ class TestStringMapBuilder:
     @pytest.mark.parametrize(
         ("name", "input_val", "expect"), [("a", True, "true"), ("b", False, "false"), ("c", None, "null")]
     )
-    def test_put_py_singleton(self, name, input_val, expect):
+    def test_put_py_singleton(self, name: str, input_val: typing.Optional[typing.Union[str, bool]], expect: str):
         mapping = data_binding.StringMapBuilder()
         mapping.put(name, input_val)
         assert dict(mapping) == {name: expect}
 
     def test_put_with_conversion_uses_return_value(self):
-        def convert(_):
+        def convert(_: str):
             return "yeah, i got called"
 
         mapping = data_binding.StringMapBuilder()
@@ -167,12 +167,12 @@ class TestStringMapBuilder:
         mapping = data_binding.StringMapBuilder()
         convert = mock.Mock()
 
-        expect = object()
+        expect = mock.Mock()
         mapping.put("yaskjgakljglak", expect, conversion=convert)
         convert.assert_called_once_with(expect)
 
     def test_put_py_singleton_conversion_runs_before_check(self):
-        def convert(_):
+        def convert(_: str):
             return True
 
         mapping = data_binding.StringMapBuilder()
@@ -246,7 +246,7 @@ class TestJSONObjectBuilder:
 
         convert = mock.Mock(side_effect=[r1, r2, r3])
         builder = data_binding.JSONObjectBuilder()
-        builder.put_array("www", [object(), object(), object()], conversion=convert)
+        builder.put_array("www", [mock.Mock(), mock.Mock(), mock.Mock()], conversion=convert)
         assert builder == {"www": [r1, r2, r3]}
 
     def test_put_array_with_conversion_passes_raw_input_to_converter(self):
@@ -277,7 +277,7 @@ class TestJSONObjectBuilder:
             (snowflakes.Snowflake("100126"), "100126"),
         ],
     )
-    def test_put_snowflake(self, input_value, expected_str):
+    def test_put_snowflake(self, input_value: snowflakes.Snowflake, expected_str: str):
         builder = data_binding.JSONObjectBuilder()
         builder.put_snowflake("WAWAWA!", input_value)
         assert builder == {"WAWAWA!": expected_str}
@@ -298,7 +298,7 @@ class TestJSONObjectBuilder:
             (snowflakes.Snowflake("100126"), "100126"),
         ],
     )
-    def test_put_snowflake_array_conversions(self, input_value, expected_str):
+    def test_put_snowflake_array_conversions(self, input_value: snowflakes.Snowflake, expected_str: str):
         builder = data_binding.JSONObjectBuilder()
         builder.put_snowflake_array("WAWAWAH!", [input_value] * 5)
         assert builder == {"WAWAWAH!": [expected_str] * 5}
