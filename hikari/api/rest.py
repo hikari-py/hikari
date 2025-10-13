@@ -5498,20 +5498,32 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_thread_members(
-        self, channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel], /
-    ) -> typing.Sequence[channels_.ThreadMember]:
+    def fetch_thread_members(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
+        /,
+        after: undefined.UndefinedOr[snowflakes.Snowflakeish] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[channels_.ThreadMember]:
         """Fetch a thread's members.
+
+        !!! note
+            This call is not a coroutine function, it returns a special type of
+            lazy iterator that will perform API calls as you iterate across it,
+            thus any errors documented below will happen then.
+
+            See [`hikari.iterators`][] for the full API for this iterator type.
 
         Parameters
         ----------
         channel
             Object or ID of the thread channel to fetch the members of.
+        after
+            If provided, fetch thread members after this time.
 
         Returns
         -------
-        typing.Sequence[hikari.channels.ThreadMember]
-            A sequence of the thread's members.
+        hikari.iterators.LazyIterator[hikari.channels.ThreadMember]
+            An iterator to fetch the thread members.
 
         Raises
         ------
