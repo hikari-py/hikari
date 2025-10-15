@@ -1291,7 +1291,7 @@ mypy = [
     { name = "mypy", extras = ["faster-cache"], specifier = "==1.18.2" },
     { name = "pydub-stubs", specifier = "~=0.25.1.5" },
 ]
-nox = [{ name = "nox", extras = ["uv"], specifier = "==2025.5.1" }]
+nox = [{ name = "nox", extras = ["uv"], specifier = "==2025.10.14" }]
 pyright = [
     { name = "pydub-stubs", specifier = "~=0.25.1.5" },
     { name = "pyright", specifier = "==1.1.406" },
@@ -1394,7 +1394,7 @@ name = "importlib-metadata"
 version = "8.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.14'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641, upload-time = "2025-04-27T15:29:01.736Z" }
 wheels = [
@@ -2137,7 +2137,7 @@ wheels = [
 
 [[package]]
 name = "nox"
-version = "2025.5.1"
+version = "2025.10.14"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "argcomplete" },
@@ -2145,12 +2145,13 @@ dependencies = [
     { name = "colorlog" },
     { name = "dependency-groups" },
     { name = "packaging" },
+    { name = "pbs-installer", extra = ["all"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "virtualenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b4/80/47712208c410defec169992e57c179f0f4d92f5dd17ba8daca50a8077e23/nox-2025.5.1.tar.gz", hash = "sha256:2a571dfa7a58acc726521ac3cd8184455ebcdcbf26401c7b737b5bc6701427b2", size = 4023334, upload-time = "2025-05-01T16:35:48.056Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/51/07f2e7d2f6f64c0c4cb722adf65e9352afae0e1dea60cf2c95594dd2b658/nox-2025.10.14.tar.gz", hash = "sha256:2f839d2b071a54ede549f59ff7017c3752b636f7a10f6cbe3d7dedfe4c7d3ce8", size = 4029600, upload-time = "2025-10-15T03:18:09.866Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a6/be/7b423b02b09eb856beffe76fe8c4121c99852db74dd12a422dcb72d1134e/nox-2025.5.1-py3-none-any.whl", hash = "sha256:56abd55cf37ff523c254fcec4d152ed51e5fe80e2ab8317221d8b828ac970a31", size = 71753, upload-time = "2025-05-01T16:35:46.037Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/fe/97edd29b855e0ae71c615ee795640e7473f469be589fd17f324dad0a1f79/nox-2025.10.14-py3-none-any.whl", hash = "sha256:1e08f987d143e8011820ef0b83ea9cc1b7380c6190d1435758c444abf3445520", size = 73948, upload-time = "2025-10-15T03:18:08.566Z" },
 ]
 
 [package.optional-dependencies]
@@ -2273,6 +2274,21 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ca/bc/f35b8446f4531a7cb215605d100cd88b7ac6f44ab3fc94870c120ab3adbf/pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712", size = 51043, upload-time = "2023-12-10T22:30:45Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cc/20/ff623b09d963f88bfde16306a54e12ee5ea43e9b597108672ff3a408aad6/pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08", size = 31191, upload-time = "2023-12-10T22:30:43.14Z" },
+]
+
+[[package]]
+name = "pbs-installer"
+version = "2025.10.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9a/b5/4922c6818d15c22430d2e79c4ebce8b482007aed1baf419626e3e405c5ae/pbs_installer-2025.10.10.tar.gz", hash = "sha256:568999771793eb337c107b089272c2269a011b1770f0f16c7afb3dbbb4a72ae9", size = 62929, upload-time = "2025-10-10T22:03:06.003Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/50/cf31051dbabe8a3388fd451a1c106676e6bc20de58e0165a885a026a48f7/pbs_installer-2025.10.10-py3-none-any.whl", hash = "sha256:657023cca9587640e5295b2ab707bf5bd35e69a35f96dda3958b6f262a5755f5", size = 64803, upload-time = "2025-10-10T22:03:04.613Z" },
+]
+
+[package.optional-dependencies]
+all = [
+    { name = "httpx" },
+    { name = "zstandard" },
 ]
 
 [[package]]
