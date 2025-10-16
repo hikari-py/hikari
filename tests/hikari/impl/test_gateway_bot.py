@@ -273,6 +273,18 @@ class TestGatewayBot:
 
         assert bot._token == token
 
+    def test_token_id(self, token):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
+
+        with stack:
+            bot = bot_impl.GatewayBot(token, cache_settings=None, http_settings=None, proxy_settings=None)
+
+        assert bot._token_id == applications.get_token_id(token)
+        assert bot.token_id == applications.get_token_id(token)
+
     def test_cache(self, bot, cache):
         assert bot.cache is cache
 
