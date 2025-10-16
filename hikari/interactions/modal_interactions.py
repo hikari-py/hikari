@@ -77,7 +77,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     This will be [`None`][] if the modal was a response to a command.
     """
 
-    components: typing.Sequence[components_.ModalComponentTypesT]  # FIXME: This is breaking.
+    components: typing.Sequence[components_.ModalComponentTypesT]
     """Components in the modal."""
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
