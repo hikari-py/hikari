@@ -38,6 +38,7 @@ __all__: typing.Sequence[str] = (
     "GuildSystemChannelFlag",
     "GuildVerificationLevel",
     "GuildWidget",
+    "GuildWidgetSettings",
     "Integration",
     "IntegrationAccount",
     "IntegrationApplication",
@@ -313,7 +314,31 @@ class GuildNSFWLevel(int, enums.Enum):
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class GuildWidget:
-    """Represents a guild widget."""
+    """Represents a guild widget object."""
+
+    id: snowflakes.Snowflake = attrs.field(repr=True)
+    """The ID of the guild."""
+
+    name: str = attrs.field(repr=True)
+    """The name of the guild."""
+
+    instant_invite: str | None = attrs.field(repr=True)
+    """Instant invite for the guilds specified widget invite channel."""
+
+    channels: typing.Sequence[channels_.PartialChannel] = attrs.field(repr=True)
+    """The voice and stage channels accessible by the @everyone role."""
+
+    members: typing.Sequence[users.PartialUser] = attrs.field(repr=True)
+    """The members in the guild."""
+
+    presence_count: int
+    """The number of online members."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildWidgetSettings:
+    """Represents a guild widget settings object."""
 
     app: traits.RESTAware = attrs.field(
         repr=False, eq=False, hash=False, metadata={attrs_extensions.SKIP_DEEP_COPY: True}

@@ -6865,15 +6865,47 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def edit_widget(
+    async def fetch_widget_settings(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.GuildWidgetSettings:
+        """Fetch a guilds's widget.
+
+        Parameters
+        ----------
+        guild
+            The guild to fetch the widget from. This can be the object
+            or the ID of an existing guild.
+
+        Returns
+        -------
+        hikari.guilds.GuildWidgetSettings
+            The requested guild widget.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission.
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_widget_settings(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.GuildChannel]] = undefined.UNDEFINED,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> guilds.GuildWidget:
-        """Fetch a guilds's widget.
+    ) -> guilds.GuildWidgetSettings:
+        """Edit a guilds's widget settings.
 
         Parameters
         ----------
@@ -6891,7 +6923,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Returns
         -------
-        hikari.guilds.GuildWidget
+        hikari.guilds.GuildWidgetSettings
             The edited guild widget.
 
         Raises
