@@ -28,11 +28,14 @@ does not map these on a 1-to-1 basis.
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import shutil
 import subprocess
 import sys
 import time
+import traceback
+import urllib.error
 import urllib.request
 
 sys.path.append("..")
@@ -40,6 +43,7 @@ sys.path.append("..")
 
 from hikari import emojis
 
+IN_CI = bool(os.getenv("CI"))
 TWEMOJI_REPO_BASE_URL = "https://github.com/discord/twemoji.git"
 DISCORD_EMOJI_MAPPING_URL = "https://emzi0767.mzgit.io/discord-emoji/discordEmojiMap-canary.min.json"
 
@@ -58,8 +62,15 @@ if not git:
 start = time.perf_counter()
 
 print("Fetching emoji mapping")
-with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL) as request:  # noqa: S310
-    mapping = json.loads(request.read())["emojiDefinitions"]
+try:
+    with urllib.request.urlopen(DISCORD_EMOJI_MAPPING_URL, timeout=30) as request:  # noqa: S310
+        mapping = json.loads(request.read())["emojiDefinitions"]
+except urllib.error.URLError:
+    if not IN_CI:
+        raise
+
+    print(f"Failed to retrieve emoji mapping: {traceback.format_exc()}")
+    sys.exit(0)
 
 has_items = next(tempdir.iterdir(), False)
 if has_items:

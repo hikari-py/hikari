@@ -464,13 +464,13 @@ class Member(users.User):
     raw_communication_disabled_until: datetime.datetime | None = attrs.field(repr=False)
     """The datetime when this member's timeout will expire.
 
-     Will be [`None`][] if the member is not timed out.
+    Will be [`None`][] if the member is not timed out.
 
-     !!! note
+    !!! note
         The datetime might be in the past, so it is recommended to use
         [`hikari.guilds.Member.communication_disabled_until`][] method to check if the member is timed
         out at the time of the call.
-     """
+    """
 
     role_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=False)
     """A sequence of the IDs of the member's current roles."""
@@ -513,6 +513,12 @@ class Member(users.User):
     def app(self) -> traits.RESTAware:
         """Return the app that is bound to the user object."""
         return self.user.app
+
+    @property
+    @typing_extensions.override
+    def primary_guild(self) -> users.PrimaryGuild | None:
+        """The primary guild of the member."""
+        return self.user.primary_guild
 
     @property
     @typing_extensions.override

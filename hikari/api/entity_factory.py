@@ -1494,6 +1494,23 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_interaction_callback_response(
+        self, payload: data_binding.JSONObject
+    ) -> base_interactions.InteractionCallbackResponse:
+        """Parse a raw payload from Discord into an interaction callback response object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.interactions.base_interactions.InteractionCallbackResponse
+            The deserialized interaction callback response object.
+        """
+
+    @abc.abstractmethod
     def serialize_command_option(self, option: commands.CommandOption) -> data_binding.JSONObject:
         """Serialize a command option object to a json serializable dict.
 
@@ -1655,6 +1672,21 @@ class EntityFactory(abc.ABC):
         -------
         hikari.messages.MessageSnapshot
             The deserialized message snapshot object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_pinned_message(self, payload: data_binding.JSONObject) -> message_models.PinnedMessage:
+        """Parse a raw payload from Discord into a pinned message object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.PinnedMessage
+            The deserialized pinned message object.
         """
 
     @abc.abstractmethod

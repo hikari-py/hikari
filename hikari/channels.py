@@ -699,12 +699,12 @@ class TextableChannel(PartialChannel):
         """
         return self.app.rest.trigger_typing(self.id)
 
-    async def fetch_pins(self) -> typing.Sequence[messages_.Message]:
+    def fetch_pins(self) -> iterators.LazyIterator[messages_.PinnedMessage]:
         """Fetch the pinned messages in this text channel.
 
         Returns
         -------
-        typing.Sequence[hikari.messages.Message]
+        iterators.LazyIterator[hikari.messages.PinnedMessage]
             The pinned messages in this text channel.
 
         Raises
@@ -722,7 +722,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_pins(self.id)
+        return self.app.rest.fetch_pins(self.id)
 
     async def pin_message(self, message: snowflakes.SnowflakeishOr[messages_.PartialMessage]) -> None:
         """Pin an existing message in the text channel.
@@ -738,7 +738,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] in the channel.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -764,7 +764,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.

@@ -290,7 +290,7 @@ AllowedComponentsT = typing.TypeVar("AllowedComponentsT", bound="PartialComponen
 
 
 @attrs.define(weakref_slot=False)
-class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
+class ActionRowComponent(PartialComponent, typing.Generic[AllowedComponentsT]):
     """Represents a row of components."""
 
     components: typing.Sequence[AllowedComponentsT] = attrs.field()

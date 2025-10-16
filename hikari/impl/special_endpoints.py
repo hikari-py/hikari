@@ -64,6 +64,7 @@ __all__: typing.Sequence[str] = (
     "TextDisplayComponentBuilder",
     "TextInputBuilder",
     "TextSelectMenuBuilder",
+    "ThreadMembersIterator",
     "ThumbnailComponentBuilder",
     "TypingIndicator",
 )
@@ -395,6 +396,89 @@ class MessageIterator(iterators.BufferedLazyIterator["messages.Message"]):
 
         self._first_id = chunk[-1]["id"]
         return (self._entity_factory.deserialize_message(m) for m in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class PinnedMessageIterator(iterators.BufferedLazyIterator["messages.PinnedMessage"]):
+    """Implementation of an iterator for message history."""
+
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_has_more", "_request_call", "_route")
+
+    def __init__(
+        self,
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: _RequestCallSig,
+        channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
+        first_id: undefined.UndefinedOr[str],
+    ) -> None:
+        super().__init__()
+        self._entity_factory = entity_factory
+        self._request_call = request_call
+        self._first_id = first_id
+        self._route = routes.GET_CHANNEL_PINS.compile(channel=channel)
+        self._has_more = True
+
+    @typing_extensions.override
+    async def _next_chunk(self) -> typing.Generator[messages.PinnedMessage, typing.Any, None] | None:
+        if not self._has_more:
+            return None
+
+        query = data_binding.StringMapBuilder()
+        query.put("before", self._first_id)
+        query.put("limit", 50)
+
+        response = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(response, dict)
+
+        chunk = response["items"]
+        if not chunk:
+            self._has_more = False
+            return None
+
+        self._has_more = response["has_more"]
+
+        self._first_id = chunk[-1]["pinned_at"]
+        return (self._entity_factory.deserialize_pinned_message(m) for m in chunk)
+
+
+# We use an explicit forward reference for this, since this breaks potential
+# circular import issues (once the file has executed, using those resources is
+# not an issue for us).
+class ThreadMembersIterator(iterators.BufferedLazyIterator["channels.ThreadMember"]):
+    """Implementation of an iterator for thread members."""
+
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_last_id", "_request_call", "_route")
+
+    def __init__(
+        self,
+        entity_factory: entity_factory_.EntityFactory,
+        request_call: _RequestCallSig,
+        channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
+        last_id: undefined.UndefinedOr[snowflakes.Snowflakeish],
+    ) -> None:
+        super().__init__()
+        self._entity_factory = entity_factory
+        self._request_call = request_call
+        self._last_id = last_id
+        self._route = routes.GET_THREAD_MEMBERS.compile(channel=channel)
+
+    @typing_extensions.override
+    async def _next_chunk(self) -> typing.Generator[channels.ThreadMember, typing.Any, None] | None:
+        query = data_binding.StringMapBuilder()
+        query.put("after", self._last_id)
+        query.put("limit", 100)
+        query.put("with_member", True)
+
+        response = await self._request_call(compiled_route=self._route, query=query)
+        assert isinstance(response, list)
+
+        if not response:
+            return None
+
+        self._last_id = response[-1]["id"]
+        return (self._entity_factory.deserialize_thread_member(m) for m in response)
 
 
 # We use an explicit forward reference for this, since this breaks potential

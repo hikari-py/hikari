@@ -31,6 +31,7 @@ __all__: typing.Sequence[str] = (
     "MessageReference",
     "MessageType",
     "PartialMessage",
+    "PinnedMessage",
     "Reaction",
 )
 
@@ -548,6 +549,18 @@ class MessageSnapshot:
     def user_mentions_ids(self) -> typing.Sequence[snowflakes.Snowflake] | None:
         """Ids of the users who were notified by their mention in the message."""
         return list(self.user_mentions.keys())
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
+class PinnedMessage:
+    """The representation of a pinned message object."""
+
+    pinned_at: datetime.datetime = attrs.field(hash=False, eq=False, repr=False)
+    """The time at which the message was pinned at."""
+
+    message: Message = attrs.field(hash=False, eq=False, repr=False)
+    """The pinned message."""
 
 
 @attrs_extensions.with_copy

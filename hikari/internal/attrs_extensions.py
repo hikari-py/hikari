@@ -101,7 +101,7 @@ def generate_shallow_copier(cls: type[ModelT]) -> typing.Callable[[ModelT], Mode
         The generated shallow copying function.
     """
     # This import is delayed to avoid a circular import error on startup
-    from hikari.internal import ux
+    from hikari.internal import ux  # noqa: PLC0415
 
     kwargs, setters = get_fields_definition(cls)
     kwargs = ",".join(f"{kwarg}=m.{attribute.name}" for attribute, kwarg in kwargs)

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = ("GatewayShardImpl",)
 
+import abc
 import asyncio
 import contextlib
 import logging
@@ -60,6 +61,16 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_factory as event_factory_
     from hikari.api import event_manager as event_manager_
     from hikari.impl import config
+
+if sys.version_info >= (3, 14):
+    _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
+else:
+    try:
+        import zstandard  # noqa: F401
+    except ModuleNotFoundError:
+        _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM
+    else:
+        _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 
 # Important attributes
 _D: typing.Final[str] = sys.intern("d")
@@ -120,8 +131,7 @@ def _log_filterer(token: bytes) -> typing.Callable[[bytes], bytes]:
     return filterer
 
 
-@typing.final
-class _GatewayTransport:
+class _GatewayTransport(abc.ABC):
     """Internal component to handle lower-level communication logic.
 
     This includes translating aiohttp error conditions to hikari ones,
@@ -131,23 +141,12 @@ class _GatewayTransport:
     Payload logging is also performed here.
     """
 
-    __slots__ = (
-        "_dumps",
-        "_exit_stack",
-        "_loads",
-        "_log_filterer",
-        "_logger",
-        "_receive_and_check",
-        "_sent_close",
-        "_ws",
-        "_zlib",
-    )
+    __slots__ = ("_dumps", "_exit_stack", "_loads", "_log_filterer", "_logger", "_sent_close", "_ws")
 
     def __init__(
         self,
         *,
         ws: aiohttp.ClientWebSocketResponse,
-        transport_compression: bool,
         exit_stack: contextlib.AsyncExitStack,
         logger: logging.Logger,
         log_filterer: typing.Callable[[bytes], bytes],
@@ -159,14 +158,8 @@ class _GatewayTransport:
         self._exit_stack = exit_stack
         self._sent_close = False
         self._ws = ws
-        self._zlib = zlib.decompressobj()
         self._loads = loads
         self._dumps = dumps
-
-        if transport_compression:
-            self._receive_and_check = self._receive_and_check_zlib
-        else:
-            self._receive_and_check = self._receive_and_check_text
 
     async def send_close(self, *, code: int, message: bytes) -> None:
         if self._sent_close:
@@ -235,40 +228,8 @@ class _GatewayTransport:
         reason = f"{message.data!r} [extra={message.extra!r}, type={message.type}]"
         raise errors.GatewayTransportError(reason) from self._ws.exception()
 
-    async def _receive_and_check_text(self) -> bytes:
-        message = await self._ws.receive()
-
-        if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data.encode()
-
-        self._handle_other_message(message)  # noqa: RET503 - Missing `return None`
-
-    async def _receive_and_check_zlib(self) -> bytes:
-        message = await self._ws.receive()
-
-        if message.type == aiohttp.WSMsgType.BINARY:
-            if message.data.endswith(_ZLIB_SYNC_FLUSH):
-                # Hot and fast path: we already have the full message
-                # in a single frame
-                return self._zlib.decompress(message.data)
-
-            # Cold and slow path: we need to keep receiving frames to complete
-            # the whole message. Only then do we create a buffer
-            buff = bytearray(message.data)
-
-            while not buff.endswith(_ZLIB_SYNC_FLUSH):
-                message = await self._ws.receive()
-
-                if message.type == aiohttp.WSMsgType.BINARY:
-                    buff.extend(message.data)
-                    continue
-
-                self._handle_other_message(message)
-
-            return self._zlib.decompress(buff)
-
-        self._handle_other_message(message)  # noqa: RET503 - Missing `return None`
+    @abc.abstractmethod
+    async def _receive_and_check(self) -> bytes: ...
 
     @classmethod
     async def connect(
@@ -280,7 +241,7 @@ class _GatewayTransport:
         log_filterer: typing.Callable[[bytes], bytes],
         dumps: data_binding.JSONEncoder,
         loads: data_binding.JSONDecoder,
-        transport_compression: bool,
+        compression: shard.GatewayCompression | None,
         url: str,
     ) -> _GatewayTransport:
         """Generate a single-use websocket connection.
@@ -314,9 +275,18 @@ class _GatewayTransport:
                     )
                 )
 
-                return cls(
+                transport_cls: type[_GatewayTransport]
+                if compression == shard.GatewayCompression.TRANSPORT_ZSTD_STREAM:
+                    transport_cls = _GatewayZstdStreamTransport
+                elif compression == shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
+                    transport_cls = _GatewayZlibStreamTransport
+                elif compression == shard.GatewayCompression.PAYLOAD_ZLIB_STREAM:
+                    transport_cls = _GatewayZlibMessageTransport
+                else:
+                    transport_cls = _GatewayBasicTransport
+
+                return transport_cls(
                     ws=web_socket,
-                    transport_compression=transport_compression,
                     exit_stack=exit_stack,
                     logger=logger,
                     log_filterer=log_filterer,
@@ -347,6 +317,105 @@ class _GatewayTransport:
             await asyncio.sleep(0.25)
 
             raise
+
+
+class _GatewayZlibStreamTransport(_GatewayTransport):
+    __slots__ = ("_inflator",)
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
+        super().__init__(*args, **kwargs)
+        self._inflator = zlib.decompressobj()
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
+        message = await self._ws.receive()
+
+        if message.type == aiohttp.WSMsgType.BINARY:
+            assert isinstance(message.data, bytes)
+            if message.data.endswith(_ZLIB_SYNC_FLUSH):
+                # Hot and fast path: we already have the full message
+                # in a single frame
+                return self._inflator.decompress(message.data)
+
+            # Cold and slow path: we need to keep receiving frames to complete
+            # the whole message. Only then do we create a buffer
+            buff = bytearray(message.data)
+
+            while not buff.endswith(_ZLIB_SYNC_FLUSH):
+                message = await self._ws.receive()
+
+                if message.type == aiohttp.WSMsgType.BINARY:
+                    assert isinstance(message.data, bytes)
+                    buff.extend(message.data)
+                    continue
+
+                self._handle_other_message(message)
+
+            return self._inflator.decompress(buff)
+
+        self._handle_other_message(message)
+
+
+class _GatewayZstdStreamTransport(_GatewayTransport):
+    __slots__ = ("_inflator",)
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
+        super().__init__(*args, **kwargs)
+
+        try:
+            import zstandard  # noqa: PLC0415
+
+            self._inflator = zstandard.ZstdDecompressor().decompressobj()
+        except ModuleNotFoundError as exc:
+            if sys.version_info >= (3, 14):
+                from compression import zstd  # noqa: PLC0415
+
+                self._inflator = zstd.ZstdDecompressor()
+                return
+
+            msg = "You must install the optional `hikari[zstd]` dependencies to use the zstd stream compression."
+            raise RuntimeError(msg) from exc
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
+        message = await self._ws.receive()
+
+        if message.type == aiohttp.WSMsgType.BINARY:
+            assert isinstance(message.data, bytes)
+            return self._inflator.decompress(message.data)
+
+        self._handle_other_message(message)
+
+
+class _GatewayZlibMessageTransport(_GatewayTransport):
+    __slots__ = ()
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
+        message = await self._ws.receive()
+
+        if message.type == aiohttp.WSMsgType.BINARY:
+            assert isinstance(message.data, bytes)
+            return zlib.decompress(message.data)
+        if message.type == aiohttp.WSMsgType.TEXT:
+            assert isinstance(message.data, str)
+            return message.data.encode()
+
+        self._handle_other_message(message)
+
+
+class _GatewayBasicTransport(_GatewayTransport):
+    __slots__ = ()
+
+    @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
+    async def _receive_and_check(self) -> bytes:
+        message = await self._ws.receive()
+
+        if message.type == aiohttp.WSMsgType.TEXT:
+            assert isinstance(message.data, str)
+            return message.data.encode()
+
+        self._handle_other_message(message)
 
 
 def _serialize_datetime(dt: datetime.datetime | None) -> int | None:
@@ -433,6 +502,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
+        "_compression",
         "_dumps",
         "_event_factory",
         "_event_manager",
@@ -460,7 +530,6 @@ class GatewayShardImpl(shard.GatewayShard):
         "_status",
         "_token",
         "_total_rate_limit",
-        "_transport_compression",
         "_user_id",
         "_ws",
     )
@@ -468,7 +537,7 @@ class GatewayShardImpl(shard.GatewayShard):
     def __init__(
         self,
         *,
-        compression: str | None = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM,
+        compression: shard.GatewayCompression | None = _DEFAULT_COMPRESS_TYPE,
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         initial_activity: presences.Activity | None = None,
@@ -489,10 +558,6 @@ class GatewayShardImpl(shard.GatewayShard):
     ) -> None:
         if data_format != shard.GatewayDataFormat.JSON:
             msg = f"Unsupported gateway data format: {data_format}"
-            raise NotImplementedError(msg)
-
-        if compression and compression != shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
-            msg = f"Unsupported compression format {compression}"
             raise NotImplementedError(msg)
 
         self._activity = initial_activity
@@ -525,7 +590,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self._total_rate_limit = rate_limits.WindowedBurstRateLimiter(
             f"shard {shard_id} total rate limit", *_TOTAL_RATELIMIT
         )
-        self._transport_compression = compression is not None
+        self._compression = compression
         self._dumps = dumps
         self._loads = loads
         self._user_id: snowflakes.Snowflake | None = None
@@ -824,8 +889,10 @@ class GatewayShardImpl(shard.GatewayShard):
         query["v"] = str(urls.VERSION)
         query["encoding"] = "json"
 
-        if self._transport_compression:
+        if self._compression == shard.GatewayCompression.TRANSPORT_ZLIB_STREAM:
             query["compress"] = "zlib-stream"
+        elif self._compression == shard.GatewayCompression.TRANSPORT_ZSTD_STREAM:
+            query["compress"] = "zstd-stream"
 
         url = urllib.parse.urlunparse(
             (url_parts.scheme, url_parts.netloc, url_parts.path, url_parts.params, urllib.parse.urlencode(query), "")
@@ -836,7 +903,7 @@ class GatewayShardImpl(shard.GatewayShard):
             log_filterer=_log_filterer(self._token.encode()),
             logger=self._logger,
             proxy_settings=self._proxy_settings,
-            transport_compression=self._transport_compression,
+            compression=self._compression,
             loads=self._loads,
             dumps=self._dumps,
             url=url,
@@ -886,7 +953,7 @@ class GatewayShardImpl(shard.GatewayShard):
                     _OP: _IDENTIFY,
                     _D: {
                         "token": self._token,
-                        "compress": False,
+                        "compress": self._compression == shard.GatewayCompression.PAYLOAD_ZLIB_STREAM,
                         "large_threshold": self._large_threshold,
                         "properties": {
                             "os": f"{platform.system()} {platform.architecture()[0]}",

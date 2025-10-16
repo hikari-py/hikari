@@ -30,7 +30,7 @@ pattern = '__version__: typing\.Final\[str\] = \"(?P<version>[^\"]+)\"'
 dynamic = ["version"]
 name = "hikari"
 description = "A sane Discord API for Python 3 built on asyncio and good intentions"
-requires-python = ">=3.9.0,<3.14"
+requires-python = ">=3.9.0,<3.15"
 dependencies = [
     "aiohttp~=3.12",
     "attrs~=25.1",
@@ -59,6 +59,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Communications :: Chat",
     "Topic :: Internet :: WWW/HTTP",
@@ -66,8 +67,9 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-speedups = ["aiohttp[speedups]~=3.11", "ciso8601~=2.3", "orjson~=3.10"]
-server = ["pynacl~=1.5"]
+speedups = ["aiohttp[speedups]", "hikari[zstd]", "ciso8601~=2.3", "orjson~=3.11"]
+server = ["pynacl~=1.6"]
+zstd = ["zstandard~=0.25"]
 
 [project.urls]
 "Documentation" = "https://docs.hikari-py.dev/en/stable"
@@ -77,44 +79,44 @@ server = ["pynacl~=1.5"]
 "CI" = "https://github.com/hikari-py/hikari/actions"
 
 [dependency-groups]
-nox = ["nox[uv]==2025.5.1"]
+nox = ["nox[uv]==2025.10.14"]
 
 audit = ["uv-secure"]
 codespell = ["codespell==2.4.1"]
-coverage = ["coverage[toml]==7.10.0"]
+coverage = ["coverage[toml]==7.10.7"]
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
-    "mkdocs-material==9.6.16",
+    "mkdocs-material==9.6.22",
     # Docstring parsing for API reference
-    "mkdocstrings[python]==0.30.0",
-    "griffe-inherited-docstrings==1.1.1",
+    "mkdocstrings[python]==0.30.1",
+    "griffe-inherited-docstrings==1.1.2",
     # Generate API reference pages dynamically
     "mkdocs-gen-files==0.5.0",
     "mkdocs-literate-nav==0.6.2",
     # Minify
     "mkdocs-minify-plugin==0.8.0",
     # Towncrier draft changelogs
-    "mkdocs-towncrier==0.1.4",
+    "mkdocs-towncrier==0.1.5",
     # Image viewer ext
     # "mkdocs-glightbox==0.3.7",
 ]
 
-mypy = ["mypy[faster-cache]==1.17.0", { include-group = "types" }]
-pyright = ["pyright==1.1.403", { include-group = "types" }]
+mypy = ["mypy[faster-cache]==1.18.2", { include-group = "types" }]
+pyright = ["pyright==1.1.406", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
-    "pytest==8.4.1",
-    "pytest-asyncio==1.1.0",
-    "pytest-cov==6.2.1",
-    "pytest-randomly==3.16.0",
+    "pytest==8.4.2",
+    "pytest-asyncio==1.2.0",
+    "pytest-cov==7.0.0",
+    "pytest-randomly==4.0.1",
     "async-timeout==5.0.1",
     { include-group = "coverage" },
 ]
-release = ["twine==6.1.0"]
-ruff = ["ruff==0.11.13"]
+release = ["twine==6.2.0"]
+ruff = ["ruff==0.14.0"]
 slotscheck = ["slotscheck==0.19.1"]
-towncrier = ["towncrier==24.8.0"]
+towncrier = ["towncrier==25.8.0"]
 types = [
     # examples/voice_message/*
     "pydub-stubs~=0.25.1.5"
@@ -122,7 +124,7 @@ types = [
 
 
 [tool.uv]
-required-version = "~=0.7"
+required-version = "~=0.8"
 
 [tool.coverage.run]
 relative_files = true
@@ -179,7 +181,6 @@ reportUntypedFunctionDecorator = "warning"
 reportOptionalMemberAccess = "warning"
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
 xfail_strict = true
 norecursedirs = [
     "docs",
@@ -199,7 +200,11 @@ filterwarnings = [
     "ignore:.*assertions not in test modules or plugins will be ignored .*:pytest.PytestConfigWarning",
 ]
 required_plugins = ["pytest-asyncio"]
+
 asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+asyncio_debug = true
+asyncio_mode = "strict"
 
 [tool.towncrier]
 package = "hikari"
