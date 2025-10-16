@@ -601,6 +601,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ] = {
             component_models.ComponentType.TEXT_INPUT: self._deserialize_text_input,
             component_models.ComponentType.TEXT_SELECT_MENU: self._deserialize_text_select_menu,
+            component_models.ComponentType.USER_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_channel_select_menu,
+            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_select_menu,
+            component_models.ComponentType.FILE_UPLOAD: self._deserialize_file_upload_component,
         }
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
@@ -3513,16 +3518,22 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_label_component(self, payload: data_binding.JSONObject) -> component_models.LabelComponent:
-        component_deserializer = self._label_component_type_mapping[
-            payload["component"]["type"]
-        ]  # FIXME: Should this error out or is this fine?
+        component_deserializer = self._label_component_type_mapping[payload["component"]["type"]]
 
         return component_models.LabelComponent(
-            type=component_models.ComponentType.CONTAINER,
+            type=component_models.ComponentType.LABEL,
             id=payload.get("id", None),
-            label=payload["label"],
-            description=payload.get("description", None),
             component=component_deserializer(payload["component"]),
+        )
+
+    def _deserialize_file_upload_component(
+        self, payload: data_binding.JSONObject
+    ) -> component_models.FileUploadComponent:
+        return component_models.FileUploadComponent(
+            type=component_models.ComponentType.FILE_UPLOAD,
+            id=payload.get("id", None),
+            custom_id=payload["custom_id"],
+            values=[snowflakes.Snowflake(value) for value in payload["values"]],
         )
 
     ##################
