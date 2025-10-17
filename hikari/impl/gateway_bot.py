@@ -304,6 +304,7 @@ class GatewayBot(traits.GatewayBotAware):
         "_rest",
         "_shards",
         "_token",
+        "_token_id",
         "_voice",
         "shards",
     )
@@ -342,6 +343,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._intents = intents
         self._proxy_settings = proxy_settings if proxy_settings is not None else config_impl.ProxySettings()
         self._token = token.strip()
+        self._token_id = applications.get_token_id(self._token)
         self._dumps = dumps
         self._loads = loads
 
@@ -387,6 +389,10 @@ class GatewayBot(traits.GatewayBotAware):
         # HTTP requests to determine what to put in this mapping.
         self._shards: dict[int, gateway_shard.GatewayShard] = {}
         self.shards = types.MappingProxyType(self._shards)
+
+    @property
+    def token_id(self) -> snowflakes.Snowflake:
+        return self._token_id
 
     @property
     @typing_extensions.override
