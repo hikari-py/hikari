@@ -27,6 +27,7 @@ import sys
 import typing
 import warnings
 import weakref
+import inspect
 
 import mock
 import pytest
@@ -39,7 +40,6 @@ from hikari.events import base_events
 from hikari.events import member_events
 from hikari.events import shard_events
 from hikari.impl import event_manager_base
-from hikari.internal import reflect
 from tests.hikari import hikari_test_helpers
 
 
@@ -783,32 +783,20 @@ class TestEventManagerBase:
             async def test(event): ...
 
     def test_listen_when_param_provided_in_decorator(self, event_manager):
-        stack = contextlib.ExitStack()
-
-        subscribe = stack.enter_context(mock.patch.object(event_manager_base.EventManagerBase, "subscribe"))
-        resolve_signature = stack.enter_context(mock.patch.object(reflect, "resolve_signature"))
-
-        with stack:
+        with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 
             @event_manager.listen(member_events.MemberCreateEvent)
             async def test(event): ...
 
-        resolve_signature.assert_not_called()
         subscribe.assert_called_once_with(member_events.MemberCreateEvent, test, _nested=1)
 
     def test_listen_when_multiple_params_provided_in_decorator(self, event_manager):
-        stack = contextlib.ExitStack()
-
-        subscribe = stack.enter_context(mock.patch.object(event_manager_base.EventManagerBase, "subscribe"))
-        resolve_signature = stack.enter_context(mock.patch.object(reflect, "resolve_signature"))
-
-        with stack:
+        with mock.patch.object(event_manager_base.EventManagerBase, "subscribe") as subscribe:
 
             @event_manager.listen(member_events.MemberCreateEvent, member_events.MemberDeleteEvent)
             async def test(event): ...
 
         assert subscribe.call_count == 2
-        resolve_signature.assert_not_called()
         subscribe.assert_has_calls(
             [
                 mock.call(member_events.MemberCreateEvent, test, _nested=1),

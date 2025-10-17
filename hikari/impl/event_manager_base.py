@@ -42,7 +42,6 @@ from hikari.api import event_manager as event_manager_
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import fast_protocol
-from hikari.internal import reflect
 from hikari.internal import typing_extensions
 from hikari.internal import ux
 
@@ -516,7 +515,7 @@ class EventManagerBase(event_manager_.EventManager):
                 resolved_types = event_types
 
             else:
-                signature = reflect.resolve_signature(callback)
+                signature = inspect.signature(callback, eval_str=True)
                 params = signature.parameters.values()
                 _assert_is_listener(iter(params))
                 event_param = next(iter(params))
