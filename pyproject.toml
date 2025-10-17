@@ -79,7 +79,7 @@ zstd = ["zstandard~=0.25"]
 "CI" = "https://github.com/hikari-py/hikari/actions"
 
 [dependency-groups]
-nox = ["nox[uv]==2025.10.14"]
+nox = ["nox[uv]==2025.10.16"]
 
 audit = ["uv-secure"]
 codespell = ["codespell==2.4.1"]
