@@ -66,7 +66,7 @@ if sys.version_info >= (3, 14):
     _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 else:
     try:
-        import zstandard  # noqa: F401
+        import backports.zstd  # noqa: F401
     except ModuleNotFoundError:
         _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM
     else:
@@ -362,19 +362,16 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
 
-        try:
-            import zstandard  # noqa: PLC0415
+        if sys.version_info >= (3, 14):
+            from compression import zstd  # noqa: PLC0415
+        else:
+            try:
+                from backports import zstd  # noqa: PLC0415
+            except ModuleNotFoundError as exc:
+                msg = "You must install the optional `hikari[zstd]` dependencies to use the zstd stream compression."
+                raise RuntimeError(msg) from exc
 
-            self._inflator = zstandard.ZstdDecompressor().decompressobj()
-        except ModuleNotFoundError as exc:
-            if sys.version_info >= (3, 14):
-                from compression import zstd  # noqa: PLC0415
-
-                self._inflator = zstd.ZstdDecompressor()
-                return
-
-            msg = "You must install the optional `hikari[zstd]` dependencies to use the zstd stream compression."
-            raise RuntimeError(msg) from exc
+        self._inflator = zstd.ZstdDecompressor()
 
     @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
     async def _receive_and_check(self) -> bytes:
