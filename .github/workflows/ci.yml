@@ -201,7 +201,7 @@ jobs:
         uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
         with:
           # NOTE: This should be kept up to date with .readthedocs.yaml
-          python-version: 3.14
+          python-version: 3.13
           activate-environment: true
 
       - name: Build documentation
