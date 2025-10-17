@@ -55,8 +55,7 @@ def resolve_signature(func: typing.Callable[..., typing.Any]) -> inspect.Signatu
         A [`inspect.Signature`][] object with all forward reference annotations
         resolved.
     """
-    if sys.version_info >= (3, 10):
-        return inspect.signature(func, eval_str=True)
+    return inspect.signature(func, eval_str=True)
 
     signature = inspect.signature(func)
     resolved_typehints = typing.get_type_hints(func)

@@ -784,10 +784,10 @@ class BufferedLazyIterator(LazyIterator[ValueT], abc.ABC, typing.Generic[ValueT]
     __slots__: typing.Sequence[str] = ("_buffer",)
 
     def __init__(self) -> None:
-        self._buffer: typing.Generator[ValueT, None, None] | None = (_ for _ in ())
+        self._buffer: typing.Generator[ValueT] | None = (_ for _ in ())
 
     @abc.abstractmethod
-    async def _next_chunk(self) -> typing.Generator[ValueT, None, None] | None: ...
+    async def _next_chunk(self) -> typing.Generator[ValueT] | None: ...
 
     @typing_extensions.override  # noqa: RET503 - Missing explicit return (ruff doesn't know about typing.NoReturn)
     async def __anext__(self) -> ValueT:

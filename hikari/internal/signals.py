@@ -78,7 +78,7 @@ def _interrupt_handler(loop: asyncio.AbstractEventLoop) -> _SignalHandlerT:
 @contextlib.contextmanager
 def handle_interrupts(
     loop: asyncio.AbstractEventLoop, *, propagate_interrupts: bool, enabled: bool | None
-) -> typing.Generator[None, None, None]:
+) -> typing.Generator[None]:
     """Context manager which cleanly exits on signal interrupts.
 
     Parameters

@@ -66,12 +66,7 @@ if typing.TYPE_CHECKING:
     _UnboundMethodT = typing.Callable[[_EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject], None]
 
 
-if sys.version_info >= (3, 10):
-    # We can use types.UnionType on 3.10+
-    _UNIONS = frozenset((typing.Union, types.UnionType))
-else:
-    _UNIONS = frozenset((typing.Union,))
-
+_UNIONS = frozenset((typing.Union, types.UnionType))
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
 
 

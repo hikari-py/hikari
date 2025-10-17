@@ -173,7 +173,7 @@ class _FilePayload(aiohttp.Payload):
                 await writer.write(chunk)
 
 
-async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.Any, None]) -> None:
+async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.Any]) -> None:
     try:
         await generator.__anext__()
 
