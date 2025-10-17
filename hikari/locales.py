@@ -51,6 +51,9 @@ class Locale(str, enums.Enum):
     ES_ES = "es-ES"
     """Spanish."""
 
+    ES_LATAM = "es-419"
+    """Spanish, LATAM."""
+
     FR = "fr"
     """French."""
 
