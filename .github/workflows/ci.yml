@@ -120,7 +120,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
         with:
-          python-version: 3.10
+          python-version: "3.10"
           activate-environment: true
 
       - name: Install nox
