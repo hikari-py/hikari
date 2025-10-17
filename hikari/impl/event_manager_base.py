@@ -28,7 +28,6 @@ import asyncio
 import inspect
 import itertools
 import logging
-import sys
 import types
 import typing
 import warnings

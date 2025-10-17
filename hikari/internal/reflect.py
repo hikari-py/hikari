@@ -26,7 +26,6 @@ __all__: typing.Sequence[str] = ("resolve_signature",)
 
 import functools
 import inspect
-import sys
 import typing
 
 if typing.TYPE_CHECKING:
