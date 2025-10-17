@@ -404,6 +404,18 @@ class ShardAware(
             When the shard is not connected so it cannot be interacted with.
         """
 
+    @abc.abstractmethod
+    async def request_soundboard_sounds(
+        self, guilds: typing.Sequence[snowflakes.SnowflakeishOr[guilds.PartialGuild]], /
+    ) -> None:
+        """Request for soundboard sounds.
+
+        Parameters
+        ----------
+        guilds
+            The guilds to request sounds for.
+        """
+
 
 @typing.runtime_checkable
 class InteractionServerAware(RESTAware, EntityFactoryAware, fast_protocol.FastProtocolChecking, typing.Protocol):

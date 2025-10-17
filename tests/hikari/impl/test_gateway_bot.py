@@ -925,6 +925,18 @@ class TestGatewayBot:
         )
 
     @pytest.mark.asyncio
+    async def test_request_soundboard_sounds(self, bot: bot_impl.GatewayBot):
+        shard = mock.Mock()
+        shard.request_soundboard_sounds = mock.AsyncMock()
+
+        with mock.patch.object(bot_impl.GatewayBot, "shards", [shard]):
+            with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
+                await bot.request_soundboard_sounds([123, 456, 789])
+
+        check_if_alive.assert_called_once_with()
+        shard.request_soundboard_sounds.assert_awaited_once_with([123, 456, 789])
+
+    @pytest.mark.asyncio
     async def test_start_one_shard(self, bot):
         activity = object()
         status = object()
