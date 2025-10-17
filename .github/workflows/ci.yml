@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.9, "3.10", 3.11, 3.12, 3.13.5, 3.14.0rc3]
+        python-version: ["3.10", 3.11, 3.12, 3.13, 3.14]
 
     runs-on: ${{ matrix.os }}
 
@@ -74,7 +74,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
         with:
-          python-version: "3.10"
+          python-version: 3.14
           activate-environment: true
 
       - name: Download coverage
@@ -181,7 +181,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
         with:
-          python-version: 3.9
+          python-version: 3.14
           activate-environment: true
 
       - name: Test twemoji mapping
@@ -201,7 +201,7 @@ jobs:
         uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
         with:
           # NOTE: This should be kept up to date with .readthedocs.yaml
-          python-version: 3.11
+          python-version: 3.13
           activate-environment: true
 
       - name: Build documentation

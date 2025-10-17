@@ -22,7 +22,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
         with:
-          python-version: 3.9
+          python-version: 3.14
           activate-environment: true
 
       - name: Check if changelog fragment was added
