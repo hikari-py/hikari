@@ -367,7 +367,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
         else:
             try:
                 from backports import zstd  # noqa: PLC0415
-            except ModuleNotFoundError as exc:
+            except (ModuleNotFoundError, ImportError) as exc:
                 msg = "You must install the optional `hikari[zstd]` dependencies to use the zstd stream compression."
                 raise RuntimeError(msg) from exc
 
