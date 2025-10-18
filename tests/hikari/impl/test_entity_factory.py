@@ -3252,18 +3252,49 @@ class TestEntityFactoryImpl:
     ################
 
     @pytest.fixture
-    def guild_embed_payload(self):
+    def guild_widget_settings_payload(self):
         return {"channel_id": "123123123", "enabled": True}
 
-    def test_deserialize_widget_embed(self, entity_factory_impl, mock_app, guild_embed_payload):
-        guild_embed = entity_factory_impl.deserialize_guild_widget(guild_embed_payload)
-        assert guild_embed.app is mock_app
-        assert guild_embed.channel_id == 123123123
-        assert guild_embed.is_enabled is True
-        assert isinstance(guild_embed, guild_models.GuildWidget)
+    def test_deserialize_widget_settings(self, entity_factory_impl, mock_app, guild_widget_settings_payload):
+        widget_settings = entity_factory_impl.deserialize_guild_widget_settings(guild_widget_settings_payload)
+        assert widget_settings.app is mock_app
+        assert widget_settings.channel_id == 123123123
+        assert widget_settings.is_enabled is True
+        assert isinstance(widget_settings, guild_models.GuildWidgetSettings)
 
-    def test_deserialize_guild_embed_with_null_fields(self, entity_factory_impl, mock_app):
-        assert entity_factory_impl.deserialize_guild_widget({"channel_id": None, "enabled": True}).channel_id is None
+    def test_deserialize_widget_settings_with_null_fields(self, entity_factory_impl, mock_app):
+        assert (
+            entity_factory_impl.deserialize_guild_widget_settings({"channel_id": None, "enabled": True}).channel_id
+            is None
+        )
+
+    @pytest.fixture
+    def guild_widget_payload(self, member_payload):
+        return {
+            "id": "123",
+            "name": "Hikari",
+            "instant_invite": "hikari",
+            "channels": [
+                {"id": "111", "name": "Some stupid voice channel", "position": 2},
+                {"id": "222", "name": "yeah there is too many of these things", "position": 1},
+            ],
+            "members": [member_payload],
+            "presence_count": 1,
+        }
+
+    def test_deserialize_widget(self, entity_factory_impl, guild_widget_payload):
+        widget = entity_factory_impl.deserialize_guild_widget(guild_widget_payload)
+        assert widget.id == snowflakes.Snowflake(123)
+        assert widget.name == "Hikari"
+        assert widget.instant_invite == "hikari"
+        assert widget.channels == []
+        assert widget.members == []
+        assert widget.presence_count == 1
+        assert isinstance(widget, guild_models.GuildWidget)
+
+    def test_deserialize_widget_with_null_fields(self, entity_factory_impl, guild_widget_payload):
+        guild_widget_payload["instant_invite"] = None
+        assert entity_factory_impl.deserialize_guild_widget(guild_widget_payload).instant_invite is None
 
     @pytest.fixture
     def guild_welcome_screen_payload(self):
