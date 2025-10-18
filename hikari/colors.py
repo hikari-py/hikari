@@ -22,13 +22,18 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Color", "Colorish")
+__all__: typing.Sequence[str] = ("Color", "ColorGradient", "Colorish")
 
 import re
 import string
 import typing
 
+import attrs
+
 from hikari.internal import typing_extensions
+
+if typing.TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 def _to_rgb_int(value: str, name: str) -> int:
@@ -585,3 +590,79 @@ following examples means the same thing semantically.
 
 Web-safe colours are three hex-digits wide, `XYZ` becomes `XXYYZZ` in full-form.
 """
+
+
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ColorGradient:
+    """Represents a role colors object."""
+
+    _primary_color: Colorish = attrs.field(hash=True, repr=True, alias="primary_color")
+    _secondary_color: Colorish | None = attrs.field(hash=True, repr=True, alias="secondary_color", default=None)
+    _tertiary_color: Colorish | None = attrs.field(hash=True, repr=True, alias="tertiary_color", default=None)
+
+    @property
+    def primary_color(self) -> Color:
+        """The primary color of the role."""
+        return Color.of(self._primary_color)
+
+    def set_primary_color(self, primary_color: Colorish) -> Self:
+        """Set the primary color of the role.
+
+        Parameters
+        ----------
+        primary_color
+            The new color to set
+
+        Returns
+        -------
+        RoleColors
+            The role colors obj.
+        """
+        self._primary_color = primary_color
+        return self
+
+    @property
+    def secondary_color(self) -> Color | None:
+        """The secondary color of the role."""
+        if self._secondary_color is None:
+            return None
+        return Color.of(self._secondary_color)
+
+    def set_secondary_color(self, secondary_color: Colorish | None) -> Self:
+        """Set the secondary color of the role.
+
+        Parameters
+        ----------
+        secondary_color
+            The new color to set
+
+        Returns
+        -------
+        RoleColors
+            The role colors obj.
+        """
+        self._secondary_color = secondary_color
+        return self
+
+    @property
+    def tertiary_color(self) -> Color | None:
+        """The tertiary color of the role."""
+        if self._secondary_color is None:
+            return None
+        return Color.of(self._secondary_color)
+
+    def set_tertiary_color(self, tertiary_color: Colorish | None) -> Self:
+        """Set the secondary color of the role.
+
+        Parameters
+        ----------
+        tertiary_color
+            The new color to set
+
+        Returns
+        -------
+        RoleColors
+            The role colors obj.
+        """
+        self._tertiary_color = tertiary_color
+        return self
