@@ -6650,6 +6650,38 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_role_member_counts(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> typing.Mapping[snowflakes.Snowflake, int]:
+        """Fetch role member counts.
+
+        Fetch the member counts for each role.
+
+        Parameters
+        ----------
+        guild
+            The guild to fetch the roles from. This may be the
+            object or the ID of an existing guild.
+
+        Returns
+        -------
+        typing.Mapping[hikari.snowflakes.Snowflake, int]
+            A mapping of role ID's to their member count.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def estimate_guild_prune_count(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
