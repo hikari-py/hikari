@@ -1,3 +1,22 @@
+## 2.5.0 (2025-10-30)
+
+### Breaking Changes
+
+- Drop Python 3.9 support ([#2576](https://github.com/hikari-py/hikari/issues/2576))
+
+### Features
+
+- Add preliminary support for Python 3.14 ([#2220](https://github.com/hikari-py/hikari/issues/2220))
+- Add various new compression support:
+    - ZSTD transport compression support (needs hikari to be installed with either `[speedups]` or `[zstd]`)
+    - ZLIB payload compression support ([#2545](https://github.com/hikari-py/hikari/issues/2545))
+- Add new edit own member arguments. ([#2551](https://github.com/hikari-py/hikari/issues/2551))
+- Slightly optimize buckets ratelimiting logic ([#2556](https://github.com/hikari-py/hikari/issues/2556))
+- Add pagination support for `fetch_thread_members` ([#2564](https://github.com/hikari-py/hikari/issues/2564))
+- Add `token_id` field to `hikari.GatewayBot` ([#2572](https://github.com/hikari-py/hikari/issues/2572))
+- Add LATAM Spanish locale ([#2577](https://github.com/hikari-py/hikari/issues/2577))
+
+---
 ## 2.4.1 (2025-09-08)
 
 ### Bugfixes
