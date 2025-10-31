@@ -73,18 +73,11 @@ class TestPartialApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(ext="JPEG") == "file"
+            assert model.make_icon_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="ahashicon", size=4096, file_format="JPEG", lossless=True
         )
-
-    def test_icon_url_property(self, model):
-        model.make_icon_url = mock.Mock(return_value="url")
-
-        assert model.icon_url == "url"
-
-        model.make_icon_url.assert_called_once_with()
 
     def test_make_icon_url_when_hash_is_None(self, model):
         model.icon_hash = None
@@ -161,17 +154,11 @@ class TestRole:
         with mock.patch.object(
             routes, "CDN_ROLE_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(ext="JPEG") == "file"
+            assert model.make_icon_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, role_id=979899100, hash="icon_hash", size=4096, file_format="JPEG", lossless=True
         )
-
-    def test_icon_url_property(self, model):
-        with mock.patch.object(guilds.Role, "make_icon_url") as make_icon_url:
-            assert model.icon_url == make_icon_url.return_value
-
-            model.make_icon_url.assert_called_once_with()
 
     def test_mention_property(self, model):
         assert model.mention == "<@&979899100>"
@@ -293,9 +280,6 @@ class TestMember:
         model.guild_avatar_decoration = None
         assert model.display_avatar_decoration is model.user.display_avatar_decoration
 
-    def test_avatar_url_property(self, model):
-        assert model.avatar_url is model.user.make_avatar_url()
-
     def test_display_avatar_url_when_guild_hash_is_None(self, model):
         with mock.patch.object(guilds.Member, "make_guild_avatar_url") as mock_make_guild_avatar_url:
             assert model.display_avatar_url is mock_make_guild_avatar_url.return_value
@@ -315,19 +299,8 @@ class TestMember:
     def test_banner_hash_property(self, model):
         assert model.banner_hash is model.user.banner_hash
 
-    def test_banner_url_property(self, model):
-        assert model.banner_url is model.user.make_banner_url()
-
     def test_accent_color_property(self, model):
         assert model.accent_color is model.user.accent_color
-
-    def test_guild_avatar_url_property(self, model):
-        with mock.patch.object(guilds.Member, "make_guild_avatar_url") as make_guild_avatar_url:
-            assert model.guild_avatar_url is make_guild_avatar_url.return_value
-
-    def test_guild_banner_url_property(self, model):
-        with mock.patch.object(guilds.Member, "make_guild_banner_url") as make_guild_banner_url:
-            assert model.guild_banner_url is make_guild_banner_url.return_value
 
     def test_communication_disabled_until(self, model):
         model.raw_communication_disabled_until = datetime.datetime(2021, 11, 22)
@@ -351,7 +324,7 @@ class TestMember:
         with mock.patch.object(
             routes, "CDN_MEMBER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_guild_avatar_url(ext="JPEG") == "file"
+            assert model.make_guild_avatar_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, guild_id=456, user_id=123, hash="dab", size=4096, file_format="JPEG", lossless=True
@@ -360,9 +333,7 @@ class TestMember:
     def test_make_avatar_url(self, model):
         result = model.make_avatar_url(file_format="PNG", size=4096)
 
-        model.user.make_avatar_url.assert_called_once_with(
-            file_format="PNG", size=4096, lossless=True, ext=undefined.UNDEFINED
-        )
+        model.user.make_avatar_url.assert_called_once_with(file_format="PNG", size=4096, lossless=True)
         assert result is model.user.make_avatar_url.return_value
 
     def test_make_guild_avatar_url_when_no_hash(self, model):
@@ -427,7 +398,7 @@ class TestMember:
         with mock.patch.object(
             routes, "CDN_MEMBER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_guild_banner_url(ext="JPEG") == "file"
+            assert model.make_guild_banner_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL,
@@ -701,17 +672,11 @@ class TestPartialGuild:
         with mock.patch.object(
             routes, "CDN_GUILD_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(ext="JPEG") == "file"
+            assert model.make_icon_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, guild_id=90210, hash="yeet", size=4096, file_format="JPEG", lossless=True
         )
-
-    def test_icon_url(self, model):
-        icon = object()
-
-        with mock.patch.object(guilds.PartialGuild, "make_icon_url", return_value=icon):
-            assert model.icon_url is icon
 
     def test_make_icon_url_when_no_hash(self, model):
         model.icon_hash = None
@@ -1075,7 +1040,7 @@ class TestGuildPreview:
         with mock.patch.object(
             routes, "CDN_GUILD_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_splash_url(ext="JPEG") == "file"
+            assert model.make_splash_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, guild_id=123, hash="dis is also mah splash hash", size=4096, file_format="JPEG", lossless=True
@@ -1087,17 +1052,11 @@ class TestGuildPreview:
         with mock.patch.object(
             routes, "CDN_GUILD_DISCOVERY_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_discovery_splash_url(ext="JPEG") == "file"
+            assert model.make_discovery_splash_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, guild_id=123, hash="18dnf8dfbakfdh", size=4096, file_format="JPEG", lossless=True
         )
-
-    def test_splash_url(self, model):
-        splash = object()
-
-        with mock.patch.object(guilds.GuildPreview, "make_splash_url", return_value=splash):
-            assert model.splash_url is splash
 
     def test_make_splash_url_when_hash(self, model):
         model.splash_hash = "18dnf8dfbakfdh"
@@ -1113,13 +1072,7 @@ class TestGuildPreview:
 
     def test_make_splash_url_when_no_hash(self, model):
         model.splash_hash = None
-        assert model.make_splash_url(ext="png", size=512) is None
-
-    def test_discovery_splash_url(self, model):
-        discovery_splash = object()
-
-        with mock.patch.object(guilds.GuildPreview, "make_discovery_splash_url", return_value=discovery_splash):
-            assert model.discovery_splash_url is discovery_splash
+        assert model.make_splash_url(file_format="png", size=512) is None
 
     def test_make_discovery_splash_url_when_hash(self, model):
         model.discovery_splash_hash = "18dnf8dfbakfdh"
@@ -1302,42 +1255,6 @@ class TestGuild:
         model.features.append(guilds.GuildFeature.INVITES_DISABLED)
         assert model.invites_disabled is True
 
-    def test_make_banner_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
-        with mock.patch.object(
-            routes, "CDN_GUILD_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
-        ) as route:
-            assert model.make_banner_url(ext="JPEG") == "file"
-
-        route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, guild_id=123, hash="banner_hash", size=4096, file_format="JPEG", lossless=True
-        )
-
-    def test_make_discovery_splash_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
-        with mock.patch.object(
-            routes, "CDN_GUILD_DISCOVERY_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
-        ) as route:
-            assert model.make_discovery_splash_url(ext="JPEG") == "file"
-
-        route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, guild_id=123, hash="discovery_splash_hash", size=4096, file_format="JPEG", lossless=True
-        )
-
-    def test_make_splash_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
-        with mock.patch.object(
-            routes, "CDN_GUILD_SPLASH", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
-        ) as route:
-            assert model.make_splash_url(ext="JPEG") == "file"
-
-        route.compile_to_file.assert_called_once_with(
-            urls.CDN_URL, guild_id=123, hash="splash_hash", size=4096, file_format="JPEG", lossless=True
-        )
-
-    def test_splash_url(self, model):
-        splash = object()
-
-        with mock.patch.object(guilds.Guild, "make_splash_url", return_value=splash):
-            assert model.splash_url is splash
-
     def test_make_splash_url_when_hash(self, model):
         model.splash_hash = "18dnf8dfbakfdh"
 
@@ -1352,13 +1269,7 @@ class TestGuild:
 
     def test_make_splash_url_when_no_hash(self, model):
         model.splash_hash = None
-        assert model.make_splash_url(ext="png", size=1024) is None
-
-    def test_discovery_splash_url(self, model):
-        discovery_splash = object()
-
-        with mock.patch.object(guilds.Guild, "make_discovery_splash_url", return_value=discovery_splash):
-            assert model.discovery_splash_url is discovery_splash
+        assert model.make_splash_url(file_format="PNG", size=1024) is None
 
     def test_make_discovery_splash_url_when_hash(self, model):
         model.discovery_splash_hash = "18dnf8dfbakfdh"
@@ -1374,13 +1285,7 @@ class TestGuild:
 
     def test_make_discovery_splash_url_when_no_hash(self, model):
         model.discovery_splash_hash = None
-        assert model.make_discovery_splash_url(ext="png", size=2048) is None
-
-    def test_banner_url(self, model):
-        banner = object()
-
-        with mock.patch.object(guilds.Guild, "make_banner_url", return_value=banner):
-            assert model.banner_url is banner
+        assert model.make_discovery_splash_url(file_format="png", size=2048) is None
 
     def test_make_banner_url_when_hash(self, model):
         with mock.patch.object(
