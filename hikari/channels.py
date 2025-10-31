@@ -891,20 +891,12 @@ class GroupDMChannel(PrivateChannel):
 
         return self.name
 
-    @property
-    @deprecation.deprecated("Use 'make_icon_url' instead.")
-    def icon_url(self) -> files.URL | None:
-        """Icon for this group DM, if set."""
-        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
-        return self.make_icon_url()
-
     def make_icon_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the icon URL for this group, if set.
 
@@ -922,12 +914,6 @@ class GroupDMChannel(PrivateChannel):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -943,12 +929,6 @@ class GroupDMChannel(PrivateChannel):
         """
         if self.icon_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_CHANNEL_ICON.compile_to_file(
             urls.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
