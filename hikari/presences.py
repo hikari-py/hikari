@@ -148,9 +148,16 @@ class ActivityAssets:
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         if asset is None:
             return None
+
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
 
         try:
             resource, identifier = asset.split(":", 1)
@@ -172,12 +179,30 @@ class ActivityAssets:
                 lossless=lossless,
             )
 
+    @property
+    @deprecation.deprecated("Use 'make_large_image_url' instead.")
+    def large_image_url(self) -> files.URL | None:
+        """Large image asset URL.
+
+        !!! note
+            This will be [`None`][] if no large image asset exists or if the
+            asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
+        """
+        deprecation.warn_deprecated(
+            "large_image_url", removal_version="2.5.0", additional_info="Use 'make_large_image_url' instead."
+        )
+        try:
+            return self.make_large_image_url()
+        except RuntimeError:
+            return None
+
     def make_large_image_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the large image asset URL for this application, if set.
 
@@ -202,6 +227,12 @@ class ActivityAssets:
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
+        ext
+            The extension to use for this URL.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -217,7 +248,26 @@ class ActivityAssets:
         RuntimeError
             If [`hikari.presences.ActivityAssets.large_image`][] points towards an unknown asset type.
         """
-        return self._make_asset_url(asset=self.large_image, file_format=file_format, size=size, lossless=lossless)
+        return self._make_asset_url(
+            asset=self.large_image, file_format=file_format, size=size, lossless=lossless, ext=ext
+        )
+
+    @property
+    @deprecation.deprecated("Use 'make_small_image_url' instead.")
+    def small_image_url(self) -> files.URL | None:
+        """Small image asset URL.
+
+        !!! note
+            This will be [`None`][] if no large image asset exists or if the
+            asset's dynamic URL (indicated by a `{name}:` prefix) is not known.
+        """
+        deprecation.warn_deprecated(
+            "small_image_url", removal_version="2.5.0", additional_info="Use 'make_small_image_url' instead."
+        )
+        try:
+            return self.make_small_image_url()
+        except RuntimeError:
+            return None
 
     def make_small_image_url(
         self,
@@ -225,6 +275,7 @@ class ActivityAssets:
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the small image asset URL for this application, if set.
 
@@ -249,6 +300,12 @@ class ActivityAssets:
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
+        ext
+            The extension to use for this URL.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -264,7 +321,9 @@ class ActivityAssets:
         RuntimeError
             If [`hikari.presences.ActivityAssets.small_image`][] points towards an unknown asset type.
         """
-        return self._make_asset_url(asset=self.small_image, file_format=file_format, size=size, lossless=lossless)
+        return self._make_asset_url(
+            asset=self.small_image, file_format=file_format, size=size, lossless=lossless, ext=ext
+        )
 
 
 @attrs_extensions.with_copy

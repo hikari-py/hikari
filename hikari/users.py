@@ -155,6 +155,13 @@ class AvatarDecoration:
     expires_at: datetime.datetime | None = attrs.field(repr=True)
     """The datetime at which the user will no longer have access to the avatar decoration."""
 
+    @property
+    @deprecation.deprecated("Use 'make_url' instead.")
+    def url(self) -> files.URL:
+        """Default image URL for this avatar decoration."""
+        deprecation.warn_deprecated("url", removal_version="2.5.0", additional_info="Use 'make_url' instead.")
+        return self.make_url()
+
     def make_url(
         self,
         *,
@@ -649,10 +656,35 @@ class User(PartialUser, abc.ABC):
         """Avatar hash for the user, if they have one, otherwise [`None`][]."""
 
     @property
+    @deprecation.deprecated("Use 'make_avatar_url' instead.")
+    def avatar_url(self) -> files.URL | None:
+        """Avatar URL for the user, if they have one set.
+
+        Will be [`None`][] if no avatar is set. In this case, you
+        should use [`hikari.User.default_avatar_url`][] instead.
+        """
+        deprecation.warn_deprecated(
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
+        )
+        return self.make_avatar_url()
+
+    @property
     @abc.abstractmethod
     @typing_extensions.override
     def banner_hash(self) -> str | None:
         """Banner hash for the user, if they have one, otherwise [`None`][]."""
+
+    @property
+    @deprecation.deprecated("Use 'make_banner_url' instead.")
+    def banner_url(self) -> files.URL | None:
+        """Banner URL for the user, if they have one set.
+
+        Will be [`None`][] if no banner is set.
+        """
+        deprecation.warn_deprecated(
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
+        )
+        return self.make_banner_url()
 
     @property
     def default_avatar_url(self) -> files.URL:
@@ -757,6 +789,7 @@ class User(PartialUser, abc.ABC):
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the avatar URL for this user, if set.
 
@@ -777,6 +810,16 @@ class User(PartialUser, abc.ABC):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP` or `AWEBP`.
+        ext
+            The ext to use for this URL.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated).
+
+            If [`None`][], then the correct default extension is
+            determined based on whether the avatar is animated or not.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -793,6 +836,12 @@ class User(PartialUser, abc.ABC):
         """
         if self.avatar_hash is None:
             return None
+
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
 
         if not file_format:
             file_format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"
@@ -830,6 +879,16 @@ class User(PartialUser, abc.ABC):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP` or `AWEBP`.
+        ext
+            The ext to use for this URL.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated).
+
+            If [`None`][], then the correct default extension is
+            determined based on whether the banner is animated or not.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -846,6 +905,12 @@ class User(PartialUser, abc.ABC):
         """
         if self.banner_hash is None:
             return None
+
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
 
         if not file_format:
             file_format = "GIF" if self.banner_hash.startswith("a_") else "PNG"

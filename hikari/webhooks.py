@@ -516,6 +516,19 @@ class PartialWebhook(snowflakes.Unique):
         return f"<@{self.id}>"
 
     @property
+    @deprecation.deprecated("Use 'make_avatar_url' instead")
+    def avatar_url(self) -> files_.URL | None:
+        """URL for this webhook's avatar, if set.
+
+        May be [`None`][] if no avatar is set. In this case, you should use
+        `default_avatar_url` instead.
+        """
+        deprecation.warn_deprecated(
+            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
+        )
+        return self.make_avatar_url()
+
+    @property
     def default_avatar_url(self) -> files_.URL:
         """Default avatar URL for the user."""
         return routes.CDN_DEFAULT_USER_AVATAR.compile_to_file(urls.CDN_URL, style=0, file_format="png")
@@ -528,6 +541,7 @@ class PartialWebhook(snowflakes.Unique):
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the avatar URL for this webhook, if set.
 
@@ -547,6 +561,16 @@ class PartialWebhook(snowflakes.Unique):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP` or `AWEBP`.
+        ext
+            The ext to use for this URL.
+            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
+            animated).
+
+            If [`None`][], then the correct default extension is
+            determined based on whether the avatar is animated or not.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -563,6 +587,12 @@ class PartialWebhook(snowflakes.Unique):
         """
         if self.avatar_hash is None:
             return None
+
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
 
         if not file_format:
             file_format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"

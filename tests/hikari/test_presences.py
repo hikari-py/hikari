@@ -49,11 +49,35 @@ class TestActivityAssets:
         with mock.patch.object(
             routes, "CDN_APPLICATION_ASSET", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert asset.make_large_image_url(file_format="JPEG") == "file"
+            assert asset.make_large_image_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=1, hash="abc", size=4096, file_format="JPEG", lossless=True
         )
+
+    def test_large_image_url_property(self):
+        asset = presences.ActivityAssets(
+            application_id=None, large_image=None, large_text=None, small_image=None, small_text=None
+        )
+
+        with mock.patch.object(presences.ActivityAssets, "make_large_image_url") as make_large_image_url:
+            result = asset.large_image_url
+
+        assert result is make_large_image_url.return_value
+        make_large_image_url.assert_called_once_with()
+
+    def test_large_image_url_property_when_runtime_error(self):
+        asset = presences.ActivityAssets(
+            application_id=None, large_image=None, large_text=None, small_image=None, small_text=None
+        )
+
+        with mock.patch.object(
+            presences.ActivityAssets, "make_large_image_url", side_effect=RuntimeError
+        ) as make_large_image_url:
+            result = asset.large_image_url
+
+        assert result is None
+        make_large_image_url.assert_called_once_with()
 
     def test_make_large_image_url(self):
         asset = presences.ActivityAssets(
@@ -61,7 +85,7 @@ class TestActivityAssets:
         )
 
         with mock.patch.object(routes, "CDN_APPLICATION_ASSET") as route:
-            assert asset.make_large_image_url(file_format="FA", size=3121) is route.compile_to_file.return_value
+            assert asset.make_large_image_url(ext="FA", size=3121) is route.compile_to_file.return_value
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=45123123, hash="541sdfasdasd", size=3121, file_format="FA", lossless=True
@@ -104,11 +128,35 @@ class TestActivityAssets:
         with mock.patch.object(
             routes, "CDN_APPLICATION_ASSET", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert asset.make_small_image_url(file_format="JPEG") == "file"
+            assert asset.make_small_image_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=1, hash="ghi", size=4096, file_format="JPEG", lossless=True
         )
+
+    def test_small_image_url_property(self):
+        asset = presences.ActivityAssets(
+            application_id=None, large_image=None, large_text=None, small_image=None, small_text=None
+        )
+
+        with mock.patch.object(presences.ActivityAssets, "make_small_image_url") as make_small_image_url:
+            result = asset.small_image_url
+
+        assert result is make_small_image_url.return_value
+        make_small_image_url.assert_called_once_with()
+
+    def test_small_image_url_property_when_runtime_error(self):
+        asset = presences.ActivityAssets(
+            application_id=None, large_image=None, large_text=None, small_image=None, small_text=None
+        )
+
+        with mock.patch.object(
+            presences.ActivityAssets, "make_small_image_url", side_effect=RuntimeError
+        ) as make_small_image_url:
+            result = asset.small_image_url
+
+        assert result is None
+        make_small_image_url.assert_called_once_with()
 
     def test_make_small_image_url(self):
         asset = presences.ActivityAssets(
@@ -116,7 +164,7 @@ class TestActivityAssets:
         )
 
         with mock.patch.object(routes, "CDN_APPLICATION_ASSET") as route:
-            assert asset.make_small_image_url(file_format="EAT", size=123312) is route.compile_to_file.return_value
+            assert asset.make_small_image_url(ext="EAT", size=123312) is route.compile_to_file.return_value
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123321, hash="aseqwsdas", size=123312, file_format="EAT", lossless=True

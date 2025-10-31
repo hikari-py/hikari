@@ -104,12 +104,22 @@ class StickerPack(snowflakes.Unique):
     banner_asset_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
     """ID of the sticker pack's banner image, if set."""
 
+    @property
+    @deprecation.deprecated("Use 'make_banner_url' instead.")
+    def banner_url(self) -> files.URL | None:
+        """Banner URL for the pack, if set."""
+        deprecation.warn_deprecated(
+            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
+        )
+        return self.make_banner_url()
+
     def make_banner_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the pack's banner image URL, if set.
 
@@ -129,6 +139,12 @@ class StickerPack(snowflakes.Unique):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
+        ext
+            The extension to use for this URL.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -144,6 +160,12 @@ class StickerPack(snowflakes.Unique):
         """
         if self.banner_asset_id is None:
             return None
+
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_STICKER_PACK_BANNER.compile_to_file(
             urls.CDN_URL, hash=self.banner_asset_id, size=size, file_format=file_format, lossless=lossless
@@ -163,6 +185,23 @@ class PartialSticker(snowflakes.Unique):
 
     format_type: StickerFormatType | int = attrs.field(eq=False, hash=False, repr=True)
     """The format of this sticker's asset."""
+
+    @property
+    @deprecation.deprecated("Use 'make_url' instead.")
+    def image_url(self) -> files.URL:
+        """Default image URL for this sticker.
+
+        The extension will be based on `format_type`.
+
+        If `format_type` is [`hikari.stickers.StickerFormatType.LOTTIE`][],
+        then the extension will be `.json`.
+
+        If it's [`hikari.stickers.StickerFormatType.APNG`][], then it will be `.png`.
+
+        Otherwise, it will be follow the format type as `.gif` or `.png`.
+        """
+        deprecation.warn_deprecated("image_url", removal_version="2.5.0", additional_info="Use 'make_url' instead.")
+        return self.make_url()
 
     def make_url(  # noqa: PLR0912 - Too many branches
         self,

@@ -152,12 +152,22 @@ class ScheduledEvent(snowflakes.Unique):
     image_hash: str | None = attrs.field(hash=False, repr=False)
     """Hash of the image used for the scheduled event, if set."""
 
+    @property
+    @deprecation.deprecated("Use 'make_image_url' instead.")
+    def image_url(self) -> files.URL | None:
+        """Cover image for this scheduled event, if set."""
+        deprecation.warn_deprecated(
+            "image_url", removal_version="2.5.0", additional_info="Use 'make_image_url' instead."
+        )
+        return self.make_image_url()
+
     def make_image_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
+        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the cover image URL for this scheduled event, if set.
 
@@ -177,6 +187,12 @@ class ScheduledEvent(snowflakes.Unique):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
+        ext
+            The extension to use for this URL.
+            Supports `png`, `jpeg`, `jpg` and `webp`.
+
+            !!! deprecated 2.4.0
+                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -192,6 +208,12 @@ class ScheduledEvent(snowflakes.Unique):
         """
         if self.image_hash is None:
             return None
+
+        if ext:
+            deprecation.warn_deprecated(
+                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
+            )
+            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.SCHEDULED_EVENT_COVER.compile_to_file(
             urls.CDN_URL,

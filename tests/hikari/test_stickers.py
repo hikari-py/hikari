@@ -46,11 +46,17 @@ class TestStickerPack:
         with mock.patch.object(
             routes, "CDN_STICKER_PACK_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_banner_url(file_format="JPEG") == "file"
+            assert model.make_banner_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, hash=541231, size=4096, file_format="JPEG", lossless=True
         )
+
+    def test_banner_url(self, model):
+        banner = object()
+
+        with mock.patch.object(stickers.StickerPack, "make_banner_url", return_value=banner):
+            assert model.banner_url is banner
 
     def test_make_banner_url(self, model):
         with mock.patch.object(

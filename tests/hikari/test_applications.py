@@ -51,8 +51,14 @@ class TestTeamMember:
     def test_avatar_hash_property(self, model):
         assert model.avatar_hash is model.user.avatar_hash
 
+    def test_avatar_url_property(self, model):
+        assert model.avatar_url is model.user.make_avatar_url()
+
     def test_banner_hash_property(self, model):
         assert model.banner_hash is model.user.banner_hash
+
+    def test_banner_url_property(self, model):
+        assert model.banner_url is model.user.make_banner_url()
 
     def test_make_avatar_url(self, model):
         assert model.make_avatar_url() is model.user.make_avatar_url()
@@ -109,11 +115,18 @@ class TestTeam:
         with mock.patch.object(
             routes, "CDN_TEAM_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(file_format="JPEG") == "file"
+            assert model.make_icon_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, team_id=123, hash="ahashicon", size=4096, file_format="JPEG", lossless=True
         )
+
+    def test_icon_url_property(self, model):
+        model.make_icon_url = mock.Mock(return_value="url")
+
+        assert model.icon_url == "url"
+
+        model.make_icon_url.assert_called_once_with()
 
     def test_make_icon_url_when_hash_is_None(self, model):
         model.icon_hash = None
@@ -152,11 +165,18 @@ class TestApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_cover_image_url(file_format="JPEG") == "file"
+            assert model.make_cover_image_url(ext="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="ahashcover", size=4096, file_format="JPEG", lossless=True
         )
+
+    def test_cover_image_url_property(self, model):
+        model.make_cover_image_url = mock.Mock(return_value="url")
+
+        assert model.cover_image_url == "url"
+
+        model.make_cover_image_url.assert_called_once_with()
 
     def test_make_cover_image_url_when_hash_is_None(self, model):
         model.cover_image_hash = None
