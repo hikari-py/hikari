@@ -34,7 +34,6 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -809,7 +808,6 @@ class User(PartialUser, abc.ABC):
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the banner URL for this user, if set.
 

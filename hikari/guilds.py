@@ -66,7 +66,6 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import time
@@ -774,9 +773,8 @@ class Member(users.User):
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
-        return self.user.make_banner_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
+        return self.user.make_banner_url(file_format=file_format, size=size, lossless=lossless)
 
     def make_guild_banner_url(
         self,

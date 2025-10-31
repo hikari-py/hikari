@@ -33,7 +33,6 @@ from hikari import guilds
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
