@@ -379,7 +379,7 @@ PATCH_STAGE_INSTANCE: typing.Final[Route] = Route(PATCH, "/stage-instances/{chan
 DELETE_STAGE_INSTANCE: typing.Final[Route] = Route(DELETE, "/stage-instances/{channel}")
 
 # Polls
-GET_POLL_ANSWER: typing.Final[Route] = Route(GET, "/channels/{channel}/polls/{message}/answer/{answer}")
+GET_POLL_ANSWER: typing.Final[Route] = Route(GET, "/channels/{channel}/polls/{message}/answers/{answer}")
 POST_EXPIRE_POLL: typing.Final[Route] = Route(POST, "/channels/{channel}/polls/{message}/expire")
 
 # Reactions
