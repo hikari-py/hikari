@@ -50,6 +50,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import soundboard_events
 from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
@@ -138,6 +139,38 @@ class EventFactoryImpl(event_factory.EventFactory):
             "CHANNEL_DELETE events for threads and DMS are undocumented behaviour"
         )
         return channel_events.GuildChannelDeleteEvent(shard=shard, channel=channel)
+
+    @typing_extensions.override
+    def deserialize_guild_channel_effect_send_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> channel_events.GuildChannelEffectSendEvent:
+        emoji: undefined.UndefinedNoneOr[emojis_models.CustomEmoji | emojis_models.UnicodeEmoji] = undefined.UNDEFINED
+        if "emoji" in payload:
+            if (emoji_payload := payload.get("emoji")) is not None:
+                emoji = self._app.entity_factory.deserialize_emoji(emoji_payload)
+            else:
+                emoji = None
+
+        animation_type: undefined.UndefinedNoneOr[emojis_models.EmojiAnimationType] = undefined.UNDEFINED
+        if "animation_type" in payload:
+            if (emoji_payload := payload.get("animation_type")) is not None:
+                animation_type = emojis_models.EmojiAnimationType(emoji_payload)
+            else:
+                animation_type = None
+
+        return channel_events.GuildChannelEffectSendEvent(
+            shard=shard,
+            channel_id=snowflakes.Snowflake(payload["channel_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            emoji=emoji,
+            animation_type=animation_type,
+            animation_id=snowflakes.Snowflake(payload["animation_id"])
+            if "animation_id" in payload
+            else undefined.UNDEFINED,
+            sound_id=snowflakes.Snowflake(payload["sound_id"]) if "sound_id" in payload else undefined.UNDEFINED,
+            sound_volume=payload.get("sound_volume", undefined.UNDEFINED),
+        )
 
     @typing_extensions.override
     def deserialize_channel_pins_update_event(
@@ -1143,4 +1176,64 @@ class EventFactoryImpl(event_factory.EventFactory):
             content=payload.get("content") or None,
             matched_keyword=payload["matched_keyword"],
             matched_content=payload.get("matched_content") or None,
+        )
+
+    @typing_extensions.override
+    def deserialize_soundboard_sound_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> soundboard_events.SoundboardSoundCreateEvent:
+        soundboard_sound = self._app.entity_factory.deserialize_soundboard_sound(payload)
+
+        return soundboard_events.SoundboardSoundCreateEvent(
+            app=self._app,
+            shard=shard,
+            id=soundboard_sound.id,
+            name=soundboard_sound.name,
+            volume=soundboard_sound.volume,
+            emoji=soundboard_sound.emoji,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            is_available=soundboard_sound.is_available,
+            user=soundboard_sound.user,
+        )
+
+    @typing_extensions.override
+    def deserialize_soundboard_sound_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> soundboard_events.SoundboardSoundUpdateEvent:
+        soundboard_sound = self._app.entity_factory.deserialize_soundboard_sound(payload)
+
+        return soundboard_events.SoundboardSoundUpdateEvent(
+            app=self._app,
+            shard=shard,
+            id=soundboard_sound.id,
+            name=soundboard_sound.name,
+            volume=soundboard_sound.volume,
+            emoji=soundboard_sound.emoji,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            is_available=soundboard_sound.is_available,
+            user=soundboard_sound.user,
+        )
+
+    @typing_extensions.override
+    def deserialize_soundboard_sound_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> soundboard_events.SoundboardSoundDeleteEvent:
+        return soundboard_events.SoundboardSoundDeleteEvent(
+            app=self._app,
+            shard=shard,
+            id=snowflakes.Snowflake(payload["sound_id"]),
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+        )
+
+    @typing_extensions.override
+    def deserialize_soundboard_sounds_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> soundboard_events.SoundboardSoundsUpdateEvent:
+        return soundboard_events.SoundboardSoundsUpdateEvent(
+            app=self._app,
+            shard=shard,
+            soundboard_sounds=[
+                self._app.entity_factory.deserialize_soundboard_sound(sound) for sound in payload["soundboard_sounds"]
+            ],
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
         )
