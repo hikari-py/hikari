@@ -5140,9 +5140,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, query=query)
 
-        assert isinstance(response, list)
+        assert isinstance(response, dict)
 
-        return [self._entity_factory.deserialize_user(payload) for payload in response]
+        return [self._entity_factory.deserialize_user(payload) for payload in response["users"]]
 
     @typing_extensions.override
     async def end_poll(

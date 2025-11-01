@@ -7285,7 +7285,7 @@ class TestRESTClientImplAsync:
             channel=StubModel(45874392), message=StubModel(398475938475), answer=StubModel(4)
         )
 
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "1234"}])
+        rest_client._request = mock.AsyncMock(return_value={"users": [{"id": "1234"}]})
 
         with mock.patch.object(
             rest_client._entity_factory, "deserialize_user", return_value=mock.Mock()
