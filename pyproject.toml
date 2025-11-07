@@ -113,7 +113,7 @@ pytest = [
     { include-group = "coverage" },
 ]
 release = ["twine==6.2.0"]
-ruff = ["ruff==0.14.3"]
+ruff = ["ruff==0.14.4"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==25.8.0"]
 types = [
