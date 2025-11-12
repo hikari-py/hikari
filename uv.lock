@@ -1247,7 +1247,7 @@ mypy = [
     { name = "mypy", extras = ["faster-cache"], specifier = "==1.18.2" },
     { name = "pydub-stubs", specifier = "~=0.25.1.5" },
 ]
-nox = [{ name = "nox", extras = ["uv"], specifier = "==2025.10.16" }]
+nox = [{ name = "nox", extras = ["uv"], specifier = "==2025.11.12" }]
 pyright = [
     { name = "pydub-stubs", specifier = "~=0.25.1.5" },
     { name = "pyright", specifier = "==1.1.407" },
@@ -2083,7 +2083,7 @@ wheels = [
 
 [[package]]
 name = "nox"
-version = "2025.10.16"
+version = "2025.11.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "argcomplete" },
@@ -2095,9 +2095,9 @@ dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "virtualenv" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/3e/16440c5a2c1e867a862479cf7d11d05d0e0f2bb133de3921cb3ed6e37e57/nox-2025.10.16.tar.gz", hash = "sha256:fca1e7504384dbc91dddef3fec45d04572f23c882a87241e2c793b77fe1c9259", size = 4030246, upload-time = "2025-10-17T01:53:07.458Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b4/a8/e169497599266d176832e2232c08557ffba97eef87bf8a18f9f918e0c6aa/nox-2025.11.12.tar.gz", hash = "sha256:3d317f9e61f49d6bde39cf2f59695bb4e1722960457eee3ae19dacfe03c07259", size = 4030561, upload-time = "2025-11-12T18:39:03.319Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6f/68/f4a9cd43dcd6cf9138e0fb39b3b8f17a82b121e8c26499d864e64c329cd0/nox-2025.10.16-py3-none-any.whl", hash = "sha256:b4ef28709d5fb0d964ccc987c8863f76ed860700fabd04ad557252df3562a7e5", size = 74405, upload-time = "2025-10-17T01:53:05.792Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/34/434c594e0125a16b05a7bedaea33e63c90abbfbe47e5729a735a8a8a90ea/nox-2025.11.12-py3-none-any.whl", hash = "sha256:707171f9f63bc685da9d00edd8c2ceec8405b8e38b5fb4e46114a860070ef0ff", size = 74447, upload-time = "2025-11-12T18:39:01.575Z" },
 ]
 
 [package.optional-dependencies]
