@@ -188,10 +188,10 @@ class TestRole:
         )
 
 
-class TestGuildWidget:
+class TestGuildWidgetSettings:
     @pytest.fixture
     def model(self, mock_app):
-        return guilds.GuildWidget(app=mock_app, channel_id=snowflakes.Snowflake(420), is_enabled=True)
+        return guilds.GuildWidgetSettings(app=mock_app, channel_id=snowflakes.Snowflake(420), is_enabled=True)
 
     def test_app_property(self, model, mock_app):
         assert model.app is mock_app
@@ -216,6 +216,37 @@ class TestGuildWidget:
         model.channel_id = None
 
         assert await model.fetch_channel() is None
+
+
+class TestGuildWidget:
+    @pytest.fixture
+    def model(self, mock_app):
+        return guilds.GuildWidget(
+            id=snowflakes.Snowflake(123),
+            name="Hikari",
+            instant_invite="hikari",
+            channels=[],
+            members=[],
+            presence_count=1,
+        )
+
+    def test_id(self, model):
+        assert model.id == snowflakes.Snowflake(123)
+
+    def test_name(self, model):
+        assert model.name == "Hikari"
+
+    def test_instant_invite(self, model):
+        assert model.instant_invite == "hikari"
+
+    def test_channels(self, model):
+        assert model.channels == []
+
+    def test_members(self, model):
+        assert model.members == []
+
+    def test_presence_count(self, model):
+        assert model.presence_count == 1
 
 
 class TestMember:
