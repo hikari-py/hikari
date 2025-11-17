@@ -38,7 +38,7 @@ if typing.TYPE_CHECKING:
     from hikari import audit_logs
     from hikari import auto_mod
     from hikari import channels as channels_
-    from hikari import colors
+    from hikari import colors as colors_
     from hikari import commands
     from hikari import embeds as embeds_
     from hikari import emojis
@@ -6443,8 +6443,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors_.Colorish | colors_.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors_.Colorish | colors_.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -6549,8 +6549,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors_.Colorish | colors_.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors_.Colorish | colors_.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
