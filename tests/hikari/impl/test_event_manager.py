@@ -209,6 +209,18 @@ class TestEventManagerImpl:
             event_factory.deserialize_guild_channel_delete_event.return_value
         )
 
+    def test_on_voice_channel_effect_send(
+        self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
+    ):
+        mock_payload = mock.Mock()
+
+        event_manager_impl.on_voice_channel_effect_send(shard, mock_payload)
+
+        event_factory.deserialize_guild_channel_effect_send_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_guild_channel_effect_send_event.return_value
+        )
+
     def test_on_channel_pins_update(self, stateless_event_manager_impl, shard, event_factory):
         payload = {}
 
@@ -1732,4 +1744,64 @@ class TestEventManagerImpl:
         event_factory.deserialize_auto_mod_action_execution_event.assert_called_once_with(shard, mock_payload)
         event_manager_impl.dispatch.assert_called_once_with(
             event_factory.deserialize_auto_mod_action_execution_event.return_value
+        )
+
+    def test_on_guild_soundboard_sound_create(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        event_manager_impl.on_guild_soundboard_sound_create(shard, mock_payload)
+
+        event_factory.deserialize_soundboard_sound_create_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_soundboard_sound_create_event.return_value
+        )
+
+    def test_on_guild_soundboard_sound_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        event_manager_impl.on_guild_soundboard_sound_update(shard, mock_payload)
+
+        event_factory.deserialize_soundboard_sound_update_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_soundboard_sound_update_event.return_value
+        )
+
+    def test_on_guild_soundboard_sound_delete(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        event_manager_impl.on_guild_soundboard_sound_delete(shard, mock_payload)
+
+        event_factory.deserialize_soundboard_sound_delete_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_soundboard_sound_delete_event.return_value
+        )
+
+    def test_on_guild_soundboard_sounds_update(
+        self,
+        event_manager_impl: event_manager.EventManagerImpl,
+        shard: mock.Mock,
+        event_factory: event_factory_.EventFactory,
+    ):
+        mock_payload = mock.Mock()
+
+        event_manager_impl.on_guild_soundboard_sounds_update(shard, mock_payload)
+
+        event_factory.deserialize_soundboard_sounds_update_event.assert_called_once_with(shard, mock_payload)
+        event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_soundboard_sounds_update_event.return_value
         )

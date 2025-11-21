@@ -7459,3 +7459,155 @@ class TestRESTClientImplAsync:
 
         assert result is None
         rest_client._request.assert_awaited_once_with(expected_route, reason="ok hi")
+
+    async def test_fetch_soundboard_sounds(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.GET_DEFAULT_SOUNDBOARD_SOUNDS.compile()
+        rest_client._request = mock.AsyncMock(return_value=[])
+
+        result = await rest_client.fetch_soundboard_sounds()
+
+        assert result == []
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_guild_soundboard_sounds(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.GET_GUILD_SOUNDBOARD_SOUNDS.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value={"items": []})
+
+        result = await rest_client.fetch_guild_soundboard_sounds(StubModel(123))
+
+        assert result == []
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_guild_soundboard_sound(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.GET_GUILD_SOUNDBOARD_SOUND.compile(guild=123, sound=6531)
+        rest_client._request = mock.AsyncMock(return_value={})
+
+        result = await rest_client.fetch_guild_soundboard_sound(StubModel(123), StubModel(6531))
+
+        assert result == rest_client._entity_factory.deserialize_soundboard_sound.return_value
+        rest_client._entity_factory.deserialize_soundboard_sound.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    @pytest.mark.parametrize(
+        ("source_guild", "expected_json"),
+        [(StubModel(123), {"sound_id": "6531", "source_guild_id": "123"}), (undefined.UNDEFINED, {"sound_id": "6531"})],
+    )
+    async def test_send_guild_soundboard_sound(
+        self, rest_client: rest.RESTClientImpl, source_guild: StubModel | None, expected_json: dict[str, typing.Any]
+    ):
+        expected_route = routes.POST_SEND_SOUNDBOARD_SOUND.compile(channel=456)
+        rest_client._request = mock.AsyncMock(return_value={})
+
+        assert await rest_client.send_guild_soundboard_sound(StubModel(456), StubModel(6531), source_guild) is None
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+
+    @pytest.mark.parametrize(
+        ("emoji", "emoji_id", "emoji_name"),
+        [
+            (emojis.CustomEmoji(id=snowflakes.Snowflake(4462), name="platypus", is_animated=False), 4462, None),
+            (emojis.UnicodeEmoji("🦫"), None, "🦫"),
+            (snowflakes.Snowflake(4462), 4462, None),
+            ("🦫", None, "🦫"),
+            (undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED),
+        ],
+    )
+    async def test_create_guild_soundboard_sound(
+        self,
+        rest_client: rest.RESTClientImpl,
+        file_resource_patch,
+        emoji: typing.Any,
+        emoji_id: undefined.UndefinedNoneOr[int],
+        emoji_name: undefined.UndefinedNoneOr[str],
+    ):
+        expected_route = routes.POST_GUILD_SOUNDBOARD_SOUND.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value={})
+
+        result = await rest_client.create_guild_soundboard_sound(
+            StubModel(123),
+            name="quack_bass_boosted",
+            sound="a_sound.mp3",
+            volume=0.6,
+            emoji=emoji,
+            reason="its a platypus, not a beaver trust me.",
+        )
+
+        payload = {"name": "quack_bass_boosted", "sound": "some data", "volume": 0.6}
+
+        if emoji_id is not undefined.UNDEFINED:
+            payload["emoji_id"] = emoji_id
+
+        if emoji_name is not undefined.UNDEFINED:
+            payload["emoji_name"] = emoji_name
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json=payload, reason="its a platypus, not a beaver trust me."
+        )
+
+    @pytest.mark.parametrize(
+        ("emoji", "emoji_id", "emoji_name"),
+        [
+            (emojis.CustomEmoji(id=snowflakes.Snowflake(4462), name="platypus", is_animated=False), 4462, None),
+            (emojis.UnicodeEmoji("🦫"), None, "🦫"),
+            (snowflakes.Snowflake(4462), 4462, None),
+            ("🦫", None, "🦫"),
+            (undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED),
+        ],
+    )
+    async def test_edit_guild_soundboard_sound(
+        self,
+        rest_client: rest.RESTClientImpl,
+        emoji: typing.Any,
+        emoji_id: undefined.UndefinedNoneOr[int],
+        emoji_name: undefined.UndefinedNoneOr[str],
+    ):
+        expected_route = routes.PATCH_GUILD_SOUNDBOARD_SOUND.compile(guild=123, sound=6531)
+        rest_client._request = mock.AsyncMock(return_value={})
+
+        result = await rest_client.edit_guild_soundboard_sound(
+            StubModel(123),
+            StubModel(6531),
+            name="quack_bass_boosted",
+            volume=0.6,
+            emoji=emoji,
+            reason="its a platypus, not a beaver trust me.",
+        )
+
+        payload = {"name": "quack_bass_boosted", "volume": 0.6}
+
+        if emoji_id is not undefined.UNDEFINED:
+            payload["emoji_id"] = emoji_id
+
+        if emoji_name is not undefined.UNDEFINED:
+            payload["emoji_name"] = emoji_name
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json=payload, reason="its a platypus, not a beaver trust me."
+        )
+
+    async def test_edit_guild_soundboard_sound_with_undefined(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.PATCH_GUILD_SOUNDBOARD_SOUND.compile(guild=123, sound=6531)
+        rest_client._request = mock.AsyncMock(return_value={})
+
+        result = await rest_client.edit_guild_soundboard_sound(
+            StubModel(123), StubModel(6531), reason="its a platypus, not a beaver trust me."
+        )
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={}, reason="its a platypus, not a beaver trust me."
+        )
+
+    async def test_delete_guild_soundboard_sound(self, rest_client: rest.RESTClientImpl):
+        expected_route = routes.DELETE_GUILD_SOUNDBOARD_SOUND.compile(guild=123, sound=6531)
+        rest_client._request = mock.AsyncMock(return_value={})
+
+        assert (
+            await rest_client.delete_guild_soundboard_sound(
+                StubModel(123), StubModel(6531), reason="I don't wanna play with you anymore"
+            )
+            is None
+        )
+
+        rest_client._request.assert_awaited_once_with(expected_route, reason="I don't wanna play with you anymore")
