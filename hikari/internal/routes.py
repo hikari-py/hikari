@@ -553,6 +553,16 @@ DELETE_MY_REACTION: typing.Final[Route] = Route(
 # Voice
 GET_VOICE_REGIONS: typing.Final[Route] = Route(GET, "/voice/regions")
 
+# Soundboard
+POST_SEND_SOUNDBOARD_SOUND: typing.Final[Route] = Route(POST, "/channels/{channel}/send-soundboard-sound")
+GET_DEFAULT_SOUNDBOARD_SOUNDS: typing.Final[Route] = Route(GET, "/soundboard-default-sounds")
+GET_GUILD_SOUNDBOARD_SOUNDS: typing.Final[Route] = Route(GET, "/guilds/{guild}/soundboard-sounds")
+GET_GUILD_SOUNDBOARD_SOUND: typing.Final[Route] = Route(GET, "/guilds/{guild}/soundboard-sounds/{sound}")
+POST_GUILD_SOUNDBOARD_SOUND: typing.Final[Route] = Route(POST, "/guilds/{guild}/soundboard-sounds")
+PATCH_GUILD_SOUNDBOARD_SOUND: typing.Final[Route] = Route(PATCH, "/guilds/{guild}/soundboard-sounds/{sound}")
+DELETE_GUILD_SOUNDBOARD_SOUND: typing.Final[Route] = Route(DELETE, "/guilds/{guild}/soundboard-sounds/{sound}")
+
+
 # Webhooks
 GET_WEBHOOK: typing.Final[Route] = Route(GET, "/webhooks/{webhook}")
 PATCH_WEBHOOK: typing.Final[Route] = Route(PATCH, "/webhooks/{webhook}")
