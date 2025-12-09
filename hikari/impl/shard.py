@@ -285,6 +285,8 @@ class _GatewayTransport(abc.ABC):
                 else:
                     transport_cls = _GatewayBasicTransport
 
+                logger.debug("Using '%s' compression", compression)
+
                 return transport_cls(
                     ws=web_socket,
                     exit_stack=exit_stack,
