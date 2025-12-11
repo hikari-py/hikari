@@ -3967,6 +3967,16 @@ class RESTClientImpl(rest_api.RESTClient):
         await self._request(route, reason=reason)
 
     @typing_extensions.override
+    async def fetch_role_member_counts(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> typing.Mapping[snowflakes.Snowflake, int]:
+        route = routes.GET_GUILD_ROLE_MEMBER_COUNTS.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+
+        return {snowflakes.Snowflake(role_id): int(count) for (role_id, count) in response.items()}
+
+    @typing_extensions.override
     async def estimate_guild_prune_count(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
