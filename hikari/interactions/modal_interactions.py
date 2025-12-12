@@ -33,11 +33,11 @@ import typing
 
 import attrs
 
+from hikari import components as components_
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import components as components_
     from hikari import messages
     from hikari import snowflakes
     from hikari.api import special_endpoints
@@ -62,6 +62,15 @@ The following types are valid for this:
 * [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]/`6`
 """
 
+ModalInteractionParentT = typing.Literal[components_.ComponentType.ACTION_ROW, components_.ComponentType.LABEL]
+"""Type-hint of the modal interaction parent types that are valid as a parent interaction component.
+
+The following types are valid for this.
+
+* [`hikari.components.ComponentType.ACTION_ROW`][]
+* [`hikari.components.ComponentType.LABEL`][]
+"""
+
 
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
@@ -77,7 +86,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     This will be [`None`][] if the modal was a response to a command.
     """
 
-    components: typing.Sequence[components_.ModalComponentTypesT]
+    components: typing.Sequence[ModalInteractionPartialComponent]
     """Components in the modal."""
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
@@ -129,6 +138,69 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
 
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ModalInteractionPartialComponent:
+    """Represents a modal component on discord."""
+
+    parent_type: ModalInteractionParentT = attrs.field(eq=False, repr=False)
+    """The type of parent that this child component was held within."""
+
+    parent_id: int = attrs.field(eq=True, repr=True)
+    """The ID of the parent this child component was held within."""
+
+    type: components_.ComponentType = attrs.field(eq=True, repr=True)
+    """The actual component type."""
+
+    custom_id: str = attrs.field(eq=True, repr=True)
+    """The developer-defined identifier."""
+
+    id: int = attrs.field(eq=True, repr=True)
+    """The unique ID for the component."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ModalInteractionStringSelectComponent(ModalInteractionPartialComponent):
+    """Represents a modal string select component."""
+
+    values: typing.Sequence[str] = attrs.field(eq=True, repr=True)
+    """The selected text options."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ModalInteractionSelectComponent(ModalInteractionPartialComponent):
+    """Represents a modal select component.
+
+    This includes things like a user, role, mentionable and channel select.
+    """
+
+    values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True, repr=True)
+    """The selected text options."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ModalInteractionTextInputComponent(ModalInteractionPartialComponent):
+    """Represents a modal string select component."""
+
+    value: str = attrs.field(eq=True, repr=True)
+    """The inputted text."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
+class ModalInteractionFileUploadComponent(ModalInteractionPartialComponent):
+    """Represents a modal string select component."""
+
+    values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True, repr=True)
+    """The selected file attachments.
+
+    These can be found in the resolved information attachments option.
+    """
+
+
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ModalInteractionMetadata(base_interactions.PartialInteractionMetadata):
     """The interaction metadata for a modal initiated message."""
@@ -140,3 +212,12 @@ class ModalInteractionMetadata(base_interactions.PartialInteractionMetadata):
         eq=False, hash=False, repr=True
     )
     """The metadata for the interaction that was used to open the modal."""
+
+
+ModalInteractionComponentT = typing.Union[
+    ModalInteractionStringSelectComponent
+    | ModalInteractionSelectComponent
+    | ModalInteractionTextInputComponent
+    | ModalInteractionFileUploadComponent
+]
+"""FIXME: Document me."""

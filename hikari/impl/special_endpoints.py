@@ -3219,8 +3219,7 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         payload["type"] = self.type
         payload["label"] = self._label
         payload.put("id", self._id)
-        if self._description is not None:
-            payload.put("description", self._description)
+        payload.put("description", self._description)
         component_payload, attachments = self._component.build()
 
         payload.put("component", component_payload)

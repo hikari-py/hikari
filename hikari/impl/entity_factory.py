@@ -3285,19 +3285,80 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     def _deserialize_modal_components(
         self, payloads: data_binding.JSONArray
-    ) -> typing.Sequence[component_models.ModalComponentTypesT]:
-        top_level_components: list[component_models.ModalComponentTypesT] = []
+    ) -> typing.Sequence[modal_interactions.ModalInteractionComponentT]:
+        top_level_components: list[modal_interactions.ModalInteractionComponentT] = []
 
         for payload in payloads:
             top_level_component_type = component_models.ComponentType(payload["type"])
-
-            if deserializer := self._modal_component_type_mapping.get(top_level_component_type):
-                top_level_components.append(deserializer(payload))
+            parent_id = int(payload["id"])
+            if top_level_component_type == component_models.ComponentType.ACTION_ROW:
+                for component in payload["components"]:
+                    c = self._deserialize_modal_component(top_level_component_type, parent_id, component)
+                    if c is None:
+                        continue
+                    top_level_components.append(c)
+            elif top_level_component_type == component_models.ComponentType.LABEL:
+                c = self._deserialize_modal_component(top_level_component_type, parent_id, payload["component"])
+                if c is None:
+                    continue
+                top_level_components.append(c)
             else:
-                _LOGGER.debug("Unknown component type %s", top_level_component_type)
+                _LOGGER.debug("Unknown top level component type %s", top_level_component_type)
                 continue
 
         return top_level_components
+
+    def _deserialize_modal_component(
+        self, parent_type: modal_interactions.ModalInteractionParentT, parent_id: int, payload: data_binding.JSONObject
+    ) -> modal_interactions.ModalInteractionComponentT | None:
+        component_type = component_models.ComponentType(payload["type"])
+
+        if component_type == component_models.ComponentType.TEXT_SELECT_MENU:
+            return modal_interactions.ModalInteractionStringSelectComponent(
+                parent_type=parent_type,
+                parent_id=parent_id,
+                type=component_type,
+                custom_id=payload["custom_id"],
+                id=payload["id"],
+                values=payload["values"],
+            )
+
+        if component_type in (
+            component_models.ComponentType.USER_SELECT_MENU,
+            component_models.ComponentType.ROLE_SELECT_MENU,
+            component_models.ComponentType.MENTIONABLE_SELECT_MENU,
+            component_models.ComponentType.CHANNEL_SELECT_MENU,
+        ):
+            return modal_interactions.ModalInteractionSelectComponent(
+                parent_type=parent_type,
+                parent_id=parent_id,
+                type=component_type,
+                custom_id=payload["custom_id"],
+                id=payload["id"],
+                values=[snowflakes.Snowflake(value) for value in payload["values"]],
+            )
+
+        if component_type == component_models.ComponentType.TEXT_INPUT:
+            return modal_interactions.ModalInteractionTextInputComponent(
+                parent_type=parent_type,
+                parent_id=parent_id,
+                type=component_type,
+                custom_id=payload["custom_id"],
+                id=payload["id"],
+                value=payload["value"],
+            )
+
+        if component_type == component_models.ComponentType.FILE_UPLOAD:
+            return modal_interactions.ModalInteractionFileUploadComponent(
+                parent_type=parent_type,
+                parent_id=parent_id,
+                type=component_type,
+                custom_id=payload["custom_id"],
+                id=payload["id"],
+                values=[snowflakes.Snowflake(value) for value in payload["values"]],
+            )
+
+        return None
 
     def _deserialize_top_level_components(
         self, payloads: data_binding.JSONArray

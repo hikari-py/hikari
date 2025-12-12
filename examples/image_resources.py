@@ -67,9 +67,7 @@ async def inspect_image(event: hikari.GuildMessageCreateEvent, what: str) -> Non
 
     # If nothing was given, we should just return the avatar of the person who ran the command:
     else:
-        await event.message.respond(
-            "Your avatar", attachment=event.author.display_avatar_url
-        )
+        await event.message.respond("Your avatar", attachment=event.author.display_avatar_url)
 
 
 bot.run()
