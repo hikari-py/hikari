@@ -46,7 +46,16 @@ from hikari.internal import time
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
 
-zstd_present = sys.version_info >= (3, 14) or importlib.util.find_spec("zstandard")
+zstd_present = False
+if sys.version_info >= (3, 14):
+    zstd_present = True
+else:
+    try:
+        import backports.zstd
+
+        zstd_present = True
+    except ModuleNotFoundError:
+        pass
 
 
 def test_log_filterer():

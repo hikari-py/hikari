@@ -5795,6 +5795,16 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
 
+    async def test_fetch_role_member_counts(self, rest_client):
+        expected_route = routes.GET_GUILD_ROLE_MEMBER_COUNTS.compile(guild=123)
+        rest_client._request = mock.AsyncMock(return_value={"456": 54})
+
+        response = await rest_client.fetch_role_member_counts(StubModel(123))
+
+        assert response == {snowflakes.Snowflake(456): 54}
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_estimate_guild_prune_count(self, rest_client):
         expected_route = routes.GET_GUILD_PRUNE.compile(guild=123)
         expected_query = {"days": "1"}
@@ -7285,7 +7295,7 @@ class TestRESTClientImplAsync:
             channel=StubModel(45874392), message=StubModel(398475938475), answer=StubModel(4)
         )
 
-        rest_client._request = mock.AsyncMock(return_value=[{"id": "1234"}])
+        rest_client._request = mock.AsyncMock(return_value={"users": [{"id": "1234"}]})
 
         with mock.patch.object(
             rest_client._entity_factory, "deserialize_user", return_value=mock.Mock()
