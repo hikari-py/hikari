@@ -1349,7 +1349,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         typing.Sequence[typing.MutableMapping[str, typing.Any]], typing.Sequence[files.Resource[files.AsyncReader]]
     ]:
         components = []
-        attachments = []
+        attachments: list[files.Resource[files.AsyncReader]] = []
         if self._components:
             for component in self._components:
                 component_payload, component_attachments = component.build()
