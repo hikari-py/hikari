@@ -713,3 +713,27 @@ MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""
 ModalActionRowComponent = ActionRowComponent[ModalComponentTypesT]
 """A modal action row component."""
+
+V2_COMPONENT_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
+    (
+        ComponentType.SECTION,
+        ComponentType.TEXT_DISPLAY,
+        ComponentType.THUMBNAIL,
+        ComponentType.MEDIA_GALLERY,
+        ComponentType.FILE,
+        ComponentType.SEPARATOR,
+        ComponentType.CONTAINER,
+    )
+)
+"""Set of the [`hikari.components.ComponentType`][] values which are considered v2 components.
+
+The following values are included in this:
+
+* [`hikari.components.ComponentType.SECTION`][]
+* [`hikari.components.ComponentType.TEXT_DISPLAY`][]
+* [`hikari.components.ComponentType.THUMBNAIL`][]
+* [`hikari.components.ComponentType.MEDIA_GALLERY`][]
+* [`hikari.components.ComponentType.FILE`][]
+* [`hikari.components.ComponentType.SEPARATOR`][]
+* [`hikari.components.ComponentType.CONTAINER`][]
+"""
