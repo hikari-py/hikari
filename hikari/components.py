@@ -714,7 +714,7 @@ MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 ModalActionRowComponent = ActionRowComponent[ModalComponentTypesT]
 """A modal action row component."""
 
-V2_COMPONENT_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
+COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
     (
         ComponentType.SECTION,
         ComponentType.TEXT_DISPLAY,
