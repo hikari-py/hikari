@@ -725,7 +725,7 @@ COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
         ComponentType.CONTAINER,
     )
 )
-"""Set of the [`hikari.components.ComponentType`][] values which are considered v2 components.
+"""Set of the component types which are considered v2 components and can only be used with the appropriate flag.
 
 The following values are included in this:
 
