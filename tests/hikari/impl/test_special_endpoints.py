@@ -1099,6 +1099,7 @@ class TestInteractionMessageBuilder:
     def test_build(self):
         mock_entity_factory = mock.Mock()
         mock_component = mock.Mock()
+        mock_component.build.return_value = ({}, [])
         mock_embed = object()
         mock_serialized_embed = object()
         mock_entity_factory.serialize_embed.return_value = (mock_serialized_embed, [])
@@ -1122,7 +1123,7 @@ class TestInteractionMessageBuilder:
             "type": base_interactions.ResponseType.MESSAGE_CREATE,
             "data": {
                 "content": "a content",
-                "components": [mock_component.build.return_value],
+                "components": [mock_component.build.return_value[0]],
                 "embeds": [mock_serialized_embed],
                 "flags": 2323,
                 "tts": True,
