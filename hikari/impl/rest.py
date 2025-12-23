@@ -1490,7 +1490,7 @@ class RESTClientImpl(rest_api.RESTClient):
                 serialized_components = [component_payload]
                 resources.extend(component_attachments)
 
-                if component.type in components_.V2_COMPONENT_TYPES:
+                if component.type in components_.COMPONENT_V2_TYPES:
                     if flags is undefined.UNDEFINED:
                         flags = 0
                     flags |= messages_.MessageFlag.IS_COMPONENTS_V2
@@ -1505,7 +1505,7 @@ class RESTClientImpl(rest_api.RESTClient):
                     serialized_components.append(component_payload)
                     resources.extend(component_attachments)
 
-                    if comp.type in components_.V2_COMPONENT_TYPES:
+                    if comp.type in components_.COMPONENT_V2_TYPES:
                         if flags is undefined.UNDEFINED:
                             flags = 0
                         flags |= messages_.MessageFlag.IS_COMPONENTS_V2

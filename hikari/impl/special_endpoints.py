@@ -1356,7 +1356,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
                 components.append(component_payload)
                 attachments.extend(component_attachments)
 
-                if component.type in component_models.V2_COMPONENT_TYPES:
+                if component.type in component_models.COMPONENT_V2_TYPES:
                     if self._flags is undefined.UNDEFINED:
                         self._flags = 0
                     self._flags |= messages.MessageFlag.IS_COMPONENTS_V2
