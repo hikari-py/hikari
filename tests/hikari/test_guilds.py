@@ -413,9 +413,7 @@ class TestMember:
     def test_make_banner_url(self, model):
         result = model.make_banner_url(file_format="PNG", size=4096)
 
-        model.user.make_banner_url.assert_called_once_with(
-            file_format="PNG", size=4096, lossless=True
-        )
+        model.user.make_banner_url.assert_called_once_with(file_format="PNG", size=4096, lossless=True)
         assert result is model.user.make_banner_url.return_value
 
     def test_make_guild_banner_url_when_no_hash(self, model):

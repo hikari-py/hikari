@@ -31,8 +31,11 @@ __all__: typing.Sequence[str] = (
     "ContainerComponent",
     "ContainerTypesT",
     "FileComponent",
+    "FileUploadComponent",
     "InteractiveButtonTypes",
     "InteractiveButtonTypesT",
+    "LabelComponent",
+    "LabelTypesT",
     "MediaGalleryComponent",
     "MediaGalleryItem",
     "MediaLoadingType",
@@ -40,6 +43,7 @@ __all__: typing.Sequence[str] = (
     "MessageActionRowComponent",
     "MessageComponentTypesT",
     "ModalActionRowComponent",
+    "ModalActionRowComponentTypesT",
     "ModalComponentTypesT",
     "PartialComponent",
     "SectionComponent",
@@ -71,6 +75,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import colors
     from hikari import emojis
+    from hikari import snowflakes
     from hikari import undefined
 
 
@@ -106,6 +111,7 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This component may only be used inside a modal container.
+        FIXME: This needs switching to a different item, like label.
 
     !!! note
         This cannot be top-level and must be within a container component such
@@ -179,6 +185,15 @@ class ComponentType(int, enums.Enum):
         As this is a container component it can never be contained within another
         component and therefore will always be top-level.
     """
+
+    LABEL = 18
+    """A label component.
+
+    FIXME: This needs a better description.
+    """
+
+    FILE_UPLOAD = 19
+    """A file upload component."""
 
 
 @typing.final
@@ -565,6 +580,25 @@ class ContainerComponent(PartialComponent):
     """The components within the container."""
 
 
+@attrs.define(kw_only=True, weakref_slot=False)
+class LabelComponent(PartialComponent):
+    """Represents a label component."""
+
+    component: LabelTypesT = attrs.field()
+    """The component within the label."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class FileUploadComponent(PartialComponent):
+    """Represents a label component."""
+
+    custom_id: str = attrs.field()
+    """Developer set custom ID used for identifying interactions with this file upload."""
+
+    values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
+    """A list of snowflakes in relation to the attachments, that can be found in the resolved interaction data."""
+
+
 TopLevelComponentTypesT = typing.Union[
     ActionRowComponent[PartialComponent],
     TextDisplayComponent,
@@ -701,7 +735,17 @@ The following values are valid for this:
 * [`hikari.components.ButtonComponent`][]
 * [`hikari.components.SelectMenuComponent`][]
 """  # noqa: E501
-ModalComponentTypesT = TextInputComponent
+
+ModalComponentTypesT = typing.Union[ActionRowComponent[PartialComponent], LabelComponent]
+"""Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
+
+The following values are valid for this:
+
+* [`hikari.components.ActionRowComponent`][]
+* [`hikari.components.LabelComponent`][]
+"""
+
+ModalActionRowComponentTypesT = TextInputComponent  # FIXME: This is a breaking change.
 """Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:
@@ -709,9 +753,18 @@ The following values are valid for this:
 * [`hikari.components.TextInputComponent`][]
 """  # noqa: E501
 
+LabelTypesT = typing.Union[SelectMenuComponent, TextInputComponent, FileUploadComponent]
+"""Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.LabelComponent`][].
+
+The following values are valid for this:
+
+* [`hikari.components.TextSelectMenuComponent`][]
+* [`hikari.components.TextInputComponent`][]
+"""
+
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""
-ModalActionRowComponent = ActionRowComponent[ModalComponentTypesT]
+ModalActionRowComponent = ActionRowComponent[ModalActionRowComponentTypesT]
 """A modal action row component."""
 
 COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
