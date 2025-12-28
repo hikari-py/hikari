@@ -93,6 +93,7 @@ _HEARTBEAT_ACK: typing.Final[int] = 11
 # Special dispatches
 _READY: typing.Final[str] = sys.intern("READY")
 _RESUMED: typing.Final[str] = sys.intern("RESUMED")
+_RATE_LIMITED: typing.Final[str] = sys.intern("RATE_LIMITED")
 # If we disconnect within this period of time after starting, we should
 # use an exponential backoff before restarting.
 _BACKOFF_WINDOW: typing.Final[float] = 30.0
@@ -840,6 +841,15 @@ class GatewayShardImpl(shard.GatewayShard):
                 elif name == _RESUMED:
                     self._logger.info("resumed session [session:%s, seq:%s]", self._session_id, self._seq)
                     self._handshake_event.set()
+                elif name == _RATE_LIMITED:
+                    self._logger.warning(
+                        "rate-limited on opcode %d for %.1fs [session:%s, metadata:%s]",
+                        data["opcode"],
+                        data["retry_after"],
+                        data["meta"],
+                        self._session_id,
+                        self._seq,
+                    )
 
                 try:
                     self._event_manager.consume_raw_event(name, self, data)
