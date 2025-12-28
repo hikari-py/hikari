@@ -846,9 +846,8 @@ class GatewayShardImpl(shard.GatewayShard):
                         "rate-limited on opcode %d for %.1fs [session:%s, metadata:%s]",
                         data["opcode"],
                         data["retry_after"],
-                        data["meta"],
                         self._session_id,
-                        self._seq,
+                        data["meta"],
                     )
 
                 try:
