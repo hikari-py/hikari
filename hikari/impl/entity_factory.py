@@ -1980,11 +1980,22 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
     @typing_extensions.override
     def deserialize_guild_widget(self, payload: data_binding.JSONObject) -> guild_models.GuildWidget:
+        return guild_models.GuildWidget(
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            instant_invite=payload.get("instant_invite"),
+            channels=[self.deserialize_partial_channel(channel) for channel in payload["channels"]],
+            members=[self.deserialize_user(member) for member in payload["members"]],
+            presence_count=payload["presence_count"],
+        )
+
+    @typing_extensions.override
+    def deserialize_guild_widget_settings(self, payload: data_binding.JSONObject) -> guild_models.GuildWidgetSettings:
         channel_id: snowflakes.Snowflake | None = None
         if (raw_channel_id := payload["channel_id"]) is not None:
             channel_id = snowflakes.Snowflake(raw_channel_id)
 
-        return guild_models.GuildWidget(app=self._app, channel_id=channel_id, is_enabled=payload["enabled"])
+        return guild_models.GuildWidgetSettings(app=self._app, channel_id=channel_id, is_enabled=payload["enabled"])
 
     @typing_extensions.override
     def deserialize_welcome_screen(self, payload: data_binding.JSONObject) -> guild_models.WelcomeScreen:
