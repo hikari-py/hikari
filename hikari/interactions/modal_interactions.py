@@ -86,8 +86,11 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     This will be [`None`][] if the modal was a response to a command.
     """
 
-    components: typing.Sequence[ModalInteractionPartialComponent]
+    components: typing.Sequence[ModalInteractionPartialComponent] = attrs.field(eq=True, repr=True)
     """Components in the modal."""
+
+    resolved: base_interactions.ResolvedOptionData | None = attrs.field(eq=False, hash=False, repr=False)
+    """Mappings of the objects resolved for the provided modal components."""
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.

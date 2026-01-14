@@ -3040,6 +3040,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if message_payload := payload.get("message"):
             message = self.deserialize_message(message_payload)
 
+        resolved: base_interactions.ResolvedOptionData | None = None
+        if resolved_payload := data_payload.get("resolved"):
+            resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
+
         authorizing_integration_owners = {
             application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
                 integration_owner_id
@@ -3067,6 +3071,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
+            resolved=resolved,
         )
 
     @typing_extensions.override
