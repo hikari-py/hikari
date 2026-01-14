@@ -1345,6 +1345,25 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         self._poll = poll
         return self
 
+    def _build_components(
+        self,
+    ) -> tuple[
+        typing.Sequence[typing.MutableMapping[str, typing.Any]], typing.Sequence[files.Resource[files.AsyncReader]]
+    ]:
+        components = []
+        attachments: list[files.Resource[files.AsyncReader]] = []
+        if self._components:
+            for component in self._components:
+                component_payload, component_attachments = component.build()
+                components.append(component_payload)
+                attachments.extend(component_attachments)
+
+                if component.type in component_models.COMPONENT_V2_TYPES:
+                    if self._flags is undefined.UNDEFINED:
+                        self._flags = 0
+                    self._flags |= messages.MessageFlag.IS_COMPONENTS_V2
+        return components, attachments
+
     @typing_extensions.override
     def build(
         self, entity_factory: entity_factory_.EntityFactory, /
@@ -1380,7 +1399,10 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
             data.put("embeds", None)
 
         if self._components:
-            data.put_array("components", self._components, conversion=lambda component: component.build())
+            components, component_attachments = self._build_components()
+            final_attachments.extend(component_attachments)
+
+            data["components"] = components
         elif self._components is None:
             data.put("components", None)
 

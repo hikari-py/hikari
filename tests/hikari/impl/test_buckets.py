@@ -80,6 +80,7 @@ class TestRESTBucket:
         bucket.move_at = now
         bucket.reset_at = now
         bucket.period = 2
+        bucket._is_fixed = False
 
         now_update = now + 100
         bucket.update_rate_limit(0, 2, now_update, 4)
@@ -187,8 +188,9 @@ class TestRESTBucket:
         assert bucket.name == "test"
         assert bucket.remaining == 1
         assert bucket.limit == 3
-        assert bucket.period == 2
-        assert bucket.move_at == 123123122
+        assert bucket.period == 4
+        assert bucket.move_at == 123123124
+        assert bucket._is_fixed is True
 
 
 class TestRESTBucketManager:
