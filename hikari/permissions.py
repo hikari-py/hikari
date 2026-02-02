@@ -315,6 +315,9 @@ class Permissions(enums.Flag):
 
     PIN_MESSAGES = 1 << 51
     """Allows for pinning a message to a channel."""
+    
+    BYPASS_SLOWMODE = 1 << 52
+    """Allows a user to bypass slowmode restrictions in a channel."""
 
     @classmethod
     def all_permissions(cls) -> Permissions:
