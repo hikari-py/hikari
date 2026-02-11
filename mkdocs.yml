@@ -16,8 +16,8 @@ theme:
   font:
     code: JetBrains Mono
 
-  logo: logo.png
-  favicon: logo.png
+  logo: assets/logo.png
+  favicon: assets/logo.png
 
   icon:
     repo: fontawesome/brands/github
