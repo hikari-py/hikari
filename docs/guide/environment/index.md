@@ -113,7 +113,7 @@ python -c "import hikari; print(hikari.__version__)"
 
 An **IDE (Integrated Development Environment)** is where you will write and manage your code.
 
-While any editor will work, **Visual Studio Code** is recommended for its simplicity, speed, and excellent Python tooling.
+While any editor will work, **Visual Studio Code** or **PyCharm** is recommended for their simplicity, speed, and excellent Python tooling.
 
 | Editor | Documented |
 |--------|------------|
