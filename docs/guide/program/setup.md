@@ -1,15 +1,7 @@
 # Program Setup
 
-We need to set up our bot's program to run, here's how to do it:
-
-- [Creating our File](#creating-our-file)
-- [Import hikari](#import-hikari)
-- [Defining the Bot](#defining-the-bot)
-- [Listen for Events](#listen-for-events)
-- [Running the Bot](#running-the-bot)
-- [Final Program](#final-program)
-
-Each section will be discussed in detail for further understanding
+We need to set up our bot's program to run, and here's how to do it.
+Each section will be discussed in detail for further understanding.
 
 ## Creating our File
 

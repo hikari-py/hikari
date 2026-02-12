@@ -2,12 +2,6 @@
 
 Since `hikari` runs on `Python` `3.10+`, we need a development environment that supports our workflow.
 
-## Table of Contents
-
-- [Installing Python](#installing-python)
-- [Installing hikari](#installing-hikari)
-- [Installing an IDE](#installing-an-ide)
-
 ## Installing Python
 
 It's recommended to install the latest version of `Python` because of new optimizations and features, but we will be installing `3.10` just for example; feel free to install any future stable version that `hikari` supports.

@@ -8,13 +8,6 @@ We need to create our OAuth2 application (bot user), set its intents, permission
 !!! warning
     Discord may change their portal and its workflow at any time, so the steps below may change.
 
-## Table of Contents
-
-- [Creating the Application](#creating-the-application)
-- [General Information](#general-information)
-- [Installation](#installation)
-- [Bot](#bot)
-
 ## Creating the Application
 
 Visit the `Applications` page at the Discord Developer portal, found [here](https://discord.com/developers/applications).

@@ -1,11 +1,5 @@
 # Visual Studio Code
 
-## Table of Contents
-
-- [Install VSCode](#install-vscode)
-- [Install Extensions](#install-extensions)
-- [Selecting the Python Interpreter](#selecting-the-python-interpreter)
-
 ## Install VSCode
 
 If you haven't already, install [Visual Studio Code](https://code.visualstudio.com/Download).
