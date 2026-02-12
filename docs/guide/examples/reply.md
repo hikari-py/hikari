@@ -2,14 +2,16 @@
 
 In this module, we are going to reply to a user with an exact copy of the message they sent.
 If a user says "Hello" the bot will say "Hello" as well.<br/>
-![Reply Result](../../../assets/guide/program/result-reply.png "Reply Result")
+![Reply Result](../../assets/guide/program/result-reply.png "Reply Result")
 
 !!! warning
-    This program requires the reading of users' message contents, and this requires the `MESSAGE_CONTENT` priveleged intent. Be sure your bot's OAuth2 application has the `Message Content` intent set to `ENABLED` and the bot definition includes the `hikari.Intents.MESSAGE_CONTENT` intent, otherwise message content will always be `None`.
+    This program requires the reading of users' message contents, and this requires the `MESSAGE_CONTENT` priveleged intent. Be sure your bot's application has the `Message Content` intent set to `ENABLED` and the bot definition includes the `hikari.Intents.MESSAGE_CONTENT` intent, otherwise message content will always be `None`.
 
     ```python
     bot = hikari.GatewayBot(TOKEN, intents=hikari.Intents.MESSAGE_CONTENT)
     ```
+
+It is recommended that you first read and understand [Program Setup](../program/setup.md) before continuing.
 
 The following will listen for a message and respond with a copy of it's contents.
 
@@ -93,5 +95,6 @@ async def message_sent(event: hikari.MessageCreateEvent) -> None:
 
     await message.respond(content)
 
-bot.run()
+if __name__ == "__main__":
+    bot.run()
 ```

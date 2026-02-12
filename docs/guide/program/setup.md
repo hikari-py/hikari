@@ -21,7 +21,7 @@ import hikari
 ## Defining the Bot
 
 To create a Discord gateway bot, we need to create a `hikari`.`GatewayBot` instance.
-This bot takes our [OAuth2 Token](../oauth2.md#bot) from earlier and identifies itself with Discord as a gateway bot.
+This bot takes our [Application Token](../application.md#bot) from earlier and identifies itself with Discord as a gateway bot.
 
 There are extra parameters that this bot takes, but these will be discussed later.
 
@@ -80,7 +80,14 @@ To actually run the bot and make it work, we have to run the bot itself.
 bot.run()
 ```
 
-Super simple.
+Super simple, however to protect from import-running (accidentally running the bot when importing the main file) we want to guard this statement. To do this:
+
+```python
+if __name__ == "__main__":
+    bot.run()
+```
+
+Python's interpreter assigns the entry program's name as `__main__` to `__name__`. To make sure our bot only runs when it's the entrypoint to the program, we guard it. Otherwise, accidental runs can occur. If an accidental run occurs when a bot is already running with your same token, unpredictable behavior may occur.
 
 ## Final Program
 
@@ -93,7 +100,8 @@ bot = hikari.GatewayBot(TOKEN)
 async def bot_started(event: hikari.GatewayBot) -> None:
     print("Hello world")
 
-bot.run()
+if __name__ == "__main__":
+    bot.run()
 ```
 
 ```
@@ -102,4 +110,6 @@ bot.run()
 
 Congratulations! The bot is running and you should see the bot online in the server you invited it to.
 
-To respond to messages sent by users, follow our [Reply Program](examples/reply-program.md).
+Feel free to follow any of our examples.
+
+If you would like a more in-depth understanding of the lifecycle events (`StartingEvent`, `StartedEvent`, etc.), please take a look at [Lifecycle](lifecycle.md).

@@ -162,8 +162,7 @@ nav:
   - Changelog: changelog.md
   - Guide:
     - Guide: guide/index.md
-    - Definitions: guide/definitions.md
-    - OAuth2: guide/oauth2.md
+    - Application: guide/application.md
     - Environment:
       - Environment: guide/environment/index.md
       - Visual Studio Code: guide/environment/visual-studio-code.md
@@ -171,6 +170,7 @@ nav:
       - Program: guide/program/index.md
       - Setup: guide/program/setup.md
       - Security: guide/program/security.md
-      - Examples:
-        - Reply: guide/program/examples/reply-program.md
+      - Lifecycle: guide/program/lifecycle.md
+    - Examples:
+      - Reply: guide/examples/reply.md
   - Reference: reference/
