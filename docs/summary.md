@@ -4,4 +4,13 @@
     - [Guide](guide/index.md)
     - [Definitions](guide/definitions.md)
     - [OAuth2](guide/oauth2.md)
+    - Environment
+        - [Environment](guide/environment/index.md)
+        - [Visual Studio Code](guide/environment/visual-studio-code.md)
+    - Program
+        - [Program](guide/program/index.md)
+        - [Security](guide/program/security.md)
+        - [Setup](guide/program/setup.md)
+        - Examples
+            - [Reply](guide/program/examples/reply-program.md)
 - [Reference](reference.md)

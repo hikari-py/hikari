@@ -7,6 +7,8 @@ This guide will show developers how exactly they can use `hikari`. It will go ov
 `hikari` is written in Python and supports `3.10`, `3.11`, `3.12`, `3.13`, and `3.14`.
 Environment setup will be discussed in a further page.
 
-It is recommended that you read and understand all of Discord's interaction objects and functionality before moving further, discussed in [[Definitions]](definitions.md).
+It is recommended that you read and understand all of Discord's interaction objects and functionality before moving further, discussed in [Definitions](definitions.md).
 
-To get started, start by visiting the [[Creating an OAuth2 application]](oauth2.md) page.
+If you already have an OAuth2 application made and have the token, skip to [Environment](environment/index.md).
+
+To get started, start by visiting [Creating an OAuth2 application](oauth2.md).

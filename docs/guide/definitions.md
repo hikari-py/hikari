@@ -26,11 +26,11 @@ A list of all publicly documented intents can be found [here](https://discord.co
 
 ## REST
 
-[REST]() is Discord's REST system, allowing HTTP requests to add/update/delete objects and systems with Discord.
+The Discord REST API allows HTTP requests to add/update/delete objects and systems within Discord.
 Most Discord objects (like guilds, channels, messages, users/members) have REST functionality (like `channel.create_message()`, etc.) implemented by `hikari`.
 
 ## Snowflakes
 
-[Snowflakes](https://discord.com/developers/docs/reference#snowflakes) are Discord's unique identifiers (or `ID`s). They are basically regular integers and are treated that way by `hikari` internally.
+[Snowflakes](https://discord.com/developers/docs/reference#snowflakes) are Discord's unique identifiers (or `ID`s). They are essentially regular integers and are treated that way by `hikari` internally.
 Discord provides a diagram that shows how they are made and what specific parts of the snowflake are for.
 ![Snowflakes](../assets/guide/definitions/snowflake.png "Snowflakes")

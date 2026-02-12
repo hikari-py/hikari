@@ -3,14 +3,21 @@
 An OAuth2 application is the foundational application that Discord bots (or any Discord app) run as.
 Each application has a token that is used to identify with Discord's gateway when we wish to connect (like a password).
 
-We need to create our OAuth2 application (bot user), set it's intents, permissions (if required), and get the token.
+We need to create our OAuth2 application (bot user), set its intents, permissions (if required), and get the token.
 
 !!! warning
     Discord may change their portal and its workflow at any time, so the steps below may change.
 
-## Creating the application
+## Table of Contents
 
-Visit the `Applications` page at the Discord Developer portal, found [[here]](https://discord.com/developers/applications).
+- [Creating the Application](#creating-the-application)
+- [General Information](#general-information)
+- [Installation](#installation)
+- [Bot](#bot)
+
+## Creating the Application
+
+Visit the `Applications` page at the Discord Developer portal, found [here](https://discord.com/developers/applications).
 Make sure you are signed in to the Discord account you wish to parent the Discord bot itself, then click `New Application` at the top-right of the page.
 
 Give your application a name and the `Personal` team is fine to start. Accept the Discord Developer Terms of Service and Developer Policy, and click `Create`.
@@ -71,4 +78,6 @@ We should keep the `Server Members Intent` and `Message Content Intent` toggled 
 
 Save your changes thus far by clicking the green `Save Changes` button at the bottom of the page.
 
-Now that our OAuth2 application as been created, proceed to setting up the [[Environment]](environment.md).
+If you already have your `Python` environment set up (`hikari` installed, IDE installed) skip to [Program](program/index.md).
+
+Now that our OAuth2 application as been created, proceed to setting up the [Environment](environment/index.md).
