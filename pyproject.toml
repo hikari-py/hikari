@@ -78,17 +78,17 @@ zstd = ["backports.zstd; python_version < '3.14'"]
 "CI" = "https://github.com/hikari-py/hikari/actions"
 
 [dependency-groups]
-nox = ["nox[uv]==2025.11.12"]
+nox = ["nox[uv]==2026.2.9"]
 
 audit = ["uv-secure"]
 codespell = ["codespell==2.4.1"]
-coverage = ["coverage[toml]==7.13.3"]
+coverage = ["coverage[toml]==7.13.4"]
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
     "mkdocs-material==9.7.1",
     # Docstring parsing for API reference
-    "mkdocstrings[python]==1.0.2",
+    "mkdocstrings[python]==1.0.3",
     "griffe-inherited-docstrings==1.1.2",
     # Generate API reference pages dynamically
     "mkdocs-gen-files==0.6.0",
@@ -113,7 +113,7 @@ pytest = [
     { include-group = "coverage" },
 ]
 release = ["twine==6.2.0"]
-ruff = ["ruff==0.14.14"]
+ruff = ["ruff==0.15.1"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==25.8.0"]
 types = [
