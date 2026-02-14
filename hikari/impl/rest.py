@@ -4054,15 +4054,24 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_guild_widget(response)
 
     @typing_extensions.override
-    async def edit_widget(
+    async def fetch_widget_settings(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+    ) -> guilds.GuildWidgetSettings:
+        route = routes.GET_GUILD_WIDGET_SETTINGS.compile(guild=guild)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_guild_widget_settings(response)
+
+    @typing_extensions.override
+    async def edit_widget_settings(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.GuildChannel]] = undefined.UNDEFINED,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-    ) -> guilds.GuildWidget:
-        route = routes.PATCH_GUILD_WIDGET.compile(guild=guild)
+    ) -> guilds.GuildWidgetSettings:
+        route = routes.PATCH_GUILD_WIDGET_SETTINGS.compile(guild=guild)
 
         body = data_binding.JSONObjectBuilder()
         body.put("enabled", enabled)
@@ -4070,7 +4079,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
-        return self._entity_factory.deserialize_guild_widget(response)
+        return self._entity_factory.deserialize_guild_widget_settings(response)
 
     @typing_extensions.override
     async def fetch_welcome_screen(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> guilds.WelcomeScreen:
