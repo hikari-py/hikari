@@ -913,7 +913,7 @@ class File(Resource[ThreadedFileReader]):
     @property
     @typing_extensions.override
     def filename(self) -> str:
-        filename = self._filename if self._filename else self.path.name
+        filename = self._filename or self.path.name
 
         if self.is_spoiler:
             return SPOILER_TAG + filename
