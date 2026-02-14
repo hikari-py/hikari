@@ -597,7 +597,7 @@ class LabelComponent(PartialComponent):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class FileUploadComponent(PartialComponent):
-    """Represents a label component."""
+    """Represents a file upload component."""
 
     custom_id: str = attrs.field()
     """Developer set custom ID used for identifying interactions with this file upload."""

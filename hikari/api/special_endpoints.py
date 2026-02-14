@@ -2905,12 +2905,12 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def label(self) -> str:
-        """The label name of the label component."""
+        """The name of the label component."""
 
     @property
     @abc.abstractmethod
     def description(self) -> undefined.UndefinedOr[str]:
-        """The label name of the label component."""
+        """The description of the label component."""
 
     @property
     @abc.abstractmethod
@@ -2918,7 +2918,7 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         """The component attached to the label."""
 
     @abc.abstractmethod
-    def set_component(self, component: ModalActionRowBuilderComponentsT, /) -> Self:
+    def set_component(self, component: LabelBuilderComponentsT, /) -> Self:
         """Set the child component of this label component.
 
         !!! warning
@@ -3002,8 +3002,8 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         """Set the child component to a select menu component for this label component.
 
         For channel select menus and text select menus see
-        [`hikari.api.special_endpoints.MessageActionRowBuilder.add_channel_menu`][]
-        and [`hikari.api.special_endpoints.MessageActionRowBuilder.add_text_menu`][].
+        [`hikari.api.special_endpoints.LabelComponentBuilder.add_channel_menu`][]
+        and [`hikari.api.special_endpoints.LabelComponentBuilder.add_text_menu`][].
 
         Parameters
         ----------
@@ -3018,8 +3018,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             The minimum amount of entries which need to be selected.
         max_values
             The maximum amount of entries which can be selected.
-        is_disabled
-            Whether this select menu should be marked as disabled.
         is_required
             Whether this select menu should be marked as required.
         id
@@ -3063,8 +3061,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             The minimum amount of entries which need to be selected.
         max_values
             The maximum amount of entries which can be selected.
-        is_disabled
-            Whether this select menu should be marked as disabled.
         is_required
             Whether this select menu should be marked as required.
         id
@@ -3119,8 +3115,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             The minimum amount of entries which need to be selected.
         max_values
             The maximum amount of entries which can be selected.
-        is_disabled
-            Whether this select menu should be marked as disabled.
         is_required
             Whether this select menu should be marked as required.
         id
