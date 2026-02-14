@@ -86,7 +86,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     This will be [`None`][] if the modal was a response to a command.
     """
 
-    components: typing.Sequence[ModalInteractionPartialComponent] = attrs.field(eq=True, repr=True)
+    components: typing.Sequence[components_.ModalComponentTypesT] = attrs.field(eq=True, repr=True)
     """Components in the modal."""
 
     resolved: base_interactions.ResolvedOptionData | None = attrs.field(eq=False, hash=False, repr=False)
@@ -141,69 +141,6 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
         return self.app.rest.interaction_deferred_builder(base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE)
 
 
-@attrs_extensions.with_copy
-@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class ModalInteractionPartialComponent:
-    """Represents a modal component on discord."""
-
-    parent_type: ModalInteractionParentT = attrs.field(eq=False, repr=False)
-    """The type of parent that this child component was held within."""
-
-    parent_id: int = attrs.field(eq=True, repr=True)
-    """The ID of the parent this child component was held within."""
-
-    type: components_.ComponentType = attrs.field(eq=True, repr=True)
-    """The actual component type."""
-
-    custom_id: str = attrs.field(eq=True, repr=True)
-    """The developer-defined identifier."""
-
-    id: int = attrs.field(eq=True, repr=True)
-    """The unique ID for the component."""
-
-
-@attrs_extensions.with_copy
-@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class ModalInteractionStringSelectComponent(ModalInteractionPartialComponent):
-    """Represents a modal string select component."""
-
-    values: typing.Sequence[str] = attrs.field(eq=True, repr=True)
-    """The selected text options."""
-
-
-@attrs_extensions.with_copy
-@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class ModalInteractionSelectComponent(ModalInteractionPartialComponent):
-    """Represents a modal select component.
-
-    This includes things like a user, role, mentionable and channel select.
-    """
-
-    values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True, repr=True)
-    """The selected text options."""
-
-
-@attrs_extensions.with_copy
-@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class ModalInteractionTextInputComponent(ModalInteractionPartialComponent):
-    """Represents a modal string select component."""
-
-    value: str = attrs.field(eq=True, repr=True)
-    """The inputted text."""
-
-
-@attrs_extensions.with_copy
-@attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
-class ModalInteractionFileUploadComponent(ModalInteractionPartialComponent):
-    """Represents a modal string select component."""
-
-    values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True, repr=True)
-    """The selected file attachments.
-
-    These can be found in the resolved information attachments option.
-    """
-
-
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class ModalInteractionMetadata(base_interactions.PartialInteractionMetadata):
     """The interaction metadata for a modal initiated message."""
@@ -215,12 +152,3 @@ class ModalInteractionMetadata(base_interactions.PartialInteractionMetadata):
         eq=False, hash=False, repr=True
     )
     """The metadata for the interaction that was used to open the modal."""
-
-
-ModalInteractionComponentT = typing.Union[
-    ModalInteractionStringSelectComponent
-    | ModalInteractionSelectComponent
-    | ModalInteractionTextInputComponent
-    | ModalInteractionFileUploadComponent
-]
-"""FIXME: Document me."""
