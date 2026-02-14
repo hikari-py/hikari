@@ -48,6 +48,7 @@ from hikari.events import reaction_events
 from hikari.events import role_events
 from hikari.events import scheduled_events
 from hikari.events import shard_events
+from hikari.events import soundboard_events
 from hikari.events import stage_events
 from hikari.events import typing_events
 from hikari.events import user_events
@@ -177,6 +178,13 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         if self._cache:
             self._cache.delete_guild_channel(event.channel.id)
             self._cache.clear_threads_for_channel(event.guild_id, event.channel.id)
+
+        self.dispatch(event)
+
+    @event_manager_base.filtered(channel_events.GuildChannelEffectSendEvent)
+    def on_voice_channel_effect_send(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#voice-channel-effect-send for more info."""
+        event = self._event_factory.deserialize_guild_channel_effect_send_event(shard, payload)
 
         self.dispatch(event)
 
@@ -951,3 +959,31 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     ) -> None:
         """See https://discord.com/developers/docs/topics/gateway#auto-moderation-action-execution for more info."""
         self.dispatch(self._event_factory.deserialize_auto_mod_action_execution_event(shard, payload))
+
+    @event_manager_base.filtered(soundboard_events.SoundboardSoundCreateEvent)
+    def on_guild_soundboard_sound_create(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#guild-soundboard-sound-create for more info."""
+        self.dispatch(self._event_factory.deserialize_soundboard_sound_create_event(shard, payload))
+
+    @event_manager_base.filtered(soundboard_events.SoundboardSoundUpdateEvent)
+    def on_guild_soundboard_sound_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#guild-soundboard-sound-update for more info."""
+        self.dispatch(self._event_factory.deserialize_soundboard_sound_update_event(shard, payload))
+
+    @event_manager_base.filtered(soundboard_events.SoundboardSoundDeleteEvent)
+    def on_guild_soundboard_sound_delete(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#guild-soundboard-sound-delete for more info."""
+        self.dispatch(self._event_factory.deserialize_soundboard_sound_delete_event(shard, payload))
+
+    @event_manager_base.filtered(soundboard_events.SoundboardSoundsUpdateEvent)
+    def on_guild_soundboard_sounds_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://discord.com/developers/docs/events/gateway-events#guild-soundboard-sounds-update for more info."""  # noqa: E501
+        self.dispatch(self._event_factory.deserialize_soundboard_sounds_update_event(shard, payload))
