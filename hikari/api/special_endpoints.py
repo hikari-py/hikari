@@ -2996,7 +2996,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,
-        is_disabled: bool = False,
         is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
@@ -3048,7 +3047,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,
-        is_disabled: bool = False,
         is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> TextSelectMenuBuilder[Self]:
@@ -3100,7 +3098,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,
-        is_disabled: bool = False,
         is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:

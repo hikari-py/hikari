@@ -3146,7 +3146,6 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,
-        is_disabled: bool = False,
         is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
@@ -3158,7 +3157,6 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
                 placeholder=placeholder,
                 min_values=min_values,
                 max_values=max_values,
-                is_disabled=is_disabled,
                 is_required=is_required,
             )
         )
@@ -3183,7 +3181,6 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
             placeholder=placeholder,
             min_values=min_values,
             max_values=max_values,
-            is_disabled=is_disabled,
             is_required=is_required,
         )
         self.set_component(component)
@@ -3199,7 +3196,6 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
         max_values: int = 1,
-        is_disabled: bool = False,
         is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
@@ -3209,7 +3205,6 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
             placeholder=placeholder,
             min_values=min_values,
             max_values=max_values,
-            is_disabled=is_disabled,
             is_required=is_required,
             channel_types=channel_types,
         )

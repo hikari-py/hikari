@@ -2686,7 +2686,6 @@ class TestLabelBuilder:
             placeholder="a fancy placeholder",
             min_values=3,
             max_values=49,
-            is_disabled=True,
             is_required=False,
             id=482,
         )
@@ -2697,7 +2696,6 @@ class TestLabelBuilder:
         assert label.component.placeholder == "a fancy placeholder"
         assert label.component.min_values == 3
         assert label.component.max_values == 49
-        assert label.component.is_disabled is True
         assert label.component.is_required is False
         assert label.component.id == 482
 
@@ -2709,13 +2707,7 @@ class TestLabelBuilder:
         assert label.component == component
 
         label.set_text_menu(
-            "text-select",
-            placeholder="a fancy placeholder",
-            min_values=3,
-            max_values=49,
-            is_disabled=True,
-            is_required=False,
-            id=482,
+            "text-select", placeholder="a fancy placeholder", min_values=3, max_values=49, is_required=False, id=482
         )
 
         assert isinstance(label.component, special_endpoints.TextSelectMenuBuilder)
@@ -2724,7 +2716,6 @@ class TestLabelBuilder:
         assert label.component.placeholder == "a fancy placeholder"  # pyright: ignore[reportUnknownMemberType]
         assert label.component.min_values == 3  # pyright: ignore[reportUnknownMemberType]
         assert label.component.max_values == 49  # pyright: ignore[reportUnknownMemberType]
-        assert label.component.is_disabled is True  # pyright: ignore[reportUnknownMemberType]
         assert label.component.is_required is False  # pyright: ignore[reportUnknownMemberType]
         assert label.component.id == 482  # pyright: ignore[reportUnknownMemberType]
         assert label.component.options == []  # pyright: ignore[reportUnknownMemberType]
@@ -2742,7 +2733,6 @@ class TestLabelBuilder:
             placeholder="a fancy placeholder",
             min_values=3,
             max_values=49,
-            is_disabled=True,
             is_required=False,
             id=482,
         )
@@ -2754,7 +2744,6 @@ class TestLabelBuilder:
         assert label.component.placeholder == "a fancy placeholder"
         assert label.component.min_values == 3
         assert label.component.max_values == 49
-        assert label.component.is_disabled is True
         assert label.component.is_required is False
         assert label.component.id == 482
 
