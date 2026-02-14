@@ -1999,7 +1999,7 @@ class TestTextInput:
             "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
-            # "label": "label", # FIXME: This needs to be changed, as the action row still needs this value.
+            "label": "label",
             "required": True,
             "min_length": 0,
             "max_length": 4000,
@@ -2026,7 +2026,7 @@ class TestTextInput:
             "type": components.ComponentType.TEXT_INPUT,
             "style": 1,
             "custom_id": "o2o2o2",
-            # "label": "label",
+            "label": "label",
             "placeholder": "placeholder",
             "value": "value",
             "required": False,

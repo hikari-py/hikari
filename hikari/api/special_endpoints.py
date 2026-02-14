@@ -3207,7 +3207,7 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
         Defaults to 1.
         Must be less than or equal to [`hikari.api.special_endpoints.FileUploadComponentBuilder.max_values`][] and greater
         than or equal to 0.
-        """
+        """  # noqa: E501
 
     @property
     @abc.abstractmethod

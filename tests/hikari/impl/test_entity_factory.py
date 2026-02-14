@@ -6103,6 +6103,21 @@ class TestEntityFactoryImpl:
 
         assert action_row.components == []
 
+    def test__deserialize_modal_label_component(self, entity_factory_impl, label_payload, text_input_payload):
+        label = entity_factory_impl._deserialize_modal_label_component(label_payload)
+
+        assert label.type == component_models.ComponentType.LABEL
+        assert label.id == 3294587
+        assert label.component == entity_factory_impl._deserialize_text_input(text_input_payload)
+
+        assert isinstance(label, component_models.LabelComponent)
+
+    def test__deserialize_modal_label_component_with_unknown_component_type(self, entity_factory_impl, label_payload):
+        label_payload["component"] = {"type": -9999}
+
+        with pytest.raises(errors.UnrecognisedEntityError, match=r"^Unrecognised component type: -9999$"):
+            label = entity_factory_impl._deserialize_modal_label_component(label_payload)
+
     def test__deserialize_section_component(
         self, entity_factory_impl, section_payload, button_payload, text_display_payload
     ):
@@ -6245,22 +6260,6 @@ class TestEntityFactoryImpl:
 
         assert container.components == []
 
-    def test__deserialize_label_component(self, entity_factory_impl, label_payload, text_input_payload):
-        label = entity_factory_impl._deserialize_label_component(label_payload)
-
-        assert label.type == component_models.ComponentType.LABEL
-        assert label.id == 3294587
-        assert label.component == entity_factory_impl._deserialize_text_input(text_input_payload)
-
-        assert isinstance(label, component_models.LabelComponent)
-
-    def test__deserialize_label_component_with_unset_fields(self, entity_factory_impl, label_payload):
-        del label_payload["id"]
-
-        label = entity_factory_impl._deserialize_label_component(label_payload)
-
-        assert label.id is None
-
     def test__deserialize_file_upload_component(self, entity_factory_impl, file_upload_payload):
         file_upload = entity_factory_impl._deserialize_file_upload_component(file_upload_payload)
 
@@ -6335,7 +6334,7 @@ class TestEntityFactoryImpl:
             components=[entity_factory_impl._deserialize_text_input(text_input_payload)],
         )
 
-        assert modal_components[1] == entity_factory_impl._deserialize_label_component(label_payload)
+        assert modal_components[1] == entity_factory_impl._deserialize_modal_label_component(label_payload)
 
     def test__deserialize_modal_components_handles_unknown_top_component_type(self, entity_factory_impl):
         modal_components = entity_factory_impl._deserialize_modal_components([{"type": 9999}])

@@ -3578,15 +3578,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             components=components,
         )
 
-    def _deserialize_label_component(self, payload: data_binding.JSONObject) -> component_models.LabelComponent:
-        component_deserializer = self._label_component_type_mapping[payload["component"]["type"]]
-
-        return component_models.LabelComponent(
-            type=component_models.ComponentType.LABEL,
-            id=payload.get("id", None),
-            component=component_deserializer(payload["component"]),
-        )
-
     def _deserialize_file_upload_component(
         self, payload: data_binding.JSONObject
     ) -> component_models.FileUploadComponent:

@@ -2355,7 +2355,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         data["type"] = component_models.ComponentType.TEXT_INPUT
         data["style"] = self._style
         data["custom_id"] = self._custom_id
-        # data["label"] = self._label # FIXME: This needs to exist for action rows, but not for labels.
+        data["label"] = self._label
         data.put("id", self._id)
         data.put("placeholder", self._placeholder)
         data.put("value", self._value)
@@ -3243,6 +3243,9 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         payload.put("id", self._id)
         payload.put("description", self._description)
         component_payload, attachments = self._component.build()
+
+        if self._component.type == component_models.ComponentType.TEXT_INPUT:
+            del component_payload["label"]
 
         payload.put("component", component_payload)
 
