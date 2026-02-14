@@ -59,6 +59,7 @@ import typing
 import attrs
 
 from hikari import channels as channels_
+from hikari import colors
 from hikari import snowflakes
 from hikari import stickers
 from hikari import traits
@@ -74,7 +75,6 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import colors
     from hikari import colours
     from hikari import emojis as emojis_
     from hikari import files
@@ -211,6 +211,9 @@ class GuildFeature(str, enums.Enum):
 
     RAID_ALERTS_DISABLED = "RAID_ALERTS_DISABLED"
     """Guild has disabled alerts for join raids in the configured safety alerts channel."""
+
+    ENHANCED_ROLE_COLORS = "ENHANCED_ROLE_COLORS"
+    """Guild is able to set gradient colors to roles."""
 
 
 @typing.final
@@ -1173,6 +1176,9 @@ class Role(PartialRole):
 
     This will be applied to a member's name in chat if it's their top coloured role.
     """
+
+    colors: colors.ColorGradient = attrs.field(eq=False, hash=False, repr=False)
+    """The colors object of this role."""
 
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the guild this role belongs to."""
