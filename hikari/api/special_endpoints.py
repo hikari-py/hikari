@@ -1783,6 +1783,9 @@ class SelectMenuBuilder(ComponentBuilder, abc.ABC):
     def set_is_disabled(self, state: bool, /) -> Self:  # noqa: FBT001 - Boolean-typed positional argument
         """Set whether this option is disabled.
 
+        !!! warning
+            Modals are not allowed to have disabled components in them and will error if used.
+
         Parameters
         ----------
         state
