@@ -41,11 +41,13 @@ __all__: typing.Sequence[str] = (
     "ContainerComponentBuilder",
     "ContextMenuCommandBuilder",
     "FileComponentBuilder",
+    "FileUploadComponentBuilder",
     "InteractionAutocompleteBuilder",
     "InteractionDeferredBuilder",
     "InteractionMessageBuilder",
     "InteractionModalBuilder",
     "InteractiveButtonBuilder",
+    "LabelComponentBuilder",
     "LinkButtonBuilder",
     "MediaGalleryComponentBuilder",
     "MediaGalleryItemBuilder",
@@ -2006,6 +2008,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     _min_values: int = attrs.field(alias="min_values", default=0)
     _max_values: int = attrs.field(alias="max_values", default=1)
     _is_disabled: bool = attrs.field(alias="is_disabled", default=False)
+    _is_required: bool = attrs.field(alias="is_required", default=True)
 
     @property
     @typing_extensions.override
@@ -2026,6 +2029,11 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     @typing_extensions.override
     def is_disabled(self) -> bool:
         return self._is_disabled
+
+    @property
+    @typing_extensions.override
+    def is_required(self) -> bool:
+        return self._is_required
 
     @property
     @typing_extensions.override
@@ -2050,6 +2058,11 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     @typing_extensions.override
     def set_is_disabled(self, state: bool, /) -> Self:
         self._is_disabled = state
+        return self
+
+    @typing_extensions.override
+    def set_is_required(self, state: bool, /) -> Self:
+        self._is_required = state
         return self
 
     @typing_extensions.override
@@ -2080,6 +2093,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
         data.put("min_values", self._min_values)
         data.put("max_values", self._max_values)
         data.put("disabled", self._is_disabled)
+        data.put("required", self._is_required)
         return data, []
 
 
@@ -2108,6 +2122,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        is_required: bool = True,
     ) -> None: ...
 
     @typing.overload
@@ -2121,6 +2136,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        is_required: bool = True,
     ) -> None: ...
 
     def __init__(
@@ -2134,6 +2150,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        is_required: bool = True,
     ) -> None:
         super().__init__(
             type=component_models.ComponentType.TEXT_SELECT_MENU,
@@ -2143,6 +2160,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
             min_values=min_values,
             max_values=max_values,
             is_disabled=is_disabled,
+            is_required=is_required,
         )
         self._options = list(options)
         self._parent = parent
@@ -2432,6 +2450,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(
@@ -2443,6 +2462,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
                 min_values=min_values,
                 max_values=max_values,
                 is_disabled=is_disabled,
+                is_required=is_required,
             )
         )
 
@@ -2457,6 +2477,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> Self:
         return self.add_component(
@@ -2468,6 +2489,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
                 min_values=min_values,
                 max_values=max_values,
                 is_disabled=is_disabled,
+                is_required=is_required,
             )
         )
 
@@ -2481,6 +2503,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
         min_values: int = 0,
         max_values: int = 1,
         is_disabled: bool = False,
+        is_required: bool = True,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
     ) -> special_endpoints.TextSelectMenuBuilder[Self]:
         component = TextSelectMenuBuilder(
@@ -2491,6 +2514,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
             min_values=min_values,
             max_values=max_values,
             is_disabled=is_disabled,
+            is_required=is_required,
         )
         self.add_component(component)
         return component
@@ -3042,6 +3066,239 @@ class ContainerComponentBuilder(special_endpoints.ContainerComponentBuilder):
         payload.put_array("components", components_payload)
 
         return payload, attachments
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.LabelComponentBuilder`][]."""
+
+    _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
+    _label: str = attrs.field(alias="label")
+    _description: undefined.UndefinedOr[str] = attrs.field(alias="description", default=undefined.UNDEFINED)
+    _component: special_endpoints.LabelBuilderComponentsT = attrs.field(alias="component")
+
+    @property
+    @typing_extensions.override
+    def type(self) -> typing.Literal[component_models.ComponentType.LABEL]:
+        return component_models.ComponentType.LABEL
+
+    @property
+    @typing_extensions.override
+    def id(self) -> undefined.UndefinedOr[int]:
+        return self._id
+
+    @property
+    @typing_extensions.override
+    def label(self) -> str:
+        return self._label
+
+    @property
+    @typing_extensions.override
+    def description(self) -> undefined.UndefinedOr[str]:
+        return self._description
+
+    @property
+    @typing_extensions.override
+    def component(self) -> special_endpoints.LabelBuilderComponentsT:
+        return self._component
+
+    @typing_extensions.override
+    def set_component(self, component: special_endpoints.LabelBuilderComponentsT, /) -> Self:
+        self._component = component
+        return self
+
+    @typing_extensions.override
+    def set_text_input(
+        self,
+        custom_id: str,
+        label: str,
+        /,
+        *,
+        style: component_models.TextInputStyle = component_models.TextInputStyle.SHORT,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        value: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        required: bool = True,
+        min_length: int = 0,
+        max_length: int = 4000,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        return self.set_component(
+            TextInputBuilder(
+                id=id,
+                custom_id=custom_id,
+                label=label,
+                style=style,
+                placeholder=placeholder,
+                value=value,
+                required=required,
+                min_length=min_length,
+                max_length=max_length,
+            )
+        )
+
+    @typing_extensions.override
+    def set_select_menu(
+        self,
+        type_: component_models.ComponentType | int,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_required: bool = True,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        return self.set_component(
+            SelectMenuBuilder(
+                type=type_,
+                id=id,
+                custom_id=custom_id,
+                placeholder=placeholder,
+                min_values=min_values,
+                max_values=max_values,
+                is_required=is_required,
+            )
+        )
+
+    @typing_extensions.override
+    def set_text_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_required: bool = True,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> special_endpoints.TextSelectMenuBuilder[Self]:
+        component = TextSelectMenuBuilder(
+            id=id,
+            custom_id=custom_id,
+            parent=self,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_required=is_required,
+        )
+        self.set_component(component)
+        return component
+
+    @typing_extensions.override
+    def set_channel_menu(
+        self,
+        custom_id: str,
+        /,
+        *,
+        channel_types: typing.Sequence[channels.ChannelType] = (),
+        placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        min_values: int = 0,
+        max_values: int = 1,
+        is_required: bool = True,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        component = ChannelSelectMenuBuilder(
+            id=id,
+            custom_id=custom_id,
+            placeholder=placeholder,
+            min_values=min_values,
+            max_values=max_values,
+            is_required=is_required,
+            channel_types=channel_types,
+        )
+        self.set_component(component)
+        return self
+
+    @typing_extensions.override
+    def set_file_upload(
+        self,
+        custom_id: str,
+        /,
+        *,
+        min_values: int = 1,
+        max_values: int = 1,
+        is_required: bool = True,
+        id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> Self:
+        component = FileUploadComponentBuilder(
+            id=id, custom_id=custom_id, min_values=min_values, max_values=max_values, is_required=is_required
+        )
+        self.set_component(component)
+        return self
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload = data_binding.JSONObjectBuilder()
+        payload["type"] = self.type
+        payload["label"] = self._label
+        payload.put("id", self._id)
+        payload.put("description", self._description)
+        component_payload, attachments = self._component.build()
+
+        if self._component.type == component_models.ComponentType.TEXT_INPUT:
+            del component_payload["label"]
+
+        payload.put("component", component_payload)
+
+        return payload, attachments
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder, abc.ABC):
+    """Builder class for file upload components."""
+
+    _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
+    _custom_id: str = attrs.field(alias="custom_id")
+    _min_values: int = attrs.field(alias="min_values", default=1)
+    _max_values: int = attrs.field(alias="max_values", default=1)
+    _is_required: bool = attrs.field(alias="is_required", default=True)
+
+    @property
+    @typing_extensions.override
+    def type(self) -> typing.Literal[component_models.ComponentType.FILE_UPLOAD]:
+        return component_models.ComponentType.FILE_UPLOAD
+
+    @property
+    @typing_extensions.override
+    def id(self) -> undefined.UndefinedOr[int]:
+        return self._id
+
+    @property
+    @typing_extensions.override
+    def custom_id(self) -> str:
+        return self._custom_id
+
+    @property
+    @typing_extensions.override
+    def min_values(self) -> int:
+        return self._min_values
+
+    @property
+    @typing_extensions.override
+    def max_values(self) -> int:
+        return self._max_values
+
+    @property
+    @typing_extensions.override
+    def is_required(self) -> bool:
+        return self._is_required
+
+    @typing_extensions.override
+    def build(
+        self,
+    ) -> tuple[typing.MutableMapping[str, typing.Any], typing.Sequence[files.Resource[files.AsyncReader]]]:
+        payload = data_binding.JSONObjectBuilder()
+        payload["type"] = self.type
+        payload.put("id", self._id)
+        payload.put("custom_id", self._custom_id)
+        payload.put("min_values", self._min_values)
+        payload.put("max_values", self._max_values)
+        payload.put("required", self._is_required)
+
+        return payload, []
 
 
 @attrs.define(kw_only=True, weakref_slot=False)

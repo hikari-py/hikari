@@ -33,11 +33,11 @@ import typing
 
 import attrs
 
+from hikari import components as components_
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
-    from hikari import components as components_
     from hikari import messages
     from hikari import snowflakes
     from hikari.api import special_endpoints
@@ -62,6 +62,15 @@ The following types are valid for this:
 * [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]/`6`
 """
 
+ModalInteractionParentT = typing.Literal[components_.ComponentType.ACTION_ROW, components_.ComponentType.LABEL]
+"""Type-hint of the modal interaction parent types that are valid as a parent interaction component.
+
+The following types are valid for this.
+
+* [`hikari.components.ComponentType.ACTION_ROW`][]
+* [`hikari.components.ComponentType.LABEL`][]
+"""
+
 
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
@@ -77,8 +86,11 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     This will be [`None`][] if the modal was a response to a command.
     """
 
-    components: typing.Sequence[components_.ModalActionRowComponent] = attrs.field(eq=False, hash=False, repr=True)
+    components: typing.Sequence[components_.ModalComponentTypesT] = attrs.field(eq=True, repr=True)
     """Components in the modal."""
+
+    resolved: base_interactions.ResolvedOptionData | None = attrs.field(eq=False, hash=False, repr=False)
+    """Mappings of the objects resolved for the provided modal components."""
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.

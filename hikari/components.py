@@ -31,8 +31,11 @@ __all__: typing.Sequence[str] = (
     "ContainerComponent",
     "ContainerTypesT",
     "FileComponent",
+    "FileUploadComponent",
     "InteractiveButtonTypes",
     "InteractiveButtonTypesT",
+    "LabelComponent",
+    "LabelTypesT",
     "MediaGalleryComponent",
     "MediaGalleryItem",
     "MediaLoadingType",
@@ -40,6 +43,7 @@ __all__: typing.Sequence[str] = (
     "MessageActionRowComponent",
     "MessageComponentTypesT",
     "ModalActionRowComponent",
+    "ModalActionRowComponentTypesT",
     "ModalComponentTypesT",
     "PartialComponent",
     "SectionComponent",
@@ -71,6 +75,7 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import colors
     from hikari import emojis
+    from hikari import snowflakes
     from hikari import undefined
 
 
@@ -98,18 +103,20 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     TEXT_INPUT = 4
     """A text input component.
 
     !!! note
-        This component may only be used inside a modal container.
+        This component may only be used inside a modal action row or a label component
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     USER_SELECT_MENU = 5
@@ -117,7 +124,8 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     ROLE_SELECT_MENU = 6
@@ -125,7 +133,8 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     MENTIONABLE_SELECT_MENU = 7
@@ -133,7 +142,8 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     CHANNEL_SELECT_MENU = 8
@@ -141,7 +151,8 @@ class ComponentType(int, enums.Enum):
 
     !!! note
         This cannot be top-level and must be within a container component such
-        as [`hikari.components.ComponentType.ACTION_ROW`][].
+        as [`hikari.components.ComponentType.ACTION_ROW`][]
+        or [`hikari.components.ComponentType.LABEL`][].
     """
 
     SECTION = 9
@@ -178,6 +189,17 @@ class ComponentType(int, enums.Enum):
     !!! note
         As this is a container component it can never be contained within another
         component and therefore will always be top-level.
+    """
+
+    LABEL = 18
+    """A label component."""
+
+    FILE_UPLOAD = 19
+    """A file upload component.
+
+    !!! note
+        This cannot be top-level and must be within a container component such
+        as [`hikari.components.ComponentType.LABEL`][].
     """
 
 
@@ -565,6 +587,25 @@ class ContainerComponent(PartialComponent):
     """The components within the container."""
 
 
+@attrs.define(kw_only=True, weakref_slot=False)
+class LabelComponent(PartialComponent):
+    """Represents a label component."""
+
+    component: LabelTypesT = attrs.field()
+    """The component within the label."""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class FileUploadComponent(PartialComponent):
+    """Represents a file upload component."""
+
+    custom_id: str = attrs.field()
+    """Developer set custom ID used for identifying interactions with this file upload."""
+
+    values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
+    """A list of snowflakes in relation to the attachments, that can be found in the resolved interaction data."""
+
+
 TopLevelComponentTypesT = typing.Union[
     ActionRowComponent[PartialComponent],
     TextDisplayComponent,
@@ -701,17 +742,36 @@ The following values are valid for this:
 * [`hikari.components.ButtonComponent`][]
 * [`hikari.components.SelectMenuComponent`][]
 """  # noqa: E501
-ModalComponentTypesT = TextInputComponent
-"""Type hint of the [`hikari.components.PartialComponent`][] that be contained in a [`hikari.components.PartialComponent`][].
+
+ModalComponentTypesT = typing.Union[ActionRowComponent[PartialComponent], LabelComponent]
+"""Type hint of the [`hikari.components.PartialComponent`][] that can be contained in a [`hikari.components.PartialComponent`][].
+
+The following values are valid for this:
+
+* [`hikari.components.ActionRowComponent`][]
+* [`hikari.components.LabelComponent`][]
+"""  # noqa: E501
+
+ModalActionRowComponentTypesT = TextInputComponent
+"""Type hint of the [`hikari.components.PartialComponent`][] that can be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:
 
 * [`hikari.components.TextInputComponent`][]
 """  # noqa: E501
 
+LabelTypesT = typing.Union[SelectMenuComponent, TextInputComponent, FileUploadComponent]
+"""Type hint of the [`hikari.components.PartialComponent`][] that can be contained in a [`hikari.components.LabelComponent`][].
+
+The following values are valid for this:
+
+* [`hikari.components.TextSelectMenuComponent`][]
+* [`hikari.components.TextInputComponent`][]
+"""  # noqa: E501
+
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""
-ModalActionRowComponent = ActionRowComponent[ModalComponentTypesT]
+ModalActionRowComponent = ActionRowComponent[ModalActionRowComponentTypesT]
 """A modal action row component."""
 
 COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
