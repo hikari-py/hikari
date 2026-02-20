@@ -1114,14 +1114,13 @@ wheels = [
 
 [[package]]
 name = "griffe-inherited-docstrings"
-version = "1.1.2"
+version = "1.1.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "griffe" },
+    { name = "griffelib" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/28/02/36d9929bb8ad929941b27117aba4d850b8a9f2c12f982e2b59ab4bc4d80b/griffe_inherited_docstrings-1.1.2.tar.gz", hash = "sha256:0a489ac4bb6093a7789d014b23083b4cbb1ab139f0b8dd878c8f3a4f8e892624", size = 27541, upload-time = "2025-09-05T15:17:13.081Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ad/12/4c67b644dc5965000874908dfa89d05ba878d5ca22a9b4ebfbfadc41467b/griffe_inherited_docstrings-1.1.2-py3-none-any.whl", hash = "sha256:b1cf61fff6e12a769db75de5718ddbbb5361b2cc4155af1f1ad86c13f56c197b", size = 6709, upload-time = "2025-09-05T15:17:11.853Z" },
+    { url = "https://files.pythonhosted.org/packages/16/20/4bc15f242181daad1c104e0a7d33be49e712461ea89e548152be0365b9ea/griffe_inherited_docstrings-1.1.3-py3-none-any.whl", hash = "sha256:aa7f6e624515c50d9325a5cfdf4b2acac547f1889aca89092d5da7278f739695", size = 6710, upload-time = "2026-02-20T11:06:38.75Z" },
 ]
 
 [[package]]
@@ -1253,7 +1252,7 @@ audit = [{ name = "uv-secure" }]
 codespell = [{ name = "codespell", specifier = "==2.4.1" }]
 coverage = [{ name = "coverage", extras = ["toml"], specifier = "==7.13.4" }]
 mkdocs = [
-    { name = "griffe-inherited-docstrings", specifier = "==1.1.2" },
+    { name = "griffe-inherited-docstrings", specifier = "==1.1.3" },
     { name = "mkdocs", specifier = "==1.6.1" },
     { name = "mkdocs-gen-files", specifier = "==0.6.0" },
     { name = "mkdocs-literate-nav", specifier = "==0.6.2" },
@@ -1357,7 +1356,7 @@ name = "importlib-metadata"
 version = "8.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107, upload-time = "2025-12-21T10:00:19.278Z" }
 wheels = [
