@@ -1412,6 +1412,10 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_message(response)
 
+    @staticmethod
+    def _filter_web_resources(resources: list[files.Resource[typing.Any]]) -> list[files.Resource[typing.Any]]:
+        return [r for r in resources if not isinstance(r, files.WebResource)]
+
     def _build_message_payload(  # noqa: C901, PLR0912, PLR0915
         self,
         /,
@@ -1551,7 +1555,7 @@ class RESTClientImpl(rest_api.RESTClient):
             # is to always upload all attachments specified as `attachments=[]`, no
             # matter if they are the same, but for other resources spread across
             # all the other components/embeds, deduplicate them and only upload them once.
-            final_attachments.extend(list(dict.fromkeys(resources)))
+            final_attachments.extend(list(dict.fromkeys(self._filter_web_resources(resources))))
 
             for f in final_attachments:
                 if edit and isinstance(f, messages_.Attachment):
