@@ -1773,6 +1773,7 @@ class TestSelectMenuBuilder:
             min_values=5,
             max_values=23,
             is_disabled=True,
+            is_required=False,
         )
 
         payload, attachments = menu.build()
@@ -1783,6 +1784,7 @@ class TestSelectMenuBuilder:
             "custom_id": "45234fsdf",
             "placeholder": "meep",
             "disabled": True,
+            "required": False,
             "min_values": 5,
             "max_values": 23,
         }
@@ -1798,6 +1800,7 @@ class TestSelectMenuBuilder:
             "type": components.ComponentType.ROLE_SELECT_MENU,
             "custom_id": "o2o2o2",
             "disabled": False,
+            "required": True,
             "min_values": 0,
             "max_values": 1,
         }
@@ -1851,6 +1854,7 @@ class TestTextSelectMenuBuilder:
             min_values=22,
             max_values=53,
             is_disabled=True,
+            is_required=False,
             options=[special_endpoints.SelectOptionBuilder("meow", "vault")],
         )
 
@@ -1864,6 +1868,7 @@ class TestTextSelectMenuBuilder:
             "min_values": 22,
             "max_values": 53,
             "disabled": True,
+            "required": False,
             "options": [{"label": "meow", "value": "vault", "default": False}],
         }
 
@@ -1880,6 +1885,7 @@ class TestTextSelectMenuBuilder:
             "min_values": 0,
             "max_values": 1,
             "disabled": False,
+            "required": True,
             "options": [],
         }
 
@@ -1906,6 +1912,7 @@ class TestChannelSelectMenuBuilder:
             min_values=22,
             max_values=53,
             is_disabled=True,
+            is_required=False,
             channel_types=[channels.ChannelType.GUILD_CATEGORY],
         )
 
@@ -1919,6 +1926,7 @@ class TestChannelSelectMenuBuilder:
             "min_values": 22,
             "max_values": 53,
             "disabled": True,
+            "required": False,
             "channel_types": [channels.ChannelType.GUILD_CATEGORY],
         }
 
@@ -1935,6 +1943,7 @@ class TestChannelSelectMenuBuilder:
             "min_values": 0,
             "max_values": 1,
             "disabled": False,
+            "required": True,
             "channel_types": [],
         }
 
@@ -2612,6 +2621,206 @@ class TestMessageContainerBuilder:
         payload, attachments = container.build()
 
         assert payload == {"type": components.ComponentType.CONTAINER, "spoiler": False, "components": []}
+        assert attachments == []
+
+
+class TestLabelBuilder:
+    def test_type_property(self):
+        label = special_endpoints.LabelComponentBuilder(label="test", component=mock.Mock())
+
+        assert label.type is components.ComponentType.LABEL
+
+    def test_set_component(self):
+        component = mock.Mock()
+        component_2 = mock.Mock()
+
+        label = special_endpoints.LabelComponentBuilder(label="test", component=component)
+
+        assert label.component == component
+
+        label.set_component(component_2)
+
+        assert label.component == component_2
+
+    def test_set_text_input(self):
+        component = mock.Mock()
+
+        label = special_endpoints.LabelComponentBuilder(label="test", component=component)
+
+        assert label.component == component
+
+        label.set_text_input(
+            "a-cool-id",
+            "another label???",
+            style=components.TextInputStyle.PARAGRAPH,
+            placeholder="a fancy placeholder",
+            value="no",
+            required=True,
+            min_length=3,
+            max_length=49,
+            id=2983457,
+        )
+
+        assert isinstance(label.component, special_endpoints.TextInputBuilder)
+
+        assert label.component.custom_id == "a-cool-id"
+        assert label.component.label == "another label???"
+        assert label.component.style == components.TextInputStyle.PARAGRAPH
+        assert label.component.placeholder == "a fancy placeholder"
+        assert label.component.value == "no"
+        assert label.component.is_required == True
+        assert label.component.min_length == 3
+        assert label.component.max_length == 49
+        assert label.component.id == 2983457
+
+    def test_set_select_menu(self):
+        component = mock.Mock()
+
+        label = special_endpoints.LabelComponentBuilder(label="test", component=component)
+
+        assert label.component == component
+
+        label.set_select_menu(
+            components.ComponentType.ROLE_SELECT_MENU,
+            "role-select",
+            placeholder="a fancy placeholder",
+            min_values=3,
+            max_values=49,
+            is_required=False,
+            id=482,
+        )
+
+        assert isinstance(label.component, special_endpoints.SelectMenuBuilder)
+
+        assert label.component.custom_id == "role-select"
+        assert label.component.placeholder == "a fancy placeholder"
+        assert label.component.min_values == 3
+        assert label.component.max_values == 49
+        assert label.component.is_required is False
+        assert label.component.id == 482
+
+    def test_set_text_menu(self):
+        component = mock.Mock()
+
+        label = special_endpoints.LabelComponentBuilder(label="test", component=component)
+
+        assert label.component == component
+
+        label.set_text_menu(
+            "text-select", placeholder="a fancy placeholder", min_values=3, max_values=49, is_required=False, id=482
+        )
+
+        assert isinstance(label.component, special_endpoints.TextSelectMenuBuilder)
+
+        assert label.component.custom_id == "text-select"  # pyright: ignore[reportUnknownMemberType]
+        assert label.component.placeholder == "a fancy placeholder"  # pyright: ignore[reportUnknownMemberType]
+        assert label.component.min_values == 3  # pyright: ignore[reportUnknownMemberType]
+        assert label.component.max_values == 49  # pyright: ignore[reportUnknownMemberType]
+        assert label.component.is_required is False  # pyright: ignore[reportUnknownMemberType]
+        assert label.component.id == 482  # pyright: ignore[reportUnknownMemberType]
+        assert label.component.options == []  # pyright: ignore[reportUnknownMemberType]
+
+    def test_set_channel_menu(self):
+        component = mock.Mock()
+
+        label = special_endpoints.LabelComponentBuilder(label="test", component=component)
+
+        assert label.component == component
+
+        label.set_channel_menu(
+            "role-select",
+            channel_types=[channels.ChannelType.GUILD_TEXT, channels.ChannelType.GUILD_VOICE],
+            placeholder="a fancy placeholder",
+            min_values=3,
+            max_values=49,
+            is_required=False,
+            id=482,
+        )
+
+        assert isinstance(label.component, special_endpoints.ChannelSelectMenuBuilder)
+
+        assert label.component.custom_id == "role-select"
+        assert label.component.channel_types == [channels.ChannelType.GUILD_TEXT, channels.ChannelType.GUILD_VOICE]
+        assert label.component.placeholder == "a fancy placeholder"
+        assert label.component.min_values == 3
+        assert label.component.max_values == 49
+        assert label.component.is_required is False
+        assert label.component.id == 482
+
+    def test_set_file_upload(self):
+        component = mock.Mock()
+
+        label = special_endpoints.LabelComponentBuilder(label="test", component=component)
+
+        assert label.component == component
+
+        label.set_file_upload("file-upload", min_values=3, max_values=49, is_required=False, id=482)
+
+        assert isinstance(label.component, special_endpoints.FileUploadComponentBuilder)
+
+        assert label.component.custom_id == "file-upload"
+        assert label.component.min_values == 3
+        assert label.component.max_values == 49
+        assert label.component.is_required is False
+        assert label.component.id == 482
+
+    def test_build(self):
+        component = mock.Mock(build=mock.Mock(return_value=({}, [])))
+
+        label = special_endpoints.LabelComponentBuilder(
+            id=2983472, label="a cool label", description="an even cooler description", component=component
+        )
+
+        payload, attachments = label.build()
+
+        assert payload == {
+            "type": components.ComponentType.LABEL,
+            "id": 2983472,
+            "label": "a cool label",
+            "description": "an even cooler description",
+            "component": component.build()[0],
+        }
+
+        assert attachments == []
+
+    def test_build_without_optional_fields(self):
+        component = mock.Mock(build=mock.Mock(return_value=({}, [])))
+
+        label = special_endpoints.LabelComponentBuilder(label="a cool label", component=component)
+
+        payload, attachments = label.build()
+
+        assert payload == {
+            "type": components.ComponentType.LABEL,
+            "label": "a cool label",
+            "component": component.build()[0],
+        }
+
+        assert attachments == []
+
+
+class TestFileUploadBuilder:
+    def test_type_property(self):
+        file_upload = special_endpoints.FileUploadComponentBuilder(custom_id="file-upload-id")
+
+        assert file_upload.type is components.ComponentType.FILE_UPLOAD
+
+    def test_build(self):
+        file_upload = special_endpoints.FileUploadComponentBuilder(
+            id=1234, custom_id="file-upload-id", min_values=482, max_values=500, is_required=False
+        )
+
+        payload, attachments = file_upload.build()
+
+        assert payload == {
+            "type": components.ComponentType.FILE_UPLOAD,
+            "custom_id": "file-upload-id",
+            "id": 1234,
+            "min_values": 482,
+            "max_values": 500,
+            "required": False,
+        }
+
         assert attachments == []
 
 
