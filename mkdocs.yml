@@ -16,8 +16,8 @@ theme:
   font:
     code: JetBrains Mono
 
-  logo: logo.png
-  favicon: logo.png
+  logo: assets/logo.png
+  favicon: assets/logo.png
 
   icon:
     repo: fontawesome/brands/github
@@ -156,3 +156,21 @@ plugins:
             find_stubs_package: true
             extensions:
               - griffe_inherited_docstrings
+
+nav:
+  - Home: index.md
+  - Changelog: changelog.md
+  - Guide:
+    - Guide: guide/index.md
+    - Application: guide/application.md
+    - Environment:
+      - Environment: guide/environment/index.md
+      - Visual Studio Code: guide/environment/visual-studio-code.md
+    - Program:
+      - Program: guide/program/index.md
+      - Setup: guide/program/setup.md
+      - Security: guide/program/security.md
+      - Lifecycle: guide/program/lifecycle.md
+    - Examples:
+      - Reply: guide/examples/reply.md
+  - Reference: reference/
