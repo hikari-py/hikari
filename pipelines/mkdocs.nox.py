@@ -22,8 +22,6 @@
 
 from __future__ import annotations
 
-import os
-
 from pipelines import config
 from pipelines import nox
 
@@ -31,9 +29,6 @@ from pipelines import nox
 def _setup_environ(session: nox.Session) -> None:
     if "--no-refs" in session.posargs:
         session.env["ENABLE_MKDOCSTRINGS"] = "false"
-
-    if os.environ.get("READTHEDOCS_VERSION_NAME", "master") == "master":
-        session.env["HIDE_EMPTY_TOWNCRIER_DRAFT"] = "false"
 
 
 @nox.session()

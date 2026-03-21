@@ -1,13 +1,21 @@
 version: 2
 
+formats: all
+
 build:
-  os: ubuntu-22.04
+  os: ubuntu-24.04
   tools:
     # NOTE: This should be kept up to date with ci.yml
     python: "3.13"
-  commands:
-    - asdf plugin add uv
-    - asdf install uv latest
-    - asdf global uv latest
-    - uv sync --frozen --only-group nox
-    - .venv/bin/nox -s mkdocs
+  jobs:
+    pre_create_environment:
+      - asdf plugin add uv
+      - asdf install uv latest
+      - asdf global uv latest
+    create_environment:
+      - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
+    install:
+      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --frozen --group mkdocs --group ruff
+
+mkdocs:
+  configuration: mkdocs.yml
