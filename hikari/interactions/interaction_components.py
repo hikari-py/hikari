@@ -82,7 +82,7 @@ class TextSelectMenuInteractionComponent(SelectMenuInteractionComponent):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class UserSelectMenuInteractionComponent(SelectMenuInteractionComponent):
-    """Represents a channel select menu interaction component."""
+    """Represents a user select menu interaction component."""
 
     values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True)
     """The values that have been selected."""
@@ -90,7 +90,7 @@ class UserSelectMenuInteractionComponent(SelectMenuInteractionComponent):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class RoleSelectMenuInteractionComponent(SelectMenuInteractionComponent):
-    """Represents a channel select menu interaction component."""
+    """Represents a role select menu interaction component."""
 
     values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True)
     """The values that have been selected."""
@@ -98,7 +98,7 @@ class RoleSelectMenuInteractionComponent(SelectMenuInteractionComponent):
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class MentionableSelectMenuInteractionComponent(SelectMenuInteractionComponent):
-    """Represents a channel select menu interaction component."""
+    """Represents a mentionable select menu interaction component."""
 
     values: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=True)
     """The values that have been selected."""
