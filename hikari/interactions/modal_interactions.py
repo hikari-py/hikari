@@ -35,6 +35,7 @@ import attrs
 
 from hikari import components as components_
 from hikari.interactions import base_interactions
+from hikari.interactions import interaction_components as interaction_components_
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
@@ -86,7 +87,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     This will be [`None`][] if the modal was a response to a command.
     """
 
-    components: typing.Sequence[components_.ModalComponentTypesT] = attrs.field(eq=True, repr=True)
+    components: typing.Sequence[interaction_components_.InteractionComponentTypesT] = attrs.field(eq=True, repr=True)
     """Components in the modal."""
 
     resolved: base_interactions.ResolvedOptionData | None = attrs.field(eq=False, hash=False, repr=False)
