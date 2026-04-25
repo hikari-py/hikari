@@ -3583,7 +3583,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> component_models.FileUploadComponent:
         return component_models.FileUploadComponent(
             type=component_models.ComponentType.FILE_UPLOAD,
-            id=payload.get("id", None),
+            id=payload["id"],
             custom_id=payload["custom_id"],
             values=[snowflakes.Snowflake(value) for value in payload["values"]],
         )

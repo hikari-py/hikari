@@ -744,7 +744,7 @@ The following values are valid for this:
 """  # noqa: E501
 
 ModalComponentTypesT = typing.Union[ActionRowComponent[PartialComponent], LabelComponent]
-"""Type hint of the [`hikari.components.PartialComponent`][] that can be contained in a [`hikari.components.PartialComponent`][].
+"""Type hint of the top-level [`hikari.components.PartialComponent`][] types that can be contained in a modal.
 
 The following values are valid for this:
 
@@ -753,7 +753,7 @@ The following values are valid for this:
 """  # noqa: E501
 
 ModalActionRowComponentTypesT = TextInputComponent
-"""Type hint of the [`hikari.components.PartialComponent`][] that can be contained in a [`hikari.components.PartialComponent`][].
+"""Type hint of the [`hikari.components.PartialComponent`][] types that can be contained in a modal action row.
 
 The following values are valid for this:
 
@@ -761,12 +761,13 @@ The following values are valid for this:
 """  # noqa: E501
 
 LabelTypesT = typing.Union[SelectMenuComponent, TextInputComponent, FileUploadComponent]
-"""Type hint of the [`hikari.components.PartialComponent`][] that can be contained in a [`hikari.components.LabelComponent`][].
+"""Type hint of the [`hikari.components.PartialComponent`][] types that can be contained in a [`hikari.components.LabelComponent`][].
 
 The following values are valid for this:
 
-* [`hikari.components.TextSelectMenuComponent`][]
+* [`hikari.components.SelectMenuComponent`][]
 * [`hikari.components.TextInputComponent`][]
+* [`hikari.components.FileUploadComponent`][]
 """  # noqa: E501
 
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]

@@ -2424,7 +2424,7 @@ class ModalActionRowBuilder(ComponentBuilder, abc.ABC):
 
         !!! warning
             It is generally better to use
-            [`hikari.api.special_endpoints.MessageActionRowBuilder.add_text_input`][]
+            [`hikari.api.special_endpoints.ModalActionRowBuilder.add_text_input`][]
             to add your component to the builder. Those methods utilize this one.
 
         Parameters
@@ -2926,11 +2926,12 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
 
         !!! warning
             It is generally better to use
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_input`][]
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_select_menu`][]
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_menu`][]
-            [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][]
-            to add your component to the builder. Those methods utilize this one.
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_input`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_select_menu`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_menu`][],
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][] or
+            [`hikari.api.special_endpoints.LabelComponentBuilder.set_file_upload`][]
+            to set your component on the builder. Those methods utilize this one.
 
         Parameters
         ----------
@@ -3005,8 +3006,8 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         """Set the child component to a select menu component for this label component.
 
         For channel select menus and text select menus see
-        [`hikari.api.special_endpoints.LabelComponentBuilder.add_channel_menu`][]
-        and [`hikari.api.special_endpoints.LabelComponentBuilder.add_text_menu`][].
+        [`hikari.api.special_endpoints.LabelComponentBuilder.set_channel_menu`][]
+        and [`hikari.api.special_endpoints.LabelComponentBuilder.set_text_menu`][].
 
         Parameters
         ----------
@@ -3152,16 +3153,16 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         Parameters
         ----------
         custom_id
-            A developer-defined custom identifier used to identify which menu
-            triggered component interactions.
+            A developer-defined custom identifier used to identify which file
+            upload triggered component interactions.
         min_values
-            The minimum amount of entries which need to be selected.
+            The minimum number of files which must be uploaded.
         max_values
-            The maximum amount of entries which can be selected.
+            The maximum number of files which can be uploaded.
         is_required
-            Whether this select menu should be marked as required.
+            Whether this file upload should be marked as required.
         id
-            The ID to give to the menu.
+            The ID to give to the file upload.
 
             If not provided, auto populated through increment.
 
@@ -3169,11 +3170,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         -------
         LabelComponentBuilder
             The label component builder to enable chained calls.
-
-        Raises
-        ------
-        ValueError
-            If an invalid select menu type is passed.
         """
 
 
@@ -3206,17 +3202,17 @@ class FileUploadComponentBuilder(ComponentBuilder, abc.ABC):
     @property
     @abc.abstractmethod
     def max_values(self) -> int:
-        """Maximum number of options which can be chosen.
+        """Maximum number of files which can be uploaded.
 
         Defaults to 1.
         Must be greater than or equal to [`hikari.api.special_endpoints.FileUploadComponentBuilder.min_values`][] and
-        less than or equal to 5.
+        less than or equal to 10.
         """
 
     @property
     @abc.abstractmethod
     def is_required(self) -> bool:
-        """Whether the select menu should be marked as required."""
+        """Whether the file upload should be marked as required."""
 
 
 class PollBuilder(abc.ABC):

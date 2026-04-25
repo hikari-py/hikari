@@ -24,8 +24,8 @@ from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
     "ModalInteraction",
-    "ModalInteraction",
     "ModalInteractionMetadata",
+    "ModalInteractionParentT",
     "ModalResponseTypesT",
 )
 
@@ -86,7 +86,7 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     This will be [`None`][] if the modal was a response to a command.
     """
 
-    components: typing.Sequence[components_.ModalComponentTypesT] = attrs.field(eq=True, repr=True)
+    components: typing.Sequence[components_.ModalComponentTypesT] = attrs.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
 
     resolved: base_interactions.ResolvedOptionData | None = attrs.field(eq=False, hash=False, repr=False)

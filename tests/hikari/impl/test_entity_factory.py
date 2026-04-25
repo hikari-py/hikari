@@ -6270,13 +6270,6 @@ class TestEntityFactoryImpl:
 
         assert isinstance(file_upload, component_models.FileUploadComponent)
 
-    def test__deserialize_file_upload_component_with_unset_fields(self, entity_factory_impl, file_upload_payload):
-        del file_upload_payload["id"]
-
-        file_upload = entity_factory_impl._deserialize_file_upload_component(file_upload_payload)
-
-        assert file_upload.id is None
-
     def test__deserialize_message_components(
         self,
         entity_factory_impl,

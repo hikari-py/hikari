@@ -3247,8 +3247,8 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
-class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder, abc.ABC):
-    """Builder class for file upload components."""
+class FileUploadComponentBuilder(special_endpoints.FileUploadComponentBuilder):
+    """Standard implementation of [`hikari.api.special_endpoints.FileUploadComponentBuilder`][]."""
 
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
     _custom_id: str = attrs.field(alias="custom_id")
