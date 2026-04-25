@@ -80,7 +80,7 @@ zstd = ["backports.zstd; python_version < '3.14'"]
 "CI" = "https://github.com/hikari-py/hikari/actions"
 
 [dependency-groups]
-nox = ["nox[uv]==2026.2.9"]
+nox = ["nox[uv]==2026.4.10"]
 
 audit = ["uv-secure"]
 codespell = ["codespell==2.4.2"]
