@@ -83,7 +83,7 @@ zstd = ["backports.zstd; python_version < '3.14'"]
 nox = ["nox[uv]==2026.2.9"]
 
 audit = ["uv-secure"]
-codespell = ["codespell==2.4.1"]
+codespell = ["codespell==2.4.2"]
 coverage = ["coverage[toml]==7.13.4"]
 mkdocs = [
     "mkdocs==1.6.1",
