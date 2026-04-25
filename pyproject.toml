@@ -33,7 +33,7 @@ description = "A sane Discord API for Python 3 built on asyncio and good intenti
 requires-python = ">=3.10.0,<3.15"
 dependencies = [
     "aiohttp~=3.13",
-    "attrs~=25.4",
+    "attrs~=26.1",
     "colorlog~=6.10",
     "multidict~=6.7",
 ]
