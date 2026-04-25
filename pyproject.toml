@@ -94,7 +94,7 @@ mkdocs = [
     "griffe-inherited-docstrings==1.1.3",
     # Generate API reference pages dynamically
     "mkdocs-gen-files==0.6.1",
-    "mkdocs-literate-nav==0.6.2",
+    "mkdocs-literate-nav==0.6.3",
     # Minify
     "mkdocs-minify-plugin==0.8.0",
     # Towncrier draft changelogs
