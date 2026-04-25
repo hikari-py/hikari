@@ -32,19 +32,16 @@ name = "hikari"
 description = "A sane Discord API for Python 3 built on asyncio and good intentions"
 requires-python = ">=3.10.0,<3.15"
 dependencies = [
-    "aiohttp~=3.12",
-    "attrs~=25.1",
-    "colorlog~=6.9",
-    "multidict~=6.1",
+    "aiohttp~=3.13",
+    "attrs~=25.4",
+    "colorlog~=6.10",
+    "multidict~=6.7",
 ]
 scripts = { "hikari" = "hikari.cli:main" }
 
 license = { text = "MIT" }
 readme = "README.md"
-authors = [
-    { name = "Nekokatt" },
-    { name = "davfsa" },
-]
+authors = [{ name = "Nekokatt" }, { name = "davfsa" }]
 maintainers = [{ name = "davfsa", email = "davfsa@hikari-py.dev" }]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -66,7 +63,12 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-speedups = ["aiohttp[speedups]", "hikari[zstd]", "ciso8601~=2.3", "orjson~=3.11"]
+speedups = [
+    "aiohttp[speedups]",
+    "hikari[zstd]",
+    "ciso8601~=2.3",
+    "orjson~=3.11",
+]
 server = ["pynacl~=1.6"]
 zstd = ["backports.zstd; python_version < '3.14'"]
 
@@ -105,7 +107,7 @@ mypy = ["mypy[faster-cache]==1.19.1", { include-group = "types" }]
 pyright = ["pyright==1.1.408", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
-    "pytest==9.0.2",
+    "pytest==9.0.3",
     "pytest-asyncio==1.3.0",
     "pytest-cov==7.0.0",
     "pytest-randomly==4.0.1",
@@ -118,7 +120,7 @@ slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==25.8.0"]
 types = [
     # examples/voice_message/*
-    "pydub-stubs~=0.25.1.5"
+    "pydub-stubs~=0.25.1.6",
 ]
 
 
@@ -255,7 +257,8 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["numpy.*"] # Numpy has already abonded py 3.9 and since we still support it we can't bring numpy into the project dependencies
+# Numpy has already abonded py 3.9 and since we still support it we can't bring numpy into the project dependencies
+module = ["numpy.*"]
 ignore_missing_imports = true
 
 [tool.slotscheck]
