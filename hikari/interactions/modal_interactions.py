@@ -22,22 +22,17 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = (
-    "ModalInteraction",
-    "ModalInteractionMetadata",
-    "ModalInteractionParentT",
-    "ModalResponseTypesT",
-)
+__all__: typing.Sequence[str] = ("ModalInteraction", "ModalInteractionMetadata", "ModalResponseTypesT")
 
 import typing
 
 import attrs
 
-from hikari import components as components_
 from hikari.interactions import base_interactions
 from hikari.internal import attrs_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import components as components_
     from hikari import messages
     from hikari import snowflakes
     from hikari.api import special_endpoints
@@ -60,15 +55,6 @@ The following types are valid for this:
 * [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
 * [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]/`7`
 * [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]/`6`
-"""
-
-ModalInteractionParentT = typing.Literal[components_.ComponentType.ACTION_ROW, components_.ComponentType.LABEL]
-"""Type-hint of the modal interaction parent types that are valid as a parent interaction component.
-
-The following types are valid for this.
-
-* [`hikari.components.ComponentType.ACTION_ROW`][]
-* [`hikari.components.ComponentType.LABEL`][]
 """
 
 

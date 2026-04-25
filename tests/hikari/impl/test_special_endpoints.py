@@ -2651,7 +2651,6 @@ class TestLabelBuilder:
 
         label.set_text_input(
             "a-cool-id",
-            "another label???",
             style=components.TextInputStyle.PARAGRAPH,
             placeholder="a fancy placeholder",
             value="no",
@@ -2664,7 +2663,6 @@ class TestLabelBuilder:
         assert isinstance(label.component, special_endpoints.TextInputBuilder)
 
         assert label.component.custom_id == "a-cool-id"
-        assert label.component.label == "another label???"
         assert label.component.style == components.TextInputStyle.PARAGRAPH
         assert label.component.placeholder == "a fancy placeholder"
         assert label.component.value == "no"

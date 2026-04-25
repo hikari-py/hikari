@@ -2245,7 +2245,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
 
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
     _custom_id: str = attrs.field(alias="custom_id")
-    _label: str = attrs.field(alias="label")
+    _label: undefined.UndefinedOr[str] = attrs.field(alias="label", default=undefined.UNDEFINED)
 
     _style: component_models.TextInputStyle = attrs.field(alias="style", default=component_models.TextInputStyle.SHORT)
     _placeholder: undefined.UndefinedOr[str] = attrs.field(
@@ -2273,7 +2273,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
 
     @property
     @typing_extensions.override
-    def label(self) -> str:
+    def label(self) -> undefined.UndefinedOr[str]:
         return self._label
 
     @property
@@ -2317,7 +2317,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         return self
 
     @typing_extensions.override
-    def set_label(self, label: str, /) -> Self:
+    def set_label(self, label: undefined.UndefinedOr[str], /) -> Self:
         self._label = label
         return self
 
@@ -2355,7 +2355,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         data["type"] = component_models.ComponentType.TEXT_INPUT
         data["style"] = self._style
         data["custom_id"] = self._custom_id
-        data["label"] = self._label
+        data.put("label", self._label)
         data.put("id", self._id)
         data.put("placeholder", self._placeholder)
         data.put("value", self._value)
@@ -3111,7 +3111,6 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
     def set_text_input(
         self,
         custom_id: str,
-        label: str,
         /,
         *,
         style: component_models.TextInputStyle = component_models.TextInputStyle.SHORT,
@@ -3126,7 +3125,6 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
             TextInputBuilder(
                 id=id,
                 custom_id=custom_id,
-                label=label,
                 style=style,
                 placeholder=placeholder,
                 value=value,
@@ -3237,10 +3235,6 @@ class LabelComponentBuilder(special_endpoints.LabelComponentBuilder):
         payload.put("id", self._id)
         payload.put("description", self._description)
         component_payload, attachments = self._component.build()
-
-        if self._component.type == component_models.ComponentType.TEXT_INPUT:
-            del component_payload["label"]
-
         payload.put("component", component_payload)
 
         return payload, attachments

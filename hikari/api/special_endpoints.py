@@ -1966,8 +1966,16 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def label(self) -> str:
-        """Label above this text input."""
+    def label(self) -> undefined.UndefinedOr[str]:
+        """Label above this text input.
+
+        !!! deprecated
+            Discord deprecated this field in favour of wrapping text inputs in a
+            [`hikari.api.special_endpoints.LabelComponentBuilder`][], which
+            carries its own `label` and `description`. Only set this when using
+            the legacy [`hikari.api.special_endpoints.ModalActionRowBuilder`][]
+            modal layout.
+        """
 
     @property
     @abc.abstractmethod
@@ -2030,7 +2038,7 @@ class TextInputBuilder(ComponentBuilder, abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_label(self, label: str, /) -> Self:
+    def set_label(self, label: undefined.UndefinedOr[str], /) -> Self:
         """Set the label above this text input.
 
         Parameters
@@ -2948,7 +2956,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
     def set_text_input(
         self,
         custom_id: str,
-        label: str,
         /,
         *,
         style: components_.TextInputStyle = components_.TextInputStyle.SHORT,
@@ -2965,8 +2972,6 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
         ----------
         custom_id
             Developer set custom ID used for identifying this text input.
-        label
-            Label above this text input.
         style
             The text input's style.
         placeholder
@@ -2983,6 +2988,10 @@ class LabelComponentBuilder(ComponentBuilder, abc.ABC):
             Maximum length the input text can be.
 
             This can be greater than or equal to 1 and less than or equal to 4000.
+        id
+            The ID to give to the text input.
+
+            If not provided, auto populated through increment.
 
         Returns
         -------
