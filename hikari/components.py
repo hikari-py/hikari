@@ -209,6 +209,14 @@ class ButtonStyle(int, enums.Enum):
         interaction and custom_id shouldn't be included for this style.
     """
 
+    PREMIUM = 6
+    """A button that will link to a specific SKU item.
+
+    !!! warning
+        Unlike the other button styles, clicking this one will not trigger an
+        interaction and custom_id shouldn't be included for this style.
+    """
+
 
 @typing.final
 class TextInputStyle(int, enums.Enum):
@@ -267,7 +275,7 @@ AllowedComponentsT = typing.TypeVar("AllowedComponentsT", bound="PartialComponen
 
 
 @attrs.define(weakref_slot=False)
-class ActionRowComponent(typing.Generic[AllowedComponentsT], PartialComponent):
+class ActionRowComponent(PartialComponent, typing.Generic[AllowedComponentsT]):
     """Represents a row of components."""
 
     components: typing.Sequence[AllowedComponentsT] = attrs.field()
@@ -705,3 +713,27 @@ MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""
 ModalActionRowComponent = ActionRowComponent[ModalComponentTypesT]
 """A modal action row component."""
+
+COMPONENT_V2_TYPES: typing.Final[frozenset[ComponentType]] = frozenset(
+    (
+        ComponentType.SECTION,
+        ComponentType.TEXT_DISPLAY,
+        ComponentType.THUMBNAIL,
+        ComponentType.MEDIA_GALLERY,
+        ComponentType.FILE,
+        ComponentType.SEPARATOR,
+        ComponentType.CONTAINER,
+    )
+)
+"""Set of the component types which are considered v2 components and can only be used with the appropriate flag.
+
+The following values are included in this:
+
+* [`hikari.components.ComponentType.SECTION`][]
+* [`hikari.components.ComponentType.TEXT_DISPLAY`][]
+* [`hikari.components.ComponentType.THUMBNAIL`][]
+* [`hikari.components.ComponentType.MEDIA_GALLERY`][]
+* [`hikari.components.ComponentType.FILE`][]
+* [`hikari.components.ComponentType.SEPARATOR`][]
+* [`hikari.components.ComponentType.CONTAINER`][]
+"""

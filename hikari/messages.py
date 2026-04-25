@@ -31,6 +31,7 @@ __all__: typing.Sequence[str] = (
     "MessageReference",
     "MessageType",
     "PartialMessage",
+    "PinnedMessage",
     "Reaction",
 )
 
@@ -46,7 +47,6 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -422,22 +422,12 @@ class MessageApplication(guilds.PartialApplication):
     cover_image_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
-    @property
-    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
-    def cover_image_url(self) -> files.URL | None:
-        """Rich presence cover image URL for this application, if set."""
-        deprecation.warn_deprecated(
-            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
-        )
-        return self.make_cover_image_url()
-
     def make_cover_image_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
 
@@ -457,12 +447,6 @@ class MessageApplication(guilds.PartialApplication):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -478,12 +462,6 @@ class MessageApplication(guilds.PartialApplication):
         """
         if self.cover_image_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
             urls.CDN_URL,
@@ -548,6 +526,18 @@ class MessageSnapshot:
     def user_mentions_ids(self) -> typing.Sequence[snowflakes.Snowflake] | None:
         """Ids of the users who were notified by their mention in the message."""
         return list(self.user_mentions.keys())
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, repr=True, eq=False, weakref_slot=False)
+class PinnedMessage:
+    """The representation of a pinned message object."""
+
+    pinned_at: datetime.datetime = attrs.field(hash=False, eq=False, repr=False)
+    """The time at which the message was pinned at."""
+
+    message: Message = attrs.field(hash=False, eq=False, repr=False)
+    """The pinned message."""
 
 
 @attrs_extensions.with_copy

@@ -254,7 +254,7 @@ def _ensure_embed_resource(resource: files.Resourceish) -> files.Resource[files.
     return files.ensure_resource(resource)
 
 
-class Embed:
+class Embed:  # noqa: PLW1641 - No __hash__
     """Represents an embed."""
 
     __slots__: typing.Sequence[str] = (
@@ -612,7 +612,7 @@ class Embed:
             Use [`hikari.embeds.Embed.add_field`][] to add a new field, [`hikari.embeds.Embed.edit_field`][]
             to edit an existing field, or [`hikari.embeds.Embed.remove_field`][] to remove a field.
         """
-        return self._fields if self._fields else []
+        return self._fields or []
 
     def set_author(
         self, *, name: str | None = None, url: str | None = None, icon: files.Resourceish | None = None

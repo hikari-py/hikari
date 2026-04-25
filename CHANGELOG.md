@@ -1,3 +1,64 @@
+## 2.5.0 (2025-10-31)
+
+### Breaking Changes
+
+- Drop Python 3.9 support ([#2576](https://github.com/hikari-py/hikari/issues/2576))
+- Remove several previously deprecated functionality:
+    - `ext` parameter in `make_x_url()` methods in favour of `file_format`
+    - `x_url` properties in favour of `make_x_url()` methods ([#2591](https://github.com/hikari-py/hikari/issues/2591))
+
+### Features
+
+- Add preliminary support for Python 3.14 ([#2220](https://github.com/hikari-py/hikari/issues/2220))
+- Add various new compression support:
+    - ZSTD transport compression support (needs hikari to be installed with either `[speedups]` or `[zstd]`)
+    - ZLIB payload compression support ([#2545](https://github.com/hikari-py/hikari/issues/2545))
+- Add new edit own member arguments. ([#2551](https://github.com/hikari-py/hikari/issues/2551))
+- Slightly optimize buckets ratelimiting logic ([#2556](https://github.com/hikari-py/hikari/issues/2556))
+- Add pagination support for `fetch_thread_members` ([#2564](https://github.com/hikari-py/hikari/issues/2564))
+- Add `token_id` field to `hikari.GatewayBot` ([#2572](https://github.com/hikari-py/hikari/issues/2572))
+- Add LATAM Spanish locale ([#2577](https://github.com/hikari-py/hikari/issues/2577))
+
+---
+## 2.4.1 (2025-09-08)
+
+### Bugfixes
+
+- Properly release initial bucket lock. ([#2529](https://github.com/hikari-py/hikari/issues/2529))
+
+---
+## 2.4.0 (2025-09-08)
+
+### Breaking Changes
+
+- Remove `PREMIUM_REQUIRED` response support
+    - Use `PREMIUM` button components instead ([#2454](https://github.com/hikari-py/hikari/issues/2454))
+
+### Features
+
+- Add `parent_id` and `lock_permissions` to `rest.reposition_channels` ([#2238](https://github.com/hikari-py/hikari/issues/2238))
+- Add support for fetching and editing guild onboarding (`rest.fetch_guild_onboarding`, `rest.edit_guild_onboarding`) ([#2337](https://github.com/hikari-py/hikari/issues/2337))
+- Add `PREMIUM` button support ([#2454](https://github.com/hikari-py/hikari/issues/2454))
+- Add `primary_guild` user feature. ([#2469](https://github.com/hikari-py/hikari/issues/2469))
+- Add `InteractionCallbackResponse` object that gets returned in the initial response to an interaction ([#2479](https://github.com/hikari-py/hikari/issues/2479))
+- Add `PIN_MESSAGES` permission. ([#2498](https://github.com/hikari-py/hikari/issues/2498))
+- Add iterator pins feature. ([#2501](https://github.com/hikari-py/hikari/issues/2501))
+- Add `code_verifier` field to `authorize_access_token` for PKCE use-cases ([#2510](https://github.com/hikari-py/hikari/issues/2510))
+- Further improve ratelimiting to track in-flight requests ([#2515](https://github.com/hikari-py/hikari/issues/2515))
+
+### Bugfixes
+
+- Always send `allowed_mentions` when editing a message to match functionality that documentation mentions ([#2447](https://github.com/hikari-py/hikari/issues/2447))
+- Improve ratelimit handling when starting bot in the middle of a ratelimit window ([#2452](https://github.com/hikari-py/hikari/issues/2452))
+- Fix `OAuth2AuthorizationToken.refresh_token` typehint being `int` instead of `str` ([#2493](https://github.com/hikari-py/hikari/issues/2493))
+- Properly handle ratelimit buckets with fixed periods ([#2506](https://github.com/hikari-py/hikari/issues/2506))
+- `fetch_guild_invites` will now return a sequence of invites (no metadata) if you only have the `VIEW_AUDIT_LOG` permission ([#2509](https://github.com/hikari-py/hikari/issues/2509))
+
+### Documentation Improvements
+
+- Improve documentation for `GuildReactionDeleteEmojiEvent` and `DMReactionDeleteEmojiEvent` ([#2450](https://github.com/hikari-py/hikari/issues/2450))
+
+---
 ## 2.3.5 (2025-06-25)
 
 ### Bugfixes

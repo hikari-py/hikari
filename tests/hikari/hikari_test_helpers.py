@@ -68,7 +68,7 @@ def mock_class_namespace(
                 # Do not use property mock here: it prevents us overwriting it later
                 # (e.g. when restubbing for specific test cases)
                 namespace[method_name] = mock.Mock(__isabstractmethod__=False)
-            elif asyncio.iscoroutinefunction(attr):
+            elif inspect.iscoroutinefunction(attr):
                 namespace[method_name] = mock.AsyncMock(spec_set=attr, __isabstractmethod__=False)
             else:
                 namespace[method_name] = mock.Mock(spec_set=attr, __isabstractmethod__=False)
@@ -83,7 +83,7 @@ def mock_class_namespace(
 
 def retry(max_retries):
     def decorator(func):
-        assert asyncio.iscoroutinefunction(func), "retry only supports coroutine functions currently"
+        assert inspect.iscoroutinefunction(func), "retry only supports coroutine functions currently"
 
         @functools.wraps(func)
         async def retry_wrapper(*args, **kwargs):
@@ -95,7 +95,7 @@ def retry(max_retries):
                     await func(*args, **kwargs)
                     return
                 except AssertionError as exc:
-                    ex = exc  # local variable 'ex' referenced before assignment: wtf?
+                    ex = exc
             raise AssertionError(f"all {max_retries} retries failed") from ex
 
         return retry_wrapper

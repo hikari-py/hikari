@@ -69,7 +69,6 @@ from hikari import undefined
 from hikari import urls
 from hikari import webhooks
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -699,12 +698,12 @@ class TextableChannel(PartialChannel):
         """
         return self.app.rest.trigger_typing(self.id)
 
-    async def fetch_pins(self) -> typing.Sequence[messages_.Message]:
+    def fetch_pins(self) -> iterators.LazyIterator[messages_.PinnedMessage]:
         """Fetch the pinned messages in this text channel.
 
         Returns
         -------
-        typing.Sequence[hikari.messages.Message]
+        iterators.LazyIterator[hikari.messages.PinnedMessage]
             The pinned messages in this text channel.
 
         Raises
@@ -722,7 +721,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.InternalServerError
             If an internal error occurs on Discord while handling the request.
         """
-        return await self.app.rest.fetch_pins(self.id)
+        return self.app.rest.fetch_pins(self.id)
 
     async def pin_message(self, message: snowflakes.SnowflakeishOr[messages_.PartialMessage]) -> None:
         """Pin an existing message in the text channel.
@@ -738,7 +737,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] in the channel.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] in the channel.
         hikari.errors.NotFoundError
             If the channel is not found, or if the message does not exist in
             the given channel.
@@ -764,7 +763,7 @@ class TextableChannel(PartialChannel):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.ForbiddenError
-            If you are missing the [`hikari.permissions.Permissions.MANAGE_MESSAGES`][] permission.
+            If you are missing the [`hikari.permissions.Permissions.PIN_MESSAGES`][] permission.
         hikari.errors.NotFoundError
             If the channel is not found or the message is not a pinned message
             in the given channel.
@@ -891,20 +890,12 @@ class GroupDMChannel(PrivateChannel):
 
         return self.name
 
-    @property
-    @deprecation.deprecated("Use 'make_icon_url' instead.")
-    def icon_url(self) -> files.URL | None:
-        """Icon for this group DM, if set."""
-        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
-        return self.make_icon_url()
-
     def make_icon_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the icon URL for this group, if set.
 
@@ -922,12 +913,6 @@ class GroupDMChannel(PrivateChannel):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -943,12 +928,6 @@ class GroupDMChannel(PrivateChannel):
         """
         if self.icon_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_CHANNEL_ICON.compile_to_file(
             urls.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless

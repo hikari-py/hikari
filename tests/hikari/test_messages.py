@@ -72,15 +72,11 @@ class TestMessageApplication:
         with mock.patch.object(
             routes, "CDN_APPLICATION_COVER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert message_application.make_cover_image_url(ext="JPEG") == "file"
+            assert message_application.make_cover_image_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, application_id=123, hash="abc123", size=4096, file_format="JPEG", lossless=True
         )
-
-    def test_cover_image_url(self, message_application):
-        with mock.patch.object(messages.MessageApplication, "make_cover_image_url") as mock_cover_image:
-            assert message_application.cover_image_url is mock_cover_image()
 
     def test_make_cover_image_url_when_hash_is_none(self, message_application):
         message_application.cover_image_hash = None

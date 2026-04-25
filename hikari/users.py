@@ -22,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("OwnUser", "PartialUser", "PremiumType", "User", "UserFlag")
+__all__: typing.Sequence[str] = ("OwnUser", "PartialUser", "PremiumType", "PrimaryGuild", "User", "UserFlag")
 
 import abc
 import typing
@@ -34,7 +34,6 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 
@@ -155,13 +154,6 @@ class AvatarDecoration:
     expires_at: datetime.datetime | None = attrs.field(repr=True)
     """The datetime at which the user will no longer have access to the avatar decoration."""
 
-    @property
-    @deprecation.deprecated("Use 'make_url' instead.")
-    def url(self) -> files.URL:
-        """Default image URL for this avatar decoration."""
-        deprecation.warn_deprecated("url", removal_version="2.5.0", additional_info="Use 'make_url' instead.")
-        return self.make_url()
-
     def make_url(
         self,
         *,
@@ -208,6 +200,77 @@ class AvatarDecoration:
 
         return routes.CDN_AVATAR_DECORATION.compile_to_file(
             urls.MEDIA_PROXY_URL, hash=self.asset_hash, size=size, file_format=file_format, lossless=lossless
+        )
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class PrimaryGuild:
+    """Data for the users primary guild."""
+
+    identity_guild_id: snowflakes.Snowflake | None = attrs.field(repr=True)
+    """The users identity guild's ID."""
+
+    identity_enabled: bool | None = attrs.field(repr=True)
+    """Whether the identity is enabled."""
+
+    tag: str | None = attrs.field(repr=True)
+    """The text for the guild tag."""
+
+    badge_hash: str | None = attrs.field(repr=True)
+    """The guild tag badge hash."""
+
+    def make_url(
+        self,
+        *,
+        file_format: undefined.UndefinedOr[typing.Literal["PNG", "JPEG", "JPG", "WEBP"]] = undefined.UNDEFINED,
+        size: int = 4096,
+        lossless: bool = True,
+    ) -> files.URL:
+        """Generate the image URL for this primary guild badge.
+
+        Parameters
+        ----------
+        file_format
+            The format to use for this URL.
+
+            Supports `PNG`, `JPEG`, `JPG`, and `WEBP`.
+
+            If not specified, the format will be `PNG`.
+        size
+            The size to set for the URL;
+            This is ignored for the `APNG` format;
+            Can be any power of two between `16` and `4096`.
+        lossless
+            Whether to return a lossless or compressed WEBP image;
+            This is ignored if `file_format` is not `WEBP`.
+
+        Returns
+        -------
+        hikari.files.URL
+            The URL to the avatar decoration.
+
+        Raises
+        ------
+        TypeError
+            If an invalid format is passed for `file_format`;
+        ValueError
+            If `size` is specified but is not a power of two or not between 16 and 4096.
+            If `identity_guild_id` or `badge_hash` is missing.
+        """
+        if not file_format:
+            file_format = "PNG"
+
+        if self.identity_guild_id is None or self.badge_hash is None:
+            error = "Missing identity guild ID and/or badge hash."
+            raise ValueError(error)
+
+        return routes.CDN_PRIMARY_GUILD_BADGE.compile_to_file(
+            urls.CDN_URL,
+            guild_id=self.identity_guild_id,
+            hash=self.badge_hash,
+            size=size,
+            file_format=file_format,
+            lossless=lossless,
         )
 
 
@@ -315,6 +378,11 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         '<@123456789123456789>'
         ```
         """
+
+    @property
+    @abc.abstractmethod
+    def primary_guild(self) -> undefined.UndefinedNoneOr[PrimaryGuild]:
+        """The users primary guild tag."""
 
     async def fetch_dm_channel(self) -> channels.DMChannel:
         """Fetch the DM channel for this user.
@@ -580,35 +648,10 @@ class User(PartialUser, abc.ABC):
         """Avatar hash for the user, if they have one, otherwise [`None`][]."""
 
     @property
-    @deprecation.deprecated("Use 'make_avatar_url' instead.")
-    def avatar_url(self) -> files.URL | None:
-        """Avatar URL for the user, if they have one set.
-
-        Will be [`None`][] if no avatar is set. In this case, you
-        should use [`hikari.User.default_avatar_url`][] instead.
-        """
-        deprecation.warn_deprecated(
-            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
-        )
-        return self.make_avatar_url()
-
-    @property
     @abc.abstractmethod
     @typing_extensions.override
     def banner_hash(self) -> str | None:
         """Banner hash for the user, if they have one, otherwise [`None`][]."""
-
-    @property
-    @deprecation.deprecated("Use 'make_banner_url' instead.")
-    def banner_url(self) -> files.URL | None:
-        """Banner URL for the user, if they have one set.
-
-        Will be [`None`][] if no banner is set.
-        """
-        deprecation.warn_deprecated(
-            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
-        )
-        return self.make_banner_url()
 
     @property
     def default_avatar_url(self) -> files.URL:
@@ -699,6 +742,12 @@ class User(PartialUser, abc.ABC):
     def global_name(self) -> str | None:
         """Global name for the user, if they have one, otherwise [`None`][]."""
 
+    @property
+    @abc.abstractmethod
+    @typing_extensions.override
+    def primary_guild(self) -> PrimaryGuild | None:
+        """The users primary guild tag."""
+
     def make_avatar_url(
         self,
         *,
@@ -707,7 +756,6 @@ class User(PartialUser, abc.ABC):
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the avatar URL for this user, if set.
 
@@ -728,16 +776,6 @@ class User(PartialUser, abc.ABC):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP` or `AWEBP`.
-        ext
-            The ext to use for this URL.
-            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated).
-
-            If [`None`][], then the correct default extension is
-            determined based on whether the avatar is animated or not.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -755,12 +793,6 @@ class User(PartialUser, abc.ABC):
         if self.avatar_hash is None:
             return None
 
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
-
         if not file_format:
             file_format = "GIF" if self.avatar_hash.startswith("a_") else "PNG"
 
@@ -776,7 +808,6 @@ class User(PartialUser, abc.ABC):
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the banner URL for this user, if set.
 
@@ -797,16 +828,6 @@ class User(PartialUser, abc.ABC):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP` or `AWEBP`.
-        ext
-            The ext to use for this URL.
-            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated).
-
-            If [`None`][], then the correct default extension is
-            determined based on whether the banner is animated or not.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -823,12 +844,6 @@ class User(PartialUser, abc.ABC):
         """
         if self.banner_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         if not file_format:
             file_format = "GIF" if self.banner_hash.startswith("a_") else "PNG"
@@ -893,6 +908,9 @@ class PartialUserImpl(PartialUser):
 
     flags: undefined.UndefinedOr[UserFlag] = attrs.field(eq=False, hash=False, repr=True)
     """Public flags for this user."""
+
+    primary_guild: undefined.UndefinedNoneOr[PrimaryGuild] = attrs.field(eq=False, hash=False, repr=True)
+    """The users primary guild tag."""
 
     @property
     @typing_extensions.override
@@ -959,6 +977,9 @@ class UserImpl(PartialUserImpl, User):
 
     flags: UserFlag = attrs.field(eq=False, hash=False, repr=True)
     """The public flags for this user."""
+
+    primary_guild: PrimaryGuild | None = attrs.field(eq=False, hash=False, repr=True)
+    """The users primary guild tag."""
 
 
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)

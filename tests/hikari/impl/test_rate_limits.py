@@ -374,7 +374,7 @@ class TestWindowedBurstRateLimiter:
 
         with stack:
             rl.queue = list(futures)
-            rl.increase_at = time.time()
+            rl.move_at = time.time()
             await rl.throttle()
             # die if we take too long...
             await asyncio.wait(futures, timeout=3)
@@ -406,25 +406,25 @@ class TestWindowedBurstRateLimiter:
             __name__, 0.01, 1
         ) as rl:
             rl.is_rate_limited = mock.Mock(return_value=True)
-            rl.increase_at = 420.4
+            rl.move_at = 420.4
             assert rl.get_time_until_increase(69.8) == 420.4 - 69.8
 
     def test_is_rate_limited_when_rate_limit_expired(self):
         with rate_limits.WindowedBurstRateLimiter(__name__, 27, 27) as rl:
             now = 180
-            rl.increase_at = 80
+            rl.move_at = 80
             rl.remaining = 3
 
             assert not rl.is_rate_limited(now)
 
-            assert rl.increase_at == 207
+            assert rl.move_at == 207
             assert rl.remaining == 27
 
     @pytest.mark.parametrize("remaining", [-1, 0, 1])
     def test_is_rate_limited_when_rate_limit_not_expired(self, remaining):
         with rate_limits.WindowedBurstRateLimiter(__name__, 403, 27) as rl:
             now = 420
-            rl.increase_at = now + 69
+            rl.move_at = now + 69
             rl.remaining = remaining
             assert rl.is_rate_limited(now) is (remaining <= 0)
 

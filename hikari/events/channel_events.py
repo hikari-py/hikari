@@ -55,6 +55,7 @@ import attrs
 
 from hikari import channels
 from hikari import intents
+from hikari import iterators
 from hikari import traits
 from hikari.events import base_events
 from hikari.events import shard_events
@@ -386,15 +387,15 @@ class PinsUpdateEvent(ChannelEvent, abc.ABC):
             concerns.
         """
 
-    async def fetch_pins(self) -> typing.Sequence[messages.Message]:
+    def fetch_pins(self) -> iterators.LazyIterator[messages.PinnedMessage]:
         """Perform an API call to fetch the pinned messages in this channel.
 
         Returns
         -------
-        typing.Sequence[hikari.messages.Message]
+        iterators.LazyIterator[hikari.messages.PinnedMessage]
             The pinned messages in this channel.
         """
-        return await self.app.rest.fetch_pins(self.channel_id)
+        return self.app.rest.fetch_pins(self.channel_id)
 
 
 @base_events.requires_intents(intents.Intents.GUILDS)

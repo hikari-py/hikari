@@ -229,7 +229,7 @@ class Color(int):
         `1A2B3C`
         """
         components = self.rgb
-        return "".join(hex(c)[2:].zfill(2) for c in components).upper()
+        return "".join(hex(c)[2:].zfill(2) for c in components).upper()  # noqa: FURB116
 
     @property
     def is_web_safe(self) -> bool:

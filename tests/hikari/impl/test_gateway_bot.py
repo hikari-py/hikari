@@ -48,6 +48,11 @@ from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
 
 
+@pytest.fixture(scope="module")
+def token() -> str:
+    return "MA.TTTT.ttttttttttttttttt"
+
+
 @pytest.mark.parametrize("activity", [undefined.UNDEFINED, None])
 def test_validate_activity_when_no_activity(activity):
     with mock.patch.object(warnings, "warn") as warn:
@@ -133,6 +138,7 @@ class TestGatewayBot:
         intents,
         proxy_settings,
         http_settings,
+        token,
     ):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(cache_impl, "CacheImpl", return_value=cache))
@@ -147,7 +153,7 @@ class TestGatewayBot:
 
         with stack:
             return bot_impl.GatewayBot(
-                "token",
+                token,
                 executor=executor,
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
@@ -155,7 +161,7 @@ class TestGatewayBot:
                 max_retries=0,
             )
 
-    def test_init(self):
+    def test_init(self, token):
         stack = contextlib.ExitStack()
         cache = stack.enter_context(mock.patch.object(cache_impl, "CacheImpl"))
         entity_factory = stack.enter_context(mock.patch.object(entity_factory_impl, "EntityFactoryImpl"))
@@ -174,7 +180,7 @@ class TestGatewayBot:
 
         with stack:
             bot = bot_impl.GatewayBot(
-                "token",
+                token,
                 allow_color=False,
                 banner="testing",
                 suppress_optimization_warning=True,
@@ -221,7 +227,7 @@ class TestGatewayBot:
             dumps=bot._dumps,
             loads=bot._loads,
             rest_url="somewhere.com",
-            token="token",
+            token=token,
             token_type=applications.TokenType.BOT,
         )
 
@@ -229,7 +235,7 @@ class TestGatewayBot:
         print_banner.assert_called_once_with("testing", allow_color=False, force_color=True)
         warn_if_not_optimized.assert_called_once_with(suppress=True)
 
-    def test_init_when_no_settings(self):
+    def test_init_when_no_settings(self, token):
         stack = contextlib.ExitStack()
         cache = stack.enter_context(mock.patch.object(cache_impl, "CacheImpl"))
         stack.enter_context(mock.patch.object(entity_factory_impl, "EntityFactoryImpl"))
@@ -245,7 +251,7 @@ class TestGatewayBot:
         cache_settings = stack.enter_context(mock.patch.object(config, "CacheSettings"))
 
         with stack:
-            bot = bot_impl.GatewayBot("token", cache_settings=None, http_settings=None, proxy_settings=None)
+            bot = bot_impl.GatewayBot(token, cache_settings=None, http_settings=None, proxy_settings=None)
 
         assert bot._http_settings is http_settings.return_value
         http_settings.assert_called_once_with()
@@ -254,7 +260,7 @@ class TestGatewayBot:
         cache.assert_called_once_with(bot, cache_settings.return_value)
         cache_settings.assert_called_once_with()
 
-    def test_init_strips_token(self):
+    def test_init_strips_token(self, token):
         stack = contextlib.ExitStack()
         stack.enter_context(mock.patch.object(ux, "init_logging"))
         stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
@@ -262,10 +268,22 @@ class TestGatewayBot:
 
         with stack:
             bot = bot_impl.GatewayBot(
-                "\n\r token yeet \r\n", cache_settings=None, http_settings=None, proxy_settings=None
+                f"\n\r {token} \r\n", cache_settings=None, http_settings=None, proxy_settings=None
             )
 
-        assert bot._token == "token yeet"
+        assert bot._token == token
+
+    def test_token_id(self, token):
+        stack = contextlib.ExitStack()
+        stack.enter_context(mock.patch.object(ux, "init_logging"))
+        stack.enter_context(mock.patch.object(bot_impl.GatewayBot, "print_banner"))
+        stack.enter_context(mock.patch.object(ux, "warn_if_not_optimized"))
+
+        with stack:
+            bot = bot_impl.GatewayBot(token, cache_settings=None, http_settings=None, proxy_settings=None)
+
+        assert bot._token_id == applications.get_token_id(token)
+        assert bot.token_id == applications.get_token_id(token)
 
     def test_cache(self, bot, cache):
         assert bot.cache is cache

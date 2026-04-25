@@ -46,7 +46,7 @@ COVERAGE_FLAGS = [
 def pytest(session: nox.Session) -> None:
     """Run unit tests and measure code coverage.
 
-    Coverage can be disabled with the `--skip-coverage` flag.
+    Coverage can be enabled with the `--coverage` flag.
     """
     _pytest(session)
 
@@ -55,7 +55,7 @@ def pytest(session: nox.Session) -> None:
 def pytest_all_features(session: nox.Session) -> None:
     """Run unit tests and measure code coverage, using speedup modules.
 
-    Coverage can be disabled with the `--skip-coverage` flag.
+    Coverage can be enabled with the `--coverage` flag.
     """
     _pytest(session, extras_install=["speedups", "server"], python_flags=("-OO",))
 

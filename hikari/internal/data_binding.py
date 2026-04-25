@@ -291,26 +291,27 @@ class JSONObjectBuilder(dict[str, JSONish]):
         value
             The JSON type to put. This may be a non-JSON type if a conversion
             is also specified. This may alternatively be undefined. In the latter
-            case, nothing is performed.
+            case, nothing is performed. This may also be [`None`][], in which case
+            the value isn't cast and is stored as-is.
         conversion
             The optional conversion to apply.
         """
         if value is undefined.UNDEFINED:
             return
 
-        if conversion is None or value is None:
+        if not conversion or value is None:
             self[key] = value
         else:
             self[key] = conversion(value)
 
     @typing.overload
-    def put_array(self, key: str, values: undefined.UndefinedOr[typing.Iterable[JSONish]], /) -> None: ...
+    def put_array(self, key: str, values: undefined.UndefinedNoneOr[typing.Iterable[JSONish]], /) -> None: ...
 
     @typing.overload
     def put_array(
         self,
         key: str,
-        values: undefined.UndefinedOr[typing.Iterable[T_co]],
+        values: undefined.UndefinedNoneOr[typing.Iterable[T_co]],
         /,
         *,
         conversion: typing.Callable[[T_co], JSONish],
@@ -319,7 +320,7 @@ class JSONObjectBuilder(dict[str, JSONish]):
     def put_array(
         self,
         key: str,
-        values: undefined.UndefinedOr[typing.Iterable[typing.Any]],
+        values: undefined.UndefinedNoneOr[typing.Iterable[typing.Any]],
         /,
         *,
         conversion: typing.Callable[[typing.Any], JSONish] | None = None,
@@ -337,15 +338,21 @@ class JSONObjectBuilder(dict[str, JSONish]):
         values
             The JSON types to put. This may be an iterable of non-JSON types if
             a conversion is also specified. This may alternatively be undefined.
-            In the latter case, nothing is performed.
+            In the latter case, nothing is performed. This may also be [`None`][],
+            in which case the value isn't cast and is stored as-is.
         conversion
             The optional conversion to apply.
         """
-        if values is not undefined.UNDEFINED:
-            if conversion is not None:
+        if values is undefined.UNDEFINED:
+            return
+
+        if values is not None:
+            if conversion:
                 self[key] = [conversion(value) for value in values]
             else:
                 self[key] = list(values)
+        else:
+            self[key] = None
 
     def put_snowflake(
         self, key: str, value: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[snowflakes.Unique]], /
@@ -361,15 +368,21 @@ class JSONObjectBuilder(dict[str, JSONish]):
         value
             The JSON type to put. This may alternatively be undefined, in this
             case, nothing is performed. This may also be [`None`][], in this
-            case the value isn't cast.
+            case the value isn't cast and is stored as-is.
         """
-        if value is not undefined.UNDEFINED and value is not None:
+        if value is undefined.UNDEFINED:
+            return
+
+        if value is not None:
             self[key] = str(int(value))
-        elif value is None:
+        else:
             self[key] = None
 
     def put_snowflake_array(
-        self, key: str, values: undefined.UndefinedOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]], /
+        self,
+        key: str,
+        values: undefined.UndefinedNoneOr[typing.Iterable[snowflakes.SnowflakeishOr[snowflakes.Unique]]],
+        /,
     ) -> None:
         """Put an array of snowflakes with the given key into this builder.
 
@@ -383,10 +396,16 @@ class JSONObjectBuilder(dict[str, JSONish]):
             The key to give the element.
         values
             The JSON snowflakes to put. This may alternatively be undefined.
-            In the latter case, nothing is performed.
+            In the latter case, nothing is performed. This may also be [`None`][],
+            in which case the value isn't cast and is stored as-is.
         """
-        if values is not undefined.UNDEFINED:
+        if values is undefined.UNDEFINED:
+            return
+
+        if values is not None:
             self[key] = [str(int(value)) for value in values]
+        else:
+            self[key] = None
 
 
 def cast_variants_array(cast: typing.Callable[[T_co], T], raw_values: typing.Iterable[T_co], /) -> list[T]:

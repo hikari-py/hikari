@@ -318,7 +318,7 @@ class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
 @attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.GUILD_MESSAGE_REACTIONS)
 class GuildReactionDeleteEmojiEvent(GuildReactionEvent, ReactionDeleteEmojiEvent):
-    """Event fired when an emoji is removed from a guild message's reactions."""
+    """Event fired when all reactions of a certain emoji is removed from a guild message."""
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.
@@ -427,7 +427,7 @@ class DMReactionDeleteEvent(DMReactionEvent, ReactionDeleteEvent):
 @attrs.define(kw_only=True, weakref_slot=False)
 @base_events.requires_intents(intents.Intents.DM_MESSAGE_REACTIONS)
 class DMReactionDeleteEmojiEvent(DMReactionEvent, ReactionDeleteEmojiEvent):
-    """Event fired when an emoji is removed from a private message's reactions."""
+    """Event fired when all reactions of a certain emoji is removed from a private message."""
 
     app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from Event>>.

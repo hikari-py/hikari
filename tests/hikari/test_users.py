@@ -193,14 +193,6 @@ class TestUser:
 
         assert obj.accent_colour is obj.accent_color
 
-    def test_avatar_decoration_property(self, obj):
-        obj.avatar_decoration = users.AvatarDecoration(
-            asset_hash="18dnf8dfbakfdh", sku_id=snowflakes.Snowflake(123), expires_at=None
-        )
-
-        with mock.patch.object(users.AvatarDecoration, "make_url") as make_url:
-            assert obj.avatar_decoration.url is make_url.return_value
-
     def test_avatar_decoration_make_url_with_all_args(self, obj):
         obj.avatar_decoration = users.AvatarDecoration(
             asset_hash="18dnf8dfbakfdh", sku_id=snowflakes.Snowflake(123), expires_at=None
@@ -222,15 +214,11 @@ class TestUser:
         with mock.patch.object(
             routes, "CDN_USER_AVATAR", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.make_avatar_url(ext="JPEG") == "file"
+            assert obj.make_avatar_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, user_id=123321, hash="fofoof", size=4096, file_format="JPEG", lossless=True
         )
-
-    def test_avatar_url_property(self, obj):
-        with mock.patch.object(users.User, "make_avatar_url") as make_avatar_url:
-            assert obj.avatar_url is make_avatar_url.return_value
 
     def test_make_avatar_url_when_no_hash(self, obj):
         obj.avatar_hash = None
@@ -319,15 +307,11 @@ class TestUser:
         with mock.patch.object(
             routes, "CDN_USER_BANNER", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert obj.make_banner_url(ext="JPEG") == "file"
+            assert obj.make_banner_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, user_id=123321, hash="fofoof", size=4096, file_format="JPEG", lossless=True
         )
-
-    def test_banner_url_property(self, obj):
-        with mock.patch.object(users.User, "make_banner_url") as make_banner_url:
-            assert obj.banner_url is make_banner_url.return_value
 
     def test_make_banner_url_when_no_hash(self, obj):
         obj.banner_hash = None
@@ -390,6 +374,7 @@ class TestPartialUserImpl:
             is_bot=False,
             is_system=False,
             flags=users.UserFlag.DISCORD_EMPLOYEE,
+            primary_guild=None,
         )
 
     def test_str_operator(self, obj):
@@ -440,6 +425,7 @@ class TestOwnUser:
             is_verified=False,
             email="someone@example.com",
             premium_type=None,
+            primary_guild=None,
         )
 
     async def test_fetch_self(self, obj):
@@ -455,3 +441,31 @@ class TestOwnUser:
     async def test_send(self, obj):
         with pytest.raises(TypeError, match=r"Unable to send a DM to yourself"):
             await obj.send()
+
+
+class TestPrimaryGuild:
+    @pytest.fixture
+    def obj(self):
+        return users.PrimaryGuild(
+            identity_guild_id=snowflakes.Snowflake(1234), identity_enabled=True, tag="HKRI", badge_hash="abcd1234"
+        )
+
+    def test_make_url(self, obj):
+        with mock.patch.object(
+            routes, "CDN_PRIMARY_GUILD_BADGE", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.make_url() == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, guild_id=1234, hash="abcd1234", size=4096, file_format="PNG", lossless=True
+        )
+
+    def test_make_url_with_all_args(self, obj):
+        with mock.patch.object(
+            routes, "CDN_PRIMARY_GUILD_BADGE", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert obj.make_url(file_format="WEBP", size=280, lossless=False) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, guild_id=1234, hash="abcd1234", size=280, file_format="WEBP", lossless=False
+        )

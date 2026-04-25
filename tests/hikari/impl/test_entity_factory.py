@@ -214,7 +214,12 @@ def guild_private_thread_payload(thread_member_payload: dict[str, typing.Any]) -
 
 
 @pytest.fixture
-def user_payload():
+def primary_guild_payload() -> dict[str, typing.Any]:
+    return {"identity_guild_id": "554454", "identity_enabled": True, "tag": "HKRI", "badge": "abcd1234"}
+
+
+@pytest.fixture
+def user_payload(primary_guild_payload: dict[str, typing.Any]):
     return {
         "id": "115590097100865541",
         "username": "nyaa",
@@ -225,6 +230,7 @@ def user_payload():
         "bot": True,
         "system": True,
         "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER | user_models.UserFlag.ACTIVE_DEVELOPER),
+        "primary_guild": primary_guild_payload,
     }
 
 
@@ -3337,6 +3343,67 @@ class TestEntityFactoryImpl:
         result = entity_factory_impl.serialize_welcome_channel(channel)
 
         assert result == {"channel_id": "4312312", "description": "meow2"}
+
+    @pytest.fixture
+    def guild_onboarding_prompt_payload(self) -> typing.MutableMapping[str, typing.Any]:
+        return {
+            "id": "123",
+            "type": 0,
+            "title": "test",
+            "single_select": True,
+            "required": True,
+            "in_onboarding": True,
+            "options": [
+                {
+                    "id": "456",
+                    "channel_ids": ["123"],
+                    "role_ids": ["123"],
+                    "emoji": {"name": "❤️"},
+                    "title": "title",
+                    "description": "description",
+                }
+            ],
+        }
+
+    def test_deserialize_guild_onboarding_prompt(
+        self, entity_factory_impl, guild_onboarding_prompt_payload: typing.MutableMapping[str, typing.Any]
+    ):
+        prompt = entity_factory_impl._deserialize_guild_onboarding_prompt(guild_onboarding_prompt_payload)
+        assert isinstance(prompt, guild_models.GuildOnboardingPrompt)
+        assert prompt.title == "test"
+        assert prompt.id == 123
+        assert prompt.type == guild_models.GuildOnboardingPromptType.MULTIPLE_CHOICE
+        assert prompt.in_onboarding == True
+        assert prompt.required == True
+        assert prompt.single_select == True
+        assert prompt.options == [
+            guild_models.GuildOnboardingPromptOption(
+                id=snowflakes.Snowflake("456"),
+                channel_ids=[snowflakes.Snowflake("123")],
+                role_ids=[snowflakes.Snowflake("123")],
+                emoji=emoji_models.UnicodeEmoji("❤️"),
+                title="title",
+                description="description",
+            )
+        ]
+
+    def test_deserialize_guild_onboarding(
+        self, entity_factory_impl, guild_onboarding_prompt_payload: typing.MutableMapping[str, typing.Any]
+    ):
+        payload = {
+            "default_channel_ids": ["123"],
+            "prompts": [guild_onboarding_prompt_payload],
+            "guild_id": "187",
+            "enabled": True,
+            "mode": guild_models.GuildOnboardingMode.ONBOARDING_DEFAULT.value,
+        }
+        onboarding = entity_factory_impl.deserialize_guild_onboarding(payload)
+        assert onboarding.guild_id == snowflakes.Snowflake("187")
+        assert onboarding.enabled == True
+        assert onboarding.default_channel_ids == [snowflakes.Snowflake("123")]
+        assert onboarding.mode == guild_models.GuildOnboardingMode.ONBOARDING_DEFAULT
+        assert len(onboarding.prompts) == 1
+        assert isinstance(onboarding.prompts[0], guild_models.GuildOnboardingPrompt)
 
     def test_deserialize_member(self, entity_factory_impl, mock_app, member_payload, user_payload):
         member_payload = {**member_payload, "guild_id": "76543325"}
@@ -7762,7 +7829,29 @@ class TestEntityFactoryImpl:
         decoration = entity_factory_impl._deserialize_avatar_decoration(None)
         assert decoration is None
 
-    def test_deserialize_user(self, entity_factory_impl, mock_app, user_payload):
+    def test__deserialize_primary_guild(
+        self, entity_factory_impl, mock_app: mock.Mock, primary_guild_payload: dict[str, typing.Any]
+    ):
+        primary_guild = entity_factory_impl._deserialize_primary_guild(primary_guild_payload)
+        assert primary_guild.identity_guild_id == snowflakes.Snowflake(554454)
+        assert primary_guild.identity_enabled is True
+        assert primary_guild.tag == "HKRI"
+        assert primary_guild.badge_hash == "abcd1234"
+
+    def test__deserialize_primary_guild_with_empty_payload(self, entity_factory_impl, mock_app: mock.Mock):
+        primary_guild = entity_factory_impl._deserialize_primary_guild(None)
+        assert primary_guild is None
+
+    def test__deserialize_primary_guild_with_nullable_fields(self, entity_factory_impl, mock_app: mock.Mock):
+        primary_guild = entity_factory_impl._deserialize_primary_guild(
+            {"identity_guild_id": None, "identity_enabled": None, "tag": None, "badge": None}
+        )
+        assert primary_guild.identity_guild_id is None
+        assert primary_guild.identity_enabled is None
+        assert primary_guild.tag is None
+        assert primary_guild.badge_hash is None
+
+    def test_deserialize_user(self, entity_factory_impl, mock_app, user_payload, primary_guild_payload):
         user = entity_factory_impl.deserialize_user(user_payload)
         assert user.app is mock_app
         assert user.id == 115590097100865541
@@ -7775,6 +7864,7 @@ class TestEntityFactoryImpl:
         assert user.is_system is True
         assert user.flags == user_models.UserFlag.EARLY_VERIFIED_DEVELOPER | user_models.UserFlag.ACTIVE_DEVELOPER
         assert isinstance(user, user_models.UserImpl)
+        assert user.primary_guild == entity_factory_impl._deserialize_primary_guild(primary_guild_payload)
 
     def test_deserialize_user_with_unset_fields(self, entity_factory_impl, mock_app, user_payload):
         user = entity_factory_impl.deserialize_user(
@@ -7790,9 +7880,10 @@ class TestEntityFactoryImpl:
         assert user.is_bot is False
         assert user.is_system is False
         assert user.flags == user_models.UserFlag.NONE
+        assert user.primary_guild is None
 
     @pytest.fixture
-    def my_user_payload(self):
+    def my_user_payload(self, primary_guild_payload: dict[str, Any]):
         return {
             "id": "379953393319542784",
             "username": "qt pi",
@@ -7810,9 +7901,10 @@ class TestEntityFactoryImpl:
             "public_flags": int(user_models.UserFlag.EARLY_VERIFIED_DEVELOPER),
             "flags": int(user_models.UserFlag.PARTNERED_SERVER_OWNER | user_models.UserFlag.DISCORD_EMPLOYEE),
             "premium_type": 1,
+            "primary_guild": primary_guild_payload,
         }
 
-    def test_deserialize_my_user(self, entity_factory_impl, mock_app, my_user_payload):
+    def test_deserialize_my_user(self, entity_factory_impl, mock_app, my_user_payload, primary_guild_payload):
         my_user = entity_factory_impl.deserialize_my_user(my_user_payload)
         assert my_user.app is mock_app
         assert my_user.id == 379953393319542784
@@ -7831,6 +7923,7 @@ class TestEntityFactoryImpl:
         assert my_user.email == "blahblah@blah.blah"
         assert my_user.flags == user_models.UserFlag.PARTNERED_SERVER_OWNER | user_models.UserFlag.DISCORD_EMPLOYEE
         assert my_user.premium_type is user_models.PremiumType.NITRO_CLASSIC
+        assert my_user.primary_guild == entity_factory_impl._deserialize_primary_guild(primary_guild_payload)
         assert isinstance(my_user, user_models.OwnUser)
 
     def test_deserialize_my_user_with_unset_fields(self, entity_factory_impl, mock_app, my_user_payload):

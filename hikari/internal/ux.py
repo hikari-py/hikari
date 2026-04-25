@@ -422,6 +422,10 @@ class HikariVersion:
         return vstring
 
     @typing_extensions.override
+    def __hash__(self) -> int:
+        return hash(self.version)
+
+    @typing_extensions.override
     def __repr__(self) -> str:
         return f"HikariVersion('{self!s}')"
 

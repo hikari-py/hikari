@@ -46,7 +46,7 @@ _BASICAUTH_TOKEN_PREFIX: typing.Final[str] = "Basic"  # noqa: S105
 _PROXY_AUTHENTICATION_HEADER: typing.Final[str] = "Proxy-Authentication"
 
 
-def _ssl_factory(value: bool | ssl_.SSLContext) -> ssl_.SSLContext:
+def _ssl_factory(value: bool | ssl_.SSLContext) -> ssl_.SSLContext:  # noqa: FBT001
     if not isinstance(value, bool):
         return value
 

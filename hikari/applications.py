@@ -61,7 +61,6 @@ from hikari import undefined
 from hikari import urls
 from hikari import users
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -394,15 +393,6 @@ class TeamMember(users.User):
 
     @property
     @typing_extensions.override
-    @deprecation.deprecated("Use 'make_avatar_url' instead.")
-    def avatar_url(self) -> files.URL | None:
-        deprecation.warn_deprecated(
-            "avatar_url", removal_version="2.5.0", additional_info="Use 'make_avatar_url' instead."
-        )
-        return self.user.make_avatar_url()
-
-    @property
-    @typing_extensions.override
     def default_avatar_url(self) -> files.URL:
         return self.user.default_avatar_url
 
@@ -410,15 +400,6 @@ class TeamMember(users.User):
     @typing_extensions.override
     def banner_hash(self) -> str | None:
         return self.user.banner_hash
-
-    @property
-    @typing_extensions.override
-    @deprecation.deprecated("Use 'make_banner_url' instead.")
-    def banner_url(self) -> files.URL | None:
-        deprecation.warn_deprecated(
-            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
-        )
-        return self.user.make_banner_url()
 
     @property
     @typing_extensions.override
@@ -465,6 +446,11 @@ class TeamMember(users.User):
     def global_name(self) -> str | None:
         return self.user.global_name
 
+    @property
+    @typing_extensions.override
+    def primary_guild(self) -> users.PrimaryGuild | None:
+        return self.user.primary_guild
+
     @typing_extensions.override
     def __str__(self) -> str:
         return str(self.user)
@@ -486,9 +472,8 @@ class TeamMember(users.User):
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
-        return self.user.make_avatar_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
+        return self.user.make_avatar_url(file_format=file_format, size=size, lossless=lossless)
 
     @typing_extensions.override
     def make_banner_url(
@@ -499,9 +484,8 @@ class TeamMember(users.User):
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
-        return self.user.make_banner_url(file_format=file_format, size=size, lossless=lossless, ext=ext)
+        return self.user.make_banner_url(file_format=file_format, size=size, lossless=lossless)
 
 
 @attrs_extensions.with_copy
@@ -540,20 +524,12 @@ class Team(snowflakes.Unique):
     def __str__(self) -> str:
         return f"Team {self.name} ({self.id})"
 
-    @property
-    @deprecation.deprecated("Use 'make_icon_url' instead.")
-    def icon_url(self) -> files.URL | None:
-        """Team icon URL, if there is one."""
-        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
-        return self.make_icon_url()
-
     def make_icon_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the icon URL for this team, if set.
 
@@ -573,12 +549,6 @@ class Team(snowflakes.Unique):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -594,12 +564,6 @@ class Team(snowflakes.Unique):
         """
         if self.icon_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_TEAM_ICON.compile_to_file(
             urls.CDN_URL, team_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless
@@ -622,22 +586,12 @@ class InviteApplication(guilds.PartialApplication):
     public_key: bytes = attrs.field(eq=False, hash=False, repr=False)
     """The key used for verifying interaction and GameSDK payload signatures."""
 
-    @property
-    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
-    def cover_image_url(self) -> files.URL | None:
-        """Rich presence cover image URL for this application, if set."""
-        deprecation.warn_deprecated(
-            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
-        )
-        return self.make_cover_image_url()
-
     def make_cover_image_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
 
@@ -657,12 +611,6 @@ class InviteApplication(guilds.PartialApplication):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -678,12 +626,6 @@ class InviteApplication(guilds.PartialApplication):
         """
         if self.cover_image_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
             urls.CDN_URL,
@@ -773,22 +715,12 @@ class Application(guilds.PartialApplication):
     )
     """The default scopes and permissions for each integration type."""
 
-    @property
-    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
-    def cover_image_url(self) -> files.URL | None:
-        """Rich presence cover image URL for this application, if set."""
-        deprecation.warn_deprecated(
-            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
-        )
-        return self.make_cover_image_url()
-
     def make_cover_image_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
 
@@ -808,12 +740,6 @@ class Application(guilds.PartialApplication):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -829,12 +755,6 @@ class Application(guilds.PartialApplication):
         """
         if self.cover_image_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
             urls.CDN_URL,
@@ -926,7 +846,7 @@ class PartialOAuth2Token:
 class OAuth2AuthorizationToken(PartialOAuth2Token):
     """Model for the OAuth2 token data returned by the authorization grant flow."""
 
-    refresh_token: int = attrs.field(eq=False, hash=False, repr=False)
+    refresh_token: str = attrs.field(eq=False, hash=False, repr=False)
     """Refresh token used to obtain new access tokens with the same grant."""
 
     webhook: webhooks.IncomingWebhook | None = attrs.field(eq=False, hash=False, repr=True)

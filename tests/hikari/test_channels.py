@@ -172,18 +172,11 @@ class TestGroupDMChannel:
         with mock.patch.object(
             routes, "CDN_CHANNEL_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
         ) as route:
-            assert model.make_icon_url(ext="JPEG") == "file"
+            assert model.make_icon_url(file_format="JPEG") == "file"
 
         route.compile_to_file.assert_called_once_with(
             urls.CDN_URL, channel_id=136134, hash="1a2b3c", size=4096, file_format="JPEG", lossless=True
         )
-
-    def test_icon_url(self):
-        channel = hikari_test_helpers.mock_class_namespace(
-            channels.GroupDMChannel, init_=False, make_icon_url=mock.Mock(return_value="icon-url-here.com")
-        )()
-        assert channel.icon_url == "icon-url-here.com"
-        channel.make_icon_url.assert_called_once()
 
     def test_make_icon_url(self, model):
         assert model.make_icon_url(file_format="JPEG", size=16) == files.URL(

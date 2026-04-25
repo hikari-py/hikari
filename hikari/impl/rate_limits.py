@@ -293,12 +293,12 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
     that a unit has been placed into the bucket.
     """
 
-    __slots__: typing.Sequence[str] = ("increase_at", "limit", "period", "remaining")
+    __slots__: typing.Sequence[str] = ("limit", "move_at", "period", "remaining")
 
     throttle_task: asyncio.Task[typing.Any] | None
     # <<inherited docstring from BurstRateLimiter>>.
 
-    increase_at: float
+    move_at: float
     """The [`time.monotonic`][] that the limit window ends at."""
 
     remaining: int
@@ -314,7 +314,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
 
     def __init__(self, name: str, period: float, limit: int) -> None:
         super().__init__(name)
-        self.increase_at = 0.0
+        self.move_at = 0.0
         self.remaining = 0
         self.limit = limit
         self.period = period
@@ -365,7 +365,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         """
         if not self.is_rate_limited(now):
             return 0.0
-        return self.increase_at - now
+        return self.move_at - now
 
     def is_rate_limited(self, now: float) -> bool:
         """Determine if we are under a rate limit at the given time.
@@ -387,7 +387,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         bool
             Whether the bucket is ratelimited.
         """
-        if now >= self.increase_at:
+        if now >= self.move_at:
             self.move_window(now)
 
         return self.remaining <= 0
@@ -399,7 +399,7 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
             You should usually not need to invoke this directly!
         """
         self.remaining = self.limit
-        self.increase_at = now + self.period
+        self.move_at = now + self.period
 
     async def throttle(self) -> None:
         """Perform the throttling rate limiter logic.
