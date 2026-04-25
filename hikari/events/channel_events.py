@@ -31,6 +31,7 @@ __all__: typing.Sequence[str] = (
     "DMPinsUpdateEvent",
     "GuildChannelCreateEvent",
     "GuildChannelDeleteEvent",
+    "GuildChannelEffectSendEvent",
     "GuildChannelEvent",
     "GuildChannelUpdateEvent",
     "GuildPinsUpdateEvent",
@@ -65,11 +66,13 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import emojis
     from hikari import guilds
     from hikari import invites
     from hikari import messages
     from hikari import presences
     from hikari import snowflakes
+    from hikari import undefined
     from hikari import webhooks
     from hikari.api import shard as gateway_shard
 
@@ -357,6 +360,46 @@ class GuildChannelDeleteEvent(GuildChannelEvent):
         # Channel will never be found.
         @typing_extensions.override
         async def fetch_channel(self) -> typing.NoReturn: ...
+
+
+@base_events.requires_intents(intents.Intents.GUILDS)
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class GuildChannelEffectSendEvent(GuildChannelEvent):
+    """Event fired when a guild channel is created."""
+
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    channel_id: snowflakes.Snowflake = attrs.field(repr=True)
+    # <<inherited docstring from ChannelEvent>>.
+
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
+    # <<inherited docstring from GuildChannelEvent>>.
+
+    user_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """The user ID that sent the effect."""
+
+    emoji: undefined.UndefinedNoneOr[emojis.CustomEmoji | emojis.UnicodeEmoji] = attrs.field(repr=True)
+    """The emoji sent in relation to the sound effect or reaction."""
+
+    animation_type: undefined.UndefinedNoneOr[emojis.EmojiAnimationType] = attrs.field(repr=True)
+    """The animation type of the emoji in relation to the sound effect or reaction."""
+
+    animation_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(repr=True)
+    """The animation ID of the emoji in relation to the sound effect or reaction."""
+
+    sound_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(repr=True)
+    """The sound ID for soundboard sound effects."""
+
+    sound_volume: undefined.UndefinedOr[float] = attrs.field(repr=True)
+    """The sound volume for soundboard sound effects."""
+
+    @property
+    @typing_extensions.override
+    def app(self) -> traits.RESTAware:
+        # <<inherited docstring from Event>>.
+        return self.app
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILDS)
