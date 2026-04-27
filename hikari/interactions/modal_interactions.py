@@ -22,12 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = (
-    "ModalInteraction",
-    "ModalInteraction",
-    "ModalInteractionMetadata",
-    "ModalResponseTypesT",
-)
+__all__: typing.Sequence[str] = ("ModalInteraction", "ModalInteractionMetadata", "ModalResponseTypesT")
 
 import typing
 
@@ -77,8 +72,11 @@ class ModalInteraction(base_interactions.MessageResponseMixin[ModalResponseTypes
     This will be [`None`][] if the modal was a response to a command.
     """
 
-    components: typing.Sequence[components_.ModalActionRowComponent] = attrs.field(eq=False, hash=False, repr=True)
+    components: typing.Sequence[components_.ModalComponentTypesT] = attrs.field(eq=False, hash=False, repr=True)
     """Components in the modal."""
+
+    resolved: base_interactions.ResolvedOptionData | None = attrs.field(eq=False, hash=False, repr=False)
+    """Mappings of the objects resolved for the provided modal components."""
 
     def build_response(self) -> special_endpoints.InteractionMessageBuilder:
         """Get a message response builder for use in the REST server flow.
