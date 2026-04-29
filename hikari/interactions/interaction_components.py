@@ -26,6 +26,8 @@ __all__: typing.Sequence[str] = (
     "ButtonInteractionComponent",
     "ChannelSelectMenuInteractionComponent",
     "FileUploadInteractionComponent",
+    "InteractionComponentTypesT",
+    "InteractionLabelTypesT",
     "LabelInteractionComponent",
     "PartialInteractionComponent",
     "SelectMenuInteractionComponent",
