@@ -64,6 +64,7 @@ from hikari.api import entity_factory
 from hikari.interactions import base_interactions
 from hikari.interactions import command_interactions
 from hikari.interactions import component_interactions
+from hikari.interactions import interaction_components
 from hikari.interactions import modal_interactions
 from hikari.internal import attrs_extensions
 from hikari.internal import data_binding
@@ -455,19 +456,19 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         "_auto_mod_action_mapping",
         "_auto_mod_trigger_mapping",
         "_command_mapping",
+        "_components_mapping",
         "_container_component_mapping",
         "_dm_channel_type_mapping",
         "_guild_channel_type_mapping",
+        "_interaction_components_mapping",
+        "_interaction_label_component_mapping",
         "_interaction_metadata_mapping",
         "_interaction_type_mapping",
-        "_label_component_type_mapping",
-        "_modal_action_row_component_type_mapping",
         "_modal_component_type_mapping",
         "_scheduled_event_type_mapping",
         "_section_accessory_mapping",
         "_section_component_mapping",
         "_thread_channel_type_mapping",
-        "_top_level_components_mapping",
         "_webhook_type_mapping",
     )
 
@@ -556,17 +557,33 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_select_menu,
             component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_channel_select_menu,
         }
-        self._top_level_components_mapping: dict[
+        self._components_mapping: dict[
             component_models.ComponentType,
             typing.Callable[[data_binding.JSONObject], component_models.TopLevelComponentTypesT],
         ] = {
-            component_models.ComponentType.ACTION_ROW: self._deserialize_message_action_row_component,
+            component_models.ComponentType.ACTION_ROW: self._deserialize_action_row_component,
             component_models.ComponentType.SECTION: self._deserialize_section_component,
             component_models.ComponentType.TEXT_DISPLAY: self._deserialize_text_display_component,
             component_models.ComponentType.MEDIA_GALLERY: self._deserialize_media_gallery_component,
             component_models.ComponentType.SEPARATOR: self._deserialize_separator_component,
             component_models.ComponentType.FILE: self._deserialize_file_component,
             component_models.ComponentType.CONTAINER: self._deserialize_container_component,
+        }
+        self._interaction_components_mapping: dict[
+            component_models.ComponentType,
+            typing.Callable[[data_binding.JSONObject], interaction_components.InteractionComponentTypesT],
+        ] = {component_models.ComponentType.LABEL: self._deserialize_interaction_label_component}
+        self._interaction_label_component_mapping: dict[
+            component_models.ComponentType,
+            typing.Callable[[data_binding.JSONObject], interaction_components.InteractionLabelTypesT],
+        ] = {
+            component_models.ComponentType.TEXT_INPUT: self._deserialize_interaction_text_input_component,
+            component_models.ComponentType.TEXT_SELECT_MENU: self._deserialize_interaction_text_select_menu_component,
+            component_models.ComponentType.USER_SELECT_MENU: self._deserialize_interaction_user_select_menu_component,
+            component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_interaction_role_select_menu_component,
+            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_interaction_mentionable_select_menu_component,  # noqa: E501
+            component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_interaction_channel_select_menu_component,  # noqa: E501
+            component_models.ComponentType.FILE_UPLOAD: self._deserialize_interaction_file_upload_component,
         }
         self._container_component_mapping: dict[
             component_models.ComponentType, typing.Callable[[data_binding.JSONObject], component_models.ContainerTypesT]
@@ -587,26 +604,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         ] = {
             component_models.ComponentType.THUMBNAIL: self._deserialize_thumbnail_component,
             component_models.ComponentType.BUTTON: self._deserialize_button,
-        }
-        self._modal_component_type_mapping: dict[
-            int, typing.Callable[[data_binding.JSONObject], component_models.ModalComponentTypesT]
-        ] = {
-            component_models.ComponentType.ACTION_ROW: self._deserialize_modal_action_row_component,
-            component_models.ComponentType.LABEL: self._deserialize_modal_label_component,
-        }
-        self._modal_action_row_component_type_mapping: dict[
-            int, typing.Callable[[data_binding.JSONObject], component_models.ModalActionRowComponentTypesT]
-        ] = {component_models.ComponentType.TEXT_INPUT: self._deserialize_text_input}
-        self._label_component_type_mapping: dict[
-            int, typing.Callable[[data_binding.JSONObject], component_models.LabelTypesT]
-        ] = {
-            component_models.ComponentType.TEXT_INPUT: self._deserialize_text_input,
-            component_models.ComponentType.TEXT_SELECT_MENU: self._deserialize_text_select_menu,
-            component_models.ComponentType.USER_SELECT_MENU: self._deserialize_select_menu,
-            component_models.ComponentType.ROLE_SELECT_MENU: self._deserialize_select_menu,
-            component_models.ComponentType.CHANNEL_SELECT_MENU: self._deserialize_channel_select_menu,
-            component_models.ComponentType.MENTIONABLE_SELECT_MENU: self._deserialize_select_menu,
-            component_models.ComponentType.FILE_UPLOAD: self._deserialize_file_upload_component,
         }
         self._dm_channel_type_mapping = {
             channel_models.ChannelType.DM: self.deserialize_dm,
@@ -3040,16 +3037,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if message_payload := payload.get("message"):
             message = self.deserialize_message(message_payload)
 
-        resolved: base_interactions.ResolvedOptionData | None = None
-        if resolved_payload := data_payload.get("resolved"):
-            resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
-
         authorizing_integration_owners = {
             application_models.ApplicationIntegrationType(int(integration_type)): snowflakes.Snowflake(
                 integration_owner_id
             )
             for integration_type, integration_owner_id in payload["authorizing_integration_owners"].items()
         }
+
+        resolved: base_interactions.ResolvedOptionData | None = None
+        if resolved_payload := data_payload.get("resolved"):
+            resolved = self._deserialize_resolved_option_data(resolved_payload, guild_id=guild_id)
 
         return modal_interactions.ModalInteraction(
             app=self._app,
@@ -3066,7 +3063,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             token=payload["token"],
             version=payload["version"],
             custom_id=data_payload["custom_id"],
-            components=self._deserialize_modal_components(data_payload["components"]),
+            components=self._deserialize_interaction_components(data_payload["components"]),
             message=message,
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
@@ -3288,36 +3285,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # COMPONENT MODELS #
     ####################
 
-    def _deserialize_modal_components(
+    def _deserialize_components(
         self, payloads: data_binding.JSONArray
-    ) -> typing.Sequence[component_models.ModalComponentTypesT]:
-        top_level_components: list[component_models.ModalComponentTypesT] = []
+    ) -> typing.Sequence[component_models.TopLevelComponentTypesT]:
+        components: list[component_models.TopLevelComponentTypesT] = []
 
         for payload in payloads:
             component_type = component_models.ComponentType(payload["type"])
-            if (deserializer := self._modal_component_type_mapping.get(component_type)) is None:
-                _LOGGER.debug("Unrecognised component type: %s", component_type)
-                continue
 
-            top_level_components.append(deserializer(payload))
-
-        return top_level_components
-
-    def _deserialize_top_level_components(
-        self, payloads: data_binding.JSONArray
-    ) -> typing.Sequence[component_models.TopLevelComponentTypesT]:
-        top_level_components: list[component_models.TopLevelComponentTypesT] = []
-
-        for payload in payloads:
-            top_level_component_type = component_models.ComponentType(payload["type"])
-
-            if deserializer := self._top_level_components_mapping.get(top_level_component_type):
-                top_level_components.append(deserializer(payload))
+            if deserializer := self._components_mapping.get(component_type):
+                components.append(deserializer(payload))
             else:
-                _LOGGER.debug("Unknown component type %s", top_level_component_type)
+                _LOGGER.debug("Unknown component type %s", component_type)
                 continue
 
-        return top_level_components
+        return components
 
     def _deserialize_button(self, payload: data_binding.JSONObject) -> component_models.ButtonComponent:
         emoji_payload = payload.get("emoji")
@@ -3392,14 +3374,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             is_disabled=payload.get("disabled", False),
         )
 
-    def _deserialize_text_input(self, payload: data_binding.JSONObject) -> component_models.TextInputComponent:
-        return component_models.TextInputComponent(
-            type=component_models.ComponentType(payload["type"]),
-            id=payload["id"],
-            custom_id=payload["custom_id"],
-            value=payload["value"],
-        )
-
     def _deserialize_media(self, payload: data_binding.JSONObject) -> component_models.MediaResource:
         height: undefined.UndefinedNoneOr[int] = undefined.UNDEFINED
         if "height" in payload:
@@ -3429,7 +3403,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             loading_state=loading_state,
         )
 
-    def _deserialize_message_action_row_component(
+    def _deserialize_action_row_component(
         self, payload: data_binding.JSONObject
     ) -> component_models.ActionRowComponent[component_models.PartialComponent]:
         components: list[component_models.PartialComponent] = []
@@ -3445,36 +3419,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return component_models.ActionRowComponent(
             type=component_models.ComponentType.ACTION_ROW, id=payload["id"], components=components
-        )
-
-    def _deserialize_modal_action_row_component(
-        self, payload: data_binding.JSONObject
-    ) -> component_models.ActionRowComponent[component_models.PartialComponent]:
-        components: list[component_models.PartialComponent] = []
-
-        for component_payload in payload["components"]:
-            component_type = component_models.ComponentType(component_payload["type"])
-
-            if (deserializer := self._modal_action_row_component_type_mapping.get(component_type)) is None:
-                _LOGGER.debug("Unknown component type %s", component_type)
-                continue
-
-            components.append(deserializer(component_payload))
-
-        return component_models.ActionRowComponent(
-            type=component_models.ComponentType.ACTION_ROW, id=payload["id"], components=components
-        )
-
-    def _deserialize_modal_label_component(self, payload: data_binding.JSONObject) -> component_models.LabelComponent:
-        component_type = component_models.ComponentType(payload["component"]["type"])
-
-        if (deserializer := self._label_component_type_mapping.get(component_type)) is None:
-            _LOGGER.debug("Unrecognised component type: %s", component_type)
-            msg = f"Unrecognised component type: {component_type}"
-            raise errors.UnrecognisedEntityError(msg)
-
-        return component_models.LabelComponent(
-            type=component_models.ComponentType.LABEL, id=payload["id"], component=deserializer(payload["component"])
         )
 
     def _deserialize_section_component(self, payload: data_binding.JSONObject) -> component_models.SectionComponent:
@@ -3555,7 +3499,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             component_type = component_models.ComponentType(component_payload["type"])
 
             if component_type == component_models.ComponentType.ACTION_ROW:
-                if action_row := self._deserialize_message_action_row_component(component_payload):
+                if action_row := self._deserialize_action_row_component(component_payload):
                     components.append(action_row)
 
                 continue
@@ -3578,12 +3522,104 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             components=components,
         )
 
-    def _deserialize_file_upload_component(
+    def _deserialize_interaction_components(
+        self, payloads: data_binding.JSONArray
+    ) -> typing.Sequence[interaction_components.InteractionComponentTypesT]:
+        interaction_components: list[interaction_components.InteractionComponentTypesT] = []
+
+        for payload in payloads:
+            interaction_component_type = component_models.ComponentType(payload["type"])
+
+            if deserializer := self._interaction_components_mapping.get(interaction_component_type):
+                interaction_components.append(deserializer(payload))
+            else:
+                _LOGGER.debug("Unknown component type %s", interaction_component_type)
+                continue
+
+        return interaction_components
+
+    def _deserialize_interaction_label_component(
         self, payload: data_binding.JSONObject
-    ) -> component_models.FileUploadComponent:
-        return component_models.FileUploadComponent(
-            type=component_models.ComponentType.FILE_UPLOAD,
-            id=payload["id"],
+    ) -> interaction_components.LabelInteractionComponent:
+        component_type = component_models.ComponentType(payload["component"]["type"])
+        deserializer = self._interaction_label_component_mapping.get(component_type)
+        if deserializer is None:
+            _LOGGER.debug("Unrecognised label component type: %s", component_type)
+            msg = f"Unrecognised label component type: {component_type}"
+            raise errors.UnrecognisedEntityError(msg)
+
+        component = deserializer(payload["component"])
+
+        return interaction_components.LabelInteractionComponent(
+            type=component_models.ComponentType(payload["type"]), id=int(payload["id"]), component=component
+        )
+
+    def _deserialize_interaction_text_input_component(
+        self, payload: data_binding.JSONObject
+    ) -> interaction_components.TextInputInteractionComponent:
+        return interaction_components.TextInputInteractionComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=int(payload["id"]),
+            custom_id=payload["custom_id"],
+            value=payload["value"],
+        )
+
+    def _deserialize_interaction_text_select_menu_component(
+        self, payload: data_binding.JSONObject
+    ) -> interaction_components.TextSelectMenuInteractionComponent:
+        return interaction_components.TextSelectMenuInteractionComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=int(payload["id"]),
+            custom_id=payload["custom_id"],
+            values=payload["values"],
+        )
+
+    def _deserialize_interaction_user_select_menu_component(
+        self, payload: data_binding.JSONObject
+    ) -> interaction_components.UserSelectMenuInteractionComponent:
+        return interaction_components.UserSelectMenuInteractionComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=int(payload["id"]),
+            custom_id=payload["custom_id"],
+            values=[snowflakes.Snowflake(value) for value in payload["values"]],
+        )
+
+    def _deserialize_interaction_role_select_menu_component(
+        self, payload: data_binding.JSONObject
+    ) -> interaction_components.RoleSelectMenuInteractionComponent:
+        return interaction_components.RoleSelectMenuInteractionComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=int(payload["id"]),
+            custom_id=payload["custom_id"],
+            values=[snowflakes.Snowflake(value) for value in payload["values"]],
+        )
+
+    def _deserialize_interaction_mentionable_select_menu_component(
+        self, payload: data_binding.JSONObject
+    ) -> interaction_components.MentionableSelectMenuInteractionComponent:
+        return interaction_components.MentionableSelectMenuInteractionComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=int(payload["id"]),
+            custom_id=payload["custom_id"],
+            values=[snowflakes.Snowflake(value) for value in payload["values"]],
+        )
+
+    def _deserialize_interaction_channel_select_menu_component(
+        self, payload: data_binding.JSONObject
+    ) -> interaction_components.ChannelSelectMenuInteractionComponent:
+        return interaction_components.ChannelSelectMenuInteractionComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=int(payload["id"]),
+            custom_id=payload["custom_id"],
+            values=[snowflakes.Snowflake(value) for value in payload["values"]],
+        )
+
+    def _deserialize_interaction_file_upload_component(
+        self, payload: data_binding.JSONObject
+    ) -> interaction_components.FileUploadInteractionComponent:
+        return interaction_components.FileUploadInteractionComponent(
+            type=component_models.ComponentType(payload["type"]),
+            id=int(payload["id"]),
             custom_id=payload["custom_id"],
             values=[snowflakes.Snowflake(value) for value in payload["values"]],
         )
@@ -3753,7 +3789,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         content = payload.get("content") or None  # Default to None if content is an empty string
 
-        components: typing.Sequence[component_models.TopLevelComponentTypesT] = self._deserialize_top_level_components(
+        components: typing.Sequence[component_models.TopLevelComponentTypesT] = self._deserialize_components(
             payload.get("components", [])
         )
 
@@ -3875,7 +3911,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             undefined.UNDEFINED
         )
         if component_payloads := payload.get("components"):
-            components = self._deserialize_top_level_components(component_payloads)
+            components = self._deserialize_components(component_payloads)
 
         channel_mentions: undefined.UndefinedOr[dict[snowflakes.Snowflake, channel_models.PartialChannel]] = (
             undefined.UNDEFINED
@@ -3992,7 +4028,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         components: typing.Sequence[component_models.TopLevelComponentTypesT]
         if component_payloads := payload.get("components"):
-            components = self._deserialize_top_level_components(component_payloads)
+            components = self._deserialize_components(component_payloads)
         else:
             components = []
 

@@ -31,11 +31,8 @@ __all__: typing.Sequence[str] = (
     "ContainerComponent",
     "ContainerTypesT",
     "FileComponent",
-    "FileUploadComponent",
     "InteractiveButtonTypes",
     "InteractiveButtonTypesT",
-    "LabelComponent",
-    "LabelTypesT",
     "MediaGalleryComponent",
     "MediaGalleryItem",
     "MediaLoadingType",
@@ -75,7 +72,6 @@ if typing.TYPE_CHECKING:
     from hikari import channels
     from hikari import colors
     from hikari import emojis
-    from hikari import snowflakes
     from hikari import undefined
 
 
@@ -587,25 +583,6 @@ class ContainerComponent(PartialComponent):
     """The components within the container."""
 
 
-@attrs.define(kw_only=True, weakref_slot=False)
-class LabelComponent(PartialComponent):
-    """Represents a label component."""
-
-    component: LabelTypesT = attrs.field()
-    """The component within the label."""
-
-
-@attrs.define(kw_only=True, weakref_slot=False)
-class FileUploadComponent(PartialComponent):
-    """Represents a file upload component."""
-
-    custom_id: str = attrs.field()
-    """Developer set custom ID used for identifying interactions with this file upload."""
-
-    values: typing.Sequence[snowflakes.Snowflake] = attrs.field()
-    """A list of snowflakes in relation to the attachments, that can be found in the resolved interaction data."""
-
-
 TopLevelComponentTypesT = typing.Union[
     ActionRowComponent[PartialComponent],
     TextDisplayComponent,
@@ -743,13 +720,12 @@ The following values are valid for this:
 * [`hikari.components.SelectMenuComponent`][]
 """  # noqa: E501
 
-ModalComponentTypesT = typing.Union[ActionRowComponent[PartialComponent], LabelComponent]
-"""Type hint of the top-level [`hikari.components.PartialComponent`][] types that can be contained in a modal.
+ModalComponentTypesT = typing.Union[ActionRowComponent[PartialComponent]]
+"""Type hint of the [`hikari.components.PartialComponent`][] that can be contained in a [`hikari.components.PartialComponent`][].
 
 The following values are valid for this:
 
 * [`hikari.components.ActionRowComponent`][]
-* [`hikari.components.LabelComponent`][]
 """  # noqa: E501
 
 ModalActionRowComponentTypesT = TextInputComponent
@@ -758,17 +734,7 @@ ModalActionRowComponentTypesT = TextInputComponent
 The following values are valid for this:
 
 * [`hikari.components.TextInputComponent`][]
-"""  # noqa: E501
-
-LabelTypesT = typing.Union[SelectMenuComponent, TextInputComponent, FileUploadComponent]
-"""Type hint of the [`hikari.components.PartialComponent`][] types that can be contained in a [`hikari.components.LabelComponent`][].
-
-The following values are valid for this:
-
-* [`hikari.components.SelectMenuComponent`][]
-* [`hikari.components.TextInputComponent`][]
-* [`hikari.components.FileUploadComponent`][]
-"""  # noqa: E501
+"""
 
 MessageActionRowComponent = ActionRowComponent[MessageComponentTypesT]
 """A message action row component."""
