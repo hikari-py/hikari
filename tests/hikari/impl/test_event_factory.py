@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import datetime
+from math import isnan
 import typing
 
 import mock
@@ -31,9 +32,11 @@ from hikari import channels as channel_models
 from hikari import emojis as emoji_models
 from hikari import traits
 from hikari import undefined
+from hikari import snowflakes
 from hikari import users as user_models
 from hikari.api import shard
 from hikari.events import application_events
+from hikari.events import soundboard_events
 from hikari.events import auto_mod_events
 from hikari.events import channel_events
 from hikari.events import guild_events
@@ -129,6 +132,47 @@ class TestEventFactoryImpl:
         assert isinstance(event, channel_events.GuildChannelDeleteEvent)
         assert event.shard is mock_shard
         assert event.channel is mock_app.entity_factory.deserialize_channel.return_value
+
+    @pytest.fixture
+    def guild_channel_effect_send_payload(self):
+        return {
+            "channel_id": "456",
+            "guild_id": "123",
+            "user_id": "789",
+            "emoji": {"name": "platypus", "id": "3248957"},
+            "animation_type": 0,
+            "animation_id": "99086",
+            "sound_id": "12987",
+            "sound_volume": 0.654,
+        }
+
+    def test_deserialize_guild_channel_effect_send_event(
+        self, event_factory, mock_app, mock_shard, guild_channel_effect_send_payload
+    ):
+        event = event_factory.deserialize_guild_channel_effect_send_event(mock_shard, guild_channel_effect_send_payload)
+        assert isinstance(event, channel_events.GuildChannelEffectSendEvent)
+
+        assert event.channel_id == snowflakes.Snowflake(456)
+        assert event.guild_id == snowflakes.Snowflake(123)
+        assert event.user_id == snowflakes.Snowflake(789)
+        assert event.emoji == mock_app.entity_factory.deserialize_emoji(guild_channel_effect_send_payload["emoji"])
+        assert event.animation_type == emoji_models.EmojiAnimationType.PREMIUM
+        assert event.animation_id == snowflakes.Snowflake(99086)
+        assert event.sound_id == snowflakes.Snowflake(12987)
+        assert event.sound_volume == 0.654
+
+    def test_deserialize_guild_channel_effect_send_event_when_partial(self, event_factory, mock_app, mock_shard):
+        payload = {"channel_id": "456", "guild_id": "123", "user_id": "789"}
+
+        event = event_factory.deserialize_guild_channel_effect_send_event(mock_shard, payload)
+
+        assert isinstance(event, channel_events.GuildChannelEffectSendEvent)
+
+        assert event.emoji is undefined.UNDEFINED
+        assert event.animation_type is undefined.UNDEFINED
+        assert event.animation_id is undefined.UNDEFINED
+        assert event.sound_id is undefined.UNDEFINED
+        assert event.sound_volume is undefined.UNDEFINED
 
     def test_deserialize_channel_pins_update_event_for_guild(self, event_factory, mock_app, mock_shard):
         mock_payload = {"channel_id": "123435", "last_pin_timestamp": None, "guild_id": "43123123"}
@@ -1729,3 +1773,94 @@ class TestEventFactoryImpl:
         assert event.matched_keyword is None
         assert event.matched_content is None
         mock_app.entity_factory.deserialize_auto_mod_action.assert_called_once_with(mock_action_payload)
+
+    def test_deserialize_soundboard_sound_create_event(self, event_factory, mock_app, mock_shard):
+        mock_soundboard_value = mock.Mock()
+        mock_app.entity_factory.deserialize_soundboard_sound.return_value = mock_soundboard_value
+
+        payload = mock.MagicMock()
+
+        event = event_factory.deserialize_soundboard_sound_create_event(mock_shard, payload)
+
+        assert isinstance(event, soundboard_events.SoundboardSoundCreateEvent)
+
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.id == mock_soundboard_value.id
+        assert event.name == mock_soundboard_value.name
+        assert event.volume == mock_soundboard_value.volume
+        assert event.emoji == mock_soundboard_value.emoji
+        assert event.guild_id == snowflakes.Snowflake(payload["guild_id"])
+        assert event.is_available is mock_soundboard_value.is_available
+        assert event.user == mock_soundboard_value.user
+
+    def test_deserialize_soundboard_sound_create_event_when_partial(self, event_factory, mock_app, mock_shard):
+        mock_soundboard_value = mock.Mock(user=undefined.UNDEFINED)
+        mock_app.entity_factory.deserialize_soundboard_sound.return_value = mock_soundboard_value
+
+        payload = mock.MagicMock()
+
+        event = event_factory.deserialize_soundboard_sound_create_event(mock_shard, payload)
+
+        assert event.user == mock_soundboard_value.user is undefined.UNDEFINED
+
+    def test_deserialize_soundboard_sound_update_event(self, event_factory, mock_app, mock_shard):
+        mock_soundboard_value = mock.Mock()
+        mock_app.entity_factory.deserialize_soundboard_sound.return_value = mock_soundboard_value
+
+        payload = mock.MagicMock()
+
+        event = event_factory.deserialize_soundboard_sound_update_event(mock_shard, payload)
+
+        assert isinstance(event, soundboard_events.SoundboardSoundUpdateEvent)
+
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.id == mock_soundboard_value.id
+        assert event.name == mock_soundboard_value.name
+        assert event.volume == mock_soundboard_value.volume
+        assert event.emoji == mock_soundboard_value.emoji
+        assert event.guild_id == snowflakes.Snowflake(payload["guild_id"])
+        assert event.is_available is mock_soundboard_value.is_available
+        assert event.user == mock_soundboard_value.user
+
+    def test_deserialize_soundboard_sound_update_event_when_partial(self, event_factory, mock_app, mock_shard):
+        mock_soundboard_value = mock.Mock(user=undefined.UNDEFINED)
+        mock_app.entity_factory.deserialize_soundboard_sound.return_value = mock_soundboard_value
+
+        payload = mock.MagicMock()
+
+        event = event_factory.deserialize_soundboard_sound_update_event(mock_shard, payload)
+
+        assert event.user == mock_soundboard_value.user is undefined.UNDEFINED
+
+    def test_deserialize_soundboard_sound_delete_event(self, event_factory, mock_app, mock_shard):
+        payload = {"sound_id": "48327", "guild_id": "123"}
+
+        event = event_factory.deserialize_soundboard_sound_delete_event(mock_shard, payload)
+
+        assert isinstance(event, soundboard_events.SoundboardSoundDeleteEvent)
+
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.id == snowflakes.Snowflake(48327)
+        assert event.guild_id == snowflakes.Snowflake(123)
+
+    def test_deserialize_soundboard_sounds_update_event(self, event_factory, mock_app, mock_shard):
+        soundboard_sound_1 = mock.Mock()
+        soundboard_sound_2 = mock.Mock()
+        soundboard_sound_3 = mock.Mock()
+        payload = {"soundboard_sounds": [soundboard_sound_1, soundboard_sound_2, soundboard_sound_3], "guild_id": "123"}
+
+        event = event_factory.deserialize_soundboard_sounds_update_event(mock_shard, payload)
+
+        assert isinstance(event, soundboard_events.SoundboardSoundsUpdateEvent)
+
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.soundboard_sounds == [
+            mock_app.entity_factory.deserialize_soundboard_sound(soundboard_sound_1),
+            mock_app.entity_factory.deserialize_soundboard_sound(soundboard_sound_2),
+            mock_app.entity_factory.deserialize_soundboard_sound(soundboard_sound_3),
+        ]
+        assert event.guild_id == snowflakes.Snowflake(123)
