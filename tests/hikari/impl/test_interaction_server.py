@@ -683,6 +683,7 @@ class TestInteractionServer:
             guild_locale="en-GB",
             locale="es-ES",
             entitlements=[],
+            attachment_size_limit=12345,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         mock_listener = mock.AsyncMock(return_value=mock_builder)
@@ -739,6 +740,7 @@ class TestInteractionServer:
             guild_locale="en-GB",
             locale="es-ES",
             entitlements=[],
+            attachment_size_limit=12345,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No boomer"}, [mock_file_1, mock_file_2])))
         g_called = False
@@ -794,6 +796,7 @@ class TestInteractionServer:
             guild_locale="en-GB",
             locale="es-ES",
             entitlements=[],
+            attachment_size_limit=12345,
         )
 
         mock_listener = mock.AsyncMock(return_value=None)
@@ -958,6 +961,7 @@ class TestInteractionServer:
             guild_locale="en-GB",
             locale="es-ES",
             entitlements=[],
+            attachment_size_limit=12345,
         )
         mock_interaction_server.set_listener(
             base_interactions.PartialInteraction, mock.Mock(side_effect=mock_exception)
@@ -1002,6 +1006,7 @@ class TestInteractionServer:
             guild_locale="en-GB",
             locale="es-ES",
             entitlements=[],
+            attachment_size_limit=12345,
         )
         mock_builder = mock.Mock(build=mock.Mock(side_effect=mock_exception))
         mock_interaction_server.set_listener(
@@ -1048,6 +1053,7 @@ class TestInteractionServer:
             guild_locale="en-GB",
             locale="es-ES",
             entitlements=[],
+            attachment_size_limit=12345,
         )
         mock_builder = mock.Mock(build=mock.Mock(return_value=({"ok": "No"}, [])))
         mock_interaction_server.set_listener(
