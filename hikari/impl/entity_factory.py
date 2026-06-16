@@ -2942,6 +2942,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entitlements=entitlements,
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
+            attachment_size_limit=payload["attachment_size_limit"],
         )
 
     @typing_extensions.override
@@ -2996,6 +2997,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
+            attachment_size_limit=payload["attachment_size_limit"],
         )
 
     @typing_extensions.override
@@ -3048,6 +3050,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
+            attachment_size_limit=payload["attachment_size_limit"],
         )
 
     @typing_extensions.override
@@ -3197,6 +3200,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             entitlements=[self.deserialize_entitlement(entitlement) for entitlement in payload.get("entitlements", ())],
             authorizing_integration_owners=authorizing_integration_owners,
             context=application_models.ApplicationContextType(payload["context"]),
+            attachment_size_limit=payload["attachment_size_limit"],
         )
 
     ##################

@@ -71,6 +71,7 @@ class TestPartialInteraction:
                 )
             ],
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            attachment_size_limit=12345,
         )
 
     def test_webhook_id_property(self, mock_partial_interaction):
@@ -150,6 +151,7 @@ class TestMessageResponseMixin:
                     subscription_id=None,
                 )
             ],
+            attachment_size_limit=12345,
         )
 
     @pytest.mark.asyncio
@@ -328,6 +330,7 @@ class TestModalResponseMixin:
                     subscription_id=None,
                 )
             ],
+            attachment_size_limit=12345,
         )
 
     @pytest.mark.asyncio

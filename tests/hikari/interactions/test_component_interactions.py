@@ -75,6 +75,7 @@ class TestComponentInteraction:
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            attachment_size_limit=12345,
         )
 
     def test_build_response(self, mock_component_interaction, mock_app):
