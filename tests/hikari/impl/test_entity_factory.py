@@ -4711,6 +4711,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_command_interaction(
@@ -4755,6 +4756,7 @@ class TestEntityFactoryImpl:
             application_models.ApplicationIntegrationType.USER_INSTALL
         ] == snowflakes.Snowflake(456)
         assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
+        assert interaction.attachment_size_limit == 12345
 
         # CommandInteractionOption
         assert len(interaction.options) == 1
@@ -4822,6 +4824,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_command_interaction_with_context_menu_field(
@@ -4907,6 +4910,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_autocomplete_interaction(
@@ -4941,6 +4945,7 @@ class TestEntityFactoryImpl:
             application_models.ApplicationIntegrationType.USER_INSTALL
         ] == snowflakes.Snowflake(456)
         assert interaction.context == application_models.ApplicationContextType.PRIVATE_CHANNEL
+        assert interaction.attachment_size_limit == 12345
 
         # AutocompleteInteractionOption
         assert len(interaction.options) == 1
@@ -5199,6 +5204,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_component_interaction(
@@ -5250,6 +5256,8 @@ class TestEntityFactoryImpl:
         assert len(interaction.entitlements) == 1
         assert interaction.entitlements[0].id == 696969696969696
 
+        assert interaction.attachment_size_limit == 12345
+
     def test_deserialize_component_interaction_with_undefined_fields(
         self, entity_factory_impl, user_payload, message_payload, guild_text_channel_payload
     ):
@@ -5283,6 +5291,7 @@ class TestEntityFactoryImpl:
                 ],
                 "authorizing_integration_owners": {"0": "123", "1": "456"},
                 "context": 0,
+                "attachment_size_limit": 12345,
             }
         )
 
@@ -5336,6 +5345,7 @@ class TestEntityFactoryImpl:
             ],
             "authorizing_integration_owners": {"0": "123", "1": "456"},
             "context": 2,
+            "attachment_size_limit": 12345,
         }
 
     def test_deserialize_modal_interaction(
@@ -5361,6 +5371,7 @@ class TestEntityFactoryImpl:
             interaction_member_payload, guild_id=290926798626357999
         )
         assert interaction.user is interaction.member.user
+        assert interaction.attachment_size_limit == 12345
         assert isinstance(interaction, modal_interactions.ModalInteraction)
 
         assert len(interaction.entitlements) == 1
