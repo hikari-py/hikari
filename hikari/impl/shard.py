@@ -201,7 +201,7 @@ class _GatewayTransport(abc.ABC):
 
         await self._ws.send_bytes(pl)
 
-    def _handle_other_message(self, message: aiohttp.WSMessage | aiohttp.WSMessageTextBytes, /) -> typing.NoReturn:
+    def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
             msg = "Unexpected message type received TEXT, expected BINARY"
             raise errors.GatewayTransportError(msg)
@@ -355,11 +355,11 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
                     buff.extend(message.data)
                     continue
 
-                self._handle_other_message(message)
+                self._handle_other_message(message) # type: ignore[arg-type]
 
             return self._inflator.decompress(buff)
 
-        self._handle_other_message(message)
+        self._handle_other_message(message) # type: ignore[arg-type]
 
 
 class _GatewayZstdStreamTransport(_GatewayTransport):
@@ -387,7 +387,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return self._inflator.decompress(message.data)
 
-        self._handle_other_message(message)
+        self._handle_other_message(message) # type: ignore[arg-type]
 
 
 class _GatewayZlibMessageTransport(_GatewayTransport):
@@ -404,7 +404,7 @@ class _GatewayZlibMessageTransport(_GatewayTransport):
             assert isinstance(message.data, str)
             return message.data.encode()
 
-        self._handle_other_message(message)
+        self._handle_other_message(message) # type: ignore[arg-type]
 
 
 class _GatewayBasicTransport(_GatewayTransport):
@@ -418,7 +418,7 @@ class _GatewayBasicTransport(_GatewayTransport):
             assert isinstance(message.data, str)
             return message.data.encode()
 
-        self._handle_other_message(message)
+        self._handle_other_message(message) # type: ignore[arg-type]
 
 
 def _serialize_datetime(dt: datetime.datetime | None) -> int | None:
