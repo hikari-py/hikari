@@ -83,6 +83,7 @@ class TestModalInteraction:
                 applications.ApplicationIntegrationType.GUILD_INSTALL: snowflakes.Snowflake(123)
             },
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            resolved=object(),
         )
 
     def test_build_response(self, mock_modal_interaction, mock_app):
