@@ -329,6 +329,7 @@ class TestGatewayTransport:
             proxy=proxy_settings.url,
             proxy_headers=proxy_settings.headers,
             url="testing.com",
+            decode_text=False,
             autoclose=False,
         )
         exit_stack.aclose.assert_not_called()
