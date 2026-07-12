@@ -2812,6 +2812,7 @@ class TestRESTClientImplAsync:
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
+            nonce="noncing",
             reply=StubModel(987654321),
             reply_must_exist=False,
             flags=54123,
@@ -2820,6 +2821,7 @@ class TestRESTClientImplAsync:
 
         rest_client._build_message_payload.assert_called_once_with(
             content="new content",
+            nonce="noncing",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
             component=component_obj,
@@ -2872,6 +2874,7 @@ class TestRESTClientImplAsync:
             mentions_everyone=False,
             user_mentions=[9876],
             role_mentions=[1234],
+            nonce="noncing",
             reply=StubModel(987654321),
             reply_must_exist=False,
             flags=6643,
@@ -2880,6 +2883,7 @@ class TestRESTClientImplAsync:
 
         rest_client._build_message_payload.assert_called_once_with(
             content="new content",
+            nonce="noncing",
             attachment=attachment_obj,
             attachments=[attachment_obj2],
             component=component_obj,

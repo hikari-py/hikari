@@ -1073,6 +1073,7 @@ class PartialMessage(snowflakes.Unique):
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedType | snowflakes.SnowflakeishOr[PartialMessage] | bool = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1156,6 +1157,9 @@ class PartialMessage(snowflakes.Unique):
             As of writing, bots can only send custom stickers from the current guild.
         tts
             If provided, whether the message will be TTS (Text To Speech).
+        nonce
+            If provided, a nonce that can be used for optimistic message
+            sending.
         reply
             If provided and [`True`][], reply to this message.
             If provided and not [`bool`][], the message to reply to.
@@ -1239,6 +1243,7 @@ class PartialMessage(snowflakes.Unique):
             poll=poll,
             sticker=sticker,
             stickers=stickers,
+            nonce=nonce,
             tts=tts,
             reply=reply,
             reply_must_exist=reply_must_exist,

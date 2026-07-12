@@ -1421,6 +1421,7 @@ class RESTClientImpl(rest_api.RESTClient):
         /,
         *,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         attachment: undefined.UndefinedNoneOr[files.Resourceish | messages_.Attachment] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[
             typing.Sequence[files.Resourceish | messages_.Attachment]
@@ -1534,6 +1535,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         body = data_binding.JSONObjectBuilder()
         body.put("content", content, conversion=lambda v: v if v is None else str(v))
+        body.put("nonce", nonce)
         body.put("tts", tts)
         body.put("flags", flags)
         body.put("embeds", serialized_embeds)
@@ -1543,8 +1545,10 @@ class RESTClientImpl(rest_api.RESTClient):
             "allowed_mentions",
             mentions.generate_allowed_mentions(mentions_everyone, mentions_reply, user_mentions, role_mentions),
         )
-
         body.put_snowflake_array("sticker_ids", (sticker,) if sticker else stickers)
+
+        if nonce:
+            body.put("enforce_nonce", True)
 
         form_builder: data_binding.URLEncodedFormBuilder | None = None
         if resources or final_attachments:
@@ -1643,6 +1647,7 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1667,6 +1672,7 @@ class RESTClientImpl(rest_api.RESTClient):
             poll=poll,
             sticker=sticker,
             stickers=stickers,
+            nonce=nonce,
             tts=tts,
             mentions_everyone=mentions_everyone,
             mentions_reply=mentions_reply,
