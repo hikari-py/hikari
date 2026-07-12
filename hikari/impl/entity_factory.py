@@ -638,6 +638,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         """Object of the application this entity factory is bound to."""
         return self._app
 
+    @typing_extensions.override
+    def serialize_color_gradient(self, gradient: color_models.ColorGradient) -> data_binding.JSONObject:
+        return {
+            "primary_color": gradient.primary_color,
+            "secondary_color": gradient.secondary_color,
+            "tertiary_color": gradient.tertiary_color,
+        }
+
     ######################
     # APPLICATION MODELS #
     ######################
@@ -2148,6 +2156,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             if "guild_connections" in tags_payload:
                 is_guild_linked_role = True
 
+        colors_payload = payload["colors"]
+        primary_color = color_models.Color(colors_payload["primary_color"])
+        secondary_color: color_models.Color | None = None
+        if (raw_secondary_color := colors_payload.get("secondary_color")) is not None:
+            secondary_color = color_models.Color(raw_secondary_color)
+        tertiary_color: color_models.Color | None = None
+        if (raw_tertiary_color := colors_payload.get("tertiary_color")) is not None:
+            tertiary_color = color_models.Color(raw_tertiary_color)
+        colors = color_models.ColorGradient(
+            primary_color=primary_color, secondary_color=secondary_color, tertiary_color=tertiary_color
+        )
+
         emoji: emoji_models.UnicodeEmoji | None = None
         if (raw_emoji := payload.get("unicode_emoji")) is not None:
             emoji = emoji_models.UnicodeEmoji(raw_emoji)
@@ -2157,7 +2177,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             id=snowflakes.Snowflake(payload["id"]),
             guild_id=guild_id,
             name=payload["name"],
-            color=color_models.Color(payload["color"]),
+            color=primary_color,
+            colors=colors,
             is_hoisted=payload["hoist"],
             icon_hash=payload.get("icon"),
             unicode_emoji=emoji,

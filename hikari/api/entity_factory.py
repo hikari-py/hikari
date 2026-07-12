@@ -34,6 +34,7 @@ if typing.TYPE_CHECKING:
     from hikari import audit_logs as audit_log_models
     from hikari import auto_mod as auto_mod_models
     from hikari import channels as channel_models
+    from hikari import colors as color_models
     from hikari import commands
     from hikari import embeds as embed_models
     from hikari import emojis as emoji_models
@@ -124,6 +125,21 @@ class EntityFactory(abc.ABC):
     """Interface for components that serialize and deserialize JSON payloads."""
 
     __slots__: typing.Sequence[str] = ()
+
+    @abc.abstractmethod
+    def serialize_color_gradient(self, gradient: color_models.ColorGradient) -> data_binding.JSONObject:
+        """Serialize a color gradient into json.
+
+        Parameters
+        ----------
+        gradient
+            The color gradient to serialize.
+
+        Returns
+        -------
+        hikari.internal.data_binding.JSONObject
+            The serialized representation of the gradient object.
+        """
 
     ######################
     # APPLICATION MODELS #
