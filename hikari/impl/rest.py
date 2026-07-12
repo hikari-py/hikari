@@ -788,7 +788,8 @@ class RESTClientImpl(rest_api.RESTClient):
 
         url = compiled_route.create_url(self._rest_url)
 
-        stack = contextlib.AsyncExitStack()
+        request_stack = contextlib.AsyncExitStack()
+        response_stack = contextlib.AsyncExitStack()
         # This is initiated the first time we time out or hit a 5xx error to
         # save a little memory when nothing goes wrong
         backoff: rate_limits.ExponentialBackOff | None = None
@@ -796,122 +797,127 @@ class RESTClientImpl(rest_api.RESTClient):
         trace_logging_enabled = _LOGGER.isEnabledFor(ux.TRACE)
 
         while True:
-            try:
-                if form_builder:
-                    data = await form_builder.build(stack, executor=self._executor)
+            async with response_stack:
+                try:
+                    if form_builder:
+                        data = await form_builder.build(request_stack, executor=self._executor)
 
-                if compiled_route.route.has_ratelimits:
-                    await stack.enter_async_context(self._bucket_manager.acquire_bucket(compiled_route, auth))
+                    if compiled_route.route.has_ratelimits:
+                        await request_stack.enter_async_context(
+                            self._bucket_manager.acquire_bucket(compiled_route, auth)
+                        )
 
-                if trace_logging_enabled:
-                    uuid = time.uuid()
-                    _LOGGER.log(
-                        ux.TRACE,
-                        "%s %s %s\n%s",
-                        uuid,
-                        compiled_route.method,
-                        url,
-                        _stringify_http_message(headers, self._dumps(json)) if json else None,
+                    if trace_logging_enabled:
+                        uuid = time.uuid()
+                        _LOGGER.log(
+                            ux.TRACE,
+                            "%s %s %s\n%s",
+                            uuid,
+                            compiled_route.method,
+                            url,
+                            _stringify_http_message(headers, self._dumps(json)) if json else None,
+                        )
+                        start = time.time()
+
+                    # Make the request.
+                    response = await response_stack.enter_async_context(
+                        self._client_session.request(
+                            compiled_route.method,
+                            url,
+                            headers=headers,
+                            params=query,
+                            data=data,
+                            allow_redirects=self._http_settings.max_redirects is not None,
+                            max_redirects=self._http_settings.max_redirects,
+                            proxy=self._proxy_settings.url,
+                            proxy_headers=self._proxy_settings.all_headers,
+                        )
                     )
-                    start = time.time()
 
-                # Make the request.
-                response = await self._client_session.request(
-                    compiled_route.method,
-                    url,
-                    headers=headers,
-                    params=query,
-                    data=data,
-                    allow_redirects=self._http_settings.max_redirects is not None,
-                    max_redirects=self._http_settings.max_redirects,
-                    proxy=self._proxy_settings.url,
-                    proxy_headers=self._proxy_settings.all_headers,
-                )
+                    if trace_logging_enabled:
+                        time_taken = (time.time() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
+                        _LOGGER.log(
+                            ux.TRACE,
+                            "%s %s %s in %sms\n%s",
+                            uuid,  # pyright: ignore[reportUnboundVariable]
+                            response.status,
+                            response.reason,
+                            time_taken,
+                            _stringify_http_message(response.headers, await response.read()),
+                        )
 
-                if trace_logging_enabled:
-                    time_taken = (time.time() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
-                    _LOGGER.log(
-                        ux.TRACE,
-                        "%s %s %s in %sms\n%s",
-                        uuid,  # pyright: ignore[reportUnboundVariable]
+                    # Ensure we are not rate limited, and update rate limiting headers where appropriate.
+                    time_before_retry = await self._parse_ratelimits(compiled_route, auth, response)
+
+                except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as ex:
+                    if retry_count >= self._max_retries:
+                        raise errors.HTTPError(message=str(ex)) from ex
+
+                    if backoff is None:
+                        backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
+
+                    sleep_time = next(backoff)
+                    _LOGGER.warning(
+                        "Connection error (%s), backing off for %.2fs and retrying. Retries remaining: %s",
+                        type(ex).__name__,
+                        sleep_time,
+                        self._max_retries - retry_count,
+                    )
+                    retry_count += 1
+
+                    await asyncio.sleep(sleep_time)
+                    continue
+
+                finally:
+                    await request_stack.aclose()
+
+                if time_before_retry is not None:
+                    await asyncio.sleep(time_before_retry)
+                    continue
+
+                # Don't bother processing any further if we got NO CONTENT. There's not anything
+                # to check.
+                if response.status == http.HTTPStatus.NO_CONTENT:
+                    return None
+
+                # Handle the response when everything went good
+                if 200 <= response.status < 300:
+                    if response.content_type == _APPLICATION_JSON:
+                        # Only deserializing here stops Cloudflare shenanigans messing us around.
+                        return self._loads(await response.read())
+
+                    real_url = str(response.real_url)
+                    msg = f"Expected JSON [{response.content_type=}, {real_url=}]"
+                    raise errors.HTTPError(msg)
+
+                # Handling 5xx errors
+                if response.status in _RETRY_ERROR_CODES and retry_count < self._max_retries:
+                    if not backoff:
+                        backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
+
+                    sleep_time = next(backoff)
+                    retry_count += 1
+                    _LOGGER.warning(
+                        "Received status %s on request, backing off for %.2fs and retrying. Retries remaining: %s",
                         response.status,
-                        response.reason,
-                        time_taken,
-                        _stringify_http_message(response.headers, await response.read()),
+                        sleep_time,
+                        self._max_retries - retry_count,
                     )
 
-                # Ensure we are not rate limited, and update rate limiting headers where appropriate.
-                time_before_retry = await self._parse_ratelimits(compiled_route, auth, response)
+                    await asyncio.sleep(sleep_time)
+                    continue
 
-            except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as ex:
-                if retry_count >= self._max_retries:
-                    raise errors.HTTPError(message=str(ex)) from ex
+                # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
+                if can_re_auth and response.status == 401:
+                    # can_re_auth ensures that it is a token strategy
+                    assert isinstance(self._token, rest_api.TokenStrategy)
 
-                if backoff is None:
-                    backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
+                    self._token.invalidate(auth)
+                    auth = headers[_AUTHORIZATION_HEADER] = await self._token.acquire(self)
+                    can_re_auth = False
+                    continue
 
-                sleep_time = next(backoff)
-                _LOGGER.warning(
-                    "Connection error (%s), backing off for %.2fs and retrying. Retries remaining: %s",
-                    type(ex).__name__,
-                    sleep_time,
-                    self._max_retries - retry_count,
-                )
-                retry_count += 1
-
-                await asyncio.sleep(sleep_time)
-                continue
-
-            finally:
-                await stack.aclose()
-
-            if time_before_retry is not None:
-                await asyncio.sleep(time_before_retry)
-                continue
-
-            # Don't bother processing any further if we got NO CONTENT. There's not anything
-            # to check.
-            if response.status == http.HTTPStatus.NO_CONTENT:
-                return None
-
-            # Handle the response when everything went good
-            if 200 <= response.status < 300:
-                if response.content_type == _APPLICATION_JSON:
-                    # Only deserializing here stops Cloudflare shenanigans messing us around.
-                    return self._loads(await response.read())
-
-                real_url = str(response.real_url)
-                msg = f"Expected JSON [{response.content_type=}, {real_url=}]"
-                raise errors.HTTPError(msg)
-
-            # Handling 5xx errors
-            if response.status in _RETRY_ERROR_CODES and retry_count < self._max_retries:
-                if not backoff:
-                    backoff = rate_limits.ExponentialBackOff(maximum=_MAX_BACKOFF_DURATION)
-
-                sleep_time = next(backoff)
-                retry_count += 1
-                _LOGGER.warning(
-                    "Received status %s on request, backing off for %.2fs and retrying. Retries remaining: %s",
-                    response.status,
-                    sleep_time,
-                    self._max_retries - retry_count,
-                )
-
-                await asyncio.sleep(sleep_time)
-                continue
-
-            # Attempt to re-auth on UNAUTHORIZED if we are using a TokenStrategy
-            if can_re_auth and response.status == 401:
-                # can_re_auth ensures that it is a token strategy
-                assert isinstance(self._token, rest_api.TokenStrategy)
-
-                self._token.invalidate(auth)
-                auth = headers[_AUTHORIZATION_HEADER] = await self._token.acquire(self)
-                can_re_auth = False
-                continue
-
-            raise await net.generate_error_response(response)
+                raise await net.generate_error_response(response)
 
     @typing.final
     async def _parse_ratelimits(
