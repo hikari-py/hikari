@@ -146,7 +146,7 @@ class _GatewayTransport(abc.ABC):
     def __init__(
         self,
         *,
-        ws: aiohttp.ClientWebSocketResponse,
+        ws: aiohttp.ClientWebSocketResponse[typing.Literal[False]],
         exit_stack: contextlib.AsyncExitStack,
         logger: logging.Logger,
         log_filterer: typing.Callable[[bytes], bytes],
@@ -201,7 +201,7 @@ class _GatewayTransport(abc.ABC):
 
         await self._ws.send_bytes(pl)
 
-    def _handle_other_message(self, message: aiohttp.WSMessage, /) -> typing.NoReturn:
+    def _handle_other_message(self, message: aiohttp.WSMessage | aiohttp.WSMessageTextBytes, /) -> typing.NoReturn:
         if message.type == aiohttp.WSMsgType.TEXT:
             msg = "Unexpected message type received TEXT, expected BINARY"
             raise errors.GatewayTransportError(msg)
@@ -264,12 +264,16 @@ class _GatewayTransport(abc.ABC):
                     )
                 )
 
+                web_socket: aiohttp.ClientWebSocketResponse[typing.Literal[False]]
+                # Type ignore due to aiohttp returning a generic instead of a specific
+                # based on the argument on <= 3.11
                 web_socket = await exit_stack.enter_async_context(
-                    client_session.ws_connect(
+                    client_session.ws_connect(  # type: ignore[arg-type]
                         max_msg_size=0,
                         proxy=proxy_settings.url,
                         proxy_headers=proxy_settings.headers,
                         url=url,
+                        decode_text=False,
                         # We manage this ourselves
                         autoclose=False,
                     )
