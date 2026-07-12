@@ -146,7 +146,7 @@ class _GatewayTransport(abc.ABC):
     def __init__(
         self,
         *,
-        ws: aiohttp.ClientWebSocketResponse,
+        ws: aiohttp.ClientWebSocketResponse[typing.Literal[False]],
         exit_stack: contextlib.AsyncExitStack,
         logger: logging.Logger,
         log_filterer: typing.Callable[[bytes], bytes],
@@ -264,12 +264,16 @@ class _GatewayTransport(abc.ABC):
                     )
                 )
 
+                web_socket: aiohttp.ClientWebSocketResponse[typing.Literal[False]]
+                # Type ignore due to aiohttp returning a generic instead of a specific
+                # based on the argument on <= 3.11
                 web_socket = await exit_stack.enter_async_context(
-                    client_session.ws_connect(
+                    client_session.ws_connect(  # type: ignore[arg-type]
                         max_msg_size=0,
                         proxy=proxy_settings.url,
                         proxy_headers=proxy_settings.headers,
                         url=url,
+                        decode_text=False,
                         # We manage this ourselves
                         autoclose=False,
                     )
@@ -351,11 +355,11 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
                     buff.extend(message.data)
                     continue
 
-                self._handle_other_message(message)
+                self._handle_other_message(message) # type: ignore[arg-type]
 
             return self._inflator.decompress(buff)
 
-        self._handle_other_message(message)
+        self._handle_other_message(message) # type: ignore[arg-type]
 
 
 class _GatewayZstdStreamTransport(_GatewayTransport):
@@ -383,7 +387,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return self._inflator.decompress(message.data)
 
-        self._handle_other_message(message)
+        self._handle_other_message(message) # type: ignore[arg-type]
 
 
 class _GatewayZlibMessageTransport(_GatewayTransport):
@@ -397,10 +401,10 @@ class _GatewayZlibMessageTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return zlib.decompress(message.data)
         if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data.encode()
+            assert isinstance(message.data, bytes)
+            return message.data
 
-        self._handle_other_message(message)
+        self._handle_other_message(message) # type: ignore[arg-type]
 
 
 class _GatewayBasicTransport(_GatewayTransport):
@@ -411,10 +415,10 @@ class _GatewayBasicTransport(_GatewayTransport):
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data.encode()
+            assert isinstance(message.data, bytes)
+            return message.data
 
-        self._handle_other_message(message)
+        self._handle_other_message(message) # type: ignore[arg-type]
 
 
 def _serialize_datetime(dt: datetime.datetime | None) -> int | None:
