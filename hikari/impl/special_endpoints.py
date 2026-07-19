@@ -485,7 +485,7 @@ class ThreadMembersIterator(iterators.BufferedLazyIterator["channels.ThreadMembe
 class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
     """Implementation of an iterator for message reactions."""
 
-    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_request_call", "_route")
+    __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_reaction_type", "_request_call", "_route")
 
     def __init__(
         self,
@@ -494,11 +494,13 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages.PartialMessage],
         emoji: str,
+        reaction_type: undefined.UndefinedOr[messages.ReactionType | int] = undefined.UNDEFINED,
     ) -> None:
         super().__init__()
         self._entity_factory = entity_factory
         self._request_call = request_call
         self._first_id = undefined.UNDEFINED
+        self._reaction_type = reaction_type
         self._route = routes.GET_REACTIONS.compile(channel=channel, message=message, emoji=emoji)
 
     @typing_extensions.override
@@ -506,6 +508,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         query = data_binding.StringMapBuilder()
         query.put("after", self._first_id)
         query.put("limit", 100)
+        query.put("type", self._reaction_type, conversion=int)
 
         chunk = await self._request_call(compiled_route=self._route, query=query)
         assert isinstance(chunk, list)

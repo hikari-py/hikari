@@ -28,6 +28,7 @@ import pytest
 
 from hikari import auto_mod
 from hikari import channels as channel_models
+from hikari import colors as color_models
 from hikari import emojis as emoji_models
 from hikari import traits
 from hikari import undefined
@@ -1066,6 +1067,8 @@ class TestEventFactoryImpl:
             "message_id": "43123123",
             "guild_id": "43949494",
             "emoji": {"id": "123312", "name": "okok", "animated": True},
+            "burst": True,
+            "burst_colors": ["#FF0000", "#00FF00"],
         }
 
         event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
@@ -1080,6 +1083,8 @@ class TestEventFactoryImpl:
         assert event.emoji_name == "okok"
         assert event.emoji_id == 123312
         assert event.is_animated is True
+        assert event.is_burst is True
+        assert event.burst_colors == [color_models.Color(0xFF0000), color_models.Color(0x00FF00)]
 
     def test_deserialize_message_reaction_add_event_in_guild_when_partial_custom(
         self, event_factory, mock_shard, mock_app
@@ -1098,6 +1103,8 @@ class TestEventFactoryImpl:
         assert event.is_animated is False
         assert event.emoji_id == 123312
         assert event.emoji_name is None
+        assert event.is_burst is False
+        assert event.burst_colors == []
 
     def test_deserialize_message_reaction_add_event_in_guild_when_unicode(self, event_factory, mock_shard, mock_app):
         mock_member_payload = object()
@@ -1122,6 +1129,8 @@ class TestEventFactoryImpl:
             "message_id": "43123123",
             "user_id": "43949494",
             "emoji": {"id": "3293939", "name": "vohio", "animated": True},
+            "burst": False,
+            "burst_colors": [],
         }
 
         event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
@@ -1136,6 +1145,8 @@ class TestEventFactoryImpl:
         assert event.emoji_name == "vohio"
         assert event.emoji_id == 3293939
         assert event.is_animated is True
+        assert event.is_burst is False
+        assert event.burst_colors == []
 
     def test_deserialize_message_reaction_add_event_in_dm_when_partial_custom(
         self, event_factory, mock_shard, mock_app
@@ -1181,6 +1192,7 @@ class TestEventFactoryImpl:
             "message_id": "43234",
             "guild_id": "383838",
             "emoji": {"id": "123432", "name": "fififiif"},
+            "burst": True,
         }
 
         event = event_factory.deserialize_message_reaction_remove_event(mock_shard, mock_payload)
@@ -1195,6 +1207,7 @@ class TestEventFactoryImpl:
         assert event.emoji_id == 123432
         assert event.emoji_name == "fififiif"
         assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+        assert event.is_burst is True
 
     def test_deserialize_message_reaction_remove_event_in_guild_with_unicode_emoji(
         self, event_factory, mock_app, mock_shard
@@ -1239,6 +1252,7 @@ class TestEventFactoryImpl:
         assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
         assert event.emoji_name == "okok"
         assert event.emoji_id == 123123
+        assert event.is_burst is False
 
     def test_deserialize_message_reaction_remove_event_in_dm_with_unicode_emoji(
         self, event_factory, mock_app, mock_shard

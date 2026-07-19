@@ -33,6 +33,8 @@ __all__: typing.Sequence[str] = (
     "PartialMessage",
     "PinnedMessage",
     "Reaction",
+    "ReactionCountDetails",
+    "ReactionType",
 )
 
 import typing
@@ -55,6 +57,7 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import channels as channels_
+    from hikari import colors as colors_
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
     from hikari import polls as polls_
@@ -324,19 +327,54 @@ class Attachment(snowflakes.Unique, files.WebResource):
         return self.filename
 
 
+@typing.final
+class ReactionType(int, enums.Enum):
+    """The type of a reaction."""
+
+    NORMAL = 0
+    """A normal reaction."""
+
+    BURST = 1
+    """A super (burst) reaction."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ReactionCountDetails:
+    """A breakdown of a reaction's count per reaction type."""
+
+    burst: int = attrs.field(repr=True)
+    """The number of super reactions."""
+
+    normal: int = attrs.field(repr=True)
+    """The number of normal reactions."""
+
+
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
     count: int = attrs.field(eq=False, hash=False, repr=True)
-    """The number of times the emoji has been used to react."""
+    """The total number of times the emoji has been used to react.
+
+    This includes both normal and super reactions.
+    """
+
+    count_details: ReactionCountDetails = attrs.field(eq=False, hash=False, repr=False)
+    """A breakdown of the reaction count per reaction type."""
 
     emoji: emojis_.UnicodeEmoji | emojis_.CustomEmoji = attrs.field(hash=True, repr=True)
     """The emoji used to react."""
 
     is_me: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
+
+    is_me_burst: bool = attrs.field(eq=False, hash=False, repr=False)
+    """Whether the current user super-reacted using this emoji."""
+
+    burst_colors: typing.Sequence[colors_.Color] = attrs.field(eq=False, hash=False, repr=False)
+    """The colours used for the super reaction animation."""
 
     @typing_extensions.override
     def __str__(self) -> str:

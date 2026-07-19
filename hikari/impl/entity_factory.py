@@ -3583,8 +3583,22 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_message_reaction(self, payload: data_binding.JSONObject) -> message_models.Reaction:
+        count = int(payload["count"])
+
+        if count_details_payload := payload.get("count_details"):
+            count_details = message_models.ReactionCountDetails(
+                burst=int(count_details_payload["burst"]), normal=int(count_details_payload["normal"])
+            )
+        else:
+            count_details = message_models.ReactionCountDetails(burst=0, normal=count)
+
         return message_models.Reaction(
-            count=int(payload["count"]), emoji=self.deserialize_emoji(payload["emoji"]), is_me=payload["me"]
+            count=count,
+            count_details=count_details,
+            emoji=self.deserialize_emoji(payload["emoji"]),
+            is_me=payload["me"],
+            is_me_burst=payload.get("me_burst", False),
+            burst_colors=[color_models.Color.from_hex_code(color) for color in payload.get("burst_colors", ())],
         )
 
     def _deserialize_message_reference(self, payload: data_binding.JSONObject) -> message_models.MessageReference:

@@ -6437,7 +6437,16 @@ class TestEntityFactoryImpl:
             "attachments": [attachment_payload],
             "embeds": [embed_payload],
             "poll": poll_payload,
-            "reactions": [{"emoji": custom_emoji_payload, "count": 100, "me": True}],
+            "reactions": [
+                {
+                    "emoji": custom_emoji_payload,
+                    "count": 100,
+                    "count_details": {"burst": 25, "normal": 75},
+                    "me": True,
+                    "me_burst": False,
+                    "burst_colors": ["#1E9AE0"],
+                }
+            ],
             "pinned": True,
             "webhook_id": "1234",
             "type": 0,
@@ -6645,7 +6654,10 @@ class TestEntityFactoryImpl:
         # Reaction
         reaction = partial_message.reactions[0]
         assert reaction.count == 100
+        assert reaction.count_details == message_models.ReactionCountDetails(burst=25, normal=75)
         assert reaction.is_me is True
+        assert reaction.is_me_burst is False
+        assert reaction.burst_colors == [color_models.Color(0x1E9AE0)]
         expected_emoji = entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert reaction.emoji == expected_emoji
         assert isinstance(reaction, message_models.Reaction)
@@ -6988,7 +7000,10 @@ class TestEntityFactoryImpl:
         # Reaction
         reaction = message.reactions[0]
         assert reaction.count == 100
+        assert reaction.count_details == message_models.ReactionCountDetails(burst=25, normal=75)
         assert reaction.is_me is True
+        assert reaction.is_me_burst is False
+        assert reaction.burst_colors == [color_models.Color(0x1E9AE0)]
         expected_emoji = entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert reaction.emoji == expected_emoji
         assert isinstance(reaction, message_models.Reaction)
@@ -7071,10 +7086,19 @@ class TestEntityFactoryImpl:
         del message_payload["mention_channels"]
         del message_payload["thread"]
         del message_payload["poll"]
+        del message_payload["reactions"][0]["count_details"]
+        del message_payload["reactions"][0]["me_burst"]
+        del message_payload["reactions"][0]["burst_colors"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
 
         assert message.channel_mentions == {}
+
+        # Reaction
+        reaction = message.reactions[0]
+        assert reaction.count_details == message_models.ReactionCountDetails(burst=0, normal=100)
+        assert reaction.is_me_burst is False
+        assert reaction.burst_colors == []
 
         # Activity
         assert message.activity.party_id is None

@@ -1914,6 +1914,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
+        *,
+        reaction_type: undefined.UndefinedOr[messages_.ReactionType | int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users.User]:
         """Fetch reactions for an emoji from a message.
 
@@ -1938,6 +1940,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             ID of the custom emoji to get the reactions for.
             This should only be provided when a custom emoji's name is passed
             for `emoji`.
+        reaction_type
+            If provided, the type of reaction to fetch the users for.
+
+            If not provided, this defaults to normal reactions.
 
         Returns
         -------
