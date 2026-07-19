@@ -25,6 +25,7 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "Application",
     "ApplicationContextType",
+    "ApplicationEventWebhookStatus",
     "ApplicationFlags",
     "ApplicationIntegrationConfiguration",
     "ApplicationIntegrationType",
@@ -105,6 +106,20 @@ class ApplicationFlags(enums.Flag):
 
     APPLICATION_COMMAND_BADGE = 1 << 23
     """Denotes that the application has at least one global application command."""
+
+
+@typing.final
+class ApplicationEventWebhookStatus(int, enums.Enum):
+    """The status of an application's event webhooks."""
+
+    DISABLED = 1
+    """Webhook events are disabled by the developer."""
+
+    ENABLED = 2
+    """Webhook events are enabled by the developer."""
+
+    DISABLED_BY_DISCORD = 3
+    """Webhook events are disabled by Discord, usually due to inactivity."""
 
 
 @typing.final
@@ -714,6 +729,15 @@ class Application(guilds.PartialApplication):
         attrs.field(eq=False, hash=False, repr=False)
     )
     """The default scopes and permissions for each integration type."""
+
+    event_webhooks_url: str | None = attrs.field(eq=False, hash=False, repr=False)
+    """The URL this application receives webhook events on, if set."""
+
+    event_webhooks_status: ApplicationEventWebhookStatus | int = attrs.field(eq=False, hash=False, repr=False)
+    """The status of this application's event webhooks."""
+
+    event_webhooks_types: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
+    """The webhook event types this application subscribes to."""
 
     def make_cover_image_url(
         self,

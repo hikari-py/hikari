@@ -3124,6 +3124,95 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If an internal error occurs on Discord while handling the request.
         """
 
+    @abc.abstractmethod
+    async def edit_application(
+        self,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        custom_install_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        role_connections_verification_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        install_params: undefined.UndefinedOr[applications.ApplicationInstallParameters] = undefined.UNDEFINED,
+        integration_types_config: undefined.UndefinedOr[
+            typing.Mapping[applications.ApplicationIntegrationType, applications.ApplicationIntegrationConfiguration]
+        ] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[applications.ApplicationFlags | int] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        cover_image: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        interactions_endpoint_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tags: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        event_webhooks_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_webhooks_status: undefined.UndefinedOr[
+            applications.ApplicationEventWebhookStatus | int
+        ] = undefined.UNDEFINED,
+        event_webhooks_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+    ) -> applications.Application:
+        """Edit the token's associated application.
+
+        !!! warning
+            This endpoint can only be used with a Bot token. Using this with a
+            Bearer token will result in a [`hikari.errors.UnauthorizedError`][].
+
+        Parameters
+        ----------
+        description
+            If provided, the new description of the application.
+        custom_install_url
+            If provided, the new default custom authorization URL of the application.
+        role_connections_verification_url
+            If provided, the new role connection verification URL of the application.
+        install_params
+            If provided, the new settings of the application's default in-app
+            authorization link.
+        integration_types_config
+            If provided, the new default scopes and permissions for each
+            installation context the application supports.
+        flags
+            If provided, the new public flags of the application.
+            Only the limited intent flags ([`hikari.applications.ApplicationFlags.GUILD_PRESENCES_INTENT`][],
+            [`hikari.applications.ApplicationFlags.GUILD_MEMBERS_INTENT`][] and
+            [`hikari.applications.ApplicationFlags.MESSAGE_CONTENT_INTENT_LIMITED`][])
+            can be updated through the API.
+        icon
+            If provided, the new icon of the application. If [`None`][], the
+            icon will be removed.
+        cover_image
+            If provided, the new default rich presence invite cover image of
+            the application. If [`None`][], the cover image will be removed.
+        interactions_endpoint_url
+            If provided, the new URL the application receives interactions on.
+            Discord validates this URL before applying it by sending a `PING`
+            interaction to it, so it must be reachable and respond correctly.
+        tags
+            If provided, the new tags describing the content and functionality
+            of the application. A maximum of 5 tags of up to 20 characters each
+            can be set.
+        event_webhooks_url
+            If provided, the new URL the application receives webhook events on.
+        event_webhooks_status
+            If provided, the new status of the application's event webhooks:
+            [`hikari.applications.ApplicationEventWebhookStatus.ENABLED`][] to enable them or
+            [`hikari.applications.ApplicationEventWebhookStatus.DISABLED`][] to disable them.
+        event_webhooks_types
+            If provided, the new webhook event types the application subscribes to.
+
+        Returns
+        -------
+        hikari.applications.Application
+            The updated application.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
     # THIS IS AN OAUTH2 FLOW ONLY
     @abc.abstractmethod
     async def fetch_authorization(self) -> applications.AuthorizationInformation:
