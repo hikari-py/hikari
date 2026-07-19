@@ -136,10 +136,7 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
     @property
     @abc.abstractmethod
     def burst_colors(self) -> typing.Sequence[colors.Color]:
-        """The colours used for the super reaction animation.
-
-        This will be empty if the reaction is not a super reaction.
-        """
+        """The colours used for the super reaction animation, empty if this is not a super reaction."""
 
     def is_for_emoji(self, emoji: emojis.Emoji | str, /) -> bool:
         """Get whether the reaction event is for a specific emoji.

@@ -483,7 +483,7 @@ class ThreadMembersIterator(iterators.BufferedLazyIterator["channels.ThreadMembe
 # circular import issues (once the file has executed, using those resources is
 # not an issue for us).
 class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
-    """Implementation of an iterator for message reactions."""
+    """Implementation of an iterator for the users who reacted to a message."""
 
     __slots__: typing.Sequence[str] = ("_entity_factory", "_first_id", "_reaction_type", "_request_call", "_route")
 

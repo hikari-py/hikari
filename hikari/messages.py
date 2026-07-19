@@ -356,10 +356,7 @@ class Reaction:
     """Represents a reaction in a message."""
 
     count: int = attrs.field(eq=False, hash=False, repr=True)
-    """The total number of times the emoji has been used to react.
-
-    This includes both normal and super reactions.
-    """
+    """The total number of times the emoji has been used to react, including super reactions."""
 
     count_details: ReactionCountDetails = attrs.field(eq=False, hash=False, repr=False)
     """A breakdown of the reaction count per reaction type."""
