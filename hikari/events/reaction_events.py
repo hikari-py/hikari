@@ -53,6 +53,7 @@ from hikari.internal import attrs_extensions
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
+    from hikari import colors
     from hikari import guilds
     from hikari import snowflakes
     from hikari import traits
@@ -127,6 +128,16 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
     def is_animated(self) -> bool:
         """Whether the emoji which was added is animated."""
 
+    @property
+    @abc.abstractmethod
+    def is_burst(self) -> bool:
+        """Whether the reaction which was added is a super reaction."""
+
+    @property
+    @abc.abstractmethod
+    def burst_colors(self) -> typing.Sequence[colors.Color]:
+        """The colours used for the super reaction animation, empty if this is not a super reaction."""
+
     def is_for_emoji(self, emoji: emojis.Emoji | str, /) -> bool:
         """Get whether the reaction event is for a specific emoji.
 
@@ -171,6 +182,11 @@ class ReactionDeleteEvent(ReactionEvent, abc.ABC):
     @abc.abstractmethod
     def emoji_id(self) -> snowflakes.Snowflake | None:
         """ID of the emoji which was added if it is custom, else [`None`][]."""
+
+    @property
+    @abc.abstractmethod
+    def is_burst(self) -> bool:
+        """Whether the reaction which was removed was a super reaction."""
 
     def is_for_emoji(self, emoji: emojis.Emoji | str, /) -> bool:
         """Get whether the reaction event is for a specific emoji.
@@ -264,6 +280,12 @@ class GuildReactionAddEvent(GuildReactionEvent, ReactionAddEvent):
     is_animated: bool = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
+    is_burst: bool = attrs.field()
+    # <<inherited docstring from ReactionAddEvent>>.
+
+    burst_colors: typing.Sequence[colors.Color] = attrs.field()
+    # <<inherited docstring from ReactionAddEvent>>.
+
     @property
     @typing_extensions.override
     def app(self) -> traits.RESTAware:
@@ -311,6 +333,9 @@ class GuildReactionDeleteEvent(GuildReactionEvent, ReactionDeleteEvent):
     # <<inherited docstring from ReactionDeleteEvent>>.
 
     emoji_id: snowflakes.Snowflake | None = attrs.field()
+    # <<inherited docstring from ReactionDeleteEvent>>.
+
+    is_burst: bool = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
 
@@ -394,6 +419,12 @@ class DMReactionAddEvent(DMReactionEvent, ReactionAddEvent):
     is_animated: bool = attrs.field()
     # <<inherited docstring from ReactionAddEvent>>.
 
+    is_burst: bool = attrs.field()
+    # <<inherited docstring from ReactionAddEvent>>.
+
+    burst_colors: typing.Sequence[colors.Color] = attrs.field()
+    # <<inherited docstring from ReactionAddEvent>>.
+
 
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
@@ -420,6 +451,9 @@ class DMReactionDeleteEvent(DMReactionEvent, ReactionDeleteEvent):
     # <<inherited docstring from ReactionDeleteEvent>>.
 
     emoji_id: snowflakes.Snowflake | None = attrs.field()
+    # <<inherited docstring from ReactionDeleteEvent>>.
+
+    is_burst: bool = attrs.field()
     # <<inherited docstring from ReactionDeleteEvent>>.
 
 

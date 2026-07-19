@@ -781,6 +781,8 @@ class EventFactoryImpl(event_factory.EventFactory):
         emoji_id = snowflakes.Snowflake(raw_emoji_id) if raw_emoji_id else None
         is_animated = bool(emoji_payload.get("animated", False))
         emoji_name = emojis_models.UnicodeEmoji(emoji_payload["name"]) if not emoji_id else emoji_payload["name"]
+        is_burst = payload.get("burst", False)
+        burst_colors = [colors.Color.from_hex_code(color) for color in payload.get("burst_colors", ())]
 
         if "member" in payload:
             guild_id = snowflakes.Snowflake(payload["guild_id"])
@@ -793,6 +795,8 @@ class EventFactoryImpl(event_factory.EventFactory):
                 emoji_id=emoji_id,
                 emoji_name=emoji_name,
                 is_animated=is_animated,
+                is_burst=is_burst,
+                burst_colors=burst_colors,
             )
 
         user_id = snowflakes.Snowflake(payload["user_id"])
@@ -805,6 +809,8 @@ class EventFactoryImpl(event_factory.EventFactory):
             emoji_id=emoji_id,
             emoji_name=emoji_name,
             is_animated=is_animated,
+            is_burst=is_burst,
+            burst_colors=burst_colors,
         )
 
     def _split_reaction_emoji(
@@ -823,6 +829,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         message_id = snowflakes.Snowflake(payload["message_id"])
         user_id = snowflakes.Snowflake(payload["user_id"])
         emoji_id, emoji_name = self._split_reaction_emoji(payload["emoji"])
+        is_burst = payload.get("burst", False)
 
         if "guild_id" in payload:
             return reaction_events.GuildReactionDeleteEvent(
@@ -834,6 +841,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 message_id=message_id,
                 emoji_id=emoji_id,
                 emoji_name=emoji_name,
+                is_burst=is_burst,
             )
 
         return reaction_events.DMReactionDeleteEvent(
@@ -844,6 +852,7 @@ class EventFactoryImpl(event_factory.EventFactory):
             message_id=message_id,
             emoji_id=emoji_id,
             emoji_name=emoji_name,
+            is_burst=is_burst,
         )
 
     @typing_extensions.override

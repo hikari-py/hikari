@@ -160,6 +160,8 @@ class TestGuildReactionAddEvent:
             emoji_name="👌",
             emoji_id=None,
             is_animated=False,
+            is_burst=False,
+            burst_colors=[],
         )
 
     def test_app_property(self, event):

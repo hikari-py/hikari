@@ -869,6 +869,30 @@ class TestRESTClientImpl:
                 channel=channel,
                 message=message,
                 emoji="rooYay:123",
+                reaction_type=undefined.UNDEFINED,
+            )
+
+    def test_fetch_reactions_for_emoji_with_reaction_type(self, rest_client):
+        channel = StubModel(123)
+        message = StubModel(456)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "ReactorIterator", return_value=stub_iterator) as iterator:
+            with mock.patch.object(rest, "_transform_emoji_to_url_format", return_value="rooYay:123"):
+                assert (
+                    rest_client.fetch_reactions_for_emoji(
+                        channel, message, "<:rooYay:123>", reaction_type=message_models.ReactionType.BURST
+                    )
+                    == stub_iterator
+                )
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                channel=channel,
+                message=message,
+                emoji="rooYay:123",
+                reaction_type=message_models.ReactionType.BURST,
             )
 
     def test_fetch_pins_with_before(self, rest_client):

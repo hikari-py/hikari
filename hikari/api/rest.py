@@ -1914,8 +1914,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
+        *,
+        reaction_type: undefined.UndefinedOr[messages_.ReactionType | int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users.User]:
-        """Fetch reactions for an emoji from a message.
+        """Fetch the users which reacted to a message with a given emoji.
 
         !!! note
             This call is not a coroutine function, it returns a special type of
@@ -1927,22 +1929,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         channel
-            The channel where the message to delete all reactions from is.
-            This may be the object or the ID of an existing channel.
+            The channel where the message is. This may be the object or
+            the ID of an existing channel.
         message
-            The message to delete all reaction from. This may be the
+            The message to fetch the reacting users from. This may be the
             object or the ID of an existing message.
         emoji
-            Object or name of the emoji to get the reactions for.
+            Object or name of the emoji to get the reacting users for.
         emoji_id
-            ID of the custom emoji to get the reactions for.
+            ID of the custom emoji to get the reacting users for.
             This should only be provided when a custom emoji's name is passed
             for `emoji`.
+        reaction_type
+            If provided, the type of reaction to fetch the users for.
+            If not provided, this defaults to normal reactions.
 
         Returns
         -------
         hikari.iterators.LazyIterator[hikari.users.User]
-            An iterator to fetch the users.
+            An iterator to fetch the users which reacted with the emoji.
 
         Raises
         ------
