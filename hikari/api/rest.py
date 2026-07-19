@@ -1929,10 +1929,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         channel
-            The channel where the message to delete all reactions from is.
-            This may be the object or the ID of an existing channel.
+            The channel where the message is. This may be the object or
+            the ID of an existing channel.
         message
-            The message to delete all reaction from. This may be the
+            The message to fetch the reactions for. This may be the
             object or the ID of an existing message.
         emoji
             Object or name of the emoji to get the reactions for.
@@ -1942,7 +1942,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             for `emoji`.
         reaction_type
             If provided, the type of reaction to fetch the users for.
-
             If not provided, this defaults to normal reactions.
 
         Returns
