@@ -4099,6 +4099,85 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
 
+    async def test_edit_application(self, rest_client, file_resource_patch):
+        application = StubModel(123)
+        expected_route = routes.PATCH_MY_APPLICATION.compile()
+        expected_json = {
+            "description": "new description",
+            "custom_install_url": "https://example.com/install",
+            "role_connections_verification_url": "https://example.com/verify",
+            "flags": applications.ApplicationFlags.GUILD_MEMBERS_INTENT,
+            "interactions_endpoint_url": "https://example.com/interactions",
+            "tags": ["shiny", "tags"],
+            "event_webhooks_url": "https://example.com/events",
+            "event_webhooks_status": applications.ApplicationEventWebhookStatus.ENABLED,
+            "event_webhooks_types": ["APPLICATION_AUTHORIZED"],
+            "install_params": {"scopes": ["applications.commands", "bot"], "permissions": 8},
+            "integration_types_config": {
+                "0": {"oauth2_install_params": {"scopes": ["bot"], "permissions": 8}},
+                "1": {},
+            },
+            "icon": "some data",
+            "cover_image": "some data",
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_application = mock.Mock(return_value=application)
+
+        result = await rest_client.edit_application(
+            description="new description",
+            custom_install_url="https://example.com/install",
+            role_connections_verification_url="https://example.com/verify",
+            install_params=applications.ApplicationInstallParameters(
+                scopes=[applications.OAuth2Scope.APPLICATIONS_COMMANDS, applications.OAuth2Scope.BOT],
+                permissions=permissions.Permissions.ADMINISTRATOR,
+            ),
+            integration_types_config={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: applications.ApplicationIntegrationConfiguration(
+                    oauth2_install_parameters=applications.OAuth2InstallParameters(
+                        scopes=[applications.OAuth2Scope.BOT], permissions=permissions.Permissions.ADMINISTRATOR
+                    )
+                ),
+                applications.ApplicationIntegrationType.USER_INSTALL: applications.ApplicationIntegrationConfiguration(
+                    oauth2_install_parameters=None
+                ),
+            },
+            flags=applications.ApplicationFlags.GUILD_MEMBERS_INTENT,
+            icon="someicon.png",
+            cover_image="somecover.png",
+            interactions_endpoint_url="https://example.com/interactions",
+            tags=["shiny", "tags"],
+            event_webhooks_url="https://example.com/events",
+            event_webhooks_status=applications.ApplicationEventWebhookStatus.ENABLED,
+            event_webhooks_types=["APPLICATION_AUTHORIZED"],
+        )
+
+        assert result is application
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
+
+    async def test_edit_application_when_images_are_None(self, rest_client):
+        application = StubModel(123)
+        expected_route = routes.PATCH_MY_APPLICATION.compile()
+        expected_json = {"icon": None, "cover_image": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_application = mock.Mock(return_value=application)
+
+        assert await rest_client.edit_application(icon=None, cover_image=None) is application
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
+
+    async def test_edit_application_without_optionals(self, rest_client):
+        application = StubModel(123)
+        expected_route = routes.PATCH_MY_APPLICATION.compile()
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_application = mock.Mock(return_value=application)
+
+        assert await rest_client.edit_application() is application
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={})
+        rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
+
     async def test_fetch_authorization(self, rest_client):
         expected_route = routes.GET_MY_AUTHORIZATION.compile()
         rest_client._request = mock.AsyncMock(return_value={"application": {}})

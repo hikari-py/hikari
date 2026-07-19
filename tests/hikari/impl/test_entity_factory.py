@@ -1020,6 +1020,9 @@ class TestEntityFactoryImpl:
                 "0": {"oauth2_install_params": {"scopes": ["applications.commands", "bot"], "permissions": "0"}},
                 "1": {},
             },
+            "event_webhooks_url": "https://eventme.com",
+            "event_webhooks_status": 2,
+            "event_webhooks_types": ["APPLICATION_AUTHORIZED"],
         }
 
     def test_deserialize_application(
@@ -1091,6 +1094,9 @@ class TestEntityFactoryImpl:
         assert user_integration_config.oauth2_install_parameters is None
 
         assert application.cover_image_hash == "hashmebaby"
+        assert application.event_webhooks_url == "https://eventme.com"
+        assert application.event_webhooks_status == application_models.ApplicationEventWebhookStatus.ENABLED
+        assert application.event_webhooks_types == ["APPLICATION_AUTHORIZED"]
         assert isinstance(application, application_models.Application)
 
     def test_deserialize_application_with_unset_fields(self, entity_factory_impl, mock_app, owner_payload):
@@ -1116,6 +1122,9 @@ class TestEntityFactoryImpl:
         assert application.privacy_policy_url is None
         assert application.terms_of_service_url is None
         assert application.role_connections_verification_url is None
+        assert application.event_webhooks_url is None
+        assert application.event_webhooks_status is application_models.ApplicationEventWebhookStatus.DISABLED
+        assert application.event_webhooks_types == []
 
     def test_deserialize_application_with_null_fields(self, entity_factory_impl, mock_app, owner_payload):
         application = entity_factory_impl.deserialize_application(
@@ -1132,6 +1141,7 @@ class TestEntityFactoryImpl:
                 "flags": 0,
                 "approximate_guild_count": 10000,
                 "approximate_user_install_count": 10001,
+                "event_webhooks_url": None,
             }
         )
 
@@ -1145,6 +1155,7 @@ class TestEntityFactoryImpl:
         assert application.team is None
         assert application.install_parameters is None
         assert application.tags == []
+        assert application.event_webhooks_url is None
 
     @pytest.fixture
     def invite_application_payload(self):

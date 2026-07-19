@@ -2437,6 +2437,78 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_application(response)
 
     @typing_extensions.override
+    async def edit_application(
+        self,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        custom_install_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        role_connections_verification_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        install_params: undefined.UndefinedOr[applications.ApplicationInstallParameters] = undefined.UNDEFINED,
+        integration_types_config: undefined.UndefinedOr[
+            typing.Mapping[applications.ApplicationIntegrationType, applications.ApplicationIntegrationConfiguration]
+        ] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[applications.ApplicationFlags | int] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        cover_image: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        interactions_endpoint_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tags: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        event_webhooks_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_webhooks_status: undefined.UndefinedOr[
+            applications.ApplicationEventWebhookStatus | int
+        ] = undefined.UNDEFINED,
+        event_webhooks_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+    ) -> applications.Application:
+        route = routes.PATCH_MY_APPLICATION.compile()
+        body = data_binding.JSONObjectBuilder()
+        body.put("description", description)
+        body.put("custom_install_url", custom_install_url)
+        body.put("role_connections_verification_url", role_connections_verification_url)
+        body.put("flags", flags)
+        body.put("interactions_endpoint_url", interactions_endpoint_url)
+        body.put("tags", tags, conversion=list)
+        body.put("event_webhooks_url", event_webhooks_url)
+        body.put("event_webhooks_status", event_webhooks_status)
+        body.put("event_webhooks_types", event_webhooks_types, conversion=list)
+
+        if install_params is not undefined.UNDEFINED:
+            body.put(
+                "install_params",
+                {"scopes": list(install_params.scopes), "permissions": int(install_params.permissions)},
+            )
+
+        if integration_types_config is not undefined.UNDEFINED:
+            raw_config: dict[str, data_binding.JSONish] = {}
+            for integration_type, config in integration_types_config.items():
+                raw_integration_config: dict[str, data_binding.JSONish] = {}
+                if config.oauth2_install_parameters is not None:
+                    raw_integration_config["oauth2_install_params"] = {
+                        "scopes": list(config.oauth2_install_parameters.scopes),
+                        "permissions": int(config.oauth2_install_parameters.permissions),
+                    }
+
+                raw_config[str(int(integration_type))] = raw_integration_config
+
+            body.put("integration_types_config", raw_config)
+
+        if icon is None:
+            body.put("icon", None)
+        elif icon is not undefined.UNDEFINED:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._executor) as stream:
+                body.put("icon", await stream.data_uri())
+
+        if cover_image is None:
+            body.put("cover_image", None)
+        elif cover_image is not undefined.UNDEFINED:
+            cover_image_resource = files.ensure_resource(cover_image)
+            async with cover_image_resource.stream(executor=self._executor) as stream:
+                body.put("cover_image", await stream.data_uri())
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_application(response)
+
+    @typing_extensions.override
     async def fetch_authorization(self) -> applications.AuthorizationInformation:
         route = routes.GET_MY_AUTHORIZATION.compile()
         response = await self._request(route)

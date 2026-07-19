@@ -756,6 +756,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_guild_count=payload["approximate_guild_count"],
             approximate_user_install_count=payload["approximate_user_install_count"],
             integration_types_config=integration_types_config,
+            event_webhooks_url=payload.get("event_webhooks_url"),
+            event_webhooks_status=application_models.ApplicationEventWebhookStatus(
+                payload.get("event_webhooks_status", application_models.ApplicationEventWebhookStatus.DISABLED)
+            ),
+            event_webhooks_types=payload.get("event_webhooks_types") or [],
         )
 
     @typing_extensions.override

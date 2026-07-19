@@ -628,6 +628,7 @@ DELETE_INTERACTION_RESPONSE: typing.Final[Route] = Route(DELETE, "/webhooks/{web
 
 # OAuth2 API
 GET_MY_APPLICATION: typing.Final[Route] = Route(GET, "/oauth2/applications/@me")
+PATCH_MY_APPLICATION: typing.Final[Route] = Route(PATCH, "/applications/@me")
 GET_MY_AUTHORIZATION: typing.Final[Route] = Route(GET, "/oauth2/@me")
 
 POST_TOKEN: typing.Final[Route] = Route(POST, "/oauth2/token", has_ratelimits=False)
