@@ -3679,6 +3679,22 @@ class TestEntityFactoryImpl:
     def test_deserialize_guild_member_ban_with_null_fields(self, entity_factory_impl, user_payload):
         assert entity_factory_impl.deserialize_guild_member_ban({"reason": None, "user": user_payload}).reason is None
 
+    def test_deserialize_bulk_ban_response(self, entity_factory_impl):
+        bulk_ban = entity_factory_impl.deserialize_bulk_ban_response(
+            {"banned_users": ["123", "456"], "failed_users": ["789"]}
+        )
+
+        assert bulk_ban.banned_users == [123, 456]
+        assert bulk_ban.failed_users == [789]
+        assert all(isinstance(user_id, snowflakes.Snowflake) for user_id in bulk_ban.banned_users)
+        assert isinstance(bulk_ban, guild_models.BulkBanResponse)
+
+    def test_deserialize_bulk_ban_response_with_empty_fields(self, entity_factory_impl):
+        bulk_ban = entity_factory_impl.deserialize_bulk_ban_response({"banned_users": [], "failed_users": []})
+
+        assert bulk_ban.banned_users == []
+        assert bulk_ban.failed_users == []
+
     @pytest.fixture
     def guild_preview_payload(self, known_custom_emoji_payload):
         return {
