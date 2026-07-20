@@ -2872,7 +2872,7 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_guild_preview(response)
 
     @typing_extensions.override
-    async def edit_guild(
+    async def edit_guild(  # noqa: PLR0913, PLR0915 - Too many arguments and statements
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
@@ -2891,18 +2891,25 @@ class RESTClientImpl(rest_api.RESTClient):
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         owner: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        discovery_splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         system_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
+        system_channel_flags: undefined.UndefinedOr[guilds.GuildSystemChannelFlag] = undefined.UNDEFINED,
         rules_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
+        safety_alerts_channel: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
+        ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str | locales.Locale] = undefined.UNDEFINED,
         features: undefined.UndefinedOr[typing.Sequence[str | guilds.GuildFeature]] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        premium_progress_bar_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         route = routes.PATCH_GUILD.compile(guild=guild)
@@ -2913,12 +2920,16 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("explicit_content_filter", explicit_content_filter_level)
         body.put("afk_timeout", afk_timeout, conversion=time.timespan_to_int)
         body.put("preferred_locale", preferred_locale, conversion=str)
+        body.put("system_channel_flags", system_channel_flags)
+        body.put("description", description)
+        body.put("premium_progress_bar_enabled", premium_progress_bar_enabled)
         body.put_array("features", features, conversion=str)
         body.put_snowflake("afk_channel_id", afk_channel)
         body.put_snowflake("owner_id", owner)
         body.put_snowflake("system_channel_id", system_channel)
         body.put_snowflake("rules_channel_id", rules_channel)
         body.put_snowflake("public_updates_channel_id", public_updates_channel)
+        body.put_snowflake("safety_alerts_channel_id", safety_alerts_channel)
 
         stack = contextlib.AsyncExitStack()
         tasks: list[asyncio.Task[str]] = []
@@ -2942,6 +2953,16 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 task = asyncio.create_task(stream.data_uri())
                 task.add_done_callback(lambda future: body.put("splash", future.result()))
+                tasks.append(task)
+
+            if discovery_splash is None:
+                body.put("discovery_splash", None)
+            elif discovery_splash is not undefined.UNDEFINED:
+                discovery_splash_resource = files.ensure_resource(discovery_splash)
+                stream = await stack.enter_async_context(discovery_splash_resource.stream(executor=self._executor))
+
+                task = asyncio.create_task(stream.data_uri())
+                task.add_done_callback(lambda future: body.put("discovery_splash", future.result()))
                 tasks.append(task)
 
             if banner is None:
