@@ -4281,7 +4281,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def edit_guild(
+    async def edit_guild(  # noqa: PLR0913 - Too many arguments
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
@@ -4300,18 +4300,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         owner: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
         splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        discovery_splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         system_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
+        system_channel_flags: undefined.UndefinedOr[guilds.GuildSystemChannelFlag] = undefined.UNDEFINED,
         rules_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
+        safety_alerts_channel: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
+        ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str | locales.Locale] = undefined.UNDEFINED,
         features: undefined.UndefinedOr[typing.Sequence[guilds.GuildFeature]] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        premium_progress_bar_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         """Edit a guild.
@@ -4345,15 +4352,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         splash
             If provided, the new guild splash. Must be a 16:9 image and the
             guild must have the [`hikari.guilds.GuildFeature.INVITE_SPLASH`][] feature.
+        discovery_splash
+            If provided, the new guild discovery splash. Must be a 16:9 image
+            and the guild must have the [`hikari.guilds.GuildFeature.DISCOVERABLE`][] feature.
         banner
             If provided, the new guild banner. Must be a 16:9 image and the
             guild must have the [`hikari.guilds.GuildFeature.BANNER`][] feature.
         system_channel
             If provided, the new system channel.
+        system_channel_flags
+            If provided, the new flags controlling which messages are
+            suppressed in the system channel.
         rules_channel
             If provided, the new rules channel.
         public_updates_channel
             If provided, the new public updates channel.
+        safety_alerts_channel
+            If provided, the new channel that Discord sends safety alerts to.
         preferred_locale
             If provided, the new preferred locale.
         features
@@ -4365,6 +4380,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 This behaviour can change in the future. You should refer to the
                 aforementioned link for the most up-to-date information, and
                 only supply mutable features.
+        description
+            If provided, the new guild description.
+        premium_progress_bar_enabled
+            If provided, whether the guild should display its boost progress bar.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
