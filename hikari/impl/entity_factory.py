@@ -2261,6 +2261,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return guild_models.GuildBan(reason=payload["reason"], user=self.deserialize_user(payload["user"]))
 
     @typing_extensions.override
+    def deserialize_bulk_ban_response(self, payload: data_binding.JSONObject) -> guild_models.BulkBanResponse:
+        return guild_models.BulkBanResponse(
+            banned_users=[snowflakes.Snowflake(user_id) for user_id in payload["banned_users"]],
+            failed_users=[snowflakes.Snowflake(user_id) for user_id in payload["failed_users"]],
+        )
+
+    @typing_extensions.override
     def deserialize_guild_preview(self, payload: data_binding.JSONObject) -> guild_models.GuildPreview:
         guild_id = snowflakes.Snowflake(payload["id"])
         emojis = {
