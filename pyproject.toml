@@ -117,7 +117,7 @@ pytest = [
 ]
 release = ["twine==6.2.0"]
 ruff = ["ruff==0.15.12"]
-slotscheck = ["slotscheck==0.19.1"]
+slotscheck = ["slotscheck==0.20.1"]
 towncrier = ["towncrier==25.8.0"]
 types = [
     # examples/voice_message/*
