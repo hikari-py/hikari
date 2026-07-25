@@ -490,7 +490,7 @@ class AuditLogEventType(int, enums.Enum):
     """Indicates that guild server guide was created."""
 
     HOME_SETTINGS_UPDATE = 191
-    """Indicates that guild server guide was uodated."""
+    """Indicates that guild server guide was updated."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)
