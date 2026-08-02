@@ -371,7 +371,7 @@ class Reaction:
     """Whether the current user super-reacted using this emoji."""
 
     burst_colors: typing.Sequence[colors_.Color] = attrs.field(eq=False, hash=False, repr=False)
-    """The colours used for the super reaction animation."""
+    """The colours used for the super reaction animation, empty if this reaction has no super reactions."""
 
     @typing_extensions.override
     def __str__(self) -> str:

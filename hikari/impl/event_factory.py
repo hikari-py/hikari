@@ -779,7 +779,7 @@ class EventFactoryImpl(event_factory.EventFactory):
         emoji_payload = payload["emoji"]
         raw_emoji_id = emoji_payload.get("id")
         emoji_id = snowflakes.Snowflake(raw_emoji_id) if raw_emoji_id else None
-        is_animated = bool(emoji_payload.get("animated", False))
+        is_animated = emoji_payload.get("animated", False)
         emoji_name = emojis_models.UnicodeEmoji(emoji_payload["name"]) if not emoji_id else emoji_payload["name"]
         is_burst = payload.get("burst", False)
         burst_colors = [colors.Color.from_hex_code(color) for color in payload.get("burst_colors", ())]
