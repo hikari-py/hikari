@@ -828,6 +828,13 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway-events#voice-server-update for more info."""
         self.dispatch(self._event_factory.deserialize_voice_server_update_event(shard, payload))
 
+    @event_manager_base.filtered(voice_events.VoiceChannelStartTimeUpdateEvent)
+    def on_voice_channel_start_time_update(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> None:
+        """See https://docs.discord.com/developers/events/gateway-events#voice-channel-start-time-update."""
+        self.dispatch(self._event_factory.deserialize_voice_channel_start_time_update_event(shard, payload))
+
     @event_manager_base.filtered(channel_events.WebhookUpdateEvent)
     def on_webhooks_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#webhooks-update for more info."""

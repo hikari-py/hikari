@@ -1356,6 +1356,25 @@ class EventFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_voice_channel_start_time_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> voice_events.VoiceChannelStartTimeUpdateEvent:
+        """Parse a raw payload from Discord into a voice channel start time update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.VoiceChannelStartTimeUpdateEvent
+            The parsed voice channel start time update event object.
+        """
+
+    @abc.abstractmethod
     def deserialize_auto_mod_rule_create_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
     ) -> auto_mod_events.AutoModRuleCreateEvent:
