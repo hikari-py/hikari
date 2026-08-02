@@ -3970,6 +3970,36 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_sticker_pack(
+        self, sticker_pack: snowflakes.SnowflakeishOr[stickers_.StickerPack]
+    ) -> stickers_.StickerPack:
+        """Fetch a sticker pack.
+
+        Parameters
+        ----------
+        sticker_pack
+            The sticker pack to fetch. This can be a sticker pack object or the
+            ID of an existing sticker pack.
+
+        Returns
+        -------
+        hikari.stickers.StickerPack
+            The requested sticker pack.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the sticker pack is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def fetch_sticker(
         self, sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker]
     ) -> stickers_.GuildSticker | stickers_.StandardSticker:
