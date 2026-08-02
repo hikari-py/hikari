@@ -494,7 +494,7 @@ class ReactorIterator(iterators.BufferedLazyIterator["users.User"]):
         channel: snowflakes.SnowflakeishOr[channels.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages.PartialMessage],
         emoji: str,
-        reaction_type: undefined.UndefinedOr[messages.ReactionType | int] = undefined.UNDEFINED,
+        reaction_type: undefined.UndefinedOr[messages.ReactionType] = undefined.UNDEFINED,
     ) -> None:
         super().__init__()
         self._entity_factory = entity_factory

@@ -1914,8 +1914,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
-        *,
-        reaction_type: undefined.UndefinedOr[messages_.ReactionType | int] = undefined.UNDEFINED,
+        reaction_type: undefined.UndefinedOr[messages_.ReactionType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users_.User]:
         """Fetch reactions for an emoji from a message.
 
