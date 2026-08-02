@@ -272,6 +272,13 @@ class TestColor:
         b = c.to_bytes(10, "little")
         assert b == b"\xff\xaa\xff\x00\x00\x00\x00\x00\x00\x00"
 
+    def test_Color_to_bytes_three_bytes(self):
+        # A color with a red channel >= 0x80 must fit in 3 bytes (Color is
+        # unsigned), and must round-trip through the inherited from_bytes.
+        c = colors.Color(0xFF0000)
+        assert c.to_bytes(3, "big") == b"\xff\x00\x00"
+        assert colors.Color.from_bytes(c.to_bytes(3, "big"), "big") == c
+
     @pytest.mark.parametrize(
         ("input", "expected_result"),
         [
