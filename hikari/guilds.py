@@ -23,6 +23,7 @@
 from __future__ import annotations
 
 __all__: typing.Sequence[str] = (
+    "BulkBanResponse",
     "GatewayGuild",
     "Guild",
     "GuildBan",
@@ -1623,6 +1624,21 @@ class GuildBan:
 
     user: users.User = attrs.field(repr=True)
     """The object of the user this ban targets."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class BulkBanResponse:
+    """The result of a bulk ban."""
+
+    banned_users: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=True)
+    """IDs of the users which were successfully banned."""
+
+    failed_users: typing.Sequence[snowflakes.Snowflake] = attrs.field(repr=True)
+    """IDs of the users which could not be banned.
+
+    A user ends up here when they could not be banned or were already banned.
+    """
 
 
 @attrs_extensions.with_copy
