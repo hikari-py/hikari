@@ -4569,6 +4569,7 @@ class TestRESTClientImplAsync:
     async def test_edit_guild(self, rest_client, file_resource):
         icon_resource = file_resource("icon data")
         splash_resource = file_resource("splash data")
+        discovery_splash_resource = file_resource("discovery splash data")
         banner_resource = file_resource("banner data")
         expected_route = routes.PATCH_GUILD.compile(guild=123)
         expected_json = {
@@ -4578,19 +4579,28 @@ class TestRESTClientImplAsync:
             "explicit_content_filter": 1,
             "afk_timeout": 60,
             "preferred_locale": "en-UK",
+            "system_channel_flags": 1,
+            "description": "a cool guild",
+            "premium_progress_bar_enabled": True,
             "afk_channel_id": "456",
             "owner_id": "789",
             "system_channel_id": "789",
             "rules_channel_id": "987",
             "public_updates_channel_id": "654",
+            "safety_alerts_channel_id": "321",
             "icon": "icon data",
             "splash": "splash data",
+            "discovery_splash": "discovery splash data",
             "banner": "banner data",
             "features": ["COMMUNITY", "RAID_ALERTS_DISABLED"],
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "123"})
 
-        with mock.patch.object(files, "ensure_resource", side_effect=[icon_resource, splash_resource, banner_resource]):
+        with mock.patch.object(
+            files,
+            "ensure_resource",
+            side_effect=[icon_resource, splash_resource, discovery_splash_resource, banner_resource],
+        ):
             result = await rest_client.edit_guild(
                 StubModel(123),
                 name="hikari",
@@ -4602,12 +4612,17 @@ class TestRESTClientImplAsync:
                 icon="icon.png",
                 owner=StubModel(789),
                 splash="splash.png",
+                discovery_splash="discovery_splash.png",
                 banner="banner.png",
                 system_channel=StubModel(789),
+                system_channel_flags=guilds.GuildSystemChannelFlag.SUPPRESS_USER_JOIN,
                 rules_channel=StubModel(987),
                 public_updates_channel=(654),
+                safety_alerts_channel=StubModel(321),
                 preferred_locale="en-UK",
                 features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
+                description="a cool guild",
+                premium_progress_bar_enabled=True,
                 reason="hikari best",
             )
             assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
@@ -4629,8 +4644,11 @@ class TestRESTClientImplAsync:
             "system_channel_id": "789",
             "rules_channel_id": "987",
             "public_updates_channel_id": "654",
+            "safety_alerts_channel_id": None,
+            "description": None,
             "icon": None,
             "splash": None,
+            "discovery_splash": None,
             "banner": None,
             "features": ["COMMUNITY", "RAID_ALERTS_DISABLED"],
         }
@@ -4647,12 +4665,15 @@ class TestRESTClientImplAsync:
             icon=None,
             owner=StubModel(789),
             splash=None,
+            discovery_splash=None,
             banner=None,
             system_channel=StubModel(789),
             rules_channel=StubModel(987),
             public_updates_channel=(654),
+            safety_alerts_channel=None,
             preferred_locale="en-UK",
             features=[guilds.GuildFeature.COMMUNITY, guilds.GuildFeature.RAID_ALERTS_DISABLED],
+            description=None,
             reason="hikari best",
         )
         assert result is rest_client._entity_factory.deserialize_rest_guild.return_value
