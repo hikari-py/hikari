@@ -1507,6 +1507,36 @@ class TestEventFactoryImpl:
         assert event.guild_id == 3122312
         assert event.raw_endpoint == "httppppppp"
 
+    def test_deserialize_voice_channel_start_time_update_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "5513123", "guild_id": "54123123", "voice_start_time": 1722945600}
+
+        event = event_factory.deserialize_voice_channel_start_time_update_event(mock_shard, mock_payload)
+
+        assert isinstance(event, voice_events.VoiceChannelStartTimeUpdateEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.channel_id == 5513123
+        assert event.guild_id == 54123123
+        assert event.voice_start_time == datetime.datetime(2024, 8, 6, 12, 0, tzinfo=datetime.timezone.utc)
+
+    def test_deserialize_voice_channel_start_time_update_event_when_no_ongoing_session(
+        self, event_factory, mock_app, mock_shard
+    ):
+        mock_payload = {"id": "5513123", "guild_id": "54123123", "voice_start_time": None}
+
+        event = event_factory.deserialize_voice_channel_start_time_update_event(mock_shard, mock_payload)
+
+        assert event.voice_start_time is None
+
+    def test_deserialize_voice_channel_start_time_update_event_when_start_time_undefined(
+        self, event_factory, mock_app, mock_shard
+    ):
+        mock_payload = {"id": "5513123", "guild_id": "54123123"}
+
+        event = event_factory.deserialize_voice_channel_start_time_update_event(mock_shard, mock_payload)
+
+        assert event.voice_start_time is None
+
     ##################
     #  MONETIZATION  #
     ##################

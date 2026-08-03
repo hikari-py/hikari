@@ -36,6 +36,12 @@ DOCUMENTATION_DIRECTORY = "docs"
 PYPROJECT_TOML = "pyproject.toml"
 COVERAGE_HTML_PATH = pathlib.Path(ARTIFACT_DIRECTORY, "coverage", "html")
 
+# Type checking targets the lowest supported python version, so some
+# version-dependant dependencies (ie. `backports.zstd`) can only be installed
+# under it.
+# NOTE: This should be kept up to date with ci.yml's linting job
+LOWEST_SUPPORTED_PYTHON = "3.10"
+
 
 if "READTHEDOCS_OUTPUT" in os.environ:
     DOCUMENTATION_OUTPUT_PATH = os.environ["READTHEDOCS_OUTPUT"] + "/html"
