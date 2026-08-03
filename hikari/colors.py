@@ -593,40 +593,58 @@ Web-safe colours are three hex-digits wide, `XYZ` becomes `XXYYZZ` in full-form.
 """
 
 
-def _to_color(value: Colorish, /) -> Color:
-    return Color.of(value)
-
-
-def _to_optional_color(value: Colorish | None, /) -> Color | None:
-    return Color.of(value) if value is not None else None
-
-
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class ColorGradient:
     """Represents a color gradient, as used for role colors.
 
-    All fields can be set to any [`hikari.colors.Colorish`][] value and will
-    be converted to a [`hikari.colors.Color`][] internally.
+    Use [`hikari.colors.ColorGradient.of`][] to build one from any
+    [`hikari.colors.Colorish`][] values.
     """
 
-    primary_color: Color = attrs.field(converter=_to_color, repr=True)
+    primary_color: Color = attrs.field(repr=True)
     """The primary color of the gradient."""
 
-    secondary_color: Color | None = attrs.field(converter=_to_optional_color, default=None, repr=True)
+    secondary_color: Color | None = attrs.field(default=None, repr=True)
     """The secondary color of the gradient, if set.
 
     When used as a role's colors, this can only be set if the guild has the
     [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
     """
 
-    tertiary_color: Color | None = attrs.field(converter=_to_optional_color, default=None, repr=True)
+    tertiary_color: Color | None = attrs.field(default=None, repr=True)
     """The tertiary color of the gradient, if set.
 
     When used as a role's colors, this will turn the gradient into a
     holographic style and can only be set if the guild has the
     [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
     """
+
+    @classmethod
+    def of(
+        cls, primary: Colorish, secondary: Colorish | None = None, tertiary: Colorish | None = None
+    ) -> ColorGradient:
+        """Build a color gradient from any color-like values.
+
+        Parameters
+        ----------
+        primary
+            The primary color of the gradient.
+        secondary
+            The secondary color of the gradient, if any.
+        tertiary
+            The tertiary color of the gradient, if any.
+
+        Returns
+        -------
+        ColorGradient
+            The built color gradient.
+        """
+        return cls(
+            primary_color=Color.of(primary),
+            secondary_color=Color.of(secondary) if secondary is not None else None,
+            tertiary_color=Color.of(tertiary) if tertiary is not None else None,
+        )
 
     @property
     def primary_colour(self) -> colours.Colour:

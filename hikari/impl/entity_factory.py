@@ -97,10 +97,8 @@ def _deserialize_seconds_timedelta(seconds: str | int) -> datetime.timedelta:
 
 
 def _deserialize_color_gradient(payload: data_binding.JSONObject) -> color_models.ColorGradient:
-    return color_models.ColorGradient(
-        primary_color=payload["primary_color"],
-        secondary_color=payload.get("secondary_color"),
-        tertiary_color=payload.get("tertiary_color"),
+    return color_models.ColorGradient.of(
+        payload["primary_color"], payload.get("secondary_color"), payload.get("tertiary_color")
     )
 
 
@@ -2164,7 +2162,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if colors_payload := payload.get("colors"):
             role_colors = _deserialize_color_gradient(colors_payload)
         else:
-            role_colors = color_models.ColorGradient(primary_color=payload["color"])
+            role_colors = color_models.ColorGradient.of(payload["color"])
 
         return guild_models.Role(
             app=self._app,

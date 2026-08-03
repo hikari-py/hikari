@@ -5806,9 +5806,7 @@ class TestRESTClientImplAsync:
     async def test_create_role_when_role_colors_and_role_colours_specified(self, rest_client):
         with pytest.raises(TypeError, match=r"Can not specify 'role_colors' and 'role_colours' together."):
             await rest_client.create_role(
-                StubModel(123),
-                role_colors=colors.ColorGradient(primary_color=12345),
-                role_colours=colors.ColorGradient(primary_color=12345),
+                StubModel(123), role_colors=colors.ColorGradient.of(12345), role_colours=colors.ColorGradient.of(12345)
             )
 
     async def test_create_role_when_color_and_role_colors_specified(self, rest_client):
@@ -5816,9 +5814,7 @@ class TestRESTClientImplAsync:
             TypeError, match=r"Can not specify 'color'/'colour' and 'role_colors'/'role_colours' together."
         ):
             await rest_client.create_role(
-                StubModel(123),
-                color=colors.Color.from_int(12345),
-                role_colors=colors.ColorGradient(primary_color=12345),
+                StubModel(123), color=colors.Color.from_int(12345), role_colors=colors.ColorGradient.of(12345)
             )
 
     async def test_create_role_with_role_colors(self, rest_client):
@@ -5834,7 +5830,7 @@ class TestRESTClientImplAsync:
         returned = await rest_client.create_role(
             StubModel(123),
             name="admin",
-            role_colors=colors.ColorGradient(primary_color=123, secondary_color=456),
+            role_colors=colors.ColorGradient.of(123, 456),
             mentionable=False,
             reason="roles are cool",
         )
@@ -5856,9 +5852,7 @@ class TestRESTClientImplAsync:
         returned = await rest_client.create_role(
             StubModel(123),
             name="admin",
-            role_colours=colors.ColorGradient(
-                primary_color=11127295, secondary_color=16759788, tertiary_color=16761760
-            ),
+            role_colours=colors.ColorGradient.of(11127295, 16759788, 16761760),
             mentionable=False,
             reason="roles are cool",
         )
@@ -5920,8 +5914,8 @@ class TestRESTClientImplAsync:
             await rest_client.edit_role(
                 StubModel(123),
                 StubModel(456),
-                role_colors=colors.ColorGradient(primary_color=12345),
-                role_colours=colors.ColorGradient(primary_color=12345),
+                role_colors=colors.ColorGradient.of(12345),
+                role_colours=colors.ColorGradient.of(12345),
             )
 
     async def test_edit_role_when_colour_and_role_colours_specified(self, rest_client):
@@ -5932,7 +5926,7 @@ class TestRESTClientImplAsync:
                 StubModel(123),
                 StubModel(456),
                 colour=colors.Color.from_int(12345),
-                role_colours=colors.ColorGradient(primary_color=12345),
+                role_colours=colors.ColorGradient.of(12345),
             )
 
     async def test_edit_role_with_role_colors(self, rest_client):
@@ -5941,10 +5935,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
 
         returned = await rest_client.edit_role(
-            StubModel(123),
-            StubModel(789),
-            role_colors=colors.ColorGradient(primary_color=123, secondary_color=456),
-            reason="roles are cool",
+            StubModel(123), StubModel(789), role_colors=colors.ColorGradient.of(123, 456), reason="roles are cool"
         )
         assert returned is rest_client._entity_factory.deserialize_role.return_value
 
@@ -5956,7 +5947,7 @@ class TestRESTClientImplAsync:
         expected_json = {"colors": {"primary_color": 123, "secondary_color": None, "tertiary_color": None}}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
 
-        await rest_client.edit_role(StubModel(123), StubModel(789), role_colors=colors.ColorGradient(primary_color=123))
+        await rest_client.edit_role(StubModel(123), StubModel(789), role_colors=colors.ColorGradient.of(123))
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
