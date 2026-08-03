@@ -1010,6 +1010,22 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, guild_id=guild_id, token=token, raw_endpoint=raw_endpoint
         )
 
+    @typing_extensions.override
+    def deserialize_voice_channel_start_time_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> voice_events.VoiceChannelStartTimeUpdateEvent:
+        raw_start_time = payload.get("voice_start_time")
+        voice_start_time = (
+            time.unix_epoch_to_datetime(raw_start_time, is_millis=False) if raw_start_time is not None else None
+        )
+        return voice_events.VoiceChannelStartTimeUpdateEvent(
+            app=self._app,
+            shard=shard,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            channel_id=snowflakes.Snowflake(payload["id"]),
+            voice_start_time=voice_start_time,
+        )
+
     ################
     # MONETIZATION #
     ################

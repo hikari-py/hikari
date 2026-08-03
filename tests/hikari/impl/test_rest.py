@@ -4440,6 +4440,17 @@ class TestRESTClientImplAsync:
             [mock.call({"id": "123"}), mock.call({"id": "456"}), mock.call({"id": "789"})]
         )
 
+    async def test_fetch_sticker_pack(self, rest_client):
+        expected_route = routes.GET_STICKER_PACK.compile(sticker_pack=123)
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_sticker_pack = mock.Mock()
+
+        returned = await rest_client.fetch_sticker_pack(StubModel(123))
+        assert returned is rest_client._entity_factory.deserialize_sticker_pack.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_sticker_pack.assert_called_once_with({"id": "123"})
+
     async def test_fetch_sticker_when_guild_sticker(self, rest_client):
         expected_route = routes.GET_STICKER.compile(sticker=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "123", "guild_id": "456"})
