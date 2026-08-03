@@ -122,6 +122,10 @@ towncrier = ["towncrier==25.8.0"]
 types = [
     # examples/voice_message/*
     "pydub-stubs~=0.25.1.6",
+    # No numpy version supports all of our python versions, so the requirement
+    # needs to be split up
+    "numpy~=2.2.6; python_version < '3.11'",
+    "numpy~=2.4.2; python_version >= '3.11'",
 ]
 
 [tool.uv]
@@ -255,11 +259,6 @@ warn_return_any = true
 warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
-
-[[tool.mypy.overrides]]
-# Numpy has already abonded py 3.9 and since we still support it we can't bring numpy into the project dependencies
-module = ["numpy.*"]
-ignore_missing_imports = true
 
 [tool.slotscheck]
 strict-imports = true
