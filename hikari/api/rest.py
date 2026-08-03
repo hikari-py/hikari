@@ -6550,10 +6550,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        role_colors: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
-        role_colours: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -6575,14 +6573,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             default behaviour on Discord where some random permissions will
             be set by default.
         color
-            If provided, the role's color. Can not be specified together
-            with `role_colors`.
-        colour
-            An alias for `color`.
-        role_colors
-            If provided, the role's colors as a color gradient. Unlike
-            `color`, this can also be used to give the role a gradient or
-            holographic color style.
+            If provided, the role's color. Passing a
+            [`hikari.colors.ColorGradient`][] can be used to give the role a
+            gradient or holographic color style instead of a solid color.
 
             Gradient and holographic styles can only be used if the guild has
             the [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
@@ -6592,8 +6585,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 enforces the role color to be a holographic style with the
                 values `primary_color=11127295`, `secondary_color=16759788`
                 and `tertiary_color=16761760`.
-        role_colours
-            An alias for `role_colors`.
+        colour
+            An alias for `color`.
         hoist
             If provided, whether to hoist the role.
         icon
@@ -6614,9 +6607,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         TypeError
-            If both `color` and `colour`, both `role_colors` and
-            `role_colours`, or both a color and a role colors argument are
-            specified, or if both `icon` and `unicode_emoji` are specified.
+            If both `color` and `colour` are specified or if both `icon` and
+            `unicode_emoji` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
@@ -6675,10 +6667,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        role_colors: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
-        role_colours: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -6700,15 +6690,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permissions
             If provided, the new permissions for the role.
         color
-            If provided, the new color for the role. Can not be specified
-            together with `role_colors`.
-        colour
-            An alias for `color`.
-        role_colors
-            If provided, the new colors for the role as a color gradient.
-            Unlike `color`, this can also be used to give the role a gradient
-            or holographic color style, or to remove it again by passing a
-            gradient with only a primary color.
+            If provided, the new color for the role. Passing a
+            [`hikari.colors.ColorGradient`][] can be used to give the role a
+            gradient or holographic color style instead of a solid color, or
+            to remove such a style again by passing a gradient with only a
+            primary color.
 
             Gradient and holographic styles can only be used if the guild has
             the [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
@@ -6718,8 +6704,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 enforces the role color to be a holographic style with the
                 values `primary_color=11127295`, `secondary_color=16759788`
                 and `tertiary_color=16761760`.
-        role_colours
-            An alias for `role_colors`.
+        colour
+            An alias for `color`.
         hoist
             If provided, whether to hoist the role.
         icon
@@ -6741,9 +6727,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Raises
         ------
         TypeError
-            If both `color` and `colour`, both `role_colors` and
-            `role_colours`, or both a color and a role colors argument are
-            specified, or if both `icon` and `unicode_emoji` are specified.
+            If both `color` and `colour` are specified or if both `icon` and
+            `unicode_emoji` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError

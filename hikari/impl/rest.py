@@ -3922,10 +3922,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        role_colors: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
-        role_colours: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -3936,14 +3934,6 @@ class RESTClientImpl(rest_api.RESTClient):
             msg = "Can not specify 'color' and 'colour' together."
             raise TypeError(msg)
 
-        if not undefined.any_undefined(role_colors, role_colours):
-            msg = "Can not specify 'role_colors' and 'role_colours' together."
-            raise TypeError(msg)
-
-        if not (undefined.all_undefined(color, colour) or undefined.all_undefined(role_colors, role_colours)):
-            msg = "Can not specify 'color'/'colour' and 'role_colors'/'role_colours' together."
-            raise TypeError(msg)
-
         if not undefined.any_undefined(icon, unicode_emoji):
             msg = "Can not specify 'icon' and 'unicode_emoji' together."
             raise TypeError(msg)
@@ -3952,10 +3942,11 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color, conversion=colors.Color.of)
-        body.put("color", colour, conversion=colors.Color.of)
-        body.put("colors", role_colors, conversion=_serialize_color_gradient)
-        body.put("colors", role_colours, conversion=_serialize_color_gradient)
+        merged_color = colour if color is undefined.UNDEFINED else color
+        if isinstance(merged_color, colors.ColorGradient):
+            body.put("colors", merged_color, conversion=_serialize_color_gradient)
+        else:
+            body.put("color", merged_color, conversion=colors.Color.of)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
@@ -3988,10 +3979,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        role_colors: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
-        role_colours: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -4000,14 +3989,6 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> guilds.Role:
         if not undefined.any_undefined(color, colour):
             msg = "Can not specify 'color' and 'colour' together."
-            raise TypeError(msg)
-
-        if not undefined.any_undefined(role_colors, role_colours):
-            msg = "Can not specify 'role_colors' and 'role_colours' together."
-            raise TypeError(msg)
-
-        if not (undefined.all_undefined(color, colour) or undefined.all_undefined(role_colors, role_colours)):
-            msg = "Can not specify 'color'/'colour' and 'role_colors'/'role_colours' together."
             raise TypeError(msg)
 
         if not undefined.any_undefined(icon, unicode_emoji):
@@ -4019,10 +4000,11 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color, conversion=colors.Color.of)
-        body.put("color", colour, conversion=colors.Color.of)
-        body.put("colors", role_colors, conversion=_serialize_color_gradient)
-        body.put("colors", role_colours, conversion=_serialize_color_gradient)
+        merged_color = colour if color is undefined.UNDEFINED else color
+        if isinstance(merged_color, colors.ColorGradient):
+            body.put("colors", merged_color, conversion=_serialize_color_gradient)
+        else:
+            body.put("color", merged_color, conversion=colors.Color.of)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
