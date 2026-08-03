@@ -22,13 +22,19 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Color", "Colorish")
+__all__: typing.Sequence[str] = ("Color", "ColorGradient", "Colorish")
 
 import re
 import string
 import typing
 
+import attrs
+
+from hikari.internal import attrs_extensions
 from hikari.internal import typing_extensions
+
+if typing.TYPE_CHECKING:
+    from hikari import colours
 
 
 def _to_rgb_int(value: str, name: str) -> int:
@@ -585,3 +591,54 @@ following examples means the same thing semantically.
 
 Web-safe colours are three hex-digits wide, `XYZ` becomes `XXYYZZ` in full-form.
 """
+
+
+def _to_color(value: Colorish, /) -> Color:
+    return Color.of(value)
+
+
+def _to_optional_color(value: Colorish | None, /) -> Color | None:
+    return Color.of(value) if value is not None else None
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ColorGradient:
+    """Represents a color gradient, as used for role colors.
+
+    All fields can be set to any [`hikari.colors.Colorish`][] value and will
+    be converted to a [`hikari.colors.Color`][] internally.
+    """
+
+    primary_color: Color = attrs.field(converter=_to_color, repr=True)
+    """The primary color of the gradient."""
+
+    secondary_color: Color | None = attrs.field(converter=_to_optional_color, default=None, repr=True)
+    """The secondary color of the gradient, if set.
+
+    When used as a role's colors, this can only be set if the guild has the
+    [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+    """
+
+    tertiary_color: Color | None = attrs.field(converter=_to_optional_color, default=None, repr=True)
+    """The tertiary color of the gradient, if set.
+
+    When used as a role's colors, this will turn the gradient into a
+    holographic style and can only be set if the guild has the
+    [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+    """
+
+    @property
+    def primary_colour(self) -> colours.Colour:
+        """Alias for the `primary_color` field."""
+        return self.primary_color
+
+    @property
+    def secondary_colour(self) -> colours.Colour | None:
+        """Alias for the `secondary_color` field."""
+        return self.secondary_color
+
+    @property
+    def tertiary_colour(self) -> colours.Colour | None:
+        """Alias for the `tertiary_color` field."""
+        return self.tertiary_color

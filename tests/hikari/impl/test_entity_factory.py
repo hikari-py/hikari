@@ -3511,7 +3511,7 @@ class TestEntityFactoryImpl:
         assert guild_role.unicode_emoji == emoji_models.UnicodeEmoji("\N{OK HAND SIGN}")
         assert isinstance(guild_role.unicode_emoji, emoji_models.UnicodeEmoji)
         assert guild_role.color == color_models.Color(3_447_003)
-        assert guild_role.role_colors == guild_models.RoleColors(
+        assert guild_role.role_colors == color_models.ColorGradient(
             primary_color=color_models.Color(3_447_003),
             secondary_color=color_models.Color(16_759_788),
             tertiary_color=color_models.Color(16_761_760),
@@ -3541,14 +3541,14 @@ class TestEntityFactoryImpl:
         assert guild_role.subscription_listing_id is None
         assert guild_role.is_available_for_purchase is False
         assert guild_role.unicode_emoji is None
-        assert guild_role.role_colors == guild_models.RoleColors(
+        assert guild_role.role_colors == color_models.ColorGradient(
             primary_color=color_models.Color(3_447_003), secondary_color=None, tertiary_color=None
         )
 
     def test_deserialize_role_with_missing_or_unset_color_fields(self, entity_factory_impl, guild_role_payload):
         guild_role_payload["colors"] = {"primary_color": 3_447_003, "secondary_color": None, "tertiary_color": None}
         guild_role = entity_factory_impl.deserialize_role(guild_role_payload, guild_id=snowflakes.Snowflake(76534453))
-        assert guild_role.role_colors == guild_models.RoleColors(
+        assert guild_role.role_colors == color_models.ColorGradient(
             primary_color=color_models.Color(3_447_003), secondary_color=None, tertiary_color=None
         )
 

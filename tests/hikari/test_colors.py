@@ -334,3 +334,35 @@ class TestColor:
     def test_from_tuple_string_sad_path(self, input_string, value_error_match):
         with pytest.raises(ValueError, match=value_error_match):
             colors.Color.from_tuple_string(input_string)
+
+
+class TestColorGradient:
+    def test_converts_colorish_values(self):
+        gradient = colors.ColorGradient(primary_color="#1A2B3C", secondary_color=0x2B3C4D)
+
+        assert gradient.primary_color == colors.Color(0x1A2B3C)
+        assert isinstance(gradient.primary_color, colors.Color)
+        assert gradient.secondary_color == colors.Color(0x2B3C4D)
+        assert isinstance(gradient.secondary_color, colors.Color)
+        assert gradient.tertiary_color is None
+
+    def test_converts_colorish_values_on_assignment(self):
+        gradient = colors.ColorGradient(primary_color=0x1A2B3C)
+
+        gradient.tertiary_color = "fab"
+
+        assert gradient.tertiary_color == colors.Color(0xFFAABB)
+        assert isinstance(gradient.tertiary_color, colors.Color)
+
+    def test_colour_alias_properties(self):
+        gradient = colors.ColorGradient(primary_color=0x1A2B3C, secondary_color=0x2B3C4D, tertiary_color=0x3C4D5E)
+
+        assert gradient.primary_colour == colors.Color(0x1A2B3C)
+        assert gradient.secondary_colour == colors.Color(0x2B3C4D)
+        assert gradient.tertiary_colour == colors.Color(0x3C4D5E)
+
+    def test_colour_alias_properties_when_not_set(self):
+        gradient = colors.ColorGradient(primary_color=0x1A2B3C)
+
+        assert gradient.secondary_colour is None
+        assert gradient.tertiary_colour is None

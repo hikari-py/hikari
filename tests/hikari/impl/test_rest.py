@@ -5803,34 +5803,30 @@ class TestRESTClientImplAsync:
                 StubModel(123), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
 
-    async def test_create_role_when_secondary_color_and_secondary_colour_specified(self, rest_client):
-        with pytest.raises(TypeError, match=r"Can not specify 'secondary_color' and 'secondary_colour' together."):
+    async def test_create_role_when_role_colors_and_role_colours_specified(self, rest_client):
+        with pytest.raises(TypeError, match=r"Can not specify 'role_colors' and 'role_colours' together."):
+            await rest_client.create_role(
+                StubModel(123),
+                role_colors=colors.ColorGradient(primary_color=12345),
+                role_colours=colors.ColorGradient(primary_color=12345),
+            )
+
+    async def test_create_role_when_color_and_role_colors_specified(self, rest_client):
+        with pytest.raises(
+            TypeError, match=r"Can not specify 'color'/'colour' and 'role_colors'/'role_colours' together."
+        ):
             await rest_client.create_role(
                 StubModel(123),
                 color=colors.Color.from_int(12345),
-                secondary_color=colors.Color.from_int(12345),
-                secondary_colour=colors.Color.from_int(12345),
+                role_colors=colors.ColorGradient(primary_color=12345),
             )
 
-    async def test_create_role_when_tertiary_color_and_tertiary_colour_specified(self, rest_client):
-        with pytest.raises(TypeError, match=r"Can not specify 'tertiary_color' and 'tertiary_colour' together."):
-            await rest_client.create_role(
-                StubModel(123),
-                color=colors.Color.from_int(12345),
-                tertiary_color=colors.Color.from_int(12345),
-                tertiary_colour=colors.Color.from_int(12345),
-            )
-
-    async def test_create_role_when_secondary_color_specified_without_color(self, rest_client):
-        with pytest.raises(TypeError, match=r"Can not specify 'secondary_color' or 'tertiary_color' without 'color'."):
-            await rest_client.create_role(StubModel(123), secondary_color=colors.Color.from_int(12345))
-
-    async def test_create_role_with_gradient_colors(self, rest_client):
+    async def test_create_role_with_role_colors(self, rest_client):
         expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
         expected_json = {
             "name": "admin",
             "permissions": 0,
-            "colors": {"primary_color": colors.Color.from_int(123), "secondary_color": colors.Color.from_int(456)},
+            "colors": {"primary_color": 123, "secondary_color": 456, "tertiary_color": None},
             "mentionable": False,
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
@@ -5838,8 +5834,7 @@ class TestRESTClientImplAsync:
         returned = await rest_client.create_role(
             StubModel(123),
             name="admin",
-            color=colors.Color.from_int(123),
-            secondary_colour=colors.Color.from_int(456),
+            role_colors=colors.ColorGradient(primary_color=123, secondary_color=456),
             mentionable=False,
             reason="roles are cool",
         )
@@ -5848,16 +5843,12 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
         rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
 
-    async def test_create_role_with_holographic_colors(self, rest_client):
+    async def test_create_role_with_role_colours(self, rest_client):
         expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
         expected_json = {
             "name": "admin",
             "permissions": 0,
-            "colors": {
-                "primary_color": colors.Color.from_int(11127295),
-                "secondary_color": colors.Color.from_int(16759788),
-                "tertiary_color": colors.Color.from_int(16761760),
-            },
+            "colors": {"primary_color": 11127295, "secondary_color": 16759788, "tertiary_color": 16761760},
             "mentionable": False,
         }
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
@@ -5865,9 +5856,9 @@ class TestRESTClientImplAsync:
         returned = await rest_client.create_role(
             StubModel(123),
             name="admin",
-            color=colors.Color.from_int(11127295),
-            secondary_color=colors.Color.from_int(16759788),
-            tertiary_color=colors.Color.from_int(16761760),
+            role_colours=colors.ColorGradient(
+                primary_color=11127295, secondary_color=16759788, tertiary_color=16761760
+            ),
             mentionable=False,
             reason="roles are cool",
         )
@@ -5924,42 +5915,35 @@ class TestRESTClientImplAsync:
                 StubModel(123), StubModel(456), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
 
-    async def test_edit_role_when_secondary_color_and_secondary_colour_specified(self, rest_client):
-        with pytest.raises(TypeError, match=r"Can not specify 'secondary_color' and 'secondary_colour' together."):
+    async def test_edit_role_when_role_colors_and_role_colours_specified(self, rest_client):
+        with pytest.raises(TypeError, match=r"Can not specify 'role_colors' and 'role_colours' together."):
             await rest_client.edit_role(
                 StubModel(123),
                 StubModel(456),
-                color=colors.Color.from_int(12345),
-                secondary_color=colors.Color.from_int(12345),
-                secondary_colour=colors.Color.from_int(12345),
+                role_colors=colors.ColorGradient(primary_color=12345),
+                role_colours=colors.ColorGradient(primary_color=12345),
             )
 
-    async def test_edit_role_when_tertiary_color_and_tertiary_colour_specified(self, rest_client):
-        with pytest.raises(TypeError, match=r"Can not specify 'tertiary_color' and 'tertiary_colour' together."):
+    async def test_edit_role_when_colour_and_role_colours_specified(self, rest_client):
+        with pytest.raises(
+            TypeError, match=r"Can not specify 'color'/'colour' and 'role_colors'/'role_colours' together."
+        ):
             await rest_client.edit_role(
                 StubModel(123),
                 StubModel(456),
-                color=colors.Color.from_int(12345),
-                tertiary_color=colors.Color.from_int(12345),
-                tertiary_colour=colors.Color.from_int(12345),
+                colour=colors.Color.from_int(12345),
+                role_colours=colors.ColorGradient(primary_color=12345),
             )
 
-    async def test_edit_role_when_tertiary_color_specified_without_color(self, rest_client):
-        with pytest.raises(TypeError, match=r"Can not specify 'secondary_color' or 'tertiary_color' without 'color'."):
-            await rest_client.edit_role(StubModel(123), StubModel(456), tertiary_color=colors.Color.from_int(12345))
-
-    async def test_edit_role_with_gradient_colors(self, rest_client):
+    async def test_edit_role_with_role_colors(self, rest_client):
         expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
-        expected_json = {
-            "colors": {"primary_color": colors.Color.from_int(123), "secondary_color": colors.Color.from_int(456)}
-        }
+        expected_json = {"colors": {"primary_color": 123, "secondary_color": 456, "tertiary_color": None}}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
 
         returned = await rest_client.edit_role(
             StubModel(123),
             StubModel(789),
-            color=colors.Color.from_int(123),
-            secondary_color=colors.Color.from_int(456),
+            role_colors=colors.ColorGradient(primary_color=123, secondary_color=456),
             reason="roles are cool",
         )
         assert returned is rest_client._entity_factory.deserialize_role.return_value
@@ -5969,12 +5953,10 @@ class TestRESTClientImplAsync:
 
     async def test_edit_role_when_removing_gradient_colors(self, rest_client):
         expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
-        expected_json = {"colors": {"primary_color": colors.Color.from_int(123), "secondary_color": None}}
+        expected_json = {"colors": {"primary_color": 123, "secondary_color": None, "tertiary_color": None}}
         rest_client._request = mock.AsyncMock(return_value={"id": "456"})
 
-        await rest_client.edit_role(
-            StubModel(123), StubModel(789), color=colors.Color.from_int(123), secondary_color=None
-        )
+        await rest_client.edit_role(StubModel(123), StubModel(789), role_colors=colors.ColorGradient(primary_color=123))
 
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 

@@ -96,13 +96,11 @@ def _deserialize_seconds_timedelta(seconds: str | int) -> datetime.timedelta:
     return datetime.timedelta(seconds=int(seconds))
 
 
-def _deserialize_role_colors(payload: data_binding.JSONObject) -> guild_models.RoleColors:
-    secondary_color = payload.get("secondary_color")
-    tertiary_color = payload.get("tertiary_color")
-    return guild_models.RoleColors(
-        primary_color=color_models.Color(payload["primary_color"]),
-        secondary_color=color_models.Color(secondary_color) if secondary_color is not None else None,
-        tertiary_color=color_models.Color(tertiary_color) if tertiary_color is not None else None,
+def _deserialize_color_gradient(payload: data_binding.JSONObject) -> color_models.ColorGradient:
+    return color_models.ColorGradient(
+        primary_color=payload["primary_color"],
+        secondary_color=payload.get("secondary_color"),
+        tertiary_color=payload.get("tertiary_color"),
     )
 
 
@@ -500,7 +498,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
-            audit_log_models.AuditLogChangeKey.COLORS: _deserialize_role_colors,
+            audit_log_models.AuditLogChangeKey.COLORS: _deserialize_color_gradient,
             audit_log_models.AuditLogChangeKey.COMMAND_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.ALLOW: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.DENY: _with_int_cast(permission_models.Permissions),
@@ -2164,9 +2162,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             emoji = emoji_models.UnicodeEmoji(raw_emoji)
 
         if colors_payload := payload.get("colors"):
-            role_colors = _deserialize_role_colors(colors_payload)
+            role_colors = _deserialize_color_gradient(colors_payload)
         else:
-            role_colors = guild_models.RoleColors(primary_color=color_models.Color(payload["color"]))
+            role_colors = color_models.ColorGradient(primary_color=payload["color"])
 
         return guild_models.Role(
             app=self._app,

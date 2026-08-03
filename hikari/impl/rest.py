@@ -476,50 +476,12 @@ def _stringify_http_message(headers: data_binding.Headers, body: bytes | None) -
     return string
 
 
-def _optional_color(value: colors.Colorish | None, /) -> colors.Color | None:
-    return colors.Color.of(value) if value is not None else None
-
-
-def _put_role_colors(
-    body: data_binding.JSONObjectBuilder,
-    *,
-    color: undefined.UndefinedOr[colors.Colorish],
-    colour: undefined.UndefinedOr[colors.Colorish],
-    secondary_color: undefined.UndefinedNoneOr[colors.Colorish],
-    secondary_colour: undefined.UndefinedNoneOr[colors.Colorish],
-    tertiary_color: undefined.UndefinedNoneOr[colors.Colorish],
-    tertiary_colour: undefined.UndefinedNoneOr[colors.Colorish],
-) -> None:
-    """Validate the role color arguments and add them to the request body."""
-    if not undefined.any_undefined(color, colour):
-        msg = "Can not specify 'color' and 'colour' together."
-        raise TypeError(msg)
-
-    if not undefined.any_undefined(secondary_color, secondary_colour):
-        msg = "Can not specify 'secondary_color' and 'secondary_colour' together."
-        raise TypeError(msg)
-
-    if not undefined.any_undefined(tertiary_color, tertiary_colour):
-        msg = "Can not specify 'tertiary_color' and 'tertiary_colour' together."
-        raise TypeError(msg)
-
-    primary = color if colour is undefined.UNDEFINED else colour
-    secondary = secondary_color if secondary_colour is undefined.UNDEFINED else secondary_colour
-    tertiary = tertiary_color if tertiary_colour is undefined.UNDEFINED else tertiary_colour
-
-    if undefined.all_undefined(secondary, tertiary):
-        body.put("color", primary, conversion=colors.Color.of)
-        return
-
-    if primary is undefined.UNDEFINED:
-        msg = "Can not specify 'secondary_color' or 'tertiary_color' without 'color'."
-        raise TypeError(msg)
-
-    colors_body = data_binding.JSONObjectBuilder()
-    colors_body.put("primary_color", primary, conversion=colors.Color.of)
-    colors_body.put("secondary_color", secondary, conversion=_optional_color)
-    colors_body.put("tertiary_color", tertiary, conversion=_optional_color)
-    body.put("colors", colors_body)
+def _serialize_color_gradient(gradient: colors.ColorGradient, /) -> data_binding.JSONObject:
+    return {
+        "primary_color": int(gradient.primary_color),
+        "secondary_color": int(gradient.secondary_color) if gradient.secondary_color is not None else None,
+        "tertiary_color": int(gradient.tertiary_color) if gradient.tertiary_color is not None else None,
+    }
 
 
 def _transform_emoji_to_url_format(
@@ -3962,16 +3924,26 @@ class RESTClientImpl(rest_api.RESTClient):
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        secondary_color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        secondary_colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        tertiary_color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        tertiary_colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        role_colors: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
+        role_colours: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
+        if not undefined.any_undefined(color, colour):
+            msg = "Can not specify 'color' and 'colour' together."
+            raise TypeError(msg)
+
+        if not undefined.any_undefined(role_colors, role_colours):
+            msg = "Can not specify 'role_colors' and 'role_colours' together."
+            raise TypeError(msg)
+
+        if not (undefined.all_undefined(color, colour) or undefined.all_undefined(role_colors, role_colours)):
+            msg = "Can not specify 'color'/'colour' and 'role_colors'/'role_colours' together."
+            raise TypeError(msg)
+
         if not undefined.any_undefined(icon, unicode_emoji):
             msg = "Can not specify 'icon' and 'unicode_emoji' together."
             raise TypeError(msg)
@@ -3980,15 +3952,10 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        _put_role_colors(
-            body,
-            color=color,
-            colour=colour,
-            secondary_color=secondary_color,
-            secondary_colour=secondary_colour,
-            tertiary_color=tertiary_color,
-            tertiary_colour=tertiary_colour,
-        )
+        body.put("color", color, conversion=colors.Color.of)
+        body.put("color", colour, conversion=colors.Color.of)
+        body.put("colors", role_colors, conversion=_serialize_color_gradient)
+        body.put("colors", role_colours, conversion=_serialize_color_gradient)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
@@ -4023,16 +3990,26 @@ class RESTClientImpl(rest_api.RESTClient):
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
         colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        secondary_color: undefined.UndefinedNoneOr[colors.Colorish] = undefined.UNDEFINED,
-        secondary_colour: undefined.UndefinedNoneOr[colors.Colorish] = undefined.UNDEFINED,
-        tertiary_color: undefined.UndefinedNoneOr[colors.Colorish] = undefined.UNDEFINED,
-        tertiary_colour: undefined.UndefinedNoneOr[colors.Colorish] = undefined.UNDEFINED,
+        role_colors: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
+        role_colours: undefined.UndefinedOr[colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         mentionable: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.Role:
+        if not undefined.any_undefined(color, colour):
+            msg = "Can not specify 'color' and 'colour' together."
+            raise TypeError(msg)
+
+        if not undefined.any_undefined(role_colors, role_colours):
+            msg = "Can not specify 'role_colors' and 'role_colours' together."
+            raise TypeError(msg)
+
+        if not (undefined.all_undefined(color, colour) or undefined.all_undefined(role_colors, role_colours)):
+            msg = "Can not specify 'color'/'colour' and 'role_colors'/'role_colours' together."
+            raise TypeError(msg)
+
         if not undefined.any_undefined(icon, unicode_emoji):
             msg = "Can not specify 'icon' and 'unicode_emoji' together."
             raise TypeError(msg)
@@ -4042,15 +4019,10 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        _put_role_colors(
-            body,
-            color=color,
-            colour=colour,
-            secondary_color=secondary_color,
-            secondary_colour=secondary_colour,
-            tertiary_color=tertiary_color,
-            tertiary_colour=tertiary_colour,
-        )
+        body.put("color", color, conversion=colors.Color.of)
+        body.put("color", colour, conversion=colors.Color.of)
+        body.put("colors", role_colors, conversion=_serialize_color_gradient)
+        body.put("colors", role_colours, conversion=_serialize_color_gradient)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
