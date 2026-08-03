@@ -2767,6 +2767,15 @@ class RESTClientImpl(rest_api.RESTClient):
         ]
 
     @typing_extensions.override
+    async def fetch_sticker_pack(
+        self, sticker_pack: snowflakes.SnowflakeishOr[stickers_.StickerPack]
+    ) -> stickers_.StickerPack:
+        route = routes.GET_STICKER_PACK.compile(sticker_pack=sticker_pack)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_sticker_pack(response)
+
+    @typing_extensions.override
     async def fetch_sticker(
         self, sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker]
     ) -> stickers_.StandardSticker | stickers_.GuildSticker:

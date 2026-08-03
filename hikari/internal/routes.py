@@ -511,6 +511,7 @@ DELETE_GUILD_AUTO_MODERATION_RULE: typing.Final[Route] = Route(DELETE, "/guilds/
 
 # Stickers
 GET_STICKER_PACKS: typing.Final[Route] = Route(GET, "/sticker-packs")
+GET_STICKER_PACK: typing.Final[Route] = Route(GET, "/sticker-packs/{sticker_pack}")
 GET_STICKER: typing.Final[Route] = Route(GET, "/stickers/{sticker}")
 
 # Templates
