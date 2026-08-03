@@ -51,6 +51,7 @@ __all__: typing.Sequence[str] = (
     "PartialRole",
     "RESTGuild",
     "Role",
+    "RoleColors",
     "WelcomeChannel",
     "WelcomeScreen",
 )
@@ -212,6 +213,9 @@ class GuildFeature(str, enums.Enum):
 
     RAID_ALERTS_DISABLED = "RAID_ALERTS_DISABLED"
     """Guild has disabled alerts for join raids in the configured safety alerts channel."""
+
+    ENHANCED_ROLE_COLORS = "ENHANCED_ROLE_COLORS"
+    """Guild is able to set gradient and holographic role colors."""
 
 
 @typing.final
@@ -1165,6 +1169,49 @@ class PartialRole(snowflakes.Unique):
         return self.name
 
 
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class RoleColors:
+    """The colors of a role."""
+
+    primary_color: colors.Color = attrs.field(repr=True)
+    """The primary color of the role."""
+
+    secondary_color: colors.Color | None = attrs.field(default=None, repr=True)
+    """The secondary color of the role, if set.
+
+    When set, the role's color will be a gradient between the primary
+    and secondary color.
+
+    This can only be set if the guild has the
+    [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+    """
+
+    tertiary_color: colors.Color | None = attrs.field(default=None, repr=True)
+    """The tertiary color of the role, if set.
+
+    When set, the role's color will be a holographic style.
+
+    This can only be set if the guild has the
+    [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+    """
+
+    @property
+    def primary_colour(self) -> colours.Colour:
+        """Alias for the `primary_color` field."""
+        return self.primary_color
+
+    @property
+    def secondary_colour(self) -> colours.Colour | None:
+        """Alias for the `secondary_color` field."""
+        return self.secondary_color
+
+    @property
+    def tertiary_colour(self) -> colours.Colour | None:
+        """Alias for the `tertiary_color` field."""
+        return self.tertiary_color
+
+
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Role(PartialRole):
     """Represents a guild bound role object."""
@@ -1173,6 +1220,13 @@ class Role(PartialRole):
     """The colour of this role.
 
     This will be applied to a member's name in chat if it's their top coloured role.
+    """
+
+    role_colors: RoleColors = attrs.field(eq=False, hash=False, repr=True)
+    """The colors of this role.
+
+    Unlike the [`color`][hikari.guilds.Role.color] field, this can also hold
+    the role's gradient or holographic colors if set.
     """
 
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -1240,6 +1294,11 @@ class Role(PartialRole):
     def colour(self) -> colours.Colour:
         """Alias for the `color` field."""
         return self.color
+
+    @property
+    def role_colours(self) -> RoleColors:
+        """Alias for the `role_colors` field."""
+        return self.role_colors
 
     @property
     @typing_extensions.override

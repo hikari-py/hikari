@@ -96,6 +96,16 @@ def _deserialize_seconds_timedelta(seconds: str | int) -> datetime.timedelta:
     return datetime.timedelta(seconds=int(seconds))
 
 
+def _deserialize_role_colors(payload: data_binding.JSONObject) -> guild_models.RoleColors:
+    secondary_color = payload.get("secondary_color")
+    tertiary_color = payload.get("tertiary_color")
+    return guild_models.RoleColors(
+        primary_color=color_models.Color(payload["primary_color"]),
+        secondary_color=color_models.Color(secondary_color) if secondary_color is not None else None,
+        tertiary_color=color_models.Color(tertiary_color) if tertiary_color is not None else None,
+    )
+
+
 def _deserialize_day_timedelta(days: str | int) -> datetime.timedelta:
     return datetime.timedelta(days=int(days))
 
@@ -490,6 +500,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
+            audit_log_models.AuditLogChangeKey.COLORS: _deserialize_role_colors,
             audit_log_models.AuditLogChangeKey.COMMAND_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.ALLOW: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.DENY: _with_int_cast(permission_models.Permissions),
@@ -2152,12 +2163,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_emoji := payload.get("unicode_emoji")) is not None:
             emoji = emoji_models.UnicodeEmoji(raw_emoji)
 
+        if colors_payload := payload.get("colors"):
+            role_colors = _deserialize_role_colors(colors_payload)
+        else:
+            role_colors = guild_models.RoleColors(primary_color=color_models.Color(payload["color"]))
+
         return guild_models.Role(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             guild_id=guild_id,
             name=payload["name"],
             color=color_models.Color(payload["color"]),
+            role_colors=role_colors,
             is_hoisted=payload["hoist"],
             icon_hash=payload.get("icon"),
             unicode_emoji=emoji,
