@@ -396,7 +396,6 @@ DELETE_REACTION_USER: typing.Final[Route] = Route(
 
 # Guilds
 GET_GUILD: typing.Final[Route] = Route(GET, "/guilds/{guild}")
-POST_GUILDS: typing.Final[Route] = Route(POST, "/guilds")
 PATCH_GUILD: typing.Final[Route] = Route(PATCH, "/guilds/{guild}")
 DELETE_GUILD: typing.Final[Route] = Route(DELETE, "/guilds/{guild}")
 
