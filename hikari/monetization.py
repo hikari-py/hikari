@@ -137,6 +137,9 @@ class Entitlement(snowflakes.Unique):
     is_deleted: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the entitlement has been deleted"""
 
+    is_consumed: bool = attrs.field(eq=False, hash=False, repr=False)
+    """For consumable items, whether the entitlement has been consumed"""
+
     starts_at: datetime.datetime | None = attrs.field(eq=False, hash=False, repr=False)
     """Start date at which the entitlement is valid. Not present when using test entitlements."""
 
