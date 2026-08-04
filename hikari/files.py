@@ -1011,14 +1011,7 @@ class IteratorReader(AsyncReader):
             except StopAsyncIteration:
                 pass
 
-        elif isinstance(self.data, typing.Iterator):
-            try:
-                while True:
-                    yield self._assert_bytes(next(self.data))
-            except StopIteration:
-                pass
-
-        elif inspect.isgenerator(self.data):
+        elif isinstance(self.data, typing.Iterator) or inspect.isgenerator(self.data):
             try:
                 while True:
                     yield self._assert_bytes(next(self.data))
