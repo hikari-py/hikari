@@ -943,6 +943,21 @@ class TestGatewayBot:
         )
 
     @pytest.mark.asyncio
+    async def test_request_channel_info(self, bot):
+        shard = mock.Mock(shard_count=3)
+        shard.request_channel_info = mock.AsyncMock()
+
+        with mock.patch.object(bot_impl.GatewayBot, "_get_shard", return_value=shard) as get_shard:
+            with mock.patch.object(bot_impl.GatewayBot, "_check_if_alive") as check_if_alive:
+                await bot.request_channel_info(115590097100865541, fields=["status", "voice_start_time"])
+
+        check_if_alive.assert_called_once_with()
+        get_shard.assert_called_once_with(115590097100865541)
+        shard.request_channel_info.assert_awaited_once_with(
+            guild=115590097100865541, fields=["status", "voice_start_time"]
+        )
+
+    @pytest.mark.asyncio
     async def test_start_one_shard(self, bot):
         activity = object()
         status = object()

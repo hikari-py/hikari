@@ -818,6 +818,16 @@ class TestGatewayShardImplAsync:
         )
         check_if_alive.assert_called_once_with()
 
+    async def test_request_channel_info(self, client):
+        with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
+            with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_connected:
+                await client.request_channel_info(123, fields=[shard_api.ChannelInfoField.STATUS, "voice_start_time"])
+
+        send_json.assert_awaited_once_with(
+            {"op": 43, "d": {"guild_id": "123", "fields": ["status", "voice_start_time"]}}
+        )
+        check_if_connected.assert_called_once_with()
+
     @pytest.mark.parametrize("attr", ["_keep_alive_task", "_handshake_event"])
     async def test_start_when_already_running(self, client, attr):
         setattr(client, attr, object())

@@ -90,6 +90,7 @@ _REQUEST_GUILD_MEMBERS: typing.Final[int] = 8
 _INVALID_SESSION: typing.Final[int] = 9
 _HELLO: typing.Final[int] = 10
 _HEARTBEAT_ACK: typing.Final[int] = 11
+_REQUEST_CHANNEL_INFO: typing.Final[int] = 43
 # Special dispatches
 _READY: typing.Final[str] = sys.intern("READY")
 _RESUMED: typing.Final[str] = sys.intern("RESUMED")
@@ -725,6 +726,21 @@ class GatewayShardImpl(shard.GatewayShard):
         payload.put("nonce", nonce)
 
         await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
+
+    @typing_extensions.override
+    async def request_channel_info(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        fields: typing.Sequence[str | shard.ChannelInfoField],
+    ) -> None:
+        self._check_if_connected()
+
+        payload = data_binding.JSONObjectBuilder()
+        payload.put_snowflake("guild_id", guild)
+        payload.put("fields", [str(field) for field in fields])
+
+        await self._send_json({_OP: _REQUEST_CHANNEL_INFO, _D: payload})
 
     @typing_extensions.override
     async def start(self) -> None:

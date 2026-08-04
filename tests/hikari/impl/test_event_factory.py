@@ -1445,6 +1445,39 @@ class TestEventFactoryImpl:
         assert event.presences == {}
         assert event.nonce is None
 
+    def test_deserialize_channel_info_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "guild_id": "54123123",
+            "channels": [
+                {"id": "5513123", "status": "amongus", "voice_start_time": 1722945600},
+                {"id": "5513124", "status": None, "voice_start_time": None},
+            ],
+        }
+
+        event = event_factory.deserialize_channel_info_event(mock_shard, mock_payload)
+
+        assert isinstance(event, shard_events.ChannelInfoEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.guild_id == 54123123
+        assert event.channels == {
+            5513123: shard_events.ChannelInfo(
+                channel_id=5513123,
+                status="amongus",
+                voice_start_time=datetime.datetime(2024, 8, 6, 12, 0, tzinfo=datetime.timezone.utc),
+            ),
+            5513124: shard_events.ChannelInfo(channel_id=5513124, status=None, voice_start_time=None),
+        }
+
+    def test_deserialize_channel_info_event_without_optional_fields(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"guild_id": "54123123", "channels": [{"id": "5513123"}]}
+
+        event = event_factory.deserialize_channel_info_event(mock_shard, mock_payload)
+
+        assert event.channels == {
+            5513123: shard_events.ChannelInfo(channel_id=5513123, status=None, voice_start_time=None)
+        }
+
     ###############
     # USER EVENTS #
     ###############

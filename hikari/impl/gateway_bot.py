@@ -1325,6 +1325,17 @@ class GatewayBot(traits.GatewayBotAware):
             guild=guild, include_presences=include_presences, query=query, limit=limit, users=users, nonce=nonce
         )
 
+    @typing_extensions.override
+    async def request_channel_info(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        fields: typing.Sequence[str | gateway_shard.ChannelInfoField],
+    ) -> None:
+        self._check_if_alive()
+        shard = self._get_shard(guild)
+        await shard.request_channel_info(guild=guild, fields=fields)
+
     async def _start_one_shard(
         self,
         *,
