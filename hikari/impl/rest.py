@@ -592,7 +592,7 @@ class RESTClientImpl(rest_api.RESTClient):
         proxy_settings: config_impl.ProxySettings,
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
-        token: str | None | rest_api.TokenStrategy,
+        token: str | rest_api.TokenStrategy | None,
         token_type: applications.TokenType | str | None,
         rest_url: str | None,
     ) -> None:
@@ -786,7 +786,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if auth:
             headers[_AUTHORIZATION_HEADER] = auth
 
-        data: None | aiohttp.BytesPayload | aiohttp.FormData = None
+        data: aiohttp.BytesPayload | aiohttp.FormData | None = None
         if json is not None:
             if form_builder:
                 msg = "Can only provide one of 'json' or 'form_builder', not both"
