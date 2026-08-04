@@ -1380,7 +1380,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             )
 
         reaction_emoji_id: snowflakes.Snowflake | None = None
-        reaction_emoji_name: None | emoji_models.UnicodeEmoji | str = None
+        reaction_emoji_name: emoji_models.UnicodeEmoji | str | None = None
         if reaction_emoji_payload := payload.get("default_reaction_emoji"):
             if reaction_emoji_id := reaction_emoji_payload["emoji_id"]:
                 reaction_emoji_id = snowflakes.Snowflake(reaction_emoji_id)
@@ -1994,7 +1994,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_emoji_id = channel_payload["emoji_id"]
             emoji_id = snowflakes.Snowflake(raw_emoji_id) if raw_emoji_id else None
 
-            emoji_name: None | emoji_models.UnicodeEmoji | str
+            emoji_name: emoji_models.UnicodeEmoji | str | None
             if (emoji_name := channel_payload["emoji_name"]) and not emoji_id:
                 emoji_name = emoji_models.UnicodeEmoji(emoji_name)
 
