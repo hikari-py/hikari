@@ -478,6 +478,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 call = listener(interaction)
 
                 if inspect.isasyncgen(call):
+                    call = typing.cast("typing.AsyncGenerator[typing.Any, typing.Any]", call)
                     result = await call.__anext__()
                     task = asyncio.create_task(_consume_generator_listener(call))
 

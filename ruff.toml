@@ -33,7 +33,14 @@ ignore = [
     "F403", # Unable to detect undefined names when using `import *`
 ]
 "hikari/**/__init__.pyi" = [
-    "F403", # Unable to detect undefined names when using `import *`
+    "F403",   # Unable to detect undefined names when using `import *`
+    "CPY001", # Missing copyright notice (they are just type files)
+]
+"examples/**/*.py" = [
+    "CPY001", # Licensed under the public domain with file saying so
+]
+"**/*.pyi" = [
+    "CPY001", # Typehint files don't need a license
 ]
 "tests/**/*.py" = [
     "D",       # Docstrings missing
