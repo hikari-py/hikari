@@ -62,6 +62,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_manager as event_manager_
     from hikari.impl import config
 
+    # TODO: drop when removing backports.zstd
+    class _ZstdDecompressor(typing.Protocol):
+        def decompress(self, data: bytes, max_length: int = ...) -> bytes:  # noqa: D102
+            raise NotImplementedError
+
 if sys.version_info >= (3, 14):
     _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 else:
@@ -362,11 +367,14 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
         self._handle_other_message(message)  # type: ignore[arg-type]
 
 
+
+
 class _GatewayZstdStreamTransport(_GatewayTransport):
     __slots__ = ("_inflator",)
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
+        self._inflator: _ZstdDecompressor
 
         if sys.version_info >= (3, 14):
             from compression import zstd  # noqa: PLC0415
