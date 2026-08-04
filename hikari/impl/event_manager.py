@@ -188,7 +188,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
 
     @event_manager_base.filtered(shard_events.ChannelInfoEvent)
     def on_channel_info(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
-        """See https://docs.discord.com/developers/events/gateway-events#channel-info for more info."""
+        """See https://docs.discord.com/developers/events/gateway-events#channel-info."""
         self.dispatch(self._event_factory.deserialize_channel_info_event(shard, payload))
 
     @event_manager_base.filtered(
