@@ -2456,7 +2456,9 @@ class RESTClientImpl(rest_api.RESTClient):
         event_webhooks_status: undefined.UndefinedOr[
             applications.ApplicationEventWebhookStatus | int
         ] = undefined.UNDEFINED,
-        event_webhooks_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        event_webhooks_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationEventWebhookType]
+        ] = undefined.UNDEFINED,
     ) -> applications.Application:
         route = routes.PATCH_MY_APPLICATION.compile()
         body = data_binding.JSONObjectBuilder()
@@ -2465,10 +2467,10 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("role_connections_verification_url", role_connections_verification_url)
         body.put("flags", flags)
         body.put("interactions_endpoint_url", interactions_endpoint_url)
-        body.put("tags", tags, conversion=list)
+        body.put_array("tags", tags)
         body.put("event_webhooks_url", event_webhooks_url)
         body.put("event_webhooks_status", event_webhooks_status)
-        body.put("event_webhooks_types", event_webhooks_types, conversion=list)
+        body.put_array("event_webhooks_types", event_webhooks_types, conversion=str)
 
         if install_params is not undefined.UNDEFINED:
             body.put(

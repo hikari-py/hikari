@@ -26,6 +26,7 @@ __all__: typing.Sequence[str] = (
     "Application",
     "ApplicationContextType",
     "ApplicationEventWebhookStatus",
+    "ApplicationEventWebhookType",
     "ApplicationFlags",
     "ApplicationIntegrationConfiguration",
     "ApplicationIntegrationType",
@@ -120,6 +121,47 @@ class ApplicationEventWebhookStatus(int, enums.Enum):
 
     DISABLED_BY_DISCORD = 3
     """Webhook events are disabled by Discord, usually due to inactivity."""
+
+
+@typing.final
+class ApplicationEventWebhookType(str, enums.Enum):
+    """The type of an application event webhook."""
+
+    APPLICATION_AUTHORIZED = "APPLICATION_AUTHORIZED"
+    """Sent when an app was authorized by a user to a server or their account."""
+
+    APPLICATION_DEAUTHORIZED = "APPLICATION_DEAUTHORIZED"
+    """Sent when an app was deauthorized by a user."""
+
+    ENTITLEMENT_CREATE = "ENTITLEMENT_CREATE"
+    """Sent when an entitlement was created."""
+
+    ENTITLEMENT_UPDATE = "ENTITLEMENT_UPDATE"
+    """Sent when an entitlement was updated."""
+
+    ENTITLEMENT_DELETE = "ENTITLEMENT_DELETE"
+    """Sent when an entitlement was deleted."""
+
+    QUEST_USER_ENROLLMENT = "QUEST_USER_ENROLLMENT"
+    """Sent when a user was added to a Quest."""
+
+    LOBBY_MESSAGE_CREATE = "LOBBY_MESSAGE_CREATE"
+    """Sent when a message is created in a lobby."""
+
+    LOBBY_MESSAGE_UPDATE = "LOBBY_MESSAGE_UPDATE"
+    """Sent when a message is updated in a lobby."""
+
+    LOBBY_MESSAGE_DELETE = "LOBBY_MESSAGE_DELETE"
+    """Sent when a message is deleted from a lobby."""
+
+    GAME_DIRECT_MESSAGE_CREATE = "GAME_DIRECT_MESSAGE_CREATE"
+    """Sent when a direct message is created during an active Social SDK session."""
+
+    GAME_DIRECT_MESSAGE_UPDATE = "GAME_DIRECT_MESSAGE_UPDATE"
+    """Sent when a direct message is updated during an active Social SDK session."""
+
+    GAME_DIRECT_MESSAGE_DELETE = "GAME_DIRECT_MESSAGE_DELETE"
+    """Sent when a direct message is deleted during an active Social SDK session."""
 
 
 @typing.final
@@ -736,7 +778,9 @@ class Application(guilds.PartialApplication):
     event_webhooks_status: ApplicationEventWebhookStatus | int = attrs.field(eq=False, hash=False, repr=False)
     """The status of this application's event webhooks."""
 
-    event_webhooks_types: typing.Sequence[str] = attrs.field(eq=False, hash=False, repr=False)
+    event_webhooks_types: typing.Sequence[ApplicationEventWebhookType | str] = attrs.field(
+        eq=False, hash=False, repr=False
+    )
     """The webhook event types this application subscribes to."""
 
     def make_cover_image_url(

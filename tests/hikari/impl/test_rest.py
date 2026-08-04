@@ -4148,7 +4148,7 @@ class TestRESTClientImplAsync:
             tags=["shiny", "tags"],
             event_webhooks_url="https://example.com/events",
             event_webhooks_status=applications.ApplicationEventWebhookStatus.ENABLED,
-            event_webhooks_types=["APPLICATION_AUTHORIZED"],
+            event_webhooks_types=[applications.ApplicationEventWebhookType.APPLICATION_AUTHORIZED],
         )
 
         assert result is application

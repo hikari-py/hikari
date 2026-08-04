@@ -24,6 +24,8 @@ from hikari._about import __url__ as __url__
 from hikari._about import __version__ as __version__
 from hikari.applications import Application as Application
 from hikari.applications import ApplicationContextType as ApplicationContextType
+from hikari.applications import ApplicationEventWebhookStatus as ApplicationEventWebhookStatus
+from hikari.applications import ApplicationEventWebhookType as ApplicationEventWebhookType
 from hikari.applications import ApplicationFlags as ApplicationFlags
 from hikari.applications import ApplicationIntegrationType as ApplicationIntegrationType
 from hikari.applications import ApplicationRoleConnectionMetadataRecord as ApplicationRoleConnectionMetadataRecord

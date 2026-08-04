@@ -3144,7 +3144,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         event_webhooks_status: undefined.UndefinedOr[
             applications.ApplicationEventWebhookStatus | int
         ] = undefined.UNDEFINED,
-        event_webhooks_types: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        event_webhooks_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationEventWebhookType]
+        ] = undefined.UNDEFINED,
     ) -> applications.Application:
         """Edit the token's associated application.
 

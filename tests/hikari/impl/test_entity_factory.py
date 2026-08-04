@@ -1096,7 +1096,9 @@ class TestEntityFactoryImpl:
         assert application.cover_image_hash == "hashmebaby"
         assert application.event_webhooks_url == "https://eventme.com"
         assert application.event_webhooks_status == application_models.ApplicationEventWebhookStatus.ENABLED
-        assert application.event_webhooks_types == ["APPLICATION_AUTHORIZED"]
+        assert application.event_webhooks_types == [
+            application_models.ApplicationEventWebhookType.APPLICATION_AUTHORIZED
+        ]
         assert isinstance(application, application_models.Application)
 
     def test_deserialize_application_with_unset_fields(self, entity_factory_impl, mock_app, owner_payload):

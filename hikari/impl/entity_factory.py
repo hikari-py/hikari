@@ -760,7 +760,9 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             event_webhooks_status=application_models.ApplicationEventWebhookStatus(
                 payload.get("event_webhooks_status", application_models.ApplicationEventWebhookStatus.DISABLED)
             ),
-            event_webhooks_types=payload.get("event_webhooks_types") or [],
+            event_webhooks_types=[
+                application_models.ApplicationEventWebhookType(t) for t in payload.get("event_webhooks_types") or []
+            ],
         )
 
     @typing_extensions.override
