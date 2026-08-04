@@ -30,6 +30,11 @@ from tests.hikari import hikari_test_helpers
 
 
 class TestReactionAddEvent:
+    def test_burst_colours_property(self):
+        event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionAddEvent, burst_colors=[123, 456])()
+
+        assert event.burst_colours is event.burst_colors
+
     def test_is_for_emoji_when_custom_emoji_matches(self):
         event = hikari_test_helpers.mock_class_namespace(reaction_events.ReactionAddEvent, emoji_id=333333)()
 

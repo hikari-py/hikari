@@ -58,6 +58,7 @@ if typing.TYPE_CHECKING:
 
     from hikari import channels as channels_
     from hikari import colors as colors_
+    from hikari import colours
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
     from hikari import polls as polls_
@@ -372,6 +373,11 @@ class Reaction:
 
     burst_colors: typing.Sequence[colors_.Color] = attrs.field(eq=False, hash=False, repr=False)
     """The colours used for the super reaction animation, empty if this reaction has no super reactions."""
+
+    @property
+    def burst_colours(self) -> typing.Sequence[colours.Colour]:
+        """Alias for the `burst_colors` field."""
+        return self.burst_colors
 
     @typing_extensions.override
     def __str__(self) -> str:

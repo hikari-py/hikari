@@ -54,6 +54,7 @@ from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
     from hikari import colors
+    from hikari import colours
     from hikari import guilds
     from hikari import snowflakes
     from hikari import traits
@@ -137,6 +138,11 @@ class ReactionAddEvent(ReactionEvent, abc.ABC):
     @abc.abstractmethod
     def burst_colors(self) -> typing.Sequence[colors.Color]:
         """The colours used for the super reaction animation, empty if this is not a super reaction."""
+
+    @property
+    def burst_colours(self) -> typing.Sequence[colours.Colour]:
+        """Alias for the `burst_colors` property."""
+        return self.burst_colors
 
     def is_for_emoji(self, emoji: emojis.Emoji | str, /) -> bool:
         """Get whether the reaction event is for a specific emoji.
