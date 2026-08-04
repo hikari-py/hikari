@@ -248,3 +248,15 @@ class GatewayShard(abc.ABC):
         hikari.errors.ComponentStateConflictError
             When the shard is not connected so it cannot be interacted with.
         """
+
+    @abc.abstractmethod
+    async def request_soundboard_sounds(
+        self, guilds: typing.Sequence[snowflakes.SnowflakeishOr[guilds.PartialGuild]], /
+    ) -> None:
+        """Request for soundboard sounds.
+
+        Parameters
+        ----------
+        guilds
+            The guilds to request sounds for.
+        """
