@@ -81,21 +81,22 @@ def test_inherited_is_no_recursive_throw_event():
     assert not base_events.is_no_recursive_throw_event(DummyGuildDerivedEvent)
 
 
+
+@pytest.fixture(scope="session")  # we don't modify this so make it once.
+def error():
+    # Raise and catch to fill in the traceback attribute.
+    try:
+        raise RuntimeError("blah")
+    except RuntimeError as ex:
+        return ex
+
+@pytest.fixture
+def event(error):
+    return base_events.ExceptionEvent(
+        exception=error, failed_event=mock.Mock(base_events.Event), failed_callback=mock.AsyncMock()
+    )
+
 class TestExceptionEvent:
-    @pytest.fixture(scope="class")  # we don't modify this so make it once.
-    def error(self):
-        # Raise and catch to fill in the traceback attribute.
-        try:
-            raise RuntimeError("blah")
-        except RuntimeError as ex:
-            return ex
-
-    @pytest.fixture
-    def event(self, error):
-        return base_events.ExceptionEvent(
-            exception=error, failed_event=mock.Mock(base_events.Event), failed_callback=mock.AsyncMock()
-        )
-
     def test_app_property(self, event):
         app = mock.Mock()
         event.failed_event.app = app
