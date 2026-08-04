@@ -775,12 +775,10 @@ class Application(guilds.PartialApplication):
     event_webhooks_url: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The URL this application receives webhook events on, if set."""
 
-    event_webhooks_status: ApplicationEventWebhookStatus | int = attrs.field(eq=False, hash=False, repr=False)
+    event_webhooks_status: ApplicationEventWebhookStatus = attrs.field(eq=False, hash=False, repr=False)
     """The status of this application's event webhooks."""
 
-    event_webhooks_types: typing.Sequence[ApplicationEventWebhookType | str] = attrs.field(
-        eq=False, hash=False, repr=False
-    )
+    event_webhooks_types: typing.Sequence[ApplicationEventWebhookType] = attrs.field(eq=False, hash=False, repr=False)
     """The webhook event types this application subscribes to."""
 
     def make_cover_image_url(

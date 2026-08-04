@@ -3135,15 +3135,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         integration_types_config: undefined.UndefinedOr[
             typing.Mapping[applications.ApplicationIntegrationType, applications.ApplicationIntegrationConfiguration]
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedOr[applications.ApplicationFlags | int] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[applications.ApplicationFlags] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         cover_image: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         interactions_endpoint_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tags: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
         event_webhooks_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        event_webhooks_status: undefined.UndefinedOr[
-            applications.ApplicationEventWebhookStatus | int
-        ] = undefined.UNDEFINED,
+        event_webhooks_status: undefined.UndefinedOr[applications.ApplicationEventWebhookStatus] = undefined.UNDEFINED,
         event_webhooks_types: undefined.UndefinedOr[
             typing.Sequence[applications.ApplicationEventWebhookType]
         ] = undefined.UNDEFINED,
