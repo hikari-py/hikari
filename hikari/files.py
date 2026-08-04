@@ -1021,7 +1021,7 @@ class IteratorReader(AsyncReader):
         elif inspect.isgenerator(self.data):
             try:
                 while True:
-                    yield self._assert_bytes(self.data.send(None))
+                    yield self._assert_bytes(next(self.data))
             except StopIteration:
                 pass
 
