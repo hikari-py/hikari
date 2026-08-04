@@ -32,7 +32,7 @@ name = "hikari"
 description = "A sane Discord API for Python 3 built on asyncio and good intentions"
 requires-python = ">=3.10.0,<3.15"
 dependencies = [
-    "aiohttp~=3.13",
+    "aiohttp~=3.14",
     "attrs~=25.4",
     "colorlog~=6.10",
     "multidict~=6.7",
