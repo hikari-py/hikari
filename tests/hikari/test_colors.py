@@ -272,6 +272,12 @@ class TestColor:
         b = c.to_bytes(10, "little")
         assert b == b"\xff\xaa\xff\x00\x00\x00\x00\x00\x00\x00"
 
+    def test_Color_to_bytes_with_three_bytes(self):
+        c = colors.Color(0xFF0000)
+        b = c.to_bytes(3, "big")
+        assert b == b"\xff\x00\x00"
+        assert colors.Color.from_bytes(b, "big") == c
+
     @pytest.mark.parametrize(
         ("input", "expected_result"),
         [

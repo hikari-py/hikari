@@ -527,7 +527,7 @@ class Color(int):
 
     @typing_extensions.override
     def to_bytes(
-        self, length: typing.SupportsIndex, byteorder: typing.Literal["little", "big"], *, signed: bool = True
+        self, length: typing.SupportsIndex, byteorder: typing.Literal["little", "big"], *, signed: bool = False
     ) -> bytes:
         """Convert the color code to bytes.
 
