@@ -1965,6 +1965,7 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
+        reaction_type: undefined.UndefinedOr[messages_.ReactionType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users_.User]:
         return special_endpoints_impl.ReactorIterator(
             entity_factory=self._entity_factory,
@@ -1972,6 +1973,7 @@ class RESTClientImpl(rest_api.RESTClient):
             channel=channel,
             message=message,
             emoji=_transform_emoji_to_url_format(emoji, emoji_id),
+            reaction_type=reaction_type,
         )
 
     @typing_extensions.override
