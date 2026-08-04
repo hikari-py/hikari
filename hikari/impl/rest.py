@@ -476,6 +476,14 @@ def _stringify_http_message(headers: data_binding.Headers, body: bytes | None) -
     return string
 
 
+def _serialize_color_gradient(gradient: colors.ColorGradient, /) -> data_binding.JSONObject:
+    return {
+        "primary_color": int(gradient.primary_color),
+        "secondary_color": int(gradient.secondary_color) if gradient.secondary_color is not None else None,
+        "tertiary_color": int(gradient.tertiary_color) if gradient.tertiary_color is not None else None,
+    }
+
+
 def _transform_emoji_to_url_format(
     emoji: str | emojis.Emoji, emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]], /
 ) -> str:
@@ -3988,8 +3996,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -4008,8 +4016,11 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color, conversion=colors.Color.of)
-        body.put("color", colour, conversion=colors.Color.of)
+        merged_color = colour if color is undefined.UNDEFINED else color
+        if isinstance(merged_color, colors.ColorGradient):
+            body.put("colors", merged_color, conversion=_serialize_color_gradient)
+        else:
+            body.put("color", merged_color, conversion=colors.Color.of)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
@@ -4042,8 +4053,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -4063,8 +4074,11 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color, conversion=colors.Color.of)
-        body.put("color", colour, conversion=colors.Color.of)
+        merged_color = colour if color is undefined.UNDEFINED else color
+        if isinstance(merged_color, colors.ColorGradient):
+            body.put("colors", merged_color, conversion=_serialize_color_gradient)
+        else:
+            body.put("color", merged_color, conversion=colors.Color.of)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)

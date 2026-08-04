@@ -75,8 +75,8 @@ from hikari.internal import typing_extensions
 if typing.TYPE_CHECKING:
     import datetime
 
-    from hikari import colors
-    from hikari import colours
+    from hikari import colors as colors_
+    from hikari import colours as colours_
     from hikari import emojis as emojis_
     from hikari import files
     from hikari import locales
@@ -212,6 +212,9 @@ class GuildFeature(str, enums.Enum):
 
     RAID_ALERTS_DISABLED = "RAID_ALERTS_DISABLED"
     """Guild has disabled alerts for join raids in the configured safety alerts channel."""
+
+    ENHANCED_ROLE_COLORS = "ENHANCED_ROLE_COLORS"
+    """Guild is able to set gradient and holographic role colors."""
 
 
 @typing.final
@@ -557,7 +560,7 @@ class Member(users.User):
 
     @property
     @typing_extensions.override
-    def accent_color(self) -> colors.Color | None:
+    def accent_color(self) -> colors_.Color | None:
         return self.user.accent_color
 
     @property
@@ -1169,10 +1172,17 @@ class PartialRole(snowflakes.Unique):
 class Role(PartialRole):
     """Represents a guild bound role object."""
 
-    color: colors.Color = attrs.field(eq=False, hash=False, repr=True)
+    color: colors_.Color = attrs.field(eq=False, hash=False, repr=True)
     """The colour of this role.
 
     This will be applied to a member's name in chat if it's their top coloured role.
+    """
+
+    colors: colors_.ColorGradient = attrs.field(eq=False, hash=False, repr=True)
+    """The colors of this role.
+
+    Unlike the [`color`][hikari.guilds.Role.color] field, this can also hold
+    the role's gradient or holographic colors if set.
     """
 
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -1237,9 +1247,14 @@ class Role(PartialRole):
     """Whether this role is a linked role in the guild."""
 
     @property
-    def colour(self) -> colours.Colour:
+    def colour(self) -> colours_.Colour:
         """Alias for the `color` field."""
         return self.color
+
+    @property
+    def colours(self) -> colours_.ColourGradient:
+        """Alias for the `colors` field."""
+        return self.colors
 
     @property
     @typing_extensions.override

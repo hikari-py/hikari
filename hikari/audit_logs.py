@@ -171,6 +171,9 @@ class AuditLogChangeKey(str, enums.Enum):
     COLOR = "color"
     """Color."""
 
+    COLORS = "colors"
+    """Colors, as a role colors object."""
+
     COMMAND_ID = "command_id"
     """Command ID."""
 
@@ -273,6 +276,9 @@ class AuditLogChangeKey(str, enums.Enum):
 
     COLOUR = COLOR
     """Alias for [`hikari.audit_logs.AuditLogChangeKey.COLOR`][]."""
+
+    COLOURS = COLORS
+    """Alias for [`hikari.audit_logs.AuditLogChangeKey.COLORS`][]."""
 
 
 @attrs_extensions.with_copy

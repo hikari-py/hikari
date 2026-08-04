@@ -6643,8 +6643,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -6666,7 +6666,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             default behaviour on Discord where some random permissions will
             be set by default.
         color
-            If provided, the role's color.
+            If provided, the role's color. Passing a
+            [`hikari.colors.ColorGradient`][] can be used to give the role a
+            gradient or holographic color style instead of a solid color.
+
+            Gradient and holographic styles can only be used if the guild has
+            the [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+
+            !!! note
+                When the gradient's tertiary color is provided, the API
+                enforces the role color to be the holographic style, which
+                can be built with [`hikari.colors.ColorGradient.holographic`][].
         colour
             An alias for `color`.
         hoist
@@ -6749,8 +6759,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -6772,7 +6782,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permissions
             If provided, the new permissions for the role.
         color
-            If provided, the new color for the role.
+            If provided, the new color for the role. Passing a
+            [`hikari.colors.ColorGradient`][] can be used to give the role a
+            gradient or holographic color style instead of a solid color, or
+            to remove such a style again by passing a gradient with only a
+            primary color.
+
+            Gradient and holographic styles can only be used if the guild has
+            the [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+
+            !!! note
+                When the gradient's tertiary color is provided, the API
+                enforces the role color to be the holographic style, which
+                can be built with [`hikari.colors.ColorGradient.holographic`][].
         colour
             An alias for `color`.
         hoist

@@ -96,6 +96,12 @@ def _deserialize_seconds_timedelta(seconds: str | int) -> datetime.timedelta:
     return datetime.timedelta(seconds=int(seconds))
 
 
+def _deserialize_color_gradient(payload: data_binding.JSONObject) -> color_models.ColorGradient:
+    return color_models.ColorGradient.of(
+        payload["primary_color"], payload.get("secondary_color"), payload.get("tertiary_color")
+    )
+
+
 def _deserialize_day_timedelta(days: str | int) -> datetime.timedelta:
     return datetime.timedelta(days=int(days))
 
@@ -490,6 +496,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.APPLICATION_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PERMISSIONS: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.COLOR: color_models.Color,
+            audit_log_models.AuditLogChangeKey.COLORS: _deserialize_color_gradient,
             audit_log_models.AuditLogChangeKey.COMMAND_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.ALLOW: _with_int_cast(permission_models.Permissions),
             audit_log_models.AuditLogChangeKey.DENY: _with_int_cast(permission_models.Permissions),
@@ -2159,12 +2166,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_emoji := payload.get("unicode_emoji")) is not None:
             emoji = emoji_models.UnicodeEmoji(raw_emoji)
 
+        if colors_payload := payload.get("colors"):
+            role_colors = _deserialize_color_gradient(colors_payload)
+        else:
+            role_colors = color_models.ColorGradient.of(payload["color"])
+
         return guild_models.Role(
             app=self._app,
             id=snowflakes.Snowflake(payload["id"]),
             guild_id=guild_id,
             name=payload["name"],
             color=color_models.Color(payload["color"]),
+            colors=role_colors,
             is_hoisted=payload["hoist"],
             icon_hash=payload.get("icon"),
             unicode_emoji=emoji,

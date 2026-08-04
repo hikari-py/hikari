@@ -5906,6 +5906,49 @@ class TestRESTClientImplAsync:
                 StubModel(123), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
 
+    async def test_create_role_with_color_gradient(self, rest_client):
+        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_json = {
+            "name": "admin",
+            "permissions": 0,
+            "colors": {"primary_color": 123, "secondary_color": 456, "tertiary_color": None},
+            "mentionable": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        returned = await rest_client.create_role(
+            StubModel(123),
+            name="admin",
+            color=colors.ColorGradient.of(123, 456),
+            mentionable=False,
+            reason="roles are cool",
+        )
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
+
+    async def test_create_role_with_colour_gradient(self, rest_client):
+        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_json = {
+            "name": "admin",
+            "permissions": 0,
+            "colors": {"primary_color": 11127295, "secondary_color": 16759788, "tertiary_color": 16761760},
+            "mentionable": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        returned = await rest_client.create_role(
+            StubModel(123),
+            name="admin",
+            colour=colors.ColorGradient.of(11127295, 16759788, 16761760),
+            mentionable=False,
+            reason="roles are cool",
+        )
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+
     async def test_create_role_when_icon_unicode_emoji_specified(self, rest_client):
         with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
             await rest_client.create_role(StubModel(123), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}")
@@ -5954,6 +5997,28 @@ class TestRESTClientImplAsync:
             await rest_client.edit_role(
                 StubModel(123), StubModel(456), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
+
+    async def test_edit_role_with_color_gradient(self, rest_client):
+        expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
+        expected_json = {"colors": {"primary_color": 123, "secondary_color": 456, "tertiary_color": None}}
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        returned = await rest_client.edit_role(
+            StubModel(123), StubModel(789), color=colors.ColorGradient.of(123, 456), reason="roles are cool"
+        )
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
+
+    async def test_edit_role_when_removing_gradient_colors(self, rest_client):
+        expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
+        expected_json = {"colors": {"primary_color": 123, "secondary_color": None, "tertiary_color": None}}
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        await rest_client.edit_role(StubModel(123), StubModel(789), colour=colors.ColorGradient.of(123))
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
     async def test_edit_role_when_icon_and_unicode_emoji_specified(self, rest_client):
         with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
