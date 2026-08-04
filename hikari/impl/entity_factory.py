@@ -756,6 +756,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             approximate_guild_count=payload["approximate_guild_count"],
             approximate_user_install_count=payload["approximate_user_install_count"],
             integration_types_config=integration_types_config,
+            event_webhooks_url=payload.get("event_webhooks_url"),
+            event_webhooks_status=application_models.ApplicationEventWebhookStatus(
+                payload.get("event_webhooks_status", application_models.ApplicationEventWebhookStatus.DISABLED)
+            ),
+            event_webhooks_types=[
+                application_models.ApplicationEventWebhookType(t) for t in payload.get("event_webhooks_types") or []
+            ],
         )
 
     @typing_extensions.override
@@ -1380,7 +1387,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             )
 
         reaction_emoji_id: snowflakes.Snowflake | None = None
-        reaction_emoji_name: None | emoji_models.UnicodeEmoji | str = None
+        reaction_emoji_name: emoji_models.UnicodeEmoji | str | None = None
         if reaction_emoji_payload := payload.get("default_reaction_emoji"):
             if reaction_emoji_id := reaction_emoji_payload["emoji_id"]:
                 reaction_emoji_id = snowflakes.Snowflake(reaction_emoji_id)
@@ -1994,7 +2001,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_emoji_id = channel_payload["emoji_id"]
             emoji_id = snowflakes.Snowflake(raw_emoji_id) if raw_emoji_id else None
 
-            emoji_name: None | emoji_models.UnicodeEmoji | str
+            emoji_name: emoji_models.UnicodeEmoji | str | None
             if (emoji_name := channel_payload["emoji_name"]) and not emoji_id:
                 emoji_name = emoji_models.UnicodeEmoji(emoji_name)
 
@@ -3590,8 +3597,22 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     def _deserialize_message_reaction(self, payload: data_binding.JSONObject) -> message_models.Reaction:
+        count = int(payload["count"])
+
+        if count_details_payload := payload.get("count_details"):
+            count_details = message_models.ReactionCountDetails(
+                burst=int(count_details_payload["burst"]), normal=int(count_details_payload["normal"])
+            )
+        else:
+            count_details = message_models.ReactionCountDetails(burst=0, normal=count)
+
         return message_models.Reaction(
-            count=int(payload["count"]), emoji=self.deserialize_emoji(payload["emoji"]), is_me=payload["me"]
+            count=count,
+            count_details=count_details,
+            emoji=self.deserialize_emoji(payload["emoji"]),
+            is_me=payload["me"],
+            is_me_burst=payload.get("me_burst", False),
+            burst_colors=[color_models.Color.from_hex_code(color) for color in payload.get("burst_colors", ())],
         )
 
     def _deserialize_message_reference(self, payload: data_binding.JSONObject) -> message_models.MessageReference:
@@ -4562,6 +4583,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
             user_id=snowflakes.Snowflake(payload["user_id"]) if "user_id" in payload else None,
             is_deleted=payload["deleted"],
+            is_consumed=payload.get("consumed", False),
             starts_at=starts_at,
             ends_at=time.iso8601_datetime_string_to_datetime(payload["ends_at"]) if payload.get("ends_at") else None,
             subscription_id=snowflakes.Snowflake(payload["subscription_id"]) if "subscription_id" in payload else None,

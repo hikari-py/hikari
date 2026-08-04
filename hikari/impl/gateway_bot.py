@@ -324,7 +324,7 @@ class GatewayBot(traits.GatewayBotAware):
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         auto_chunk_members: bool = True,
-        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
+        logs: str | int | dict[str, typing.Any] | os.PathLike[str] | None = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: config_impl.ProxySettings | None = None,

@@ -1020,6 +1020,9 @@ class TestEntityFactoryImpl:
                 "0": {"oauth2_install_params": {"scopes": ["applications.commands", "bot"], "permissions": "0"}},
                 "1": {},
             },
+            "event_webhooks_url": "https://eventme.com",
+            "event_webhooks_status": 2,
+            "event_webhooks_types": ["APPLICATION_AUTHORIZED"],
         }
 
     def test_deserialize_application(
@@ -1091,6 +1094,11 @@ class TestEntityFactoryImpl:
         assert user_integration_config.oauth2_install_parameters is None
 
         assert application.cover_image_hash == "hashmebaby"
+        assert application.event_webhooks_url == "https://eventme.com"
+        assert application.event_webhooks_status == application_models.ApplicationEventWebhookStatus.ENABLED
+        assert application.event_webhooks_types == [
+            application_models.ApplicationEventWebhookType.APPLICATION_AUTHORIZED
+        ]
         assert isinstance(application, application_models.Application)
 
     def test_deserialize_application_with_unset_fields(self, entity_factory_impl, mock_app, owner_payload):
@@ -1116,6 +1124,9 @@ class TestEntityFactoryImpl:
         assert application.privacy_policy_url is None
         assert application.terms_of_service_url is None
         assert application.role_connections_verification_url is None
+        assert application.event_webhooks_url is None
+        assert application.event_webhooks_status is application_models.ApplicationEventWebhookStatus.DISABLED
+        assert application.event_webhooks_types == []
 
     def test_deserialize_application_with_null_fields(self, entity_factory_impl, mock_app, owner_payload):
         application = entity_factory_impl.deserialize_application(
@@ -1132,6 +1143,7 @@ class TestEntityFactoryImpl:
                 "flags": 0,
                 "approximate_guild_count": 10000,
                 "approximate_user_install_count": 10001,
+                "event_webhooks_url": None,
             }
         )
 
@@ -1145,6 +1157,7 @@ class TestEntityFactoryImpl:
         assert application.team is None
         assert application.install_parameters is None
         assert application.tags == []
+        assert application.event_webhooks_url is None
 
     @pytest.fixture
     def invite_application_payload(self):
@@ -6453,7 +6466,16 @@ class TestEntityFactoryImpl:
             "attachments": [attachment_payload],
             "embeds": [embed_payload],
             "poll": poll_payload,
-            "reactions": [{"emoji": custom_emoji_payload, "count": 100, "me": True}],
+            "reactions": [
+                {
+                    "emoji": custom_emoji_payload,
+                    "count": 100,
+                    "count_details": {"burst": 25, "normal": 75},
+                    "me": True,
+                    "me_burst": False,
+                    "burst_colors": ["#1E9AE0"],
+                }
+            ],
             "pinned": True,
             "webhook_id": "1234",
             "type": 0,
@@ -6661,7 +6683,10 @@ class TestEntityFactoryImpl:
         # Reaction
         reaction = partial_message.reactions[0]
         assert reaction.count == 100
+        assert reaction.count_details == message_models.ReactionCountDetails(burst=25, normal=75)
         assert reaction.is_me is True
+        assert reaction.is_me_burst is False
+        assert reaction.burst_colors == [color_models.Color(0x1E9AE0)]
         expected_emoji = entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert reaction.emoji == expected_emoji
         assert isinstance(reaction, message_models.Reaction)
@@ -7004,7 +7029,10 @@ class TestEntityFactoryImpl:
         # Reaction
         reaction = message.reactions[0]
         assert reaction.count == 100
+        assert reaction.count_details == message_models.ReactionCountDetails(burst=25, normal=75)
         assert reaction.is_me is True
+        assert reaction.is_me_burst is False
+        assert reaction.burst_colors == [color_models.Color(0x1E9AE0)]
         expected_emoji = entity_factory_impl.deserialize_emoji(custom_emoji_payload)
         assert reaction.emoji == expected_emoji
         assert isinstance(reaction, message_models.Reaction)
@@ -7087,10 +7115,19 @@ class TestEntityFactoryImpl:
         del message_payload["mention_channels"]
         del message_payload["thread"]
         del message_payload["poll"]
+        del message_payload["reactions"][0]["count_details"]
+        del message_payload["reactions"][0]["me_burst"]
+        del message_payload["reactions"][0]["burst_colors"]
 
         message = entity_factory_impl.deserialize_message(message_payload)
 
         assert message.channel_mentions == {}
+
+        # Reaction
+        reaction = message.reactions[0]
+        assert reaction.count_details == message_models.ReactionCountDetails(burst=0, normal=100)
+        assert reaction.is_me_burst is False
+        assert reaction.burst_colors == []
 
         # Activity
         assert message.activity.party_id is None
@@ -8261,6 +8298,7 @@ class TestEntityFactoryImpl:
             "application_id": "123123123123123",
             "type": 8,
             "deleted": False,
+            "consumed": True,
             "starts_at": "2022-09-14T17:00:18.704163+00:00",
             "ends_at": "2022-10-14T17:00:18.704163+00:00",
             "guild_id": "1015034326372454400",
@@ -8302,6 +8340,7 @@ class TestEntityFactoryImpl:
         assert entitlement.application_id == 123123123123123
         assert entitlement.type is monetization_models.EntitlementType.APPLICATION_SUBSCRIPTION
         assert entitlement.is_deleted is False
+        assert entitlement.is_consumed is True
         assert entitlement.starts_at == datetime.datetime(2022, 9, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
         assert entitlement.ends_at == datetime.datetime(2022, 10, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
         assert entitlement.guild_id == 1015034326372454400
@@ -8317,6 +8356,7 @@ class TestEntityFactoryImpl:
         assert entitlement.application_id == 123123123123123
         assert entitlement.type is monetization_models.EntitlementType.APPLICATION_SUBSCRIPTION
         assert entitlement.is_deleted is False
+        assert entitlement.is_consumed is False
         assert entitlement.starts_at is None
         assert entitlement.ends_at is None
         assert entitlement.guild_id == 1015034326372454400

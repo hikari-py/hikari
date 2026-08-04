@@ -1914,6 +1914,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
+        reaction_type: undefined.UndefinedOr[messages_.ReactionType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users_.User]:
         """Fetch reactions for an emoji from a message.
 
@@ -1927,22 +1928,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         channel
-            The channel where the message to delete all reactions from is.
-            This may be the object or the ID of an existing channel.
+            The channel where the message is. This may be the object or
+            the ID of an existing channel.
         message
-            The message to delete all reaction from. This may be the
+            The message to fetch the reacting users from. This may be the
             object or the ID of an existing message.
         emoji
-            Object or name of the emoji to get the reactions for.
+            Object or name of the emoji to get the reacting users for.
         emoji_id
-            ID of the custom emoji to get the reactions for.
+            ID of the custom emoji to get the reacting users for.
             This should only be provided when a custom emoji's name is passed
             for `emoji`.
+        reaction_type
+            If provided, the type of reaction to fetch the users for.
+            If not provided, this defaults to normal reactions.
 
         Returns
         -------
         hikari.iterators.LazyIterator[hikari.users.User]
-            An iterator to fetch the users.
+            An iterator to fetch the users which reacted with the emoji.
 
         Raises
         ------
@@ -3115,6 +3119,95 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_application(
+        self,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        custom_install_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        role_connections_verification_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        install_params: undefined.UndefinedOr[applications.ApplicationInstallParameters] = undefined.UNDEFINED,
+        integration_types_config: undefined.UndefinedOr[
+            typing.Mapping[applications.ApplicationIntegrationType, applications.ApplicationIntegrationConfiguration]
+        ] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[applications.ApplicationFlags] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        cover_image: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        interactions_endpoint_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tags: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        event_webhooks_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_webhooks_status: undefined.UndefinedOr[applications.ApplicationEventWebhookStatus] = undefined.UNDEFINED,
+        event_webhooks_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationEventWebhookType]
+        ] = undefined.UNDEFINED,
+    ) -> applications.Application:
+        """Edit the token's associated application.
+
+        !!! warning
+            This endpoint can only be used with a Bot token. Using this with a
+            Bearer token will result in a [`hikari.errors.UnauthorizedError`][].
+
+        Parameters
+        ----------
+        description
+            If provided, the new description of the application.
+        custom_install_url
+            If provided, the new default custom authorization URL of the application.
+        role_connections_verification_url
+            If provided, the new role connection verification URL of the application.
+        install_params
+            If provided, the new settings of the application's default in-app
+            authorization link.
+        integration_types_config
+            If provided, the new default scopes and permissions for each
+            installation context the application supports.
+        flags
+            If provided, the new public flags of the application.
+            Only the limited intent flags ([`hikari.applications.ApplicationFlags.GUILD_PRESENCES_INTENT`][],
+            [`hikari.applications.ApplicationFlags.GUILD_MEMBERS_INTENT`][] and
+            [`hikari.applications.ApplicationFlags.MESSAGE_CONTENT_INTENT_LIMITED`][])
+            can be updated through the API.
+        icon
+            If provided, the new icon of the application. If [`None`][], the
+            icon will be removed.
+        cover_image
+            If provided, the new default rich presence invite cover image of
+            the application. If [`None`][], the cover image will be removed.
+        interactions_endpoint_url
+            If provided, the new URL the application receives interactions on.
+            Discord validates this URL before applying it by sending a `PING`
+            interaction to it, so it must be reachable and respond correctly.
+        tags
+            If provided, the new tags describing the content and functionality
+            of the application. A maximum of 5 tags of up to 20 characters each
+            can be set.
+        event_webhooks_url
+            If provided, the new URL the application receives webhook events on.
+        event_webhooks_status
+            If provided, the new status of the application's event webhooks:
+            [`hikari.applications.ApplicationEventWebhookStatus.ENABLED`][] to enable them or
+            [`hikari.applications.ApplicationEventWebhookStatus.DISABLED`][] to disable them.
+        event_webhooks_types
+            If provided, the new webhook event types the application subscribes to.
+
+        Returns
+        -------
+        hikari.applications.Application
+            The updated application.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -9098,10 +9191,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        skus: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[monetization.SKU]] = undefined.UNDEFINED,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exclude_deleted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Sequence[monetization.Entitlement]:
         """Fetch all entitlements for a given application, active and expired.
 
@@ -9113,6 +9208,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The user to look up entitlements for.
         guild
             The guild to look up entitlements for.
+        skus
+            The SKUs to check entitlements for.
         before
             Retrieve entitlements before this time or ID.
         after
@@ -9120,7 +9217,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         limit
             Number of entitlements to return, 1-100, default 100.
         exclude_ended
-            Whether or not ended entitlements should be omitted.
+            Whether or not ended entitlements should be omitted. Defaults to
+            [`False`][].
+        exclude_deleted
+            Whether or not deleted entitlements should be omitted. Defaults to
+            [`True`][].
 
         Returns
         -------
@@ -9135,6 +9236,69 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or user was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> monetization.Entitlement:
+        """Fetch an entitlement for a given application.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the entitlement for.
+        entitlement
+            The entitlement to fetch.
+
+        Returns
+        -------
+        hikari.monetization.Entitlement
+            The requested entitlement.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def consume_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> None:
+        """Mark a one-time purchase consumable entitlement as consumed.
+
+        Parameters
+        ----------
+        application
+            The application the entitlement belongs to.
+        entitlement
+            The entitlement to consume.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the entitlement is not consumable.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
