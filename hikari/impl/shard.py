@@ -64,7 +64,7 @@ if typing.TYPE_CHECKING:
 
     # TODO: drop when removing backports.zstd
     class _ZstdDecompressor(typing.Protocol):
-        def decompress(self, data: bytes, max_length: int = ...) -> bytes:  # noqa: D102
+        def decompress(self, data: bytes, max_length: int = ...) -> bytes:
             raise NotImplementedError
 
 if sys.version_info >= (3, 14):
