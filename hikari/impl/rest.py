@@ -5069,17 +5069,22 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        skus: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[monetization.SKU]] = undefined.UNDEFINED,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exclude_deleted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Sequence[monetization.Entitlement]:
         query = data_binding.StringMapBuilder()
 
         query.put("user_id", user)
         query.put("guild_id", guild)
+        if skus is not undefined.UNDEFINED:
+            query.put("sku_ids", ",".join(str(int(sku)) for sku in skus))
         query.put("limit", limit)
         query.put("exclude_ended", exclude_ended)
+        query.put("exclude_deleted", exclude_deleted)
         query.put("before", before)
         query.put("after", after)
 
@@ -5088,6 +5093,27 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
 
         return [self._entity_factory.deserialize_entitlement(payload) for payload in response]
+
+    @typing_extensions.override
+    async def fetch_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> monetization.Entitlement:
+        route = routes.GET_APPLICATION_ENTITLEMENT.compile(application=application, entitlement=entitlement)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+
+        return self._entity_factory.deserialize_entitlement(response)
+
+    @typing_extensions.override
+    async def consume_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> None:
+        route = routes.POST_APPLICATION_ENTITLEMENT_CONSUME.compile(application=application, entitlement=entitlement)
+        await self._request(route)
 
     @typing_extensions.override
     async def create_test_entitlement(

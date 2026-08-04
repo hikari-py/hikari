@@ -7289,6 +7289,72 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route)
 
+    async def test_fetch_entitlements(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=123)
+        expected_query = {
+            "user_id": "456",
+            "guild_id": "789",
+            "sku_ids": "135,246",
+            "limit": "42",
+            "exclude_ended": "true",
+            "exclude_deleted": "false",
+            "before": "912",
+            "after": "911",
+        }
+        mock_payload_1 = {"id": "696969696969696"}
+        mock_payload_2 = {"id": "420420420420420"}
+        rest_client._request = mock.AsyncMock(return_value=[mock_payload_1, mock_payload_2])
+
+        result = await rest_client.fetch_entitlements(
+            StubModel(123),
+            user=StubModel(456),
+            guild=StubModel(789),
+            skus=[StubModel(135), StubModel(246)],
+            before=912,
+            after=911,
+            limit=42,
+            exclude_ended=True,
+            exclude_deleted=False,
+        )
+
+        assert result == [
+            rest_client._entity_factory.deserialize_entitlement.return_value,
+            rest_client._entity_factory.deserialize_entitlement.return_value,
+        ]
+        rest_client._request.assert_awaited_once_with(expected_route, query=expected_query)
+        rest_client._entity_factory.deserialize_entitlement.assert_has_calls(
+            [mock.call(mock_payload_1), mock.call(mock_payload_2)]
+        )
+
+    async def test_fetch_entitlements_without_optional_params(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=123)
+        rest_client._request = mock.AsyncMock(return_value=[])
+
+        result = await rest_client.fetch_entitlements(StubModel(123))
+
+        assert result == []
+        rest_client._request.assert_awaited_once_with(expected_route, query={})
+        rest_client._entity_factory.deserialize_entitlement.assert_not_called()
+
+    async def test_fetch_entitlement(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ENTITLEMENT.compile(application=123, entitlement=456)
+        mock_payload = {"id": "456"}
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_entitlement(StubModel(123), StubModel(456))
+
+        assert result is rest_client._entity_factory.deserialize_entitlement.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_entitlement.assert_called_once_with(mock_payload)
+
+    async def test_consume_entitlement(self, rest_client):
+        expected_route = routes.POST_APPLICATION_ENTITLEMENT_CONSUME.compile(application=123, entitlement=456)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.consume_entitlement(StubModel(123), StubModel(456))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
     async def test_fetch_stage_instance(self, rest_client):
         expected_route = routes.GET_STAGE_INSTANCE.compile(channel=123)
         mock_payload = {
