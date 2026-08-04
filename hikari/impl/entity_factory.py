@@ -2170,7 +2170,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=guild_id,
             name=payload["name"],
             color=color_models.Color(payload["color"]),
-            role_colors=role_colors,
+            colors=role_colors,
             is_hoisted=payload["hoist"],
             icon_hash=payload.get("icon"),
             unicode_emoji=emoji,
