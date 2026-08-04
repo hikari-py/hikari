@@ -2467,6 +2467,15 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
         return [self._entity_factory.deserialize_application_connection_metadata_record(r) for r in response]
 
+    @typing_extensions.override
+    async def fetch_activity_instance(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], instance_id: str
+    ) -> applications.ActivityInstance:
+        route = routes.GET_APPLICATION_ACTIVITY_INSTANCE.compile(application=application, instance=instance_id)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_activity_instance(response)
+
     @staticmethod
     def _gen_oauth2_token(client: snowflakes.SnowflakeishOr[guilds.PartialApplication], client_secret: str) -> str:
         token = base64.b64encode(f"{int(client)}:{client_secret}".encode()).decode("utf-8")
