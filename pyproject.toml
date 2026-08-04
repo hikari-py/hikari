@@ -109,14 +109,14 @@ pyright = ["pyright==1.1.409", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==9.0.3",
-    "pytest-asyncio==1.3.0",
+    "pytest-asyncio==1.4.0",
     "pytest-cov==7.1.0",
     "pytest-randomly==4.1.0",
     "async-timeout==5.0.1",
     { include-group = "coverage" },
 ]
 release = ["twine==6.2.0"]
-ruff = ["ruff==0.15.12"]
+ruff = ["ruff==0.16.1"]
 slotscheck = ["slotscheck==0.19.1"]
 towncrier = ["towncrier==25.8.0"]
 types = [

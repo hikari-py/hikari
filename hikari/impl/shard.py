@@ -355,11 +355,11 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
                     buff.extend(message.data)
                     continue
 
-                self._handle_other_message(message) # type: ignore[arg-type]
+                self._handle_other_message(message)  # type: ignore[arg-type]
 
             return self._inflator.decompress(buff)
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayZstdStreamTransport(_GatewayTransport):
@@ -387,7 +387,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return self._inflator.decompress(message.data)
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayZlibMessageTransport(_GatewayTransport):
@@ -404,7 +404,7 @@ class _GatewayZlibMessageTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return message.data
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayBasicTransport(_GatewayTransport):
@@ -418,7 +418,7 @@ class _GatewayBasicTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return message.data
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 def _serialize_datetime(dt: datetime.datetime | None) -> int | None:

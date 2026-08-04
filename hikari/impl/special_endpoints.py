@@ -127,7 +127,7 @@ if typing.TYPE_CHECKING:
             json: data_binding.JSONObjectBuilder | data_binding.JSONArray | None = None,
             reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
             auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        ) -> None | data_binding.JSONObject | data_binding.JSONArray: ...
+        ) -> data_binding.JSONObject | data_binding.JSONArray | None: ...
 
     _GuildThreadChannelT_co = typing.TypeVar(
         "_GuildThreadChannelT_co", bound=channels.GuildThreadChannel, covariant=True
