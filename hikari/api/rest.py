@@ -9187,10 +9187,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        skus: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[monetization.SKU]] = undefined.UNDEFINED,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exclude_deleted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Sequence[monetization.Entitlement]:
         """Fetch all entitlements for a given application, active and expired.
 
@@ -9202,6 +9204,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The user to look up entitlements for.
         guild
             The guild to look up entitlements for.
+        skus
+            The SKUs to check entitlements for.
         before
             Retrieve entitlements before this time or ID.
         after
@@ -9209,7 +9213,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         limit
             Number of entitlements to return, 1-100, default 100.
         exclude_ended
-            Whether or not ended entitlements should be omitted.
+            Whether or not ended entitlements should be omitted. Defaults to
+            [`False`][].
+        exclude_deleted
+            Whether or not deleted entitlements should be omitted. Defaults to
+            [`True`][].
 
         Returns
         -------
@@ -9224,6 +9232,69 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or user was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> monetization.Entitlement:
+        """Fetch an entitlement for a given application.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the entitlement for.
+        entitlement
+            The entitlement to fetch.
+
+        Returns
+        -------
+        hikari.monetization.Entitlement
+            The requested entitlement.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def consume_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> None:
+        """Mark a one-time purchase consumable entitlement as consumed.
+
+        Parameters
+        ----------
+        application
+            The application the entitlement belongs to.
+        entitlement
+            The entitlement to consume.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the entitlement is not consumable.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.

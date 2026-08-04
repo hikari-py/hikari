@@ -4569,6 +4569,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id=snowflakes.Snowflake(payload["guild_id"]) if "guild_id" in payload else None,
             user_id=snowflakes.Snowflake(payload["user_id"]) if "user_id" in payload else None,
             is_deleted=payload["deleted"],
+            is_consumed=payload.get("consumed", False),
             starts_at=starts_at,
             ends_at=time.iso8601_datetime_string_to_datetime(payload["ends_at"]) if payload.get("ends_at") else None,
             subscription_id=snowflakes.Snowflake(payload["subscription_id"]) if "subscription_id" in payload else None,

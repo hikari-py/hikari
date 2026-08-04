@@ -8274,6 +8274,7 @@ class TestEntityFactoryImpl:
             "application_id": "123123123123123",
             "type": 8,
             "deleted": False,
+            "consumed": True,
             "starts_at": "2022-09-14T17:00:18.704163+00:00",
             "ends_at": "2022-10-14T17:00:18.704163+00:00",
             "guild_id": "1015034326372454400",
@@ -8315,6 +8316,7 @@ class TestEntityFactoryImpl:
         assert entitlement.application_id == 123123123123123
         assert entitlement.type is monetization_models.EntitlementType.APPLICATION_SUBSCRIPTION
         assert entitlement.is_deleted is False
+        assert entitlement.is_consumed is True
         assert entitlement.starts_at == datetime.datetime(2022, 9, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
         assert entitlement.ends_at == datetime.datetime(2022, 10, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc)
         assert entitlement.guild_id == 1015034326372454400
@@ -8330,6 +8332,7 @@ class TestEntityFactoryImpl:
         assert entitlement.application_id == 123123123123123
         assert entitlement.type is monetization_models.EntitlementType.APPLICATION_SUBSCRIPTION
         assert entitlement.is_deleted is False
+        assert entitlement.is_consumed is False
         assert entitlement.starts_at is None
         assert entitlement.ends_at is None
         assert entitlement.guild_id == 1015034326372454400

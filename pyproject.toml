@@ -115,7 +115,7 @@ pytest = [
     "async-timeout==5.0.1",
     { include-group = "coverage" },
 ]
-release = ["twine==6.2.0"]
+release = ["twine==7.0.0"]
 ruff = ["ruff==0.16.1"]
 slotscheck = ["slotscheck==0.20.1"]
 towncrier = ["towncrier==25.8.0"]

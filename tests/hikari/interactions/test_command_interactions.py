@@ -71,6 +71,7 @@ class TestCommandInteraction:
                     starts_at=None,
                     ends_at=None,
                     is_deleted=False,
+                    is_consumed=False,
                     subscription_id=None,
                 )
             ],
@@ -134,6 +135,7 @@ class TestAutocompleteInteraction:
                     starts_at=None,
                     ends_at=None,
                     is_deleted=False,
+                    is_consumed=False,
                     subscription_id=None,
                 )
             ],
