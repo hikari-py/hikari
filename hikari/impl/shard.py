@@ -62,6 +62,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_manager as event_manager_
     from hikari.impl import config
 
+    # TODO: drop when removing backports.zstd
+    class _ZstdDecompressor(typing.Protocol):
+        def decompress(self, data: bytes, max_length: int = ...) -> bytes:
+            raise NotImplementedError
+
 if sys.version_info >= (3, 14):
     _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 else:
@@ -355,11 +360,13 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
                     buff.extend(message.data)
                     continue
 
-                self._handle_other_message(message) # type: ignore[arg-type]
+                self._handle_other_message(message)  # type: ignore[arg-type]
 
             return self._inflator.decompress(buff)
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
+
+
 
 
 class _GatewayZstdStreamTransport(_GatewayTransport):
@@ -367,6 +374,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
+        self._inflator: _ZstdDecompressor
 
         if sys.version_info >= (3, 14):
             from compression import zstd  # noqa: PLC0415
@@ -387,7 +395,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return self._inflator.decompress(message.data)
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayZlibMessageTransport(_GatewayTransport):
@@ -404,7 +412,7 @@ class _GatewayZlibMessageTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return message.data
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayBasicTransport(_GatewayTransport):
@@ -418,7 +426,7 @@ class _GatewayBasicTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return message.data
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 def _serialize_datetime(dt: datetime.datetime | None) -> int | None:

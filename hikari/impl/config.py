@@ -114,7 +114,7 @@ class ProxySettings(config.ProxySettings):
     headers: data_binding.Headers | None = attrs.field(default=None)
     """Additional headers to use for requests via a proxy, if required."""
 
-    url: None | str = attrs.field(default=None)
+    url: str | None = attrs.field(default=None)
     """Proxy URL to use.
 
     Defaults to [`None`][] which disables the use of an explicit proxy.
