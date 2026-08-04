@@ -53,6 +53,8 @@ from hikari.applications import ActivityLocation
 from hikari.applications import ActivityLocationKind
 from hikari.applications import Application
 from hikari.applications import ApplicationContextType
+from hikari.applications import ApplicationEventWebhookStatus
+from hikari.applications import ApplicationEventWebhookType
 from hikari.applications import ApplicationFlags
 from hikari.applications import ApplicationIntegrationType
 from hikari.applications import ApplicationRoleConnectionMetadataRecord

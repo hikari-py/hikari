@@ -62,6 +62,11 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_manager as event_manager_
     from hikari.impl import config
 
+    # TODO: drop when removing backports.zstd
+    class _ZstdDecompressor(typing.Protocol):
+        def decompress(self, data: bytes, max_length: int = ...) -> bytes:
+            raise NotImplementedError
+
 if sys.version_info >= (3, 14):
     _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 else:
@@ -90,6 +95,7 @@ _REQUEST_GUILD_MEMBERS: typing.Final[int] = 8
 _INVALID_SESSION: typing.Final[int] = 9
 _HELLO: typing.Final[int] = 10
 _HEARTBEAT_ACK: typing.Final[int] = 11
+_REQUEST_CHANNEL_INFO: typing.Final[int] = 43
 # Special dispatches
 _READY: typing.Final[str] = sys.intern("READY")
 _RESUMED: typing.Final[str] = sys.intern("RESUMED")
@@ -355,11 +361,13 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
                     buff.extend(message.data)
                     continue
 
-                self._handle_other_message(message) # type: ignore[arg-type]
+                self._handle_other_message(message)  # type: ignore[arg-type]
 
             return self._inflator.decompress(buff)
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
+
+
 
 
 class _GatewayZstdStreamTransport(_GatewayTransport):
@@ -367,6 +375,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
+        self._inflator: _ZstdDecompressor
 
         if sys.version_info >= (3, 14):
             from compression import zstd  # noqa: PLC0415
@@ -387,7 +396,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return self._inflator.decompress(message.data)
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayZlibMessageTransport(_GatewayTransport):
@@ -404,7 +413,7 @@ class _GatewayZlibMessageTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return message.data
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayBasicTransport(_GatewayTransport):
@@ -418,7 +427,7 @@ class _GatewayBasicTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return message.data
 
-        self._handle_other_message(message) # type: ignore[arg-type]
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 def _serialize_datetime(dt: datetime.datetime | None) -> int | None:
@@ -725,6 +734,18 @@ class GatewayShardImpl(shard.GatewayShard):
         payload.put("nonce", nonce)
 
         await self._send_json({_OP: _REQUEST_GUILD_MEMBERS, _D: payload})
+
+    @typing_extensions.override
+    async def request_channel_info(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], *, fields: typing.Sequence[shard.ChannelInfoField]
+    ) -> None:
+        self._check_if_connected()
+
+        payload = data_binding.JSONObjectBuilder()
+        payload.put_snowflake("guild_id", guild)
+        payload.put("fields", [str(field) for field in fields])
+
+        await self._send_json({_OP: _REQUEST_CHANNEL_INFO, _D: payload})
 
     @typing_extensions.override
     async def start(self) -> None:

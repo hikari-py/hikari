@@ -869,6 +869,30 @@ class TestRESTClientImpl:
                 channel=channel,
                 message=message,
                 emoji="rooYay:123",
+                reaction_type=undefined.UNDEFINED,
+            )
+
+    def test_fetch_reactions_for_emoji_with_reaction_type(self, rest_client):
+        channel = StubModel(123)
+        message = StubModel(456)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "ReactorIterator", return_value=stub_iterator) as iterator:
+            with mock.patch.object(rest, "_transform_emoji_to_url_format", return_value="rooYay:123"):
+                assert (
+                    rest_client.fetch_reactions_for_emoji(
+                        channel, message, "<:rooYay:123>", reaction_type=message_models.ReactionType.BURST
+                    )
+                    == stub_iterator
+                )
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                channel=channel,
+                message=message,
+                emoji="rooYay:123",
+                reaction_type=message_models.ReactionType.BURST,
             )
 
     def test_fetch_pins_with_before(self, rest_client):
@@ -4099,6 +4123,85 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route)
         rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
 
+    async def test_edit_application(self, rest_client, file_resource_patch):
+        application = StubModel(123)
+        expected_route = routes.PATCH_MY_APPLICATION.compile()
+        expected_json = {
+            "description": "new description",
+            "custom_install_url": "https://example.com/install",
+            "role_connections_verification_url": "https://example.com/verify",
+            "flags": applications.ApplicationFlags.GUILD_MEMBERS_INTENT,
+            "interactions_endpoint_url": "https://example.com/interactions",
+            "tags": ["shiny", "tags"],
+            "event_webhooks_url": "https://example.com/events",
+            "event_webhooks_status": applications.ApplicationEventWebhookStatus.ENABLED,
+            "event_webhooks_types": ["APPLICATION_AUTHORIZED"],
+            "install_params": {"scopes": ["applications.commands", "bot"], "permissions": 8},
+            "integration_types_config": {
+                "0": {"oauth2_install_params": {"scopes": ["bot"], "permissions": 8}},
+                "1": {},
+            },
+            "icon": "some data",
+            "cover_image": "some data",
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_application = mock.Mock(return_value=application)
+
+        result = await rest_client.edit_application(
+            description="new description",
+            custom_install_url="https://example.com/install",
+            role_connections_verification_url="https://example.com/verify",
+            install_params=applications.ApplicationInstallParameters(
+                scopes=[applications.OAuth2Scope.APPLICATIONS_COMMANDS, applications.OAuth2Scope.BOT],
+                permissions=permissions.Permissions.ADMINISTRATOR,
+            ),
+            integration_types_config={
+                applications.ApplicationIntegrationType.GUILD_INSTALL: applications.ApplicationIntegrationConfiguration(
+                    oauth2_install_parameters=applications.OAuth2InstallParameters(
+                        scopes=[applications.OAuth2Scope.BOT], permissions=permissions.Permissions.ADMINISTRATOR
+                    )
+                ),
+                applications.ApplicationIntegrationType.USER_INSTALL: applications.ApplicationIntegrationConfiguration(
+                    oauth2_install_parameters=None
+                ),
+            },
+            flags=applications.ApplicationFlags.GUILD_MEMBERS_INTENT,
+            icon="someicon.png",
+            cover_image="somecover.png",
+            interactions_endpoint_url="https://example.com/interactions",
+            tags=["shiny", "tags"],
+            event_webhooks_url="https://example.com/events",
+            event_webhooks_status=applications.ApplicationEventWebhookStatus.ENABLED,
+            event_webhooks_types=[applications.ApplicationEventWebhookType.APPLICATION_AUTHORIZED],
+        )
+
+        assert result is application
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
+
+    async def test_edit_application_when_images_are_None(self, rest_client):
+        application = StubModel(123)
+        expected_route = routes.PATCH_MY_APPLICATION.compile()
+        expected_json = {"icon": None, "cover_image": None}
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_application = mock.Mock(return_value=application)
+
+        assert await rest_client.edit_application(icon=None, cover_image=None) is application
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
+
+    async def test_edit_application_without_optionals(self, rest_client):
+        application = StubModel(123)
+        expected_route = routes.PATCH_MY_APPLICATION.compile()
+        rest_client._request = mock.AsyncMock(return_value={"id": "123"})
+        rest_client._entity_factory.deserialize_application = mock.Mock(return_value=application)
+
+        assert await rest_client.edit_application() is application
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={})
+        rest_client._entity_factory.deserialize_application.assert_called_once_with({"id": "123"})
+
     async def test_fetch_authorization(self, rest_client):
         expected_route = routes.GET_MY_AUTHORIZATION.compile()
         rest_client._request = mock.AsyncMock(return_value={"application": {}})
@@ -5818,6 +5921,49 @@ class TestRESTClientImplAsync:
                 StubModel(123), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
 
+    async def test_create_role_with_color_gradient(self, rest_client):
+        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_json = {
+            "name": "admin",
+            "permissions": 0,
+            "colors": {"primary_color": 123, "secondary_color": 456, "tertiary_color": None},
+            "mentionable": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        returned = await rest_client.create_role(
+            StubModel(123),
+            name="admin",
+            color=colors.ColorGradient.of(123, 456),
+            mentionable=False,
+            reason="roles are cool",
+        )
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
+
+    async def test_create_role_with_colour_gradient(self, rest_client):
+        expected_route = routes.POST_GUILD_ROLES.compile(guild=123)
+        expected_json = {
+            "name": "admin",
+            "permissions": 0,
+            "colors": {"primary_color": 11127295, "secondary_color": 16759788, "tertiary_color": 16761760},
+            "mentionable": False,
+        }
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        returned = await rest_client.create_role(
+            StubModel(123),
+            name="admin",
+            colour=colors.ColorGradient.of(11127295, 16759788, 16761760),
+            mentionable=False,
+            reason="roles are cool",
+        )
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+
     async def test_create_role_when_icon_unicode_emoji_specified(self, rest_client):
         with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
             await rest_client.create_role(StubModel(123), icon="icon.png", unicode_emoji="\N{OK HAND SIGN}")
@@ -5866,6 +6012,28 @@ class TestRESTClientImplAsync:
             await rest_client.edit_role(
                 StubModel(123), StubModel(456), color=colors.Color.from_int(12345), colour=colors.Color.from_int(12345)
             )
+
+    async def test_edit_role_with_color_gradient(self, rest_client):
+        expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
+        expected_json = {"colors": {"primary_color": 123, "secondary_color": 456, "tertiary_color": None}}
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        returned = await rest_client.edit_role(
+            StubModel(123), StubModel(789), color=colors.ColorGradient.of(123, 456), reason="roles are cool"
+        )
+        assert returned is rest_client._entity_factory.deserialize_role.return_value
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="roles are cool")
+        rest_client._entity_factory.deserialize_role.assert_called_once_with({"id": "456"}, guild_id=123)
+
+    async def test_edit_role_when_removing_gradient_colors(self, rest_client):
+        expected_route = routes.PATCH_GUILD_ROLE.compile(guild=123, role=789)
+        expected_json = {"colors": {"primary_color": 123, "secondary_color": None, "tertiary_color": None}}
+        rest_client._request = mock.AsyncMock(return_value={"id": "456"})
+
+        await rest_client.edit_role(StubModel(123), StubModel(789), colour=colors.ColorGradient.of(123))
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason=undefined.UNDEFINED)
 
     async def test_edit_role_when_icon_and_unicode_emoji_specified(self, rest_client):
         with pytest.raises(TypeError, match=r"Can not specify 'icon' and 'unicode_emoji' together."):
@@ -7301,6 +7469,72 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock()
 
         await rest_client.delete_scheduled_event(StubModel(54531123), StubModel(123321123321))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_entitlements(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=123)
+        expected_query = {
+            "user_id": "456",
+            "guild_id": "789",
+            "sku_ids": "135,246",
+            "limit": "42",
+            "exclude_ended": "true",
+            "exclude_deleted": "false",
+            "before": "912",
+            "after": "911",
+        }
+        mock_payload_1 = {"id": "696969696969696"}
+        mock_payload_2 = {"id": "420420420420420"}
+        rest_client._request = mock.AsyncMock(return_value=[mock_payload_1, mock_payload_2])
+
+        result = await rest_client.fetch_entitlements(
+            StubModel(123),
+            user=StubModel(456),
+            guild=StubModel(789),
+            skus=[StubModel(135), StubModel(246)],
+            before=912,
+            after=911,
+            limit=42,
+            exclude_ended=True,
+            exclude_deleted=False,
+        )
+
+        assert result == [
+            rest_client._entity_factory.deserialize_entitlement.return_value,
+            rest_client._entity_factory.deserialize_entitlement.return_value,
+        ]
+        rest_client._request.assert_awaited_once_with(expected_route, query=expected_query)
+        rest_client._entity_factory.deserialize_entitlement.assert_has_calls(
+            [mock.call(mock_payload_1), mock.call(mock_payload_2)]
+        )
+
+    async def test_fetch_entitlements_without_optional_params(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ENTITLEMENTS.compile(application=123)
+        rest_client._request = mock.AsyncMock(return_value=[])
+
+        result = await rest_client.fetch_entitlements(StubModel(123))
+
+        assert result == []
+        rest_client._request.assert_awaited_once_with(expected_route, query={})
+        rest_client._entity_factory.deserialize_entitlement.assert_not_called()
+
+    async def test_fetch_entitlement(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ENTITLEMENT.compile(application=123, entitlement=456)
+        mock_payload = {"id": "456"}
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_entitlement(StubModel(123), StubModel(456))
+
+        assert result is rest_client._entity_factory.deserialize_entitlement.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_entitlement.assert_called_once_with(mock_payload)
+
+    async def test_consume_entitlement(self, rest_client):
+        expected_route = routes.POST_APPLICATION_ENTITLEMENT_CONSUME.compile(application=123, entitlement=456)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.consume_entitlement(StubModel(123), StubModel(456))
 
         rest_client._request.assert_awaited_once_with(expected_route)
 

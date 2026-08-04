@@ -463,7 +463,7 @@ class TestExponentialBackOff:
         eb.reset()
         assert eb.increment == 0
 
-    @pytest.mark.parametrize(("iteration", "backoff"), enumerate((1, 2, 4, 8, 16, 32)))
+    @pytest.mark.parametrize(("iteration", "backoff"), tuple(enumerate((1, 2, 4, 8, 16, 32))))
     def test_increment_linear(self, iteration, backoff):
         eb = rate_limits.ExponentialBackOff(2, 64, 0)
 
@@ -498,7 +498,7 @@ class TestExponentialBackOff:
 
         assert eb.increment == 5
 
-    @pytest.mark.parametrize(("iteration", "backoff"), enumerate((1, 2, 4, 8, 16, 32)))
+    @pytest.mark.parametrize(("iteration", "backoff"), tuple(enumerate((1, 2, 4, 8, 16, 32))))
     def test_increment_jitter(self, iteration, backoff):
         abs_tol = 1
         eb = rate_limits.ExponentialBackOff(2, 64, abs_tol)

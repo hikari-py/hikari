@@ -476,6 +476,14 @@ def _stringify_http_message(headers: data_binding.Headers, body: bytes | None) -
     return string
 
 
+def _serialize_color_gradient(gradient: colors.ColorGradient, /) -> data_binding.JSONObject:
+    return {
+        "primary_color": int(gradient.primary_color),
+        "secondary_color": int(gradient.secondary_color) if gradient.secondary_color is not None else None,
+        "tertiary_color": int(gradient.tertiary_color) if gradient.tertiary_color is not None else None,
+    }
+
+
 def _transform_emoji_to_url_format(
     emoji: str | emojis.Emoji, emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]], /
 ) -> str:
@@ -584,7 +592,7 @@ class RESTClientImpl(rest_api.RESTClient):
         proxy_settings: config_impl.ProxySettings,
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
-        token: str | None | rest_api.TokenStrategy,
+        token: str | rest_api.TokenStrategy | None,
         token_type: applications.TokenType | str | None,
         rest_url: str | None,
     ) -> None:
@@ -778,7 +786,7 @@ class RESTClientImpl(rest_api.RESTClient):
         if auth:
             headers[_AUTHORIZATION_HEADER] = auth
 
-        data: None | aiohttp.BytesPayload | aiohttp.FormData = None
+        data: aiohttp.BytesPayload | aiohttp.FormData | None = None
         if json is not None:
             if form_builder:
                 msg = "Can only provide one of 'json' or 'form_builder', not both"
@@ -1965,6 +1973,7 @@ class RESTClientImpl(rest_api.RESTClient):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
+        reaction_type: undefined.UndefinedOr[messages_.ReactionType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[users_.User]:
         return special_endpoints_impl.ReactorIterator(
             entity_factory=self._entity_factory,
@@ -1972,6 +1981,7 @@ class RESTClientImpl(rest_api.RESTClient):
             channel=channel,
             message=message,
             emoji=_transform_emoji_to_url_format(emoji, emoji_id),
+            reaction_type=reaction_type,
         )
 
     @typing_extensions.override
@@ -2433,6 +2443,78 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_application(self) -> applications.Application:
         route = routes.GET_MY_APPLICATION.compile()
         response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_application(response)
+
+    @typing_extensions.override
+    async def edit_application(
+        self,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        custom_install_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        role_connections_verification_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        install_params: undefined.UndefinedOr[applications.ApplicationInstallParameters] = undefined.UNDEFINED,
+        integration_types_config: undefined.UndefinedOr[
+            typing.Mapping[applications.ApplicationIntegrationType, applications.ApplicationIntegrationConfiguration]
+        ] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[applications.ApplicationFlags] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        cover_image: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        interactions_endpoint_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tags: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        event_webhooks_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_webhooks_status: undefined.UndefinedOr[applications.ApplicationEventWebhookStatus] = undefined.UNDEFINED,
+        event_webhooks_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationEventWebhookType]
+        ] = undefined.UNDEFINED,
+    ) -> applications.Application:
+        route = routes.PATCH_MY_APPLICATION.compile()
+        body = data_binding.JSONObjectBuilder()
+        body.put("description", description)
+        body.put("custom_install_url", custom_install_url)
+        body.put("role_connections_verification_url", role_connections_verification_url)
+        body.put("flags", flags)
+        body.put("interactions_endpoint_url", interactions_endpoint_url)
+        body.put_array("tags", tags)
+        body.put("event_webhooks_url", event_webhooks_url)
+        body.put("event_webhooks_status", event_webhooks_status)
+        body.put_array("event_webhooks_types", event_webhooks_types, conversion=str)
+
+        if install_params is not undefined.UNDEFINED:
+            body.put(
+                "install_params",
+                {"scopes": list(install_params.scopes), "permissions": int(install_params.permissions)},
+            )
+
+        if integration_types_config is not undefined.UNDEFINED:
+            raw_config: dict[str, data_binding.JSONish] = {}
+            for integration_type, config in integration_types_config.items():
+                raw_integration_config: dict[str, data_binding.JSONish] = {}
+                if config.oauth2_install_parameters is not None:
+                    raw_integration_config["oauth2_install_params"] = {
+                        "scopes": list(config.oauth2_install_parameters.scopes),
+                        "permissions": int(config.oauth2_install_parameters.permissions),
+                    }
+
+                raw_config[str(int(integration_type))] = raw_integration_config
+
+            body.put("integration_types_config", raw_config)
+
+        if icon is None:
+            body.put("icon", None)
+        elif icon is not undefined.UNDEFINED:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._executor) as stream:
+                body.put("icon", await stream.data_uri())
+
+        if cover_image is None:
+            body.put("cover_image", None)
+        elif cover_image is not undefined.UNDEFINED:
+            cover_image_resource = files.ensure_resource(cover_image)
+            async with cover_image_resource.stream(executor=self._executor) as stream:
+                body.put("cover_image", await stream.data_uri())
+
+        response = await self._request(route, json=body)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_application(response)
 
@@ -3923,8 +4005,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -3943,8 +4025,11 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color, conversion=colors.Color.of)
-        body.put("color", colour, conversion=colors.Color.of)
+        merged_color = colour if color is undefined.UNDEFINED else color
+        if isinstance(merged_color, colors.ColorGradient):
+            body.put("colors", merged_color, conversion=_serialize_color_gradient)
+        else:
+            body.put("color", merged_color, conversion=colors.Color.of)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
@@ -3977,8 +4062,8 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -3998,8 +4083,11 @@ class RESTClientImpl(rest_api.RESTClient):
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
         body.put("permissions", permissions)
-        body.put("color", color, conversion=colors.Color.of)
-        body.put("color", colour, conversion=colors.Color.of)
+        merged_color = colour if color is undefined.UNDEFINED else color
+        if isinstance(merged_color, colors.ColorGradient):
+            body.put("colors", merged_color, conversion=_serialize_color_gradient)
+        else:
+            body.put("color", merged_color, conversion=colors.Color.of)
         body.put("hoist", hoist)
         body.put("unicode_emoji", unicode_emoji)
         body.put("mentionable", mentionable)
@@ -5078,17 +5166,22 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        skus: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[monetization.SKU]] = undefined.UNDEFINED,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exclude_deleted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Sequence[monetization.Entitlement]:
         query = data_binding.StringMapBuilder()
 
         query.put("user_id", user)
         query.put("guild_id", guild)
+        if skus is not undefined.UNDEFINED:
+            query.put("sku_ids", ",".join(str(int(sku)) for sku in skus))
         query.put("limit", limit)
         query.put("exclude_ended", exclude_ended)
+        query.put("exclude_deleted", exclude_deleted)
         query.put("before", before)
         query.put("after", after)
 
@@ -5097,6 +5190,27 @@ class RESTClientImpl(rest_api.RESTClient):
         assert isinstance(response, list)
 
         return [self._entity_factory.deserialize_entitlement(payload) for payload in response]
+
+    @typing_extensions.override
+    async def fetch_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> monetization.Entitlement:
+        route = routes.GET_APPLICATION_ENTITLEMENT.compile(application=application, entitlement=entitlement)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+
+        return self._entity_factory.deserialize_entitlement(response)
+
+    @typing_extensions.override
+    async def consume_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> None:
+        route = routes.POST_APPLICATION_ENTITLEMENT_CONSUME.compile(application=application, entitlement=entitlement)
+        await self._request(route)
 
     @typing_extensions.override
     async def create_test_entitlement(
