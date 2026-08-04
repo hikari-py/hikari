@@ -621,6 +621,21 @@ class ColorGradient:
     """
 
     @classmethod
+    def holographic(cls) -> ColorGradient:
+        """Build the holographic role color style.
+
+        This is the only gradient with a tertiary color that the API accepts;
+        setting any tertiary color will enforce these exact values.
+
+        Returns
+        -------
+        ColorGradient
+            The holographic color gradient, with `primary_color=11127295`,
+            `secondary_color=16759788` and `tertiary_color=16761760`.
+        """
+        return cls(primary_color=Color(11127295), secondary_color=Color(16759788), tertiary_color=Color(16761760))
+
+    @classmethod
     def of(
         cls, primary: Colorish, secondary: Colorish | None = None, tertiary: Colorish | None = None
     ) -> ColorGradient:

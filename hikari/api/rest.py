@@ -6582,9 +6582,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             !!! note
                 When the gradient's tertiary color is provided, the API
-                enforces the role color to be a holographic style with the
-                values `primary_color=11127295`, `secondary_color=16759788`
-                and `tertiary_color=16761760`.
+                enforces the role color to be the holographic style, which
+                can be built with [`hikari.colors.ColorGradient.holographic`][].
         colour
             An alias for `color`.
         hoist
@@ -6701,9 +6700,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
             !!! note
                 When the gradient's tertiary color is provided, the API
-                enforces the role color to be a holographic style with the
-                values `primary_color=11127295`, `secondary_color=16759788`
-                and `tertiary_color=16761760`.
+                enforces the role color to be the holographic style, which
+                can be built with [`hikari.colors.ColorGradient.holographic`][].
         colour
             An alias for `color`.
         hoist

@@ -346,6 +346,15 @@ class TestColorGradient:
         assert isinstance(gradient.secondary_color, colors.Color)
         assert gradient.tertiary_color is None
 
+    def test_holographic(self):
+        gradient = colors.ColorGradient.holographic()
+
+        assert gradient == colors.ColorGradient(
+            primary_color=colors.Color(11127295),
+            secondary_color=colors.Color(16759788),
+            tertiary_color=colors.Color(16761760),
+        )
+
     def test_of_with_all_colors(self):
         gradient = colors.ColorGradient.of((0xFF, 0x5, 0x1A), "fab", 0x3C4D5E)
 
