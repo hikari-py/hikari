@@ -9155,7 +9155,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
-        /,
     ) -> monetization.Entitlement:
         """Fetch an entitlement for a given application.
 
@@ -9189,7 +9188,6 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
-        /,
     ) -> None:
         """Mark a one-time purchase consumable entitlement as consumed.
 
