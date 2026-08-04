@@ -404,6 +404,34 @@ class ShardAware(
             When the shard is not connected so it cannot be interacted with.
         """
 
+    @abc.abstractmethod
+    async def request_channel_info(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        fields: typing.Sequence[gateway_shard.ChannelInfoField],
+    ) -> None:
+        """Request ephemeral channel data for the channels of a guild.
+
+        The response will be dispatched as a
+        [`hikari.events.shard_events.ChannelInfoEvent`][].
+
+        Parameters
+        ----------
+        guild
+            The guild to request channel info for.
+        fields
+            The fields to request.
+
+        Raises
+        ------
+        RuntimeError
+            If the guild passed isn't covered by any of the shards in this sharded
+            client.
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
+        """
+
 
 @typing.runtime_checkable
 class InteractionServerAware(RESTAware, EntityFactoryAware, fast_protocol.FastProtocolChecking, typing.Protocol):

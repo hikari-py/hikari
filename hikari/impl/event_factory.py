@@ -977,6 +977,26 @@ class EventFactoryImpl(event_factory.EventFactory):
             nonce=payload.get("nonce"),
         )
 
+    @typing_extensions.override
+    def deserialize_channel_info_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> shard_events.ChannelInfoEvent:
+        channels: dict[snowflakes.Snowflake, shard_events.ChannelInfo] = {}
+        for channel_payload in payload["channels"]:
+            channel_id = snowflakes.Snowflake(channel_payload["id"])
+            raw_start_time = channel_payload.get("voice_start_time")
+            channels[channel_id] = shard_events.ChannelInfo(
+                channel_id=channel_id,
+                status=channel_payload.get("status"),
+                voice_start_time=time.unix_epoch_to_datetime(raw_start_time, is_millis=False)
+                if raw_start_time is not None
+                else None,
+            )
+
+        return shard_events.ChannelInfoEvent(
+            app=self._app, shard=shard, guild_id=snowflakes.Snowflake(payload["guild_id"]), channels=channels
+        )
+
     ###############
     # USER EVENTS #
     ###############
