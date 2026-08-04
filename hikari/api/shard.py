@@ -262,7 +262,7 @@ class GatewayShard(abc.ABC):
 
     @abc.abstractmethod
     async def request_channel_info(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], *, fields: typing.Sequence[str | ChannelInfoField]
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], *, fields: typing.Sequence[ChannelInfoField]
     ) -> None:
         """Request ephemeral channel data for the channels of a guild.
 

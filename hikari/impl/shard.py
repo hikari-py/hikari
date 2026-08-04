@@ -729,10 +729,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     @typing_extensions.override
     async def request_channel_info(
-        self,
-        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        *,
-        fields: typing.Sequence[str | shard.ChannelInfoField],
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], *, fields: typing.Sequence[shard.ChannelInfoField]
     ) -> None:
         self._check_if_connected()
 

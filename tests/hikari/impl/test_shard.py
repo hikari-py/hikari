@@ -821,7 +821,9 @@ class TestGatewayShardImplAsync:
     async def test_request_channel_info(self, client):
         with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
             with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_connected:
-                await client.request_channel_info(123, fields=[shard_api.ChannelInfoField.STATUS, "voice_start_time"])
+                await client.request_channel_info(
+                    123, fields=[shard_api.ChannelInfoField.STATUS, shard_api.ChannelInfoField.VOICE_START_TIME]
+                )
 
         send_json.assert_awaited_once_with(
             {"op": 43, "d": {"guild_id": "123", "fields": ["status", "voice_start_time"]}}

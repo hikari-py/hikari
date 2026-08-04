@@ -1330,7 +1330,7 @@ class GatewayBot(traits.GatewayBotAware):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
-        fields: typing.Sequence[str | gateway_shard.ChannelInfoField],
+        fields: typing.Sequence[gateway_shard.ChannelInfoField],
     ) -> None:
         self._check_if_alive()
         shard = self._get_shard(guild)

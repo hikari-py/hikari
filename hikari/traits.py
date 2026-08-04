@@ -409,7 +409,7 @@ class ShardAware(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
-        fields: typing.Sequence[str | gateway_shard.ChannelInfoField],
+        fields: typing.Sequence[gateway_shard.ChannelInfoField],
     ) -> None:
         """Request ephemeral channel data for the channels of a guild.
 
