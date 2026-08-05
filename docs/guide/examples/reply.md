@@ -55,7 +55,7 @@ async def message_sent(event: hikari.MessageCreateEvent) -> None:
         await message.respond("I cannot create an empty message")
         return
 
-    if message.author.id == bot.get_me().id:
+    if event.is_bot:
         return
     
     await message.respond(content)
