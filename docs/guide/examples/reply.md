@@ -8,7 +8,7 @@ If a user says "Hello" the bot will say "Hello" as well.<br/>
     This program requires the reading of users' message contents, and this requires the `MESSAGE_CONTENT` priveleged intent. Be sure your bot's application has the `Message Content` intent set to `ENABLED` and the bot definition includes the `hikari.Intents.MESSAGE_CONTENT` intent, otherwise message content will always be `None`.
 
     ```python
-    bot = hikari.GatewayBot(TOKEN, intents=hikari.Intents.MESSAGE_CONTENT)
+    bot = hikari.GatewayBot(TOKEN, intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT)
     ```
 
 It is recommended that you first read and understand [Program Setup](../program/setup.md) before continuing.
