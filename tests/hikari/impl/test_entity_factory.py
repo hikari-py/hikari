@@ -73,6 +73,7 @@ def guild_text_channel_payload(permission_overwrite_payload):
     return {
         "id": "123",
         "guild_id": "567",
+        "application_id": "323123123",
         "name": "general",
         "type": 0,
         "position": 6,
@@ -1868,6 +1869,13 @@ class TestEntityFactoryImpl:
         assert group_dm.application_id is None
         assert group_dm.last_message_id is None
 
+    def test_deserialize_group_dm_channel_with_null_application_id(self, entity_factory_impl, group_dm_channel_payload):
+        group_dm_channel_payload["application_id"] = None
+
+        group_dm = entity_factory_impl.deserialize_group_dm(group_dm_channel_payload)
+
+        assert group_dm.application_id is None
+
     @pytest.fixture
     def guild_category_payload(self, permission_overwrite_payload):
         return {
@@ -1937,6 +1945,7 @@ class TestEntityFactoryImpl:
         assert guild_text_channel.name == "general"
         assert guild_text_channel.type == channel_models.ChannelType.GUILD_TEXT
         assert guild_text_channel.guild_id == 567
+        assert guild_text_channel.application_id == 323123123
         assert guild_text_channel.position == 6
         assert guild_text_channel.permission_overwrites == {
             4242: entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
@@ -1968,6 +1977,7 @@ class TestEntityFactoryImpl:
         assert guild_text_channel.rate_limit_per_user.total_seconds() == 0
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
+        assert guild_text_channel.application_id is None
         assert guild_text_channel.last_message_id is None
         assert guild_text_channel.default_auto_archive_duration == datetime.timedelta(minutes=1440)
 
@@ -1986,12 +1996,14 @@ class TestEntityFactoryImpl:
                 "last_message_id": None,
                 "last_pin_timestamp": None,
                 "parent_id": None,
+                "application_id": None,
             }
         )
         assert guild_text_channel.topic is None
         assert guild_text_channel.last_message_id is None
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
+        assert guild_text_channel.application_id is None
 
     def test_deserialize_guild_news_channel(
         self, entity_factory_impl, mock_app, guild_news_channel_payload, permission_overwrite_payload

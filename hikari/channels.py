@@ -946,6 +946,13 @@ class GuildChannel(PartialChannel):
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to."""
 
+    application_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the application associated with this channel.
+
+    This will be [`None`][] for channels which are not associated with an
+    application.
+    """
+
     parent_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 

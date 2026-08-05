@@ -121,6 +121,7 @@ class _GuildChannelFields:
     name: str | None = attrs.field()
     type: channel_models.ChannelType | int = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
+    application_id: snowflakes.Snowflake | None = attrs.field()
     parent_id: snowflakes.Snowflake | None = attrs.field()
 
 
@@ -1136,6 +1137,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             nicknames = {}
 
+        application_id: snowflakes.Snowflake | None = None
+        if (raw_application_id := payload.get("application_id")) is not None:
+            application_id = snowflakes.Snowflake(raw_application_id)
+
         recipients = {snowflakes.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["recipients"]}
 
         return channel_models.GroupDMChannel(
@@ -1147,7 +1152,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
             icon_hash=payload["icon"],
             nicknames=nicknames,
-            application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
+            application_id=application_id,
             recipients=recipients,
         )
 
@@ -1161,11 +1166,16 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_parent_id := payload.get("parent_id")) is not None:
             parent_id = snowflakes.Snowflake(raw_parent_id)
 
+        application_id: snowflakes.Snowflake | None = None
+        if (raw_application_id := payload.get("application_id")) is not None:
+            application_id = snowflakes.Snowflake(raw_application_id)
+
         return _GuildChannelFields(
             id=snowflakes.Snowflake(payload["id"]),
             name=payload.get("name"),
             type=channel_models.ChannelType(payload["type"]),
             guild_id=guild_id,
+            application_id=application_id,
             parent_id=parent_id,
         )
 
@@ -1187,6 +1197,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=None,
@@ -1223,6 +1234,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
@@ -1267,6 +1279,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
@@ -1298,6 +1311,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites={
                 snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
                 for overwrite in payload["permission_overwrites"]
@@ -1336,6 +1350,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites={
                 snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
                 for overwrite in payload["permission_overwrites"]
@@ -1408,6 +1423,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
@@ -1515,6 +1531,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1561,6 +1578,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1603,6 +1621,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1671,6 +1690,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
