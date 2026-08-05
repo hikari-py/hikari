@@ -59,7 +59,7 @@ Upload any avatars/icons you wish and set the username of the bot.
 
 ![Bot Details](../assets/guide/application/bot/bot-details.png "Bot Details")
 
-Get the bot's token by clicking the blurple `Reset Token` button. Copy this token and save it somewhere that you can access later, like a notepad or text document, as well will need this later. It should look something like this: `ABCdEfghIJKlmnopQrStUvWxYZ.abcDEF.aBCdefGHIjKlMNOPqrStUvWXYzABcDeFgHiJkl`.
+Get the bot's token by clicking the blurple `Reset Token` button. Copy this token and save it somewhere that you can access later, like a notepad or text document, as we will need this later. It should look something like this: `ABCdEfghIJKlmnopQrStUvWxYZ.abcDEF.aBCdefGHIjKlMNOPqrStUvWXYzABcDeFgHiJkl`.
 
 ![Token](../assets/guide/application/bot/token.png "Token")
 
