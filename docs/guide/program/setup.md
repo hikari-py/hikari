@@ -97,7 +97,7 @@ import hikari
 bot = hikari.GatewayBot(TOKEN)
 
 @bot.listen()
-async def bot_started(event: hikari.GatewayBot) -> None:
+async def bot_started(event: hikari.StartedEvent) -> None:
     print("Hello world")
 
 if __name__ == "__main__":
