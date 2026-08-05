@@ -5,7 +5,7 @@ In our [basic implementation](setup.md#final-program), we use the `hikari.Starte
 
 ## StartingEvent
 
-This event is dispatched when the bot is signalled to run (via `bot.run()`). The bot will identify itself with Discord and receive it's identity (`hikari.OwnUser`).
+This event is dispatched when the bot is signalled to run (via `bot.run()`). The bot will identify itself with Discord and receive its identity (`hikari.OwnUser`).
 
 ## StartedEvent
 
