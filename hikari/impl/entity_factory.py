@@ -773,6 +773,25 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     @typing_extensions.override
+    def deserialize_activity_instance(self, payload: data_binding.JSONObject) -> application_models.ActivityInstance:
+        location_payload = payload["location"]
+        raw_guild_id = location_payload.get("guild_id")
+        location = application_models.ActivityLocation(
+            id=location_payload["id"],
+            kind=application_models.ActivityLocationKind(location_payload["kind"]),
+            channel_id=snowflakes.Snowflake(location_payload["channel_id"]),
+            guild_id=snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None,
+        )
+
+        return application_models.ActivityInstance(
+            application_id=snowflakes.Snowflake(payload["application_id"]),
+            instance_id=payload["instance_id"],
+            launch_id=snowflakes.Snowflake(payload["launch_id"]),
+            location=location,
+            users=[snowflakes.Snowflake(user_id) for user_id in payload["users"]],
+        )
+
+    @typing_extensions.override
     def deserialize_authorization_information(
         self, payload: data_binding.JSONObject
     ) -> application_models.AuthorizationInformation:

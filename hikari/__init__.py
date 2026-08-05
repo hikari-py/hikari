@@ -48,6 +48,9 @@ from hikari._about import __license__
 from hikari._about import __maintainer__
 from hikari._about import __url__
 from hikari._about import __version__
+from hikari.applications import ActivityInstance
+from hikari.applications import ActivityLocation
+from hikari.applications import ActivityLocationKind
 from hikari.applications import Application
 from hikari.applications import ApplicationContextType
 from hikari.applications import ApplicationEventWebhookStatus
