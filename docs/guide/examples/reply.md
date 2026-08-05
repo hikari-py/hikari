@@ -79,7 +79,7 @@ Because this requires the bot's `.get_me()` method, we need to be sure that when
 ```python
 import hikari
 
-bot = hikari.GatewayBot(TOKEN, intents=hikari.Intents.MESSAGE_CONTENT)
+bot = hikari.GatewayBot(TOKEN, intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT)
 
 @bot.listen()
 async def message_sent(event: hikari.MessageCreateEvent) -> None:
