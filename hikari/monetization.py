@@ -22,7 +22,16 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("SKU", "Entitlement", "EntitlementOwnerType", "EntitlementType", "SKUFlags", "SKUType")
+__all__: typing.Sequence[str] = (
+    "SKU",
+    "Entitlement",
+    "EntitlementOwnerType",
+    "EntitlementType",
+    "SKUFlags",
+    "SKUType",
+    "Subscription",
+    "SubscriptionStatus",
+)
 
 import typing
 
@@ -181,4 +190,62 @@ class Entitlement(snowflakes.Unique):
     """The ID of the subscription that this entitlement is associated with.
 
     Not present when using test entitlements.
+    """
+
+
+@typing.final
+class SubscriptionStatus(int, enums.Enum):
+    """Represents the status of a subscription."""
+
+    ACTIVE = 0
+    """The subscription is active and scheduled to renew"""
+
+    INACTIVE = 1
+    """The subscription is inactive and not being charged"""
+
+    ENDING = 2
+    """The subscription is active but will not renew"""
+
+
+@attrs.define(kw_only=True, weakref_slot=False)
+class Subscription(snowflakes.Unique):
+    """Represents a user making recurring payments for at least one SKU.
+
+    !!! note
+        The subscription status should not be used to grant perks. Use
+        [`hikari.monetization.Entitlement`][]s as an indication of whether a
+        user should have access to a specific SKU.
+    """
+
+    id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
+    """ID of the subscription"""
+
+    user_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
+    """ID of the user who is subscribed"""
+
+    sku_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=True)
+    """List of SKUs subscribed to"""
+
+    entitlement_ids: typing.Sequence[snowflakes.Snowflake] = attrs.field(eq=False, hash=False, repr=False)
+    """List of entitlements granted for this subscription"""
+
+    renewal_sku_ids: typing.Sequence[snowflakes.Snowflake] | None = attrs.field(eq=False, hash=False, repr=False)
+    """List of SKUs that this user will be subscribed to at renewal, if known"""
+
+    current_period_start: datetime.datetime = attrs.field(eq=False, hash=False, repr=False)
+    """Start of the current subscription period"""
+
+    current_period_end: datetime.datetime = attrs.field(eq=False, hash=False, repr=False)
+    """End of the current subscription period"""
+
+    status: SubscriptionStatus | int = attrs.field(eq=False, hash=False, repr=True)
+    """Current status of the subscription"""
+
+    canceled_at: datetime.datetime | None = attrs.field(eq=False, hash=False, repr=False)
+    """When the subscription was canceled, if it was"""
+
+    country: str | None = attrs.field(eq=False, hash=False, repr=False)
+    """ISO3166-1 alpha-2 country code of the payment source used to purchase the subscription.
+
+    This will be [`None`][] unless queried with a private OAuth scope.
     """

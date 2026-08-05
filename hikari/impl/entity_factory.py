@@ -4613,6 +4613,28 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             flags=monetization_models.SKUFlags(payload["flags"]),
         )
 
+    @typing_extensions.override
+    def deserialize_subscription(self, payload: data_binding.JSONObject) -> monetization_models.Subscription:
+        raw_renewal_sku_ids = payload.get("renewal_sku_ids")
+        raw_canceled_at = payload.get("canceled_at")
+
+        return monetization_models.Subscription(
+            id=snowflakes.Snowflake(payload["id"]),
+            user_id=snowflakes.Snowflake(payload["user_id"]),
+            sku_ids=[snowflakes.Snowflake(sku_id) for sku_id in payload["sku_ids"]],
+            entitlement_ids=[snowflakes.Snowflake(entitlement_id) for entitlement_id in payload["entitlement_ids"]],
+            renewal_sku_ids=[snowflakes.Snowflake(sku_id) for sku_id in raw_renewal_sku_ids]
+            if raw_renewal_sku_ids is not None
+            else None,
+            current_period_start=time.iso8601_datetime_string_to_datetime(payload["current_period_start"]),
+            current_period_end=time.iso8601_datetime_string_to_datetime(payload["current_period_end"]),
+            status=monetization_models.SubscriptionStatus(payload["status"]),
+            canceled_at=time.iso8601_datetime_string_to_datetime(raw_canceled_at)
+            if raw_canceled_at is not None
+            else None,
+            country=payload.get("country"),
+        )
+
     ###############
     # POLL MODELS #
     ###############

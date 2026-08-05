@@ -1628,6 +1628,57 @@ class TestEventFactoryImpl:
 
         assert isinstance(event, monetization_events.EntitlementDeleteEvent)
 
+    def test_deserialize_subscription_create_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "id": "1278078770116427839",
+            "user_id": "115590097100865541",
+            "sku_ids": ["420420420420420"],
+            "entitlement_ids": ["696969696969696"],
+            "renewal_sku_ids": None,
+            "current_period_start": "2024-08-27T19:48:44.406602+00:00",
+            "current_period_end": "2024-09-27T19:48:44.406602+00:00",
+            "status": 0,
+            "canceled_at": None,
+        }
+
+        event = event_factory.deserialize_subscription_create_event(mock_shard, payload)
+
+        assert isinstance(event, monetization_events.SubscriptionCreateEvent)
+
+    def test_deserialize_subscription_update_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "id": "1278078770116427839",
+            "user_id": "115590097100865541",
+            "sku_ids": ["420420420420420"],
+            "entitlement_ids": ["696969696969696"],
+            "renewal_sku_ids": None,
+            "current_period_start": "2024-08-27T19:48:44.406602+00:00",
+            "current_period_end": "2024-09-27T19:48:44.406602+00:00",
+            "status": 0,
+            "canceled_at": None,
+        }
+
+        event = event_factory.deserialize_subscription_update_event(mock_shard, payload)
+
+        assert isinstance(event, monetization_events.SubscriptionUpdateEvent)
+
+    def test_deserialize_subscription_delete_event(self, event_factory, mock_app, mock_shard):
+        payload = {
+            "id": "1278078770116427839",
+            "user_id": "115590097100865541",
+            "sku_ids": ["420420420420420"],
+            "entitlement_ids": ["696969696969696"],
+            "renewal_sku_ids": None,
+            "current_period_start": "2024-08-27T19:48:44.406602+00:00",
+            "current_period_end": "2024-09-27T19:48:44.406602+00:00",
+            "status": 0,
+            "canceled_at": None,
+        }
+
+        event = event_factory.deserialize_subscription_delete_event(mock_shard, payload)
+
+        assert isinstance(event, monetization_events.SubscriptionDeleteEvent)
+
     #########################
     # STAGE INSTANCE EVENTS #
     #########################

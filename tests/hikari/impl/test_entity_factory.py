@@ -8392,6 +8392,60 @@ class TestEntityFactoryImpl:
         assert sku.flags == (monetization_models.SKUFlags.AVAILABLE | monetization_models.SKUFlags.GUILD_SUBSCRIPTION)
         assert isinstance(sku, monetization_models.SKU)
 
+    @pytest.fixture
+    def subscription_payload(self):
+        return {
+            "id": "1278078770116427839",
+            "user_id": "115590097100865541",
+            "sku_ids": ["420420420420420"],
+            "entitlement_ids": ["696969696969696"],
+            "renewal_sku_ids": ["420420420420421"],
+            "current_period_start": "2024-08-27T19:48:44.406602+00:00",
+            "current_period_end": "2024-09-27T19:48:44.406602+00:00",
+            "status": 0,
+            "canceled_at": None,
+            "country": "US",
+        }
+
+    def test_deserialize_subscription(self, entity_factory_impl, subscription_payload):
+        subscription = entity_factory_impl.deserialize_subscription(subscription_payload)
+
+        assert subscription.id == 1278078770116427839
+        assert subscription.user_id == 115590097100865541
+        assert subscription.sku_ids == [420420420420420]
+        assert subscription.entitlement_ids == [696969696969696]
+        assert subscription.renewal_sku_ids == [420420420420421]
+        assert subscription.current_period_start == datetime.datetime(
+            2024, 8, 27, 19, 48, 44, 406602, tzinfo=datetime.timezone.utc
+        )
+        assert subscription.current_period_end == datetime.datetime(
+            2024, 9, 27, 19, 48, 44, 406602, tzinfo=datetime.timezone.utc
+        )
+        assert subscription.status is monetization_models.SubscriptionStatus.ACTIVE
+        assert subscription.canceled_at is None
+        assert subscription.country == "US"
+        assert isinstance(subscription, monetization_models.Subscription)
+
+    def test_deserialize_subscription_with_canceled_at(self, entity_factory_impl, subscription_payload):
+        subscription_payload["status"] = 2
+        subscription_payload["canceled_at"] = "2024-09-14T17:00:18.704163+00:00"
+
+        subscription = entity_factory_impl.deserialize_subscription(subscription_payload)
+
+        assert subscription.status is monetization_models.SubscriptionStatus.ENDING
+        assert subscription.canceled_at == datetime.datetime(
+            2024, 9, 14, 17, 0, 18, 704163, tzinfo=datetime.timezone.utc
+        )
+
+    def test_deserialize_subscription_with_null_or_unset_fields(self, entity_factory_impl, subscription_payload):
+        subscription_payload["renewal_sku_ids"] = None
+        del subscription_payload["country"]
+
+        subscription = entity_factory_impl.deserialize_subscription(subscription_payload)
+
+        assert subscription.renewal_sku_ids is None
+        assert subscription.country is None
+
     #########################
     # Stage instance models #
     #########################
