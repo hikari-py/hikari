@@ -18,7 +18,7 @@ The following will listen for a message and respond with a copy of it's contents
 ```python
 @bot.listen()
 async def message_sent(event: hikari.MessageCreateEvent) -> None:
-    await event.message.respond(event.message.content)
+    await bot.rest.create_message(event.channel_id, content=event.message.content, reply=event.message)
 ```
 
 First, we listen for the `MessageCreateEvent`. Once we receive this event, the bot will execute the `message_sent` function with the event itself as the first parameter (`event`).
