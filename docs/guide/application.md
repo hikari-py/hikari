@@ -73,4 +73,4 @@ Save your changes thus far by clicking the green `Save Changes` button at the bo
 
 If you already have your `Python` environment set up (`hikari` installed, IDE installed) skip to [Program](program/index.md).
 
-Now that our application as been created, proceed to setting up the [Environment](environment/index.md).
+Now that our application has been created, proceed to setting up the [Environment](environment/index.md).
