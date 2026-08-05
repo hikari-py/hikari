@@ -2297,10 +2297,19 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_gateway_bot_info(response)
 
     @typing_extensions.override
-    async def fetch_invite(self, invite: invites.InviteCode | str, *, with_counts: bool = True) -> invites.Invite:
+    async def fetch_invite(
+        self,
+        invite: invites.InviteCode | str,
+        *,
+        with_counts: bool = True,
+        scheduled_event: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+        ] = undefined.UNDEFINED,
+    ) -> invites.Invite:
         route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
         query = data_binding.StringMapBuilder()
         query.put("with_counts", with_counts)
+        query.put("guild_scheduled_event_id", scheduled_event)
         response = await self._request(route, query=query)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
