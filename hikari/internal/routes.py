@@ -622,6 +622,8 @@ POST_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(POST, "/applicati
 DELETE_APPLICATION_TEST_ENTITLEMENT: typing.Final[Route] = Route(
     DELETE, "/applications/{application}/entitlements/{entitlement}"
 )
+GET_SKU_SUBSCRIPTIONS: typing.Final[Route] = Route(GET, "/skus/{sku}/subscriptions")
+GET_SKU_SUBSCRIPTION: typing.Final[Route] = Route(GET, "/skus/{sku}/subscriptions/{subscription}")
 
 # Interactions
 # For these endpoints "webhook" is the application ID.

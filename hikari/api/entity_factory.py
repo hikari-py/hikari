@@ -2092,6 +2092,21 @@ class EntityFactory(abc.ABC):
             The deserialized SKU object.
         """
 
+    @abc.abstractmethod
+    def deserialize_subscription(self, payload: data_binding.JSONObject) -> entitlement_models.Subscription:
+        """Parse a raw payload from Discord into a subscription object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.monetization.Subscription
+            The deserialized subscription object.
+        """
+
     #########################
     # STAGE INSTANCE MODELS #
     #########################
