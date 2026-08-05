@@ -626,25 +626,20 @@ The following values are valid for this:
 
 SelectMenuTypesT = typing.Literal[
     ComponentType.TEXT_SELECT_MENU,
-    3,
     ComponentType.USER_SELECT_MENU,
-    5,
     ComponentType.ROLE_SELECT_MENU,
-    6,
     ComponentType.MENTIONABLE_SELECT_MENU,
-    7,
     ComponentType.CHANNEL_SELECT_MENU,
-    8,
 ]
 """Type hints of the [`hikari.components.ComponentType`][] values which are valid for select menus.
 
 The following values are valid for this:
 
-* [`hikari.components.ComponentType.TEXT_SELECT_MENU`][]/`3`
-* [`hikari.components.ComponentType.USER_SELECT_MENU`][]/`5`
-* [`hikari.components.ComponentType.ROLE_SELECT_MENU`][]/`6`
-* [`hikari.components.ComponentType.MENTIONABLE_SELECT_MENU`][]`/`7`
-* [`hikari.components.ComponentType.CHANNEL_SELECT_MENU`][]`/`8`
+* [`hikari.components.ComponentType.TEXT_SELECT_MENU`][]
+* [`hikari.components.ComponentType.USER_SELECT_MENU`][]
+* [`hikari.components.ComponentType.ROLE_SELECT_MENU`][]
+* [`hikari.components.ComponentType.MENTIONABLE_SELECT_MENU`][]
+* [`hikari.components.ComponentType.CHANNEL_SELECT_MENU`][]
 """
 
 SelectMenuTypes: typing.AbstractSet[SelectMenuTypesT] = frozenset(
@@ -668,7 +663,7 @@ The following values are included in this:
 """
 
 InteractiveButtonTypesT = typing.Literal[
-    ButtonStyle.PRIMARY, 1, ButtonStyle.SECONDARY, 2, ButtonStyle.SUCCESS, 3, ButtonStyle.DANGER, 4
+    ButtonStyle.PRIMARY, ButtonStyle.SECONDARY, ButtonStyle.SUCCESS, ButtonStyle.DANGER
 ]
 """Type hints of the [`hikari.components.ButtonStyle`][] values which are valid for interactive buttons.
 

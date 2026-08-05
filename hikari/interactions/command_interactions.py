@@ -63,14 +63,14 @@ This includes:
 """
 
 CommandResponseTypesT = typing.Literal[
-    base_interactions.ResponseType.MESSAGE_CREATE, 4, base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, 5
+    base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE
 ]
 """Type-hint of the response types which are valid for a command interaction.
 
 The following types are valid for this:
 
-* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]/`4`
-* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]
 """
 
 

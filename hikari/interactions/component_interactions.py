@@ -46,13 +46,13 @@ _DEFERRED_TYPES: typing.AbstractSet[_DeferredTypesT] = frozenset(
     [base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE]
 )
 _DeferredTypesT = typing.Literal[
-    base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, 5, base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE, 6
+    base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE, base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE
 ]
 _IMMEDIATE_TYPES: typing.AbstractSet[_ImmediateTypesT] = frozenset(
     [base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.MESSAGE_UPDATE]
 )
 _ImmediateTypesT = typing.Literal[
-    base_interactions.ResponseType.MESSAGE_CREATE, 4, base_interactions.ResponseType.MESSAGE_UPDATE, 7
+    base_interactions.ResponseType.MESSAGE_CREATE, base_interactions.ResponseType.MESSAGE_UPDATE
 ]
 
 
@@ -74,10 +74,10 @@ ComponentResponseTypesT = typing.Union[_ImmediateTypesT, _DeferredTypesT]
 
 The following types are valid for this:
 
-* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]/`4`
-* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
-* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]/`6`
-* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]/`7`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]
 """
 
 

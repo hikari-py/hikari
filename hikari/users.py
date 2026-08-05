@@ -446,7 +446,7 @@ class PartialUser(snowflakes.Unique, abc.ABC):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages.MessageFlag = undefined.UNDEFINED,
     ) -> messages.Message:
         """Send a message to this user in DM's.
 
@@ -1070,7 +1070,7 @@ class OwnUser(UserImpl):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages.MessageFlag = undefined.UNDEFINED,
     ) -> typing.NoReturn:
         msg = "Unable to send a DM to yourself"
         raise TypeError(msg)

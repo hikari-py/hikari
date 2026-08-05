@@ -1876,7 +1876,7 @@ class PartialGuild(snowflakes.Unique):
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[str | locales.Locale] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[locales.Locale] = undefined.UNDEFINED,
         features: undefined.UndefinedOr[typing.Sequence[GuildFeature]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
@@ -2479,8 +2479,8 @@ class PartialGuild(snowflakes.Unique):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
-        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType] = undefined.UNDEFINED,
         available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
         default_reaction_emoji: str
         | emojis_.Emoji
@@ -2577,7 +2577,7 @@ class PartialGuild(snowflakes.Unique):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode | int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,

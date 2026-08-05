@@ -1124,7 +1124,7 @@ class PartialMessage(snowflakes.Unique):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | MessageFlag = undefined.UNDEFINED,
     ) -> Message:
         """Create a message in the channel this message belongs to.
 

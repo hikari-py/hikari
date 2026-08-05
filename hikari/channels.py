@@ -516,7 +516,7 @@ class TextableChannel(PartialChannel):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in this channel.
 
@@ -1011,7 +1011,7 @@ class GuildChannel(PartialChannel):
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[VideoQualityMode | int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[VideoQualityMode] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         region: undefined.UndefinedOr[voices.VoiceRegion | str] = undefined.UNDEFINED,
@@ -1166,7 +1166,7 @@ class PermissibleGuildChannel(GuildChannel):
         self,
         target: snowflakes.Snowflakeish | users.PartialUser | guilds.PartialRole | PermissionOverwrite,
         *,
-        target_type: undefined.UndefinedOr[PermissionOverwriteType | int] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[PermissionOverwriteType] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,

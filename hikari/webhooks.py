@@ -117,7 +117,7 @@ class ExecutableWebhook(abc.ABC):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds_.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Execute the webhook to create a message.
 

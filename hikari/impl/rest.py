@@ -373,11 +373,11 @@ class RESTApp(traits.ExecutorAware):
 
     @typing.overload
     def acquire(
-        self, token: str, token_type: str | applications.TokenType = applications.TokenType.BEARER
+        self, token: str, token_type: applications.TokenType = applications.TokenType.BEARER
     ) -> RESTClientImpl: ...
 
     def acquire(
-        self, token: str | rest_api.TokenStrategy | None = None, token_type: str | applications.TokenType | None = None
+        self, token: str | rest_api.TokenStrategy | None = None, token_type: applications.TokenType | None = None
     ) -> RESTClientImpl:
         """Acquire an instance of this REST client.
 
@@ -593,7 +593,7 @@ class RESTClientImpl(rest_api.RESTClient):
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         token: str | rest_api.TokenStrategy | None,
-        token_type: applications.TokenType | str | None,
+        token_type: applications.TokenType | None,
         rest_url: str | None,
     ) -> None:
         if max_retries > 5:
@@ -628,7 +628,7 @@ class RESTClientImpl(rest_api.RESTClient):
         self._close_event: asyncio.Event | None = None
 
         self._token: str | rest_api.TokenStrategy | None = None
-        self._token_type: str | None = None
+        self._token_type: applications.TokenType | None = None
         if isinstance(token, str):
             if token_type is None:
                 msg = "Token type required when a str is passed for `token`"
@@ -671,7 +671,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     @property
     @typing_extensions.override
-    def token_type(self) -> str | applications.TokenType | None:
+    def token_type(self) -> applications.TokenType | None:
         return self._token_type
 
     @typing_extensions.override
@@ -1072,7 +1072,7 @@ class RESTClientImpl(rest_api.RESTClient):
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode | int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         region: undefined.UndefinedNoneOr[voices.VoiceRegion | str] = undefined.UNDEFINED,
@@ -1084,8 +1084,8 @@ class RESTClientImpl(rest_api.RESTClient):
         ] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
-        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType] = undefined.UNDEFINED,
         available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
         default_reaction_emoji: str
         | emojis.Emoji
@@ -1248,7 +1248,7 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
         target: snowflakes.Snowflakeish | users_.PartialUser | guilds.PartialRole | channels_.PermissionOverwrite,
         *,
-        target_type: undefined.UndefinedOr[channels_.PermissionOverwriteType | int] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[channels_.PermissionOverwriteType] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1445,7 +1445,7 @@ class RESTClientImpl(rest_api.RESTClient):
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1505,7 +1505,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 if component.type in components_.COMPONENT_V2_TYPES:
                     if flags is undefined.UNDEFINED:
-                        flags = 0
+                        flags = messages_.MessageFlag.NONE
                     flags |= messages_.MessageFlag.IS_COMPONENTS_V2
             else:
                 serialized_components = []
@@ -1520,7 +1520,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
                     if comp.type in components_.COMPONENT_V2_TYPES:
                         if flags is undefined.UNDEFINED:
-                            flags = 0
+                            flags = messages_.MessageFlag.NONE
                         flags |= messages_.MessageFlag.IS_COMPONENTS_V2
 
         serialized_embeds: undefined.UndefinedOr[data_binding.JSONArray] = undefined.UNDEFINED
@@ -1599,7 +1599,7 @@ class RESTClientImpl(rest_api.RESTClient):
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> tuple[data_binding.JSONObjectBuilder, data_binding.URLEncodedFormBuilder]:
         if not flags:
             flags = messages_.MessageFlag.IS_VOICE_MESSAGE
@@ -1666,7 +1666,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
         body, form_builder = self._build_message_payload(
@@ -1716,7 +1716,7 @@ class RESTClientImpl(rest_api.RESTClient):
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.POST_CHANNEL_MESSAGES.compile(channel=channel)
 
@@ -1802,7 +1802,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         route = routes.PATCH_CHANNEL_MESSAGE.compile(channel=channel, message=message)
         body, form_builder = self._build_message_payload(
@@ -2105,7 +2105,7 @@ class RESTClientImpl(rest_api.RESTClient):
         thread: undefined.UndefinedType | snowflakes.SnowflakeishOr[channels_.GuildThreadChannel] = undefined.UNDEFINED,
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar_url: undefined.UndefinedType | str | files.URL = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
         route = routes.POST_WEBHOOK_WITH_TOKEN.compile(webhook=webhook_id, token=token)
@@ -2150,7 +2150,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         # int(ExecutableWebhook) isn't guaranteed to be valid nor the ID used to execute this entity as a webhook.
         webhook_id = webhook if isinstance(webhook, int) else webhook.webhook_id
@@ -2681,7 +2681,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
-        event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         timestamp: undefined.UndefinedOr[str]
         if before is undefined.UNDEFINED:
@@ -2997,8 +2997,8 @@ class RESTClientImpl(rest_api.RESTClient):
         safety_alerts_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[str | locales.Locale] = undefined.UNDEFINED,
-        features: undefined.UndefinedOr[typing.Sequence[str | guilds.GuildFeature]] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[locales.Locale] = undefined.UNDEFINED,
+        features: undefined.UndefinedOr[typing.Sequence[guilds.GuildFeature]] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         premium_progress_bar_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -3186,8 +3186,8 @@ class RESTClientImpl(rest_api.RESTClient):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
-        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType] = undefined.UNDEFINED,
         available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
         default_reaction_emoji: str
         | emojis.Emoji
@@ -3231,8 +3231,8 @@ class RESTClientImpl(rest_api.RESTClient):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
-        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType] = undefined.UNDEFINED,
         available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
         default_reaction_emoji: undefined.UndefinedOr[str | emojis.Emoji | snowflakes.Snowflake] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -3266,7 +3266,7 @@ class RESTClientImpl(rest_api.RESTClient):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode | int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -3351,7 +3351,7 @@ class RESTClientImpl(rest_api.RESTClient):
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode | int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
@@ -3361,8 +3361,8 @@ class RESTClientImpl(rest_api.RESTClient):
         category: undefined.UndefinedOr[snowflakes.SnowflakeishOr[channels_.GuildCategory]] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
-        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType] = undefined.UNDEFINED,
         available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
         default_reaction_emoji: str
         | emojis.Emoji
@@ -3445,7 +3445,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def create_thread(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.PermissibleGuildChannel],
-        type: channels_.ChannelType | int,
+        type: channels_.ChannelType,
         name: str,
         /,
         *,
@@ -3499,7 +3499,7 @@ class RESTClientImpl(rest_api.RESTClient):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
         # Channel arguments
         auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = datetime.timedelta(days=1),
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
@@ -4370,7 +4370,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     @typing_extensions.override
     def context_menu_command_builder(
-        self, type: commands.CommandType | int, name: str
+        self, type: commands.CommandType, name: str
     ) -> special_endpoints.ContextMenuCommandBuilder:
         return special_endpoints_impl.ContextMenuCommandBuilder(commands.CommandType(type), name)
 
@@ -4429,17 +4429,15 @@ class RESTClientImpl(rest_api.RESTClient):
     async def _create_application_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: commands.CommandType | int,
+        type: commands.CommandType,
         name: str,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale | str, str]] = undefined.UNDEFINED,
-        description_localizations: undefined.UndefinedOr[
-            typing.Mapping[locales.Locale | str, str]
-        ] = undefined.UNDEFINED,
-        default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale, str]] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedType | permissions_.Permissions = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         if guild is undefined.UNDEFINED:
@@ -4453,8 +4451,13 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("description", description)
         body.put("type", type)
         body.put_array("options", options, conversion=self._entity_factory.serialize_command_option)
-        body.put("name_localizations", name_localizations)
-        body.put("description_localizations", description_localizations)
+        body.put(
+            "name_localizations", typing.cast("undefined.UndefinedOr[typing.Mapping[str, str]]", name_localizations)
+        )
+        body.put(
+            "description_localizations",
+            typing.cast("undefined.UndefinedOr[typing.Mapping[str, str]]", description_localizations),
+        )
         body.put("nsfw", nsfw)
 
         # Discord has some funky behaviour around what 0 means. They consider it to be the same as ADMINISTRATOR,
@@ -4474,11 +4477,9 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale | str, str]] = undefined.UNDEFINED,
-        description_localizations: undefined.UndefinedOr[
-            typing.Mapping[locales.Locale | str, str]
-        ] = undefined.UNDEFINED,
-        default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale, str]] = undefined.UNDEFINED,
+        description_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale, str]] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedType | permissions_.Permissions = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.SlashCommand:
         response = await self._create_application_command(
@@ -4501,12 +4502,12 @@ class RESTClientImpl(rest_api.RESTClient):
     async def create_context_menu_command(
         self,
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
-        type: commands.CommandType | int,
+        type: commands.CommandType,
         name: str,
         *,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
-        name_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale | str, str]] = undefined.UNDEFINED,
-        default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions = undefined.UNDEFINED,
+        name_localizations: undefined.UndefinedOr[typing.Mapping[locales.Locale, str]] = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedType | permissions_.Permissions = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.ContextMenuCommand:
         response = await self._create_application_command(
@@ -4550,7 +4551,7 @@ class RESTClientImpl(rest_api.RESTClient):
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         options: undefined.UndefinedOr[typing.Sequence[commands.CommandOption]] = undefined.UNDEFINED,
-        default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions = undefined.UNDEFINED,
+        default_member_permissions: undefined.UndefinedType | permissions_.Permissions = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> commands.PartialCommand:
         if guild is undefined.UNDEFINED:
@@ -4638,7 +4639,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     @typing_extensions.override
     def interaction_deferred_builder(
-        self, type_: base_interactions.ResponseType | int, /
+        self, type_: base_interactions.DeferredResponseTypesT, /
     ) -> special_endpoints.InteractionDeferredBuilder:
         return special_endpoints_impl.InteractionDeferredBuilder(type=type_)
 
@@ -4650,7 +4651,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
     @typing_extensions.override
     def interaction_message_builder(
-        self, type_: base_interactions.ResponseType | int, /
+        self, type_: base_interactions.MessageResponseTypesT, /
     ) -> special_endpoints.InteractionMessageBuilder:
         return special_endpoints_impl.InteractionMessageBuilder(type=type_)
 
@@ -4672,10 +4673,10 @@ class RESTClientImpl(rest_api.RESTClient):
         self,
         interaction: snowflakes.SnowflakeishOr[base_interactions.PartialInteraction],
         token: str,
-        response_type: int | base_interactions.ResponseType,
+        response_type: base_interactions.ResponseType,
         content: undefined.UndefinedNoneOr[typing.Any] = undefined.UNDEFINED,
         *,
-        flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
+        flags: messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         attachment: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,
@@ -4736,7 +4737,7 @@ class RESTClientImpl(rest_api.RESTClient):
         waveform: str,
         duration: float,
         *,
-        flags: int | messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
+        flags: messages_.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> base_interactions.InteractionCallbackResponse:
         route = routes.POST_INTERACTION_RESPONSE.compile(interaction=interaction, token=token)
 
@@ -4938,7 +4939,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def _create_or_edit_scheduled_stage(
         self,
         route: routes.CompiledRoute,
-        entity_type: undefined.UndefinedNoneOr[int | scheduled_events.ScheduledEventType],
+        entity_type: undefined.UndefinedNoneOr[scheduled_events.ScheduledEventType],
         name: undefined.UndefinedOr[str],
         *,
         channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.PartialChannel]] = undefined.UNDEFINED,
@@ -4947,8 +4948,8 @@ class RESTClientImpl(rest_api.RESTClient):
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: undefined.UndefinedOr[int | scheduled_events.EventPrivacyLevel] = undefined.UNDEFINED,
-        status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[scheduled_events.EventPrivacyLevel] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         body = data_binding.JSONObjectBuilder()
@@ -4985,7 +4986,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        privacy_level: scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -5015,7 +5016,7 @@ class RESTClientImpl(rest_api.RESTClient):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        privacy_level: scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -5045,7 +5046,7 @@ class RESTClientImpl(rest_api.RESTClient):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
-        privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        privacy_level: scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -5072,14 +5073,14 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         channel: undefined.UndefinedNoneOr[snowflakes.SnowflakeishOr[channels_.PartialChannel]] = undefined.UNDEFINED,
         description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-        entity_type: undefined.UndefinedOr[int | scheduled_events.ScheduledEventType] = undefined.UNDEFINED,
+        entity_type: undefined.UndefinedOr[scheduled_events.ScheduledEventType] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         location: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        privacy_level: undefined.UndefinedOr[int | scheduled_events.EventPrivacyLevel] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[scheduled_events.EventPrivacyLevel] = undefined.UNDEFINED,
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
-        status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        status: undefined.UndefinedOr[scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledEvent:
         route = routes.PATCH_GUILD_SCHEDULED_EVENT.compile(guild=guild, scheduled_event=event)
@@ -5211,7 +5212,7 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         sku: snowflakes.SnowflakeishOr[monetization.SKU],
         owner_id: guilds.PartialGuild | users_.PartialUser | snowflakes.Snowflakeish,
-        owner_type: int | monetization.EntitlementOwnerType,
+        owner_type: monetization.EntitlementOwnerType,
     ) -> monetization.Entitlement:
         body = data_binding.JSONObjectBuilder()
         body.put_snowflake("sku_id", sku)
@@ -5249,7 +5250,7 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: str,
-        privacy_level: undefined.UndefinedOr[int | stage_instances.StageInstancePrivacyLevel] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[stage_instances.StageInstancePrivacyLevel] = undefined.UNDEFINED,
         send_start_notification: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         scheduled_event_id: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
@@ -5274,7 +5275,7 @@ class RESTClientImpl(rest_api.RESTClient):
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
         *,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        privacy_level: undefined.UndefinedOr[int | stage_instances.StageInstancePrivacyLevel] = undefined.UNDEFINED,
+        privacy_level: undefined.UndefinedOr[stage_instances.StageInstancePrivacyLevel] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> stage_instances.StageInstance:
         route = routes.PATCH_STAGE_INSTANCE.compile(channel=channel)
@@ -5356,7 +5357,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         /,
         name: str,
-        event_type: auto_mod.AutoModEventType | int,
+        event_type: auto_mod.AutoModEventType,
         trigger: special_endpoints.AutoModTriggerBuilder,
         actions: typing.Sequence[special_endpoints.AutoModActionBuilder],
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -5388,7 +5389,7 @@ class RESTClientImpl(rest_api.RESTClient):
         rule: snowflakes.SnowflakeishOr[auto_mod.AutoModRule],
         /,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
-        event_type: undefined.UndefinedOr[auto_mod.AutoModEventType | int] = undefined.UNDEFINED,
+        event_type: undefined.UndefinedOr[auto_mod.AutoModEventType] = undefined.UNDEFINED,
         trigger: undefined.UndefinedOr[special_endpoints.AutoModTriggerBuilder] = undefined.UNDEFINED,
         actions: undefined.UndefinedOr[typing.Sequence[special_endpoints.AutoModActionBuilder]] = undefined.UNDEFINED,
         enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
