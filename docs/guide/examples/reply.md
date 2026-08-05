@@ -40,7 +40,7 @@ async def message_sent(event: hikari.MessageCreateEvent) -> None:
         await message.respond("I cannot create an empty message")
         return # Return so further logic is not executed
     
-    await message.respond(content) # Reply with original message's content
+    await bot.rest.create_message(event.channel_id, content=content, reply=message)
 ```
 
 However, there is still one big issue. This listens for **all** messages created. If the bot replies with a message, another `MessageCreateEvent` is fired for the message the bot created, leading to another event being dispatched, forever. To prevent this, another guard should be added that ignores the bot's own messages.
