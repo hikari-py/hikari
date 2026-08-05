@@ -1,6 +1,6 @@
 # Environment
 
-Since `hikari` runs on modern, non-deprecated versions of Python, we first need to set up a proper development environment. This guide walks you through installing Python, `hikari`, and a suitable code editor.
+Since `hikari` works best on modern versions of Python, we first need to set up a proper development environment. This guide walks you through installing Python, `hikari`, and a suitable code editor.
 
 ## Installing Python
 
