@@ -13,7 +13,7 @@ This event is dispatched when everything internally is running. The bot isn't 10
 
 ## StoppingEvent
 
-This event is dispatched when the bot is signalled to stop (via `bot.stop()`). All internal systems will shut down and you should save your state (databases, configurations, etc.).
+This event is dispatched when the bot is signalled to stop (via `bot.close()`). All internal systems will shut down and you should save your state (databases, configurations, etc.).
 
 ## StoppedEvent
 
