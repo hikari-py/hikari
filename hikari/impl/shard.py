@@ -217,7 +217,7 @@ class _GatewayTransport(abc.ABC):
             raise errors.GatewayTransportError(msg)
 
         if message.type == aiohttp.WSMsgType.CLOSE:
-            close_code = int(message.data)
+            close_code = errors.ShardCloseCode(int(message.data))
 
             can_reconnect = close_code < 4000 or close_code in _RECONNECTABLE_CLOSE_CODES
             # str(message.extra) is used to cast the possible None to a string

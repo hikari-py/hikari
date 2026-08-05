@@ -997,7 +997,7 @@ class OwnUser(UserImpl):
     is_mfa_enabled: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the user's account has multi-factor authentication enabled."""
 
-    locale: str | locales.Locale | None = attrs.field(eq=False, hash=False, repr=False)
+    locale: locales.Locale | None = attrs.field(eq=False, hash=False, repr=False)
     """The user's set locale.
 
     This is not provided in the `READY` event.
@@ -1017,7 +1017,7 @@ class OwnUser(UserImpl):
     scope. Will always be [`None`][] for bot users.
     """
 
-    premium_type: PremiumType | int | None = attrs.field(eq=False, hash=False, repr=False)
+    premium_type: PremiumType | None = attrs.field(eq=False, hash=False, repr=False)
     """The type of Nitro Subscription this user account had.
 
     This will always be [`None`][] for bots.

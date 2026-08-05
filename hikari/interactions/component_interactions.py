@@ -87,7 +87,7 @@ class ComponentInteraction(
 ):
     """Represents a component interaction on Discord."""
 
-    component_type: components_.ComponentType | int = attrs.field(eq=False)
+    component_type: components_.ComponentType = attrs.field(eq=False)
     """The type of component which triggers this interaction.
 
     !!! note

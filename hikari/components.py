@@ -264,7 +264,7 @@ class MediaLoadingType(int, enums.Enum):
 class PartialComponent:
     """Base class for all component entities."""
 
-    type: ComponentType | int = attrs.field()
+    type: ComponentType = attrs.field()
     """The type of component this is."""
 
     id: int = attrs.field()
@@ -301,7 +301,7 @@ class ActionRowComponent(PartialComponent, typing.Generic[AllowedComponentsT]):
 class ButtonComponent(PartialComponent):
     """Represents a button component."""
 
-    style: ButtonStyle | int = attrs.field(eq=False)
+    style: ButtonStyle = attrs.field(eq=False)
     """The button's style."""
 
     label: str | None = attrs.field(eq=False)
@@ -389,7 +389,7 @@ class TextSelectMenuComponent(SelectMenuComponent):
 class ChannelSelectMenuComponent(SelectMenuComponent):
     """Represents a channel select menu component."""
 
-    channel_types: typing.Sequence[int | channels.ChannelType] = attrs.field(eq=False)
+    channel_types: typing.Sequence[channels.ChannelType] = attrs.field(eq=False)
     """The valid channel types for this menu."""
 
 

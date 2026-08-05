@@ -307,7 +307,7 @@ class PermissionOverwrite(snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(converter=snowflakes.Snowflake, repr=True)
     """The ID of this entity."""
 
-    type: PermissionOverwriteType | int = attrs.field(converter=PermissionOverwriteType, repr=True)
+    type: PermissionOverwriteType = attrs.field(converter=PermissionOverwriteType, repr=True)
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permissions = attrs.field(
@@ -346,7 +346,7 @@ class PartialChannel(snowflakes.Unique):
     name: str | None = attrs.field(eq=False, hash=False, repr=True)
     """The channel's name. This will be missing for DM channels."""
 
-    type: ChannelType | int = attrs.field(eq=False, hash=False, repr=True)
+    type: ChannelType = attrs.field(eq=False, hash=False, repr=True)
     """The channel's type."""
 
     @property
@@ -1365,7 +1365,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     If this is `0`, then assume no limit.
     """
 
-    video_quality_mode: VideoQualityMode | int = attrs.field(eq=False, hash=False, repr=False)
+    video_quality_mode: VideoQualityMode = attrs.field(eq=False, hash=False, repr=False)
     """The video quality mode for this channel."""
 
     last_message_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
@@ -1398,7 +1398,7 @@ class GuildStageChannel(PermissibleGuildChannel, TextableGuildChannel):
     If this is `0`, then assume no limit.
     """
 
-    video_quality_mode: VideoQualityMode | int = attrs.field(eq=False, hash=False, repr=False)
+    video_quality_mode: VideoQualityMode = attrs.field(eq=False, hash=False, repr=False)
     """The video quality mode for this channel."""
 
     last_message_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)

@@ -315,7 +315,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     This will be [`None`][] for modal interactions triggered in DMs.
     """
 
-    guild_locale: str | locales.Locale | None = attrs.field(eq=False, hash=False, repr=True)
+    guild_locale: locales.Locale | None = attrs.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this component interaction was triggered in.
 
     This will be [`None`][] for component interactions triggered in DMs.
@@ -325,7 +325,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
         for the guild and will otherwise default to `en-US`.
     """
 
-    locale: str | locales.Locale = attrs.field(eq=False, hash=False, repr=True)
+    locale: locales.Locale = attrs.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this modal interaction."""
 
     authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (
@@ -403,7 +403,7 @@ class PartialInteractionMetadata:
     interaction_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID for this message interaction."""
 
-    type: InteractionType | int = attrs.field(eq=False, repr=True)
+    type: InteractionType = attrs.field(eq=False, repr=True)
     """The type of this message interaction."""
 
     user: users.User = attrs.field(eq=False, repr=True)

@@ -337,7 +337,7 @@ class Activity:
     Only valid for [`hikari.presences.ActivityType.STREAMING`][] activities.
     """
 
-    type: ActivityType | int = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
+    type: ActivityType = attrs.field(converter=ActivityType, default=ActivityType.PLAYING)
     """The activity type."""
 
     @typing_extensions.override
@@ -405,13 +405,13 @@ class Status(str, enums.Enum):
 class ClientStatus:
     """The client statuses for this member."""
 
-    desktop: Status | str = attrs.field(repr=True)
+    desktop: Status = attrs.field(repr=True)
     """The status of the target user's desktop session."""
 
-    mobile: Status | str = attrs.field(repr=True)
+    mobile: Status = attrs.field(repr=True)
     """The status of the target user's mobile session."""
 
-    web: Status | str = attrs.field(repr=True)
+    web: Status = attrs.field(repr=True)
     """The status of the target user's web session."""
 
 
@@ -431,7 +431,7 @@ class MemberPresence:
     guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of the guild this presence belongs to."""
 
-    visible_status: Status | str = attrs.field(eq=False, hash=False, repr=True)
+    visible_status: Status = attrs.field(eq=False, hash=False, repr=True)
     """This user's current status being displayed by the client."""
 
     activities: typing.Sequence[RichActivity] = attrs.field(eq=False, hash=False, repr=False)

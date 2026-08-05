@@ -247,7 +247,7 @@ class GatewayConnectionError(GatewayError):
 class GatewayServerClosedConnectionError(GatewayError):
     """An exception raised when the server closes the connection."""
 
-    code: ShardCloseCode | int | None = attrs.field(default=None)
+    code: ShardCloseCode | None = attrs.field(default=None)
     """Return the close code that was received, if there is one."""
 
     can_reconnect: bool = attrs.field(default=False)

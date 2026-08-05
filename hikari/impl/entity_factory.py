@@ -119,7 +119,7 @@ def _deserialize_max_age(seconds: int) -> datetime.timedelta | None:
 class _GuildChannelFields:
     id: snowflakes.Snowflake = attrs.field()
     name: str | None = attrs.field()
-    type: channel_models.ChannelType | int = attrs.field()
+    type: channel_models.ChannelType = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
     parent_id: snowflakes.Snowflake | None = attrs.field()
 
@@ -129,7 +129,7 @@ class _GuildChannelFields:
 class _IntegrationFields:
     id: snowflakes.Snowflake = attrs.field()
     name: str = attrs.field()
-    type: guild_models.IntegrationType | str = attrs.field()
+    type: guild_models.IntegrationType = attrs.field()
     account: guild_models.IntegrationAccount = attrs.field()
 
 
@@ -139,16 +139,16 @@ class _GuildFields:
     id: snowflakes.Snowflake = attrs.field()
     name: str = attrs.field()
     icon_hash: str = attrs.field()
-    features: list[guild_models.GuildFeature | str] = attrs.field()
+    features: list[guild_models.GuildFeature] = attrs.field()
     splash_hash: str | None = attrs.field()
     discovery_splash_hash: str | None = attrs.field()
     owner_id: snowflakes.Snowflake = attrs.field()
     afk_channel_id: snowflakes.Snowflake | None = attrs.field()
     afk_timeout: datetime.timedelta = attrs.field()
-    verification_level: guild_models.GuildVerificationLevel | int = attrs.field()
-    default_message_notifications: guild_models.GuildMessageNotificationsLevel | int = attrs.field()
-    explicit_content_filter: guild_models.GuildVerificationLevel | int = attrs.field()
-    mfa_level: guild_models.GuildMFALevel | int = attrs.field()
+    verification_level: guild_models.GuildVerificationLevel = attrs.field()
+    default_message_notifications: guild_models.GuildMessageNotificationsLevel = attrs.field()
+    explicit_content_filter: guild_models.GuildExplicitContentFilterLevel = attrs.field()
+    mfa_level: guild_models.GuildMFALevel = attrs.field()
     application_id: snowflakes.Snowflake | None = attrs.field()
     widget_channel_id: snowflakes.Snowflake | None = attrs.field()
     system_channel_id: snowflakes.Snowflake | None = attrs.field()
@@ -159,9 +159,9 @@ class _GuildFields:
     vanity_url_code: str | None = attrs.field()
     description: str | None = attrs.field()
     banner_hash: str | None = attrs.field()
-    premium_tier: guild_models.GuildPremiumTier | int = attrs.field()
+    premium_tier: guild_models.GuildPremiumTier = attrs.field()
     premium_subscription_count: int | None = attrs.field()
-    preferred_locale: str | locales.Locale = attrs.field()
+    preferred_locale: locales.Locale = attrs.field()
     public_updates_channel_id: snowflakes.Snowflake | None = attrs.field()
     nsfw_level: guild_models.GuildNSFWLevel = attrs.field()
 
@@ -228,7 +228,7 @@ class _InviteFields:
     inviter: user_models.User | None = attrs.field()
     target_user: user_models.User | None = attrs.field()
     target_application: application_models.InviteApplication | None = attrs.field()
-    target_type: invite_models.TargetType | int | None = attrs.field()
+    target_type: invite_models.TargetType | None = attrs.field()
     approximate_active_member_count: int | None = attrs.field()
     approximate_member_count: int | None = attrs.field()
 
@@ -520,7 +520,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.COMMUNICATION_DISABLED_UNTIL: time.iso8601_datetime_string_to_datetime,
         }
         self._audit_log_event_mapping: dict[
-            int | audit_log_models.AuditLogEventType,
+            audit_log_models.AuditLogEventType,
             typing.Callable[[data_binding.JSONObject], audit_log_models.BaseAuditLogEntryInfo],
         ] = {
             audit_log_models.AuditLogEventType.CHANNEL_OVERWRITE_CREATE: self._deserialize_channel_overwrite_entry_info,
@@ -800,13 +800,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def deserialize_application_connection_metadata_record(
         self, payload: data_binding.JSONObject
     ) -> application_models.ApplicationRoleConnectionMetadataRecord:
-        name_localizations: typing.Mapping[str, str]
+        name_localizations: typing.Mapping[locales.Locale, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
         else:
             name_localizations = {}
 
-        description_localizations: typing.Mapping[str, str]
+        description_localizations: typing.Mapping[locales.Locale, str]
         if raw_description_localizations := payload.get("description_localizations"):
             description_localizations = {
                 locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
@@ -960,9 +960,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         changes: list[audit_log_models.AuditLogChange] = []
         if (change_payloads := payload.get("changes")) is not None:
             for change_payload in change_payloads:
-                key: audit_log_models.AuditLogChangeKey | str = audit_log_models.AuditLogChangeKey(
-                    change_payload["key"]
-                )
+                key = audit_log_models.AuditLogChangeKey(change_payload["key"])
 
                 new_value = change_payload.get("new_value")
                 old_value = change_payload.get("old_value")
@@ -970,7 +968,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
                     new_value = value_converter(new_value) if new_value is not None else None
                     old_value = value_converter(old_value) if old_value is not None else None
 
-                elif not isinstance(key, audit_log_models.AuditLogChangeKey):  # pyright: ignore [reportUnnecessaryIsInstance]
+                elif key.is_unknown:
                     _LOGGER.debug("Unknown audit log change key found %r", key)
 
                 changes.append(audit_log_models.AuditLogChange(key=key, new_value=new_value, old_value=old_value))
@@ -983,7 +981,6 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_user_id := payload["user_id"]) is not None:
             user_id = snowflakes.Snowflake(raw_user_id)
 
-        action_type: audit_log_models.AuditLogEventType | int
         action_type = audit_log_models.AuditLogEventType(payload["action_type"])
 
         options: audit_log_models.BaseAuditLogEntryInfo | None = None
@@ -2235,7 +2232,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_expire_grace_period := payload.get("expire_grace_period")) is not None:
             expire_grace_period = datetime.timedelta(days=raw_expire_grace_period)
 
-        expire_behavior: guild_models.IntegrationExpireBehaviour | int | None = None
+        expire_behavior: guild_models.IntegrationExpireBehaviour | None = None
         if (raw_expire_behavior := payload.get("expire_behavior")) is not None:
             expire_behavior = guild_models.IntegrationExpireBehaviour(raw_expire_behavior)
 
@@ -2551,30 +2548,37 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_command_option(self, payload: data_binding.JSONObject) -> commands.CommandOption:
         choices: list[commands.CommandChoice] | None = None
         if raw_choices := payload.get("choices"):
-            choices = [
-                commands.CommandChoice(
-                    name=choice["name"],
-                    name_localizations=choice.get("name_localizations") or {},
-                    value=choice["value"],
+            choices = []
+            for choice in raw_choices:
+                choice_name_localizations: typing.Mapping[locales.Locale, str]
+                if raw_choice_name_localizations := choice.get("name_localizations"):
+                    choice_name_localizations = {
+                        locales.Locale(k): raw_choice_name_localizations[k] for k in raw_choice_name_localizations
+                    }
+                else:
+                    choice_name_localizations = {}
+
+                choices.append(
+                    commands.CommandChoice(
+                        name=choice["name"], name_localizations=choice_name_localizations, value=choice["value"]
+                    )
                 )
-                for choice in raw_choices
-            ]
 
         suboptions: list[commands.CommandOption] | None = None
         if raw_options := payload.get("options"):
             suboptions = [self._deserialize_command_option(option) for option in raw_options]
 
-        channel_types: typing.Sequence[channel_models.ChannelType | int] | None = None
+        channel_types: typing.Sequence[channel_models.ChannelType] | None = None
         if raw_channel_types := payload.get("channel_types"):
             channel_types = [channel_models.ChannelType(channel_type) for channel_type in raw_channel_types]
 
-        name_localizations: typing.Mapping[str, str]
+        name_localizations: typing.Mapping[locales.Locale, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
         else:
             name_localizations = {}
 
-        description_localizations: typing.Mapping[str, str]
+        description_localizations: typing.Mapping[locales.Locale, str]
         if raw_description_localizations := payload.get("description_localizations"):
             description_localizations = {
                 locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
@@ -2614,13 +2618,13 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if raw_options := payload.get("options"):
             options = [self._deserialize_command_option(option) for option in raw_options]
 
-        name_localizations: typing.Mapping[locales.Locale | str, str]
+        name_localizations: typing.Mapping[locales.Locale, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
         else:
             name_localizations = {}
 
-        description_localizations: typing.Mapping[locales.Locale | str, str]
+        description_localizations: typing.Mapping[locales.Locale, str]
         if raw_description_localizations := payload.get("description_localizations"):
             description_localizations = {
                 locales.Locale(k): raw_description_localizations[k] for k in raw_description_localizations
@@ -2674,7 +2678,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             raw_guild_id = payload["guild_id"]
             guild_id = snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None
 
-        name_localizations: typing.Mapping[locales.Locale | str, str]
+        name_localizations: typing.Mapping[locales.Locale, str]
         if raw_name_localizations := payload.get("name_localizations"):
             name_localizations = {locales.Locale(k): raw_name_localizations[k] for k in raw_name_localizations}
         else:
@@ -3403,7 +3407,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     def _deserialize_channel_select_menu(
         self, payload: data_binding.JSONObject
     ) -> component_models.ChannelSelectMenuComponent:
-        channel_types: list[int | channel_models.ChannelType] = []
+        channel_types: list[channel_models.ChannelType] = []
         if "channel_types" in payload:
             channel_types.extend(channel_models.ChannelType(t) for t in payload["channel_types"])
 
@@ -3477,8 +3481,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         accessory_payload = payload["accessory"]
         accessory_type = component_models.ComponentType(accessory_payload["type"])
         if (accessory_deserializer := self._section_accessory_mapping.get(accessory_type)) is None:
-            _LOGGER.debug("Unknown section accessory type %s", accessory_type)
-            msg = f"Unknown section accessory type {accessory_type}"
+            _LOGGER.debug("Unknown section accessory type %r", accessory_type)
+            msg = f"Unknown section accessory type {accessory_type!r}"
             raise errors.UnrecognisedEntityError(msg)
         accessory = accessory_deserializer(accessory_payload)
 
