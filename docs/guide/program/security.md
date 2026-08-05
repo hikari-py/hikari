@@ -6,7 +6,7 @@ Environment variables are our friend here, because not only do we not have to pa
 
 ## Install dotenv
 
-`dotenv` is a `Python` package that will take any environment file (like `.env`) and load it into our program's environment variables. It is only being shown here as an option for simplicity and convenience, but there are vastly different approaches to doing this.
+`python-dotenv` is a `Python` package that will take any environment file (like `.env`) and load it into our program's environment variables. It is only being shown here as an option for simplicity and convenience, but there are vastly different approaches to doing this.
 
 Install `dotenv` using `pip install python-dotenv`.<br/>
 ![Install dotenv](../../assets/guide/program/security-dotenv.png "Install dotenv")
