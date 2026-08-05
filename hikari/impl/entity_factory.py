@@ -483,10 +483,14 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.AFK_TIMEOUT: _deserialize_seconds_timedelta,
             audit_log_models.AuditLogChangeKey.RULES_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.PUBLIC_UPDATES_CHANNEL_ID: snowflakes.Snowflake,
-            audit_log_models.AuditLogChangeKey.MFA_LEVEL: guild_models.GuildMFALevel,
-            audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: guild_models.GuildVerificationLevel,
-            audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: guild_models.GuildExplicitContentFilterLevel,
-            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: guild_models.GuildMessageNotificationsLevel,  # noqa: E501
+            audit_log_models.AuditLogChangeKey.MFA_LEVEL: _with_int_cast(guild_models.GuildMFALevel),
+            audit_log_models.AuditLogChangeKey.VERIFICATION_LEVEL: _with_int_cast(guild_models.GuildVerificationLevel),
+            audit_log_models.AuditLogChangeKey.EXPLICIT_CONTENT_FILTER: _with_int_cast(
+                guild_models.GuildExplicitContentFilterLevel
+            ),
+            audit_log_models.AuditLogChangeKey.DEFAULT_MESSAGE_NOTIFICATIONS: _with_int_cast(
+                guild_models.GuildMessageNotificationsLevel
+            ),
             audit_log_models.AuditLogChangeKey.PRUNE_DELETE_DAYS: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.WIDGET_CHANNEL_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.POSITION: int,
@@ -508,11 +512,11 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogChangeKey.ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.TYPE: str,
             audit_log_models.AuditLogChangeKey.ENABLE_EMOTICONS: bool,
-            audit_log_models.AuditLogChangeKey.EXPIRE_BEHAVIOR: guild_models.IntegrationExpireBehaviour,
+            audit_log_models.AuditLogChangeKey.EXPIRE_BEHAVIOR: _with_int_cast(guild_models.IntegrationExpireBehaviour),
             audit_log_models.AuditLogChangeKey.EXPIRE_GRACE_PERIOD: _deserialize_day_timedelta,
             audit_log_models.AuditLogChangeKey.RATE_LIMIT_PER_USER: _deserialize_seconds_timedelta,
             audit_log_models.AuditLogChangeKey.SYSTEM_CHANNEL_ID: snowflakes.Snowflake,
-            audit_log_models.AuditLogChangeKey.FORMAT_TYPE: sticker_models.StickerFormatType,
+            audit_log_models.AuditLogChangeKey.FORMAT_TYPE: _with_int_cast(sticker_models.StickerFormatType),
             audit_log_models.AuditLogChangeKey.GUILD_ID: snowflakes.Snowflake,
             audit_log_models.AuditLogChangeKey.ADD_ROLE_TO_MEMBER: self._deserialize_audit_log_change_roles,
             audit_log_models.AuditLogChangeKey.REMOVE_ROLE_FROM_MEMBER: self._deserialize_audit_log_change_roles,
@@ -765,7 +769,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             integration_types_config=integration_types_config,
             event_webhooks_url=payload.get("event_webhooks_url"),
             event_webhooks_status=application_models.ApplicationEventWebhookStatus(
-                payload.get("event_webhooks_status", application_models.ApplicationEventWebhookStatus.DISABLED)
+                payload.get("event_webhooks_status") or application_models.ApplicationEventWebhookStatus.DISABLED
             ),
             event_webhooks_types=[
                 application_models.ApplicationEventWebhookType(t) for t in payload.get("event_webhooks_types") or []
@@ -1081,7 +1085,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return channel_models.PermissionOverwrite(
             # PermissionOverwrite's init has converters set for these fields which will handle casting
             id=payload["id"],
-            type=payload["type"],
+            type=int(payload["type"]),
             # Permissions still have to be cast to int before they can be cast to Permission typing wise.
             allow=int(payload["allow"]),
             deny=int(payload["deny"]),
@@ -1420,7 +1424,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             available_tags=available_tags,
             flags=channel_models.ChannelFlag(payload["flags"]),
             # Discord may send None here for old channels, but they are just NOT_SET
-            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout", 0)),
+            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout") or 0),
             # Discord may send None here for old channels, but they are just LATEST_ACTIVITY
             default_sort_order=channel_models.ForumSortOrderType(payload.get("default_sort_order") or 0),
             default_reaction_emoji_id=reaction_emoji_id,
@@ -1682,7 +1686,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             # Discord's docs are just wrong about this never being null.
             default_sort_order=channel_models.ForumSortOrderType(payload.get("default_sort_order") or 0),
             # Discord may send None here for old channels, but they are just NOT_SET
-            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout", 0)),
+            default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout") or 0),
             default_reaction_emoji_id=reaction_emoji_id,
             default_reaction_emoji_name=reaction_emoji_name,
         )
@@ -2964,7 +2968,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
-            command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
+            command_type=commands.CommandType(data_payload.get("type") or commands.CommandType.SLASH),
             options=options,
             resolved=resolved,
             target_id=target_id,
@@ -3019,7 +3023,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             version=payload["version"],
             command_id=snowflakes.Snowflake(data_payload["id"]),
             command_name=data_payload["name"],
-            command_type=commands.CommandType(data_payload.get("type", commands.CommandType.SLASH)),
+            command_type=commands.CommandType(data_payload.get("type") or commands.CommandType.SLASH),
             options=options,
             locale=locales.Locale(payload["locale"]),
             app_permissions=permission_models.Permissions(payload["app_permissions"]),
@@ -3643,7 +3647,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
 
         return message_models.MessageReference(
             app=self._app,
-            type=message_models.MessageReferenceType(payload.get("type", 0)),
+            type=message_models.MessageReferenceType(payload.get("type") or 0),
             id=message_reference_message_id,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             guild_id=message_reference_guild_id,
