@@ -45,13 +45,13 @@ However, there is still one big issue. This listens for **all** messages created
 ```python
 @bot.listen()
 async def message_sent(event: hikari.MessageCreateEvent) -> None:
+    if event.is_bot: # Ignore all bots
+        return
+
     if event.message.content is None:
         await bot.rest.create_message(event.channel_id, content="I cannot create an empty message", reply=event.message)
         return
     
-    if event.is_bot: # Ignore all bots
-        return
-
     await bot.rest.create_message(event.channel_id, content=event.message.content, reply=event.message)
 ```
 
