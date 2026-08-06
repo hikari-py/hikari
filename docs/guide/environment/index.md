@@ -98,7 +98,7 @@ Open your terminal relative to your project folder and perform the following ste
 
     ```bash
     python3 -m venv venv
-    source venv\bin\activate
+    source venv/bin/activate
     ```
 
 === "Linux"
