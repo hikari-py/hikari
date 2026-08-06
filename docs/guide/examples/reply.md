@@ -33,35 +33,27 @@ A better way to do this is:
 ```python
 @bot.listen()
 async def message_sent(event: hikari.MessageCreateEvent) -> None:
-    message: hikari.Message = event.message # Get the original message
-    content: str | None = message.content # Get the message's content, if populated
-
-    if content is None: # No content
-        await message.respond("I cannot create an empty message")
-        return # Return so further logic is not executed
+    if event.message.content is None: # No content (`None` here)
+        await bot.rest.create_message(event.channel_id, content="I cannot create an empty message", reply=event.message)
+        return
     
-    await bot.rest.create_message(event.channel_id, content=content, reply=message)
+    await bot.rest.create_message(event.channel_id, content=event.message.content, reply=event.message)
 ```
 
-However, there is still one big issue. This listens for **all** messages created. If the bot replies with a message, another `MessageCreateEvent` is fired for the message the bot created, leading to another event being dispatched, forever. To prevent this, another guard should be added that ignores the bot's own messages.
+However, there is still one big issue. This listens for **all** messages created. If the bot replies with a message, another `MessageCreateEvent` is fired for the message the bot created, leading to another event being dispatched, forever. To prevent this, another guard should be added that ignores the bot's own messages (blocking all bots in this case).
 
 ```python
 @bot.listen()
 async def message_sent(event: hikari.MessageCreateEvent) -> None:
-    message: hikari.Message = event.message
-    content: str | None = message.content
-
-    if content is None:
-        await message.respond("I cannot create an empty message")
-        return
-
-    if event.is_bot:
+    if event.message.content is None:
+        await bot.rest.create_message(event.channel_id, content="I cannot create an empty message", reply=event.message)
         return
     
-    await message.respond(content)
-```
+    if event.is_bot: # Ignore all bots
+        return
 
-Because this requires the bot's `.get_me()` method, we need to be sure that whenever we use it, the bot is actually started/running. Otherwise, the `.get_me()` method will return `None` rather than `hikari`.`OwnUser`. If not started, then the `bot.get_me().id` will error because `None` doesn't contain the `id` property. We do not need to worry about this as non-lifetime events dispatched by `hikari` are only dispatched when the bot is running/started already. This will not be an issue for us now, but is important to know for future development. However, your IDE may complain about it if unguarded (you can implement a guard for this, but it will never execute).
+    await bot.rest.create_message(event.channel_id, content=event.message.content, reply=event.message)
+```
 
 !!! warning
     `hikari`'s `MessageCreateEvent` works even if the message is in DMs or in a guild.
@@ -83,17 +75,14 @@ bot = hikari.GatewayBot(TOKEN, intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.
 
 @bot.listen()
 async def message_sent(event: hikari.MessageCreateEvent) -> None:
-    message: hikari.Message = event.message
-    content: str | None = message.content
-
-    if content is None:
-        await message.respond("I cannot create an empty message")
+    if event.message.content is None:
+        await bot.rest.create_message(event.channel_id, content="I cannot create an empty message", reply=event.message)
+        return
+    
+    if event.is_bot:
         return
 
-    if message.author.id == bot.get_me().id:
-        return
-
-    await message.respond(content)
+    await bot.rest.create_message(event.channel_id, content=event.message.content, reply=event.message)
 
 if __name__ == "__main__":
     bot.run()

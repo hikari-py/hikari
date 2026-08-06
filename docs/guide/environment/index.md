@@ -53,7 +53,7 @@ It is strongly recommended to install the **latest stable version of Python**, a
 
 === "Linux"
 
-    Python is typically preinstalled on most Linux distributions
+    Python is typically preinstalled on most Linux distributions. Keep in mind that you should never modify the system's preinstalled Python environment (using `venv` is always recommended).
 
     **Debian / Ubuntu**
 
@@ -83,7 +83,38 @@ It is strongly recommended to install the **latest stable version of Python**, a
 
 ## Installing hikari
 
-Once Python and `pip` are installed, installing `hikari` is straightforward
+Once Python and `pip` are installed, installing `hikari` is straightforward. However, you should always make a local environment specific to each project rather than relying on a global environment. Different projects rely on different versions of similar packages, and this prevents compatibility issues in the future.
+
+Open your terminal relative to your project folder and perform the following steps to create a local environment (called a virtual environment or `venv`):
+
+=== "Windows"
+
+    ```powershell
+    python -m venv venv
+    .\venv\Scripts\activate
+    ```
+
+=== "macOS"
+
+    ```bash
+    python3 -m venv venv
+    source venv\bin\activate
+    ```
+
+=== "Linux"
+
+    Ensure the `venv` module is installed:
+    ```bash
+    sudo apt install python3-venv
+    ```
+
+    Once installed:
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+Now that the local/virtual environment is created and activated within your project, you may install `hikari`:
 
 === "Windows"
 
@@ -113,7 +144,7 @@ python -c "import hikari; print(hikari.__version__)"
 
 An **IDE (Integrated Development Environment)** is where you will write and manage your code.
 
-While any editor will work, **Visual Studio Code** or **PyCharm** is recommended for their simplicity, speed, and excellent Python tooling.
+While any editor will work, **Visual Studio Code** or **PyCharm** are recommended for their simplicity, speed, and excellent Python tooling.
 
 | Editor | Documented |
 |--------|------------|
