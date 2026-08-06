@@ -913,7 +913,7 @@ class File(Resource[ThreadedFileReader]):
     @property
     @typing_extensions.override
     def filename(self) -> str:
-        filename = self._filename if self._filename else self.path.name
+        filename = self._filename or self.path.name
 
         if self.is_spoiler:
             return SPOILER_TAG + filename
@@ -1011,17 +1011,10 @@ class IteratorReader(AsyncReader):
             except StopAsyncIteration:
                 pass
 
-        elif isinstance(self.data, typing.Iterator):
+        elif isinstance(self.data, typing.Iterator) or inspect.isgenerator(self.data):
             try:
                 while True:
                     yield self._assert_bytes(next(self.data))
-            except StopIteration:
-                pass
-
-        elif inspect.isgenerator(self.data):
-            try:
-                while True:
-                    yield self._assert_bytes(self.data.send(None))
             except StopIteration:
                 pass
 

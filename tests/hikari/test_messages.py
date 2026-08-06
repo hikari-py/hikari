@@ -25,6 +25,7 @@ import datetime
 import mock
 import pytest
 
+from hikari import colors
 from hikari import emojis
 from hikari import guilds
 from hikari import messages
@@ -57,8 +58,26 @@ class TestAttachment:
 
 class TestReaction:
     def test_str_operator(self):
-        reaction = messages.Reaction(emoji=emojis.UnicodeEmoji("\N{OK HAND SIGN}"), count=42, is_me=True)
+        reaction = messages.Reaction(
+            emoji=emojis.UnicodeEmoji("\N{OK HAND SIGN}"),
+            count=42,
+            count_details=messages.ReactionCountDetails(burst=2, normal=40),
+            is_me=True,
+            is_me_burst=False,
+            burst_colors=[],
+        )
         assert str(reaction) == "\N{OK HAND SIGN}"
+
+    def test_burst_colours_property(self):
+        reaction = messages.Reaction(
+            emoji=emojis.UnicodeEmoji("\N{OK HAND SIGN}"),
+            count=42,
+            count_details=messages.ReactionCountDetails(burst=2, normal=40),
+            is_me=True,
+            is_me_burst=False,
+            burst_colors=[colors.Color(0x1A2B3C)],
+        )
+        assert reaction.burst_colours is reaction.burst_colors
 
 
 class TestMessageApplication:
@@ -246,6 +265,7 @@ class TestAsyncMessage:
             components=components,
             sticker=123,
             stickers=[543, 6542],
+            nonce="nonce",
             tts=True,
             reply=reference_messsage,
             reply_must_exist=False,
@@ -267,6 +287,7 @@ class TestAsyncMessage:
             components=components,
             sticker=123,
             stickers=[543, 6542],
+            nonce="nonce",
             tts=True,
             reply=reference_messsage,
             reply_must_exist=False,
@@ -294,6 +315,7 @@ class TestAsyncMessage:
             components=undefined.UNDEFINED,
             sticker=undefined.UNDEFINED,
             stickers=undefined.UNDEFINED,
+            nonce=undefined.UNDEFINED,
             tts=undefined.UNDEFINED,
             reply=message,
             reply_must_exist=undefined.UNDEFINED,
@@ -321,6 +343,7 @@ class TestAsyncMessage:
             components=undefined.UNDEFINED,
             sticker=undefined.UNDEFINED,
             stickers=undefined.UNDEFINED,
+            nonce=undefined.UNDEFINED,
             tts=undefined.UNDEFINED,
             reply=undefined.UNDEFINED,
             reply_must_exist=undefined.UNDEFINED,

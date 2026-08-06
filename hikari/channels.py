@@ -504,6 +504,7 @@ class TextableChannel(PartialChannel):
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -586,6 +587,9 @@ class TextableChannel(PartialChannel):
             As of writing, bots can only send custom stickers from the current guild.
         tts
             If provided, whether the message will be TTS (Text To Speech).
+        nonce
+            If provided, a nonce that can be used for optimistic message
+            sending.
         reply
             If provided, the message to reply to.
         reply_must_exist
@@ -662,6 +666,7 @@ class TextableChannel(PartialChannel):
             embeds=embeds,
             sticker=sticker,
             stickers=stickers,
+            nonce=nonce,
             tts=tts,
             reply=reply,
             reply_must_exist=reply_must_exist,

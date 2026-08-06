@@ -67,10 +67,12 @@ class TestPartialInteraction:
                     starts_at=None,
                     ends_at=None,
                     is_deleted=False,
+                    is_consumed=False,
                     subscription_id=None,
                 )
             ],
             context=applications.ApplicationContextType.PRIVATE_CHANNEL,
+            attachment_size_limit=12345,
         )
 
     def test_webhook_id_property(self, mock_partial_interaction):
@@ -147,9 +149,11 @@ class TestMessageResponseMixin:
                     starts_at=None,
                     ends_at=None,
                     is_deleted=False,
+                    is_consumed=False,
                     subscription_id=None,
                 )
             ],
+            attachment_size_limit=12345,
         )
 
     @pytest.mark.asyncio
@@ -325,9 +329,11 @@ class TestModalResponseMixin:
                     starts_at=None,
                     ends_at=None,
                     is_deleted=False,
+                    is_consumed=False,
                     subscription_id=None,
                 )
             ],
+            attachment_size_limit=12345,
         )
 
     @pytest.mark.asyncio

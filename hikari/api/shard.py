@@ -22,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("GatewayCompression", "GatewayDataFormat", "GatewayShard")
+__all__: typing.Sequence[str] = ("ChannelInfoField", "GatewayCompression", "GatewayDataFormat", "GatewayShard")
 
 import abc
 import typing
@@ -49,6 +49,17 @@ class GatewayDataFormat(str, enums.Enum):
     """Javascript serialized object notation."""
     ETF = "etf"
     """Erlang transmission format."""
+
+
+@typing.final
+class ChannelInfoField(str, enums.Enum):
+    """Fields which can be requested through [`hikari.api.shard.GatewayShard.request_channel_info`][]."""
+
+    STATUS = "status"
+    """The voice channel status."""
+
+    VOICE_START_TIME = "voice_start_time"
+    """When the ongoing voice session in the voice channel started."""
 
 
 @typing.final
@@ -245,6 +256,28 @@ class GatewayShard(abc.ABC):
         hikari.errors.MissingIntentError
             When trying to request presences without the [`hikari.intents.Intents.GUILD_MEMBERS`][] or when trying to
             request the full list of members without [`hikari.intents.Intents.GUILD_PRESENCES`][].
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
+        """
+
+    @abc.abstractmethod
+    async def request_channel_info(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], *, fields: typing.Sequence[ChannelInfoField]
+    ) -> None:
+        """Request ephemeral channel data for the channels of a guild.
+
+        The response will be dispatched as a
+        [`hikari.events.shard_events.ChannelInfoEvent`][].
+
+        Parameters
+        ----------
+        guild
+            The guild to request channel info for.
+        fields
+            The fields to request.
+
+        Raises
+        ------
         hikari.errors.ComponentStateConflictError
             When the shard is not connected so it cannot be interacted with.
         """

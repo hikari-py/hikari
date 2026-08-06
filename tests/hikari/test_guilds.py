@@ -131,6 +131,11 @@ class TestRole:
             id=snowflakes.Snowflake(979899100),
             name="@everyone",
             color=colors.Color(0x1A2B3C),
+            colors=colors.ColorGradient(
+                primary_color=colors.Color(0x1A2B3C),
+                secondary_color=colors.Color(0x2B3C4D),
+                tertiary_color=colors.Color(0x3C4D5E),
+            ),
             guild_id=snowflakes.Snowflake(112233),
             is_hoisted=False,
             icon_hash="icon_hash",
@@ -149,6 +154,9 @@ class TestRole:
 
     def test_colour_property(self, model):
         assert model.colour == colors.Color(0x1A2B3C)
+
+    def test_colours_property(self, model):
+        assert model.colours is model.colors
 
     def test_make_icon_url_format_set_to_deprecated_ext_argument_if_provided(self, model):
         with mock.patch.object(
@@ -413,9 +421,7 @@ class TestMember:
     def test_make_banner_url(self, model):
         result = model.make_banner_url(file_format="PNG", size=4096)
 
-        model.user.make_banner_url.assert_called_once_with(
-            file_format="PNG", size=4096, lossless=True
-        )
+        model.user.make_banner_url.assert_called_once_with(file_format="PNG", size=4096, lossless=True)
         assert result is model.user.make_banner_url.return_value
 
     def test_make_guild_banner_url_when_no_hash(self, model):
