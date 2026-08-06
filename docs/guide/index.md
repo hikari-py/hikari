@@ -19,7 +19,7 @@ To get started, start by visiting [Application](application.md).
 
 ## Intents
 
-Discord outlines intents as what your bot/application **intends** on implementing and using. Most intents are unpriveleged (meaning no authorization is necessary) where some are **priveleged**, meaning Discord must manually authorize your bot to access information provided by those intents once your bot reaches a certain threshold of guilds.
+Discord outlines intents as what your bot/application **intends** on implementing and using. Most intents are unprivileged (meaning no authorization is necessary) where some are **privileged**, meaning Discord must manually authorize your bot to access information provided by those intents once your bot reaches a certain threshold of guilds.
 A list of all publicly documented intents can be found [here](https://discord.com/developers/docs/events/gateway#list-of-intents).
 
 ## REST (HTTP)
