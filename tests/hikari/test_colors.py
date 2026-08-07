@@ -272,6 +272,12 @@ class TestColor:
         b = c.to_bytes(10, "little")
         assert b == b"\xff\xaa\xff\x00\x00\x00\x00\x00\x00\x00"
 
+    def test_Color_to_bytes_with_three_bytes(self):
+        c = colors.Color(0xFF0000)
+        b = c.to_bytes(3, "big")
+        assert b == b"\xff\x00\x00"
+        assert colors.Color.from_bytes(b, "big") == c
+
     @pytest.mark.parametrize(
         ("input", "expected_result"),
         [
@@ -334,3 +340,45 @@ class TestColor:
     def test_from_tuple_string_sad_path(self, input_string, value_error_match):
         with pytest.raises(ValueError, match=value_error_match):
             colors.Color.from_tuple_string(input_string)
+
+
+class TestColorGradient:
+    def test_of_converts_colorish_values(self):
+        gradient = colors.ColorGradient.of("#1A2B3C", 0x2B3C4D)
+
+        assert gradient.primary_color == colors.Color(0x1A2B3C)
+        assert isinstance(gradient.primary_color, colors.Color)
+        assert gradient.secondary_color == colors.Color(0x2B3C4D)
+        assert isinstance(gradient.secondary_color, colors.Color)
+        assert gradient.tertiary_color is None
+
+    def test_holographic(self):
+        gradient = colors.ColorGradient.holographic()
+
+        assert gradient == colors.ColorGradient(
+            primary_color=colors.Color(11127295),
+            secondary_color=colors.Color(16759788),
+            tertiary_color=colors.Color(16761760),
+        )
+
+    def test_of_with_all_colors(self):
+        gradient = colors.ColorGradient.of((0xFF, 0x5, 0x1A), "fab", 0x3C4D5E)
+
+        assert gradient == colors.ColorGradient(
+            primary_color=colors.Color(0xFF051A),
+            secondary_color=colors.Color(0xFFAABB),
+            tertiary_color=colors.Color(0x3C4D5E),
+        )
+
+    def test_colour_alias_properties(self):
+        gradient = colors.ColorGradient.of(0x1A2B3C, 0x2B3C4D, 0x3C4D5E)
+
+        assert gradient.primary_colour == colors.Color(0x1A2B3C)
+        assert gradient.secondary_colour == colors.Color(0x2B3C4D)
+        assert gradient.tertiary_colour == colors.Color(0x3C4D5E)
+
+    def test_colour_alias_properties_when_not_set(self):
+        gradient = colors.ColorGradient.of(0x1A2B3C)
+
+        assert gradient.secondary_colour is None
+        assert gradient.tertiary_colour is None
