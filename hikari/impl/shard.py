@@ -827,7 +827,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
             await asyncio.sleep(heartbeat_interval)
 
-    async def _poll_events(self) -> None:
+    async def _poll_events(self) -> None:  # noqa: PLR0912 - Too many branches
         assert self._ws is not None
         assert self._handshake_event is not None
 
