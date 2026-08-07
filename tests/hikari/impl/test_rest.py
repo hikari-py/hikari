@@ -2517,6 +2517,30 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
         rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
 
+    async def test_edit_channel_with_icon(self, rest_client, file_resource_patch):
+        expected_route = routes.PATCH_CHANNEL.compile(channel=123)
+        mock_object = mock.Mock()
+        rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
+        rest_client._request = mock.AsyncMock(return_value={"payload": "yes"})
+
+        assert await rest_client.edit_channel(StubModel(123), icon="somefile.png") == mock_object
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"icon": "some data"}, reason=undefined.UNDEFINED
+        )
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+
+    async def test_edit_channel_with_null_icon(self, rest_client):
+        expected_route = routes.PATCH_CHANNEL.compile(channel=123)
+        mock_object = mock.Mock()
+        rest_client._entity_factory.deserialize_channel = mock.Mock(return_value=mock_object)
+        rest_client._request = mock.AsyncMock(return_value={"payload": "yes"})
+
+        assert await rest_client.edit_channel(StubModel(123), icon=None) == mock_object
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={"icon": None}, reason=undefined.UNDEFINED)
+        rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
+
     async def test_delete_channel(self, rest_client):
         expected_route = routes.DELETE_CHANNEL.compile(channel=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "NNNNN"})
@@ -4111,6 +4135,62 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
         rest_client._entity_factory.deserialize_dm.assert_called_once_with({"id": "43234"})
         mock_cache.set_dm_channel_id.assert_not_called()
+
+    async def test_create_group_dm_channel(self, rest_client):
+        group_dm = StubModel(4444)
+        expected_route = routes.POST_MY_CHANNELS.compile()
+        expected_json = {"access_tokens": ["token1", "token2"], "nicks": {"123": "nick1", "456": "nick2"}}
+        rest_client._request = mock.AsyncMock(return_value={"id": "4444"})
+        rest_client._entity_factory.deserialize_group_dm = mock.Mock(return_value=group_dm)
+
+        result = await rest_client.create_group_dm_channel(
+            ["token1", "token2"], nicknames={StubModel(123): "nick1", 456: "nick2"}
+        )
+
+        assert result == group_dm
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_group_dm.assert_called_once_with({"id": "4444"})
+
+    async def test_create_group_dm_channel_without_nicknames(self, rest_client):
+        group_dm = StubModel(4444)
+        expected_route = routes.POST_MY_CHANNELS.compile()
+        expected_json = {"access_tokens": ["token1"]}
+        rest_client._request = mock.AsyncMock(return_value={"id": "4444"})
+        rest_client._entity_factory.deserialize_group_dm = mock.Mock(return_value=group_dm)
+
+        result = await rest_client.create_group_dm_channel(["token1"])
+
+        assert result == group_dm
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+        rest_client._entity_factory.deserialize_group_dm.assert_called_once_with({"id": "4444"})
+
+    async def test_add_recipient_to_group_dm(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_RECIPIENT.compile(channel=45411, user=123)
+        expected_json = {"access_token": "token", "nick": "cool nickname"}
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.add_recipient_to_group_dm(
+            StubModel(45411), StubModel(123), access_token="token", nickname="cool nickname"
+        )
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+
+    async def test_add_recipient_to_group_dm_without_nickname(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_RECIPIENT.compile(channel=45411, user=123)
+        expected_json = {"access_token": "token"}
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.add_recipient_to_group_dm(StubModel(45411), StubModel(123), access_token="token")
+
+        rest_client._request.assert_awaited_once_with(expected_route, json=expected_json)
+
+    async def test_remove_recipient_from_group_dm(self, rest_client):
+        expected_route = routes.DELETE_CHANNEL_RECIPIENT.compile(channel=45411, user=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.remove_recipient_from_group_dm(StubModel(45411), StubModel(123))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_fetch_application(self, rest_client):
         application = StubModel(123)
