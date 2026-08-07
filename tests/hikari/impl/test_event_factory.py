@@ -1570,6 +1570,25 @@ class TestEventFactoryImpl:
 
         assert event.voice_start_time is None
 
+    def test_deserialize_voice_channel_status_update_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "5513123", "guild_id": "54123123", "status": "very cool status"}
+
+        event = event_factory.deserialize_voice_channel_status_update_event(mock_shard, mock_payload)
+
+        assert isinstance(event, voice_events.VoiceChannelStatusUpdateEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.channel_id == 5513123
+        assert event.guild_id == 54123123
+        assert event.status == "very cool status"
+
+    def test_deserialize_voice_channel_status_update_event_with_null_status(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "5513123", "guild_id": "54123123", "status": None}
+
+        event = event_factory.deserialize_voice_channel_status_update_event(mock_shard, mock_payload)
+
+        assert event.status is None
+
     ##################
     #  MONETIZATION  #
     ##################
