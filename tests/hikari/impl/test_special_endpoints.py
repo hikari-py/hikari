@@ -326,6 +326,80 @@ class TestOwnGuildIterator:
         mock_request.assert_awaited_once_with(compiled_route=expected_route, query=query)
 
 
+class TestMemberIterator:
+    @pytest.mark.asyncio
+    async def test_aiter(self):
+        expected_route = routes.GET_GUILD_MEMBERS.compile(guild=10000)
+        mock_entity_factory = mock.Mock()
+        mock_payload_1 = {"user": {"id": "45234"}}
+        mock_payload_2 = {"user": {"id": "452745"}}
+        mock_payload_3 = {"user": {"id": "45237656"}}
+        mock_payload_4 = {"user": {"id": "452345666"}}
+        mock_payload_5 = {"user": {"id": "4523456744"}}
+        mock_result_1 = mock.Mock()
+        mock_result_2 = mock.Mock()
+        mock_result_3 = mock.Mock()
+        mock_result_4 = mock.Mock()
+        mock_result_5 = mock.Mock()
+        mock_entity_factory.deserialize_member.side_effect = [
+            mock_result_1,
+            mock_result_2,
+            mock_result_3,
+            mock_result_4,
+            mock_result_5,
+        ]
+        mock_request = mock.AsyncMock(
+            side_effect=[[mock_payload_1, mock_payload_2, mock_payload_3], [mock_payload_4, mock_payload_5], []]
+        )
+        iterator = special_endpoints.MemberIterator(
+            entity_factory=mock_entity_factory, request_call=mock_request, guild=10000
+        )
+
+        result = await iterator
+
+        assert result == [mock_result_1, mock_result_2, mock_result_3, mock_result_4, mock_result_5]
+        mock_entity_factory.deserialize_member.assert_has_calls(
+            [
+                mock.call(mock_payload_1, guild_id=10000),
+                mock.call(mock_payload_2, guild_id=10000),
+                mock.call(mock_payload_3, guild_id=10000),
+                mock.call(mock_payload_4, guild_id=10000),
+                mock.call(mock_payload_5, guild_id=10000),
+            ]
+        )
+        mock_request.assert_has_awaits(
+            [
+                mock.call(compiled_route=expected_route, query={"limit": "1000"}),
+                mock.call(compiled_route=expected_route, query={"after": "45237656", "limit": "1000"}),
+                mock.call(compiled_route=expected_route, query={"after": "4523456744", "limit": "1000"}),
+            ]
+        )
+
+    @pytest.mark.asyncio
+    async def test_aiter_when_first_id(self):
+        expected_route = routes.GET_GUILD_MEMBERS.compile(guild=10000)
+        mock_entity_factory = mock.Mock()
+        mock_payload_1 = {"user": {"id": "45234"}}
+        mock_payload_2 = {"user": {"id": "452745"}}
+        mock_result_1 = mock.Mock()
+        mock_result_2 = mock.Mock()
+        mock_entity_factory.deserialize_member.side_effect = [mock_result_1, mock_result_2]
+        mock_request = mock.AsyncMock(side_effect=[[mock_payload_1, mock_payload_2], []])
+        iterator = special_endpoints.MemberIterator(
+            entity_factory=mock_entity_factory, request_call=mock_request, guild=10000, first_id="123321"
+        )
+
+        result = await iterator
+
+        assert result == [mock_result_1, mock_result_2]
+        mock_request.assert_has_awaits(
+            [
+                mock.call(compiled_route=expected_route, query={"after": "123321", "limit": "1000"}),
+                mock.call(compiled_route=expected_route, query={"after": "452745", "limit": "1000"}),
+            ]
+        )
+
+
 class TestGuildBanIterator:
     @pytest.mark.asyncio
     async def test_aiter(self):
