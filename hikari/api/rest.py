@@ -54,7 +54,7 @@ if typing.TYPE_CHECKING:
     from hikari import stage_instances
     from hikari import stickers as stickers_
     from hikari import templates
-    from hikari import users
+    from hikari import users as users_
     from hikari import voices
     from hikari import webhooks
     from hikari.api import entity_factory as entity_factory_
@@ -440,7 +440,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_voice_state(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users_.PartialUser]
     ) -> voices.VoiceState:
         """Fetch the current user's voice state.
 
@@ -525,7 +525,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         *,
         suppress: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> None:
@@ -569,7 +569,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: channels_.PermissionOverwrite | users.PartialUser | guilds.PartialRole,
+        target: channels_.PermissionOverwrite | users_.PartialUser | guilds.PartialRole,
         *,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
@@ -597,7 +597,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: snowflakes.Snowflakeish | users.PartialUser | guilds.PartialRole | channels_.PermissionOverwrite,
+        target: snowflakes.Snowflakeish | users_.PartialUser | guilds.PartialRole | channels_.PermissionOverwrite,
         *,
         target_type: undefined.UndefinedOr[channels_.PermissionOverwriteType | int] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
@@ -651,7 +651,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def delete_permission_overwrite(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
-        target: channels_.PermissionOverwrite | guilds.PartialRole | users.PartialUser | snowflakes.Snowflakeish,
+        target: channels_.PermissionOverwrite | guilds.PartialRole | users_.PartialUser | snowflakes.Snowflakeish,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         """Delete a custom permission for an entity in a given guild channel.
@@ -725,7 +725,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         temporary: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         unique: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         target_type: undefined.UndefinedOr[invites.TargetType] = undefined.UNDEFINED,
-        target_user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        target_user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         target_application: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[guilds.PartialApplication]
         ] = undefined.UNDEFINED,
@@ -1068,12 +1068,13 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
@@ -1154,6 +1155,12 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         tts
             If provided, whether the message will be read out by a screen
             reader using Discord's TTS (text-to-speech) system.
+        nonce
+            An arbitrary identifier to associate with the message. This
+            can be used to identify it later in received events. If provided,
+            this must be less than 32 bytes. If not provided, then
+            a null value is placed on the message instead. All users can
+            see this value.
         reply
             If provided, the message to reply to.
         reply_must_exist
@@ -1445,7 +1452,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
@@ -1821,7 +1828,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         channel: snowflakes.SnowflakeishOr[channels_.TextableChannel],
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
     ) -> None:
@@ -1907,7 +1914,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         message: snowflakes.SnowflakeishOr[messages_.PartialMessage],
         emoji: str | emojis.Emoji,
         emoji_id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[emojis.CustomEmoji]] = undefined.UNDEFINED,
-    ) -> iterators.LazyIterator[users.User]:
+        reaction_type: undefined.UndefinedOr[messages_.ReactionType] = undefined.UNDEFINED,
+    ) -> iterators.LazyIterator[users_.User]:
         """Fetch reactions for an emoji from a message.
 
         !!! note
@@ -1920,22 +1928,25 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         channel
-            The channel where the message to delete all reactions from is.
-            This may be the object or the ID of an existing channel.
+            The channel where the message is. This may be the object or
+            the ID of an existing channel.
         message
-            The message to delete all reaction from. This may be the
+            The message to fetch the reacting users from. This may be the
             object or the ID of an existing message.
         emoji
-            Object or name of the emoji to get the reactions for.
+            Object or name of the emoji to get the reacting users for.
         emoji_id
-            ID of the custom emoji to get the reactions for.
+            ID of the custom emoji to get the reacting users for.
             This should only be provided when a custom emoji's name is passed
             for `emoji`.
+        reaction_type
+            If provided, the type of reaction to fetch the users for.
+            If not provided, this defaults to normal reactions.
 
         Returns
         -------
         hikari.iterators.LazyIterator[hikari.users.User]
-            An iterator to fetch the users.
+            An iterator to fetch the users which reacted with the emoji.
 
         Raises
         ------
@@ -2334,7 +2345,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
@@ -2551,7 +2562,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
@@ -2831,7 +2842,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_my_user(self) -> users.OwnUser:
+    async def fetch_my_user(self) -> users_.OwnUser:
         """Fetch the token's associated user.
 
         Returns
@@ -2857,7 +2868,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         username: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         avatar: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-    ) -> users.OwnUser:
+    ) -> users_.OwnUser:
         """Edit the token's associated user.
 
         Parameters
@@ -3065,7 +3076,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users.PartialUser], /) -> channels_.DMChannel:
+    async def create_dm_channel(self, user: snowflakes.SnowflakeishOr[users_.PartialUser], /) -> channels_.DMChannel:
         """Create a DM channel with a user.
 
         Parameters
@@ -3108,6 +3119,95 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_application(
+        self,
+        *,
+        description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        custom_install_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        role_connections_verification_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        install_params: undefined.UndefinedOr[applications.ApplicationInstallParameters] = undefined.UNDEFINED,
+        integration_types_config: undefined.UndefinedOr[
+            typing.Mapping[applications.ApplicationIntegrationType, applications.ApplicationIntegrationConfiguration]
+        ] = undefined.UNDEFINED,
+        flags: undefined.UndefinedOr[applications.ApplicationFlags] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        cover_image: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        interactions_endpoint_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        tags: undefined.UndefinedOr[typing.Sequence[str]] = undefined.UNDEFINED,
+        event_webhooks_url: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        event_webhooks_status: undefined.UndefinedOr[applications.ApplicationEventWebhookStatus] = undefined.UNDEFINED,
+        event_webhooks_types: undefined.UndefinedOr[
+            typing.Sequence[applications.ApplicationEventWebhookType]
+        ] = undefined.UNDEFINED,
+    ) -> applications.Application:
+        """Edit the token's associated application.
+
+        !!! warning
+            This endpoint can only be used with a Bot token. Using this with a
+            Bearer token will result in a [`hikari.errors.UnauthorizedError`][].
+
+        Parameters
+        ----------
+        description
+            If provided, the new description of the application.
+        custom_install_url
+            If provided, the new default custom authorization URL of the application.
+        role_connections_verification_url
+            If provided, the new role connection verification URL of the application.
+        install_params
+            If provided, the new settings of the application's default in-app
+            authorization link.
+        integration_types_config
+            If provided, the new default scopes and permissions for each
+            installation context the application supports.
+        flags
+            If provided, the new public flags of the application.
+            Only the limited intent flags ([`hikari.applications.ApplicationFlags.GUILD_PRESENCES_INTENT`][],
+            [`hikari.applications.ApplicationFlags.GUILD_MEMBERS_INTENT`][] and
+            [`hikari.applications.ApplicationFlags.MESSAGE_CONTENT_INTENT_LIMITED`][])
+            can be updated through the API.
+        icon
+            If provided, the new icon of the application. If [`None`][], the
+            icon will be removed.
+        cover_image
+            If provided, the new default rich presence invite cover image of
+            the application. If [`None`][], the cover image will be removed.
+        interactions_endpoint_url
+            If provided, the new URL the application receives interactions on.
+            Discord validates this URL before applying it by sending a `PING`
+            interaction to it, so it must be reachable and respond correctly.
+        tags
+            If provided, the new tags describing the content and functionality
+            of the application. A maximum of 5 tags of up to 20 characters each
+            can be set.
+        event_webhooks_url
+            If provided, the new URL the application receives webhook events on.
+        event_webhooks_status
+            If provided, the new status of the application's event webhooks:
+            [`hikari.applications.ApplicationEventWebhookStatus.ENABLED`][] to enable them or
+            [`hikari.applications.ApplicationEventWebhookStatus.DISABLED`][] to disable them.
+        event_webhooks_types
+            If provided, the new webhook event types the application subscribes to.
+
+        Returns
+        -------
+        hikari.applications.Application
+            The updated application.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.RateLimitTooLongError
@@ -3376,7 +3476,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self,
         access_token: str | applications.PartialOAuth2Token,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         *,
         nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
@@ -3467,7 +3567,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_user(self, user: snowflakes.SnowflakeishOr[users.PartialUser]) -> users.User:
+    async def fetch_user(self, user: snowflakes.SnowflakeishOr[users_.PartialUser]) -> users_.User:
         """Fetch a user.
 
         Parameters
@@ -3500,7 +3600,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
-        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         """Fetch pages of the guild's audit log.
@@ -3963,6 +4063,36 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_sticker_pack(
+        self, sticker_pack: snowflakes.SnowflakeishOr[stickers_.StickerPack]
+    ) -> stickers_.StickerPack:
+        """Fetch a sticker pack.
+
+        Parameters
+        ----------
+        sticker_pack
+            The sticker pack to fetch. This can be a sticker pack object or the
+            ID of an existing sticker pack.
+
+        Returns
+        -------
+        hikari.stickers.StickerPack
+            The requested sticker pack.
+
+        Raises
+        ------
+        hikari.errors.NotFoundError
+            If the sticker pack is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def fetch_sticker(
         self, sticker: snowflakes.SnowflakeishOr[stickers_.PartialSticker]
     ) -> stickers_.GuildSticker | stickers_.StandardSticker:
@@ -4274,7 +4404,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def edit_guild(
+    async def edit_guild(  # noqa: PLR0913 - Too many arguments
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
@@ -4291,20 +4421,27 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ] = undefined.UNDEFINED,
         afk_timeout: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
-        owner: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        owner: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
+        discovery_splash: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         banner: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         system_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
+        system_channel_flags: undefined.UndefinedOr[guilds.GuildSystemChannelFlag] = undefined.UNDEFINED,
         rules_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
+        safety_alerts_channel: undefined.UndefinedNoneOr[
+            snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
+        ] = undefined.UNDEFINED,
         preferred_locale: undefined.UndefinedOr[str | locales.Locale] = undefined.UNDEFINED,
         features: undefined.UndefinedOr[typing.Sequence[guilds.GuildFeature]] = undefined.UNDEFINED,
+        description: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        premium_progress_bar_enabled: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> guilds.RESTGuild:
         """Edit a guild.
@@ -4338,15 +4475,23 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         splash
             If provided, the new guild splash. Must be a 16:9 image and the
             guild must have the [`hikari.guilds.GuildFeature.INVITE_SPLASH`][] feature.
+        discovery_splash
+            If provided, the new guild discovery splash. Must be a 16:9 image
+            and the guild must have the [`hikari.guilds.GuildFeature.DISCOVERABLE`][] feature.
         banner
             If provided, the new guild banner. Must be a 16:9 image and the
             guild must have the [`hikari.guilds.GuildFeature.BANNER`][] feature.
         system_channel
             If provided, the new system channel.
+        system_channel_flags
+            If provided, the new flags controlling which messages are
+            suppressed in the system channel.
         rules_channel
             If provided, the new rules channel.
         public_updates_channel
             If provided, the new public updates channel.
+        safety_alerts_channel
+            If provided, the new channel that Discord sends safety alerts to.
         preferred_locale
             If provided, the new preferred locale.
         features
@@ -4358,6 +4503,10 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
                 This behaviour can change in the future. You should refer to the
                 aforementioned link for the most up-to-date information, and
                 only supply mutable features.
+        description
+            If provided, the new guild description.
+        premium_progress_bar_enabled
+            If provided, whether the guild should display its boost progress bar.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -5187,7 +5336,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         mentions_reply: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
@@ -5373,7 +5522,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def add_thread_member(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         /,
     ) -> None:
         """Add a user to a thread channel.
@@ -5430,7 +5579,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def remove_thread_member(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         /,
     ) -> None:
         """Remove a user from a thread.
@@ -5463,7 +5612,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def fetch_thread_member(
         self,
         channel: snowflakes.SnowflakeishOr[channels_.GuildThreadChannel],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         /,
     ) -> channels_.ThreadMember:
         """Fetch a thread member.
@@ -5775,7 +5924,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_member(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users_.PartialUser]
     ) -> guilds.Member:
         """Fetch a guild member.
 
@@ -5916,7 +6065,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def edit_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         *,
         nickname: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
         roles: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
@@ -6063,7 +6212,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def add_role_to_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         role: snowflakes.SnowflakeishOr[guilds.PartialRole],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -6104,7 +6253,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def remove_role_from_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         role: snowflakes.SnowflakeishOr[guilds.PartialRole],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -6145,7 +6294,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def kick_user(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -6182,7 +6331,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def kick_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -6192,7 +6341,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def ban_user(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         *,
         delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -6236,7 +6385,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def ban_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         *,
         delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -6244,10 +6393,61 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """Alias of [`hikari.api.rest.RESTClient.ban_user`][]."""
 
     @abc.abstractmethod
+    async def bulk_ban_users(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        users: snowflakes.SnowflakeishSequence[users_.PartialUser],
+        *,
+        delete_message_seconds: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> guilds.BulkBanResponse:
+        """Ban up to 200 users from a guild at once.
+
+        Parameters
+        ----------
+        guild
+            The guild to ban the users from. This may be the
+            object or the ID of an existing guild.
+        users
+            The users to ban. These may be the objects or the IDs of
+            existing users. A maximum of 200 users can be banned at once.
+        delete_message_seconds
+            If provided, the number of seconds to delete messages for.
+            This can be represented as either an int/float between 0 and 604800 (7 days), or
+            a [`datetime.timedelta`][] object.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Returns
+        -------
+        hikari.guilds.BulkBanResponse
+            The IDs of the users which were banned and of those which were not.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value, or if
+            none of the users could be banned.
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.BAN_MEMBERS`][] or
+            [`hikari.permissions.Permissions.MANAGE_GUILD`][] permissions.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the guild is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def unban_user(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -6284,7 +6484,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     async def unban_member(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        user: snowflakes.SnowflakeishOr[users.PartialUser],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
         *,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
@@ -6292,7 +6492,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     async def fetch_ban(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users.PartialUser]
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], user: snowflakes.SnowflakeishOr[users_.PartialUser]
     ) -> guilds.GuildBan:
         """Fetch the guild's ban info for a user.
 
@@ -6333,7 +6533,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         /,
         *,
         newest_first: bool = False,
-        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[guilds.GuildBan]:
         """Fetch the bans of a guild.
 
@@ -6443,8 +6643,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = permissions_.Permissions.NONE,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -6466,7 +6666,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             default behaviour on Discord where some random permissions will
             be set by default.
         color
-            If provided, the role's color.
+            If provided, the role's color. Passing a
+            [`hikari.colors.ColorGradient`][] can be used to give the role a
+            gradient or holographic color style instead of a solid color.
+
+            Gradient and holographic styles can only be used if the guild has
+            the [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+
+            !!! note
+                When the gradient's tertiary color is provided, the API
+                enforces the role color to be the holographic style, which
+                can be built with [`hikari.colors.ColorGradient.holographic`][].
         colour
             An alias for `color`.
         hoist
@@ -6549,8 +6759,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         permissions: undefined.UndefinedOr[permissions_.Permissions] = undefined.UNDEFINED,
-        color: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
-        colour: undefined.UndefinedOr[colors.Colorish] = undefined.UNDEFINED,
+        color: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
+        colour: undefined.UndefinedOr[colors.Colorish | colors.ColorGradient] = undefined.UNDEFINED,
         hoist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         unicode_emoji: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
@@ -6572,7 +6782,19 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         permissions
             If provided, the new permissions for the role.
         color
-            If provided, the new color for the role.
+            If provided, the new color for the role. Passing a
+            [`hikari.colors.ColorGradient`][] can be used to give the role a
+            gradient or holographic color style instead of a solid color, or
+            to remove such a style again by passing a gradient with only a
+            primary color.
+
+            Gradient and holographic styles can only be used if the guild has
+            the [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+
+            !!! note
+                When the gradient's tertiary color is provided, the API
+                enforces the role color to be the holographic style, which
+                can be built with [`hikari.colors.ColorGradient.holographic`][].
         colour
             An alias for `color`.
         hoist
@@ -7996,7 +8218,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         poll: undefined.UndefinedOr[special_endpoints.PollBuilder] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
@@ -8199,7 +8421,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         embeds: undefined.UndefinedNoneOr[typing.Sequence[embeds_.Embed]] = undefined.UNDEFINED,
         mentions_everyone: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         user_mentions: undefined.UndefinedOr[
-            snowflakes.SnowflakeishSequence[users.PartialUser] | bool
+            snowflakes.SnowflakeishSequence[users_.PartialUser] | bool
         ] = undefined.UNDEFINED,
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
@@ -8905,7 +9127,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         /,
         *,
         newest_first: bool = False,
-        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[scheduled_events.ScheduledEventUser]:
         """Asynchronously iterate over the users who're subscribed to a scheduled event.
 
@@ -8989,12 +9211,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
         /,
         *,
-        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         guild: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.PartialGuild]] = undefined.UNDEFINED,
+        skus: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[monetization.SKU]] = undefined.UNDEFINED,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         exclude_ended: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
+        exclude_deleted: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> typing.Sequence[monetization.Entitlement]:
         """Fetch all entitlements for a given application, active and expired.
 
@@ -9006,6 +9230,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             The user to look up entitlements for.
         guild
             The guild to look up entitlements for.
+        skus
+            The SKUs to check entitlements for.
         before
             Retrieve entitlements before this time or ID.
         after
@@ -9013,7 +9239,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         limit
             Number of entitlements to return, 1-100, default 100.
         exclude_ended
-            Whether or not ended entitlements should be omitted.
+            Whether or not ended entitlements should be omitted. Defaults to
+            [`False`][].
+        exclude_deleted
+            Whether or not deleted entitlements should be omitted. Defaults to
+            [`True`][].
 
         Returns
         -------
@@ -9028,6 +9258,69 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
             If the guild or user was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> monetization.Entitlement:
+        """Fetch an entitlement for a given application.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the entitlement for.
+        entitlement
+            The entitlement to fetch.
+
+        Returns
+        -------
+        hikari.monetization.Entitlement
+            The requested entitlement.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def consume_entitlement(
+        self,
+        application: snowflakes.SnowflakeishOr[guilds.PartialApplication],
+        entitlement: snowflakes.SnowflakeishOr[monetization.Entitlement],
+    ) -> None:
+        """Mark a one-time purchase consumable entitlement as consumed.
+
+        Parameters
+        ----------
+        application
+            The application the entitlement belongs to.
+        entitlement
+            The entitlement to consume.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the entitlement is not consumable.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the entitlement was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.
@@ -9302,9 +9595,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         answer_id: int,
         /,
         *,
-        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-    ) -> typing.Sequence[users.User]:
+    ) -> typing.Sequence[users_.User]:
         """Fetch users that voted for a specific answer.
 
         Parameters

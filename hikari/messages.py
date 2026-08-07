@@ -33,6 +33,8 @@ __all__: typing.Sequence[str] = (
     "PartialMessage",
     "PinnedMessage",
     "Reaction",
+    "ReactionCountDetails",
+    "ReactionType",
 )
 
 import typing
@@ -55,6 +57,8 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import channels as channels_
+    from hikari import colors as colors_
+    from hikari import colours
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
     from hikari import polls as polls_
@@ -324,19 +328,56 @@ class Attachment(snowflakes.Unique, files.WebResource):
         return self.filename
 
 
+@typing.final
+class ReactionType(int, enums.Enum):
+    """The type of a reaction."""
+
+    NORMAL = 0
+    """A normal reaction."""
+
+    BURST = 1
+    """A super (burst) reaction."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ReactionCountDetails:
+    """A breakdown of a reaction's count per reaction type."""
+
+    burst: int = attrs.field(repr=True)
+    """The number of super reactions."""
+
+    normal: int = attrs.field(repr=True)
+    """The number of normal reactions."""
+
+
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
     count: int = attrs.field(eq=False, hash=False, repr=True)
-    """The number of times the emoji has been used to react."""
+    """The total number of times the emoji has been used to react, including super reactions."""
+
+    count_details: ReactionCountDetails = attrs.field(eq=False, hash=False, repr=False)
+    """A breakdown of the reaction count per reaction type."""
 
     emoji: emojis_.UnicodeEmoji | emojis_.CustomEmoji = attrs.field(hash=True, repr=True)
     """The emoji used to react."""
 
     is_me: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
+
+    is_me_burst: bool = attrs.field(eq=False, hash=False, repr=False)
+    """Whether the current user super-reacted using this emoji."""
+
+    burst_colors: typing.Sequence[colors_.Color] = attrs.field(eq=False, hash=False, repr=False)
+    """The colours used for the super reaction animation, empty if this reaction has no super reactions."""
+
+    @property
+    def burst_colours(self) -> typing.Sequence[colours.Colour]:
+        """Alias for the `burst_colors` field."""
+        return self.burst_colors
 
     @typing_extensions.override
     def __str__(self) -> str:
@@ -1073,6 +1114,7 @@ class PartialMessage(snowflakes.Unique):
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedType | snowflakes.SnowflakeishOr[PartialMessage] | bool = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1156,6 +1198,9 @@ class PartialMessage(snowflakes.Unique):
             As of writing, bots can only send custom stickers from the current guild.
         tts
             If provided, whether the message will be TTS (Text To Speech).
+        nonce
+            If provided, a nonce that can be used for optimistic message
+            sending.
         reply
             If provided and [`True`][], reply to this message.
             If provided and not [`bool`][], the message to reply to.
@@ -1239,6 +1284,7 @@ class PartialMessage(snowflakes.Unique):
             poll=poll,
             sticker=sticker,
             stickers=stickers,
+            nonce=nonce,
             tts=tts,
             reply=reply,
             reply_must_exist=reply_must_exist,

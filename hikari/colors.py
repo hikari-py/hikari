@@ -22,13 +22,19 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("Color", "Colorish")
+__all__: typing.Sequence[str] = ("Color", "ColorGradient", "Colorish")
 
 import re
 import string
 import typing
 
+import attrs
+
+from hikari.internal import attrs_extensions
 from hikari.internal import typing_extensions
+
+if typing.TYPE_CHECKING:
+    from hikari import colours
 
 
 def _to_rgb_int(value: str, name: str) -> int:
@@ -527,7 +533,7 @@ class Color(int):
 
     @typing_extensions.override
     def to_bytes(
-        self, length: typing.SupportsIndex, byteorder: typing.Literal["little", "big"], *, signed: bool = True
+        self, length: typing.SupportsIndex, byteorder: typing.Literal["little", "big"], *, signed: bool = False
     ) -> bytes:
         """Convert the color code to bytes.
 
@@ -585,3 +591,87 @@ following examples means the same thing semantically.
 
 Web-safe colours are three hex-digits wide, `XYZ` becomes `XXYYZZ` in full-form.
 """
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ColorGradient:
+    """Represents a color gradient, as used for role colors.
+
+    Use [`hikari.colors.ColorGradient.of`][] to build one from any
+    [`hikari.colors.Colorish`][] values.
+    """
+
+    primary_color: Color = attrs.field(repr=True)
+    """The primary color of the gradient."""
+
+    secondary_color: Color | None = attrs.field(default=None, repr=True)
+    """The secondary color of the gradient, if set.
+
+    When used as a role's colors, this can only be set if the guild has the
+    [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+    """
+
+    tertiary_color: Color | None = attrs.field(default=None, repr=True)
+    """The tertiary color of the gradient, if set.
+
+    When used as a role's colors, this will turn the gradient into a
+    holographic style and can only be set if the guild has the
+    [`hikari.guilds.GuildFeature.ENHANCED_ROLE_COLORS`][] feature.
+    """
+
+    @classmethod
+    def holographic(cls) -> ColorGradient:
+        """Build the holographic role color style.
+
+        This is the only gradient with a tertiary color that the API accepts;
+        setting any tertiary color will enforce these exact values.
+
+        Returns
+        -------
+        ColorGradient
+            The holographic color gradient, with `primary_color=11127295`,
+            `secondary_color=16759788` and `tertiary_color=16761760`.
+        """
+        return cls(primary_color=Color(11127295), secondary_color=Color(16759788), tertiary_color=Color(16761760))
+
+    @classmethod
+    def of(
+        cls, primary: Colorish, secondary: Colorish | None = None, tertiary: Colorish | None = None
+    ) -> ColorGradient:
+        """Build a color gradient from any color-like values.
+
+        Parameters
+        ----------
+        primary
+            The primary color of the gradient.
+        secondary
+            The secondary color of the gradient, if any.
+        tertiary
+            The tertiary color of the gradient, if any.
+
+        Returns
+        -------
+        ColorGradient
+            The built color gradient.
+        """
+        return cls(
+            primary_color=Color.of(primary),
+            secondary_color=Color.of(secondary) if secondary is not None else None,
+            tertiary_color=Color.of(tertiary) if tertiary is not None else None,
+        )
+
+    @property
+    def primary_colour(self) -> colours.Colour:
+        """Alias for the `primary_color` field."""
+        return self.primary_color
+
+    @property
+    def secondary_colour(self) -> colours.Colour | None:
+        """Alias for the `secondary_color` field."""
+        return self.secondary_color
+
+    @property
+    def tertiary_colour(self) -> colours.Colour | None:
+        """Alias for the `tertiary_color` field."""
+        return self.tertiary_color

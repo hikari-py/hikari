@@ -37,7 +37,13 @@ if typing.TYPE_CHECKING:
 
 @typing.final
 class SKUType(int, enums.Enum):
-    """Represents the type of an entitlement."""
+    """Represents the type of a SKU."""
+
+    DURABLE = 2
+    """Durable one-time purchase"""
+
+    CONSUMABLE = 3
+    """Consumable one-time purchase"""
 
     SUBSCRIPTION = 5
     """Represents a recurring subscription"""
@@ -72,6 +78,27 @@ class SKUFlags(enums.Flag):
 @typing.final
 class EntitlementType(int, enums.Enum):
     """Represents the type of an entitlement."""
+
+    PURCHASE = 1
+    """Entitlement was purchased by user"""
+
+    PREMIUM_SUBSCRIPTION = 2
+    """Entitlement for Discord Nitro subscription"""
+
+    DEVELOPER_GIFT = 3
+    """Entitlement was gifted by developer"""
+
+    TEST_MODE_PURCHASE = 4
+    """Entitlement was purchased by a dev in application test mode"""
+
+    FREE_PURCHASE = 5
+    """Entitlement was granted when the SKU was free"""
+
+    USER_GIFT = 6
+    """Entitlement was gifted by another user"""
+
+    PREMIUM_PURCHASE = 7
+    """Entitlement was claimed by user for free as a Nitro Subscriber"""
 
     APPLICATION_SUBSCRIPTION = 8
     """Entitlement was purchased as an app subscription"""
@@ -136,6 +163,9 @@ class Entitlement(snowflakes.Unique):
 
     is_deleted: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the entitlement has been deleted"""
+
+    is_consumed: bool = attrs.field(eq=False, hash=False, repr=False)
+    """For consumable items, whether the entitlement has been consumed"""
 
     starts_at: datetime.datetime | None = attrs.field(eq=False, hash=False, repr=False)
     """Start date at which the entitlement is valid. Not present when using test entitlements."""

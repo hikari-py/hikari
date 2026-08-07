@@ -171,6 +171,9 @@ class AuditLogChangeKey(str, enums.Enum):
     COLOR = "color"
     """Color."""
 
+    COLORS = "colors"
+    """Colors, as a role colors object."""
+
     COMMAND_ID = "command_id"
     """Command ID."""
 
@@ -273,6 +276,9 @@ class AuditLogChangeKey(str, enums.Enum):
 
     COLOUR = COLOR
     """Alias for [`hikari.audit_logs.AuditLogChangeKey.COLOR`][]."""
+
+    COLOURS = COLORS
+    """Alias for [`hikari.audit_logs.AuditLogChangeKey.COLORS`][]."""
 
 
 @attrs_extensions.with_copy
@@ -490,7 +496,7 @@ class AuditLogEventType(int, enums.Enum):
     """Indicates that guild server guide was created."""
 
     HOME_SETTINGS_UPDATE = 191
-    """Indicates that guild server guide was uodated."""
+    """Indicates that guild server guide was updated."""
 
 
 @attrs.define(kw_only=True, weakref_slot=False)

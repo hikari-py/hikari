@@ -302,7 +302,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
     ) -> None:
         super().__init__(name, 1, 1)
         self.move_at = self.reset_at = time.time() + self.period
-        self._is_fixed = True
+        self._is_fixed = False
         self._compiled_route = compiled_route
         self._max_rate_limit = max_rate_limit
         self._global_ratelimit = global_ratelimit
@@ -437,7 +437,7 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             # Old ratelimit information, ignore
             return
 
-        if not self._out_of_sync and remaining < limit - 1:
+        if not self._out_of_sync:
             reset_at_eq = math.isclose(self.reset_at, reset_at, rel_tol=0.0, abs_tol=0.05)
             if not self._is_fixed and reset_at_eq:
                 _LOGGER.debug(
@@ -531,12 +531,20 @@ class RESTBucket(rate_limits.WindowedBurstRateLimiter):
             msg = "Cannot resolve known bucket"
             raise RuntimeError(msg)
 
+        if remaining == limit:
+            # This should never happen, but just in case
+            return
+
+        slide_period, move_at = _calculate_sliding_window(
+            remaining=remaining, limit=limit, reset_at=reset_at, reset_after=reset_after
+        )
+
         self.name = real_bucket_hash
         self.remaining = remaining
         self.limit = limit
         self.reset_at = reset_at
-        self.period = reset_after
-        self.move_at = reset_at
+        self.period = slide_period
+        self.move_at = move_at
         self._out_of_sync = False
         self._is_unknown = False
 

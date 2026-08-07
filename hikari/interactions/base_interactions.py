@@ -339,6 +339,9 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     entitlements: typing.Sequence[monetization.Entitlement] = attrs.field(eq=False, hash=False, repr=True)
     """For monetized apps, any entitlements for the invoking user, represents access to SKUs."""
 
+    attachment_size_limit: int = attrs.field(eq=False, hash=False, repr=True)
+    """The size limit of the attachments that can be uploaded."""
+
     @property
     def channel_id(self) -> snowflakes.Snowflake:
         """The ID of the channel this interaction was invoked in."""

@@ -50,6 +50,8 @@ from hikari._about import __url__
 from hikari._about import __version__
 from hikari.applications import Application
 from hikari.applications import ApplicationContextType
+from hikari.applications import ApplicationEventWebhookStatus
+from hikari.applications import ApplicationEventWebhookType
 from hikari.applications import ApplicationFlags
 from hikari.applications import ApplicationIntegrationType
 from hikari.applications import ApplicationRoleConnectionMetadataRecord
