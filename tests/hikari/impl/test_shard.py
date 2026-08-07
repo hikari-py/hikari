@@ -1204,6 +1204,22 @@ class TestGatewayShardImplAsync:
         client._event_manager.consume_raw_event.assert_called_once_with("RESUMED", client, {"some": "test"})
         client._handshake_event.set.assert_called_once_with()
 
+    async def test__poll_events_on_dispatch_when_RATE_LIMITED(self, client):
+        data = {"opcode": 8, "retry_after": 12.5, "meta": {"guild_id": "123123", "nonce": "anonce"}}
+        payload = {"op": 0, "t": "RATE_LIMITED", "d": data, "s": 102}
+
+        client._ws = mock.Mock(receive_json=mock.AsyncMock(side_effect=[payload, RuntimeError]))
+        client._seq = 1000
+        client._event_manager.consume_raw_event = mock.Mock(side_effect=[LookupError])
+        client._handshake_event = mock.Mock()
+
+        with pytest.raises(RuntimeError):
+            await client._poll_events()
+
+        assert client._ws.receive_json.await_count == 2
+        assert client._seq == 102
+        client._event_manager.consume_raw_event.assert_called_once_with("RATE_LIMITED", client, data)
+
     async def test__poll_events_on_heartbeat_ack(self, client):
         payload = {"op": 11}
 

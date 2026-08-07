@@ -72,7 +72,6 @@ if typing.TYPE_CHECKING:
     from hikari import voices as voices_models
     from hikari.api import shard as gateway_shard
 
-# The REQUEST_GUILD_MEMBERS gateway opcode
 _REQUEST_GUILD_MEMBERS_OPCODE: typing.Final[int] = 8
 
 _INTERACTION_EVENTS_MAP: dict[base_interactions.InteractionType, type[interaction_events.InteractionCreateEvent]] = {
