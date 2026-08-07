@@ -533,6 +533,8 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             audit_log_models.AuditLogEventType.MESSAGE_DELETE: self._deserialize_message_delete_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_DISCONNECT: self._deserialize_member_disconnect_entry_info,
             audit_log_models.AuditLogEventType.MEMBER_MOVE: self._deserialize_member_move_entry_info,
+            audit_log_models.AuditLogEventType.VOICE_CHANNEL_STATUS_CREATE: self._deserialize_voice_channel_status_create_entry_info,  # noqa: E501
+            audit_log_models.AuditLogEventType.VOICE_CHANNEL_STATUS_DELETE: self._deserialize_voice_channel_status_delete_entry_info,  # noqa: E501
         }
         self._auto_mod_action_mapping = {
             auto_mod_models.AutoModActionType.BLOCK_MESSAGE: self._deserialize_auto_mod_block_message,
@@ -943,6 +945,20 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     ) -> audit_log_models.MemberMoveEntryInfo:
         return audit_log_models.MemberMoveEntryInfo(
             app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), count=int(payload["count"])
+        )
+
+    def _deserialize_voice_channel_status_create_entry_info(
+        self, payload: data_binding.JSONObject
+    ) -> audit_log_models.VoiceChannelStatusCreateEntryInfo:
+        return audit_log_models.VoiceChannelStatusCreateEntryInfo(
+            app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"]), status=payload["status"]
+        )
+
+    def _deserialize_voice_channel_status_delete_entry_info(
+        self, payload: data_binding.JSONObject
+    ) -> audit_log_models.VoiceChannelStatusDeleteEntryInfo:
+        return audit_log_models.VoiceChannelStatusDeleteEntryInfo(
+            app=self._app, channel_id=snowflakes.Snowflake(payload["channel_id"])
         )
 
     @typing_extensions.override

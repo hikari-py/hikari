@@ -1489,6 +1489,33 @@ class TestEntityFactoryImpl:
         assert isinstance(member_move_entry_info, audit_log_models.MemberMoveEntryInfo)
 
     @pytest.fixture
+    def voice_channel_status_create_info_payload(self):
+        return {"channel_id": "22222222", "status": "very cool status"}
+
+    def test__deserialize_voice_channel_status_create_entry_info(
+        self, entity_factory_impl, voice_channel_status_create_info_payload
+    ):
+        info = entity_factory_impl._deserialize_voice_channel_status_create_entry_info(
+            voice_channel_status_create_info_payload
+        )
+        assert info.channel_id == 22222222
+        assert info.status == "very cool status"
+        assert isinstance(info, audit_log_models.VoiceChannelStatusCreateEntryInfo)
+
+    @pytest.fixture
+    def voice_channel_status_delete_info_payload(self):
+        return {"channel_id": "22222222"}
+
+    def test__deserialize_voice_channel_status_delete_entry_info(
+        self, entity_factory_impl, voice_channel_status_delete_info_payload
+    ):
+        info = entity_factory_impl._deserialize_voice_channel_status_delete_entry_info(
+            voice_channel_status_delete_info_payload
+        )
+        assert info.channel_id == 22222222
+        assert isinstance(info, audit_log_models.VoiceChannelStatusDeleteEntryInfo)
+
+    @pytest.fixture
     def audit_log_entry_payload(self):
         return {
             "action_type": 14,

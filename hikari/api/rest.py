@@ -412,6 +412,45 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def set_voice_channel_status(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
+        status: str | None,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        """Set the status of a voice channel.
+
+        Parameters
+        ----------
+        channel
+            The voice channel to set the status of. This may be the object
+            or the ID of an existing channel.
+        status
+            The new voice channel status (up to 500 characters) or
+            [`None`][] to remove it.
+        reason
+            If provided, the reason that will be recorded in the audit logs.
+            Maximum of 512 characters.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are missing the [`hikari.permissions.Permissions.SET_VOICE_CHANNEL_STATUS`][]
+            permission, or the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission
+            when not connected to the voice channel.
+        hikari.errors.NotFoundError
+            If the channel is not found.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
         """Fetch the current user's voice state.
 

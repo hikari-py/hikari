@@ -1183,6 +1183,19 @@ class RESTClientImpl(rest_api.RESTClient):
         return self._entity_factory.deserialize_channel(response)
 
     @typing_extensions.override
+    async def set_voice_channel_status(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GuildVoiceChannel],
+        status: str | None,
+        *,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.PUT_CHANNEL_VOICE_STATUS.compile(channel=channel)
+        body = data_binding.JSONObjectBuilder()
+        body.put("status", status)
+        await self._request(route, json=body, reason=reason)
+
+    @typing_extensions.override
     async def fetch_my_voice_state(self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]) -> voices.VoiceState:
         route = routes.GET_MY_GUILD_VOICE_STATE.compile(guild=guild)
 
