@@ -1055,6 +1055,21 @@ class EntityFactory(abc.ABC):
         """
 
     @abc.abstractmethod
+    def deserialize_guild_widget_settings(self, payload: data_binding.JSONObject) -> guild_models.GuildWidgetSettings:
+        """Parse a raw payload from Discord into a guild widget settings object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.guilds.GuildWidget
+            The deserialized guild widget settings object.
+        """
+
+    @abc.abstractmethod
     def deserialize_welcome_screen(self, payload: data_binding.JSONObject) -> guild_models.WelcomeScreen:
         """Parse a raw payload from Discord into a guild welcome screen object.
 
