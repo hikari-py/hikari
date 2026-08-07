@@ -85,7 +85,7 @@ dev = [{ include-group = "nox" }]
 nox = ["nox==2026.7.11"]
 
 codespell = ["codespell==2.4.3"]
-coverage = ["coverage[toml]==7.15.3"]
+coverage = ["coverage[toml]==7.15.4"]
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
