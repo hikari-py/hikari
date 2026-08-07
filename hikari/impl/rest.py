@@ -1063,7 +1063,7 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing_extensions.override
     async def edit_channel(  # noqa: PLR0913
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel | channels_.GroupDMChannel],
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,

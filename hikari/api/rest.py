@@ -187,7 +187,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     @abc.abstractmethod
     async def edit_channel(  # noqa: PLR0913 - Too many arguments
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.PartialChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel | channels_.GroupDMChannel],
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
