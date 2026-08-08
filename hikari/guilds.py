@@ -508,7 +508,7 @@ class Member(users.User):
         This takes precedence over [`hikari.guilds.Member.banner_hash`][] in the client.
     """
 
-    guild_flags: GuildMemberFlags | int = attrs.field(eq=False, hash=False, repr=False)
+    guild_flags: GuildMemberFlags = attrs.field(eq=False, hash=False, repr=False)
     """The flags this member has in the guild."""
 
     @property
@@ -1455,7 +1455,7 @@ class PartialIntegration(snowflakes.Unique):
     name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of this integration."""
 
-    type: IntegrationType | str = attrs.field(eq=False, hash=False, repr=True)
+    type: IntegrationType = attrs.field(eq=False, hash=False, repr=True)
     """The type of this integration."""
 
     @typing_extensions.override
@@ -1470,7 +1470,7 @@ class Integration(PartialIntegration):
     guild_id: snowflakes.Snowflake = attrs.field()
     """The ID of the guild this integration belongs to."""
 
-    expire_behavior: IntegrationExpireBehaviour | int | None = attrs.field(eq=False, hash=False, repr=False)
+    expire_behavior: IntegrationExpireBehaviour | None = attrs.field(eq=False, hash=False, repr=False)
     """How members should be treated after their connected subscription expires.
 
     This will not be enacted until after `GuildIntegration.expire_grace_period`
@@ -1876,7 +1876,7 @@ class PartialGuild(snowflakes.Unique):
         public_updates_channel: undefined.UndefinedNoneOr[
             snowflakes.SnowflakeishOr[channels_.GuildTextChannel]
         ] = undefined.UNDEFINED,
-        preferred_locale: undefined.UndefinedOr[str | locales.Locale] = undefined.UNDEFINED,
+        preferred_locale: undefined.UndefinedOr[locales.Locale] = undefined.UNDEFINED,
         features: undefined.UndefinedOr[typing.Sequence[GuildFeature]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> RESTGuild:
@@ -2479,8 +2479,8 @@ class PartialGuild(snowflakes.Unique):
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_auto_archive_duration: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         default_thread_rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
-        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType | int] = undefined.UNDEFINED,
-        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType | int] = undefined.UNDEFINED,
+        default_forum_layout: undefined.UndefinedOr[channels_.ForumLayoutType] = undefined.UNDEFINED,
+        default_sort_order: undefined.UndefinedOr[channels_.ForumSortOrderType] = undefined.UNDEFINED,
         available_tags: undefined.UndefinedOr[typing.Sequence[channels_.ForumTag]] = undefined.UNDEFINED,
         default_reaction_emoji: str
         | emojis_.Emoji
@@ -2577,7 +2577,7 @@ class PartialGuild(snowflakes.Unique):
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode | int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[channels_.VideoQualityMode] = undefined.UNDEFINED,
         permission_overwrites: undefined.UndefinedOr[
             typing.Sequence[channels_.PermissionOverwrite]
         ] = undefined.UNDEFINED,
@@ -2821,7 +2821,7 @@ class PartialGuild(snowflakes.Unique):
 class GuildPreview(PartialGuild):
     """A preview of a guild with the [`hikari.guilds.GuildFeature.DISCOVERABLE`][] feature."""
 
-    features: typing.Sequence[str | GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     splash_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
@@ -2944,7 +2944,7 @@ class GuildPreview(PartialGuild):
 class Guild(PartialGuild):
     """A representation of a guild on Discord."""
 
-    features: typing.Sequence[str | GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
+    features: typing.Sequence[GuildFeature] = attrs.field(eq=False, hash=False, repr=False)
     """A list of the features in this guild."""
 
     incidents: GuildIncidents = attrs.field(eq=False, hash=False, repr=False)
@@ -2976,7 +2976,7 @@ class Guild(PartialGuild):
     [`hikari.guilds.Guild.features`][] for this guild. For all other purposes, it is [`None`][].
     """
 
-    default_message_notifications: GuildMessageNotificationsLevel | int = attrs.field(eq=False, hash=False, repr=False)
+    default_message_notifications: GuildMessageNotificationsLevel = attrs.field(eq=False, hash=False, repr=False)
     """The default setting for message notifications in this guild."""
 
     description: str | None = attrs.field(eq=False, hash=False, repr=False)
@@ -2989,7 +2989,7 @@ class Guild(PartialGuild):
     discovery_splash_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The hash of the discovery splash for the guild, if there is one."""
 
-    explicit_content_filter: GuildExplicitContentFilterLevel | int = attrs.field(eq=False, hash=False, repr=False)
+    explicit_content_filter: GuildExplicitContentFilterLevel = attrs.field(eq=False, hash=False, repr=False)
     """The setting for the explicit content filter in this guild."""
 
     is_widget_enabled: bool | None = attrs.field(eq=False, hash=False, repr=False)
@@ -3004,13 +3004,13 @@ class Guild(PartialGuild):
     This information may not be present, in which case, it will be [`None`][].
     """
 
-    mfa_level: GuildMFALevel | int = attrs.field(eq=False, hash=False, repr=False)
+    mfa_level: GuildMFALevel = attrs.field(eq=False, hash=False, repr=False)
     """The required MFA level for users wishing to participate in this guild."""
 
     owner_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the owner of this guild."""
 
-    preferred_locale: str | locales.Locale = attrs.field(eq=False, hash=False, repr=False)
+    preferred_locale: locales.Locale = attrs.field(eq=False, hash=False, repr=False)
     """The preferred locale to use for this guild.
 
     This can only be change if [`hikari.guilds.GuildFeature.COMMUNITY`][] is in [`hikari.guilds.Guild.features`][]
@@ -3023,7 +3023,7 @@ class Guild(PartialGuild):
     This information may not be present, in which case, it will be [`None`][].
     """
 
-    premium_tier: GuildPremiumTier | int = attrs.field(eq=False, hash=False, repr=False)
+    premium_tier: GuildPremiumTier = attrs.field(eq=False, hash=False, repr=False)
     """The premium tier for this guild."""
 
     public_updates_channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
@@ -3061,7 +3061,7 @@ class Guild(PartialGuild):
     this guild. If not, this will always be [`None`][].
     """
 
-    verification_level: GuildVerificationLevel | int = attrs.field(eq=False, hash=False, repr=False)
+    verification_level: GuildVerificationLevel = attrs.field(eq=False, hash=False, repr=False)
     """The verification level needed for a user to participate in this guild."""
 
     widget_channel_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)

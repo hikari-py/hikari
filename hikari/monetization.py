@@ -126,7 +126,7 @@ class SKU(snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of the SKU"""
 
-    type: SKUType | int = attrs.field(eq=False, hash=False, repr=True)
+    type: SKUType = attrs.field(eq=False, hash=False, repr=True)
     """The type of the SKU"""
 
     application_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
@@ -158,7 +158,7 @@ class Entitlement(snowflakes.Unique):
     user_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """ID of the user that is granted access to the entitlement's SKU"""
 
-    type: EntitlementType | int = attrs.field(eq=False, hash=False, repr=True)
+    type: EntitlementType = attrs.field(eq=False, hash=False, repr=True)
     """Type of entitlement"""
 
     is_deleted: bool = attrs.field(eq=False, hash=False, repr=False)

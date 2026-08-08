@@ -260,6 +260,11 @@ warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
 
+[[tool.mypy.overrides]]
+# The enum stubs describe zero-member enums, which mypy complains about
+module = "hikari.internal.enums"
+disable_error_code = ["misc"]
+
 [tool.slotscheck]
 strict-imports = true
 require-superclass = true

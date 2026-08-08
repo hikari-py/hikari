@@ -25,7 +25,7 @@
 # The caveat to implementing this is that MyPy has to have a special module to
 # understand how to use Python's enum types. I really don't want to have to
 # ship my own MyPy plugin for this, so just make MyPy think that the types
-# we are using are just aliases from the enum types in the standard library.
+# we are using are subclasses of the enum types in the standard library.
 
 __all__ = ["Enum", "Flag"]
 
@@ -38,10 +38,16 @@ from typing_extensions import Self as __Self
 
 from hikari.internal import typing_extensions as __typing_backport
 
-Enum = __enum.Enum
+# MyPy complains about enums in stubs with zero members and Flags with no
+# additional flags, so the [misc] error code is disabled for this module in
+# the mypy configuration.
+class Enum(__enum.Enum):
+    @property
+    def is_unknown(self) -> bool: ...
 
-# MyPy started complaining of Flags with no additional flags, so just ignore it here
-class Flag(__enum.IntFlag):  # type: ignore[misc]
+class Flag(__enum.IntFlag):
+    @property
+    def is_unknown(self) -> bool: ...
     def all(self, *flags: __Self) -> bool: ...
     def any(self, *flags: __Self) -> bool: ...
     def difference(self, other: int | __Self) -> __Self: ...

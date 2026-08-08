@@ -733,7 +733,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         before: undefined.UndefinedOr[str],
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
-        action_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int],
+        action_type: undefined.UndefinedOr[audit_logs.AuditLogEventType],
     ) -> None:
         self._action_type = action_type
         self._entity_factory = entity_factory
@@ -1121,7 +1121,7 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
         validator=attrs.validators.in_(base_interactions.DEFERRED_RESPONSE_TYPES),
     )
 
-    _flags: undefined.UndefinedType | int | messages.MessageFlag = attrs.field(
+    _flags: undefined.UndefinedType | messages.MessageFlag = attrs.field(
         alias="flags", default=undefined.UNDEFINED, kw_only=True
     )
 
@@ -1132,11 +1132,11 @@ class InteractionDeferredBuilder(special_endpoints.InteractionDeferredBuilder):
 
     @property
     @typing_extensions.override
-    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
+    def flags(self) -> undefined.UndefinedType | messages.MessageFlag:
         return self._flags
 
     @typing_extensions.override
-    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | messages.MessageFlag, /) -> Self:
         self._flags = flags
         return self
 
@@ -1175,7 +1175,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     _content: undefined.UndefinedNoneOr[str] = attrs.field(alias="content", default=undefined.UNDEFINED)
 
     # Key-word only not-required arguments.
-    _flags: int | messages.MessageFlag | undefined.UndefinedType = attrs.field(
+    _flags: messages.MessageFlag | undefined.UndefinedType = attrs.field(
         alias="flags", default=undefined.UNDEFINED, kw_only=True
     )
     _is_tts: undefined.UndefinedOr[bool] = attrs.field(alias="is_tts", default=undefined.UNDEFINED, kw_only=True)
@@ -1223,7 +1223,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
     @property
     @typing_extensions.override
-    def flags(self) -> undefined.UndefinedType | int | messages.MessageFlag:
+    def flags(self) -> undefined.UndefinedType | messages.MessageFlag:
         return self._flags
 
     @property
@@ -1305,7 +1305,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         return self
 
     @typing_extensions.override
-    def set_flags(self, flags: undefined.UndefinedType | int | messages.MessageFlag, /) -> Self:
+    def set_flags(self, flags: undefined.UndefinedType | messages.MessageFlag, /) -> Self:
         self._flags = flags
         return self
 
@@ -1361,7 +1361,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
 
                 if component.type in component_models.COMPONENT_V2_TYPES:
                     if self._flags is undefined.UNDEFINED:
-                        self._flags = 0
+                        self._flags = messages.MessageFlag.NONE
                     self._flags |= messages.MessageFlag.IS_COMPONENTS_V2
         return components, attachments
 
@@ -1487,13 +1487,13 @@ class CommandBuilder(special_endpoints.CommandBuilder, abc.ABC):
         alias="id", default=undefined.UNDEFINED, kw_only=True
     )
 
-    _default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions = attrs.field(
+    _default_member_permissions: undefined.UndefinedType | permissions_.Permissions = attrs.field(
         alias="default_member_permissions", default=undefined.UNDEFINED, kw_only=True
     )
 
     _is_nsfw: undefined.UndefinedOr[bool] = attrs.field(alias="is_nsfw", default=undefined.UNDEFINED, kw_only=True)
 
-    _name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
+    _name_localizations: typing.Mapping[locales.Locale, str] = attrs.field(
         alias="name_localizations", factory=dict, kw_only=True
     )
 
@@ -1512,7 +1512,7 @@ class CommandBuilder(special_endpoints.CommandBuilder, abc.ABC):
 
     @property
     @typing_extensions.override
-    def default_member_permissions(self) -> undefined.UndefinedType | permissions_.Permissions | int:
+    def default_member_permissions(self) -> undefined.UndefinedType | permissions_.Permissions:
         return self._default_member_permissions
 
     @property
@@ -1537,7 +1537,7 @@ class CommandBuilder(special_endpoints.CommandBuilder, abc.ABC):
 
     @property
     @typing_extensions.override
-    def name_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
+    def name_localizations(self) -> typing.Mapping[locales.Locale, str]:
         return self._name_localizations
 
     @typing_extensions.override
@@ -1552,7 +1552,7 @@ class CommandBuilder(special_endpoints.CommandBuilder, abc.ABC):
 
     @typing_extensions.override
     def set_default_member_permissions(
-        self, default_member_permissions: undefined.UndefinedType | int | permissions_.Permissions, /
+        self, default_member_permissions: undefined.UndefinedType | permissions_.Permissions, /
     ) -> Self:
         self._default_member_permissions = default_member_permissions
         return self
@@ -1577,7 +1577,7 @@ class CommandBuilder(special_endpoints.CommandBuilder, abc.ABC):
         return self
 
     @typing_extensions.override
-    def set_name_localizations(self, name_localizations: typing.Mapping[locales.Locale | str, str], /) -> Self:
+    def set_name_localizations(self, name_localizations: typing.Mapping[locales.Locale, str], /) -> Self:
         self._name_localizations = name_localizations
         return self
 
@@ -1587,7 +1587,7 @@ class CommandBuilder(special_endpoints.CommandBuilder, abc.ABC):
         data["name"] = self._name
         data["type"] = self.type
         data.put_snowflake("id", self._id)
-        data.put("name_localizations", self._name_localizations)
+        data.put("name_localizations", typing.cast("typing.Mapping[str, str]", self._name_localizations))
         data.put("nsfw", self._is_nsfw)
         data.put_array("integration_types", self._integration_types)
         data.put_array("contexts", self._context_types)
@@ -1607,7 +1607,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     _description: str = attrs.field(alias="description")
     _options: list[commands.CommandOption] = attrs.field(alias="options", factory=list, kw_only=True)
-    _description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
+    _description_localizations: typing.Mapping[locales.Locale, str] = attrs.field(
         alias="description_localizations", factory=dict, kw_only=True
     )
 
@@ -1628,7 +1628,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
 
     @property
     @typing_extensions.override
-    def description_localizations(self) -> typing.Mapping[locales.Locale | str, str]:
+    def description_localizations(self) -> typing.Mapping[locales.Locale, str]:
         return self._description_localizations
 
     @typing_extensions.override
@@ -1637,9 +1637,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         return self
 
     @typing_extensions.override
-    def set_description_localizations(
-        self, description_localizations: typing.Mapping[locales.Locale | str, str], /
-    ) -> Self:
+    def set_description_localizations(self, description_localizations: typing.Mapping[locales.Locale, str], /) -> Self:
         self._description_localizations = description_localizations
         return self
 
@@ -1657,7 +1655,7 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
         assert isinstance(data, data_binding.JSONObjectBuilder)
         data.put("description", self._description)
         data.put_array("options", self._options, conversion=entity_factory.serialize_command_option)
-        data.put("description_localizations", self._description_localizations)
+        data.put("description_localizations", typing.cast("typing.Mapping[str, str]", self._description_localizations))
         return data
 
     @typing_extensions.override
@@ -1879,12 +1877,12 @@ class PremiumButtonBuilder(_ButtonBuilder, special_endpoints.PremiumButtonBuilde
 class InteractiveButtonBuilder(_ButtonBuilder, special_endpoints.InteractiveButtonBuilder):
     """Builder class for interactive buttons."""
 
-    _style: int | component_models.ButtonStyle = attrs.field(alias="style")
+    _style: component_models.ButtonStyle = attrs.field(alias="style")
     _custom_id: str = attrs.field(alias="custom_id")
 
     @property
     @typing_extensions.override
-    def style(self) -> int | component_models.ButtonStyle:
+    def style(self) -> component_models.ButtonStyle:
         return self._style
 
     @property
@@ -2003,7 +2001,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
     """Builder class for select menus."""
 
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
-    _type: component_models.ComponentType | int = attrs.field(alias="type")
+    _type: component_models.ComponentType = attrs.field(alias="type")
     _custom_id: str = attrs.field(alias="custom_id")
     _placeholder: undefined.UndefinedOr[str] = attrs.field(alias="placeholder", default=undefined.UNDEFINED)
     _min_values: int = attrs.field(alias="min_values", default=0)
@@ -2012,7 +2010,7 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
 
     @property
     @typing_extensions.override
-    def type(self) -> int | component_models.ComponentType:
+    def type(self) -> component_models.ComponentType:
         return self._type
 
     @property
@@ -2292,7 +2290,7 @@ class TextInputBuilder(special_endpoints.TextInputBuilder):
         return self._max_length
 
     @typing_extensions.override
-    def set_style(self, style: component_models.TextInputStyle | int, /) -> Self:
+    def set_style(self, style: component_models.TextInputStyle, /) -> Self:
         self._style = component_models.TextInputStyle(style)
         return self
 
@@ -2376,7 +2374,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     def components(self) -> typing.Sequence[special_endpoints.MessageActionRowBuilderComponentsT]:
         return self._components.copy()
 
-    def _assert_can_add_type(self, type_: component_models.ComponentType | int, /) -> None:
+    def _assert_can_add_type(self, type_: component_models.ComponentType, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
             raise ValueError(msg)
@@ -2427,7 +2425,7 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
     @typing_extensions.override
     def add_select_menu(
         self,
-        type_: component_models.ComponentType | int,
+        type_: component_models.ComponentType,
         custom_id: str,
         /,
         *,
@@ -2544,7 +2542,7 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
     def components(self) -> typing.Sequence[special_endpoints.ModalActionRowBuilderComponentsT]:
         return self._components.copy()
 
-    def _assert_can_add_type(self, type_: component_models.ComponentType | int, /) -> None:
+    def _assert_can_add_type(self, type_: component_models.ComponentType, /) -> None:
         if self._stored_type is not None and self._stored_type != type_:
             msg = f"{type_} component type cannot be added to a container which already holds {self._stored_type}"
             raise ValueError(msg)

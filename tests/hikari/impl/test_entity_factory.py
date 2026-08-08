@@ -6144,7 +6144,9 @@ class TestEntityFactoryImpl:
 
     def test__deserialize_section_component_with_unknown_accessory_type(self, entity_factory_impl, section_payload):
         section_payload["accessory"] = {"type": 9999}
-        with pytest.raises(errors.UnrecognisedEntityError, match=r"Unknown section accessory type 9999"):
+        with pytest.raises(
+            errors.UnrecognisedEntityError, match=r"Unknown section accessory type <ComponentType\.UNKNOWN 9999: 9999>"
+        ):
             entity_factory_impl._deserialize_section_component(section_payload)
 
     def test__deserialize_thumbnail_component(self, entity_factory_impl, thumbnail_payload, media_payload):
