@@ -23,6 +23,7 @@ from __future__ import annotations
 import mock
 import pytest
 
+from hikari import colors
 from hikari import invites
 from hikari import urls
 from hikari.internal import routes
@@ -128,6 +129,43 @@ class TestInviteGuild:
     def test_make_banner_url_when_no_hash(self, model: invites.InviteGuild):
         model.banner_hash = None
         assert model.make_banner_url(file_format="png", size=2048) is None
+
+
+class TestInviteRole:
+    @pytest.fixture
+    def model(self):
+        return invites.InviteRole(
+            app=mock.Mock(),
+            id=123321,
+            name="everypony",
+            position=2,
+            color=colors.Color(0x1A2B3C),
+            colors=colors.ColorGradient(
+                primary_color=colors.Color(0x1A2B3C), secondary_color=colors.Color(0x2B3C4D), tertiary_color=None
+            ),
+            icon_hash="icon_hash",
+            unicode_emoji=None,
+        )
+
+    def test_colour_property(self, model):
+        assert model.colour is model.color
+
+    def test_colours_property(self, model):
+        assert model.colours is model.colors
+
+    def test_make_icon_url_when_hash(self, model):
+        with mock.patch.object(
+            routes, "CDN_ROLE_ICON", new=mock.Mock(compile_to_file=mock.Mock(return_value="file"))
+        ) as route:
+            assert model.make_icon_url(file_format="JPEG", size=2) == "file"
+
+        route.compile_to_file.assert_called_once_with(
+            urls.CDN_URL, role_id=123321, hash="icon_hash", size=2, file_format="JPEG", lossless=True
+        )
+
+    def test_make_icon_url_when_no_hash(self, model):
+        model.icon_hash = None
+        assert model.make_icon_url() is None
 
 
 class TestInviteWithMetadata:
