@@ -137,7 +137,7 @@ Now that the local/virtual environment is created and activated within your proj
 Verify installation:
 
 ```
-python -c "import hikari; print(hikari.__version__)"
+python -m hikari
 ```
 
 ## Installing an IDE
