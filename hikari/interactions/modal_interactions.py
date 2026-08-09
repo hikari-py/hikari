@@ -22,12 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = (
-    "ModalInteraction",
-    "ModalInteraction",
-    "ModalInteractionMetadata",
-    "ModalResponseTypesT",
-)
+__all__: typing.Sequence[str] = ("ModalInteraction", "ModalInteractionMetadata", "ModalResponseTypesT")
 
 import typing
 

@@ -2487,7 +2487,7 @@ class SectionComponentBuilder(ComponentBuilder, abc.ABC):
 
         !!! warning
             It is generally better to use
-            [`hikari.api.special_endpoints.MessageSectionBuilder.add_text_display`][]
+            [`hikari.api.special_endpoints.SectionComponentBuilder.add_text_display`][]
             to add your component to the builder. Those methods utilize this one.
 
         Parameters
@@ -2587,7 +2587,7 @@ class MediaGalleryComponentBuilder(ComponentBuilder, abc.ABC):
 
         !!! warning
             It is generally better to use
-            [`hikari.api.special_endpoints.MessageMediaGalleryBuilder.add_media_gallery_item`][]
+            [`hikari.api.special_endpoints.MediaGalleryComponentBuilder.add_media_gallery_item`][]
             to add your component to the builder. Those methods utilize this one.
 
         Parameters
@@ -2739,11 +2739,11 @@ class ContainerComponentBuilder(ComponentBuilder, abc.ABC):
 
         !!! warning
             It is generally better to use
-            [`hikari.api.special_endpoints.MessageContainerBuilder.add_action_row`][]
-            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_text_display`][]
-            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_media_gallery`][]
-            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_separator`][]
-            and [`hikari.api.special_endpoints.MessageContainerBuilder.add_file`][]
+            [`hikari.api.special_endpoints.ContainerComponentBuilder.add_action_row`][]
+            and [`hikari.api.special_endpoints.ContainerComponentBuilder.add_text_display`][]
+            and [`hikari.api.special_endpoints.ContainerComponentBuilder.add_media_gallery`][]
+            and [`hikari.api.special_endpoints.ContainerComponentBuilder.add_separator`][]
+            and [`hikari.api.special_endpoints.ContainerComponentBuilder.add_file`][]
             to add your component to the builder. Those methods utilize this one.
 
         Parameters

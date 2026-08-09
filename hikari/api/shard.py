@@ -22,7 +22,7 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("GatewayCompression", "GatewayDataFormat", "GatewayShard")
+__all__: typing.Sequence[str] = ("ChannelInfoField", "GatewayCompression", "GatewayDataFormat", "GatewayShard")
 
 import abc
 import typing
@@ -52,6 +52,17 @@ class GatewayDataFormat(str, enums.Enum):
 
 
 @typing.final
+class ChannelInfoField(str, enums.Enum):
+    """Fields which can be requested through [`hikari.api.shard.GatewayShard.request_channel_info`][]."""
+
+    STATUS = "status"
+    """The voice channel status."""
+
+    VOICE_START_TIME = "voice_start_time"
+    """When the ongoing voice session in the voice channel started."""
+
+
+@typing.final
 class GatewayCompression(str, enums.Enum):
     """Types of gateway compression that may be supported."""
 
@@ -59,7 +70,7 @@ class GatewayCompression(str, enums.Enum):
     """Transport compression using ZLIB."""
 
     TRANSPORT_ZSTD_STREAM = "transport_zstd_stream"
-    """Transport compression using ZLIB."""
+    """Transport compression using ZSTD."""
 
     PAYLOAD_ZLIB_STREAM = "payload_zlib_stream"
     """Payload compression using ZLIB."""
@@ -259,4 +270,26 @@ class GatewayShard(abc.ABC):
         ----------
         guilds
             The guilds to request sounds for.
+        """
+
+    @abc.abstractmethod
+    async def request_channel_info(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], *, fields: typing.Sequence[ChannelInfoField]
+    ) -> None:
+        """Request ephemeral channel data for the channels of a guild.
+
+        The response will be dispatched as a
+        [`hikari.events.shard_events.ChannelInfoEvent`][].
+
+        Parameters
+        ----------
+        guild
+            The guild to request channel info for.
+        fields
+            The fields to request.
+
+        Raises
+        ------
+        hikari.errors.ComponentStateConflictError
+            When the shard is not connected so it cannot be interacted with.
         """

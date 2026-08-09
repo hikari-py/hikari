@@ -1298,6 +1298,25 @@ class EventFactory(abc.ABC):
             The parsed member chunk object.
         """
 
+    @abc.abstractmethod
+    def deserialize_channel_info_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> shard_events.ChannelInfoEvent:
+        """Parse a raw payload from Discord into a channel info event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.shard_events.ChannelInfoEvent
+            The parsed channel info event object.
+        """
+
     ###############
     # USER EVENTS #
     ###############
@@ -1373,6 +1392,25 @@ class EventFactory(abc.ABC):
         -------
         hikari.events.voice_events.VoiceServerUpdateEvent
             The parsed voice server update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_voice_channel_start_time_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> voice_events.VoiceChannelStartTimeUpdateEvent:
+        """Parse a raw payload from Discord into a voice channel start time update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.voice_events.VoiceChannelStartTimeUpdateEvent
+            The parsed voice channel start time update event object.
         """
 
     @abc.abstractmethod

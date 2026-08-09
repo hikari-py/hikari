@@ -33,7 +33,6 @@ from hikari import guilds
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -128,22 +127,12 @@ class InviteGuild(guilds.PartialGuild):
     nsfw_level: guilds.GuildNSFWLevel = attrs.field(eq=False, hash=False, repr=False)
     """The NSFW level of the guild."""
 
-    @property
-    @deprecation.deprecated("Use 'make_splash_url' instead.")
-    def splash_url(self) -> files.URL | None:
-        """Splash URL for the guild, if set."""
-        deprecation.warn_deprecated(
-            "splash_url", removal_version="2.5.0", additional_info="Use 'make_splash_url' instead."
-        )
-        return self.make_splash_url()
-
     def make_splash_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the splash URL for this guild, if set.
 
@@ -163,12 +152,6 @@ class InviteGuild(guilds.PartialGuild):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -185,24 +168,9 @@ class InviteGuild(guilds.PartialGuild):
         if self.splash_hash is None:
             return None
 
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
-
         return routes.CDN_GUILD_SPLASH.compile_to_file(
             urls.CDN_URL, guild_id=self.id, hash=self.splash_hash, size=size, file_format=file_format, lossless=lossless
         )
-
-    @property
-    @deprecation.deprecated("Use 'make_banner_url' instead.")
-    def banner_url(self) -> files.URL | None:
-        """Banner URL for the guild, if set."""
-        deprecation.warn_deprecated(
-            "banner_url", removal_version="2.5.0", additional_info="Use 'make_banner_url' instead."
-        )
-        return self.make_banner_url()
 
     def make_banner_url(
         self,
@@ -212,7 +180,6 @@ class InviteGuild(guilds.PartialGuild):
         ] = undefined.UNDEFINED,
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the banner URL for this guild, if set.
 
@@ -233,16 +200,6 @@ class InviteGuild(guilds.PartialGuild):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP` or `AWEBP`.
-        ext
-            The ext to use for this URL.
-            Supports `png`, `jpeg`, `jpg`, `webp` and `gif` (when
-            animated).
-
-            If [`None`][], then the correct default extension is
-            determined based on whether the banner is animated or not.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -259,12 +216,6 @@ class InviteGuild(guilds.PartialGuild):
         """
         if self.banner_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         if not file_format:
             file_format = "GIF" if self.banner_hash.startswith("a_") else "PNG"

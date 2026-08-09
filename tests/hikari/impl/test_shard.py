@@ -46,7 +46,16 @@ from hikari.internal import time
 from hikari.internal import ux
 from tests.hikari import hikari_test_helpers
 
-zstd_present = sys.version_info >= (3, 14) or importlib.util.find_spec("zstandard")
+zstd_present = False
+if sys.version_info >= (3, 14):
+    zstd_present = True
+else:
+    try:
+        import backports.zstd
+
+        zstd_present = True
+    except ModuleNotFoundError:
+        pass
 
 
 def test_log_filterer():
@@ -320,6 +329,7 @@ class TestGatewayTransport:
             proxy=proxy_settings.url,
             proxy_headers=proxy_settings.headers,
             url="testing.com",
+            decode_text=False,
             autoclose=False,
         )
         exit_stack.aclose.assert_not_called()
@@ -413,7 +423,7 @@ class TestGatewayBasicTransport:
     @pytest.mark.asyncio
     async def test__receive_and_check(self, transport_impl):
         transport_impl._ws.receive = mock.AsyncMock(
-            return_value=StubResponse(type=aiohttp.WSMsgType.TEXT, data="some text")
+            return_value=StubResponse(type=aiohttp.WSMsgType.TEXT, data=b"some text")
         )
 
         assert await transport_impl._receive_and_check() == b"some text"
@@ -817,6 +827,18 @@ class TestGatewayShardImplAsync:
 
         send_json.assert_awaited_once_with({"op": 31, "d": {"guild_ids": ["123", "456", "789"]}})
         check_if_alive.assert_called_once_with()
+
+    async def test_request_channel_info(self, client):
+        with mock.patch.object(shard.GatewayShardImpl, "_send_json") as send_json:
+            with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_connected:
+                await client.request_channel_info(
+                    123, fields=[shard_api.ChannelInfoField.STATUS, shard_api.ChannelInfoField.VOICE_START_TIME]
+                )
+
+        send_json.assert_awaited_once_with(
+            {"op": 43, "d": {"guild_id": "123", "fields": ["status", "voice_start_time"]}}
+        )
+        check_if_connected.assert_called_once_with()
 
     @pytest.mark.parametrize("attr", ["_keep_alive_task", "_handshake_event"])
     async def test_start_when_already_running(self, client, attr):

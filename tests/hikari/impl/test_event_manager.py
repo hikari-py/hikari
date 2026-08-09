@@ -231,6 +231,16 @@ class TestEventManagerImpl:
             event_factory.deserialize_channel_pins_update_event.return_value
         )
 
+    def test_on_channel_info(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {}
+
+        stateless_event_manager_impl.on_channel_info(shard, payload)
+
+        event_factory.deserialize_channel_info_event.assert_called_once_with(shard, payload)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_channel_info_event.return_value
+        )
+
     def test_on_thread_create_when_create_stateful(
         self, event_manager_impl: event_manager.EventManagerImpl, shard: mock.Mock, event_factory: mock.Mock
     ):
@@ -1477,6 +1487,17 @@ class TestEventManagerImpl:
         event_manager_impl.on_voice_server_update(shard, payload)
 
         event_factory.deserialize_voice_server_update_event.assert_called_once_with(shard, payload)
+        event_manager_impl.dispatch.assert_called_once_with(event)
+
+    def test_on_voice_channel_start_time_update(self, event_manager_impl, shard, event_factory):
+        payload = {}
+        event = mock.Mock()
+
+        event_factory.deserialize_voice_channel_start_time_update_event.return_value = event
+
+        event_manager_impl.on_voice_channel_start_time_update(shard, payload)
+
+        event_factory.deserialize_voice_channel_start_time_update_event.assert_called_once_with(shard, payload)
         event_manager_impl.dispatch.assert_called_once_with(event)
 
     def test_on_webhooks_update(self, event_manager_impl, shard, event_factory):

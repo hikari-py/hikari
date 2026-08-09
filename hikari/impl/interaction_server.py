@@ -173,7 +173,7 @@ class _FilePayload(aiohttp.Payload):
                 await writer.write(chunk)
 
 
-async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.Any, None]) -> None:
+async def _consume_generator_listener(generator: typing.AsyncGenerator[typing.Any]) -> None:
     try:
         await generator.__anext__()
 
@@ -478,6 +478,7 @@ class InteractionServer(interaction_server.InteractionServer):
                 call = listener(interaction)
 
                 if inspect.isasyncgen(call):
+                    call = typing.cast("typing.AsyncGenerator[typing.Any, typing.Any]", call)
                     result = await call.__anext__()
                     task = asyncio.create_task(_consume_generator_listener(call))
 

@@ -29,6 +29,7 @@ import pytest
 
 from hikari import auto_mod
 from hikari import channels as channel_models
+from hikari import colors as color_models
 from hikari import emojis as emoji_models
 from hikari import traits
 from hikari import undefined
@@ -1110,6 +1111,8 @@ class TestEventFactoryImpl:
             "message_id": "43123123",
             "guild_id": "43949494",
             "emoji": {"id": "123312", "name": "okok", "animated": True},
+            "burst": True,
+            "burst_colors": ["#FF0000", "#00FF00"],
         }
 
         event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
@@ -1124,6 +1127,8 @@ class TestEventFactoryImpl:
         assert event.emoji_name == "okok"
         assert event.emoji_id == 123312
         assert event.is_animated is True
+        assert event.is_burst is True
+        assert event.burst_colors == [color_models.Color(0xFF0000), color_models.Color(0x00FF00)]
 
     def test_deserialize_message_reaction_add_event_in_guild_when_partial_custom(
         self, event_factory, mock_shard, mock_app
@@ -1142,6 +1147,8 @@ class TestEventFactoryImpl:
         assert event.is_animated is False
         assert event.emoji_id == 123312
         assert event.emoji_name is None
+        assert event.is_burst is False
+        assert event.burst_colors == []
 
     def test_deserialize_message_reaction_add_event_in_guild_when_unicode(self, event_factory, mock_shard, mock_app):
         mock_member_payload = object()
@@ -1166,6 +1173,8 @@ class TestEventFactoryImpl:
             "message_id": "43123123",
             "user_id": "43949494",
             "emoji": {"id": "3293939", "name": "vohio", "animated": True},
+            "burst": False,
+            "burst_colors": [],
         }
 
         event = event_factory.deserialize_message_reaction_add_event(mock_shard, mock_payload)
@@ -1180,6 +1189,8 @@ class TestEventFactoryImpl:
         assert event.emoji_name == "vohio"
         assert event.emoji_id == 3293939
         assert event.is_animated is True
+        assert event.is_burst is False
+        assert event.burst_colors == []
 
     def test_deserialize_message_reaction_add_event_in_dm_when_partial_custom(
         self, event_factory, mock_shard, mock_app
@@ -1225,6 +1236,7 @@ class TestEventFactoryImpl:
             "message_id": "43234",
             "guild_id": "383838",
             "emoji": {"id": "123432", "name": "fififiif"},
+            "burst": True,
         }
 
         event = event_factory.deserialize_message_reaction_remove_event(mock_shard, mock_payload)
@@ -1239,6 +1251,7 @@ class TestEventFactoryImpl:
         assert event.emoji_id == 123432
         assert event.emoji_name == "fififiif"
         assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
+        assert event.is_burst is True
 
     def test_deserialize_message_reaction_remove_event_in_guild_with_unicode_emoji(
         self, event_factory, mock_app, mock_shard
@@ -1283,6 +1296,7 @@ class TestEventFactoryImpl:
         assert not isinstance(event.emoji_name, emoji_models.UnicodeEmoji)
         assert event.emoji_name == "okok"
         assert event.emoji_id == 123123
+        assert event.is_burst is False
 
     def test_deserialize_message_reaction_remove_event_in_dm_with_unicode_emoji(
         self, event_factory, mock_app, mock_shard
@@ -1489,6 +1503,39 @@ class TestEventFactoryImpl:
         assert event.presences == {}
         assert event.nonce is None
 
+    def test_deserialize_channel_info_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "guild_id": "54123123",
+            "channels": [
+                {"id": "5513123", "status": "amongus", "voice_start_time": 1722945600},
+                {"id": "5513124", "status": None, "voice_start_time": None},
+            ],
+        }
+
+        event = event_factory.deserialize_channel_info_event(mock_shard, mock_payload)
+
+        assert isinstance(event, shard_events.ChannelInfoEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.guild_id == 54123123
+        assert event.channels == {
+            5513123: shard_events.ChannelInfo(
+                channel_id=5513123,
+                status="amongus",
+                voice_start_time=datetime.datetime(2024, 8, 6, 12, 0, tzinfo=datetime.timezone.utc),
+            ),
+            5513124: shard_events.ChannelInfo(channel_id=5513124, status=None, voice_start_time=None),
+        }
+
+    def test_deserialize_channel_info_event_without_optional_fields(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"guild_id": "54123123", "channels": [{"id": "5513123"}]}
+
+        event = event_factory.deserialize_channel_info_event(mock_shard, mock_payload)
+
+        assert event.channels == {
+            5513123: shard_events.ChannelInfo(channel_id=5513123, status=None, voice_start_time=None)
+        }
+
     ###############
     # USER EVENTS #
     ###############
@@ -1536,6 +1583,36 @@ class TestEventFactoryImpl:
         assert event.token == "okokok"
         assert event.guild_id == 3122312
         assert event.raw_endpoint == "httppppppp"
+
+    def test_deserialize_voice_channel_start_time_update_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"id": "5513123", "guild_id": "54123123", "voice_start_time": 1722945600}
+
+        event = event_factory.deserialize_voice_channel_start_time_update_event(mock_shard, mock_payload)
+
+        assert isinstance(event, voice_events.VoiceChannelStartTimeUpdateEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.channel_id == 5513123
+        assert event.guild_id == 54123123
+        assert event.voice_start_time == datetime.datetime(2024, 8, 6, 12, 0, tzinfo=datetime.timezone.utc)
+
+    def test_deserialize_voice_channel_start_time_update_event_when_no_ongoing_session(
+        self, event_factory, mock_app, mock_shard
+    ):
+        mock_payload = {"id": "5513123", "guild_id": "54123123", "voice_start_time": None}
+
+        event = event_factory.deserialize_voice_channel_start_time_update_event(mock_shard, mock_payload)
+
+        assert event.voice_start_time is None
+
+    def test_deserialize_voice_channel_start_time_update_event_when_start_time_undefined(
+        self, event_factory, mock_app, mock_shard
+    ):
+        mock_payload = {"id": "5513123", "guild_id": "54123123"}
+
+        event = event_factory.deserialize_voice_channel_start_time_update_event(mock_shard, mock_payload)
+
+        assert event.voice_start_time is None
 
     ##################
     #  MONETIZATION  #

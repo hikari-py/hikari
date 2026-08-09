@@ -21,7 +21,7 @@ Gateway APIs.
 Built on good intentions and the hope that it will be extendable and reusable, rather than an obstacle for future
 development.
 
-Python 3.9, 3.10, 3.11, 3.12, 3.13, and 3.14 are currently supported.
+Python 3.10, 3.11, 3.12, 3.13, and 3.14 are currently supported.
 
 ## Installation
 
@@ -42,6 +42,8 @@ Hikari is used in the wild to run some large bots! Here are some examples:
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://invite-tracker.com"><img src="https://invite-tracker.com/og/invitetracker_logo.png" width="100px;" height="100px;" alt="Invite Tracker"/><br /><sub><b>Invite Tracker</b></sub></a>
       <td align="center" valign="top" width="14.28%"><a href="https://nmarkov.xyz"><img src="https://nmarkov.xyz/logo.png" width="100px;" alt="nMarkov"/><br /><sub><b>nMarkov</b></sub></a>
+      <td align="center" valign="top" width="14.28%"><a href="https://gpob.xyz"><img src="https://gpob.xyz/images/logo.png" width="100px;" alt="General Purpose ORG Bot"/><br /><sub><b>General Purpose ORG Bot</b></sub></a>
+      <td align="center" valign="top" width="14.28%"><a href="https://www.scoreboarder.xyz"><img src="https://www.scoreboarder.xyz/logo.svg" width="100px;" alt="Scoreboarder"/><br /><sub><b>Scoreboarder</b></sub></a>
     </tr>
   </tbody>
 </table>

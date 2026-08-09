@@ -22,7 +22,12 @@
 
 from __future__ import annotations
 
-__all__: typing.Sequence[str] = ("VoiceEvent", "VoiceServerUpdateEvent", "VoiceStateUpdateEvent")
+__all__: typing.Sequence[str] = (
+    "VoiceChannelStartTimeUpdateEvent",
+    "VoiceEvent",
+    "VoiceServerUpdateEvent",
+    "VoiceStateUpdateEvent",
+)
 
 import abc
 import typing
@@ -36,6 +41,8 @@ from hikari.internal import attrs_extensions
 from hikari.internal import typing_extensions
 
 if typing.TYPE_CHECKING:
+    import datetime
+
     from hikari import snowflakes
     from hikari import traits
     from hikari import voices
@@ -136,3 +143,30 @@ class VoiceServerUpdateEvent(VoiceEvent):
             return None
 
         return f"wss://{self.raw_endpoint}"
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class VoiceChannelStartTimeUpdateEvent(VoiceEvent):
+    """Event fired when the start time of a voice channel changes.
+
+    Sent when a voice session starts or ends in a voice channel.
+    """
+
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
+    shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from ShardEvent>>.
+
+    guild_id: snowflakes.Snowflake = attrs.field(repr=True)
+    # <<inherited docstring from VoiceEvent>>
+
+    channel_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """ID of the voice channel this event is for."""
+
+    voice_start_time: datetime.datetime | None = attrs.field(repr=True)
+    """When the ongoing voice session started.
+
+    This will be [`None`][] if there is no ongoing voice session.
+    """

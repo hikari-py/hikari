@@ -62,11 +62,17 @@ if typing.TYPE_CHECKING:
     from hikari.api import event_manager as event_manager_
     from hikari.impl import config
 
+    # TODO: drop when removing backports.zstd
+    class _ZstdDecompressor(typing.Protocol):
+        def decompress(self, data: bytes, max_length: int = ...) -> bytes:
+            raise NotImplementedError
+
+
 if sys.version_info >= (3, 14):
     _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 else:
     try:
-        import zstandard  # noqa: F401
+        import backports.zstd  # noqa: F401
     except ModuleNotFoundError:
         _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM
     else:
@@ -91,6 +97,7 @@ _INVALID_SESSION: typing.Final[int] = 9
 _HELLO: typing.Final[int] = 10
 _HEARTBEAT_ACK: typing.Final[int] = 11
 _REQUEST_SOUNDBOARD_SOUNDS: typing.Final[int] = 31
+_REQUEST_CHANNEL_INFO: typing.Final[int] = 43
 # Special dispatches
 _READY: typing.Final[str] = sys.intern("READY")
 _RESUMED: typing.Final[str] = sys.intern("RESUMED")
@@ -147,7 +154,7 @@ class _GatewayTransport(abc.ABC):
     def __init__(
         self,
         *,
-        ws: aiohttp.ClientWebSocketResponse,
+        ws: aiohttp.ClientWebSocketResponse[typing.Literal[False]],
         exit_stack: contextlib.AsyncExitStack,
         logger: logging.Logger,
         log_filterer: typing.Callable[[bytes], bytes],
@@ -265,12 +272,16 @@ class _GatewayTransport(abc.ABC):
                     )
                 )
 
+                web_socket: aiohttp.ClientWebSocketResponse[typing.Literal[False]]
+                # Type ignore due to aiohttp returning a generic instead of a specific
+                # based on the argument on <= 3.11
                 web_socket = await exit_stack.enter_async_context(
-                    client_session.ws_connect(
+                    client_session.ws_connect(  # type: ignore[arg-type]
                         max_msg_size=0,
                         proxy=proxy_settings.url,
                         proxy_headers=proxy_settings.headers,
                         url=url,
+                        decode_text=False,
                         # We manage this ourselves
                         autoclose=False,
                     )
@@ -285,6 +296,8 @@ class _GatewayTransport(abc.ABC):
                     transport_cls = _GatewayZlibMessageTransport
                 else:
                     transport_cls = _GatewayBasicTransport
+
+                logger.debug("Using '%s' compression", compression)
 
                 return transport_cls(
                     ws=web_socket,
@@ -350,11 +363,11 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
                     buff.extend(message.data)
                     continue
 
-                self._handle_other_message(message)
+                self._handle_other_message(message)  # type: ignore[arg-type]
 
             return self._inflator.decompress(buff)
 
-        self._handle_other_message(message)
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayZstdStreamTransport(_GatewayTransport):
@@ -362,20 +375,18 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
+        self._inflator: _ZstdDecompressor
 
-        try:
-            import zstandard  # noqa: PLC0415
+        if sys.version_info >= (3, 14):
+            from compression import zstd  # noqa: PLC0415
+        else:
+            try:
+                from backports import zstd  # noqa: PLC0415
+            except (ModuleNotFoundError, ImportError) as exc:
+                msg = "You must install the optional `hikari[zstd]` dependencies to use the zstd stream compression."
+                raise RuntimeError(msg) from exc
 
-            self._inflator = zstandard.ZstdDecompressor().decompressobj()
-        except ModuleNotFoundError as exc:
-            if sys.version_info >= (3, 14):
-                from compression import zstd  # noqa: PLC0415
-
-                self._inflator = zstd.ZstdDecompressor()
-                return
-
-            msg = "You must install the optional `hikari[zstd]` dependencies to use the zstd stream compression."
-            raise RuntimeError(msg) from exc
+        self._inflator = zstd.ZstdDecompressor()
 
     @typing_extensions.override  # noqa: RET503 - ruff doesn't understand `typing.NoReturn`
     async def _receive_and_check(self) -> bytes:
@@ -385,7 +396,7 @@ class _GatewayZstdStreamTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return self._inflator.decompress(message.data)
 
-        self._handle_other_message(message)
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayZlibMessageTransport(_GatewayTransport):
@@ -399,10 +410,10 @@ class _GatewayZlibMessageTransport(_GatewayTransport):
             assert isinstance(message.data, bytes)
             return zlib.decompress(message.data)
         if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data.encode()
+            assert isinstance(message.data, bytes)
+            return message.data
 
-        self._handle_other_message(message)
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 class _GatewayBasicTransport(_GatewayTransport):
@@ -413,10 +424,10 @@ class _GatewayBasicTransport(_GatewayTransport):
         message = await self._ws.receive()
 
         if message.type == aiohttp.WSMsgType.TEXT:
-            assert isinstance(message.data, str)
-            return message.data.encode()
+            assert isinstance(message.data, bytes)
+            return message.data
 
-        self._handle_other_message(message)
+        self._handle_other_message(message)  # type: ignore[arg-type]
 
 
 def _serialize_datetime(dt: datetime.datetime | None) -> int | None:
@@ -734,6 +745,18 @@ class GatewayShardImpl(shard.GatewayShard):
         payload.put_snowflake_array("guild_ids", guilds)
 
         await self._send_json({_OP: _REQUEST_SOUNDBOARD_SOUNDS, _D: payload})
+
+    @typing_extensions.override
+    async def request_channel_info(
+        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild], *, fields: typing.Sequence[shard.ChannelInfoField]
+    ) -> None:
+        self._check_if_connected()
+
+        payload = data_binding.JSONObjectBuilder()
+        payload.put_snowflake("guild_id", guild)
+        payload.put("fields", [str(field) for field in fields])
+
+        await self._send_json({_OP: _REQUEST_CHANNEL_INFO, _D: payload})
 
     @typing_extensions.override
     async def start(self) -> None:

@@ -28,7 +28,6 @@ import asyncio
 import inspect
 import itertools
 import logging
-import sys
 import types
 import typing
 import warnings
@@ -43,7 +42,6 @@ from hikari.api import event_manager as event_manager_
 from hikari.events import base_events
 from hikari.events import shard_events
 from hikari.internal import fast_protocol
-from hikari.internal import reflect
 from hikari.internal import typing_extensions
 from hikari.internal import ux
 
@@ -66,12 +64,7 @@ if typing.TYPE_CHECKING:
     _UnboundMethodT = typing.Callable[[_EventManagerBaseT, gateway_shard.GatewayShard, data_binding.JSONObject], None]
 
 
-if sys.version_info >= (3, 10):
-    # We can use types.UnionType on 3.10+
-    _UNIONS = frozenset((typing.Union, types.UnionType))
-else:
-    _UNIONS = frozenset((typing.Union,))
-
+_UNIONS = frozenset((typing.Union, types.UnionType))
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.event_manager")
 
 
@@ -522,7 +515,7 @@ class EventManagerBase(event_manager_.EventManager):
                 resolved_types = event_types
 
             else:
-                signature = reflect.resolve_signature(callback)
+                signature = inspect.signature(callback, eval_str=True)
                 params = signature.parameters.values()
                 _assert_is_listener(iter(params))
                 event_param = next(iter(params))

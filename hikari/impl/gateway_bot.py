@@ -324,7 +324,7 @@ class GatewayBot(traits.GatewayBotAware):
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
         auto_chunk_members: bool = True,
-        logs: None | str | int | dict[str, typing.Any] | os.PathLike[str] = "INFO",
+        logs: str | int | dict[str, typing.Any] | os.PathLike[str] | None = "INFO",
         max_rate_limit: float = 300.0,
         max_retries: int = 3,
         proxy_settings: config_impl.ProxySettings | None = None,
@@ -1332,6 +1332,17 @@ class GatewayBot(traits.GatewayBotAware):
         self._check_if_alive()
         shard = self.shards[0]
         await shard.request_soundboard_sounds(guilds)
+
+    @typing_extensions.override
+    async def request_channel_info(
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        *,
+        fields: typing.Sequence[gateway_shard.ChannelInfoField],
+    ) -> None:
+        self._check_if_alive()
+        shard = self._get_shard(guild)
+        await shard.request_channel_info(guild=guild, fields=fields)
 
     async def _start_one_shard(
         self,

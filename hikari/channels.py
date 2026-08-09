@@ -69,7 +69,6 @@ from hikari import undefined
 from hikari import urls
 from hikari import webhooks
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -505,6 +504,7 @@ class TextableChannel(PartialChannel):
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedOr[snowflakes.SnowflakeishOr[messages_.PartialMessage]] = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -587,6 +587,9 @@ class TextableChannel(PartialChannel):
             As of writing, bots can only send custom stickers from the current guild.
         tts
             If provided, whether the message will be TTS (Text To Speech).
+        nonce
+            If provided, a nonce that can be used for optimistic message
+            sending.
         reply
             If provided, the message to reply to.
         reply_must_exist
@@ -663,6 +666,7 @@ class TextableChannel(PartialChannel):
             embeds=embeds,
             sticker=sticker,
             stickers=stickers,
+            nonce=nonce,
             tts=tts,
             reply=reply,
             reply_must_exist=reply_must_exist,
@@ -891,20 +895,12 @@ class GroupDMChannel(PrivateChannel):
 
         return self.name
 
-    @property
-    @deprecation.deprecated("Use 'make_icon_url' instead.")
-    def icon_url(self) -> files.URL | None:
-        """Icon for this group DM, if set."""
-        deprecation.warn_deprecated("icon_url", removal_version="2.5.0", additional_info="Use 'make_icon_url' instead.")
-        return self.make_icon_url()
-
     def make_icon_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the icon URL for this group, if set.
 
@@ -922,12 +918,6 @@ class GroupDMChannel(PrivateChannel):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -943,12 +933,6 @@ class GroupDMChannel(PrivateChannel):
         """
         if self.icon_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_CHANNEL_ICON.compile_to_file(
             urls.CDN_URL, channel_id=self.id, hash=self.icon_hash, size=size, file_format=file_format, lossless=lossless

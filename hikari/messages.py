@@ -33,6 +33,8 @@ __all__: typing.Sequence[str] = (
     "PartialMessage",
     "PinnedMessage",
     "Reaction",
+    "ReactionCountDetails",
+    "ReactionType",
 )
 
 import typing
@@ -47,7 +49,6 @@ from hikari import traits
 from hikari import undefined
 from hikari import urls
 from hikari.internal import attrs_extensions
-from hikari.internal import deprecation
 from hikari.internal import enums
 from hikari.internal import routes
 from hikari.internal import typing_extensions
@@ -56,6 +57,8 @@ if typing.TYPE_CHECKING:
     import datetime
 
     from hikari import channels as channels_
+    from hikari import colors as colors_
+    from hikari import colours
     from hikari import embeds as embeds_
     from hikari import emojis as emojis_
     from hikari import polls as polls_
@@ -325,19 +328,56 @@ class Attachment(snowflakes.Unique, files.WebResource):
         return self.filename
 
 
+@typing.final
+class ReactionType(int, enums.Enum):
+    """The type of a reaction."""
+
+    NORMAL = 0
+    """A normal reaction."""
+
+    BURST = 1
+    """A super (burst) reaction."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class ReactionCountDetails:
+    """A breakdown of a reaction's count per reaction type."""
+
+    burst: int = attrs.field(repr=True)
+    """The number of super reactions."""
+
+    normal: int = attrs.field(repr=True)
+    """The number of normal reactions."""
+
+
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, kw_only=True, weakref_slot=False)
 class Reaction:
     """Represents a reaction in a message."""
 
     count: int = attrs.field(eq=False, hash=False, repr=True)
-    """The number of times the emoji has been used to react."""
+    """The total number of times the emoji has been used to react, including super reactions."""
+
+    count_details: ReactionCountDetails = attrs.field(eq=False, hash=False, repr=False)
+    """A breakdown of the reaction count per reaction type."""
 
     emoji: emojis_.UnicodeEmoji | emojis_.CustomEmoji = attrs.field(hash=True, repr=True)
     """The emoji used to react."""
 
     is_me: bool = attrs.field(eq=False, hash=False, repr=False)
     """Whether the current user reacted using this emoji."""
+
+    is_me_burst: bool = attrs.field(eq=False, hash=False, repr=False)
+    """Whether the current user super-reacted using this emoji."""
+
+    burst_colors: typing.Sequence[colors_.Color] = attrs.field(eq=False, hash=False, repr=False)
+    """The colours used for the super reaction animation, empty if this reaction has no super reactions."""
+
+    @property
+    def burst_colours(self) -> typing.Sequence[colours.Colour]:
+        """Alias for the `burst_colors` field."""
+        return self.burst_colors
 
     @typing_extensions.override
     def __str__(self) -> str:
@@ -423,22 +463,12 @@ class MessageApplication(guilds.PartialApplication):
     cover_image_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
     """The CDN's hash of this application's default rich presence invite cover image."""
 
-    @property
-    @deprecation.deprecated("Use 'make_cover_image_url' instead.")
-    def cover_image_url(self) -> files.URL | None:
-        """Rich presence cover image URL for this application, if set."""
-        deprecation.warn_deprecated(
-            "cover_image_url", removal_version="2.5.0", additional_info="Use 'make_cover_image_url' instead."
-        )
-        return self.make_cover_image_url()
-
     def make_cover_image_url(
         self,
         *,
         file_format: typing.Literal["PNG", "JPEG", "JPG", "WEBP"] = "PNG",
         size: int = 4096,
         lossless: bool = True,
-        ext: str | None | undefined.UndefinedType = undefined.UNDEFINED,
     ) -> files.URL | None:
         """Generate the rich presence cover image URL for this application, if set.
 
@@ -458,12 +488,6 @@ class MessageApplication(guilds.PartialApplication):
         lossless
             Whether to return a lossless or compressed WEBP image;
             This is ignored if `file_format` is not `WEBP`.
-        ext
-            The extension to use for this URL.
-            Supports `png`, `jpeg`, `jpg` and `webp`.
-
-            !!! deprecated 2.4.0
-                This has been replaced with the `file_format` argument.
 
         Returns
         -------
@@ -479,12 +503,6 @@ class MessageApplication(guilds.PartialApplication):
         """
         if self.cover_image_hash is None:
             return None
-
-        if ext:
-            deprecation.warn_deprecated(
-                "ext", removal_version="2.5.0", additional_info="Use 'file_format' argument instead."
-            )
-            file_format = ext.upper()  # type: ignore[assignment]
 
         return routes.CDN_APPLICATION_COVER.compile_to_file(
             urls.CDN_URL,
@@ -1096,6 +1114,7 @@ class PartialMessage(snowflakes.Unique):
         stickers: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[stickers_.PartialSticker]
         ] = undefined.UNDEFINED,
+        nonce: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         reply: undefined.UndefinedType | snowflakes.SnowflakeishOr[PartialMessage] | bool = undefined.UNDEFINED,
         reply_must_exist: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
@@ -1179,6 +1198,9 @@ class PartialMessage(snowflakes.Unique):
             As of writing, bots can only send custom stickers from the current guild.
         tts
             If provided, whether the message will be TTS (Text To Speech).
+        nonce
+            If provided, a nonce that can be used for optimistic message
+            sending.
         reply
             If provided and [`True`][], reply to this message.
             If provided and not [`bool`][], the message to reply to.
@@ -1262,6 +1284,7 @@ class PartialMessage(snowflakes.Unique):
             poll=poll,
             sticker=sticker,
             stickers=stickers,
+            nonce=nonce,
             tts=tts,
             reply=reply,
             reply_must_exist=reply_must_exist,
