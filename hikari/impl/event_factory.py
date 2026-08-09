@@ -159,6 +159,7 @@ class EventFactoryImpl(event_factory.EventFactory):
                 animation_type = None
 
         return channel_events.GuildChannelEffectSendEvent(
+            app=self._app,
             shard=shard,
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
             guild_id=snowflakes.Snowflake(payload["guild_id"]),
@@ -166,9 +167,11 @@ class EventFactoryImpl(event_factory.EventFactory):
             emoji=emoji,
             animation_type=animation_type,
             animation_id=snowflakes.Snowflake(payload["animation_id"])
-            if "animation_id" in payload
+            if payload["animation_id"] is not None
             else undefined.UNDEFINED,
-            sound_id=snowflakes.Snowflake(payload["sound_id"]) if "sound_id" in payload else undefined.UNDEFINED,
+            sound_id=snowflakes.Snowflake(payload["sound_id"])
+            if payload["sound_id"] is not None
+            else undefined.UNDEFINED,
             sound_volume=payload.get("sound_volume", undefined.UNDEFINED),
         )
 

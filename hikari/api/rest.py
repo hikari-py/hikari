@@ -9981,7 +9981,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
         /,
-    ) -> soundboard.SoundboardSound | None:
+    ) -> soundboard.SoundboardSound:
         """Fetch a guild soundboard sound.
 
         Fetch a specific guild soundboard sound.
@@ -10009,7 +10009,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
-            If the guild or rule was not found.
+            If the guild or sound was not found.
         hikari.errors.RateLimitTooLongError
             Raised in the event that a rate limit occurs that is
             longer than `max_rate_limit` when making a request.

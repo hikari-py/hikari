@@ -368,6 +368,9 @@ class GuildChannelDeleteEvent(GuildChannelEvent):
 class GuildChannelEffectSendEvent(GuildChannelEvent):
     """Event fired when a guild channel is created."""
 
+    app: traits.RESTAware = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
+    # <<inherited docstring from Event>>.
+
     shard: gateway_shard.GatewayShard = attrs.field(metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     # <<inherited docstring from ShardEvent>>.
 
@@ -394,12 +397,6 @@ class GuildChannelEffectSendEvent(GuildChannelEvent):
 
     sound_volume: undefined.UndefinedOr[float] = attrs.field(repr=True)
     """The sound volume for soundboard sound effects."""
-
-    @property
-    @typing_extensions.override
-    def app(self) -> traits.RESTAware:
-        # <<inherited docstring from Event>>.
-        return self.app
 
 
 @base_events.requires_intents(intents.Intents.DM_MESSAGES, intents.Intents.GUILDS)

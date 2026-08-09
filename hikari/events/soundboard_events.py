@@ -18,7 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Events pertaining to manipulation of roles within guilds."""
+"""Events pertaining to soundboard sounds within guilds."""
 
 from __future__ import annotations
 
@@ -86,7 +86,7 @@ class SoundboardSoundCreateEvent(SoundboardSoundEvent):
     """The emoji of the sound."""
 
     guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=False)
-    """The guild ID of the stage instance."""
+    # <<inherited docstring from SoundboardSoundEvent>>.
 
     is_available: bool = attrs.field(hash=True, repr=False)
     """Whether this sound can be used, or lost due to insufficient boosting."""
@@ -119,7 +119,7 @@ class SoundboardSoundUpdateEvent(SoundboardSoundEvent):
     """The emoji of the sound."""
 
     guild_id: snowflakes.Snowflake = attrs.field(hash=True, repr=False)
-    """The guild ID of the stage instance."""
+    # <<inherited docstring from SoundboardSoundEvent>>.
 
     is_available: bool = attrs.field(hash=True, repr=False)
     """Whether this sound can be used, or lost due to insufficient boosting."""

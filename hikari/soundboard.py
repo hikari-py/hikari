@@ -18,7 +18,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Application and entities that are used to describe stage instances on Discord."""
+"""Application and entities that are used to describe soundboard sounds on Discord."""
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ class SoundboardSound(snowflakes.Unique):
     """The emoji of the sound."""
 
     guild_id: undefined.UndefinedOr[snowflakes.Snowflake] = attrs.field(hash=True, repr=False)
-    """The guild ID of the stage instance."""
+    """The guild ID this sound belongs to."""
 
     is_available: bool = attrs.field(hash=True, repr=False)
     """Whether this sound can be used, or lost due to insufficient boosting."""

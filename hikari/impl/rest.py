@@ -5449,7 +5449,7 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         sound: snowflakes.SnowflakeishOr[soundboard.SoundboardSound],
         /,
-    ) -> soundboard.SoundboardSound | None:
+    ) -> soundboard.SoundboardSound:
         result = await self._request(routes.GET_GUILD_SOUNDBOARD_SOUND.compile(guild=guild, sound=sound))
         assert isinstance(result, dict)
         return self._entity_factory.deserialize_soundboard_sound(result)

@@ -163,7 +163,7 @@ class TestEventFactoryImpl:
         assert event.sound_volume == 0.654
 
     def test_deserialize_guild_channel_effect_send_event_when_partial(self, event_factory, mock_app, mock_shard):
-        payload = {"channel_id": "456", "guild_id": "123", "user_id": "789"}
+        payload = {"channel_id": "456", "guild_id": "123", "user_id": "789", "animation_id": None, "sound_id": None}
 
         event = event_factory.deserialize_guild_channel_effect_send_event(mock_shard, payload)
 
