@@ -124,8 +124,8 @@ types = [
     "pydub-stubs==0.25.1.6",
     # No numpy version supports all of our python versions, so the requirement
     # needs to be split up
-    "numpy==2.2.6; python_version < '3.11'",
-    "numpy==2.4.2; python_version >= '3.11'",
+    "numpy==2.5.2; python_version < '3.11'",
+    "numpy==2.5.2; python_version >= '3.11'",
 ]
 
 [tool.uv]
