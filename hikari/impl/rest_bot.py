@@ -251,7 +251,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def __init__(
         self,
         token: str,
-        token_type: str | applications.TokenType = applications.TokenType.BOT,
+        token_type: applications.TokenType = applications.TokenType.BOT,
         public_key: bytes | str | None = None,
         *,
         allow_color: bool = True,
@@ -270,7 +270,7 @@ class RESTBot(traits.RESTBotAware, interaction_server_.InteractionServer):
     def __init__(
         self,
         token: str | rest_api.TokenStrategy,
-        token_type: applications.TokenType | str | None = None,
+        token_type: applications.TokenType | None = None,
         public_key: bytes | str | None = None,
         *,
         allow_color: bool = True,

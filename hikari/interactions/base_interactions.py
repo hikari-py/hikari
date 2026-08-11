@@ -68,7 +68,7 @@ if typing.TYPE_CHECKING:
     from hikari.api import special_endpoints
 
 
-_CommandResponseTypesT = typing.TypeVar("_CommandResponseTypesT", bound=int)
+_CommandResponseTypesT = typing.TypeVar("_CommandResponseTypesT", bound="ResponseType")
 
 
 @typing.final
@@ -235,13 +235,13 @@ This includes the following:
 * [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]
 """
 
-MessageResponseTypesT = typing.Literal[ResponseType.MESSAGE_CREATE, 4, ResponseType.MESSAGE_UPDATE, 7]
+MessageResponseTypesT = typing.Literal[ResponseType.MESSAGE_CREATE, ResponseType.MESSAGE_UPDATE]
 """Type-hint of the response types which are valid for message responses.
 
 The following are valid for this:
 
-* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]/`4`
-* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]/`7`
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.MESSAGE_UPDATE`][]
 """
 
 DEFERRED_RESPONSE_TYPES: typing.Final[typing.AbstractSet[DeferredResponseTypesT]] = frozenset(
@@ -255,15 +255,13 @@ This includes the following:
 * [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]
 """
 
-DeferredResponseTypesT = typing.Literal[
-    ResponseType.DEFERRED_MESSAGE_CREATE, 5, ResponseType.DEFERRED_MESSAGE_UPDATE, 6
-]
+DeferredResponseTypesT = typing.Literal[ResponseType.DEFERRED_MESSAGE_CREATE, ResponseType.DEFERRED_MESSAGE_UPDATE]
 """Type-hint of the response types which are valid for deferred messages responses.
 
 The following are valid for this:
 
-* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]/`5`
-* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]/`6`
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_CREATE`][]
+* [`hikari.interactions.base_interactions.ResponseType.DEFERRED_MESSAGE_UPDATE`][]
 """
 
 
@@ -315,7 +313,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
     This will be [`None`][] for modal interactions triggered in DMs.
     """
 
-    guild_locale: str | locales.Locale | None = attrs.field(eq=False, hash=False, repr=True)
+    guild_locale: locales.Locale | None = attrs.field(eq=False, hash=False, repr=True)
     """The preferred language of the guild this component interaction was triggered in.
 
     This will be [`None`][] for component interactions triggered in DMs.
@@ -325,7 +323,7 @@ class PartialInteraction(snowflakes.Unique, webhooks.ExecutableWebhook):
         for the guild and will otherwise default to `en-US`.
     """
 
-    locale: str | locales.Locale = attrs.field(eq=False, hash=False, repr=True)
+    locale: locales.Locale = attrs.field(eq=False, hash=False, repr=True)
     """The selected language of the user who triggered this modal interaction."""
 
     authorizing_integration_owners: typing.Mapping[applications.ApplicationIntegrationType, snowflakes.Snowflake] = (
@@ -403,7 +401,7 @@ class PartialInteractionMetadata:
     interaction_id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID for this message interaction."""
 
-    type: InteractionType | int = attrs.field(eq=False, repr=True)
+    type: InteractionType = attrs.field(eq=False, repr=True)
     """The type of this message interaction."""
 
     user: users.User = attrs.field(eq=False, repr=True)
@@ -452,7 +450,7 @@ class MessageResponseMixin(PartialInteraction, typing.Generic[_CommandResponseTy
         response_type: _CommandResponseTypesT,
         content: undefined.UndefinedOr[typing.Any] = undefined.UNDEFINED,
         *,
-        flags: int | messages.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
+        flags: messages.MessageFlag | undefined.UndefinedType = undefined.UNDEFINED,
         tts: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         attachment: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         attachments: undefined.UndefinedNoneOr[typing.Sequence[files.Resourceish]] = undefined.UNDEFINED,

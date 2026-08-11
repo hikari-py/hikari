@@ -307,7 +307,7 @@ class PermissionOverwrite(snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(converter=snowflakes.Snowflake, repr=True)
     """The ID of this entity."""
 
-    type: PermissionOverwriteType | int = attrs.field(converter=PermissionOverwriteType, repr=True)
+    type: PermissionOverwriteType = attrs.field(converter=PermissionOverwriteType, repr=True)
     """The type of entity this overwrite targets."""
 
     allow: permissions.Permissions = attrs.field(
@@ -346,7 +346,7 @@ class PartialChannel(snowflakes.Unique):
     name: str | None = attrs.field(eq=False, hash=False, repr=True)
     """The channel's name. This will be missing for DM channels."""
 
-    type: ChannelType | int = attrs.field(eq=False, hash=False, repr=True)
+    type: ChannelType = attrs.field(eq=False, hash=False, repr=True)
     """The channel's type."""
 
     @property
@@ -516,7 +516,7 @@ class TextableChannel(PartialChannel):
         role_mentions: undefined.UndefinedOr[
             snowflakes.SnowflakeishSequence[guilds.PartialRole] | bool
         ] = undefined.UNDEFINED,
-        flags: undefined.UndefinedType | int | messages_.MessageFlag = undefined.UNDEFINED,
+        flags: undefined.UndefinedType | messages_.MessageFlag = undefined.UNDEFINED,
     ) -> messages_.Message:
         """Create a message in this channel.
 
@@ -1011,7 +1011,7 @@ class GuildChannel(PartialChannel):
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
         bitrate: undefined.UndefinedOr[int] = undefined.UNDEFINED,
-        video_quality_mode: undefined.UndefinedOr[VideoQualityMode | int] = undefined.UNDEFINED,
+        video_quality_mode: undefined.UndefinedOr[VideoQualityMode] = undefined.UNDEFINED,
         user_limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         rate_limit_per_user: undefined.UndefinedOr[time.Intervalish] = undefined.UNDEFINED,
         region: undefined.UndefinedOr[voices.VoiceRegion | str] = undefined.UNDEFINED,
@@ -1166,7 +1166,7 @@ class PermissibleGuildChannel(GuildChannel):
         self,
         target: snowflakes.Snowflakeish | users.PartialUser | guilds.PartialRole | PermissionOverwrite,
         *,
-        target_type: undefined.UndefinedOr[PermissionOverwriteType | int] = undefined.UNDEFINED,
+        target_type: undefined.UndefinedOr[PermissionOverwriteType] = undefined.UNDEFINED,
         allow: undefined.UndefinedOr[permissions.Permissions] = undefined.UNDEFINED,
         deny: undefined.UndefinedOr[permissions.Permissions] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1365,7 +1365,7 @@ class GuildVoiceChannel(PermissibleGuildChannel, TextableGuildChannel):
     If this is `0`, then assume no limit.
     """
 
-    video_quality_mode: VideoQualityMode | int = attrs.field(eq=False, hash=False, repr=False)
+    video_quality_mode: VideoQualityMode = attrs.field(eq=False, hash=False, repr=False)
     """The video quality mode for this channel."""
 
     last_message_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
@@ -1398,7 +1398,7 @@ class GuildStageChannel(PermissibleGuildChannel, TextableGuildChannel):
     If this is `0`, then assume no limit.
     """
 
-    video_quality_mode: VideoQualityMode | int = attrs.field(eq=False, hash=False, repr=False)
+    video_quality_mode: VideoQualityMode = attrs.field(eq=False, hash=False, repr=False)
     """The video quality mode for this channel."""
 
     last_message_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)

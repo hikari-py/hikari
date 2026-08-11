@@ -64,9 +64,10 @@ if typing.TYPE_CHECKING:
 class AuditLogChangeKey(str, enums.Enum):
     """Commonly known and documented keys for audit log change objects.
 
-    Others may exist. These should be expected to default to the raw string
-    Discord provided us. These are defined for documentation purposes and
-    can be treated as regular strings for all other purposes.
+    Others may exist. These will be represented by unknown members which
+    keep hold of the raw string Discord provided us as their value. These
+    are defined for documentation purposes and can be treated as regular
+    strings for all other purposes.
     """
 
     NAME = "name"
@@ -292,7 +293,7 @@ class AuditLogChange:
     old_value: typing.Any | None = attrs.field(repr=True)
     """The old value of the key, if something was removed or changed."""
 
-    key: AuditLogChangeKey | str = attrs.field(repr=True)
+    key: AuditLogChangeKey = attrs.field(repr=True)
     """The name of the audit log change's key."""
 
 
@@ -519,7 +520,7 @@ class ChannelOverwriteEntryInfo(BaseAuditLogEntryInfo, snowflakes.Unique):
     id: snowflakes.Snowflake = attrs.field(hash=True, repr=True)
     """The ID of this entity."""
 
-    type: channels.PermissionOverwriteType | int = attrs.field(repr=True)
+    type: channels.PermissionOverwriteType = attrs.field(repr=True)
     """The type of entity this overwrite targets."""
 
     role_name: str | None = attrs.field(repr=True)
@@ -717,7 +718,7 @@ class AuditLogEntry(snowflakes.Unique):
     user_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the user who made this change."""
 
-    action_type: AuditLogEventType | int = attrs.field(eq=False, hash=False, repr=True)
+    action_type: AuditLogEventType = attrs.field(eq=False, hash=False, repr=True)
     """The type of action this entry represents."""
 
     options: BaseAuditLogEntryInfo | None = attrs.field(eq=False, hash=False, repr=False)

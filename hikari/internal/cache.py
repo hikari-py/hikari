@@ -341,7 +341,7 @@ class InviteData(BaseData[invites.InviteWithMetadata]):
     guild_id: snowflakes.Snowflake | None = attrs.field()
     channel_id: snowflakes.Snowflake = attrs.field()
     inviter: RefCell[users_.User] | None = attrs.field()
-    target_type: invites.TargetType | int | None = attrs.field()
+    target_type: invites.TargetType | None = attrs.field()
     target_user: RefCell[users_.User] | None = attrs.field()
     target_application: applications.InviteApplication | None = attrs.field()
     uses: int = attrs.field()
@@ -423,7 +423,7 @@ class MemberData(BaseData[guilds.Member]):
     is_mute: undefined.UndefinedOr[bool] = attrs.field()
     is_pending: undefined.UndefinedOr[bool] = attrs.field()
     raw_communication_disabled_until: datetime.datetime | None = attrs.field()
-    guild_flags: guilds.GuildMemberFlags | int = attrs.field()
+    guild_flags: guilds.GuildMemberFlags = attrs.field()
     # meta-attribute
     has_been_deleted: bool = attrs.field(default=False, init=False)
 
@@ -534,7 +534,7 @@ class GuildStickerData(BaseData[stickers_.GuildSticker]):
     name: str = attrs.field()
     description: str | None = attrs.field()
     tag: str = attrs.field()
-    format_type: stickers_.StickerFormatType | int = attrs.field()
+    format_type: stickers_.StickerFormatType = attrs.field()
     is_available: bool = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
     user: RefCell[users_.User] | None = attrs.field()
@@ -579,7 +579,7 @@ class RichActivityData(BaseData[presences.RichActivity]):
 
     name: str = attrs.field()
     url: str | None = attrs.field()
-    type: presences.ActivityType | int = attrs.field()
+    type: presences.ActivityType = attrs.field()
     created_at: datetime.datetime = attrs.field()
     timestamps: presences.ActivityTimestamps | None = attrs.field()
     application_id: snowflakes.Snowflake | None = attrs.field()
@@ -664,7 +664,7 @@ class MemberPresenceData(BaseData[presences.MemberPresence]):
 
     user_id: snowflakes.Snowflake = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
-    visible_status: presences.Status | str = attrs.field()
+    visible_status: presences.Status = attrs.field()
     activities: tuple[RichActivityData, ...] = attrs.field()
     client_status: presences.ClientStatus = attrs.field()
 
@@ -736,7 +736,7 @@ class MessageData(BaseData[messages.Message]):
     poll: polls_.Poll | None = attrs.field()
     is_pinned: bool = attrs.field()
     webhook_id: snowflakes.Snowflake | None = attrs.field()
-    type: messages.MessageType | int = attrs.field()
+    type: messages.MessageType = attrs.field()
     activity: messages.MessageActivity | None = attrs.field()
     application: messages.MessageApplication | None = attrs.field()
     message_reference: messages.MessageReference | None = attrs.field()

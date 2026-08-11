@@ -212,8 +212,78 @@ class TestEnum:
             baz = 27
 
         returned = Enum(69)
+        assert type(returned) is Enum
         assert returned == 69
-        assert type(returned) is not Enum
+        assert hash(returned) == hash(69)
+        assert returned.value == 69
+        assert returned.name == "UNKNOWN 69"
+        assert str(returned) == "UNKNOWN 69"
+        assert repr(returned) == "<Enum.UNKNOWN 69: 69>"
+
+    def test_call_when_not_member_with_str_enum(self):
+        class Enum(str, enums.Enum):
+            foo = "foo"
+            bar = "bar"
+
+        returned = Enum("baz")
+        assert type(returned) is Enum
+        assert returned == "baz"
+        assert hash(returned) == hash("baz")
+        assert returned.value == "baz"
+        assert returned.name == "UNKNOWN 'baz'"
+        assert str(returned) == "baz"
+        assert repr(returned) == "<Enum.UNKNOWN 'baz': 'baz'>"
+
+    def test_call_when_not_member_caches_unknown_member(self):
+        class Enum(int, enums.Enum):
+            foo = 9
+
+        returned = Enum(69)
+        assert Enum(69) is returned
+        assert Enum(returned) is returned
+        assert Enum._temp_members_ == {69: returned}
+
+    def test_call_when_not_member_when_temp_values_over_MAX_CACHED_MEMBERS(self):
+        class MockDict:
+            def __getitem__(self, key):
+                raise KeyError
+
+            def __len__(self):
+                return enums._MAX_CACHED_MEMBERS + 1
+
+            def __setitem__(self, k, v):
+                pass
+
+            popitem = mock.Mock()
+
+        class Enum(int, enums.Enum):
+            foo = 9
+
+        Enum._temp_members_ = MockDict()
+
+        Enum(69)
+        Enum._temp_members_.popitem.assert_called_once_with()
+
+    def test_call_when_value_of_wrong_type(self):
+        class Enum(int, enums.Enum):
+            foo = 9
+
+        with pytest.raises(TypeError, match="Enum values must be of type int, not str"):
+            Enum("69")
+
+    def test_call_when_value_of_wrong_type_with_str_enum(self):
+        class Enum(str, enums.Enum):
+            foo = "foo"
+
+        with pytest.raises(TypeError, match="Enum values must be of type str, not NoneType"):
+            Enum(None)
+
+    def test_is_unknown(self):
+        class Enum(int, enums.Enum):
+            foo = 9
+
+        assert Enum(69).is_unknown is True
+        assert Enum.foo.is_unknown is False
 
     def test_getitem(self):
         class Enum(int, enums.Enum):
@@ -643,6 +713,16 @@ class TestIntFlag:
             baz = 3
 
         assert Flag(4).name == "UNKNOWN 0x4"
+
+    def test_is_unknown(self):
+        class Flag(enums.Flag):
+            foo = 1
+            bar = 2
+
+        assert Flag(4).is_unknown is True
+        assert Flag(Flag.foo | 4).is_unknown is True
+        assert Flag.foo.is_unknown is False
+        assert (Flag.foo | Flag.bar).is_unknown is False
 
     def test_value(self):
         class Flag(enums.Flag):
