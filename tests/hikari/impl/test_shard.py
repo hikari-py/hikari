@@ -535,6 +535,11 @@ class TestGatewayShardImpl:
         client._shard_id = 101
         assert client.id == 101
 
+    def test_capabilities_property(self, client):
+        mock_capabilities = object()
+        client._capabilities = mock_capabilities
+        assert client.capabilities is mock_capabilities
+
     def test_intents_property(self, client):
         mock_intents = object()
         client._intents = mock_intents
@@ -958,6 +963,7 @@ class TestGatewayShardImplAsync:
         client._seq = None
         client._large_threshold = "your mom"
         client._intents = 9
+        client._capabilities = 32768
 
         heartbeat_task = object()
         poll_events_task = object()
@@ -1027,6 +1033,7 @@ class TestGatewayShardImplAsync:
                     },
                     "shard": [20, 100],
                     "intents": 9,
+                    "capabilities": 32768,
                     "presence": serialize_and_store_presence_payload.return_value,
                 },
             }
