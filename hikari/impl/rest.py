@@ -1069,10 +1069,11 @@ class RESTClientImpl(rest_api.RESTClient):
     @typing_extensions.override
     async def edit_channel(  # noqa: PLR0913
         self,
-        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel],
+        channel: snowflakes.SnowflakeishOr[channels_.GuildChannel | channels_.GroupDMChannel],
         /,
         *,
         name: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        icon: undefined.UndefinedNoneOr[files.Resourceish] = undefined.UNDEFINED,
         flags: undefined.UndefinedOr[channels_.ChannelFlag] = undefined.UNDEFINED,
         position: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         topic: undefined.UndefinedOr[str] = undefined.UNDEFINED,
@@ -1113,6 +1114,13 @@ class RESTClientImpl(rest_api.RESTClient):
         route = routes.PATCH_CHANNEL.compile(channel=channel)
         body = data_binding.JSONObjectBuilder()
         body.put("name", name)
+
+        if icon is None:
+            body.put("icon", None)
+        elif icon is not undefined.UNDEFINED:
+            icon_resource = files.ensure_resource(icon)
+            async with icon_resource.stream(executor=self._executor) as stream:
+                body.put("icon", await stream.data_uri())
         body.put("flags", flags)
         body.put("position", position)
         body.put("topic", topic)
@@ -2444,6 +2452,51 @@ class RESTClientImpl(rest_api.RESTClient):
             self._cache.set_dm_channel_id(user, channel.id)
 
         return channel
+
+    @typing_extensions.override
+    async def create_group_dm_channel(
+        self,
+        access_tokens: typing.Sequence[str],
+        /,
+        *,
+        nicknames: undefined.UndefinedOr[
+            typing.Mapping[snowflakes.SnowflakeishOr[users_.PartialUser], str]
+        ] = undefined.UNDEFINED,
+    ) -> channels_.GroupDMChannel:
+        route = routes.POST_MY_CHANNELS.compile()
+        body = data_binding.JSONObjectBuilder()
+        body.put_array("access_tokens", access_tokens)
+
+        if nicknames is not undefined.UNDEFINED:
+            body.put("nicks", {str(int(user)): nickname for user, nickname in nicknames.items()})
+
+        response = await self._request(route, json=body)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_group_dm(response)
+
+    @typing_extensions.override
+    async def add_recipient_to_group_dm(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GroupDMChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+        *,
+        access_token: str,
+        nickname: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+    ) -> None:
+        route = routes.PUT_CHANNEL_RECIPIENT.compile(channel=channel, user=user)
+        body = data_binding.JSONObjectBuilder()
+        body.put("access_token", access_token)
+        body.put("nick", nickname)
+        await self._request(route, json=body)
+
+    @typing_extensions.override
+    async def remove_recipient_from_group_dm(
+        self,
+        channel: snowflakes.SnowflakeishOr[channels_.GroupDMChannel],
+        user: snowflakes.SnowflakeishOr[users_.PartialUser],
+    ) -> None:
+        route = routes.DELETE_CHANNEL_RECIPIENT.compile(channel=channel, user=user)
+        await self._request(route)
 
     @typing_extensions.override
     async def fetch_application(self) -> applications.Application:

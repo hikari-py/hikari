@@ -1834,6 +1834,7 @@ class TestEntityFactoryImpl:
             "icon": "123asdf123adsf",
             "owner_id": "456",
             "application_id": "123789",
+            "managed": True,
             "last_message_id": "456",
             "nicks": [{"id": "115590097100865541", "nick": "nyaa"}],
             "type": 3,
@@ -1847,6 +1848,7 @@ class TestEntityFactoryImpl:
         assert group_dm.name == "Secret Developer Group"
         assert group_dm.icon_hash == "123asdf123adsf"
         assert group_dm.application_id == 123789
+        assert group_dm.is_managed is True
         assert group_dm.nicknames == {115590097100865541: "nyaa"}
         assert group_dm.last_message_id == 456
         assert group_dm.type == channel_models.ChannelType.GROUP_DM
@@ -1866,6 +1868,7 @@ class TestEntityFactoryImpl:
         )
         assert group_dm.nicknames == {}
         assert group_dm.application_id is None
+        assert group_dm.is_managed is False
         assert group_dm.last_message_id is None
 
     @pytest.fixture
