@@ -328,6 +328,7 @@ class TestGuildChannel:
             name="foo1",
             type=channels.ChannelType.GUILD_VOICE,
             guild_id=snowflakes.Snowflake(123456789),
+            application_id=None,
             parent_id=None,
         )
 
@@ -408,10 +409,12 @@ class TestPermissibleGuildChannel:
             name="foo1",
             type=channels.ChannelType.GUILD_VOICE,
             guild_id=snowflakes.Snowflake(123456789),
+            application_id=None,
             is_nsfw=True,
             parent_id=None,
             position=54,
             permission_overwrites=[],
+            flags=channels.ChannelFlag.NONE,
         )
 
     @pytest.mark.asyncio

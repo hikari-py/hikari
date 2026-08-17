@@ -121,7 +121,9 @@ class _GuildChannelFields:
     name: str | None = attrs.field()
     type: channel_models.ChannelType | int = attrs.field()
     guild_id: snowflakes.Snowflake = attrs.field()
+    application_id: snowflakes.Snowflake | None = attrs.field()
     parent_id: snowflakes.Snowflake | None = attrs.field()
+    flags: channel_models.ChannelFlag = attrs.field()
 
 
 @attrs_extensions.with_copy
@@ -778,6 +780,25 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         )
 
     @typing_extensions.override
+    def deserialize_activity_instance(self, payload: data_binding.JSONObject) -> application_models.ActivityInstance:
+        location_payload = payload["location"]
+        raw_guild_id = location_payload.get("guild_id")
+        location = application_models.ActivityLocation(
+            id=location_payload["id"],
+            kind=application_models.ActivityLocationKind(location_payload["kind"]),
+            channel_id=snowflakes.Snowflake(location_payload["channel_id"]),
+            guild_id=snowflakes.Snowflake(raw_guild_id) if raw_guild_id is not None else None,
+        )
+
+        return application_models.ActivityInstance(
+            application_id=snowflakes.Snowflake(payload["application_id"]),
+            instance_id=payload["instance_id"],
+            launch_id=snowflakes.Snowflake(payload["launch_id"]),
+            location=location,
+            users=[snowflakes.Snowflake(user_id) for user_id in payload["users"]],
+        )
+
+    @typing_extensions.override
     def deserialize_authorization_information(
         self, payload: data_binding.JSONObject
     ) -> application_models.AuthorizationInformation:
@@ -1141,6 +1162,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         else:
             nicknames = {}
 
+        application_id: snowflakes.Snowflake | None = None
+        if (raw_application_id := payload.get("application_id")) is not None:
+            application_id = snowflakes.Snowflake(raw_application_id)
+
         recipients = {snowflakes.Snowflake(user["id"]): self.deserialize_user(user) for user in payload["recipients"]}
 
         return channel_models.GroupDMChannel(
@@ -1152,7 +1177,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             owner_id=snowflakes.Snowflake(payload["owner_id"]),
             icon_hash=payload["icon"],
             nicknames=nicknames,
-            application_id=snowflakes.Snowflake(payload["application_id"]) if "application_id" in payload else None,
+            application_id=application_id,
             recipients=recipients,
         )
 
@@ -1166,12 +1191,18 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         if (raw_parent_id := payload.get("parent_id")) is not None:
             parent_id = snowflakes.Snowflake(raw_parent_id)
 
+        application_id: snowflakes.Snowflake | None = None
+        if (raw_application_id := payload.get("application_id")) is not None:
+            application_id = snowflakes.Snowflake(raw_application_id)
+
         return _GuildChannelFields(
             id=snowflakes.Snowflake(payload["id"]),
             name=payload.get("name"),
             type=channel_models.ChannelType(payload["type"]),
             guild_id=guild_id,
+            application_id=application_id,
             parent_id=parent_id,
+            flags=channel_models.ChannelFlag(payload.get("flags", 0)),
         )
 
     @typing_extensions.override
@@ -1192,10 +1223,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=None,
             position=int(payload["position"]),
+            flags=channel_fields.flags,
         )
 
     @typing_extensions.override
@@ -1228,6 +1261,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
@@ -1240,6 +1274,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             last_pin_timestamp=last_pin_timestamp,
             default_auto_archive_duration=default_auto_archive_duration,
             position=int(payload["position"]),
+            flags=channel_fields.flags,
         )
 
     @typing_extensions.override
@@ -1272,6 +1307,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
@@ -1280,6 +1316,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             last_pin_timestamp=last_pin_timestamp,
             default_auto_archive_duration=default_auto_archive_duration,
             position=int(payload["position"]),
+            flags=channel_fields.flags,
         )
 
     @typing_extensions.override
@@ -1303,6 +1340,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites={
                 snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
                 for overwrite in payload["permission_overwrites"]
@@ -1317,6 +1355,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             video_quality_mode=channel_models.VideoQualityMode(int(video_quality_mode)),
             last_message_id=last_message_id,
             position=int(payload["position"]),
+            flags=channel_fields.flags,
         )
 
     @typing_extensions.override
@@ -1341,6 +1380,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites={
                 snowflakes.Snowflake(overwrite["id"]): self.deserialize_permission_overwrite(overwrite)
                 for overwrite in payload["permission_overwrites"]
@@ -1353,6 +1393,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             video_quality_mode=channel_models.VideoQualityMode(int(video_quality_mode)),
             position=int(payload["position"]),
             last_message_id=last_message_id,
+            flags=channel_fields.flags,
         )
 
     @typing_extensions.override
@@ -1413,6 +1454,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
@@ -1426,7 +1468,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             default_auto_archive_duration=default_auto_archive_duration,
             position=int(payload["position"]),
             available_tags=available_tags,
-            flags=channel_models.ChannelFlag(payload["flags"]),
+            flags=channel_fields.flags,
             # Discord may send None here for old channels, but they are just NOT_SET
             default_layout=channel_models.ForumLayoutType(payload.get("default_forum_layout", 0)),
             # Discord may send None here for old channels, but they are just LATEST_ACTIVITY
@@ -1520,6 +1562,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1566,6 +1609,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1608,6 +1652,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             parent_id=channel_fields.parent_id,
             last_message_id=last_message_id,
             last_pin_timestamp=last_pin_timestamp,
@@ -1676,6 +1721,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             name=channel_fields.name,
             type=channel_fields.type,
             guild_id=channel_fields.guild_id,
+            application_id=channel_fields.application_id,
             permission_overwrites=permission_overwrites,
             is_nsfw=payload.get("nsfw", False),
             parent_id=channel_fields.parent_id,
@@ -1686,7 +1732,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             default_auto_archive_duration=default_auto_archive_duration,
             position=int(payload["position"]),
             available_tags=available_tags,
-            flags=channel_models.ChannelFlag(payload["flags"]),
+            flags=channel_fields.flags,
             # Discord's docs are just wrong about this never being null.
             default_sort_order=channel_models.ForumSortOrderType(payload.get("default_sort_order") or 0),
             # Discord may send None here for old channels, but they are just NOT_SET

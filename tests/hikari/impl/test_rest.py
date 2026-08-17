@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import copy
 import datetime
 import http
 import re
@@ -429,7 +430,7 @@ def rest_client(rest_client_class, mock_cache):
             acquire_bucket=mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock()),
             acquire_authentication=mock.AsyncMock(),
         ),
-        client_session=mock.Mock(request=mock.AsyncMock()),
+        client_session=mock.Mock(request=ClientSessionRequestMock()),
     )
     obj._close_event = object()
     return obj
@@ -480,6 +481,39 @@ class StubModel(snowflakes.Unique):
 
     def __init__(self, id=0):
         self.id = snowflakes.Snowflake(id)
+
+
+class RequestContextManagerMock:
+    def __init__(self, response):
+        self.response = response
+
+    async def __aenter__(self):
+        return self.response
+
+    async def __aexit__(self, *args):
+        return None
+
+
+class ClientSessionRequestMock(mock.Mock):
+    """Mock of `aiohttp.ClientSession.request`.
+
+    `request` returns an async context manager which yields the response,
+    so the configured return value gets wrapped into one accordingly.
+    """
+
+    __slots__ = ()
+
+    def __call__(self, *args, **kwargs):
+        return RequestContextManagerMock(super().__call__(*args, **kwargs))
+
+
+class CopyingClientSessionRequestMock(ClientSessionRequestMock):
+    __slots__ = ()
+
+    def __call__(self, *args, **kwargs):
+        args = (copy.copy(arg) for arg in args)
+        kwargs = {copy.copy(key): copy.copy(value) for key, value in kwargs.items()}
+        return super().__call__(*args, **kwargs)
 
 
 class TestStringifyHttpMessage:
@@ -2012,7 +2046,7 @@ class TestRESTClientImplAsync:
                 return '{"something": null}'
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        rest_client._client_session.request = hikari_test_helpers.CopyingAsyncMock(
+        rest_client._client_session.request = CopyingClientSessionRequestMock(
             side_effect=[StubResponse(), exit_exception]
         )
         rest_client._token = mock.Mock(
@@ -2043,7 +2077,7 @@ class TestRESTClientImplAsync:
                 return {"something": None}
 
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        rest_client._client_session.request = hikari_test_helpers.CopyingAsyncMock(
+        rest_client._client_session.request = CopyingClientSessionRequestMock(
             side_effect=[StubResponse(), StubResponse(), StubResponse()]
         )
         rest_client._token = mock.Mock(
@@ -2206,7 +2240,7 @@ class TestRESTClientImplAsync:
     @pytest.mark.parametrize("exception", [asyncio.TimeoutError, aiohttp.ClientConnectionError])
     async def test_request_when_connection_error_will_retry_until_exhausted(self, rest_client, exception):
         route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
-        mock_session = mock.AsyncMock(request=mock.AsyncMock(side_effect=exception))
+        mock_session = mock.AsyncMock(request=ClientSessionRequestMock(side_effect=exception))
         rest_client._max_retries = 3
         rest_client._parse_ratelimits = mock.AsyncMock()
         rest_client._client_session = mock_session
@@ -4225,6 +4259,21 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(expected_route)
+
+    async def test_fetch_activity_instance(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ACTIVITY_INSTANCE.compile(
+            application=123, instance="i-1276580072400224306-gc-912952092627435520-912954213460484116"
+        )
+        mock_payload = {"instance_id": "i-1276580072400224306-gc-912952092627435520-912954213460484116"}
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_activity_instance(
+            StubModel(123), "i-1276580072400224306-gc-912952092627435520-912954213460484116"
+        )
+
+        assert result is rest_client._entity_factory.deserialize_activity_instance.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_activity_instance.assert_called_once_with(mock_payload)
 
     async def test_authorize_client_credentials_token(self, rest_client):
         expected_route = routes.POST_TOKEN.compile()

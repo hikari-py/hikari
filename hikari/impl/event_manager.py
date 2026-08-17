@@ -191,6 +191,11 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://docs.discord.com/developers/events/gateway-events#channel-info."""
         self.dispatch(self._event_factory.deserialize_channel_info_event(shard, payload))
 
+    @event_manager_base.filtered((shard_events.ShardRateLimitedEvent, shard_events.RequestGuildMembersRateLimitedEvent))
+    def on_rate_limited(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://docs.discord.com/developers/events/gateway-events#rate-limited."""
+        self.dispatch(self._event_factory.deserialize_rate_limited_event(shard, payload))
+
     @event_manager_base.filtered(
         (channel_events.GuildThreadAccessEvent, channel_events.GuildThreadCreateEvent),
         config.CacheComponents.GUILD_THREADS,

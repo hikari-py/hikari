@@ -33,6 +33,7 @@ import typing
 import warnings
 
 from hikari import applications
+from hikari import capabilities as capabilities_
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
@@ -167,6 +168,12 @@ class GatewayBot(traits.GatewayBotAware):
         This allows you
         to change which intents your application will use on the gateway. This
         can be used to control and change the types of events you will receive.
+    capabilities
+        This allows you to declare which gateway capabilities your
+        application will use on the gateway. Unlike intents, capabilities
+        don't change which events you will receive but instead opt the
+        application into gateway behaviors, such as
+        [`hikari.capabilities.GatewayCapabilities.CHANNEL_OBFUSCATION`][].
     auto_chunk_members
         If [`False`][], then no member chunks will be requested automatically,
         even if there are reasons to do so.
@@ -290,6 +297,7 @@ class GatewayBot(traits.GatewayBotAware):
 
     __slots__: typing.Sequence[str] = (
         "_cache",
+        "_capabilities",
         "_closed_event",
         "_closing_event",
         "_dumps",
@@ -323,6 +331,7 @@ class GatewayBot(traits.GatewayBotAware):
         dumps: data_binding.JSONEncoder = data_binding.default_json_dumps,
         loads: data_binding.JSONDecoder = data_binding.default_json_loads,
         intents: intents_.Intents = intents_.Intents.ALL_UNPRIVILEGED,
+        capabilities: capabilities_.GatewayCapabilities = capabilities_.GatewayCapabilities.NONE,
         auto_chunk_members: bool = True,
         logs: str | int | dict[str, typing.Any] | os.PathLike[str] | None = "INFO",
         max_rate_limit: float = 300.0,
@@ -341,6 +350,7 @@ class GatewayBot(traits.GatewayBotAware):
         self._executor = executor
         self._http_settings = http_settings if http_settings is not None else config_impl.HTTPSettings()
         self._intents = intents
+        self._capabilities = capabilities
         self._proxy_settings = proxy_settings if proxy_settings is not None else config_impl.ProxySettings()
         self._token = token.strip()
         self._token_id = applications.get_token_id(self._token)
@@ -439,6 +449,11 @@ class GatewayBot(traits.GatewayBotAware):
     @typing_extensions.override
     def intents(self) -> intents_.Intents:
         return self._intents
+
+    @property
+    def capabilities(self) -> capabilities_.GatewayCapabilities:
+        """Capabilities declared for the application."""
+        return self._capabilities
 
     @property
     @typing_extensions.override
@@ -1354,6 +1369,7 @@ class GatewayBot(traits.GatewayBotAware):
             event_manager=self._event_manager,
             event_factory=self._event_factory,
             intents=self._intents,
+            capabilities=self._capabilities,
             dumps=self._dumps,
             loads=self._loads,
             initial_activity=activity,
