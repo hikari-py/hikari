@@ -99,6 +99,7 @@ _REQUEST_CHANNEL_INFO: typing.Final[int] = 43
 # Special dispatches
 _READY: typing.Final[str] = sys.intern("READY")
 _RESUMED: typing.Final[str] = sys.intern("RESUMED")
+_RATE_LIMITED: typing.Final[str] = sys.intern("RATE_LIMITED")
 # If we disconnect within this period of time after starting, we should
 # use an exponential backoff before restarting.
 _BACKOFF_WINDOW: typing.Final[float] = 30.0
@@ -826,7 +827,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
             await asyncio.sleep(heartbeat_interval)
 
-    async def _poll_events(self) -> None:
+    async def _poll_events(self) -> None:  # noqa: PLR0912 - Too many branches
         assert self._ws is not None
         assert self._handshake_event is not None
 
@@ -865,6 +866,14 @@ class GatewayShardImpl(shard.GatewayShard):
                 elif name == _RESUMED:
                     self._logger.info("resumed session [session:%s, seq:%s]", self._session_id, self._seq)
                     self._handshake_event.set()
+                elif name == _RATE_LIMITED:
+                    self._logger.warning(
+                        "rate-limited on opcode %d for %.1fs [session:%s, metadata:%s]",
+                        data["opcode"],
+                        data["retry_after"],
+                        self._session_id,
+                        data["meta"],
+                    )
 
                 try:
                     self._event_manager.consume_raw_event(name, self, data)
