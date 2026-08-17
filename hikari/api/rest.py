@@ -6007,7 +6007,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def fetch_members(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
+        *,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[guilds.Member]:
         """Fetch the members from a guild.
 
@@ -6030,6 +6034,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to fetch the members of. This may be the
             object or the ID of an existing guild.
+        start_at
+            If provided, will start after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may also be a user object. In this case, the date the object was
+            first created will be used.
 
         Returns
         -------

@@ -1136,8 +1136,40 @@ class TestRESTClientImpl:
             assert rest_client.fetch_members(guild) == stub_iterator
 
             iterator.assert_called_once_with(
-                entity_factory=rest_client._entity_factory, request_call=rest_client._request, guild=guild
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                first_id=undefined.UNDEFINED,
             )
+
+    def test_fetch_members_when_start_at(self, rest_client):
+        guild = StubModel(123)
+
+        with mock.patch.object(special_endpoints, "MemberIterator") as iterator_cls:
+            iterator = rest_client.fetch_members(guild, start_at=StubModel(65652342134))
+
+        iterator_cls.assert_called_once_with(
+            entity_factory=rest_client._entity_factory,
+            request_call=rest_client._request,
+            guild=guild,
+            first_id="65652342134",
+        )
+        assert iterator is iterator_cls.return_value
+
+    def test_fetch_members_when_datetime_for_start_at(self, rest_client):
+        guild = StubModel(123)
+        start_at = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.timezone.utc)
+
+        with mock.patch.object(special_endpoints, "MemberIterator") as iterator_cls:
+            iterator = rest_client.fetch_members(guild, start_at=start_at)
+
+        iterator_cls.assert_called_once_with(
+            entity_factory=rest_client._entity_factory,
+            request_call=rest_client._request,
+            guild=guild,
+            first_id="950000286338908160",
+        )
+        assert iterator is iterator_cls.return_value
 
     def test_kick_member(self, rest_client):
         mock_kick_user = mock.Mock()
