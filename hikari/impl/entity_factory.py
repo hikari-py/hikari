@@ -223,14 +223,19 @@ class _GuildFields:
 @attrs.define(kw_only=True, repr=False, weakref_slot=False)
 class _InviteFields:
     code: str = attrs.field()
+    type: invite_models.InviteType | int = attrs.field()
     guild: invite_models.InviteGuild | None = attrs.field()
     guild_id: snowflakes.Snowflake | None = attrs.field()
     channel: channel_models.PartialChannel | None = attrs.field()
-    channel_id: snowflakes.Snowflake = attrs.field()
+    channel_id: snowflakes.Snowflake | None = attrs.field()
     inviter: user_models.User | None = attrs.field()
     target_user: user_models.User | None = attrs.field()
     target_application: application_models.InviteApplication | None = attrs.field()
     target_type: invite_models.TargetType | int | None = attrs.field()
+    guild_scheduled_event: scheduled_events_models.ScheduledEvent | None = attrs.field()
+    flags: invite_models.InviteFlags = attrs.field()
+    roles: list[invite_models.InviteRole] = attrs.field()
+    role_ids: list[snowflakes.Snowflake] = attrs.field()
     approximate_active_member_count: int | None = attrs.field()
     approximate_member_count: int | None = attrs.field()
 
@@ -2495,11 +2500,12 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             guild_id = snowflakes.Snowflake(payload["guild_id"])
 
         channel: channel_models.PartialChannel | None = None
+        channel_id: snowflakes.Snowflake | None = None
         if (raw_channel := payload.get("channel")) is not None:
             channel = self.deserialize_partial_channel(raw_channel)
             channel_id = channel.id
-        else:
-            channel_id = snowflakes.Snowflake(payload["channel_id"])
+        elif (raw_channel_id := payload.get("channel_id")) is not None:
+            channel_id = snowflakes.Snowflake(raw_channel_id)
 
         target_application: application_models.InviteApplication | None = None
         if (invite_payload := payload.get("target_application")) is not None:
@@ -2519,8 +2525,17 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         approximate_member_count = (
             int(payload["approximate_member_count"]) if "approximate_member_count" in payload else None
         )
+        raw_scheduled_event = payload.get("guild_scheduled_event")
+        roles = [self._deserialize_invite_role(role_payload) for role_payload in payload.get("roles") or []]
+
+        if raw_role_ids := payload.get("role_ids"):
+            role_ids = [snowflakes.Snowflake(role_id) for role_id in raw_role_ids]
+        else:
+            role_ids = [role.id for role in roles]
+
         return _InviteFields(
             code=payload["code"],
+            type=invite_models.InviteType(payload.get("type", invite_models.InviteType.GUILD)),
             guild=guild,
             guild_id=guild_id,
             channel=channel,
@@ -2529,8 +2544,35 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             target_type=invite_models.TargetType(payload["target_type"]) if "target_type" in payload else None,
             target_user=self.deserialize_user(payload["target_user"]) if "target_user" in payload else None,
             target_application=target_application,
+            guild_scheduled_event=self.deserialize_scheduled_event(raw_scheduled_event)
+            if raw_scheduled_event is not None
+            else None,
+            flags=invite_models.InviteFlags(payload.get("flags", 0)),
+            roles=roles,
+            role_ids=role_ids,
             approximate_active_member_count=approximate_active_member_count,
             approximate_member_count=approximate_member_count,
+        )
+
+    def _deserialize_invite_role(self, payload: data_binding.JSONObject) -> invite_models.InviteRole:
+        if colors_payload := payload.get("colors"):
+            role_colors = _deserialize_color_gradient(colors_payload)
+        else:
+            role_colors = color_models.ColorGradient.of(payload["color"])
+
+        unicode_emoji: emoji_models.UnicodeEmoji | None = None
+        if (raw_emoji := payload.get("unicode_emoji")) is not None:
+            unicode_emoji = emoji_models.UnicodeEmoji(raw_emoji)
+
+        return invite_models.InviteRole(
+            app=self._app,
+            id=snowflakes.Snowflake(payload["id"]),
+            name=payload["name"],
+            position=int(payload["position"]),
+            color=color_models.Color(payload["color"]),
+            colors=role_colors,
+            icon_hash=payload.get("icon"),
+            unicode_emoji=unicode_emoji,
         )
 
     @typing_extensions.override
@@ -2544,6 +2586,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return invite_models.Invite(
             app=self._app,
             code=invite_fields.code,
+            type=invite_fields.type,
             guild=invite_fields.guild,
             guild_id=invite_fields.guild_id,
             channel=invite_fields.channel,
@@ -2552,6 +2595,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             target_type=invite_fields.target_type,
             target_user=invite_fields.target_user,
             target_application=invite_fields.target_application,
+            guild_scheduled_event=invite_fields.guild_scheduled_event,
+            flags=invite_fields.flags,
+            roles=invite_fields.roles,
+            role_ids=invite_fields.role_ids,
             approximate_member_count=invite_fields.approximate_member_count,
             approximate_active_member_count=invite_fields.approximate_active_member_count,
             expires_at=expires_at,
@@ -2572,6 +2619,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
         return invite_models.InviteWithMetadata(
             app=self._app,
             code=invite_fields.code,
+            type=invite_fields.type,
             guild=invite_fields.guild,
             guild_id=invite_fields.guild_id,
             channel=invite_fields.channel,
@@ -2580,6 +2628,10 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             target_type=invite_fields.target_type,
             target_user=invite_fields.target_user,
             target_application=invite_fields.target_application,
+            guild_scheduled_event=invite_fields.guild_scheduled_event,
+            flags=invite_fields.flags,
+            roles=invite_fields.roles,
+            role_ids=invite_fields.role_ids,
             approximate_member_count=invite_fields.approximate_member_count,
             approximate_active_member_count=invite_fields.approximate_active_member_count,
             uses=int(payload["uses"]),

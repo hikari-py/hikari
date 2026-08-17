@@ -5681,6 +5681,18 @@ class TestEntityFactoryImpl:
         return {"id": "1231231", "username": "soad", "discriminator": "3333", "avatar": None}
 
     @pytest.fixture
+    def invite_role_payload(self):
+        return {
+            "id": "41771983423143936",
+            "name": "WE DEM BOYZZ!!!!!!",
+            "position": 1,
+            "color": 3_447_003,
+            "colors": {"primary_color": 3_447_003, "secondary_color": None, "tertiary_color": None},
+            "icon": "abc123hash",
+            "unicode_emoji": "\N{OK HAND SIGN}",
+        }
+
+    @pytest.fixture
     def invite_payload(
         self,
         partial_channel_payload,
@@ -5688,6 +5700,7 @@ class TestEntityFactoryImpl:
         alternative_user_payload,
         guild_welcome_screen_payload,
         invite_application_payload,
+        invite_role_payload,
     ):
         return {
             "code": "aCode",
@@ -5706,9 +5719,12 @@ class TestEntityFactoryImpl:
             },
             "channel": partial_channel_payload,
             "inviter": user_payload,
+            "type": 0,
             "target_type": 1,
             "target_user": alternative_user_payload,
             "target_application": invite_application_payload,
+            "flags": 1,
+            "roles": [invite_role_payload],
             "approximate_presence_count": 42,
             "approximate_member_count": 84,
             "expires_at": "2021-05-08T00:15:24.534000+00:00",
@@ -5747,6 +5763,10 @@ class TestEntityFactoryImpl:
         assert invite.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
         assert invite.channel_id == 561884984214814750
         assert invite.inviter == entity_factory_impl.deserialize_user(user_payload)
+        assert invite.type is invite_models.InviteType.GUILD
+        assert invite.flags == invite_models.InviteFlags.IS_GUEST_INVITE
+        assert invite.guild_scheduled_event is None
+        assert invite.role_ids == [41771983423143936]
         assert invite.target_type == invite_models.TargetType.STREAM
         assert invite.target_user == entity_factory_impl.deserialize_user(alternative_user_payload)
         assert invite.approximate_member_count == 84
@@ -5767,6 +5787,72 @@ class TestEntityFactoryImpl:
         assert application.icon_hash == "0227b2e89ea08d666c43003fbadbc72a"
         assert application.cover_image_hash == "0227b2e89ea08d666c43003fbadbc72a (but as cover)"
         assert isinstance(application, application_models.InviteApplication)
+
+        # InviteRole
+        assert len(invite.roles) == 1
+        role = invite.roles[0]
+        assert role.app is mock_app
+        assert role.id == 41771983423143936
+        assert role.name == "WE DEM BOYZZ!!!!!!"
+        assert role.position == 1
+        assert role.color == color_models.Color(3_447_003)
+        assert role.colors == color_models.ColorGradient(
+            primary_color=color_models.Color(3_447_003), secondary_color=None, tertiary_color=None
+        )
+        assert role.icon_hash == "abc123hash"
+        assert role.unicode_emoji == emoji_models.UnicodeEmoji("\N{OK HAND SIGN}")
+        assert isinstance(role, invite_models.InviteRole)
+
+    def test_deserialize_invite_when_friend_invite(self, entity_factory_impl, user_payload):
+        invite = entity_factory_impl.deserialize_invite(
+            {
+                "code": "aCode",
+                "inviter": user_payload,
+                "channel": None,
+                "type": 2,
+                "uses": 0,
+                "max_uses": 5,
+                "max_age": 604800,
+                "created_at": "2025-03-19T11:40:31.885200+00:00",
+                "expires_at": "2025-03-26T11:40:31+00:00",
+            }
+        )
+
+        assert invite.type is invite_models.InviteType.FRIEND
+        assert invite.channel is None
+        assert invite.channel_id is None
+        assert invite.guild is None
+        assert invite.guild_id is None
+
+    def test_deserialize_invite_with_metadata_when_gateway_payload(self, entity_factory_impl, user_payload):
+        invite = entity_factory_impl.deserialize_invite_with_metadata(
+            {
+                "channel_id": "43123123",
+                "code": "aCode",
+                "created_at": "2015-04-26T06:26:56.936000+00:00",
+                "guild_id": "43123123123",
+                "inviter": user_payload,
+                "max_age": 456,
+                "max_uses": 42,
+                "role_ids": ["41771983423143936", "41771983423143937"],
+                "temporary": True,
+                "uses": 0,
+            }
+        )
+
+        assert invite.type is invite_models.InviteType.GUILD
+        assert invite.roles == []
+        assert invite.role_ids == [41771983423143936, 41771983423143937]
+
+    def test_deserialize_invite_with_guild_scheduled_event(self, entity_factory_impl, invite_payload):
+        mock_scheduled_event_payload = {"id": "494949"}
+        invite_payload["guild_scheduled_event"] = mock_scheduled_event_payload
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, "deserialize_scheduled_event") as patched:
+            invite = entity_factory_impl.deserialize_invite(invite_payload)
+
+        patched.assert_called_once_with(mock_scheduled_event_payload)
+        assert invite.guild_scheduled_event is patched.return_value
 
     def test_deserialize_invite_with_null_fields(
         self, entity_factory_impl, partial_channel_payload, invite_application_payload
@@ -5798,6 +5884,11 @@ class TestEntityFactoryImpl:
                 "approximate_presence_count": 9,
             }
         )
+        assert invite.type is invite_models.InviteType.GUILD
+        assert invite.flags == invite_models.InviteFlags.NONE
+        assert invite.roles == []
+        assert invite.role_ids == []
+        assert invite.guild_scheduled_event is None
         assert invite.channel is None
         assert invite.channel_id == 43123123
         assert invite.guild is None

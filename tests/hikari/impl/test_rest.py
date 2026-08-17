@@ -4011,6 +4011,17 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, query={"with_counts": "true"})
         rest_client._entity_factory.deserialize_invite.assert_called_once_with({"code": "Jx4cNGG"})
 
+    async def test_fetch_invite_with_scheduled_event(self, rest_client):
+        expected_route = routes.GET_INVITE.compile(invite_code="Jx4cNGG")
+        rest_client._request = mock.AsyncMock(return_value={"code": "Jx4cNGG"})
+
+        result = await rest_client.fetch_invite("Jx4cNGG", with_counts=False, scheduled_event=StubModel(9494949))
+
+        assert result is rest_client._entity_factory.deserialize_invite.return_value
+        rest_client._request.assert_awaited_once_with(
+            expected_route, query={"with_counts": "false", "guild_scheduled_event_id": "9494949"}
+        )
+
     async def test_delete_invite(self, rest_client):
         input_invite = StubModel()
         input_invite.code = "Jx4cNGG"

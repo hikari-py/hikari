@@ -2775,7 +2775,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_invite(self, invite: invites.InviteCode | str, *, with_counts: bool = True) -> invites.Invite:
+    async def fetch_invite(
+        self,
+        invite: invites.InviteCode | str,
+        *,
+        with_counts: bool = True,
+        scheduled_event: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+        ] = undefined.UNDEFINED,
+    ) -> invites.Invite:
         """Fetch an existing invite.
 
         Parameters
@@ -2785,6 +2793,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the code of an existing invite.
         with_counts
             Whether the invite should contain the approximate member counts.
+        scheduled_event
+            The scheduled event to include with the invite, if any.
 
         Returns
         -------
