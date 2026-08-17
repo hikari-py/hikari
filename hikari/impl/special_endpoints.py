@@ -637,8 +637,6 @@ class MemberIterator(iterators.BufferedLazyIterator["guilds.Member"]):
         self._route = routes.GET_GUILD_MEMBERS.compile(guild=guild)
         self._request_call = request_call
         self._entity_factory = entity_factory
-        # This defaults to the value provided by Discord instead of the max snowflake
-        # because that caused Discord to take about 2 seconds more to return the first response.
         self._first_id = first_id
 
     @typing_extensions.override
