@@ -37,6 +37,7 @@ import zlib
 import aiohttp
 
 from hikari import _about as about
+from hikari import capabilities as capabilities_
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
@@ -99,6 +100,7 @@ _REQUEST_CHANNEL_INFO: typing.Final[int] = 43
 # Special dispatches
 _READY: typing.Final[str] = sys.intern("READY")
 _RESUMED: typing.Final[str] = sys.intern("RESUMED")
+_RATE_LIMITED: typing.Final[str] = sys.intern("RATE_LIMITED")
 # If we disconnect within this period of time after starting, we should
 # use an exponential backoff before restarting.
 _BACKOFF_WINDOW: typing.Final[float] = 30.0
@@ -498,6 +500,11 @@ class GatewayShardImpl(shard.GatewayShard):
         The initial status to set on login for the shard.
     intents
         Collection of intents to use.
+    capabilities
+        Collection of capabilities to declare.
+
+        These opt the application into gateway behaviors such as
+        [`hikari.capabilities.GatewayCapabilities.CHANNEL_OBFUSCATION`][].
     large_threshold
         The number of members to have in a guild for it to be considered large.
     shard_id
@@ -514,6 +521,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
+        "_capabilities",
         "_compression",
         "_dumps",
         "_event_factory",
@@ -557,6 +565,7 @@ class GatewayShardImpl(shard.GatewayShard):
         initial_is_afk: bool = False,
         initial_status: presences.Status = presences.Status.ONLINE,
         intents: intents_.Intents,
+        capabilities: capabilities_.GatewayCapabilities = capabilities_.GatewayCapabilities.NONE,
         large_threshold: int = 250,
         shard_id: int = 0,
         shard_count: int = 1,
@@ -573,6 +582,7 @@ class GatewayShardImpl(shard.GatewayShard):
             raise NotImplementedError(msg)
 
         self._activity = initial_activity
+        self._capabilities = capabilities
         self._event_manager = event_manager
         self._event_factory = event_factory
         self._gateway_url = url
@@ -607,6 +617,11 @@ class GatewayShardImpl(shard.GatewayShard):
         self._loads = loads
         self._user_id: snowflakes.Snowflake | None = None
         self._ws: _GatewayTransport | None = None
+
+    @property
+    @typing_extensions.override
+    def capabilities(self) -> capabilities_.GatewayCapabilities:
+        return self._capabilities
 
     @property
     @typing_extensions.override
@@ -826,7 +841,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
             await asyncio.sleep(heartbeat_interval)
 
-    async def _poll_events(self) -> None:
+    async def _poll_events(self) -> None:  # noqa: PLR0912 - Too many branches
         assert self._ws is not None
         assert self._handshake_event is not None
 
@@ -865,6 +880,14 @@ class GatewayShardImpl(shard.GatewayShard):
                 elif name == _RESUMED:
                     self._logger.info("resumed session [session:%s, seq:%s]", self._session_id, self._seq)
                     self._handshake_event.set()
+                elif name == _RATE_LIMITED:
+                    self._logger.warning(
+                        "rate-limited on opcode %d for %.1fs [session:%s, metadata:%s]",
+                        data["opcode"],
+                        data["retry_after"],
+                        self._session_id,
+                        data["meta"],
+                    )
 
                 try:
                     self._event_manager.consume_raw_event(name, self, data)
@@ -986,6 +1009,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         },
                         "shard": [self._shard_id, self._shard_count],
                         "intents": self._intents,
+                        "capabilities": self._capabilities,
                         "presence": self._serialize_and_store_presence_payload(),
                     },
                 }

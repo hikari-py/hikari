@@ -33,6 +33,7 @@ from hikari.internal import enums
 if typing.TYPE_CHECKING:
     import datetime
 
+    from hikari import capabilities as capabilities_
     from hikari import channels
     from hikari import guilds
     from hikari import intents as intents_
@@ -83,6 +84,11 @@ class GatewayShard(abc.ABC):
     """
 
     __slots__: typing.Sequence[str] = ()
+
+    @property
+    @abc.abstractmethod
+    def capabilities(self) -> capabilities_.GatewayCapabilities:
+        """Capabilities set on this shard."""
 
     @property
     @abc.abstractmethod

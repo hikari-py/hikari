@@ -4281,6 +4281,21 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(expected_route)
 
+    async def test_fetch_activity_instance(self, rest_client):
+        expected_route = routes.GET_APPLICATION_ACTIVITY_INSTANCE.compile(
+            application=123, instance="i-1276580072400224306-gc-912952092627435520-912954213460484116"
+        )
+        mock_payload = {"instance_id": "i-1276580072400224306-gc-912952092627435520-912954213460484116"}
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_activity_instance(
+            StubModel(123), "i-1276580072400224306-gc-912952092627435520-912954213460484116"
+        )
+
+        assert result is rest_client._entity_factory.deserialize_activity_instance.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_activity_instance.assert_called_once_with(mock_payload)
+
     async def test_authorize_client_credentials_token(self, rest_client):
         expected_route = routes.POST_TOKEN.compile()
         mock_url_encoded_form = mock.Mock()

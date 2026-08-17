@@ -412,6 +412,7 @@ class TestPermissibleGuildChannel:
             parent_id=None,
             position=54,
             permission_overwrites=[],
+            flags=channels.ChannelFlag.NONE,
         )
 
     @pytest.mark.asyncio
