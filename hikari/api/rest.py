@@ -3315,6 +3315,37 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_activity_instance(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], instance_id: str
+    ) -> applications.ActivityInstance:
+        """Fetch a live activity instance for a given application.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the activity instance for.
+        instance_id
+            The ID of the activity instance to fetch.
+
+        Returns
+        -------
+        hikari.applications.ActivityInstance
+            The requested activity instance.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the application or activity instance was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def authorize_client_credentials_token(
         self,
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],

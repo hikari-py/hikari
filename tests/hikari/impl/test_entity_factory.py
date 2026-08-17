@@ -1175,6 +1175,51 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
+    def activity_instance_payload(self):
+        return {
+            "application_id": "1215413995645968394",
+            "instance_id": "i-1276580072400224306-gc-912952092627435520-912954213460484116",
+            "launch_id": "1276580072400224306",
+            "location": {
+                "id": "gc-912952092627435520-912954213460484116",
+                "kind": "gc",
+                "channel_id": "912954213460484116",
+                "guild_id": "912952092627435520",
+            },
+            "users": ["205519959982473217", "115590097100865541"],
+        }
+
+    def test_deserialize_activity_instance(self, entity_factory_impl, activity_instance_payload):
+        activity_instance = entity_factory_impl.deserialize_activity_instance(activity_instance_payload)
+
+        assert activity_instance.application_id == 1215413995645968394
+        assert activity_instance.instance_id == "i-1276580072400224306-gc-912952092627435520-912954213460484116"
+        assert activity_instance.launch_id == 1276580072400224306
+        assert activity_instance.location.id == "gc-912952092627435520-912954213460484116"
+        assert activity_instance.location.kind is application_models.ActivityLocationKind.GUILD_CHANNEL
+        assert activity_instance.location.channel_id == 912954213460484116
+        assert activity_instance.location.guild_id == 912952092627435520
+        assert activity_instance.users == [205519959982473217, 115590097100865541]
+        assert isinstance(activity_instance, application_models.ActivityInstance)
+        assert isinstance(activity_instance.location, application_models.ActivityLocation)
+
+    @pytest.mark.parametrize("guild_id_field", [{"guild_id": None}, {}])
+    def test_deserialize_activity_instance_when_no_guild(
+        self, entity_factory_impl, activity_instance_payload, guild_id_field
+    ):
+        activity_instance_payload["location"] = {
+            "id": "pc-912954213460484116",
+            "kind": "pc",
+            "channel_id": "912954213460484116",
+            **guild_id_field,
+        }
+
+        activity_instance = entity_factory_impl.deserialize_activity_instance(activity_instance_payload)
+
+        assert activity_instance.location.kind is application_models.ActivityLocationKind.PRIVATE_CHANNEL
+        assert activity_instance.location.guild_id is None
+
+    @pytest.fixture
     def authorization_information_payload(self, user_payload):
         return {
             "application": {
