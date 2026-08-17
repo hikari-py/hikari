@@ -37,6 +37,7 @@ import zlib
 import aiohttp
 
 from hikari import _about as about
+from hikari import capabilities as capabilities_
 from hikari import errors
 from hikari import intents as intents_
 from hikari import presences
@@ -499,6 +500,11 @@ class GatewayShardImpl(shard.GatewayShard):
         The initial status to set on login for the shard.
     intents
         Collection of intents to use.
+    capabilities
+        Collection of capabilities to declare.
+
+        These opt the application into gateway behaviors such as
+        [`hikari.capabilities.GatewayCapabilities.CHANNEL_OBFUSCATION`][].
     large_threshold
         The number of members to have in a guild for it to be considered large.
     shard_id
@@ -515,6 +521,7 @@ class GatewayShardImpl(shard.GatewayShard):
 
     __slots__: typing.Sequence[str] = (
         "_activity",
+        "_capabilities",
         "_compression",
         "_dumps",
         "_event_factory",
@@ -558,6 +565,7 @@ class GatewayShardImpl(shard.GatewayShard):
         initial_is_afk: bool = False,
         initial_status: presences.Status = presences.Status.ONLINE,
         intents: intents_.Intents,
+        capabilities: capabilities_.GatewayCapabilities = capabilities_.GatewayCapabilities.NONE,
         large_threshold: int = 250,
         shard_id: int = 0,
         shard_count: int = 1,
@@ -574,6 +582,7 @@ class GatewayShardImpl(shard.GatewayShard):
             raise NotImplementedError(msg)
 
         self._activity = initial_activity
+        self._capabilities = capabilities
         self._event_manager = event_manager
         self._event_factory = event_factory
         self._gateway_url = url
@@ -608,6 +617,11 @@ class GatewayShardImpl(shard.GatewayShard):
         self._loads = loads
         self._user_id: snowflakes.Snowflake | None = None
         self._ws: _GatewayTransport | None = None
+
+    @property
+    @typing_extensions.override
+    def capabilities(self) -> capabilities_.GatewayCapabilities:
+        return self._capabilities
 
     @property
     @typing_extensions.override
@@ -995,6 +1009,7 @@ class GatewayShardImpl(shard.GatewayShard):
                         },
                         "shard": [self._shard_id, self._shard_count],
                         "intents": self._intents,
+                        "capabilities": self._capabilities,
                         "presence": self._serialize_and_store_presence_payload(),
                     },
                 }

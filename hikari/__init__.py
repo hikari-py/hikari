@@ -72,6 +72,7 @@ from hikari.applications import TeamMembershipState
 from hikari.applications import TokenType
 from hikari.audit_logs import *
 from hikari.auto_mod import *
+from hikari.capabilities import *
 from hikari.channels import *
 from hikari.colors import *
 from hikari.colours import *

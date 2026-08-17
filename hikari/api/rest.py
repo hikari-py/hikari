@@ -4625,6 +4625,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
     ) -> typing.Sequence[channels_.GuildChannel]:
         """Fetch the channels in a guild.
 
+        !!! warning
+            Starting November 16, 2026, Discord will omit any channel the
+            application doesn't have permission to view from the response.
+            Permission to view a channel is defined by having
+            [`hikari.permissions.Permissions.VIEW_CHANNEL`][] on it or by
+            being connected to it if it is a voice channel. Channel
+            categories are viewable if any of their child channels are
+            viewable.
+
         Parameters
         ----------
         guild
