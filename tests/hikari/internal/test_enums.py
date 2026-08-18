@@ -1099,6 +1099,31 @@ class TestIntFlag:
         # Baz is a combined field technically, so we don't expect it to be output here
         assert val.split() == [TestFlag.BAR, TestFlag.BORK, TestFlag.FOO]
 
+    def test_split_with_unrecognised_bits(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            QUX = 0x10
+
+        val = TestFlag(0x1 | 0x2 | 0x4 | 0x8 | 0x20)
+
+        # 0x4, 0x8 and 0x20 are not defined members, so they must be omitted.
+        assert val.split() == [TestFlag.BAR, TestFlag.FOO]
+
+    def test_split_with_only_unrecognised_bits(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+
+        assert TestFlag(0x4 | 0x8).split() == []
+
+    def test_split_on_empty_value(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+
+        assert TestFlag(0).split() == []
+
     def test_str_operator(self):
         class TestFlag(enums.Flag):
             FOO = 0x1

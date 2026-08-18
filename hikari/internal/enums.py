@@ -504,6 +504,7 @@ class _FlagMeta(type):
         all_bits_member._name_ = None
         all_bits_member._value_ = all_bits
         cls.__everything__ = all_bits_member
+        cls._powers_of_2_mask_ = functools.reduce(operator.or_, powers_of_2_map.keys(), 0)
 
         return cls
 
@@ -660,6 +661,7 @@ class Flag(metaclass=_FlagMeta):
     _name_to_member_map_: typing.ClassVar[typing.Mapping[str, Flag]]
     _value_to_member_map_: typing.ClassVar[typing.Mapping[int, Flag]]
     _powers_of_2_to_member_map_: typing.ClassVar[typing.Mapping[int, Flag]]
+    _powers_of_2_mask_: typing.ClassVar[int]
     _temp_members_: typing.ClassVar[typing.Mapping[int, Flag]]
     _member_names_: typing.ClassVar[typing.Sequence[str]]
     __members__: typing.ClassVar[typing.Mapping[str, Flag]]
@@ -763,11 +765,18 @@ class Flag(metaclass=_FlagMeta):
 
         The result will be a name-sorted [`typing.Sequence`][] of each member
         """
-        return sorted(
-            (member for member in self.__class__._powers_of_2_to_member_map_.values() if member.value & self),
-            # Assumption: powers of 2 already have a cached value.
-            key=lambda m: m._name_,
-        )
+        members = self.__class__._powers_of_2_to_member_map_
+        # Masking drops any unrecognised bits upfront, so every remaining bit
+        # is guaranteed to have a member in the map.
+        value = self._value_ & self.__class__._powers_of_2_mask_
+        out = []
+        while value:
+            bit = value & -value
+            value ^= bit
+            out.append(members[bit])
+
+        out.sort(key=lambda m: m._name_)
+        return out
 
     def symmetric_difference(self, other: _T | int) -> Self:
         """Return a set with the symmetric differences of two flag sets.
