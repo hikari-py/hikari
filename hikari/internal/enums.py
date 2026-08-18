@@ -37,6 +37,7 @@ if typing.TYPE_CHECKING:
 
 _T = typing.TypeVar("_T")
 _MAX_CACHED_MEMBERS: typing.Final[int] = 1 << 12
+_get_name = operator.attrgetter("_name_")
 
 
 class _DeprecatedAlias(typing.Generic[_T]):
@@ -791,7 +792,7 @@ class Flag(metaclass=_FlagMeta):
             value ^= bit
             out.append(members[bit])
 
-        out.sort(key=lambda m: m._name_)
+        out.sort(key=_get_name)
         return out
 
     def symmetric_difference(self, other: _T | int) -> Self:
