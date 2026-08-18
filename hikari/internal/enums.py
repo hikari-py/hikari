@@ -808,8 +808,9 @@ class Flag(metaclass=_FlagMeta):
     # so this is being defined anyway.
     symmetricdifference = symmetric_difference
 
-    def __bool__(self) -> bool:
-        return bool(self._value_)
+    # __bool__ is deliberately not defined: every construction path guarantees
+    # the underlying int value has the same truthiness as _value_, so the
+    # C-level int.__bool__ is both correct and faster.
 
     def __int__(self) -> int:
         return self._value_
