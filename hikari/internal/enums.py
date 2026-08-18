@@ -491,6 +491,7 @@ class _FlagMeta(type):
 
         cls = super().__new__(mcls, cls_name, (int, *bases), new_namespace)
 
+        powers_of_2_mask = 0
         for name, value in namespace.names_to_values.items():
             if isinstance(new_namespace.get(name), _DeprecatedAlias):
                 continue
@@ -511,13 +512,14 @@ class _FlagMeta(type):
 
             if not (value & value - 1):
                 powers_of_2_map[value] = member
+                powers_of_2_mask |= value
 
         all_bits = functools.reduce(operator.or_, value_to_member.keys())
         all_bits_member = cls.__new__(cls, all_bits)
         all_bits_member._name_ = None
         all_bits_member._value_ = all_bits
         cls.__everything__ = all_bits_member
-        cls._powers_of_2_mask_ = functools.reduce(operator.or_, powers_of_2_map.keys(), 0)
+        cls._powers_of_2_mask_ = powers_of_2_mask
 
         return cls
 
