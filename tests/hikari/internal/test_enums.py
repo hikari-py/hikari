@@ -239,7 +239,7 @@ class TestEnum:
                 foo = 9
                 old_foo = enums.deprecated(9, removal_version="4.0.0")
 
-        with mock.patch.object(warnings, "warn") as warn:
+        with mock.patch.object(deprecation, "check_if_past_removal"), mock.patch.object(warnings, "warn") as warn:
             assert Enum["old_foo"] is Enum.foo
 
         warn.assert_called_once()
@@ -1345,7 +1345,7 @@ class TestIntFlag:
                 FOO = 0x1
                 OLD_FOO = enums.deprecated(0x1, removal_version="4.0.0")
 
-        with mock.patch.object(warnings, "warn") as warn:
+        with mock.patch.object(deprecation, "check_if_past_removal"), mock.patch.object(warnings, "warn") as warn:
             assert TestFlag["OLD_FOO"] is TestFlag.FOO
 
         warn.assert_called_once()
