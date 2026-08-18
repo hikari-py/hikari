@@ -1022,6 +1022,16 @@ class TestIntFlag:
         assert len(val3) == 3
         assert len(val3_comb) == 3
 
+    def test_len_with_unrecognised_bits(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+            QUX = 0x10
+
+        # 0x4 and 0x8 are not defined members, so they must not be counted.
+        assert len(TestFlag(0x1 | 0x4 | 0x8 | 0x10)) == 2
+        assert len(TestFlag(0x4 | 0x8)) == 0
+
     def test_or(self):
         class TestFlag(enums.Flag):
             FOO = 0x1

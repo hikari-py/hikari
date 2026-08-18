@@ -815,7 +815,8 @@ class Flag(metaclass=_FlagMeta):
         return iter(self.split())
 
     def __len__(self) -> int:
-        return len(self.split())
+        # Masking drops any unrecognised bits, matching what split returns.
+        return (self._value_ & self._powers_of_2_mask_).bit_count()
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}.{self.name}: {self.value!r}>"
