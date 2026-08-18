@@ -225,6 +225,25 @@ class TestEnum:
         assert returned == Enum.foo
         assert type(returned) is Enum
 
+    def test_getitem_when_name_unknown(self):
+        class Enum(int, enums.Enum):
+            foo = 9
+
+        with pytest.raises(KeyError):
+            Enum["missing"]
+
+    def test_getitem_when_deprecated_alias(self):
+        with mock.patch.object(deprecation, "check_if_past_removal"):
+
+            class Enum(int, enums.Enum):
+                foo = 9
+                old_foo = enums.deprecated(9, removal_version="4.0.0")
+
+        with mock.patch.object(warnings, "warn") as warn:
+            assert Enum["old_foo"] is Enum.foo
+
+        warn.assert_called_once()
+
     def test_contains(self):
         class Enum(int, enums.Enum):
             foo = 9
@@ -1289,6 +1308,25 @@ class TestIntFlag:
         returned = TestFlag["FOO"]
         assert returned == TestFlag.FOO
         assert type(returned) is TestFlag
+
+    def test_getitem_when_name_unknown(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+
+        with pytest.raises(KeyError):
+            TestFlag["MISSING"]
+
+    def test_getitem_when_deprecated_alias(self):
+        with mock.patch.object(deprecation, "check_if_past_removal"):
+
+            class TestFlag(enums.Flag):
+                FOO = 0x1
+                OLD_FOO = enums.deprecated(0x1, removal_version="4.0.0")
+
+        with mock.patch.object(warnings, "warn") as warn:
+            assert TestFlag["OLD_FOO"] is TestFlag.FOO
+
+        warn.assert_called_once()
 
     def test_repr(self):
         class TestFlag(enums.Flag):

@@ -156,10 +156,16 @@ class _EnumMeta(type):
         return cls._value_to_member_map_.get(value, value)
 
     def __getitem__(cls, name: str) -> Enum:
-        if (member := getattr(cls, name, None)) is not None:
-            return member
+        try:
+            return cls._name_to_member_map_[name]
+        # AttributeError can only happen on the base Enum class, which has no member map.
+        except (AttributeError, KeyError):
+            # Fall back to attribute access so that deprecated aliases and any
+            # other descriptor-provided names still resolve.
+            if (member := getattr(cls, name, None)) is not None:
+                return member
 
-        raise KeyError(name)
+            raise KeyError(name) from None
 
     def __contains__(cls, item: object) -> bool:
         return item in cls._value_to_member_map_
@@ -412,10 +418,16 @@ class _FlagMeta(type):
                 return pseudomember
 
     def __getitem__(cls, name: str) -> Flag:
-        if (member := getattr(cls, name, None)) is not None:
-            return member
+        try:
+            return cls._name_to_member_map_[name]
+        # AttributeError can only happen on the base Flag class, which has no member map.
+        except (AttributeError, KeyError):
+            # Fall back to attribute access so that deprecated aliases and any
+            # other descriptor-provided names still resolve.
+            if (member := getattr(cls, name, None)) is not None:
+                return member
 
-        raise KeyError(name)
+            raise KeyError(name) from None
 
     def __iter__(cls) -> typing.Iterator[typing.Any]:
         yield from cls._name_to_member_map_.values()
