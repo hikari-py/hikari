@@ -691,7 +691,8 @@ class Flag(metaclass=_FlagMeta):
             [`True`][] if any of the given flags are part of this value.
             Otherwise, return [`False`][].
         """
-        return all((flag & self) == flag for flag in flags)
+        value = self._value_
+        return all(((flag_value := int(flag)) & value) == flag_value for flag in flags)
 
     def any(self, *flags: Self) -> bool:
         """Check if any of the given flags are part of this value.
@@ -702,7 +703,8 @@ class Flag(metaclass=_FlagMeta):
             [`True`][] if any of the given flags are part of this value.
             Otherwise, return [`False`][].
         """
-        return any((flag & self) == flag for flag in flags)
+        value = self._value_
+        return any(((flag_value := int(flag)) & value) == flag_value for flag in flags)
 
     def difference(self, other: Self | int) -> _T:
         """Perform a set difference with the other set.
@@ -711,7 +713,7 @@ class Flag(metaclass=_FlagMeta):
 
         Equivalent to using the subtraction `-` operator.
         """
-        return self.__class__(self & ~int(other))
+        return self.__class__(self._value_ & ~int(other))
 
     def intersection(self, other: Self | int) -> _T:
         """Return a combination of flags that are set for both given values.
@@ -731,18 +733,19 @@ class Flag(metaclass=_FlagMeta):
         [`False`][]. If no common flag values exist between them, then
         this returns [`True`][].
         """
-        return not (self & other)
+        return not self._value_ & int(other)
 
     def is_subset(self, other: Self | int) -> bool:
         """Return whether another set contains this set or not.
 
         Equivalent to using the "in" operator.
         """
-        return (self & other) == other
+        other_value = int(other)
+        return (self._value_ & other_value) == other_value
 
     def is_superset(self, other: Self | int) -> bool:
         """Return whether this set contains another set or not."""
-        return (self & other) == self
+        return (self._value_ & int(other)) == self._value_
 
     def none(self, *flags: Self) -> bool:
         """Check if none of the given flags are part of this value.
