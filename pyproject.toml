@@ -82,7 +82,7 @@ zstd = ["backports.zstd; python_version < '3.14'"]
 [dependency-groups]
 dev = [{ include-group = "nox" }]
 
-nox = ["nox==2026.8.10"]
+nox = ["nox==2026.8.17"]
 
 codespell = ["codespell==2.4.3"]
 coverage = ["coverage[toml]==7.15.4"]
