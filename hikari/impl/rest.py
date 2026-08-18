@@ -32,8 +32,10 @@ import asyncio
 import base64
 import contextlib
 import copy
+import csv
 import datetime
 import http
+import io
 import logging
 import math
 import os
@@ -103,6 +105,7 @@ if typing.TYPE_CHECKING:
 _LOGGER: typing.Final[logging.Logger] = logging.getLogger("hikari.rest")
 
 _APPLICATION_JSON: typing.Final[str] = "application/json"
+_TEXT_CSV: typing.Final[str] = "text/csv"
 _AUTHORIZATION_HEADER: typing.Final[str] = sys.intern("Authorization")
 _HTTP_USER_AGENT: typing.Final[str] = (
     f"DiscordBot ({about.__url__}, {about.__version__}) {about.__author__} "
@@ -500,6 +503,22 @@ def _transform_emoji_to_url_format(
     return emoji
 
 
+def _build_target_users_file(
+    users: typing.Sequence[snowflakes.SnowflakeishOr[users_.PartialUser]], /
+) -> files.Resource[files.AsyncReader]:
+    # Discord documents this as "a csv file with a single column of user IDs", so no header is written.
+    buffer = io.StringIO(newline="")
+    csv.writer(buffer).writerows((snowflakes.Snowflake(user),) for user in users)
+
+    return files.ensure_resource(files.Bytes(buffer.getvalue().encode(), "target_users.csv", _TEXT_CSV))
+
+
+def _parse_target_users_file(data: bytes, /) -> typing.Sequence[snowflakes.Snowflake]:
+    # Unlike the uploaded file, the returned file is documented to carry a `user_id` header.
+    reader = csv.DictReader(io.StringIO(data.decode("utf-8-sig"), newline=""))
+    return [snowflakes.Snowflake(row["user_id"]) for row in reader]
+
+
 def _build_prompts(
     prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder],
 ) -> list[typing.MutableMapping[str, typing.Any]]:
@@ -749,6 +768,32 @@ class RESTClientImpl(rest_api.RESTClient):
         ) -> None:
             return None
 
+    @typing.overload
+    async def _request(
+        self,
+        compiled_route: routes.CompiledRoute,
+        *,
+        query: data_binding.StringMapBuilder | None = None,
+        form_builder: data_binding.URLEncodedFormBuilder | None = None,
+        json: data_binding.JSONObjectBuilder | data_binding.JSONArray | None = None,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        expect_json: typing.Literal[True] = True,
+    ) -> data_binding.JSONObject | data_binding.JSONArray | None: ...
+
+    @typing.overload
+    async def _request(
+        self,
+        compiled_route: routes.CompiledRoute,
+        *,
+        query: data_binding.StringMapBuilder | None = None,
+        form_builder: data_binding.URLEncodedFormBuilder | None = None,
+        json: data_binding.JSONObjectBuilder | data_binding.JSONArray | None = None,
+        reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
+        expect_json: typing.Literal[False],
+    ) -> bytes | None: ...
+
     # We rather keep everything we can here inline.
     @typing.final
     async def _request(  # noqa: C901, PLR0912, PLR0915
@@ -760,9 +805,11 @@ class RESTClientImpl(rest_api.RESTClient):
         json: data_binding.JSONObjectBuilder | data_binding.JSONArray | None = None,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         auth: undefined.UndefinedNoneOr[str] = undefined.UNDEFINED,
-    ) -> data_binding.JSONObject | data_binding.JSONArray | None:
-        # Make a ratelimit-protected HTTP request to a JSON endpoint and expect some form
-        # of JSON response.
+        expect_json: bool = True,
+    ) -> data_binding.JSONObject | data_binding.JSONArray | bytes | None:
+        # Make a ratelimit-protected HTTP request to an endpoint and expect some form of
+        # JSON response, unless `expect_json` is `False`, in which case the raw body is
+        # returned instead.
         if not self._close_event:
             msg = "Cannot use an inactive REST client"
             raise errors.ComponentStateConflictError(msg)
@@ -890,6 +937,9 @@ class RESTClientImpl(rest_api.RESTClient):
 
                 # Handle the response when everything went good
                 if 200 <= response.status < 300:
+                    if not expect_json:
+                        return await response.read()
+
                     if response.content_type == _APPLICATION_JSON:
                         # Only deserializing here stops Cloudflare shenanigans messing us around.
                         return self._loads(await response.read())
@@ -1312,6 +1362,9 @@ class RESTClientImpl(rest_api.RESTClient):
         target_application: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[guilds.PartialApplication]
         ] = undefined.UNDEFINED,
+        target_users: undefined.UndefinedOr[
+            typing.Sequence[snowflakes.SnowflakeishOr[users_.PartialUser]]
+        ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         route = routes.POST_CHANNEL_INVITES.compile(channel=channel)
@@ -1323,7 +1376,15 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("target_type", target_type)
         body.put_snowflake("target_user_id", target_user)
         body.put_snowflake("target_application_id", target_application)
-        response = await self._request(route, json=body, reason=reason)
+
+        if target_users is not undefined.UNDEFINED:
+            form_builder = data_binding.URLEncodedFormBuilder()
+            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
+            form_builder.add_resource("target_users_file", _build_target_users_file(target_users))
+            response = await self._request(route, form_builder=form_builder, reason=reason)
+        else:
+            response = await self._request(route, json=body, reason=reason)
+
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite_with_metadata(response)
 
@@ -2328,6 +2389,33 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
+
+    @typing_extensions.override
+    async def fetch_invite_target_user_ids(
+        self, invite: invites.InviteCode | str
+    ) -> typing.Sequence[snowflakes.Snowflake]:
+        route = routes.GET_INVITE_TARGET_USERS.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        response = await self._request(route, expect_json=False)
+        assert isinstance(response, bytes)
+        return _parse_target_users_file(response)
+
+    @typing_extensions.override
+    async def edit_invite_target_users(
+        self, invite: invites.InviteCode | str, users: typing.Sequence[snowflakes.SnowflakeishOr[users_.PartialUser]]
+    ) -> None:
+        route = routes.PUT_INVITE_TARGET_USERS.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        form_builder = data_binding.URLEncodedFormBuilder()
+        form_builder.add_resource("target_users_file", _build_target_users_file(users))
+        await self._request(route, form_builder=form_builder)
+
+    @typing_extensions.override
+    async def fetch_invite_target_users_job(self, invite: invites.InviteCode | str) -> invites.TargetUsersJob:
+        route = routes.GET_INVITE_TARGET_USERS_JOB_STATUS.compile(
+            invite_code=invite if isinstance(invite, str) else invite.code
+        )
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_target_users_job(response)
 
     @typing_extensions.override
     async def fetch_my_user(self) -> users_.OwnUser:
