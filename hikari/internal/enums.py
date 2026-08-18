@@ -704,7 +704,7 @@ class Flag(metaclass=_FlagMeta):
             Otherwise, return [`False`][].
         """
         value = self._value_
-        return all(((flag_value := int(flag)) & value) == flag_value for flag in flags)
+        return all(((flag_value := operator.index(flag)) & value) == flag_value for flag in flags)
 
     def any(self, *flags: Self) -> bool:
         """Check if any of the given flags are part of this value.
@@ -716,7 +716,7 @@ class Flag(metaclass=_FlagMeta):
             Otherwise, return [`False`][].
         """
         value = self._value_
-        return any(((flag_value := int(flag)) & value) == flag_value for flag in flags)
+        return any(((flag_value := operator.index(flag)) & value) == flag_value for flag in flags)
 
     def difference(self, other: Self | int) -> _T:
         """Perform a set difference with the other set.
@@ -745,19 +745,20 @@ class Flag(metaclass=_FlagMeta):
         [`False`][]. If no common flag values exist between them, then
         this returns [`True`][].
         """
-        return not self._value_ & int(other)
+        return not self._value_ & operator.index(other)
 
     def is_subset(self, other: Self | int) -> bool:
         """Return whether another set contains this set or not.
 
         Equivalent to using the "in" operator.
         """
-        other_value = int(other)
+        other_value = operator.index(other)
         return (self._value_ & other_value) == other_value
 
     def is_superset(self, other: Self | int) -> bool:
         """Return whether this set contains another set or not."""
-        return (self._value_ & int(other)) == self._value_
+        value = self._value_
+        return (value & operator.index(other)) == value
 
     def none(self, *flags: Self) -> bool:
         """Check if none of the given flags are part of this value.

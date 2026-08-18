@@ -1128,6 +1128,28 @@ class TestIntFlag:
         # Baz is a combined field technically, so we don't expect it to be output here
         assert val.split() == [TestFlag.BAR, TestFlag.BORK, TestFlag.FOO]
 
+    def test_set_predicates_reject_non_integer_operands(self):
+        class TestFlag(enums.Flag):
+            FOO = 0x1
+            BAR = 0x2
+
+        val = TestFlag.FOO | TestFlag.BAR
+
+        with pytest.raises(TypeError):
+            val.is_subset(1.5)
+        with pytest.raises(TypeError):
+            val.is_superset("1")
+        with pytest.raises(TypeError):
+            val.is_disjoint(1.5)
+        with pytest.raises(TypeError):
+            val.all(1.5)
+        with pytest.raises(TypeError):
+            val.any("1")
+        with pytest.raises(TypeError):
+            val.none(1.5)
+        with pytest.raises(TypeError):
+            1.5 in val
+
     def test_split_with_unrecognised_bits(self):
         class TestFlag(enums.Flag):
             FOO = 0x1
