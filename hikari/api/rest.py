@@ -729,6 +729,9 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target_application: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[guilds.PartialApplication]
         ] = undefined.UNDEFINED,
+        target_users: undefined.UndefinedOr[
+            typing.Sequence[snowflakes.SnowflakeishOr[users_.PartialUser]]
+        ] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         """Create an invite to the given guild channel.
@@ -762,6 +765,16 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             !!! note
                 This is required if `target_type` is [`hikari.invites.TargetType.EMBEDDED_APPLICATION`][] and
                 the targeted application must have the [`hikari.applications.ApplicationFlags.EMBEDDED`][] flag.
+        target_users
+            If provided, the users which should be allowed to see and accept
+            this invite. These may be the objects or the IDs of existing users.
+
+            Duplicate users are ignored by Discord.
+
+            !!! note
+                The passed users are processed asynchronously by Discord. You can
+                keep track of the progress with
+                [`hikari.api.rest.RESTClient.fetch_invite_target_users_job`][].
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -2840,6 +2853,113 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             If you are missing the [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission in the guild
             the invite is from or if you are missing the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][]
             permission in the channel the invite is from.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the invite is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_invite_target_user_ids(
+        self, invite: invites.InviteCode | str
+    ) -> typing.Sequence[snowflakes.Snowflake]:
+        """Fetch the IDs of the users which are allowed to see and accept an invite.
+
+        Parameters
+        ----------
+        invite
+            The invite to fetch the target users of. This may be an invite
+            object or the code of an existing invite.
+
+        Returns
+        -------
+        typing.Sequence[hikari.snowflakes.Snowflake]
+            The IDs of the users which are allowed to see and accept the invite.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not the inviter and are missing the
+            [`hikari.permissions.Permissions.MANAGE_GUILD`][] or
+            [`hikari.permissions.Permissions.VIEW_AUDIT_LOG`][] permission in the
+            guild the invite is from.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the invite is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def edit_invite_target_users(
+        self, invite: invites.InviteCode | str, users: typing.Sequence[snowflakes.SnowflakeishOr[users_.PartialUser]]
+    ) -> None:
+        """Edit the users which are allowed to see and accept an invite.
+
+        !!! note
+            The passed users are processed asynchronously by Discord. You can
+            keep track of the progress with
+            [`hikari.api.rest.RESTClient.fetch_invite_target_users_job`][].
+
+        Parameters
+        ----------
+        invite
+            The invite to edit the target users of. This may be an invite
+            object or the code of an existing invite.
+        users
+            The users which should be allowed to see and accept the invite.
+            These may be the objects or the IDs of existing users.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the passed users is not a valid user.
+        hikari.errors.ForbiddenError
+            If you are not the inviter and are missing the
+            [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission in the
+            guild the invite is from.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the invite is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_invite_target_users_job(self, invite: invites.InviteCode | str) -> invites.TargetUsersJob:
+        """Fetch the status of the job processing an invite's target users.
+
+        Parameters
+        ----------
+        invite
+            The invite to fetch the target users job of. This may be an invite
+            object or the code of an existing invite.
+
+        Returns
+        -------
+        hikari.invites.TargetUsersJob
+            The status of the job processing the invite's target users.
+
+        Raises
+        ------
+        hikari.errors.ForbiddenError
+            If you are not the inviter and are missing the
+            [`hikari.permissions.Permissions.MANAGE_GUILD`][] or
+            [`hikari.permissions.Permissions.VIEW_AUDIT_LOG`][] permission in the
+            guild the invite is from.
         hikari.errors.UnauthorizedError
             If you are unauthorized to make the request (invalid/missing token).
         hikari.errors.NotFoundError
