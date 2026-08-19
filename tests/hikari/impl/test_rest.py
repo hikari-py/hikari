@@ -2827,6 +2827,7 @@ class TestRESTClientImplAsync:
             "target_type": invites.TargetType.STREAM,
             "target_user_id": "456",
             "target_application_id": "789",
+            "role_ids": ["135", "246"],
         }
 
         result = await rest_client.create_invite(
@@ -2838,6 +2839,7 @@ class TestRESTClientImplAsync:
             target_type=invites.TargetType.STREAM,
             target_user=StubModel(456),
             target_application=StubModel(789),
+            role_ids=[StubModel(135), StubModel(246)],
             reason="cause why not :)",
         )
 
