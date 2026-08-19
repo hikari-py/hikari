@@ -729,6 +729,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target_application: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[guilds.PartialApplication]
         ] = undefined.UNDEFINED,
+        role_ids: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         """Create an invite to the given guild channel.
@@ -762,6 +763,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             !!! note
                 This is required if `target_type` is [`hikari.invites.TargetType.EMBEDDED_APPLICATION`][] and
                 the targeted application must have the [`hikari.applications.ApplicationFlags.EMBEDDED`][] flag.
+        role_ids
+            If provided, the roles which will be given to the users that
+            accept this invite. These may be the objects or the IDs of
+            existing roles.
+
+            !!! note
+                This requires the [`hikari.permissions.Permissions.MANAGE_ROLES`][]
+                permission and roles with higher permissions than the inviter
+                cannot be assigned.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.

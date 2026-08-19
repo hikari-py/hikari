@@ -1312,6 +1312,7 @@ class RESTClientImpl(rest_api.RESTClient):
         target_application: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[guilds.PartialApplication]
         ] = undefined.UNDEFINED,
+        role_ids: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         route = routes.POST_CHANNEL_INVITES.compile(channel=channel)
@@ -1323,6 +1324,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("target_type", target_type)
         body.put_snowflake("target_user_id", target_user)
         body.put_snowflake("target_application_id", target_application)
+        body.put_snowflake_array("role_ids", role_ids)
         response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite_with_metadata(response)
