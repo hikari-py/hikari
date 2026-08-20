@@ -222,9 +222,7 @@ class TestAuditLogIterator:
                 {"audit_log_entries": []},
             ]
         )
-        iterator = special_endpoints.AuditLogIterator(
-            mock_entity_factory, mock_request, 123, undefined.UNDEFINED, undefined.UNDEFINED, undefined.UNDEFINED
-        )
+        iterator = special_endpoints.AuditLogIterator(mock_entity_factory, mock_request, 123)
 
         result = await iterator
 
@@ -249,15 +247,7 @@ class TestAuditLogIterator:
                 {"audit_log_entries": []},
             ]
         )
-        iterator = special_endpoints.AuditLogIterator(
-            mock_entity_factory,
-            mock_request,
-            123,
-            undefined.UNDEFINED,
-            undefined.UNDEFINED,
-            undefined.UNDEFINED,
-            after="0",
-        )
+        iterator = special_endpoints.AuditLogIterator(mock_entity_factory, mock_request, 123, after="0")
 
         result = await iterator
 

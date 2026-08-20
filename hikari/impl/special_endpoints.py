@@ -732,11 +732,11 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         entity_factory: entity_factory_.EntityFactory,
         request_call: _RequestCallSig,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
-        before: undefined.UndefinedOr[str],
-        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
-        action_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int],
         *,
+        before: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         after: undefined.UndefinedOr[str] = undefined.UNDEFINED,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]] = undefined.UNDEFINED,
+        action_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int] = undefined.UNDEFINED,
     ) -> None:
         self._action_type = action_type
         self._entity_factory = entity_factory
