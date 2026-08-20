@@ -5694,6 +5694,121 @@ class TestRESTClientImplAsync:
         rest_client._entity_factory.deserialize_member.assert_called_once_with({"id": "764435"}, guild_id=645234123)
         rest_client._request.assert_awaited_once_with(expected_route, query=expected_query)
 
+    async def test_search_messages(self, rest_client):
+        expected_route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=645234123)
+        rest_client._request = mock.AsyncMock(return_value={"total_results": 1})
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        result = await rest_client.search_messages(
+            StubModel(645234123),
+            content="some words",
+            limit=10,
+            offset=25,
+            max_id=StubModel(1002000000000000000),
+            min_id=StubModel(1001000000000000000),
+            slop=5,
+            channels=[StubModel(123), 456],
+            author_types=[
+                message_models.MessageSearchAuthorType.BOT,
+                message_models.MessageSearchAuthorType.NOT_WEBHOOK,
+            ],
+            authors=[StubModel(111)],
+            mentioned_users=[StubModel(222)],
+            mentioned_roles=[StubModel(333)],
+            mentions_everyone=False,
+            replied_to_users=[StubModel(444)],
+            replied_to_messages=[StubModel(555)],
+            pinned=True,
+            has=[message_models.MessageSearchHasType.IMAGE, message_models.MessageSearchHasType.NOT_POLL],
+            embed_types=[message_models.MessageSearchEmbedType.GIF],
+            embed_providers=["Tenor"],
+            link_hostnames=["discordapp.com"],
+            attachment_filenames=["foo"],
+            attachment_extensions=["txt"],
+            sort_by=message_models.MessageSearchSortMode.RELEVANCE,
+            sort_order=message_models.MessageSearchSortOrder.ASCENDING,
+            include_nsfw=True,
+        )
+
+        assert result is rest_client._entity_factory.deserialize_message_search_result.return_value
+        rest_client._entity_factory.deserialize_message_search_result.assert_called_once_with({"total_results": 1})
+        rest_client._request.assert_awaited_once_with(expected_route, query=mock.ANY)
+        _, kwargs = rest_client._request.call_args
+        assert sorted(kwargs["query"].items()) == sorted(
+            [
+                ("content", "some words"),
+                ("limit", "10"),
+                ("offset", "25"),
+                ("slop", "5"),
+                ("mention_everyone", "false"),
+                ("pinned", "true"),
+                ("sort_by", "relevance"),
+                ("sort_order", "asc"),
+                ("include_nsfw", "true"),
+                ("max_id", "1002000000000000000"),
+                ("min_id", "1001000000000000000"),
+                ("channel_id", "123"),
+                ("channel_id", "456"),
+                ("author_id", "111"),
+                ("mentions", "222"),
+                ("mentions_role_id", "333"),
+                ("replied_to_user_id", "444"),
+                ("replied_to_message_id", "555"),
+                ("author_type", "bot"),
+                ("author_type", "-webhook"),
+                ("has", "image"),
+                ("has", "-poll"),
+                ("embed_type", "gif"),
+                ("embed_provider", "Tenor"),
+                ("link_hostname", "discordapp.com"),
+                ("attachment_filename", "foo"),
+                ("attachment_extension", "txt"),
+            ]
+        )
+
+    async def test_search_messages_when_datetimes(self, rest_client):
+        expected_route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=645234123)
+        rest_client._request = mock.AsyncMock(return_value={"total_results": 0})
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+        date = datetime.datetime(2022, 3, 6, 12, 1, 58, 415625, tzinfo=datetime.timezone.utc)
+
+        await rest_client.search_messages(StubModel(645234123), max_id=date, min_id=date)
+
+        rest_client._request.assert_awaited_once_with(expected_route, query=mock.ANY)
+        _, kwargs = rest_client._request.call_args
+        assert sorted(kwargs["query"].items()) == sorted(
+            [("max_id", "950000286338908160"), ("min_id", "950000286338908160")]
+        )
+
+    async def test_search_messages_without_optionals(self, rest_client):
+        expected_route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=645234123)
+        rest_client._request = mock.AsyncMock(return_value={"total_results": 0})
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        await rest_client.search_messages(StubModel(645234123))
+
+        rest_client._request.assert_awaited_once_with(expected_route, query=mock.ANY)
+        _, kwargs = rest_client._request.call_args
+        assert dict(kwargs["query"]) == {}
+
+    async def test_search_messages_when_not_indexed(self, rest_client):
+        rest_client._request = mock.AsyncMock(
+            return_value={
+                "message": "Index not yet available. Try again later",
+                "code": 110000,
+                "documents_indexed": 100,
+                "retry_after": 2,
+            }
+        )
+        rest_client._entity_factory.deserialize_message_search_result = mock.Mock()
+
+        with pytest.raises(errors.SearchNotIndexedError) as exc_info:
+            await rest_client.search_messages(StubModel(645234123))
+
+        assert exc_info.value.documents_indexed == 100
+        assert exc_info.value.retry_after == 2.0
+        rest_client._entity_factory.deserialize_message_search_result.assert_not_called()
+
     async def test_edit_member(self, rest_client):
         expected_route = routes.PATCH_GUILD_MEMBER.compile(guild=123, user=456)
         expected_json = {

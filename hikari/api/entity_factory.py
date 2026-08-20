@@ -1749,6 +1749,21 @@ class EntityFactory(abc.ABC):
             The deserialized message object.
         """
 
+    @abc.abstractmethod
+    def deserialize_message_search_result(self, payload: data_binding.JSONObject) -> message_models.MessageSearchResult:
+        """Parse a raw payload from Discord into a message search result object.
+
+        Parameters
+        ----------
+        payload
+            The JSON payload to deserialize.
+
+        Returns
+        -------
+        hikari.messages.MessageSearchResult
+            The deserialized message search result object.
+        """
+
     ###################
     # PRESENCE MODELS #
     ###################

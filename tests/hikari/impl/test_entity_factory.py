@@ -7404,6 +7404,39 @@ class TestEntityFactoryImpl:
         assert sticker.format_type is sticker_models.StickerFormatType.LOTTIE
         assert isinstance(sticker, sticker_models.PartialSticker)
 
+    def test_deserialize_message_search_result(
+        self, entity_factory_impl, message_payload, guild_public_thread_payload, thread_member_payload
+    ):
+        payload = {
+            "doing_deep_historical_index": True,
+            "documents_indexed": 100,
+            "total_results": 2,
+            "messages": [[message_payload]],
+            "threads": [guild_public_thread_payload],
+            "members": [thread_member_payload],
+        }
+
+        result = entity_factory_impl.deserialize_message_search_result(payload)
+
+        assert result.doing_deep_historical_index is True
+        assert result.documents_indexed == 100
+        assert result.total_results == 2
+        assert result.messages == [entity_factory_impl.deserialize_message(message_payload)]
+        assert result.threads == [entity_factory_impl.deserialize_guild_thread(guild_public_thread_payload)]
+        assert result.members == [entity_factory_impl.deserialize_thread_member(thread_member_payload)]
+        assert isinstance(result, message_models.MessageSearchResult)
+
+    def test_deserialize_message_search_result_without_optional_fields(self, entity_factory_impl):
+        payload = {"doing_deep_historical_index": False, "total_results": 0, "messages": []}
+
+        result = entity_factory_impl.deserialize_message_search_result(payload)
+
+        assert result.doing_deep_historical_index is False
+        assert result.documents_indexed is None
+        assert result.messages == []
+        assert result.threads == []
+        assert result.members == []
+
     ###################
     # PRESENCE MODELS #
     ###################
