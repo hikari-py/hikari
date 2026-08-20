@@ -1076,7 +1076,7 @@ class TestRESTClientImpl:
             )
 
     def test_fetch_audit_log_when_before_and_after_specified(self, rest_client):
-        with pytest.raises(TypeError, match=r"Can not specify 'before' and 'after' together."):
+        with pytest.raises(ValueError, match=r"Can not specify 'before' and 'after' together."):
             rest_client.fetch_audit_log(StubModel(123), before=StubModel(456), after=StubModel(789))
 
     def test_fetch_public_archived_threads(self, rest_client: rest.RESTClientImpl):

@@ -2724,7 +2724,7 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
         if not undefined.any_undefined(before, after):
             msg = "Can not specify 'before' and 'after' together."
-            raise TypeError(msg)
+            raise ValueError(msg)
 
         return special_endpoints_impl.AuditLogIterator(
             entity_factory=self._entity_factory,

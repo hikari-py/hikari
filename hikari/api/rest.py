@@ -3695,7 +3695,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
-        TypeError
+        ValueError
             If both `before` and `after` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
