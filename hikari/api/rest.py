@@ -9476,6 +9476,86 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_sku_subscriptions(
+        self,
+        sku: snowflakes.SnowflakeishOr[monetization.SKU],
+        *,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> typing.Sequence[monetization.Subscription]:
+        """Fetch the subscriptions containing a given SKU.
+
+        Parameters
+        ----------
+        sku
+            The SKU to fetch the subscriptions for.
+        user
+            The user to fetch the subscriptions for.
+
+            This is required unless the request is made with an OAuth token.
+        before
+            Fetch subscriptions before this time or ID.
+        after
+            Fetch subscriptions after this time or ID.
+        limit
+            Number of subscriptions to return, 1-100, default 50.
+
+        Returns
+        -------
+        typing.Sequence[hikari.monetization.Subscription]
+            The subscriptions containing the SKU that match the criteria.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the fields that are passed have an invalid value.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the SKU or user was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def fetch_sku_subscription(
+        self,
+        sku: snowflakes.SnowflakeishOr[monetization.SKU],
+        subscription: snowflakes.SnowflakeishOr[monetization.Subscription],
+    ) -> monetization.Subscription:
+        """Fetch a subscription containing a given SKU.
+
+        Parameters
+        ----------
+        sku
+            The SKU the subscription contains.
+        subscription
+            The subscription to fetch.
+
+        Returns
+        -------
+        hikari.monetization.Subscription
+            The requested subscription.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the SKU or subscription was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def fetch_stage_instance(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
     ) -> stage_instances.StageInstance:

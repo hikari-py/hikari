@@ -7617,6 +7617,47 @@ class TestRESTClientImplAsync:
 
         rest_client._request.assert_awaited_once_with(expected_route)
 
+    async def test_fetch_sku_subscriptions(self, rest_client):
+        expected_route = routes.GET_SKU_SUBSCRIPTIONS.compile(sku=123)
+        expected_query = {"user_id": "456", "before": "912", "after": "911", "limit": "42"}
+        mock_payload_1 = {"id": "1278078770116427839"}
+        mock_payload_2 = {"id": "1278078770116427840"}
+        rest_client._request = mock.AsyncMock(return_value=[mock_payload_1, mock_payload_2])
+
+        result = await rest_client.fetch_sku_subscriptions(
+            StubModel(123), user=StubModel(456), before=912, after=911, limit=42
+        )
+
+        assert result == [
+            rest_client._entity_factory.deserialize_subscription.return_value,
+            rest_client._entity_factory.deserialize_subscription.return_value,
+        ]
+        rest_client._request.assert_awaited_once_with(expected_route, query=expected_query)
+        rest_client._entity_factory.deserialize_subscription.assert_has_calls(
+            [mock.call(mock_payload_1), mock.call(mock_payload_2)]
+        )
+
+    async def test_fetch_sku_subscriptions_without_optional_params(self, rest_client):
+        expected_route = routes.GET_SKU_SUBSCRIPTIONS.compile(sku=123)
+        rest_client._request = mock.AsyncMock(return_value=[])
+
+        result = await rest_client.fetch_sku_subscriptions(StubModel(123))
+
+        assert result == []
+        rest_client._request.assert_awaited_once_with(expected_route, query={})
+        rest_client._entity_factory.deserialize_subscription.assert_not_called()
+
+    async def test_fetch_sku_subscription(self, rest_client):
+        expected_route = routes.GET_SKU_SUBSCRIPTION.compile(sku=123, subscription=456)
+        mock_payload = {"id": "456"}
+        rest_client._request = mock.AsyncMock(return_value=mock_payload)
+
+        result = await rest_client.fetch_sku_subscription(StubModel(123), StubModel(456))
+
+        assert result is rest_client._entity_factory.deserialize_subscription.return_value
+        rest_client._request.assert_awaited_once_with(expected_route)
+        rest_client._entity_factory.deserialize_subscription.assert_called_once_with(mock_payload)
+
     async def test_fetch_stage_instance(self, rest_client):
         expected_route = routes.GET_STAGE_INSTANCE.compile(channel=123)
         mock_payload = {

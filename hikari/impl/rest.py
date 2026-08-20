@@ -5271,6 +5271,40 @@ class RESTClientImpl(rest_api.RESTClient):
         await self._request(route)
 
     @typing_extensions.override
+    async def fetch_sku_subscriptions(
+        self,
+        sku: snowflakes.SnowflakeishOr[monetization.SKU],
+        *,
+        user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
+        before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
+        limit: undefined.UndefinedOr[int] = undefined.UNDEFINED,
+    ) -> typing.Sequence[monetization.Subscription]:
+        query = data_binding.StringMapBuilder()
+
+        query.put("user_id", user)
+        query.put("before", before)
+        query.put("after", after)
+        query.put("limit", limit)
+
+        route = routes.GET_SKU_SUBSCRIPTIONS.compile(sku=sku)
+        response = await self._request(route, query=query)
+        assert isinstance(response, list)
+
+        return [self._entity_factory.deserialize_subscription(payload) for payload in response]
+
+    @typing_extensions.override
+    async def fetch_sku_subscription(
+        self,
+        sku: snowflakes.SnowflakeishOr[monetization.SKU],
+        subscription: snowflakes.SnowflakeishOr[monetization.Subscription],
+    ) -> monetization.Subscription:
+        route = routes.GET_SKU_SUBSCRIPTION.compile(sku=sku, subscription=subscription)
+        response = await self._request(route)
+        assert isinstance(response, dict)
+        return self._entity_factory.deserialize_subscription(response)
+
+    @typing_extensions.override
     async def fetch_stage_instance(
         self, channel: snowflakes.SnowflakeishOr[channels_.GuildStageChannel]
     ) -> stage_instances.StageInstance:
