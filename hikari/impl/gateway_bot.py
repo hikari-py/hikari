@@ -1341,6 +1341,14 @@ class GatewayBot(traits.GatewayBotAware):
         )
 
     @typing_extensions.override
+    async def request_soundboard_sounds(
+        self, guilds: typing.Sequence[snowflakes.SnowflakeishOr[guilds.PartialGuild]], /
+    ) -> None:
+        self._check_if_alive()
+        shard = self.shards[0]
+        await shard.request_soundboard_sounds(guilds)
+
+    @typing_extensions.override
     async def request_channel_info(
         self,
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
