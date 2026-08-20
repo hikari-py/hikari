@@ -771,10 +771,8 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         # Since deserialize_audit_log may skip entries it doesn't recognise,
         # first_id has to be calculated based on the raw payload as log.entries
         # may be missing entries.
-        if self._direction == "before":
-            self._first_id = str(min(int(entry["id"]) for entry in audit_log_entries))
-        else:
-            self._first_id = str(max(int(entry["id"]) for entry in audit_log_entries))
+        aggregate = min if self._direction == "before" else max
+        self._first_id = str(aggregate(int(entry["id"]) for entry in audit_log_entries))
         return log
 
 
