@@ -500,6 +500,18 @@ def _transform_emoji_to_url_format(
     return emoji
 
 
+def _to_audit_log_timestamp(
+    value: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]], /
+) -> undefined.UndefinedOr[str]:
+    if value is undefined.UNDEFINED:
+        return undefined.UNDEFINED
+
+    if isinstance(value, datetime.datetime):
+        return str(snowflakes.Snowflake.from_datetime(value))
+
+    return str(int(value))
+
+
 def _build_prompts(
     prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder],
 ) -> list[typing.MutableMapping[str, typing.Any]]:
@@ -2706,22 +2718,20 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
-        timestamp: undefined.UndefinedOr[str]
-        if before is undefined.UNDEFINED:
-            timestamp = undefined.UNDEFINED
-        elif isinstance(before, datetime.datetime):
-            timestamp = str(snowflakes.Snowflake.from_datetime(before))
-        else:
-            timestamp = str(int(before))
+        if not undefined.any_undefined(before, after):
+            msg = "Can not specify 'before' and 'after' together."
+            raise TypeError(msg)
 
         return special_endpoints_impl.AuditLogIterator(
             entity_factory=self._entity_factory,
             request_call=self._request,
             guild=guild,
-            before=timestamp,
+            before=_to_audit_log_timestamp(before),
+            after=_to_audit_log_timestamp(after),
             user=user,
             action_type=event_type,
         )

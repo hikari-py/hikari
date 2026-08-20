@@ -718,6 +718,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
 
     __slots__: typing.Sequence[str] = (
         "_action_type",
+        "_direction",
         "_entity_factory",
         "_first_id",
         "_guild_id",
@@ -734,10 +735,18 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         before: undefined.UndefinedOr[str],
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users.PartialUser]],
         action_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int],
+        *,
+        after: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> None:
         self._action_type = action_type
         self._entity_factory = entity_factory
-        self._first_id = before
+        self._first_id: undefined.UndefinedOr[str]
+        if after is not undefined.UNDEFINED:
+            self._direction = "after"
+            self._first_id = after
+        else:
+            self._direction = "before"
+            self._first_id = before
         self._guild_id = snowflakes.Snowflake(guild)
         self._request_call = request_call
         self._route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=guild)
@@ -749,7 +758,7 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         query.put("limit", 100)
         query.put("user_id", self._user)
         query.put("action_type", self._action_type, conversion=int)
-        query.put("before", self._first_id)
+        query.put(self._direction, self._first_id)
 
         response = await self._request_call(compiled_route=self._route, query=query)
         assert isinstance(response, dict)
@@ -762,7 +771,10 @@ class AuditLogIterator(iterators.LazyIterator["audit_logs.AuditLog"]):
         # Since deserialize_audit_log may skip entries it doesn't recognise,
         # first_id has to be calculated based on the raw payload as log.entries
         # may be missing entries.
-        self._first_id = str(min(entry["id"] for entry in audit_log_entries))
+        if self._direction == "before":
+            self._first_id = str(min(int(entry["id"]) for entry in audit_log_entries))
+        else:
+            self._first_id = str(max(int(entry["id"]) for entry in audit_log_entries))
         return log
 
 

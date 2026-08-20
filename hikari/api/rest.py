@@ -3651,6 +3651,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
@@ -3673,6 +3674,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a datetime object, it will be transformed into a snowflake. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
+
+            The entries will be returned in descending order (newest first).
+        after
+            If provided, filter to only actions after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+
+            The entries will be returned in ascending order (oldest first).
         user
             If provided, the user to filter for.
         event_type
@@ -3685,6 +3695,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        TypeError
+            If both `before` and `after` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError

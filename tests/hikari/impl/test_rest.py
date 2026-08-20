@@ -996,6 +996,7 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 guild=guild,
                 before=undefined.UNDEFINED,
+                after=undefined.UNDEFINED,
                 user=undefined.UNDEFINED,
                 action_type=undefined.UNDEFINED,
             )
@@ -1017,6 +1018,7 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 guild=guild,
                 before="735757641938108416",
+                after=undefined.UNDEFINED,
                 user=user,
                 action_type=audit_logs.AuditLogEventType.GUILD_UPDATE,
             )
@@ -1033,9 +1035,49 @@ class TestRESTClientImpl:
                 request_call=rest_client._request,
                 guild=guild,
                 before="456",
+                after=undefined.UNDEFINED,
                 user=undefined.UNDEFINED,
                 action_type=undefined.UNDEFINED,
             )
+
+    def test_fetch_audit_log_when_after_datetime(self, rest_client):
+        guild = StubModel(123)
+        stub_iterator = mock.Mock()
+        datetime_obj = datetime.datetime(2020, 7, 23, 7, 18, 11, 554023, tzinfo=datetime.timezone.utc)
+
+        with mock.patch.object(special_endpoints, "AuditLogIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_audit_log(guild, after=datetime_obj) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                before=undefined.UNDEFINED,
+                after="735757641938108416",
+                user=undefined.UNDEFINED,
+                action_type=undefined.UNDEFINED,
+            )
+
+    def test_fetch_audit_log_when_after_is_else(self, rest_client):
+        guild = StubModel(123)
+        stub_iterator = mock.Mock()
+
+        with mock.patch.object(special_endpoints, "AuditLogIterator", return_value=stub_iterator) as iterator:
+            assert rest_client.fetch_audit_log(guild, after=StubModel(456)) == stub_iterator
+
+            iterator.assert_called_once_with(
+                entity_factory=rest_client._entity_factory,
+                request_call=rest_client._request,
+                guild=guild,
+                before=undefined.UNDEFINED,
+                after="456",
+                user=undefined.UNDEFINED,
+                action_type=undefined.UNDEFINED,
+            )
+
+    def test_fetch_audit_log_when_before_and_after_specified(self, rest_client):
+        with pytest.raises(TypeError, match=r"Can not specify 'before' and 'after' together."):
+            rest_client.fetch_audit_log(StubModel(123), before=StubModel(456), after=StubModel(789))
 
     def test_fetch_public_archived_threads(self, rest_client: rest.RESTClientImpl):
         mock_datetime = time.utc_datetime()
