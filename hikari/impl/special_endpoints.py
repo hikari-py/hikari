@@ -145,7 +145,7 @@ if typing.TYPE_CHECKING:
             raise NotImplementedError
 
 
-_ParentT = typing.TypeVar("_ParentT")
+_ParentT_co = typing.TypeVar("_ParentT_co", covariant=True)
 _GuildThreadChannelT = typing.TypeVar("_GuildThreadChannelT", bound=channels.GuildThreadChannel)
 
 
@@ -2097,11 +2097,11 @@ class SelectMenuBuilder(special_endpoints.SelectMenuBuilder):
 
 
 @attrs.define(init=False, weakref_slot=False)
-class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuBuilder[_ParentT]):
+class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuBuilder[_ParentT_co]):
     """Builder class for text select menus."""
 
     _options: list[special_endpoints.SelectOptionBuilder] = attrs.field()
-    _parent: _ParentT | None = attrs.field()
+    _parent: _ParentT_co | None = attrs.field()
     _type: typing.Literal[component_models.ComponentType.TEXT_SELECT_MENU] = attrs.field()
 
     if not typing.TYPE_CHECKING:
@@ -2115,7 +2115,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         *,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         custom_id: str,
-        parent: _ParentT,
+        parent: _ParentT_co,
         options: typing.Sequence[special_endpoints.SelectOptionBuilder] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
@@ -2141,7 +2141,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
         *,
         id: undefined.UndefinedOr[int] = undefined.UNDEFINED,
         custom_id: str,
-        parent: _ParentT | None = None,
+        parent: _ParentT_co | None = None,
         options: typing.Sequence[special_endpoints.SelectOptionBuilder] = (),
         placeholder: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         min_values: int = 0,
@@ -2162,7 +2162,7 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
 
     @property
     @typing_extensions.override
-    def parent(self) -> _ParentT:
+    def parent(self) -> _ParentT_co:
         if self._parent is None:
             msg = "This menu has no parent"
             raise RuntimeError(msg)
