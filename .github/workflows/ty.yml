@@ -1,0 +1,43 @@
+name: Ty
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  ty:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          python-version: "3.10"
+          activate-environment: true
+
+      - name: Install nox
+        run: |
+          uv sync --frozen --only-group nox
+
+      - name: Ty
+        # Ty is not stable yet, so this job is informational and must never
+        # block a pull request; see the step summary for the full output.
+        continue-on-error: true
+        run: |
+          nox -s ty 2>&1 | tee ty-output.log
+
+      - name: Report
+        run: |
+          {
+            echo "### ty results"
+            echo
+            echo "ty has not reached 1.0 yet, so this check is informational only and never blocks the pull request."
+            echo
+            echo '```'
+            cat ty-output.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
