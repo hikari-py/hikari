@@ -73,7 +73,7 @@ if sys.version_info >= (3, 14):
     _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 else:
     try:
-        import backports.zstd  # noqa: F401
+        import backports.zstd  # noqa: F401 # pyright: ignore[reportUnusedImport]
     except ModuleNotFoundError:
         _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZLIB_STREAM
     else:

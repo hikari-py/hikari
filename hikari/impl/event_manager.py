@@ -59,6 +59,7 @@ from hikari.internal import ux
 if typing.TYPE_CHECKING:
     from hikari import guilds
     from hikari import invites
+    from hikari import messages
     from hikari import voices
     from hikari.api import cache as cache_
     from hikari.api import entity_factory as entity_factory_
@@ -736,7 +737,7 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
     )
     def on_message_delete_bulk(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         """See https://discord.com/developers/docs/topics/gateway-events#message-delete-bulk for more info."""
-        old_messages = {}
+        old_messages: typing.MutableMapping[snowflakes.Snowflake, messages.Message] = {}
 
         if self._cache:
             for raw_message_id in payload["ids"]:

@@ -291,7 +291,7 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     def __await__(self) -> typing.Generator[typing.Any, typing.Any, typing.Any]:
         route = routes.PATCH_GUILD_CHANNELS.compile(guild=self._guild)
 
-        body = []
+        body: list[data_binding.JSONObject] = []
         for channel in self._positions:
             channel_payload = data_binding.JSONObjectBuilder()
             channel_payload.put_snowflake("id", channel.channel)

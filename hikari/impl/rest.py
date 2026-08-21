@@ -863,11 +863,11 @@ class RESTClientImpl(rest_api.RESTClient):
                     )
 
                     if trace_logging_enabled:
-                        time_taken = (time.time() - start) * 1_000  # pyright: ignore[reportUnboundVariable]
+                        time_taken = (time.time() - start) * 1_000  # pyright: ignore[reportPossiblyUnboundVariable]
                         _LOGGER.log(
                             ux.TRACE,
                             "%s %s %s in %sms\n%s",
-                            uuid,  # pyright: ignore[reportUnboundVariable]
+                            uuid,  # pyright: ignore[reportPossiblyUnboundVariable]
                             response.status,
                             response.reason,
                             time_taken,
@@ -1022,11 +1022,11 @@ class RESTClientImpl(rest_api.RESTClient):
             # but I'd rather we just give up than do something resulting in multiple failed
             # requests repeatedly.
             raise errors.HTTPResponseError(
-                str(response.real_url),
-                http.HTTPStatus.TOO_MANY_REQUESTS,
-                response.headers,
-                await response.read(),
-                f"received rate limited response with unexpected response type {response.content_type}",
+                url=str(response.real_url),
+                status=http.HTTPStatus.TOO_MANY_REQUESTS,
+                headers=response.headers,
+                raw_body=await response.read(),
+                message=f"received rate limited response with unexpected response type {response.content_type}",
             )
 
         body = self._loads(await response.read())
@@ -1035,7 +1035,11 @@ class RESTClientImpl(rest_api.RESTClient):
             # This is most probably a Cloudflare ban, so just output the entire
             # body to the console and abort the request.
             raise errors.HTTPResponseError(
-                str(response.real_url), http.HTTPStatus.TOO_MANY_REQUESTS, response.headers, str(body), str(body)
+                url=str(response.real_url),
+                status=http.HTTPStatus.TOO_MANY_REQUESTS,
+                headers=response.headers,
+                raw_body=str(body),
+                message=str(body),
             )
 
         body_retry_after = float(body["retry_after"])
@@ -1579,7 +1583,7 @@ class RESTClientImpl(rest_api.RESTClient):
 
         form_builder: data_binding.URLEncodedFormBuilder | None = None
         if resources or final_attachments:
-            attachments_payload = []
+            attachments_payload: list[data_binding.JSONObject] = []
             attachment_id = 0
 
             # The rationale behind this large (and probably confusing) piece of code
@@ -3468,9 +3472,9 @@ class RESTClientImpl(rest_api.RESTClient):
         response = await self._request(route, json=body, reason=reason)
 
         assert isinstance(response, dict)
-        channel = self._entity_factory.deserialize_guild_thread(response)
-        assert isinstance(channel, (channels_.GuildPublicThread, channels_.GuildNewsThread))
-        return channel
+        thread = self._entity_factory.deserialize_guild_thread(response)
+        assert isinstance(thread, (channels_.GuildPublicThread, channels_.GuildNewsThread))
+        return thread
 
     @typing_extensions.override
     async def create_thread(
@@ -4403,7 +4407,7 @@ class RESTClientImpl(rest_api.RESTClient):
     def context_menu_command_builder(
         self, type: commands.CommandType | int, name: str
     ) -> special_endpoints.ContextMenuCommandBuilder:
-        return special_endpoints_impl.ContextMenuCommandBuilder(commands.CommandType(type), name)
+        return special_endpoints_impl.ContextMenuCommandBuilder(type=commands.CommandType(type), name=name)
 
     @typing_extensions.override
     async def fetch_application_command(
