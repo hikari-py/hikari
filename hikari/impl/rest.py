@@ -500,6 +500,26 @@ def _transform_emoji_to_url_format(
     return emoji
 
 
+@typing.overload
+def _to_searchable_snowflake_str(value: undefined.UndefinedType, /) -> undefined.UndefinedType: ...
+
+
+@typing.overload
+def _to_searchable_snowflake_str(value: snowflakes.SearchableSnowflakeishOr[snowflakes.Unique], /) -> str: ...
+
+
+def _to_searchable_snowflake_str(
+    value: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]], /
+) -> undefined.UndefinedOr[str]:
+    if value is undefined.UNDEFINED:
+        return undefined.UNDEFINED
+
+    if isinstance(value, datetime.datetime):
+        return str(snowflakes.Snowflake.from_datetime(value))
+
+    return str(int(value))
+
+
 def _build_prompts(
     prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder],
 ) -> list[typing.MutableMapping[str, typing.Any]]:
@@ -1389,22 +1409,13 @@ class RESTClientImpl(rest_api.RESTClient):
 
         if before is not undefined.UNDEFINED:
             direction = "before"
-            if isinstance(before, datetime.datetime):
-                timestamp = str(snowflakes.Snowflake.from_datetime(before))
-            else:
-                timestamp = str(int(before))
+            timestamp = _to_searchable_snowflake_str(before)
         elif after is not undefined.UNDEFINED:
             direction = "after"
-            if isinstance(after, datetime.datetime):
-                timestamp = str(snowflakes.Snowflake.from_datetime(after))
-            else:
-                timestamp = str(int(after))
+            timestamp = _to_searchable_snowflake_str(after)
         elif around is not undefined.UNDEFINED:
             direction = "around"
-            if isinstance(around, datetime.datetime):
-                timestamp = str(snowflakes.Snowflake.from_datetime(around))
-            else:
-                timestamp = str(int(around))
+            timestamp = _to_searchable_snowflake_str(around)
         else:
             direction = "before"
             timestamp = undefined.UNDEFINED
@@ -2384,16 +2395,12 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> iterators.LazyIterator[applications.OwnGuild]:
         if start_at is undefined.UNDEFINED:
             start_at = snowflakes.Snowflake.max() if newest_first else snowflakes.Snowflake.min()
-        elif isinstance(start_at, datetime.datetime):
-            start_at = snowflakes.Snowflake.from_datetime(start_at)
-        else:
-            start_at = int(start_at)
 
         return special_endpoints_impl.OwnGuildIterator(
             entity_factory=self._entity_factory,
             request_call=self._request,
             newest_first=newest_first,
-            first_id=str(start_at),
+            first_id=_to_searchable_snowflake_str(start_at),
         )
 
     @typing_extensions.override
@@ -2706,22 +2713,20 @@ class RESTClientImpl(rest_api.RESTClient):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
-        timestamp: undefined.UndefinedOr[str]
-        if before is undefined.UNDEFINED:
-            timestamp = undefined.UNDEFINED
-        elif isinstance(before, datetime.datetime):
-            timestamp = str(snowflakes.Snowflake.from_datetime(before))
-        else:
-            timestamp = str(int(before))
+        if not undefined.any_undefined(before, after):
+            msg = "Can not specify 'before' and 'after' together."
+            raise ValueError(msg)
 
         return special_endpoints_impl.AuditLogIterator(
             entity_factory=self._entity_factory,
             request_call=self._request,
             guild=guild,
-            before=timestamp,
+            before=_to_searchable_snowflake_str(before),
+            after=_to_searchable_snowflake_str(after),
             user=user,
             action_type=event_type,
         )
@@ -3702,14 +3707,7 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SearchableSnowflakeishOr[channels_.GuildThreadChannel]
         ] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[channels_.GuildPrivateThread]:
-        if before is undefined.UNDEFINED:
-            start: undefined.UndefinedOr[str] = undefined.UNDEFINED
-
-        elif isinstance(before, datetime.datetime):
-            start = str(snowflakes.Snowflake.from_datetime(before))
-
-        else:
-            start = str(snowflakes.Snowflake(before))
+        start = _to_searchable_snowflake_str(before)
 
         return special_endpoints_impl.GuildThreadIterator(
             deserialize=self._entity_factory.deserialize_guild_private_thread,
@@ -3752,14 +3750,11 @@ class RESTClientImpl(rest_api.RESTClient):
         *,
         start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[guilds.Member]:
-        first_id: undefined.UndefinedOr[str] = undefined.UNDEFINED
-        if isinstance(start_at, datetime.datetime):
-            first_id = str(snowflakes.Snowflake.from_datetime(start_at))
-        elif start_at is not undefined.UNDEFINED:
-            first_id = str(int(start_at))
-
         return special_endpoints_impl.MemberIterator(
-            entity_factory=self._entity_factory, request_call=self._request, guild=guild, first_id=first_id
+            entity_factory=self._entity_factory,
+            request_call=self._request,
+            guild=guild,
+            first_id=_to_searchable_snowflake_str(start_at),
         )
 
     @typing_extensions.override
@@ -3998,13 +3993,13 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> iterators.LazyIterator[guilds.GuildBan]:
         if start_at is undefined.UNDEFINED:
             start_at = snowflakes.Snowflake.max() if newest_first else snowflakes.Snowflake.min()
-        elif isinstance(start_at, datetime.datetime):
-            start_at = snowflakes.Snowflake.from_datetime(start_at)
-        else:
-            start_at = int(start_at)
 
         return special_endpoints_impl.GuildBanIterator(
-            self._entity_factory, self._request, guild, newest_first=newest_first, first_id=str(start_at)
+            self._entity_factory,
+            self._request,
+            guild,
+            newest_first=newest_first,
+            first_id=_to_searchable_snowflake_str(start_at),
         )
 
     @typing_extensions.override
@@ -5166,13 +5161,14 @@ class RESTClientImpl(rest_api.RESTClient):
     ) -> iterators.LazyIterator[scheduled_events.ScheduledEventUser]:
         if start_at is undefined.UNDEFINED:
             start_at = snowflakes.Snowflake.max() if newest_first else snowflakes.Snowflake.min()
-        elif isinstance(start_at, datetime.datetime):
-            start_at = snowflakes.Snowflake.from_datetime(start_at)
-        else:
-            start_at = int(start_at)
 
         return special_endpoints_impl.ScheduledEventUserIterator(
-            self._entity_factory, self._request, guild, event, first_id=str(start_at), newest_first=newest_first
+            self._entity_factory,
+            self._request,
+            guild,
+            event,
+            first_id=_to_searchable_snowflake_str(start_at),
+            newest_first=newest_first,
         )
 
     @typing_extensions.override
