@@ -68,6 +68,7 @@ if typing.TYPE_CHECKING:
         def decompress(self, data: bytes, max_length: int = ...) -> bytes:
             raise NotImplementedError
 
+
 if sys.version_info >= (3, 14):
     _DEFAULT_COMPRESS_TYPE = shard.GatewayCompression.TRANSPORT_ZSTD_STREAM
 else:
@@ -368,8 +369,6 @@ class _GatewayZlibStreamTransport(_GatewayTransport):
             return self._inflator.decompress(buff)
 
         self._handle_other_message(message)  # type: ignore[arg-type]
-
-
 
 
 class _GatewayZstdStreamTransport(_GatewayTransport):

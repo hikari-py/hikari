@@ -210,6 +210,63 @@ class TestReactorIterator:
         mock_request.assert_awaited_once_with(compiled_route=expected_route, query={"limit": "100", "type": "1"})
 
 
+class TestAuditLogIterator:
+    @pytest.mark.asyncio
+    async def test_aiter_when_before(self):
+        expected_route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=123)
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(
+            side_effect=[
+                {"audit_log_entries": [{"id": "1000"}, {"id": "99"}, {"id": "100"}]},
+                {"audit_log_entries": [{"id": "50"}]},
+                {"audit_log_entries": []},
+            ]
+        )
+        iterator = special_endpoints.AuditLogIterator(mock_entity_factory, mock_request, 123)
+
+        result = await iterator
+
+        assert result == [mock_entity_factory.deserialize_audit_log.return_value] * 2
+        mock_request.assert_has_awaits(
+            [
+                mock.call(compiled_route=expected_route, query={"limit": "100"}),
+                # Entry IDs must be compared numerically, not lexicographically ("99" > "100" as strings).
+                mock.call(compiled_route=expected_route, query={"limit": "100", "before": "99"}),
+                mock.call(compiled_route=expected_route, query={"limit": "100", "before": "50"}),
+            ]
+        )
+
+    @pytest.mark.asyncio
+    async def test_aiter_when_after(self):
+        expected_route = routes.GET_GUILD_AUDIT_LOGS.compile(guild=123)
+        mock_entity_factory = mock.Mock()
+        mock_request = mock.AsyncMock(
+            side_effect=[
+                {"audit_log_entries": [{"id": "99"}, {"id": "1000"}, {"id": "100"}]},
+                {"audit_log_entries": [{"id": "2000"}]},
+                {"audit_log_entries": []},
+            ]
+        )
+        iterator = special_endpoints.AuditLogIterator(mock_entity_factory, mock_request, 123, after="0")
+
+        result = await iterator
+
+        assert result == [mock_entity_factory.deserialize_audit_log.return_value] * 2
+        mock_entity_factory.deserialize_audit_log.assert_has_calls(
+            [
+                mock.call({"audit_log_entries": [{"id": "99"}, {"id": "1000"}, {"id": "100"}]}, guild_id=123),
+                mock.call({"audit_log_entries": [{"id": "2000"}]}, guild_id=123),
+            ]
+        )
+        mock_request.assert_has_awaits(
+            [
+                mock.call(compiled_route=expected_route, query={"limit": "100", "after": "0"}),
+                mock.call(compiled_route=expected_route, query={"limit": "100", "after": "1000"}),
+                mock.call(compiled_route=expected_route, query={"limit": "100", "after": "2000"}),
+            ]
+        )
+
+
 class TestOwnGuildIterator:
     @pytest.mark.asyncio
     async def test_aiter(self):
