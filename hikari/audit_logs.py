@@ -36,6 +36,8 @@ __all__: typing.Sequence[str] = (
     "MessageBulkDeleteEntryInfo",
     "MessageDeleteEntryInfo",
     "MessagePinEntryInfo",
+    "VoiceChannelStatusCreateEntryInfo",
+    "VoiceChannelStatusDeleteEntryInfo",
 )
 
 import typing
@@ -498,6 +500,12 @@ class AuditLogEventType(int, enums.Enum):
     HOME_SETTINGS_UPDATE = 191
     """Indicates that guild server guide was updated."""
 
+    VOICE_CHANNEL_STATUS_CREATE = 192
+    """Indicates that a voice channel status was set by a user."""
+
+    VOICE_CHANNEL_STATUS_DELETE = 193
+    """Indicates that a voice channel status was deleted by a user."""
+
 
 @attrs.define(kw_only=True, weakref_slot=False)
 class BaseAuditLogEntryInfo:
@@ -690,6 +698,24 @@ class MemberMoveEntryInfo(MemberDisconnectEntryInfo):
         channel = await self.app.rest.fetch_channel(self.channel_id)
         assert isinstance(channel, channels.GuildVoiceChannel)
         return channel
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class VoiceChannelStatusDeleteEntryInfo(BaseAuditLogEntryInfo):
+    """Extra information for the voice channel status delete entry."""
+
+    channel_id: snowflakes.Snowflake = attrs.field(repr=True)
+    """The channel the voice channel status was deleted from."""
+
+
+@attrs_extensions.with_copy
+@attrs.define(kw_only=True, weakref_slot=False)
+class VoiceChannelStatusCreateEntryInfo(VoiceChannelStatusDeleteEntryInfo):
+    """Extra information for the voice channel status create entry."""
+
+    status: str = attrs.field(repr=True)
+    """The new voice channel status."""
 
 
 @attrs_extensions.with_copy
