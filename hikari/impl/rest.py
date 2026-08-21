@@ -520,6 +520,24 @@ def _to_searchable_snowflake_str(
     return str(int(value))
 
 
+def _serialize_recurrence_rule(rule: scheduled_events.ScheduledEventRecurrenceRule, /) -> data_binding.JSONObject:
+    # count, end and by_year_day are deliberately not serialized as the API
+    # doesn't allow them to be set externally.
+    payload = data_binding.JSONObjectBuilder()
+    payload.put("start", rule.start, conversion=datetime.datetime.isoformat)
+    payload.put("frequency", int(rule.frequency))
+    payload.put("interval", rule.interval)
+    payload["by_weekday"] = [int(day) for day in rule.by_weekday] if rule.by_weekday is not None else None
+    payload["by_n_weekday"] = (
+        [{"n": n_weekday.n, "day": int(n_weekday.day)} for n_weekday in rule.by_n_weekday]
+        if rule.by_n_weekday is not None
+        else None
+    )
+    payload["by_month"] = [int(month) for month in rule.by_month] if rule.by_month is not None else None
+    payload["by_month_day"] = list(rule.by_month_day) if rule.by_month_day is not None else None
+    return payload
+
+
 def _build_prompts(
     prompts: typing.Sequence[special_endpoints.GuildOnboardingPromptBuilder],
 ) -> list[typing.MutableMapping[str, typing.Any]]:
@@ -4980,6 +4998,7 @@ class RESTClientImpl(rest_api.RESTClient):
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: undefined.UndefinedOr[int | scheduled_events.EventPrivacyLevel] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        recurrence_rule: undefined.UndefinedNoneOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> data_binding.JSONObject:
         body = data_binding.JSONObjectBuilder()
@@ -4991,6 +5010,7 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put("description", description)
         body.put("entity_type", entity_type)
         body.put("status", status)
+        body.put("recurrence_rule", recurrence_rule, conversion=_serialize_recurrence_rule)
 
         if image is not undefined.UNDEFINED:
             image_resource = files.ensure_resource(image)
@@ -5017,6 +5037,7 @@ class RESTClientImpl(rest_api.RESTClient):
         description: undefined.UndefinedOr[str] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledExternalEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -5030,6 +5051,7 @@ class RESTClientImpl(rest_api.RESTClient):
             end_time=end_time,
             image=image,
             privacy_level=privacy_level,
+            recurrence_rule=recurrence_rule,
             reason=reason,
         )
         return self._entity_factory.deserialize_scheduled_external_event(response)
@@ -5047,6 +5069,7 @@ class RESTClientImpl(rest_api.RESTClient):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledStageEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -5060,6 +5083,7 @@ class RESTClientImpl(rest_api.RESTClient):
             end_time=end_time,
             image=image,
             privacy_level=privacy_level,
+            recurrence_rule=recurrence_rule,
             reason=reason,
         )
         return self._entity_factory.deserialize_scheduled_stage_event(response)
@@ -5077,6 +5101,7 @@ class RESTClientImpl(rest_api.RESTClient):
         end_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         image: undefined.UndefinedOr[files.Resourceish] = undefined.UNDEFINED,
         privacy_level: int | scheduled_events.EventPrivacyLevel = scheduled_events.EventPrivacyLevel.GUILD_ONLY,
+        recurrence_rule: undefined.UndefinedOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledVoiceEvent:
         route = routes.POST_GUILD_SCHEDULED_EVENT.compile(guild=guild)
@@ -5090,6 +5115,7 @@ class RESTClientImpl(rest_api.RESTClient):
             end_time=end_time,
             image=image,
             privacy_level=privacy_level,
+            recurrence_rule=recurrence_rule,
             reason=reason,
         )
         return self._entity_factory.deserialize_scheduled_voice_event(response)
@@ -5111,6 +5137,7 @@ class RESTClientImpl(rest_api.RESTClient):
         start_time: undefined.UndefinedOr[datetime.datetime] = undefined.UNDEFINED,
         end_time: undefined.UndefinedNoneOr[datetime.datetime] = undefined.UNDEFINED,
         status: undefined.UndefinedOr[int | scheduled_events.ScheduledEventStatus] = undefined.UNDEFINED,
+        recurrence_rule: undefined.UndefinedNoneOr[scheduled_events.ScheduledEventRecurrenceRule] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> scheduled_events.ScheduledEvent:
         route = routes.PATCH_GUILD_SCHEDULED_EVENT.compile(guild=guild, scheduled_event=event)
@@ -5134,6 +5161,7 @@ class RESTClientImpl(rest_api.RESTClient):
             location=location,
             privacy_level=privacy_level,
             status=status,
+            recurrence_rule=recurrence_rule,
             reason=reason,
         )
         return self._entity_factory.deserialize_scheduled_event(response)

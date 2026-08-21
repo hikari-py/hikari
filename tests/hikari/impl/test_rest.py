@@ -557,6 +557,64 @@ class TestTransformEmojiToUrlFormat:
             rest._transform_emoji_to_url_format(emoji, 123)
 
 
+class TestSerializeRecurrenceRule:
+    def test_with_all_settable_fields(self):
+        rule = scheduled_events.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+            frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+            interval=2,
+            by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            by_n_weekday=[
+                scheduled_events.ScheduledEventRecurrenceNWeekday(
+                    n=4, day=scheduled_events.ScheduledEventRecurrenceWeekday.FRIDAY
+                )
+            ],
+            by_month=[scheduled_events.ScheduledEventRecurrenceMonth.JULY],
+            by_month_day=[24],
+        )
+
+        assert rest._serialize_recurrence_rule(rule) == {
+            "start": "2001-01-01T00:00:00+00:00",
+            "frequency": 2,
+            "interval": 2,
+            "by_weekday": [2],
+            "by_n_weekday": [{"n": 4, "day": 4}],
+            "by_month": [7],
+            "by_month_day": [24],
+        }
+
+    def test_with_minimal_fields(self):
+        rule = scheduled_events.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+            frequency=scheduled_events.ScheduledEventRecurrenceFrequency.DAILY,
+        )
+
+        assert rest._serialize_recurrence_rule(rule) == {
+            "start": "2001-01-01T00:00:00+00:00",
+            "frequency": 3,
+            "interval": 1,
+            "by_weekday": None,
+            "by_n_weekday": None,
+            "by_month": None,
+            "by_month_day": None,
+        }
+
+    def test_ignores_fields_which_can_not_be_set_externally(self):
+        rule = scheduled_events.ScheduledEventRecurrenceRule(
+            start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+            frequency=scheduled_events.ScheduledEventRecurrenceFrequency.DAILY,
+            end=datetime.datetime(2002, 1, 1, tzinfo=datetime.timezone.utc),
+            by_year_day=[180],
+            count=10,
+        )
+
+        result = rest._serialize_recurrence_rule(rule)
+
+        assert "end" not in result
+        assert "by_year_day" not in result
+        assert "count" not in result
+
+
 class TestRESTClientImpl:
     def test__init__when_max_retries_over_5(self):
         with pytest.raises(ValueError, match="'max_retries' must be below or equal to 5"):
@@ -7298,6 +7356,11 @@ class TestRESTClientImplAsync:
             end_time=datetime.datetime(2002, 2, 2, 17, 42, 41, 891222, tzinfo=datetime.timezone.utc),
             image="tksksk.txt",
             privacy_level=654134,
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             reason="bye bye",
         )
 
@@ -7315,6 +7378,15 @@ class TestRESTClientImplAsync:
                 "privacy_level": 654134,
                 "scheduled_start_time": "2001-01-01T17:42:41.891222+00:00",
                 "scheduled_end_time": "2002-02-02T17:42:41.891222+00:00",
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="bye bye",
@@ -7519,7 +7591,7 @@ class TestRESTClientImplAsync:
         rest_client._request = mock.AsyncMock(return_value={"id": "494949", "name": "ME222222OW"})
 
         result = await rest_client.edit_scheduled_event(
-            StubModel(345543), StubModel(123321123), channel=None, description=None, end_time=None
+            StubModel(345543), StubModel(123321123), channel=None, description=None, end_time=None, recurrence_rule=None
         )
 
         assert result is rest_client._entity_factory.deserialize_scheduled_event.return_value
@@ -7528,7 +7600,7 @@ class TestRESTClientImplAsync:
         )
         rest_client._request.assert_awaited_once_with(
             expected_route,
-            json={"channel_id": None, "description": None, "scheduled_end_time": None},
+            json={"channel_id": None, "description": None, "scheduled_end_time": None, "recurrence_rule": None},
             reason=undefined.UNDEFINED,
         )
 
