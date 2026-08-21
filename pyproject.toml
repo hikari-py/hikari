@@ -165,6 +165,7 @@ exclude_lines = [
 include = ["hikari", "examples"]
 exclude = [
     "examples/simple_dashboard.py",
+    "examples/voice_message/voice_message.py",
     "**/__init__.py",
     "hikari/internal/enums.py",
     "hikari/internal/fast_protocol.py",

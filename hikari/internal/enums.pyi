@@ -19,6 +19,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# mypy: disable-error-code="misc"
+
 # Enums use a lot of internal voodoo that will not type check nicely, so we
 # skip that module with MyPy and just accept that "here be dragons".
 #
@@ -41,7 +43,7 @@ from hikari.internal import typing_extensions as __typing_backport
 Enum = __enum.Enum
 
 # MyPy started complaining of Flags with no additional flags, so just ignore it here
-class Flag(__enum.IntFlag):  # type: ignore[misc]
+class Flag(__enum.IntFlag):
     def all(self, *flags: __Self) -> bool: ...
     def any(self, *flags: __Self) -> bool: ...
     def difference(self, other: int | __Self) -> __Self: ...

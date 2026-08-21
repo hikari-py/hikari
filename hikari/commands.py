@@ -39,6 +39,7 @@ import typing
 
 import attrs
 
+from hikari import locales
 from hikari import permissions
 from hikari import snowflakes
 from hikari import traits
@@ -50,7 +51,6 @@ if typing.TYPE_CHECKING:
     from hikari import applications
     from hikari import channels
     from hikari import guilds
-    from hikari import locales
 
 
 class CommandType(int, enums.Enum):
@@ -119,7 +119,7 @@ class CommandChoice:
     """The choice's name (inclusively between 1-100 characters)."""
 
     name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
-        eq=False, factory=dict, hash=False, repr=False
+        eq=False, factory=attrs_extensions.dict_factory(dict[locales.Locale | str, str]), hash=False, repr=False
     )
     """A mapping of name localizations for this command choice."""
 
@@ -188,12 +188,12 @@ class CommandOption:
     """
 
     name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
-        eq=False, factory=dict, hash=False, repr=False
+        eq=False, factory=attrs_extensions.dict_factory(dict[locales.Locale | str, str]), hash=False, repr=False
     )
     """A mapping of name localizations for this option."""
 
     description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
-        eq=False, factory=dict, hash=False, repr=False
+        eq=False, factory=attrs_extensions.dict_factory(dict[locales.Locale | str, str]), hash=False, repr=False
     )
     """A mapping of description localizations for this option."""
 

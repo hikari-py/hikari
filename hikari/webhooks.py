@@ -483,7 +483,7 @@ class PartialWebhook(snowflakes.Unique):
     type: WebhookType | int = attrs.field(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
-    name: str = attrs.field(eq=False, hash=False, repr=True)
+    name: str | None = attrs.field(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
     avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)

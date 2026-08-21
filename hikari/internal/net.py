@@ -67,10 +67,10 @@ async def generate_error_response(response: aiohttp.ClientResponse) -> errors.HT
         status = response.status
 
     if 400 <= status < 500:
-        return errors.ClientHTTPResponseError(real_url, status, response.headers, raw_body)
+        return errors.ClientHTTPResponseError(url=real_url, status=status, headers=response.headers, raw_body=raw_body)
     if 500 <= status < 600:
-        return errors.InternalServerError(real_url, status, response.headers, raw_body)
-    return errors.HTTPResponseError(real_url, status, response.headers, raw_body)
+        return errors.InternalServerError(url=real_url, status=status, headers=response.headers, raw_body=raw_body)
+    return errors.HTTPResponseError(url=real_url, status=status, headers=response.headers, raw_body=raw_body)
 
 
 def create_tcp_connector(http_settings: config.HTTPSettings, *, dns_cache: bool | int = True) -> aiohttp.TCPConnector:

@@ -1054,12 +1054,12 @@ class ApplicationRoleConnectionMetadataRecord:
     """The metadata's field description."""
 
     name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
-        eq=False, hash=False, repr=False, factory=dict
+        eq=False, hash=False, repr=False, factory=attrs_extensions.dict_factory(dict[locales.Locale | str, str])
     )
     """A mapping of name localizations for this metadata field."""
 
     description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
-        eq=False, hash=False, repr=False, factory=dict
+        eq=False, hash=False, repr=False, factory=attrs_extensions.dict_factory(dict[locales.Locale | str, str])
     )
     """A mapping of description localizations for this metadata field."""
 

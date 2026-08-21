@@ -197,6 +197,14 @@ def _cdn_valid_formats_converter(values: typing.AbstractSet[str]) -> frozenset[s
     return frozenset(v.upper() for v in values)
 
 
+def _cdn_valid_formats_validator(
+    route: CDNRoute, _: attrs.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]
+) -> None:
+    if not values:
+        msg = f"{route.path_template} must have at least one valid format set"
+        raise ValueError(msg)
+
+
 @attrs_extensions.with_copy
 @attrs.define(unsafe_hash=True, weakref_slot=False)
 @typing.final
@@ -207,15 +215,9 @@ class CDNRoute:
     """Template string for this endpoint."""
 
     valid_formats: typing.AbstractSet[str] = attrs.field(
-        converter=_cdn_valid_formats_converter, eq=False, hash=False, repr=False
+        converter=_cdn_valid_formats_converter, validator=_cdn_valid_formats_validator, eq=False, hash=False, repr=False
     )
     """Valid file formats for this endpoint."""
-
-    @valid_formats.validator
-    def _(self, _: attrs.Attribute[typing.AbstractSet[str]], values: typing.AbstractSet[str]) -> None:
-        if not values:
-            msg = f"{self.path_template} must have at least one valid format set"
-            raise ValueError(msg)
 
     def compile(
         self,

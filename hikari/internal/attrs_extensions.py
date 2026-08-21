@@ -25,8 +25,10 @@ from __future__ import annotations
 __all__: typing.Sequence[str] = (
     "copy_attrs",
     "deep_copy_attrs",
+    "dict_factory",
     "invalidate_deep_copy_cache",
     "invalidate_shallow_copy_cache",
+    "list_factory",
     "with_copy",
 )
 
@@ -37,6 +39,9 @@ import typing
 import attrs
 
 ModelT = typing.TypeVar("ModelT", bound=attrs.AttrsInstance)
+_T = typing.TypeVar("_T")
+_KeyT = typing.TypeVar("_KeyT")
+_ValueT = typing.TypeVar("_ValueT")
 SKIP_DEEP_COPY: typing.Final[str] = "skip_deep_copy"
 
 _DEEP_COPIERS: typing.MutableMapping[
@@ -44,6 +49,41 @@ _DEEP_COPIERS: typing.MutableMapping[
 ] = {}
 _SHALLOW_COPIERS: typing.MutableMapping[typing.Any, typing.Callable[[typing.Any], typing.Any]] = {}
 _LOGGER = logging.getLogger("hikari.models")
+
+
+def list_factory(type_: type[list[_T]], /) -> typing.Callable[[], list[_T]]:  # noqa: ARG001 - Only used for typing
+    """Return a correctly typed, zero-overhead list factory for an attrs field.
+
+    Parameters
+    ----------
+    type_
+        The parameterized list type to build a factory for.
+
+    Returns
+    -------
+    typing.Callable[[], list[_T]]
+        The [`list`][] constructor, typed for the given parameterization.
+    """
+    return list
+
+
+def dict_factory(
+    type_: type[dict[_KeyT, _ValueT]],  # noqa: ARG001 - Only used for typing
+    /,
+) -> typing.Callable[[], dict[_KeyT, _ValueT]]:
+    """Return a correctly typed, zero-overhead dict factory for an attrs field.
+
+    Parameters
+    ----------
+    type_
+        The parameterized dict type to build a factory for.
+
+    Returns
+    -------
+    typing.Callable[[], dict[_KeyT, _ValueT]]
+        The [`dict`][] constructor, typed for the given parameterization.
+    """
+    return dict
 
 
 def invalidate_shallow_copy_cache() -> None:

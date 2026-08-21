@@ -206,7 +206,7 @@ def init_logging(
             logging.basicConfig(level=flavor, stream=sys.stdout)
             handler = logging.root.handlers[0]
             handler.setFormatter(
-                colorlog.formatter.ColoredFormatter(
+                colorlog.ColoredFormatter(
                     fmt=(
                         "%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s "  # Logging level
                         "%(asctime)23.23s "  # Date and time

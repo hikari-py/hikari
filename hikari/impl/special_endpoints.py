@@ -236,7 +236,10 @@ class ChannelRepositioner(special_endpoints.ChannelRepositioner):
     _guild: snowflakes.SnowflakeishOr[guilds.PartialGuild] = attrs.field(repr=True, alias="guild")
     _request_call: _RequestCallSig = attrs.field(alias="request_call", metadata={attrs_extensions.SKIP_DEEP_COPY: True})
     _positions: list[special_endpoints.RepositionedChannel] = attrs.field(
-        repr=True, alias="positions", factory=list, init=False
+        repr=True,
+        alias="positions",
+        factory=attrs_extensions.list_factory(list[special_endpoints.RepositionedChannel]),
+        init=False,
     )
     _reason: undefined.UndefinedOr[str] = attrs.field(alias="reason", repr=True, default=undefined.UNDEFINED)
 
@@ -983,7 +986,10 @@ class GuildOnboardingPromptBuilder(special_endpoints.GuildOnboardingPromptBuilde
     _single_select: bool = attrs.field(alias="single_select")
     _required: bool = attrs.field(alias="required")
     _in_onboarding: bool = attrs.field(alias="in_onboarding")
-    _options: list[special_endpoints.GuildOnboardingPromptOptionBuilder] = attrs.field(alias="options", factory=list)
+    _options: list[special_endpoints.GuildOnboardingPromptOptionBuilder] = attrs.field(
+        alias="options",
+        factory=attrs_extensions.list_factory(list[special_endpoints.GuildOnboardingPromptOptionBuilder]),
+    )
     _id: undefined.UndefinedOr[snowflakes.SnowflakeishOr[guilds.GuildOnboardingPrompt]] = attrs.field(
         alias="id",
         default=undefined.UNDEFINED,
@@ -1361,7 +1367,7 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
     ) -> tuple[
         typing.Sequence[typing.MutableMapping[str, typing.Any]], typing.Sequence[files.Resource[files.AsyncReader]]
     ]:
-        components = []
+        components: list[typing.MutableMapping[str, typing.Any]] = []
         attachments: list[files.Resource[files.AsyncReader]] = []
         if self._components:
             for component in self._components:
@@ -1382,9 +1388,9 @@ class InteractionMessageBuilder(special_endpoints.InteractionMessageBuilder):
         data = data_binding.JSONObjectBuilder()
         data.put("content", self.content)
 
-        final_attachments = []
+        final_attachments: list[files.Resource[files.AsyncReader]] = []
         if self._attachments:
-            attachments_payload = []
+            attachments_payload: list[typing.MutableMapping[str, typing.Any]] = []
 
             for f in self._attachments:
                 if isinstance(f, messages.Attachment):
@@ -1438,7 +1444,9 @@ class InteractionModalBuilder(special_endpoints.InteractionModalBuilder):
 
     _title: str = attrs.field(alias="title")
     _custom_id: str = attrs.field(alias="custom_id")
-    _components: list[special_endpoints.ComponentBuilder] = attrs.field(alias="components", factory=list)
+    _components: list[special_endpoints.ComponentBuilder] = attrs.field(
+        alias="components", factory=attrs_extensions.list_factory(list[special_endpoints.ComponentBuilder])
+    )
 
     @property
     @typing_extensions.override
@@ -1504,7 +1512,7 @@ class CommandBuilder(special_endpoints.CommandBuilder, abc.ABC):
     _is_nsfw: undefined.UndefinedOr[bool] = attrs.field(alias="is_nsfw", default=undefined.UNDEFINED, kw_only=True)
 
     _name_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
-        alias="name_localizations", factory=dict, kw_only=True
+        alias="name_localizations", factory=attrs_extensions.dict_factory(dict[locales.Locale | str, str]), kw_only=True
     )
 
     _integration_types: undefined.UndefinedOr[typing.Sequence[applications.ApplicationIntegrationType]] = attrs.field(
@@ -1616,9 +1624,13 @@ class SlashCommandBuilder(CommandBuilder, special_endpoints.SlashCommandBuilder)
     """Builder class for slash commands."""
 
     _description: str = attrs.field(alias="description")
-    _options: list[commands.CommandOption] = attrs.field(alias="options", factory=list, kw_only=True)
+    _options: list[commands.CommandOption] = attrs.field(
+        alias="options", factory=attrs_extensions.list_factory(list[commands.CommandOption]), kw_only=True
+    )
     _description_localizations: typing.Mapping[locales.Locale | str, str] = attrs.field(
-        alias="description_localizations", factory=dict, kw_only=True
+        alias="description_localizations",
+        factory=attrs_extensions.dict_factory(dict[locales.Locale | str, str]),
+        kw_only=True,
     )
 
     @property
@@ -2208,7 +2220,9 @@ class TextSelectMenuBuilder(SelectMenuBuilder, special_endpoints.TextSelectMenuB
 class ChannelSelectMenuBuilder(SelectMenuBuilder, special_endpoints.ChannelSelectMenuBuilder):
     """Builder class for channel select menus."""
 
-    _channel_types: typing.Sequence[channels.ChannelType] = attrs.field(alias="channel_types", factory=list)
+    _channel_types: typing.Sequence[channels.ChannelType] = attrs.field(
+        alias="channel_types", factory=attrs_extensions.list_factory(list[channels.ChannelType])
+    )
     _type: typing.Literal[component_models.ComponentType.CHANNEL_SELECT_MENU] = attrs.field(
         default=component_models.ComponentType.CHANNEL_SELECT_MENU, init=False
     )
@@ -2367,7 +2381,8 @@ class MessageActionRowBuilder(special_endpoints.MessageActionRowBuilder):
 
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
     _components: list[special_endpoints.MessageActionRowBuilderComponentsT] = attrs.field(
-        alias="components", factory=list
+        alias="components",
+        factory=attrs_extensions.list_factory(list[special_endpoints.MessageActionRowBuilderComponentsT]),
     )
     _stored_type: int | None = attrs.field(default=None, init=False)
 
@@ -2535,7 +2550,8 @@ class ModalActionRowBuilder(special_endpoints.ModalActionRowBuilder):
 
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
     _components: list[special_endpoints.ModalActionRowBuilderComponentsT] = attrs.field(
-        alias="components", factory=list
+        alias="components",
+        factory=attrs_extensions.list_factory(list[special_endpoints.ModalActionRowBuilderComponentsT]),
     )
     _stored_type: int | None = attrs.field(init=False, default=None)
 
@@ -2623,7 +2639,9 @@ class SectionComponentBuilder(special_endpoints.SectionComponentBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.SectionComponentBuilder`][]."""
 
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
-    _components: list[special_endpoints.SectionBuilderComponentsT] = attrs.field(alias="components", factory=list)
+    _components: list[special_endpoints.SectionBuilderComponentsT] = attrs.field(
+        alias="components", factory=attrs_extensions.list_factory(list[special_endpoints.SectionBuilderComponentsT])
+    )
     _accessory: special_endpoints.SectionBuilderAccessoriesT = attrs.field(alias="accessory")
 
     @property
@@ -2772,7 +2790,9 @@ class MediaGalleryComponentBuilder(special_endpoints.MediaGalleryComponentBuilde
     """Standard implementation of [`hikari.api.special_endpoints.MediaGalleryComponentBuilder`][]."""
 
     _id: undefined.UndefinedOr[int] = attrs.field(alias="id", default=undefined.UNDEFINED)
-    _items: list[special_endpoints.MediaGalleryItemBuilder] = attrs.field(alias="items", factory=list)
+    _items: list[special_endpoints.MediaGalleryItemBuilder] = attrs.field(
+        alias="items", factory=attrs_extensions.list_factory(list[special_endpoints.MediaGalleryItemBuilder])
+    )
 
     @property
     @typing_extensions.override
@@ -2955,7 +2975,9 @@ class ContainerComponentBuilder(special_endpoints.ContainerComponentBuilder):
     _accent_color: undefined.UndefinedOr[colors.Color] = attrs.field(alias="accent_color", default=undefined.UNDEFINED)
     _spoiler: bool = attrs.field(alias="spoiler", default=False)
 
-    _components: list[special_endpoints.ContainerBuilderComponentsT] = attrs.field(alias="components", factory=list)
+    _components: list[special_endpoints.ContainerBuilderComponentsT] = attrs.field(
+        alias="components", factory=attrs_extensions.list_factory(list[special_endpoints.ContainerBuilderComponentsT])
+    )
 
     @property
     @typing_extensions.override
@@ -3062,7 +3084,9 @@ class PollBuilder(special_endpoints.PollBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.PollBuilder`][]."""
 
     _question_text: str = attrs.field(alias="question_text")
-    _answers: list[special_endpoints.PollAnswerBuilder] = attrs.field(alias="answers", factory=list)
+    _answers: list[special_endpoints.PollAnswerBuilder] = attrs.field(
+        alias="answers", factory=attrs_extensions.list_factory(list[special_endpoints.PollAnswerBuilder])
+    )
     _duration: undefined.UndefinedOr[int] = attrs.field(alias="duration", default=undefined.UNDEFINED)
     _allow_multiselect: bool = attrs.field(alias="allow_multiselect")
     _layout_type: undefined.UndefinedOr[polls.PollLayoutType] = attrs.field(
@@ -3234,11 +3258,11 @@ class AutoModBlockMemberInteractionActionBuilder(special_endpoints.AutoModBlockM
 class AutoModKeywordTriggerBuilder(special_endpoints.AutoModKeywordTriggerBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.AutoModKeywordTriggerBuilder`][]."""
 
-    _keyword_filter: list[str] = attrs.field(alias="keyword_filter", factory=list)
+    _keyword_filter: list[str] = attrs.field(alias="keyword_filter", factory=attrs_extensions.list_factory(list[str]))
 
-    _regex_patterns: list[str] = attrs.field(alias="regex_patterns", factory=list)
+    _regex_patterns: list[str] = attrs.field(alias="regex_patterns", factory=attrs_extensions.list_factory(list[str]))
 
-    _allow_list: list[str] = attrs.field(alias="allow_list", factory=list)
+    _allow_list: list[str] = attrs.field(alias="allow_list", factory=attrs_extensions.list_factory(list[str]))
 
     @property
     @typing_extensions.override
@@ -3287,9 +3311,11 @@ class AutoModSpamTriggerBuilder(special_endpoints.AutoModSpamTriggerBuilder):
 class AutoModKeywordPresetTriggerBuilder(special_endpoints.AutoModKeywordPresetTriggerBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.AutoModKeywordPresetTriggerBuilder`][]."""
 
-    _presets: list[auto_mod.AutoModKeywordPresetType] = attrs.field(alias="presets", factory=list)
+    _presets: list[auto_mod.AutoModKeywordPresetType] = attrs.field(
+        alias="presets", factory=attrs_extensions.list_factory(list[auto_mod.AutoModKeywordPresetType])
+    )
 
-    _allow_list: list[str] = attrs.field(alias="allow_list", factory=list)
+    _allow_list: list[str] = attrs.field(alias="allow_list", factory=attrs_extensions.list_factory(list[str]))
 
     @property
     @typing_extensions.override
@@ -3346,11 +3372,11 @@ class AutoModMentionSpamTriggerBuilder(special_endpoints.AutoModMentionSpamTrigg
 class AutoModMemberProfileTriggerBuilder(special_endpoints.AutoModMemberProfileTriggerBuilder):
     """Standard implementation of [`hikari.api.special_endpoints.AutoModMemberProfileTriggerBuilder`][]."""
 
-    _keyword_filter: list[str] = attrs.field(alias="keyword_filter", factory=list)
+    _keyword_filter: list[str] = attrs.field(alias="keyword_filter", factory=attrs_extensions.list_factory(list[str]))
 
-    _regex_patterns: list[str] = attrs.field(alias="regex_patterns", factory=list)
+    _regex_patterns: list[str] = attrs.field(alias="regex_patterns", factory=attrs_extensions.list_factory(list[str]))
 
-    _allow_list: list[str] = attrs.field(alias="allow_list", factory=list)
+    _allow_list: list[str] = attrs.field(alias="allow_list", factory=attrs_extensions.list_factory(list[str]))
 
     @property
     @typing_extensions.override

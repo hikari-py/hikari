@@ -114,10 +114,10 @@ class All(typing.Generic[ValueT]):
     def __invert__(self) -> typing.Callable[[ValueT], bool]:
         return lambda item: not self(item)
 
-    def __or__(self, other: object) -> All[ValueT]:
-        if not isinstance(other, All):
-            msg = f"unsupported operand type(s) for |: {type(self).__name__!r} and {type(other).__name__!r}"
-            raise TypeError(msg)
+    def __or__(self, other: All[ValueT]) -> All[ValueT]:
+        if not isinstance(other, All):  # pyright: ignore[reportUnnecessaryIsInstance]
+            # https://docs.python.org/3/library/constants.html#NotImplemented
+            return NotImplemented
 
         return All((self, other))
 
@@ -683,15 +683,15 @@ class LazyIterator(abc.ABC, typing.Generic[ValueT]):
         conditions: list[typing.Callable[[ValueT], bool]] = []
 
         for p in predicates:
-            if isinstance(p, tuple):
+            if callable(p):
+                conditions.append(p)
+            elif isinstance(p, tuple):
                 name, value = p
                 tuple_comparator: AttrComparator[ValueT] = AttrComparator(name, value)
                 conditions.append(tuple_comparator)
-            elif isinstance(p, str):
+            else:
                 comparator: AttrComparator[ValueT] = AttrComparator(p, True, bool)
                 conditions.append(comparator)
-            else:
-                conditions.append(p)
 
         for name, value in attrs.items():
             attr_comparator: AttrComparator[ValueT] = AttrComparator(name, value)

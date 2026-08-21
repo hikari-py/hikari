@@ -129,7 +129,7 @@ class TestInitLogging:
         handler = mock.Mock()
         logging_basic_config = mock.Mock()
         stack.enter_context(mock.patch.object(logging, "basicConfig", new=_basicConfig))
-        colored_formatter = stack.enter_context(mock.patch.object(colorlog.formatter, "ColoredFormatter"))
+        colored_formatter = stack.enter_context(mock.patch.object(colorlog, "ColoredFormatter"))
         supports_color = stack.enter_context(mock.patch.object(ux, "supports_color", return_value=True))
 
         with stack:

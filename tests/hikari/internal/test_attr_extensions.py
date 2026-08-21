@@ -29,6 +29,42 @@ import mock
 from hikari.internal import attrs_extensions
 
 
+def test_list_factory():
+    factory = attrs_extensions.list_factory(list[int])
+
+    assert factory is list
+
+
+def test_list_factory_returns_distinct_instances():
+    @attrs.define()
+    class StubModel:
+        values: list[int] = attrs.field(factory=attrs_extensions.list_factory(list[int]))
+
+    model = StubModel()
+    other_model = StubModel()
+
+    assert model.values == []
+    assert model.values is not other_model.values
+
+
+def test_dict_factory():
+    factory = attrs_extensions.dict_factory(dict[str, int])
+
+    assert factory is dict
+
+
+def test_dict_factory_returns_distinct_instances():
+    @attrs.define()
+    class StubModel:
+        mapping: dict[str, int] = attrs.field(factory=attrs_extensions.dict_factory(dict[str, int]))
+
+    model = StubModel()
+    other_model = StubModel()
+
+    assert model.mapping == {}
+    assert model.mapping is not other_model.mapping
+
+
 def test_invalidate_shallow_copy_cache():
     attrs_extensions._SHALLOW_COPIERS = {int: object(), str: object()}
     assert attrs_extensions.invalidate_shallow_copy_cache() is None

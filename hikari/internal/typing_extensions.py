@@ -22,9 +22,10 @@
 
 from __future__ import annotations
 
+import sys
 import typing
 
-if hasattr(typing, "override"):  # 3.12+
+if sys.version_info >= (3, 12):  # 3.12+
     override = typing.override
 else:  # <=3.11
     _F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])

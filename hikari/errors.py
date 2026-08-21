@@ -415,6 +415,14 @@ class NotFoundError(ClientHTTPResponseError):
     """The HTTP status code for the response."""
 
 
+def _default_ratelimit_too_long_error_message(error: RateLimitTooLongError) -> str:
+    return (
+        "The request has been rejected, as you would be waiting for more than "
+        f"the max retry-after ({error.max_retry_after}) on route '{error.route}' "
+        f"[is_global={error.is_global}]"
+    )
+
+
 @attrs.define(auto_exc=True, kw_only=True, repr=False, slots=False)
 class RateLimitTooLongError(HTTPError):
     """Internal error raised if the wait for a rate limit is too long.
@@ -449,16 +457,10 @@ class RateLimitTooLongError(HTTPError):
     period: float | None = attrs.field()
     """How long the rate limit window lasts for from start to end, if known."""
 
-    message: str = attrs.field(init=False)
+    message: str = attrs.field(
+        init=False, default=attrs.Factory(_default_ratelimit_too_long_error_message, takes_self=True)
+    )
     """The error message."""
-
-    @message.default
-    def _(self) -> str:
-        return (
-            "The request has been rejected, as you would be waiting for more than "
-            f"the max retry-after ({self.max_retry_after}) on route '{self.route}' "
-            f"[is_global={self.is_global}]"
-        )
 
     # This may support other types of limits in the future, this currently
     # exists to be self-documenting to the user and for future compatibility

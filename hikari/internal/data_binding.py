@@ -106,20 +106,22 @@ default_json_loads: JSONDecoder
 try:
     import orjson
 
-    def default_json_dumps(obj: JSONArray | JSONObject) -> bytes:
+    def _orjson_dumps(obj: JSONArray | JSONObject) -> bytes:
         """Encode a JSON object to [`bytes`][]."""
         return orjson.dumps(obj, option=orjson.OPT_NON_STR_KEYS)
 
+    default_json_dumps = _orjson_dumps
     default_json_loads = orjson.loads
 except ModuleNotFoundError:
     import json
 
     _json_separators = (",", ":")
 
-    def default_json_dumps(obj: JSONArray | JSONObject) -> bytes:
+    def _default_json_dumps(obj: JSONArray | JSONObject) -> bytes:
         """Encode a JSON object to [`bytes`][]."""
         return json.dumps(obj, separators=_json_separators).encode(_UTF_8)
 
+    default_json_dumps = _default_json_dumps
     default_json_loads = json.loads
 
 

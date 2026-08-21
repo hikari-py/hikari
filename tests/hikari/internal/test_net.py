@@ -64,7 +64,9 @@ async def test_generate_error_response(status_, expected_error):
             "https://some.url", {}, '{"message": "raw message", "code": 123}', "raw message", 123
         )
     else:
-        error.assert_called_once_with("https://some.url", status_, {}, '{"message": "raw message", "code": 123}')
+        error.assert_called_once_with(
+            url="https://some.url", status=status_, headers={}, raw_body='{"message": "raw message", "code": 123}'
+        )
 
     assert returned is error()
 
@@ -107,7 +109,9 @@ async def test_generate_error_response_with_non_conforming_status_code(status_, 
     with mock.patch.object(errors, expected_error) as error:
         returned = await net.generate_error_response(StubResponse())
 
-    error.assert_called_once_with("https://some.url", status_, {}, '{"message": "raw message", "code": 123}')
+    error.assert_called_once_with(
+        url="https://some.url", status=status_, headers={}, raw_body='{"message": "raw message", "code": 123}'
+    )
 
     assert returned is error()
 

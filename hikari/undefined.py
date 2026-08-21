@@ -78,7 +78,7 @@ UNDEFINED = UndefinedType()
 """A sentinel singleton that denotes a missing or omitted value."""
 
 
-def _forbidden_new(cls: UndefinedType) -> typing.NoReturn:  # noqa: ARG001 - Unused arguments
+def _forbidden_new(cls: type[UndefinedType]) -> typing.NoReturn:  # noqa: ARG001 - Unused arguments
     msg = "Cannot initialize multiple instances of singleton UNDEFINED"
     raise TypeError(msg)  # pragma: nocover
 
