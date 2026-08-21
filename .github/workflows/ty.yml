@@ -24,18 +24,15 @@ jobs:
           uv sync --frozen --only-group nox
 
       - name: Ty
-        # Ty is not stable yet, so this job is informational and must never
-        # block a pull request; see the step summary for the full output.
-        continue-on-error: true
         run: |
+          set -o pipefail
           nox -s ty 2>&1 | tee ty-output.log
 
       - name: Report
+        if: always() && !cancelled()
         run: |
           {
             echo "### ty results"
-            echo
-            echo "ty has not reached 1.0 yet, so this check is informational only and never blocks the pull request."
             echo
             echo '```'
             cat ty-output.log
