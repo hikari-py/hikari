@@ -483,7 +483,7 @@ class PartialWebhook(snowflakes.Unique):
     type: WebhookType | int = attrs.field(eq=False, hash=False, repr=True)
     """The type of the webhook."""
 
-    name: str | None = attrs.field(eq=False, hash=False, repr=True)
+    name: str = attrs.field(eq=False, hash=False, repr=True)
     """The name of the webhook."""
 
     avatar_hash: str | None = attrs.field(eq=False, hash=False, repr=False)
@@ -494,7 +494,7 @@ class PartialWebhook(snowflakes.Unique):
 
     @typing_extensions.override
     def __str__(self) -> str:
-        return self.name if self.name is not None else f"Unnamed webhook ID {self.id}"
+        return self.name
 
     @property
     def mention(self) -> str:
