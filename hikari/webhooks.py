@@ -494,7 +494,7 @@ class PartialWebhook(snowflakes.Unique):
 
     @typing_extensions.override
     def __str__(self) -> str:
-        return self.name
+        return self.name if self.name != "" else f"Unnamed webhook ID {self.id}"
 
     @property
     def mention(self) -> str:
