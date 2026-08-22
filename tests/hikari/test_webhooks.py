@@ -215,6 +215,10 @@ class TestPartialWebhook:
     def test_str(self, webhook):
         assert str(webhook) == "not a webhook"
 
+    def test_str_when_name_is_None(self, webhook):
+        webhook.name = ""
+        assert str(webhook) == "Unnamed webhook ID 987654321"
+
     def test_mention_property(self, webhook):
         assert webhook.mention == "<@987654321>"
 

@@ -8356,10 +8356,12 @@ class TestEntityFactoryImpl:
         del incoming_webhook_payload["token"]
         del incoming_webhook_payload["application_id"]
         incoming_webhook_payload["avatar"] = None
+        incoming_webhook_payload["name"] = None
 
         webhook = entity_factory_impl.deserialize_incoming_webhook(incoming_webhook_payload)
 
-        assert webhook.name == "test webhook"
+        assert str(webhook) == "Unnamed webhook ID 223704706495545344"
+        assert webhook.name == ""
         assert webhook.type is webhook_models.WebhookType.INCOMING
         assert webhook.channel_id == 199737254929760256
         assert webhook.token is None
