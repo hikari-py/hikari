@@ -435,6 +435,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        hikari.errors.BadRequestError
+            If the provided status is longer than 500 characters.
         hikari.errors.ForbiddenError
             If you are missing the [`hikari.permissions.Permissions.SET_VOICE_CHANNEL_STATUS`][]
             permission, or the [`hikari.permissions.Permissions.MANAGE_CHANNELS`][] permission

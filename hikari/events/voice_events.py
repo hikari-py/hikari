@@ -146,6 +146,7 @@ class VoiceServerUpdateEvent(VoiceEvent):
         return f"wss://{self.raw_endpoint}"
 
 
+@base_events.requires_intents(intents.Intents.GUILDS)
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class VoiceChannelStartTimeUpdateEvent(VoiceEvent):
@@ -173,6 +174,7 @@ class VoiceChannelStartTimeUpdateEvent(VoiceEvent):
     """
 
 
+@base_events.requires_intents(intents.Intents.GUILDS)
 @attrs_extensions.with_copy
 @attrs.define(kw_only=True, weakref_slot=False)
 class VoiceChannelStatusUpdateEvent(VoiceEvent):
