@@ -7426,6 +7426,20 @@ class TestEntityFactoryImpl:
         assert result.members == [entity_factory_impl.deserialize_thread_member(thread_member_payload)]
         assert isinstance(result, message_models.MessageSearchResult)
 
+    def test_deserialize_message_search_result_skips_unknown_thread_type(
+        self, entity_factory_impl, guild_public_thread_payload
+    ):
+        payload = {
+            "doing_deep_historical_index": False,
+            "total_results": 0,
+            "messages": [],
+            "threads": [{"type": -99999}, guild_public_thread_payload],
+        }
+
+        result = entity_factory_impl.deserialize_message_search_result(payload)
+
+        assert result.threads == [entity_factory_impl.deserialize_guild_thread(guild_public_thread_payload)]
+
     def test_deserialize_message_search_result_without_optional_fields(self, entity_factory_impl):
         payload = {"doing_deep_historical_index": False, "total_results": 0, "messages": []}
 

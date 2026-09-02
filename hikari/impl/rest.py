@@ -3825,12 +3825,6 @@ class RESTClientImpl(rest_api.RESTClient):
         sort_order: undefined.UndefinedOr[messages_.MessageSearchSortOrder] = undefined.UNDEFINED,
         include_nsfw: undefined.UndefinedOr[bool] = undefined.UNDEFINED,
     ) -> messages_.MessageSearchResult:
-        if isinstance(max_id, datetime.datetime):
-            max_id = snowflakes.Snowflake.from_datetime(max_id)
-
-        if isinstance(min_id, datetime.datetime):
-            min_id = snowflakes.Snowflake.from_datetime(min_id)
-
         route = routes.GET_GUILD_MESSAGES_SEARCH.compile(guild=guild)
         query = data_binding.StringMapBuilder()
         query.put("content", content)
@@ -3843,11 +3837,8 @@ class RESTClientImpl(rest_api.RESTClient):
         query.put("sort_order", sort_order)
         query.put("include_nsfw", include_nsfw)
 
-        if max_id is not undefined.UNDEFINED:
-            query.put("max_id", str(int(max_id)))
-
-        if min_id is not undefined.UNDEFINED:
-            query.put("min_id", str(int(min_id)))
+        query.put("max_id", _to_searchable_snowflake_str(max_id))
+        query.put("min_id", _to_searchable_snowflake_str(min_id))
 
         snowflake_arrays: tuple[tuple[str, undefined.UndefinedOr[snowflakes.SnowflakeishSequence[typing.Any]]], ...] = (
             ("channel_id", channels),
