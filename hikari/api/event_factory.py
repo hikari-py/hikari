@@ -1297,6 +1297,25 @@ class EventFactory(abc.ABC):
             The parsed channel info event object.
         """
 
+    @abc.abstractmethod
+    def deserialize_rate_limited_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> shard_events.ShardRateLimitedEvent:
+        """Parse a raw payload from Discord into a shard rate limited event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.shard_events.ShardRateLimitedEvent
+            The parsed shard rate limited event object.
+        """
+
     ###############
     # USER EVENTS #
     ###############

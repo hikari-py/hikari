@@ -1492,6 +1492,44 @@ class TestEventFactoryImpl:
             5513123: shard_events.ChannelInfo(channel_id=5513123, status=None, voice_start_time=None)
         }
 
+    def test_deserialize_rate_limited_event(self, event_factory, mock_app, mock_shard):
+        mock_payload = {
+            "opcode": 8,
+            "retry_after": 12.5,
+            "meta": {"guild_id": "54123123", "nonce": "o7to8L2QRhCsmMokZLDsMg=="},
+        }
+
+        event = event_factory.deserialize_rate_limited_event(mock_shard, mock_payload)
+
+        assert isinstance(event, shard_events.RequestGuildMembersRateLimitedEvent)
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.opcode == 8
+        assert event.retry_after == 12.5
+        assert event.meta == {"guild_id": "54123123", "nonce": "o7to8L2QRhCsmMokZLDsMg=="}
+        assert event.guild_id == 54123123
+        assert event.nonce == "o7to8L2QRhCsmMokZLDsMg=="
+
+    def test_deserialize_rate_limited_event_without_nonce(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"opcode": 8, "retry_after": 12.5, "meta": {"guild_id": "54123123"}}
+
+        event = event_factory.deserialize_rate_limited_event(mock_shard, mock_payload)
+
+        assert isinstance(event, shard_events.RequestGuildMembersRateLimitedEvent)
+        assert event.nonce is None
+
+    def test_deserialize_rate_limited_event_with_unknown_opcode(self, event_factory, mock_app, mock_shard):
+        mock_payload = {"opcode": 43, "retry_after": 3.5, "meta": {"something": "else"}}
+
+        event = event_factory.deserialize_rate_limited_event(mock_shard, mock_payload)
+
+        assert type(event) is shard_events.ShardRateLimitedEvent
+        assert event.app is mock_app
+        assert event.shard is mock_shard
+        assert event.opcode == 43
+        assert event.retry_after == 3.5
+        assert event.meta == {"something": "else"}
+
     ###############
     # USER EVENTS #
     ###############
