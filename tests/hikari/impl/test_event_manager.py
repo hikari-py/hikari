@@ -1609,6 +1609,36 @@ class TestEventManagerImpl:
             event_factory.deserialize_audit_log_entry_create_event.return_value
         )
 
+    def test_on_subscription_create(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {}
+
+        stateless_event_manager_impl.on_subscription_create(shard, payload)
+
+        event_factory.deserialize_subscription_create_event.assert_called_once_with(shard, payload)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_subscription_create_event.return_value
+        )
+
+    def test_on_subscription_update(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {}
+
+        stateless_event_manager_impl.on_subscription_update(shard, payload)
+
+        event_factory.deserialize_subscription_update_event.assert_called_once_with(shard, payload)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_subscription_update_event.return_value
+        )
+
+    def test_on_subscription_delete(self, stateless_event_manager_impl, shard, event_factory):
+        payload = {}
+
+        stateless_event_manager_impl.on_subscription_delete(shard, payload)
+
+        event_factory.deserialize_subscription_delete_event.assert_called_once_with(shard, payload)
+        stateless_event_manager_impl.dispatch.assert_called_once_with(
+            event_factory.deserialize_subscription_delete_event.return_value
+        )
+
     def test_on_stage_instance_create(
         self,
         event_manager_impl: event_manager.EventManagerImpl,

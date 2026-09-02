@@ -1549,6 +1549,63 @@ class EventFactory(abc.ABC):
             The parsed entitlement update event object.
         """
 
+    @abc.abstractmethod
+    def deserialize_subscription_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.SubscriptionCreateEvent:
+        """Parse a raw payload from Discord into a subscription create event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.monetization_events.SubscriptionCreateEvent
+            The parsed subscription create event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_subscription_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.SubscriptionUpdateEvent:
+        """Parse a raw payload from Discord into a subscription update event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.monetization_events.SubscriptionUpdateEvent
+            The parsed subscription update event object.
+        """
+
+    @abc.abstractmethod
+    def deserialize_subscription_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.SubscriptionDeleteEvent:
+        """Parse a raw payload from Discord into a subscription delete event object.
+
+        Parameters
+        ----------
+        shard
+            The shard that emitted this event.
+        payload
+            The dict payload to parse.
+
+        Returns
+        -------
+        hikari.events.monetization_events.SubscriptionDeleteEvent
+            The parsed subscription delete event object.
+        """
+
     #########################
     # STAGE INSTANCE EVENTS #
     #########################

@@ -1108,6 +1108,30 @@ class EventFactoryImpl(event_factory.EventFactory):
             app=self._app, shard=shard, entitlement=self._app.entity_factory.deserialize_entitlement(payload)
         )
 
+    @typing_extensions.override
+    def deserialize_subscription_create_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.SubscriptionCreateEvent:
+        return monetization_events.SubscriptionCreateEvent(
+            app=self._app, shard=shard, subscription=self._app.entity_factory.deserialize_subscription(payload)
+        )
+
+    @typing_extensions.override
+    def deserialize_subscription_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.SubscriptionUpdateEvent:
+        return monetization_events.SubscriptionUpdateEvent(
+            app=self._app, shard=shard, subscription=self._app.entity_factory.deserialize_subscription(payload)
+        )
+
+    @typing_extensions.override
+    def deserialize_subscription_delete_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> monetization_events.SubscriptionDeleteEvent:
+        return monetization_events.SubscriptionDeleteEvent(
+            app=self._app, shard=shard, subscription=self._app.entity_factory.deserialize_subscription(payload)
+        )
+
     #########################
     # STAGE INSTANCE EVENTS #
     #########################
