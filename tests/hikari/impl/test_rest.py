@@ -2625,6 +2625,24 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, json={}, reason=undefined.UNDEFINED)
         rest_client._entity_factory.deserialize_channel.assert_called_once_with(rest_client._request.return_value)
 
+    async def test_set_voice_channel_status(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_VOICE_STATUS.compile(channel=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.set_voice_channel_status(StubModel(123), "very cool status", reason="because")
+
+        rest_client._request.assert_awaited_once_with(
+            expected_route, json={"status": "very cool status"}, reason="because"
+        )
+
+    async def test_set_voice_channel_status_with_null_status(self, rest_client):
+        expected_route = routes.PUT_CHANNEL_VOICE_STATUS.compile(channel=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.set_voice_channel_status(StubModel(123), None)
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={"status": None}, reason=undefined.UNDEFINED)
+
     async def test_delete_channel(self, rest_client):
         expected_route = routes.DELETE_CHANNEL.compile(channel=123)
         rest_client._request = mock.AsyncMock(return_value={"id": "NNNNN"})

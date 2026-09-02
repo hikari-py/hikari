@@ -1080,6 +1080,18 @@ class EventFactoryImpl(event_factory.EventFactory):
             voice_start_time=voice_start_time,
         )
 
+    @typing_extensions.override
+    def deserialize_voice_channel_status_update_event(
+        self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject
+    ) -> voice_events.VoiceChannelStatusUpdateEvent:
+        return voice_events.VoiceChannelStatusUpdateEvent(
+            app=self._app,
+            shard=shard,
+            guild_id=snowflakes.Snowflake(payload["guild_id"]),
+            channel_id=snowflakes.Snowflake(payload["id"]),
+            status=payload["status"],
+        )
+
     ################
     # MONETIZATION #
     ################
