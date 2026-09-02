@@ -1511,7 +1511,6 @@ class EventFactory(abc.ABC):
             The parsed entitlement delete event object.
         """
 
-
     @abc.abstractmethod
     def deserialize_entitlement_update_event(
         self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject

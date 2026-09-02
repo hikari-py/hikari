@@ -1784,4 +1784,3 @@ class TestEventManagerImpl:
         event_manager_impl.dispatch.assert_called_once_with(
             event_factory.deserialize_auto_mod_action_execution_event.return_value
         )
-

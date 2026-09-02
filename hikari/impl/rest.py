@@ -5238,6 +5238,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_sku_subscriptions(
         self,
         sku: snowflakes.SnowflakeishOr[monetization.SKU],
+        /,
         *,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeish] = undefined.UNDEFINED,
