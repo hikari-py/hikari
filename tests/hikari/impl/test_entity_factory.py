@@ -73,6 +73,7 @@ def guild_text_channel_payload(permission_overwrite_payload):
     return {
         "id": "123",
         "guild_id": "567",
+        "application_id": "323123123",
         "name": "general",
         "type": 0,
         "position": 6,
@@ -84,6 +85,7 @@ def guild_text_channel_payload(permission_overwrite_payload):
         "last_pin_timestamp": "2020-05-27T15:58:51.545252+00:00",
         "parent_id": "987",
         "default_auto_archive_duration": 10080,
+        "flags": 131072,
     }
 
 
@@ -103,6 +105,7 @@ def guild_voice_channel_payload(permission_overwrite_payload):
         "parent_id": "456",
         "video_quality_mode": 1,
         "last_message_id": 1234567890,
+        "flags": 131072,
     }
 
 
@@ -121,6 +124,7 @@ def guild_news_channel_payload(permission_overwrite_payload):
         "parent_id": "654",
         "last_pin_timestamp": "2020-05-27T15:58:51.545252+00:00",
         "default_auto_archive_duration": 4320,
+        "flags": 131072,
     }
 
 
@@ -1172,6 +1176,51 @@ class TestEntityFactoryImpl:
         }
 
     @pytest.fixture
+    def activity_instance_payload(self):
+        return {
+            "application_id": "1215413995645968394",
+            "instance_id": "i-1276580072400224306-gc-912952092627435520-912954213460484116",
+            "launch_id": "1276580072400224306",
+            "location": {
+                "id": "gc-912952092627435520-912954213460484116",
+                "kind": "gc",
+                "channel_id": "912954213460484116",
+                "guild_id": "912952092627435520",
+            },
+            "users": ["205519959982473217", "115590097100865541"],
+        }
+
+    def test_deserialize_activity_instance(self, entity_factory_impl, activity_instance_payload):
+        activity_instance = entity_factory_impl.deserialize_activity_instance(activity_instance_payload)
+
+        assert activity_instance.application_id == 1215413995645968394
+        assert activity_instance.instance_id == "i-1276580072400224306-gc-912952092627435520-912954213460484116"
+        assert activity_instance.launch_id == 1276580072400224306
+        assert activity_instance.location.id == "gc-912952092627435520-912954213460484116"
+        assert activity_instance.location.kind is application_models.ActivityLocationKind.GUILD_CHANNEL
+        assert activity_instance.location.channel_id == 912954213460484116
+        assert activity_instance.location.guild_id == 912952092627435520
+        assert activity_instance.users == [205519959982473217, 115590097100865541]
+        assert isinstance(activity_instance, application_models.ActivityInstance)
+        assert isinstance(activity_instance.location, application_models.ActivityLocation)
+
+    @pytest.mark.parametrize("guild_id_field", [{"guild_id": None}, {}])
+    def test_deserialize_activity_instance_when_no_guild(
+        self, entity_factory_impl, activity_instance_payload, guild_id_field
+    ):
+        activity_instance_payload["location"] = {
+            "id": "pc-912954213460484116",
+            "kind": "pc",
+            "channel_id": "912954213460484116",
+            **guild_id_field,
+        }
+
+        activity_instance = entity_factory_impl.deserialize_activity_instance(activity_instance_payload)
+
+        assert activity_instance.location.kind is application_models.ActivityLocationKind.PRIVATE_CHANNEL
+        assert activity_instance.location.guild_id is None
+
+    @pytest.fixture
     def authorization_information_payload(self, user_payload):
         return {
             "application": {
@@ -1868,6 +1917,13 @@ class TestEntityFactoryImpl:
         assert group_dm.application_id is None
         assert group_dm.last_message_id is None
 
+    def test_deserialize_group_dm_channel_with_null_application_id(self, entity_factory_impl, group_dm_channel_payload):
+        group_dm_channel_payload["application_id"] = None
+
+        group_dm = entity_factory_impl.deserialize_group_dm(group_dm_channel_payload)
+
+        assert group_dm.application_id is None
+
     @pytest.fixture
     def guild_category_payload(self, permission_overwrite_payload):
         return {
@@ -1879,6 +1935,7 @@ class TestEntityFactoryImpl:
             "position": 3,
             "guild_id": "9876",
             "type": 4,
+            "flags": 131072,
         }
 
     def test_deserialize_guild_category(
@@ -1897,6 +1954,7 @@ class TestEntityFactoryImpl:
         assert guild_category.is_nsfw is True
         # Categories cannot have parents, this field should be ignored as it is erroneous if included here.
         assert guild_category.parent_id is None
+        assert guild_category.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(guild_category, channel_models.GuildCategory)
 
     def test_deserialize_guild_category_with_unset_fields(self, entity_factory_impl, permission_overwrite_payload):
@@ -1912,6 +1970,7 @@ class TestEntityFactoryImpl:
         )
         assert guild_category.parent_id is None
         assert guild_category.is_nsfw is False
+        assert guild_category.flags == channel_models.ChannelFlag.NONE
 
     def test_deserialize_guild_category_with_null_fields(self, entity_factory_impl, permission_overwrite_payload):
         guild_category = entity_factory_impl.deserialize_guild_category(
@@ -1937,6 +1996,7 @@ class TestEntityFactoryImpl:
         assert guild_text_channel.name == "general"
         assert guild_text_channel.type == channel_models.ChannelType.GUILD_TEXT
         assert guild_text_channel.guild_id == 567
+        assert guild_text_channel.application_id == 323123123
         assert guild_text_channel.position == 6
         assert guild_text_channel.permission_overwrites == {
             4242: entity_factory_impl.deserialize_permission_overwrite(permission_overwrite_payload)
@@ -1950,6 +2010,7 @@ class TestEntityFactoryImpl:
             2020, 5, 27, 15, 58, 51, 545252, tzinfo=datetime.timezone.utc
         )
         assert guild_text_channel.default_auto_archive_duration == datetime.timedelta(minutes=10080)
+        assert guild_text_channel.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(guild_text_channel, channel_models.GuildTextChannel)
 
     def test_deserialize_guild_text_channel_with_unset_fields(self, entity_factory_impl):
@@ -1968,8 +2029,10 @@ class TestEntityFactoryImpl:
         assert guild_text_channel.rate_limit_per_user.total_seconds() == 0
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
+        assert guild_text_channel.application_id is None
         assert guild_text_channel.last_message_id is None
         assert guild_text_channel.default_auto_archive_duration == datetime.timedelta(minutes=1440)
+        assert guild_text_channel.flags == channel_models.ChannelFlag.NONE
 
     def test_deserialize_guild_text_channel_with_null_fields(self, entity_factory_impl):
         guild_text_channel = entity_factory_impl.deserialize_guild_text_channel(
@@ -1986,12 +2049,14 @@ class TestEntityFactoryImpl:
                 "last_message_id": None,
                 "last_pin_timestamp": None,
                 "parent_id": None,
+                "application_id": None,
             }
         )
         assert guild_text_channel.topic is None
         assert guild_text_channel.last_message_id is None
         assert guild_text_channel.last_pin_timestamp is None
         assert guild_text_channel.parent_id is None
+        assert guild_text_channel.application_id is None
 
     def test_deserialize_guild_news_channel(
         self, entity_factory_impl, mock_app, guild_news_channel_payload, permission_overwrite_payload
@@ -2014,6 +2079,7 @@ class TestEntityFactoryImpl:
             2020, 5, 27, 15, 58, 51, 545252, tzinfo=datetime.timezone.utc
         )
         assert news_channel.default_auto_archive_duration == datetime.timedelta(minutes=4320)
+        assert news_channel.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(news_channel, channel_models.GuildNewsChannel)
 
     def test_deserialize_guild_news_channel_with_unset_fields(self, entity_factory_impl):
@@ -2033,6 +2099,7 @@ class TestEntityFactoryImpl:
         assert news_channel.last_pin_timestamp is None
         assert news_channel.last_message_id is None
         assert news_channel.default_auto_archive_duration == datetime.timedelta(minutes=1440)
+        assert news_channel.flags == channel_models.ChannelFlag.NONE
 
     def test_deserialize_guild_news_channel_with_null_fields(self, entity_factory_impl):
         news_channel = entity_factory_impl.deserialize_guild_news_channel(
@@ -2073,6 +2140,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.bitrate == 64000
         assert voice_channel.video_quality_mode is channel_models.VideoQualityMode.AUTO
         assert voice_channel.user_limit == 3
+        assert voice_channel.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(voice_channel, channel_models.GuildVoiceChannel)
 
     def test_deserialize_guild_voice_channel_with_null_fields(self, entity_factory_impl):
@@ -2109,6 +2177,7 @@ class TestEntityFactoryImpl:
             }
         )
         assert voice_channel.video_quality_mode is channel_models.VideoQualityMode.AUTO
+        assert voice_channel.flags == channel_models.ChannelFlag.NONE
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is False
         assert voice_channel.region is None
@@ -2128,6 +2197,7 @@ class TestEntityFactoryImpl:
             "rtc_region": "euoo",
             "parent_id": "543",
             "last_message_id": "1000101",
+            "flags": 131072,
         }
 
     def test_deserialize_guild_stage_channel(
@@ -2148,6 +2218,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.bitrate == 64000
         assert voice_channel.user_limit == 3
         assert voice_channel.last_message_id == 1000101
+        assert voice_channel.flags == channel_models.ChannelFlag.CHANNEL_OBFUSCATED
         assert isinstance(voice_channel, channel_models.GuildStageChannel)
 
     def test_deserialize_guild_stage_channel_with_null_fields(self, entity_factory_impl):
@@ -2188,6 +2259,7 @@ class TestEntityFactoryImpl:
         assert voice_channel.parent_id is None
         assert voice_channel.is_nsfw is False
         assert voice_channel.last_message_id is None
+        assert voice_channel.flags == channel_models.ChannelFlag.NONE
 
     @pytest.fixture
     def guild_forum_channel_payload(self, permission_overwrite_payload):
@@ -5609,6 +5681,18 @@ class TestEntityFactoryImpl:
         return {"id": "1231231", "username": "soad", "discriminator": "3333", "avatar": None}
 
     @pytest.fixture
+    def invite_role_payload(self):
+        return {
+            "id": "41771983423143936",
+            "name": "WE DEM BOYZZ!!!!!!",
+            "position": 1,
+            "color": 3_447_003,
+            "colors": {"primary_color": 3_447_003, "secondary_color": None, "tertiary_color": None},
+            "icon": "abc123hash",
+            "unicode_emoji": "\N{OK HAND SIGN}",
+        }
+
+    @pytest.fixture
     def invite_payload(
         self,
         partial_channel_payload,
@@ -5616,6 +5700,7 @@ class TestEntityFactoryImpl:
         alternative_user_payload,
         guild_welcome_screen_payload,
         invite_application_payload,
+        invite_role_payload,
     ):
         return {
             "code": "aCode",
@@ -5634,9 +5719,12 @@ class TestEntityFactoryImpl:
             },
             "channel": partial_channel_payload,
             "inviter": user_payload,
+            "type": 0,
             "target_type": 1,
             "target_user": alternative_user_payload,
             "target_application": invite_application_payload,
+            "flags": 1,
+            "roles": [invite_role_payload],
             "approximate_presence_count": 42,
             "approximate_member_count": 84,
             "expires_at": "2021-05-08T00:15:24.534000+00:00",
@@ -5675,6 +5763,10 @@ class TestEntityFactoryImpl:
         assert invite.channel == entity_factory_impl.deserialize_partial_channel(partial_channel_payload)
         assert invite.channel_id == 561884984214814750
         assert invite.inviter == entity_factory_impl.deserialize_user(user_payload)
+        assert invite.type is invite_models.InviteType.GUILD
+        assert invite.flags == invite_models.InviteFlags.IS_GUEST_INVITE
+        assert invite.guild_scheduled_event is None
+        assert invite.role_ids == [41771983423143936]
         assert invite.target_type == invite_models.TargetType.STREAM
         assert invite.target_user == entity_factory_impl.deserialize_user(alternative_user_payload)
         assert invite.approximate_member_count == 84
@@ -5695,6 +5787,72 @@ class TestEntityFactoryImpl:
         assert application.icon_hash == "0227b2e89ea08d666c43003fbadbc72a"
         assert application.cover_image_hash == "0227b2e89ea08d666c43003fbadbc72a (but as cover)"
         assert isinstance(application, application_models.InviteApplication)
+
+        # InviteRole
+        assert len(invite.roles) == 1
+        role = invite.roles[0]
+        assert role.app is mock_app
+        assert role.id == 41771983423143936
+        assert role.name == "WE DEM BOYZZ!!!!!!"
+        assert role.position == 1
+        assert role.color == color_models.Color(3_447_003)
+        assert role.colors == color_models.ColorGradient(
+            primary_color=color_models.Color(3_447_003), secondary_color=None, tertiary_color=None
+        )
+        assert role.icon_hash == "abc123hash"
+        assert role.unicode_emoji == emoji_models.UnicodeEmoji("\N{OK HAND SIGN}")
+        assert isinstance(role, invite_models.InviteRole)
+
+    def test_deserialize_invite_when_friend_invite(self, entity_factory_impl, user_payload):
+        invite = entity_factory_impl.deserialize_invite(
+            {
+                "code": "aCode",
+                "inviter": user_payload,
+                "channel": None,
+                "type": 2,
+                "uses": 0,
+                "max_uses": 5,
+                "max_age": 604800,
+                "created_at": "2025-03-19T11:40:31.885200+00:00",
+                "expires_at": "2025-03-26T11:40:31+00:00",
+            }
+        )
+
+        assert invite.type is invite_models.InviteType.FRIEND
+        assert invite.channel is None
+        assert invite.channel_id is None
+        assert invite.guild is None
+        assert invite.guild_id is None
+
+    def test_deserialize_invite_with_metadata_when_gateway_payload(self, entity_factory_impl, user_payload):
+        invite = entity_factory_impl.deserialize_invite_with_metadata(
+            {
+                "channel_id": "43123123",
+                "code": "aCode",
+                "created_at": "2015-04-26T06:26:56.936000+00:00",
+                "guild_id": "43123123123",
+                "inviter": user_payload,
+                "max_age": 456,
+                "max_uses": 42,
+                "role_ids": ["41771983423143936", "41771983423143937"],
+                "temporary": True,
+                "uses": 0,
+            }
+        )
+
+        assert invite.type is invite_models.InviteType.GUILD
+        assert invite.roles == []
+        assert invite.role_ids == [41771983423143936, 41771983423143937]
+
+    def test_deserialize_invite_with_guild_scheduled_event(self, entity_factory_impl, invite_payload):
+        mock_scheduled_event_payload = {"id": "494949"}
+        invite_payload["guild_scheduled_event"] = mock_scheduled_event_payload
+
+        with mock.patch.object(entity_factory.EntityFactoryImpl, "deserialize_scheduled_event") as patched:
+            invite = entity_factory_impl.deserialize_invite(invite_payload)
+
+        patched.assert_called_once_with(mock_scheduled_event_payload)
+        assert invite.guild_scheduled_event is patched.return_value
 
     def test_deserialize_invite_with_null_fields(
         self, entity_factory_impl, partial_channel_payload, invite_application_payload
@@ -5726,6 +5884,11 @@ class TestEntityFactoryImpl:
                 "approximate_presence_count": 9,
             }
         )
+        assert invite.type is invite_models.InviteType.GUILD
+        assert invite.flags == invite_models.InviteFlags.NONE
+        assert invite.roles == []
+        assert invite.role_ids == []
+        assert invite.guild_scheduled_event is None
         assert invite.channel is None
         assert invite.channel_id == 43123123
         assert invite.guild is None

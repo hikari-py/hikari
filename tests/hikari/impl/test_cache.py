@@ -29,6 +29,7 @@ from hikari import embeds
 from hikari import emojis
 from hikari import guilds
 from hikari import invites
+from hikari import scheduled_events
 from hikari import messages
 from hikari import polls
 from hikari import snowflakes
@@ -1274,14 +1275,21 @@ class TestCacheImpl:
         mock_inviter = mock.MagicMock(users.User)
         mock_target_user = mock.MagicMock(users.User)
         mock_application = object()
+        mock_scheduled_event = mock.MagicMock(scheduled_events.ScheduledEvent)
+        mock_role = mock.MagicMock(invites.InviteRole)
         invite_data = cache_utilities.InviteData(
             code="okokok",
+            type=invites.InviteType.GUILD,
             guild_id=snowflakes.Snowflake(965234),
             channel_id=snowflakes.Snowflake(87345234),
             inviter=cache_utilities.RefCell(mock_inviter),
             target_type=invites.TargetType.STREAM,
             target_user=cache_utilities.RefCell(mock_target_user),
             target_application=mock_application,
+            guild_scheduled_event=mock_scheduled_event,
+            flags=invites.InviteFlags.NONE,
+            roles=(mock_role,),
+            role_ids=(snowflakes.Snowflake(123321123),),
             uses=42,
             max_uses=999,
             max_age=datetime.timedelta(days=7),
@@ -1301,6 +1309,11 @@ class TestCacheImpl:
         assert invite.target_user == mock_target_user
         assert invite.inviter is not mock_inviter
         assert invite.target_user is not mock_target_user
+        assert invite.guild_scheduled_event == mock_scheduled_event
+        assert invite.guild_scheduled_event is not mock_scheduled_event
+        assert invite.roles == (mock_role,)
+        assert invite.roles[0] is not mock_role
+        assert invite.role_ids == (123321123,)
         assert invite.target_type is invites.TargetType.STREAM
         assert invite.target_application is mock_application
         assert invite.approximate_active_member_count is None
@@ -1314,12 +1327,17 @@ class TestCacheImpl:
     def test__build_invite_without_users(self, cache_impl):
         invite_data = cache_utilities.InviteData(
             code="okokok",
+            type=invites.InviteType.GUILD,
             guild_id=snowflakes.Snowflake(965234),
             channel_id=snowflakes.Snowflake(87345234),
             inviter=None,
             target_type=invites.TargetType.STREAM,
             target_user=None,
             target_application=None,
+            guild_scheduled_event=None,
+            flags=invites.InviteFlags.NONE,
+            roles=(),
+            role_ids=(),
             uses=42,
             max_uses=999,
             max_age=datetime.timedelta(days=7),

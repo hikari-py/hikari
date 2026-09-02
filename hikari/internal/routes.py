@@ -605,6 +605,10 @@ PUT_APPLICATION_COMMAND_PERMISSIONS: typing.Final[Route] = Route(
     PUT, "/applications/{application}/guilds/{guild}/commands/{command}/permissions"
 )
 
+GET_APPLICATION_ACTIVITY_INSTANCE: typing.Final[Route] = Route(
+    GET, "/applications/{application}/activity-instances/{instance}"
+)
+
 GET_APPLICATION_ROLE_CONNECTION_METADATA_RECORDS: typing.Final[Route] = Route(
     GET, "/applications/{application}/role-connections/metadata"
 )
