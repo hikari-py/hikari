@@ -1405,7 +1405,6 @@ class RESTClientImpl(rest_api.RESTClient):
         else:
             response = await self._request(route, json=body, reason=reason)
 
-
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite_with_metadata(response)
 

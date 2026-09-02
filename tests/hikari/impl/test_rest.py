@@ -2967,6 +2967,34 @@ class TestRESTClientImplAsync:
             expected_route, form_builder=mock_url_encoded_form, reason="cause why not :)"
         )
 
+    async def test_create_invite_with_target_users_and_role_ids(self, rest_client):
+        expected_route = routes.POST_CHANNEL_INVITES.compile(channel=123)
+        mock_resource = mock.Mock()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock(return_value={"ID": "NOOOOOOOOPOOOOOOOI!"})
+
+        with (
+            mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form),
+            mock.patch.object(rest, "_build_target_users_file", return_value=mock_resource) as build_target_users_file,
+        ):
+            result = await rest_client.create_invite(
+                StubModel(123),
+                unique=True,
+                role_ids=[StubModel(135), StubModel(246)],
+                target_users=[StubModel(456), StubModel(789)],
+                reason="cause why not :)",
+            )
+
+        assert result is rest_client._entity_factory.deserialize_invite_with_metadata.return_value
+        build_target_users_file.assert_called_once_with([StubModel(456), StubModel(789)])
+        mock_url_encoded_form.add_field.assert_called_once_with(
+            "payload_json", b'{"unique":true,"role_ids":["135","246"]}', content_type="application/json"
+        )
+        mock_url_encoded_form.add_resource.assert_called_once_with("target_users_file", mock_resource)
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form_builder=mock_url_encoded_form, reason="cause why not :)"
+        )
+
     async def test_pin_message(self, rest_client):
         expected_route = routes.PUT_CHANNEL_PINS.compile(channel=123, message=456)
         rest_client._request = mock.AsyncMock()
