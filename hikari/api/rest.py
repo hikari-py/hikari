@@ -729,9 +729,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target_application: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[guilds.PartialApplication]
         ] = undefined.UNDEFINED,
-        target_users: undefined.UndefinedOr[
-            typing.Sequence[snowflakes.SnowflakeishOr[users_.PartialUser]]
-        ] = undefined.UNDEFINED,
+        role_ids: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
+        target_users: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[users_.PartialUser]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         """Create an invite to the given guild channel.
@@ -765,6 +764,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             !!! note
                 This is required if `target_type` is [`hikari.invites.TargetType.EMBEDDED_APPLICATION`][] and
                 the targeted application must have the [`hikari.applications.ApplicationFlags.EMBEDDED`][] flag.
+        role_ids
+            If provided, the roles which will be given to the users that
+            accept this invite. These may be the objects or the IDs of
+            existing roles.
+
+            !!! note
+                This requires the [`hikari.permissions.Permissions.MANAGE_ROLES`][]
+                permission and roles with higher permissions than the inviter
+                cannot be assigned.
         target_users
             If provided, the users which should be allowed to see and accept
             this invite. These may be the objects or the IDs of existing users.
@@ -3761,6 +3769,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
@@ -3783,6 +3792,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a datetime object, it will be transformed into a snowflake. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
+
+            The entries will be returned in descending order (newest first).
+        after
+            If provided, filter to only actions after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+
+            The entries will be returned in ascending order (oldest first).
         user
             If provided, the user to filter for.
         event_type
@@ -3795,6 +3813,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        ValueError
+            If both `before` and `after` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
