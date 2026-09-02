@@ -119,6 +119,10 @@ class TestGatewayBot:
         return mock.Mock()
 
     @pytest.fixture
+    def capabilities(self):
+        return mock.Mock()
+
+    @pytest.fixture
     def proxy_settings(self):
         return mock.Mock()
 
@@ -137,6 +141,7 @@ class TestGatewayBot:
         voice,
         executor,
         intents,
+        capabilities,
         proxy_settings,
         http_settings,
         token,
@@ -159,6 +164,7 @@ class TestGatewayBot:
                 http_settings=http_settings,
                 proxy_settings=proxy_settings,
                 intents=intents,
+                capabilities=capabilities,
                 max_retries=0,
             )
 
@@ -178,6 +184,7 @@ class TestGatewayBot:
         http_settings = object()
         proxy_settings = object()
         intents = object()
+        capabilities = object()
 
         with stack:
             bot = bot_impl.GatewayBot(
@@ -190,6 +197,7 @@ class TestGatewayBot:
                 cache_settings=cache_settings,
                 http_settings=http_settings,
                 intents=intents,
+                capabilities=capabilities,
                 auto_chunk_members=False,
                 logs="DEBUG",
                 max_rate_limit=200,
@@ -200,6 +208,7 @@ class TestGatewayBot:
 
         assert bot._http_settings is http_settings
         assert bot._proxy_settings is proxy_settings
+        assert bot._capabilities is capabilities
         assert bot._cache is cache.return_value
         cache.assert_called_once_with(bot, cache_settings)
         assert bot._event_manager is event_manager.return_value
@@ -324,6 +333,9 @@ class TestGatewayBot:
 
     def test_intents(self, bot, intents):
         assert bot.intents is intents
+
+    def test_capabilities(self, bot, capabilities):
+        assert bot.capabilities is capabilities
 
     def test_get_me(self, bot, cache):
         assert bot.get_me() is cache.get_me.return_value
@@ -987,6 +999,7 @@ class TestGatewayBot:
             event_manager=bot._event_manager,
             event_factory=bot._event_factory,
             intents=bot._intents,
+            capabilities=bot._capabilities,
             initial_activity=activity,
             initial_is_afk=True,
             initial_idle_since=None,

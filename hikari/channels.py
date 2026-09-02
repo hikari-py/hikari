@@ -156,6 +156,29 @@ class ChannelFlag(enums.Flag):
         As of writing, this can only be set for forum channels.
     """
 
+    CHANNEL_OBFUSCATED = 1 << 17
+    """The channel's metadata has been obfuscated because the current user cannot view it.
+
+    Obfuscated channels have their sensitive fields nulled, reduced or
+    replaced with placeholder values (e.g. the channel's name becomes
+    `"___hidden___"`) and their permission overwrites will contain a single
+    overwrite denying [`hikari.permissions.Permissions.VIEW_CHANNEL`][] for
+    the guild's `@everyone` role. The channel's ID, type, position and parent
+    ID are never obfuscated.
+
+    This flag is the only reliable way to detect whether a channel has been
+    obfuscated and is only ever set on channels received over the gateway;
+    the REST API omits obfuscated channels entirely instead.
+
+    !!! note
+        Until November 16, 2026, channels are only obfuscated if the
+        application has opted into the
+        [`hikari.capabilities.GatewayCapabilities.CHANNEL_OBFUSCATION`][]
+        capability or through the **Private Channel Obfuscation** developer
+        portal toggle. After that, obfuscation will apply to all
+        applications automatically.
+    """
+
 
 @typing.final
 class VideoQualityMode(int, enums.Enum):
@@ -949,6 +972,13 @@ class GuildChannel(PartialChannel):
     guild_id: snowflakes.Snowflake = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the guild the channel belongs to."""
 
+    application_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=False)
+    """The ID of the application associated with this channel.
+
+    This will be [`None`][] for channels which are not associated with an
+    application.
+    """
+
     parent_id: snowflakes.Snowflake | None = attrs.field(eq=False, hash=False, repr=True)
     """The ID of the parent channel the channel belongs to.
 
@@ -1163,6 +1193,14 @@ class PermissibleGuildChannel(GuildChannel):
     """The permission overwrites for the channel.
 
     This maps the ID of the entity in the overwrite to the overwrite data.
+    """
+
+    flags: ChannelFlag = attrs.field(eq=False, hash=False, repr=False)
+    """The channel flags for this channel.
+
+    If [`hikari.channels.ChannelFlag.CHANNEL_OBFUSCATED`][] is set then this
+    channel's metadata has been obfuscated because the application cannot
+    view it.
     """
 
     async def edit_overwrite(
@@ -1527,13 +1565,6 @@ class GuildForumChannel(PermissibleGuildChannel):
     This may be be either 1 hour, 1 day, 3 days or 1 week.
     """
 
-    flags: ChannelFlag = attrs.field(eq=False, hash=False, repr=False)
-    """The channel flags for this channel.
-
-    !!! note
-        As of writing, the only flag that can be set is [`hikari.channels.ChannelFlag.REQUIRE_TAG`][].
-    """
-
     available_tags: typing.Sequence[ForumTag] = attrs.field(eq=False, hash=False, repr=False)
     """The available tags to select from when creating a thread."""
 
@@ -1825,13 +1856,6 @@ class GuildMediaChannel(PermissibleGuildChannel):
     """The auto archive duration Discord's client defaults to for threads in this channel.
 
     This may be be either 1 hour, 1 day, 3 days or 1 week.
-    """
-
-    flags: ChannelFlag = attrs.field(eq=False, hash=False, repr=False)
-    """The channel flags for this channel.
-
-    .. note::
-        As of writing, the only flag that can be set is `ChannelFlag.REQUIRE_TAG`.
     """
 
     available_tags: typing.Sequence[ForumTag] = attrs.field(eq=False, hash=False, repr=False)

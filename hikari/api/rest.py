@@ -733,6 +733,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target_application: undefined.UndefinedOr[
             snowflakes.SnowflakeishOr[guilds.PartialApplication]
         ] = undefined.UNDEFINED,
+        role_ids: undefined.UndefinedOr[snowflakes.SnowflakeishSequence[guilds.PartialRole]] = undefined.UNDEFINED,
         reason: undefined.UndefinedOr[str] = undefined.UNDEFINED,
     ) -> invites.InviteWithMetadata:
         """Create an invite to the given guild channel.
@@ -766,6 +767,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             !!! note
                 This is required if `target_type` is [`hikari.invites.TargetType.EMBEDDED_APPLICATION`][] and
                 the targeted application must have the [`hikari.applications.ApplicationFlags.EMBEDDED`][] flag.
+        role_ids
+            If provided, the roles which will be given to the users that
+            accept this invite. These may be the objects or the IDs of
+            existing roles.
+
+            !!! note
+                This requires the [`hikari.permissions.Permissions.MANAGE_ROLES`][]
+                permission and roles with higher permissions than the inviter
+                cannot be assigned.
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -2779,7 +2789,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def fetch_invite(self, invite: invites.InviteCode | str, *, with_counts: bool = True) -> invites.Invite:
+    async def fetch_invite(
+        self,
+        invite: invites.InviteCode | str,
+        *,
+        with_counts: bool = True,
+        scheduled_event: undefined.UndefinedOr[
+            snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
+        ] = undefined.UNDEFINED,
+    ) -> invites.Invite:
         """Fetch an existing invite.
 
         Parameters
@@ -2789,6 +2807,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             the code of an existing invite.
         with_counts
             Whether the invite should contain the approximate member counts.
+        scheduled_event
+            The scheduled event to include with the invite, if any.
 
         Returns
         -------
@@ -3432,6 +3452,37 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
+    async def fetch_activity_instance(
+        self, application: snowflakes.SnowflakeishOr[guilds.PartialApplication], instance_id: str
+    ) -> applications.ActivityInstance:
+        """Fetch a live activity instance for a given application.
+
+        Parameters
+        ----------
+        application
+            The application to fetch the activity instance for.
+        instance_id
+            The ID of the activity instance to fetch.
+
+        Returns
+        -------
+        hikari.applications.ActivityInstance
+            The requested activity instance.
+
+        Raises
+        ------
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the application or activity instance was not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
     async def authorize_client_credentials_token(
         self,
         client: snowflakes.SnowflakeishOr[guilds.PartialApplication],
@@ -3717,6 +3768,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
         *,
         before: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
+        after: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[snowflakes.Unique]] = undefined.UNDEFINED,
         user: undefined.UndefinedOr[snowflakes.SnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
         event_type: undefined.UndefinedOr[audit_logs.AuditLogEventType | int] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[audit_logs.AuditLog]:
@@ -3739,6 +3791,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
             a datetime object, it will be transformed into a snowflake. This
             may be any other Discord entity that has an ID. In this case, the
             date the object was first created will be used.
+
+            The entries will be returned in descending order (newest first).
+        after
+            If provided, filter to only actions after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may be any other Discord entity that has an ID. In this case, the
+            date the object was first created will be used.
+
+            The entries will be returned in ascending order (oldest first).
         user
             If provided, the user to filter for.
         event_type
@@ -3751,6 +3812,8 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
         Raises
         ------
+        ValueError
+            If both `before` and `after` are specified.
         hikari.errors.BadRequestError
             If any of the fields that are passed have an invalid value.
         hikari.errors.ForbiddenError
@@ -4741,6 +4804,15 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
     ) -> typing.Sequence[channels_.GuildChannel]:
         """Fetch the channels in a guild.
+
+        !!! warning
+            Starting November 16, 2026, Discord will omit any channel the
+            application doesn't have permission to view from the response.
+            Permission to view a channel is defined by having
+            [`hikari.permissions.Permissions.VIEW_CHANNEL`][] on it or by
+            being connected to it if it is a voice channel. Channel
+            categories are viewable if any of their child channels are
+            viewable.
 
         Parameters
         ----------
@@ -6074,7 +6146,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
 
     @abc.abstractmethod
     def fetch_members(
-        self, guild: snowflakes.SnowflakeishOr[guilds.PartialGuild]
+        self,
+        guild: snowflakes.SnowflakeishOr[guilds.PartialGuild],
+        /,
+        *,
+        start_at: undefined.UndefinedOr[snowflakes.SearchableSnowflakeishOr[users_.PartialUser]] = undefined.UNDEFINED,
     ) -> iterators.LazyIterator[guilds.Member]:
         """Fetch the members from a guild.
 
@@ -6097,6 +6173,11 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         guild
             The guild to fetch the members of. This may be the
             object or the ID of an existing guild.
+        start_at
+            If provided, will start after this snowflake. If you provide
+            a datetime object, it will be transformed into a snowflake. This
+            may also be a user object. In this case, the date the object was
+            first created will be used.
 
         Returns
         -------

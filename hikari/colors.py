@@ -128,13 +128,13 @@ class Color(int):
     Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.of((255, 5, 26))
-    Color(r=0xff, g=0x5, b=1xa)
+    Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.of(255, 5, 26)
-    Color(r=0xff, g=0x5, b=1xa)
+    Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.of([0xFF, 0x5, 0x1a])
-    Color(r=0xff, g=0x5, b=1xa)
+    Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.of("#1a2b3c")
     Color(r=0x1a, g=0x2b, b=0x3c)
@@ -156,7 +156,7 @@ class Color(int):
     Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.from_rgb(255, 5, 26)
-    Color(r=0xff, g=0x5, b=1xa)
+    Color(r=0xff, g=0x5, b=0x1a)
 
     >>> c = Color.from_hex_code("#1a2b3c")
     Color(r=0x1a, g=0x2b, b=0x3c)
@@ -467,10 +467,10 @@ class Color(int):
         Color(r=0xff, g=0x5, b=0x1a)
 
         >>> c = Color.of((255, 5, 26))
-        Color(r=0xff, g=0x5, b=1xa)
+        Color(r=0xff, g=0x5, b=0x1a)
 
         >>> c = Color.of([0xFF, 0x5, 0x1a])
-        Color(r=0xff, g=0x5, b=1xa)
+        Color(r=0xff, g=0x5, b=0x1a)
 
         >>> c = Color.of("#1a2b3c")
         Color(r=0x1a, g=0x2b, b=0x3c)

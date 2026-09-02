@@ -82,10 +82,10 @@ zstd = ["backports.zstd; python_version < '3.14'"]
 [dependency-groups]
 dev = [{ include-group = "nox" }]
 
-nox = ["nox==2026.7.11"]
+nox = ["nox==2026.8.17"]
 
 codespell = ["codespell==2.4.3"]
-coverage = ["coverage[toml]==7.15.3"]
+coverage = ["coverage[toml]==7.16.0"]
 mkdocs = [
     "mkdocs==1.6.1",
     # Mkdocs Material
@@ -104,19 +104,19 @@ mkdocs = [
     # "mkdocs-glightbox==0.3.7",
 ]
 
-mypy = ["mypy[faster-cache]==2.3.0", { include-group = "types" }]
+mypy = ["mypy[faster-cache]==2.3.1", { include-group = "types" }]
 pyright = ["pyright==1.1.411", { include-group = "types" }]
 pytest = [
     "mock==5.2.0",
     "pytest==9.1.1",
     "pytest-asyncio==1.4.0",
     "pytest-cov==7.1.0",
-    "pytest-randomly==4.1.0",
+    "pytest-randomly==5.0.0",
     "async-timeout==5.0.1",
     { include-group = "coverage" },
 ]
 release = ["twine==7.0.0"]
-ruff = ["ruff==0.16.1"]
+ruff = ["ruff==0.16.5"]
 slotscheck = ["slotscheck==0.20.1"]
 towncrier = ["towncrier==25.8.0"]
 types = [
