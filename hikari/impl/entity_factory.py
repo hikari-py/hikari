@@ -4295,7 +4295,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             start=time.iso8601_datetime_string_to_datetime(payload["start"]),
             end=end,
             frequency=scheduled_events_models.ScheduledEventRecurrenceFrequency(payload["frequency"]),
-            interval=int(payload["interval"]),
+            interval=payload["interval"],
             by_weekday=by_weekday,
             by_n_weekday=by_n_weekday,
             by_month=by_month,

@@ -189,7 +189,7 @@ class ScheduledEventRecurrenceRule:
     """The specific months to recur on, if set."""
 
     by_month_day: typing.Sequence[int] | None = attrs.field(default=None, repr=False)
-    """The specific dates within a month to recur on, if set."""
+    """The specific dates within a month to recur on (1-31), if set."""
 
     end: datetime.datetime | None = attrs.field(default=None, repr=False)
     """The ending time of the recurrence interval, if set.

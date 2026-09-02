@@ -7432,6 +7432,11 @@ class TestRESTClientImplAsync:
             end_time=datetime.datetime(2069, 3, 9, 13, 1, 41, 891222, tzinfo=datetime.timezone.utc),
             image="meow.txt",
             privacy_level=6523123,
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             reason="it was the {insert political part here}",
         )
 
@@ -7449,6 +7454,15 @@ class TestRESTClientImplAsync:
                 "scheduled_start_time": "2021-03-09T13:42:41.891222+00:00",
                 "scheduled_end_time": "2069-03-09T13:01:41.891222+00:00",
                 "description": "hhhhh",
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="it was the {insert political part here}",
@@ -7494,6 +7508,11 @@ class TestRESTClientImplAsync:
             description="This is a description",
             image="icon.png",
             privacy_level=6454,
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             reason="chairman meow",
         )
 
@@ -7511,6 +7530,15 @@ class TestRESTClientImplAsync:
                 "scheduled_start_time": "2021-03-06T02:42:41.891222+00:00",
                 "scheduled_end_time": "2023-05-06T16:42:41.891222+00:00",
                 "description": "This is a description",
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="chairman meow",
@@ -7561,6 +7589,11 @@ class TestRESTClientImplAsync:
             privacy_level=69,
             start_time=datetime.datetime(2022, 3, 6, 12, 42, 41, 891222, tzinfo=datetime.timezone.utc),
             end_time=datetime.datetime(2022, 5, 6, 12, 42, 41, 891222, tzinfo=datetime.timezone.utc),
+            recurrence_rule=scheduled_events.ScheduledEventRecurrenceRule(
+                start=datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc),
+                frequency=scheduled_events.ScheduledEventRecurrenceFrequency.WEEKLY,
+                by_weekday=[scheduled_events.ScheduledEventRecurrenceWeekday.WEDNESDAY],
+            ),
             status=64,
             reason="go home",
         )
@@ -7581,6 +7614,15 @@ class TestRESTClientImplAsync:
                 "description": "hihihi",
                 "entity_type": scheduled_events.ScheduledEventType.VOICE,
                 "status": 64,
+                "recurrence_rule": {
+                    "start": "2001-01-01T00:00:00+00:00",
+                    "frequency": 2,
+                    "interval": 1,
+                    "by_weekday": [2],
+                    "by_n_weekday": None,
+                    "by_month": None,
+                    "by_month_day": None,
+                },
                 "image": "some data",
             },
             reason="go home",

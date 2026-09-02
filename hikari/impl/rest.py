@@ -527,14 +527,12 @@ def _serialize_recurrence_rule(rule: scheduled_events.ScheduledEventRecurrenceRu
     payload.put("start", rule.start, conversion=datetime.datetime.isoformat)
     payload.put("frequency", int(rule.frequency))
     payload.put("interval", rule.interval)
-    payload["by_weekday"] = [int(day) for day in rule.by_weekday] if rule.by_weekday is not None else None
-    payload["by_n_weekday"] = (
-        [{"n": n_weekday.n, "day": int(n_weekday.day)} for n_weekday in rule.by_n_weekday]
-        if rule.by_n_weekday is not None
-        else None
+    payload.put_array("by_weekday", rule.by_weekday, conversion=int)
+    payload.put_array(
+        "by_n_weekday", rule.by_n_weekday, conversion=lambda n_weekday: {"n": n_weekday.n, "day": int(n_weekday.day)}
     )
-    payload["by_month"] = [int(month) for month in rule.by_month] if rule.by_month is not None else None
-    payload["by_month_day"] = list(rule.by_month_day) if rule.by_month_day is not None else None
+    payload.put_array("by_month", rule.by_month, conversion=int)
+    payload.put_array("by_month_day", rule.by_month_day)
     return payload
 
 
