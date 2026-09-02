@@ -4138,6 +4138,29 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             interaction_metadata=interaction_metadata,
         )
 
+    @typing_extensions.override
+    def deserialize_message_search_result(self, payload: data_binding.JSONObject) -> message_models.MessageSearchResult:
+        messages = [self.deserialize_message(message) for group in payload["messages"] for message in group]
+
+        threads: list[channel_models.GuildThreadChannel] = []
+        for thread_payload in payload.get("threads", ()):
+            try:
+                threads.append(self.deserialize_guild_thread(thread_payload))
+            except errors.UnrecognisedEntityError:  # noqa: PERF203 - try-except inside a loop
+                # Ignore the thread, this has already been logged
+                continue
+
+        members = [self.deserialize_thread_member(member) for member in payload.get("members", ())]
+
+        return message_models.MessageSearchResult(
+            doing_deep_historical_index=payload["doing_deep_historical_index"],
+            documents_indexed=payload.get("documents_indexed"),
+            total_results=int(payload["total_results"]),
+            messages=messages,
+            threads=threads,
+            members=members,
+        )
+
     ###################
     # PRESENCE MODELS #
     ###################
