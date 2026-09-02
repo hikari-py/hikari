@@ -6056,6 +6056,54 @@ class TestEntityFactoryImpl:
         invite_with_metadata_payload["max_age"] = 0
         assert entity_factory_impl.deserialize_invite_with_metadata(invite_with_metadata_payload).max_age is None
 
+    @pytest.fixture
+    def target_users_job_payload(self):
+        return {
+            "status": 3,
+            "total_users": 100,
+            "processed_users": 41,
+            "created_at": "2025-01-08T12:00:00.000000+00:00",
+            "completed_at": "2025-01-08T12:05:32.000000+00:00",
+            "error_message": "Failed to parse CSV file",
+        }
+
+    def test_deserialize_target_users_job(self, entity_factory_impl, target_users_job_payload):
+        job = entity_factory_impl.deserialize_target_users_job(target_users_job_payload)
+
+        assert job.status is invite_models.TargetUsersJobStatus.FAILED
+        assert job.total_users == 100
+        assert job.processed_users == 41
+        assert job.created_at == datetime.datetime(2025, 1, 8, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        assert job.completed_at == datetime.datetime(2025, 1, 8, 12, 5, 32, tzinfo=datetime.timezone.utc)
+        assert job.error_message == "Failed to parse CSV file"
+
+    def test_deserialize_target_users_job_with_null_fields(self, entity_factory_impl, target_users_job_payload):
+        target_users_job_payload["status"] = 1
+        target_users_job_payload["completed_at"] = None
+        target_users_job_payload["error_message"] = None
+
+        job = entity_factory_impl.deserialize_target_users_job(target_users_job_payload)
+
+        assert job.status is invite_models.TargetUsersJobStatus.PROCESSING
+        assert job.completed_at is None
+        assert job.error_message is None
+
+    def test_deserialize_target_users_job_with_unknown_status(self, entity_factory_impl, target_users_job_payload):
+        target_users_job_payload["status"] = 4242
+
+        job = entity_factory_impl.deserialize_target_users_job(target_users_job_payload)
+
+        assert job.status == 4242
+
+    def test_deserialize_target_users_job_with_unset_fields(self, entity_factory_impl, target_users_job_payload):
+        del target_users_job_payload["completed_at"]
+        del target_users_job_payload["error_message"]
+
+        job = entity_factory_impl.deserialize_target_users_job(target_users_job_payload)
+
+        assert job.completed_at is None
+        assert job.error_message is None
+
     ####################
     # COMPONENT MODELS #
     ####################

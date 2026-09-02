@@ -557,6 +557,35 @@ class TestTransformEmojiToUrlFormat:
             rest._transform_emoji_to_url_format(emoji, 123)
 
 
+class TestBuildTargetUsersFile:
+    def test_expected(self):
+        resource = rest._build_target_users_file([StubModel(123), 456, "789"])
+
+        assert resource.filename == "target_users.csv"
+        assert resource.mimetype == "text/csv"
+        assert resource.data == b"123\r\n456\r\n789\r\n"
+
+    def test_when_no_users(self):
+        assert rest._build_target_users_file([]).data == b""
+
+
+class TestParseTargetUsersFile:
+    def test_expected(self):
+        result = rest._parse_target_users_file(b"user_id\r\n123\r\n456\r\n")
+
+        assert result == [123, 456]
+        assert all(isinstance(user_id, snowflakes.Snowflake) for user_id in result)
+
+    def test_when_byte_order_mark(self):
+        assert rest._parse_target_users_file(b"\xef\xbb\xbfuser_id\r\n123\r\n") == [123]
+
+    def test_when_only_header(self):
+        assert rest._parse_target_users_file(b"user_id\r\n") == []
+
+    def test_when_empty(self):
+        assert rest._parse_target_users_file(b"") == []
+
+
 class TestRESTClientImpl:
     def test__init__when_max_retries_over_5(self):
         with pytest.raises(ValueError, match="'max_retries' must be below or equal to 5"):
@@ -2248,6 +2277,26 @@ class TestRESTClientImplAsync:
         assert (await rest_client._request(route)) == {"something": None}
 
     @hikari_test_helpers.timeout()
+    @pytest.mark.parametrize("content_type", ["text/csv", rest._APPLICATION_JSON])
+    async def test_request_when_json_is_not_expected(self, rest_client, content_type):
+        class StubResponse:
+            status = http.HTTPStatus.OK
+            reason = "cause why not"
+            headers = {"HEADER": "value"}
+
+            def __init__(self, content_type):
+                self.content_type = content_type
+
+            async def read(self):
+                return b"user_id\r\n123\r\n"
+
+        route = routes.Route("GET", "/something/{channel}/somewhere").compile(channel=123)
+        rest_client._client_session.request.return_value = StubResponse(content_type)
+        rest_client._parse_ratelimits = mock.AsyncMock(return_value=None)
+
+        assert (await rest_client._request(route, expect_json=False)) == b"user_id\r\n123\r\n"
+
+    @hikari_test_helpers.timeout()
     async def test_request_when_response_is_not_JSON(self, rest_client):
         class StubResponse:
             status = http.HTTPStatus.IM_USED
@@ -2890,6 +2939,61 @@ class TestRESTClientImplAsync:
             rest_client._request.return_value
         )
         rest_client._request.assert_awaited_once_with(expected_route, json=expected_json, reason="cause why not :)")
+
+    async def test_create_invite_with_target_users(self, rest_client):
+        expected_route = routes.POST_CHANNEL_INVITES.compile(channel=123)
+        mock_resource = mock.Mock()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock(return_value={"ID": "NOOOOOOOOPOOOOOOOI!"})
+
+        with (
+            mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form),
+            mock.patch.object(rest, "_build_target_users_file", return_value=mock_resource) as build_target_users_file,
+        ):
+            result = await rest_client.create_invite(
+                StubModel(123), unique=True, target_users=[StubModel(456), StubModel(789)], reason="cause why not :)"
+            )
+
+        assert result is rest_client._entity_factory.deserialize_invite_with_metadata.return_value
+        rest_client._entity_factory.deserialize_invite_with_metadata.assert_called_once_with(
+            rest_client._request.return_value
+        )
+        build_target_users_file.assert_called_once_with([StubModel(456), StubModel(789)])
+        mock_url_encoded_form.add_field.assert_called_once_with(
+            "payload_json", b'{"unique":true}', content_type="application/json"
+        )
+        mock_url_encoded_form.add_resource.assert_called_once_with("target_users_file", mock_resource)
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form_builder=mock_url_encoded_form, reason="cause why not :)"
+        )
+
+    async def test_create_invite_with_target_users_and_role_ids(self, rest_client):
+        expected_route = routes.POST_CHANNEL_INVITES.compile(channel=123)
+        mock_resource = mock.Mock()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock(return_value={"ID": "NOOOOOOOOPOOOOOOOI!"})
+
+        with (
+            mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form),
+            mock.patch.object(rest, "_build_target_users_file", return_value=mock_resource) as build_target_users_file,
+        ):
+            result = await rest_client.create_invite(
+                StubModel(123),
+                unique=True,
+                role_ids=[StubModel(135), StubModel(246)],
+                target_users=[StubModel(456), StubModel(789)],
+                reason="cause why not :)",
+            )
+
+        assert result is rest_client._entity_factory.deserialize_invite_with_metadata.return_value
+        build_target_users_file.assert_called_once_with([StubModel(456), StubModel(789)])
+        mock_url_encoded_form.add_field.assert_called_once_with(
+            "payload_json", b'{"unique":true,"role_ids":["135","246"]}', content_type="application/json"
+        )
+        mock_url_encoded_form.add_resource.assert_called_once_with("target_users_file", mock_resource)
+        rest_client._request.assert_awaited_once_with(
+            expected_route, form_builder=mock_url_encoded_form, reason="cause why not :)"
+        )
 
     async def test_pin_message(self, rest_client):
         expected_route = routes.PUT_CHANNEL_PINS.compile(channel=123, message=456)
@@ -4110,6 +4214,44 @@ class TestRESTClientImplAsync:
 
         rest_client._entity_factory.deserialize_invite.assert_called_once_with(rest_client._request.return_value)
         rest_client._request.assert_awaited_once_with(expected_route, reason="testing")
+
+    @pytest.mark.parametrize("input_invite", [mock.Mock(code="Jx4cNGG"), "Jx4cNGG"])
+    async def test_fetch_invite_target_user_ids(self, rest_client, input_invite):
+        expected_route = routes.GET_INVITE_TARGET_USERS.compile(invite_code="Jx4cNGG")
+        rest_client._request = mock.AsyncMock(return_value=b"user_id\r\n123\r\n456\r\n")
+
+        result = await rest_client.fetch_invite_target_user_ids(input_invite)
+
+        assert result == [123, 456]
+        rest_client._request.assert_awaited_once_with(expected_route, expect_json=False)
+
+    @pytest.mark.parametrize("input_invite", [mock.Mock(code="Jx4cNGG"), "Jx4cNGG"])
+    async def test_edit_invite_target_users(self, rest_client, input_invite):
+        expected_route = routes.PUT_INVITE_TARGET_USERS.compile(invite_code="Jx4cNGG")
+        mock_resource = mock.Mock()
+        mock_url_encoded_form = mock.Mock()
+        rest_client._request = mock.AsyncMock()
+
+        with (
+            mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form),
+            mock.patch.object(rest, "_build_target_users_file", return_value=mock_resource) as build_target_users_file,
+        ):
+            await rest_client.edit_invite_target_users(input_invite, [StubModel(123), StubModel(456)])
+
+        build_target_users_file.assert_called_once_with([StubModel(123), StubModel(456)])
+        mock_url_encoded_form.add_resource.assert_called_once_with("target_users_file", mock_resource)
+        rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_url_encoded_form)
+
+    @pytest.mark.parametrize("input_invite", [mock.Mock(code="Jx4cNGG"), "Jx4cNGG"])
+    async def test_fetch_invite_target_users_job(self, rest_client, input_invite):
+        expected_route = routes.GET_INVITE_TARGET_USERS_JOB_STATUS.compile(invite_code="Jx4cNGG")
+        rest_client._request = mock.AsyncMock(return_value={"status": 1})
+
+        result = await rest_client.fetch_invite_target_users_job(input_invite)
+
+        assert result is rest_client._entity_factory.deserialize_target_users_job.return_value
+        rest_client._entity_factory.deserialize_target_users_job.assert_called_once_with({"status": 1})
+        rest_client._request.assert_awaited_once_with(expected_route)
 
     async def test_fetch_my_user(self, rest_client):
         user = StubModel(123)
