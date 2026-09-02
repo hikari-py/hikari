@@ -4259,6 +4259,59 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
     # SCHEDULED EVENT MODELS #
     ##########################
 
+    def _deserialize_scheduled_event_recurrence_rule(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledEventRecurrenceRule:
+        end: datetime.datetime | None = None
+        if raw_end := payload.get("end"):
+            end = time.iso8601_datetime_string_to_datetime(raw_end)
+
+        by_weekday: list[scheduled_events_models.ScheduledEventRecurrenceWeekday | int] | None = None
+        if (raw_by_weekday := payload.get("by_weekday")) is not None:
+            by_weekday = [scheduled_events_models.ScheduledEventRecurrenceWeekday(day) for day in raw_by_weekday]
+
+        by_n_weekday: list[scheduled_events_models.ScheduledEventRecurrenceNWeekday] | None = None
+        if (raw_by_n_weekday := payload.get("by_n_weekday")) is not None:
+            by_n_weekday = [
+                scheduled_events_models.ScheduledEventRecurrenceNWeekday(
+                    n=int(n_weekday["n"]), day=scheduled_events_models.ScheduledEventRecurrenceWeekday(n_weekday["day"])
+                )
+                for n_weekday in raw_by_n_weekday
+            ]
+
+        by_month: list[scheduled_events_models.ScheduledEventRecurrenceMonth | int] | None = None
+        if (raw_by_month := payload.get("by_month")) is not None:
+            by_month = [scheduled_events_models.ScheduledEventRecurrenceMonth(month) for month in raw_by_month]
+
+        by_month_day: list[int] | None = None
+        if (raw_by_month_day := payload.get("by_month_day")) is not None:
+            by_month_day = [int(day) for day in raw_by_month_day]
+
+        by_year_day: list[int] | None = None
+        if (raw_by_year_day := payload.get("by_year_day")) is not None:
+            by_year_day = [int(day) for day in raw_by_year_day]
+
+        return scheduled_events_models.ScheduledEventRecurrenceRule(
+            start=time.iso8601_datetime_string_to_datetime(payload["start"]),
+            end=end,
+            frequency=scheduled_events_models.ScheduledEventRecurrenceFrequency(payload["frequency"]),
+            interval=payload["interval"],
+            by_weekday=by_weekday,
+            by_n_weekday=by_n_weekday,
+            by_month=by_month,
+            by_month_day=by_month_day,
+            by_year_day=by_year_day,
+            count=payload.get("count"),
+        )
+
+    def _deserialize_optional_scheduled_event_recurrence_rule(
+        self, payload: data_binding.JSONObject
+    ) -> scheduled_events_models.ScheduledEventRecurrenceRule | None:
+        if raw_recurrence_rule := payload.get("recurrence_rule"):
+            return self._deserialize_scheduled_event_recurrence_rule(raw_recurrence_rule)
+
+        return None
+
     @typing_extensions.override
     def deserialize_scheduled_external_event(
         self, payload: data_binding.JSONObject
@@ -4281,6 +4334,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             creator=creator,
             user_count=payload.get("user_count"),
             image_hash=payload.get("image"),
+            recurrence_rule=self._deserialize_optional_scheduled_event_recurrence_rule(payload),
             location=payload["entity_metadata"]["location"],
         )
 
@@ -4310,6 +4364,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             creator=creator,
             user_count=payload.get("user_count"),
             image_hash=payload.get("image"),
+            recurrence_rule=self._deserialize_optional_scheduled_event_recurrence_rule(payload),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
         )
 
@@ -4339,6 +4394,7 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             creator=creator,
             user_count=payload.get("user_count"),
             image_hash=payload.get("image"),
+            recurrence_rule=self._deserialize_optional_scheduled_event_recurrence_rule(payload),
             channel_id=snowflakes.Snowflake(payload["channel_id"]),
         )
 
