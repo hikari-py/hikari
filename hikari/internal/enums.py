@@ -37,6 +37,7 @@ if typing.TYPE_CHECKING:
 
 _T = typing.TypeVar("_T")
 _MAX_CACHED_MEMBERS: typing.Final[int] = 1 << 12
+_get_name = operator.attrgetter("_name_")
 
 
 class _DeprecatedAlias(typing.Generic[_T]):
@@ -156,10 +157,16 @@ class _EnumMeta(type):
         return cls._value_to_member_map_.get(value, value)
 
     def __getitem__(cls, name: str) -> Enum:
-        if (member := getattr(cls, name, None)) is not None:
-            return member
+        try:
+            return cls._name_to_member_map_[name]
+        # AttributeError can only happen on the base Enum class, which has no member map.
+        except (AttributeError, KeyError):
+            # Fall back to attribute access so that deprecated aliases and any
+            # other descriptor-provided names still resolve.
+            if (member := getattr(cls, name, None)) is not None:
+                return member
 
-        raise KeyError(name)
+            raise KeyError(name) from None
 
     def __contains__(cls, item: object) -> bool:
         return item in cls._value_to_member_map_
@@ -412,10 +419,16 @@ class _FlagMeta(type):
                 return pseudomember
 
     def __getitem__(cls, name: str) -> Flag:
-        if (member := getattr(cls, name, None)) is not None:
-            return member
+        try:
+            return cls._name_to_member_map_[name]
+        # AttributeError can only happen on the base Flag class, which has no member map.
+        except (AttributeError, KeyError):
+            # Fall back to attribute access so that deprecated aliases and any
+            # other descriptor-provided names still resolve.
+            if (member := getattr(cls, name, None)) is not None:
+                return member
 
-        raise KeyError(name)
+            raise KeyError(name) from None
 
     def __iter__(cls) -> typing.Iterator[typing.Any]:
         yield from cls._name_to_member_map_.values()
@@ -478,6 +491,7 @@ class _FlagMeta(type):
 
         cls = super().__new__(mcls, cls_name, (int, *bases), new_namespace)
 
+        powers_of_2_mask = 0
         for name, value in namespace.names_to_values.items():
             if isinstance(new_namespace.get(name), _DeprecatedAlias):
                 continue
@@ -498,12 +512,14 @@ class _FlagMeta(type):
 
             if not (value & value - 1):
                 powers_of_2_map[value] = member
+                powers_of_2_mask |= value
 
         all_bits = functools.reduce(operator.or_, value_to_member.keys())
         all_bits_member = cls.__new__(cls, all_bits)
         all_bits_member._name_ = None
         all_bits_member._value_ = all_bits
         cls.__everything__ = all_bits_member
+        cls._powers_of_2_mask_ = powers_of_2_mask
 
         return cls
 
@@ -660,6 +676,7 @@ class Flag(metaclass=_FlagMeta):
     _name_to_member_map_: typing.ClassVar[typing.Mapping[str, Flag]]
     _value_to_member_map_: typing.ClassVar[typing.Mapping[int, Flag]]
     _powers_of_2_to_member_map_: typing.ClassVar[typing.Mapping[int, Flag]]
+    _powers_of_2_mask_: typing.ClassVar[int]
     _temp_members_: typing.ClassVar[typing.Mapping[int, Flag]]
     _member_names_: typing.ClassVar[typing.Sequence[str]]
     __members__: typing.ClassVar[typing.Mapping[str, Flag]]
@@ -689,7 +706,8 @@ class Flag(metaclass=_FlagMeta):
             [`True`][] if any of the given flags are part of this value.
             Otherwise, return [`False`][].
         """
-        return all((flag & self) == flag for flag in flags)
+        value = self._value_
+        return all(((flag_value := operator.index(flag)) & value) == flag_value for flag in flags)
 
     def any(self, *flags: Self) -> bool:
         """Check if any of the given flags are part of this value.
@@ -700,7 +718,8 @@ class Flag(metaclass=_FlagMeta):
             [`True`][] if any of the given flags are part of this value.
             Otherwise, return [`False`][].
         """
-        return any((flag & self) == flag for flag in flags)
+        value = self._value_
+        return any(((flag_value := operator.index(flag)) & value) == flag_value for flag in flags)
 
     def difference(self, other: Self | int) -> _T:
         """Perform a set difference with the other set.
@@ -709,7 +728,7 @@ class Flag(metaclass=_FlagMeta):
 
         Equivalent to using the subtraction `-` operator.
         """
-        return self.__class__(self & ~int(other))
+        return self.__class__(self._value_ & ~int(other))
 
     def intersection(self, other: Self | int) -> _T:
         """Return a combination of flags that are set for both given values.
@@ -729,18 +748,20 @@ class Flag(metaclass=_FlagMeta):
         [`False`][]. If no common flag values exist between them, then
         this returns [`True`][].
         """
-        return not (self & other)
+        return not self._value_ & operator.index(other)
 
     def is_subset(self, other: Self | int) -> bool:
         """Return whether another set contains this set or not.
 
         Equivalent to using the "in" operator.
         """
-        return (self & other) == other
+        other_value = operator.index(other)
+        return (self._value_ & other_value) == other_value
 
     def is_superset(self, other: Self | int) -> bool:
         """Return whether this set contains another set or not."""
-        return (self & other) == self
+        value = self._value_
+        return (value & operator.index(other)) == value
 
     def none(self, *flags: Self) -> bool:
         """Check if none of the given flags are part of this value.
@@ -763,11 +784,18 @@ class Flag(metaclass=_FlagMeta):
 
         The result will be a name-sorted [`typing.Sequence`][] of each member
         """
-        return sorted(
-            (member for member in self.__class__._powers_of_2_to_member_map_.values() if member.value & self),
-            # Assumption: powers of 2 already have a cached value.
-            key=lambda m: m._name_,
-        )
+        members = self.__class__._powers_of_2_to_member_map_
+        # Masking drops any unrecognised bits upfront, so every remaining bit
+        # is guaranteed to have a member in the map.
+        value = self._value_ & self.__class__._powers_of_2_mask_
+        out = []
+        while value:
+            bit = value & -value
+            value ^= bit
+            out.append(members[bit])
+
+        out.sort(key=_get_name)
+        return out
 
     def symmetric_difference(self, other: _T | int) -> Self:
         """Return a set with the symmetric differences of two flag sets.
@@ -796,8 +824,7 @@ class Flag(metaclass=_FlagMeta):
     # so this is being defined anyway.
     symmetricdifference = symmetric_difference
 
-    def __bool__(self) -> bool:
-        return bool(self._value_)
+    # __bool__ is intentionally not defined: the inherited C-level int.__bool__ is equivalent and faster.
 
     def __int__(self) -> int:
         return self._value_
@@ -806,7 +833,8 @@ class Flag(metaclass=_FlagMeta):
         return iter(self.split())
 
     def __len__(self) -> int:
-        return len(self.split())
+        # Masking drops any unrecognised bits, matching what split returns.
+        return (self._value_ & self._powers_of_2_mask_).bit_count()
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}.{self.name}: {self.value!r}>"
