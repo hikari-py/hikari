@@ -118,7 +118,7 @@ pytest = [
 release = ["twine==7.0.0"]
 ruff = ["ruff==0.16.6"]
 slotscheck = ["slotscheck==0.20.1"]
-towncrier = ["towncrier==25.8.0"]
+towncrier = ["towncrier==26.9.0"]
 types = [
     # examples/voice_message/*
     "pydub-stubs==0.25.1.6",
