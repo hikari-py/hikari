@@ -525,6 +525,9 @@ PUT_GUILD_TEMPLATE: typing.Final[Route] = Route(PUT, "/guilds/{guild}/templates/
 # Invites
 GET_INVITE: typing.Final[Route] = Route(GET, "/invites/{invite_code}")
 DELETE_INVITE: typing.Final[Route] = Route(DELETE, "/invites/{invite_code}")
+GET_INVITE_TARGET_USERS: typing.Final[Route] = Route(GET, "/invites/{invite_code}/target-users")
+PUT_INVITE_TARGET_USERS: typing.Final[Route] = Route(PUT, "/invites/{invite_code}/target-users")
+GET_INVITE_TARGET_USERS_JOB_STATUS: typing.Final[Route] = Route(GET, "/invites/{invite_code}/target-users/job-status")
 
 # Users
 GET_USER: typing.Final[Route] = Route(GET, "/users/{user}")

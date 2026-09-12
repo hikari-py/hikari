@@ -2642,6 +2642,21 @@ class EntityFactoryImpl(entity_factory.EntityFactory):
             expires_at=expires_at,
         )
 
+    @typing_extensions.override
+    def deserialize_target_users_job(self, payload: data_binding.JSONObject) -> invite_models.TargetUsersJob:
+        completed_at: datetime.datetime | None = None
+        if raw_completed_at := payload.get("completed_at"):
+            completed_at = time.iso8601_datetime_string_to_datetime(raw_completed_at)
+
+        return invite_models.TargetUsersJob(
+            status=invite_models.TargetUsersJobStatus(payload["status"]),
+            total_users=int(payload["total_users"]),
+            processed_users=int(payload["processed_users"]),
+            created_at=time.iso8601_datetime_string_to_datetime(payload["created_at"]),
+            completed_at=completed_at,
+            error_message=payload.get("error_message"),
+        )
+
     ######################
     # INTERACTION MODELS #
     ######################
