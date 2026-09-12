@@ -1280,7 +1280,7 @@ mkdocs = [
     { name = "mkdocs-literate-nav", specifier = "==0.6.3" },
     { name = "mkdocs-material", specifier = "==9.7.7" },
     { name = "mkdocs-minify-plugin", specifier = "==0.8.0" },
-    { name = "mkdocs-towncrier", specifier = "==0.1.5" },
+    { name = "mkdocs-towncrier", specifier = "==0.1.6" },
     { name = "mkdocstrings", extras = ["python"], specifier = "==1.0.6" },
 ]
 mypy = [
@@ -1804,15 +1804,15 @@ wheels = [
 
 [[package]]
 name = "mkdocs-towncrier"
-version = "0.1.5"
+version = "0.1.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mkdocs" },
     { name = "towncrier" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/02/21/2b9ed48625a771310e9123b4f53c480bcea54731a40bee6af641b7ce2f04/mkdocs_towncrier-0.1.5.tar.gz", hash = "sha256:081dc80f3bc84035b9ee6994e0d8fb88acf3ccc123bcefb4cccabe0f515892de", size = 20321, upload-time = "2025-08-31T16:29:29.294Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/12/23/a7e2f7313a62524778f8c3e134c48f37b42cacece8147de52efcfb473b3c/mkdocs_towncrier-0.1.6.tar.gz", hash = "sha256:a58b9eff5d7e580aeb7560839fd2d889949f8e9417f5c17f4f9008e6c48d4e13", size = 20313, upload-time = "2026-09-12T20:55:20.895Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/c1/1b180400e8912d7ff477ce569ae1f2c0d80890d2558ab8fe18b2f07e95c1/mkdocs_towncrier-0.1.5-py3-none-any.whl", hash = "sha256:ea6819a5600912a4238890cf9b921d2933eea1a2d0e7e862861caf091ef4e4b4", size = 4855, upload-time = "2025-08-31T16:29:28.254Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/6f/463eab8fada173a1272ad83c2ce2f84611b7eb1415f6991cc7ab1c66eb09/mkdocs_towncrier-0.1.6-py3-none-any.whl", hash = "sha256:9499d3a551bdb7a287debf139ebc624dce23b01e784384eec12f7b8f2b38dc2b", size = 4846, upload-time = "2026-09-12T20:55:19.74Z" },
 ]
 
 [[package]]
