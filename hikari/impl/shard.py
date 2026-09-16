@@ -990,8 +990,7 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         poll_events_task = asyncio.create_task(self._poll_events(), name=f"poll events (shard {self._shard_id})")
 
-        # Rate-limits are imposed per websocket connection, so reset them. This discards
-        # any payloads which were still queued to be sent over the previous connection
+        # Rate-limits are imposed per websocket connection, so reset them (discarding any queued payloads)
         discarded = len(self._total_rate_limit.queue) + len(self._non_priority_rate_limit.queue)
         self._total_rate_limit.close()
         self._non_priority_rate_limit.close()
