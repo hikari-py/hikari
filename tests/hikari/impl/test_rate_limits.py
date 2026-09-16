@@ -225,6 +225,16 @@ class TestWindowedBurstRateLimiter:
         with contextlib.suppress(Exception):
             inst.close()
 
+    def test_close_resets_window(self, ratelimiter):
+        ratelimiter.remaining = 0
+        ratelimiter.move_at = time.time() + 100
+
+        ratelimiter.close()
+
+        assert ratelimiter.remaining == 0
+        assert ratelimiter.move_at == 0.0
+        assert ratelimiter.is_rate_limited(time.time()) is False
+
     @pytest.mark.asyncio
     async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter):
         event_loop = asyncio.get_running_loop()

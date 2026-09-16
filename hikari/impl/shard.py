@@ -697,7 +697,10 @@ class GatewayShardImpl(shard.GatewayShard):
 
         await self._total_rate_limit.acquire()
 
-        assert self._ws is not None
+        if self._ws is None:
+            msg = f"shard {self._shard_id} disconnected while the payload was waiting to be sent"
+            raise errors.ComponentStateConflictError(msg)
+
         await self._ws.send_json(data)
 
     def _check_if_connected(self) -> None:
@@ -987,12 +990,17 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         poll_events_task = asyncio.create_task(self._poll_events(), name=f"poll events (shard {self._shard_id})")
 
-        # Rate-limits are imposed per websocket connection
+        # Rate-limits are imposed per websocket connection, so reset them. This discards
+        # any payloads which were still queued to be sent over the previous connection
+        discarded = len(self._total_rate_limit.queue) + len(self._non_priority_rate_limit.queue)
         self._total_rate_limit.close()
         self._non_priority_rate_limit.close()
 
         # Perform handshake
         if self._seq is None:
+            if discarded:
+                self._logger.debug("discarded %s payload(s) queued for the previous connection", discarded)
+
             self._logger.info("identifying with new session")
             await self._send_json(
                 {
@@ -1014,6 +1022,13 @@ class GatewayShardImpl(shard.GatewayShard):
                 }
             )
         else:
+            if discarded:
+                self._logger.warning(
+                    "discarded %s payload(s) still queued for the previous connection (e.g. member chunk requests); "
+                    "they will not be re-sent after resuming",
+                    discarded,
+                )
+
             self._logger.info("resuming session %s", self._session_id)
             await self._send_json(
                 {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}}

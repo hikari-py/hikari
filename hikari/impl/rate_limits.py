@@ -401,6 +401,18 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.remaining = self.limit
         self.move_at = now + self.period
 
+    @typing_extensions.override
+    def close(self) -> None:
+        """Close the rate limiter, shut down any pending tasks and reset the window.
+
+        The limiter is left in its initial state afterwards, so it can be
+        reused for a brand new rate limit period (for example, after a new
+        websocket connection is established).
+        """
+        super().close()
+        self.remaining = 0
+        self.move_at = 0.0
+
     async def throttle(self) -> None:
         """Perform the throttling rate limiter logic.
 
