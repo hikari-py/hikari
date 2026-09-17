@@ -141,13 +141,14 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         """
         self._cancel_throttle_task()
 
-        dropped = len(self.queue)
+        dropped = 0
         while self.queue:
             future = self.queue.pop(0)
 
             # The waiter may have been cancelled while queued
             if not future.done():
                 future.set_exception(exception)
+                dropped += 1
 
         if dropped:
             _LOGGER.debug("%s rate limiter dropped %s pending tasks: %s", self.name, dropped, exception)
