@@ -225,15 +225,50 @@ class TestWindowedBurstRateLimiter:
         with contextlib.suppress(Exception):
             inst.close()
 
-    def test_close_resets_window(self, ratelimiter):
+    def test_reset_moves_window(self, ratelimiter):
+        ratelimiter.remaining = 0
+        ratelimiter.move_at = 5000
+        ratelimiter.throttle_task = None
+        ratelimiter.queue = []
+
+        with mock.patch.object(rate_limits.time, "time", return_value=1000):
+            ratelimiter.reset()
+
+        assert ratelimiter.remaining == 3
+        assert ratelimiter.move_at == 1003
+        assert ratelimiter.throttle_task is None
+
+    @pytest.mark.asyncio
+    async def test_reset_restarts_throttle_when_queue_not_empty(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+        old_throttle_task = event_loop.create_future()
+        ratelimiter.throttle_task = old_throttle_task
+        ratelimiter.throttle = mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock())
+        ratelimiter.queue = [event_loop.create_future()]
+
+        with mock.patch.object(event_loop, "create_task") as create_task:
+            ratelimiter.reset()
+
+        assert old_throttle_task.cancelled()
+        ratelimiter.throttle.assert_called_once_with()
+        create_task.assert_called_once_with(ratelimiter.throttle.return_value)
+        assert ratelimiter.throttle_task is create_task.return_value
+        assert not ratelimiter.queue[0].cancelled()
+
+    @pytest.mark.asyncio
+    async def test_reset_releases_queued_futures_under_new_window(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
         ratelimiter.remaining = 0
         ratelimiter.move_at = time.time() + 100
+        futures = [event_loop.create_future() for _ in range(5)]
+        ratelimiter.queue = list(futures)
+        ratelimiter.throttle_task = event_loop.create_task(asyncio.sleep(100))
 
-        ratelimiter.close()
+        ratelimiter.reset()
+        await asyncio.sleep(0)
 
+        assert [f.done() for f in futures] == [True, True, True, False, False]
         assert ratelimiter.remaining == 0
-        assert ratelimiter.move_at == 0.0
-        assert ratelimiter.is_rate_limited(time.time()) is False
 
     @pytest.mark.asyncio
     async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter):

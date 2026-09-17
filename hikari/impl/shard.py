@@ -692,16 +692,19 @@ class GatewayShardImpl(shard.GatewayShard):
         await asyncio.wait_for(asyncio.shield(self._keep_alive_task), timeout=None)
 
     async def _send_json(self, data: data_binding.JSONObject, *, priority: bool = False) -> None:
-        if not priority:
-            await self._non_priority_rate_limit.acquire()
+        while True:
+            if not priority:
+                await self._non_priority_rate_limit.acquire()
 
-        await self._total_rate_limit.acquire()
+            await self._total_rate_limit.acquire()
 
-        if self._ws is None:
-            msg = f"shard {self._shard_id} disconnected while the payload was waiting to be sent"
-            raise errors.ComponentStateConflictError(msg)
+            if self._ws is not None and (priority or self.is_connected):
+                await self._ws.send_json(data)
+                return
 
-        await self._ws.send_json(data)
+            # Disconnected while waiting on the rate limit, retry once the new connection is ready
+            assert self._handshake_event is not None
+            await self._handshake_event.wait()
 
     def _check_if_connected(self) -> None:
         if not self.is_connected:
@@ -878,10 +881,12 @@ class GatewayShardImpl(shard.GatewayShard):
                         data["v"],
                     )
                     self._handshake_event.set()
+                    self._non_priority_rate_limit.reset()
 
                 elif name == _RESUMED:
                     self._logger.info("resumed session [session:%s, seq:%s]", self._session_id, self._seq)
                     self._handshake_event.set()
+                    self._non_priority_rate_limit.reset()
                 elif name == _RATE_LIMITED:
                     self._logger.warning(
                         "rate-limited on opcode %d for %.1fs [session:%s, metadata:%s]",
@@ -990,16 +995,12 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         poll_events_task = asyncio.create_task(self._poll_events(), name=f"poll events (shard {self._shard_id})")
 
-        # Rate-limits are imposed per websocket connection, so reset them (discarding any queued payloads)
-        discarded = len(self._total_rate_limit.queue) + len(self._non_priority_rate_limit.queue)
-        self._total_rate_limit.close()
-        self._non_priority_rate_limit.close()
+        # Rate-limits are imposed per websocket connection. The non-priority rate limit
+        # is reset once the handshake completes, as nothing can be sent before then
+        self._total_rate_limit.reset()
 
         # Perform handshake
         if self._seq is None:
-            if discarded:
-                self._logger.debug("discarded %s payload(s) queued for the previous connection", discarded)
-
             self._logger.info("identifying with new session")
             await self._send_json(
                 {
@@ -1018,19 +1019,14 @@ class GatewayShardImpl(shard.GatewayShard):
                         "capabilities": self._capabilities,
                         "presence": self._serialize_and_store_presence_payload(),
                     },
-                }
+                },
+                priority=True,
             )
         else:
-            if discarded:
-                self._logger.warning(
-                    "discarded %s payload(s) still queued for the previous connection (e.g. member chunk requests); "
-                    "they will not be re-sent after resuming",
-                    discarded,
-                )
-
             self._logger.info("resuming session %s", self._session_id)
             await self._send_json(
-                {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}}
+                {_OP: _RESUME, _D: {"token": self._token, "seq": self._seq, "session_id": self._session_id}},
+                priority=True,
             )
 
         lifetime_tasks = (heartbeat_task, poll_events_task)

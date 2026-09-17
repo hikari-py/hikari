@@ -721,6 +721,7 @@ class TestGatewayShardImplAsync:
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=True))
         data = object()
 
         await client._send_json(data)
@@ -728,22 +729,53 @@ class TestGatewayShardImplAsync:
         client._non_priority_rate_limit.acquire.assert_awaited_once_with()
         client._total_rate_limit.acquire.assert_awaited_once_with()
         client._ws.send_json.assert_awaited_once_with(data)
+        client._handshake_event.wait.assert_not_called()
 
-    async def test__send_json_when_disconnected_while_waiting(self, client):
+    @pytest.mark.parametrize("priority", [True, False])
+    async def test__send_json_when_disconnected_while_waiting(self, client, priority):
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = None
+        ws = mock.AsyncMock()
+        data = object()
 
-        with pytest.raises(errors.ComponentStateConflictError):
-            await client._send_json(object())
+        async def wait():
+            # Simulate a reconnect finishing while we wait
+            client._ws = ws
+            client._handshake_event.is_set.return_value = True
 
-        client._non_priority_rate_limit.acquire.assert_awaited_once_with()
-        client._total_rate_limit.acquire.assert_awaited_once_with()
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        await client._send_json(data, priority=priority)
+
+        client._handshake_event.wait.assert_called_once_with()
+        assert client._non_priority_rate_limit.acquire.await_count == (0 if priority else 2)
+        assert client._total_rate_limit.acquire.await_count == 2
+        ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_connected_but_handshake_not_complete(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = mock.AsyncMock()
+        data = object()
+
+        async def wait():
+            client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        await client._send_json(data)
+
+        client._handshake_event.wait.assert_called_once_with()
+        assert client._non_priority_rate_limit.acquire.await_count == 2
+        assert client._total_rate_limit.acquire.await_count == 2
+        client._ws.send_json.assert_awaited_once_with(data)
 
     async def test__send_json_when_priority(self, client):
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
         client._ws = mock.AsyncMock()
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False))
         data = object()
 
         await client._send_json(data, priority=True)
@@ -969,6 +1001,8 @@ class TestGatewayShardImplAsync:
         client._gateway_url = "wss://somewhere.com?somewhere=true"
         client._resume_gateway_url = None
         client._token = "sometoken"
+        client._total_rate_limit = mock.Mock()
+        client._non_priority_rate_limit = mock.Mock()
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
         client._seq = None
@@ -1029,6 +1063,8 @@ class TestGatewayShardImplAsync:
         )
         heartbeat.assert_called_once_with(0.01)
 
+        client._total_rate_limit.reset.assert_called_once_with()
+        client._non_priority_rate_limit.reset.assert_not_called()
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {
@@ -1047,7 +1083,8 @@ class TestGatewayShardImplAsync:
                     "capabilities": 32768,
                     "presence": serialize_and_store_presence_payload.return_value,
                 },
-            }
+            },
+            priority=True,
         )
 
         assert shield.call_count == 2
@@ -1064,6 +1101,8 @@ class TestGatewayShardImplAsync:
         client._gateway_url = "wss://somewhere.com?somewhere=false"
         client._resume_gateway_url = "wss://notsomewhere.com?somewhere=true"
         client._token = "sometoken"
+        client._total_rate_limit = mock.Mock()
+        client._non_priority_rate_limit = mock.Mock()
         client._logger = mock.Mock()
         client._handshake_event = mock.Mock()
         client._seq = 1234
@@ -1115,9 +1154,11 @@ class TestGatewayShardImplAsync:
         )
         heartbeat.assert_called_once_with(0.01)
 
+        client._total_rate_limit.reset.assert_called_once_with()
+        client._non_priority_rate_limit.reset.assert_not_called()
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
-            {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}
+            {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}, priority=True
         )
 
         assert shield.call_count == 2
@@ -1125,36 +1166,6 @@ class TestGatewayShardImplAsync:
         first_completed.assert_called_once_with(
             client._handshake_event.wait.return_value, shielded_heartbeat_task, shielded_poll_events_task
         )
-
-    @pytest.mark.parametrize(("seq", "level"), [(None, "debug"), (1234, "warning")])
-    async def test__connect_discards_queued_payloads(self, client, seq, level):
-        ws = mock.AsyncMock()
-        ws.receive_json.return_value = {"op": 10, "d": {"heartbeat_interval": 10}}
-        client._logger = mock.Mock()
-        client._handshake_event = mock.Mock()
-        client._seq = seq
-        client._session_id = "some session id"
-        client._total_rate_limit = mock.Mock(queue=[object()])
-        client._non_priority_rate_limit = mock.Mock(queue=[object(), object()])
-
-        stack = contextlib.ExitStack()
-        stack.enter_context(mock.patch.object(asyncio, "create_task"))
-        stack.enter_context(mock.patch.object(asyncio, "shield"))
-        stack.enter_context(mock.patch.object(aio, "first_completed"))
-        stack.enter_context(mock.patch.object(shard, "_log_filterer"))
-        stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_send_json"))
-        stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_heartbeat", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(shard.GatewayShardImpl, "_poll_events", new=mock.Mock()))
-        stack.enter_context(mock.patch.object(shard._GatewayTransport, "connect", return_value=ws))
-
-        with stack:
-            await client._connect()
-
-        client._total_rate_limit.close.assert_called_once_with()
-        client._non_priority_rate_limit.close.assert_called_once_with()
-        log = getattr(client._logger, level)
-        log.assert_called_once()
-        assert log.call_args.args[-1] == 3
 
     async def test__connect_when_op_received_is_not_HELLO(self, client):
         ws = mock.AsyncMock()
@@ -1223,6 +1234,7 @@ class TestGatewayShardImplAsync:
         client._resume_gateway_url = None
         client._user_id = None
         client._event_manager.consume_raw_event = mock.Mock(side_effect=[LookupError])
+        client._non_priority_rate_limit = mock.Mock()
         client._handshake_event = mock.Mock()
 
         with pytest.raises(RuntimeError):
@@ -1235,6 +1247,7 @@ class TestGatewayShardImplAsync:
         assert client._user_id == 123
         client._event_manager.consume_raw_event.assert_called_once_with("READY", client, data)
         client._handshake_event.set.assert_called_once_with()
+        client._non_priority_rate_limit.reset.assert_called_once_with()
 
     async def test__poll_events_on_dispatch_when_RESUMED(self, client):
         payload = {"op": 0, "t": "RESUMED", "d": {"some": "test"}, "s": 101}
@@ -1242,6 +1255,7 @@ class TestGatewayShardImplAsync:
         client._ws = mock.Mock(receive_json=mock.AsyncMock(side_effect=[payload, RuntimeError]))
         client._seq = 1000
         client._event_manager.consume_raw_event = mock.Mock(side_effect=[LookupError])
+        client._non_priority_rate_limit = mock.Mock()
         client._handshake_event = mock.Mock()
 
         with pytest.raises(RuntimeError):
@@ -1251,6 +1265,7 @@ class TestGatewayShardImplAsync:
         assert client._seq == 101
         client._event_manager.consume_raw_event.assert_called_once_with("RESUMED", client, {"some": "test"})
         client._handshake_event.set.assert_called_once_with()
+        client._non_priority_rate_limit.reset.assert_called_once_with()
 
     async def test__poll_events_on_dispatch_when_RATE_LIMITED(self, client):
         data = {"opcode": 8, "retry_after": 12.5, "meta": {"guild_id": "123123", "nonce": "anonce"}}

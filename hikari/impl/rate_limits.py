@@ -401,17 +401,20 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.remaining = self.limit
         self.move_at = now + self.period
 
-    @typing_extensions.override
-    def close(self) -> None:
-        """Close the rate limiter, shut down any pending tasks and reset the window.
+    def reset(self) -> None:
+        """Start a fresh rate limit window without dropping the queue.
 
-        The limiter is left in its initial state afterwards, so it can be
-        reused for a brand new rate limit period (for example, after a new
-        websocket connection is established).
+        Unlike [`hikari.impl.rate_limits.WindowedBurstRateLimiter.close`][],
+        queued futures are kept and released under the new window.
         """
-        super().close()
-        self.remaining = 0
-        self.move_at = 0.0
+        if self.throttle_task is not None:
+            self.throttle_task.cancel()
+            self.throttle_task = None
+
+        self.move_window(time.time())
+
+        if self.queue:
+            self.throttle_task = asyncio.get_running_loop().create_task(self.throttle())
 
     async def throttle(self) -> None:
         """Perform the throttling rate limiter logic.
