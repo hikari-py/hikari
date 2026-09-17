@@ -647,20 +647,6 @@ class TestGatewayShardImpl:
 
         check_if_alive.assert_called_once_with()
 
-    def test__on_keep_alive_done(self, client):
-        client._shard_id = 20
-        client._non_priority_rate_limit = mock.Mock()
-        client._total_rate_limit = mock.Mock()
-
-        client._on_keep_alive_done(mock.Mock())
-
-        client._non_priority_rate_limit.drop.assert_called_once()
-        client._total_rate_limit.drop.assert_called_once()
-        exception = client._non_priority_rate_limit.drop.call_args.args[0]
-        assert client._total_rate_limit.drop.call_args.args[0] is exception
-        assert isinstance(exception, errors.ComponentStateConflictError)
-        assert str(exception) == "shard 20 has shut down"
-
 
 @pytest.mark.asyncio
 class TestGatewayShardImplAsync:
@@ -843,6 +829,109 @@ class TestGatewayShardImplAsync:
         assert client._non_priority_rate_limit.acquire.await_count == 3
         ws.send_json.assert_awaited_once_with(data)
 
+    async def test__send_json_when_dropped_while_queued(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock(
+            acquire=mock.AsyncMock(side_effect=[shard._DisconnectedError, None])
+        )
+        client._ws = None
+        client._keep_alive_task = asyncio.get_running_loop().create_future()
+        ws = mock.AsyncMock()
+        data = object()
+
+        async def wait():
+            client._ws = ws
+            client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        await client._send_json(data)
+
+        client._handshake_event.wait.assert_called_once_with()
+        assert client._non_priority_rate_limit.acquire.await_count == 2
+        # First attempt never reached the total rate limit
+        client._total_rate_limit.acquire.assert_awaited_once_with()
+        ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_shard_shuts_down_after_wait(self, client):
+        event_loop = asyncio.get_running_loop()
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = event_loop.create_future()
+        client._session_id = "some session"
+        client._shard_id = 20
+
+        async def wait():
+            # Shut down while waiting, same session
+            client._keep_alive_task.set_result(None)
+            await asyncio.sleep(100)
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        with pytest.raises(errors.ComponentStateConflictError, match="shard 20 has shut down"):
+            await client._send_json(object())
+
+        # Must not acquire again
+        client._non_priority_rate_limit.acquire.assert_awaited_once_with()
+
+    async def test__send_json_with_real_rate_limits_when_shard_shuts_down_while_waiting(self, client):
+        event_loop = asyncio.get_running_loop()
+        client._shard_id = 20
+        client._session_id = "some session"
+        client._handshake_event = asyncio.Event()
+        client._ws = None
+        client._non_priority_rate_limit.move_window(time.time())
+        client._non_priority_rate_limit.remaining = 0
+
+        async def keep_alive():
+            await asyncio.sleep(0)
+            # Mimic `_keep_alive` cleanup on shutdown
+            client._handshake_event.clear()
+            client._total_rate_limit.drop(shard._DisconnectedError())
+            client._non_priority_rate_limit.drop(shard._DisconnectedError())
+
+        client._keep_alive_task = event_loop.create_task(keep_alive())
+
+        with pytest.raises(errors.ComponentStateConflictError, match="shard 20 has shut down"):
+            await asyncio.wait_for(client._send_json(object()), timeout=1)
+
+        assert client._non_priority_rate_limit.queue == []
+        assert client._total_rate_limit.queue == []
+
+    async def test__send_json_with_real_rate_limits_when_resumed_while_waiting(self, client):
+        event_loop = asyncio.get_running_loop()
+        client._session_id = "some session"
+        client._handshake_event = asyncio.Event()
+        client._ws = None
+        ws = mock.AsyncMock()
+        data = object()
+        client._non_priority_rate_limit.move_window(time.time())
+        client._non_priority_rate_limit.remaining = 0
+
+        async def keep_alive():
+            await asyncio.sleep(0)
+            # Mimic a disconnect, then a resume
+            client._total_rate_limit.drop(shard._DisconnectedError())
+            client._non_priority_rate_limit.drop(shard._DisconnectedError())
+            await asyncio.sleep(0)
+            client._total_rate_limit.move_window(time.time())
+            client._non_priority_rate_limit.move_window(time.time())
+            client._ws = ws
+            client._handshake_event.set()
+            await asyncio.sleep(100)
+
+        client._keep_alive_task = event_loop.create_task(keep_alive())
+
+        try:
+            await asyncio.wait_for(client._send_json(data), timeout=1)
+        finally:
+            client._keep_alive_task.cancel()
+
+        ws.send_json.assert_awaited_once_with(data)
+        assert client._non_priority_rate_limit.queue == []
+        assert client._total_rate_limit.queue == []
+
     async def test__send_json_when_shard_not_running(self, client):
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
@@ -993,7 +1082,6 @@ class TestGatewayShardImplAsync:
         assert client._keep_alive_task is keep_alive_task
 
         create_task.assert_called_once_with(keep_alive.return_value, name="keep alive (shard 20)")
-        keep_alive_task.add_done_callback.assert_called_once_with(client._on_keep_alive_done)
         shield.assert_called_once_with(create_task.return_value)
         first_completed.assert_awaited_once_with(handshake_event.wait.return_value, shield.return_value)
 
@@ -1117,6 +1205,7 @@ class TestGatewayShardImplAsync:
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
         stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
+        stack.enter_context(mock.patch.object(time, "time", return_value=123456))
         stack.enter_context(mock.patch.object(platform, "system", return_value="Potato OS"))
         stack.enter_context(mock.patch.object(platform, "architecture", return_value=["ARM64"]))
         stack.enter_context(mock.patch.object(aiohttp, "__version__", new="4.0"))
@@ -1146,12 +1235,10 @@ class TestGatewayShardImplAsync:
         )
         heartbeat.assert_called_once_with(0.01)
 
-        client._total_rate_limit.reset.assert_called_once_with()
-        client._non_priority_rate_limit.reset.assert_not_called()
-        client._non_priority_rate_limit.drop.assert_called_once()
-        dropped_with = client._non_priority_rate_limit.drop.call_args.args[0]
-        assert isinstance(dropped_with, errors.SessionInvalidatedError)
-        assert str(dropped_with) == "shard 20 started a new session"
+        client._total_rate_limit.move_window.assert_called_once_with(123456)
+        client._non_priority_rate_limit.move_window.assert_called_once_with(123456)
+        client._total_rate_limit.drop.assert_not_called()
+        client._non_priority_rate_limit.drop.assert_not_called()
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {
@@ -1216,6 +1303,7 @@ class TestGatewayShardImplAsync:
             mock.patch.object(shard._GatewayTransport, "connect", return_value=ws)
         )
         stack.enter_context(mock.patch.object(urls, "VERSION", new=400))
+        stack.enter_context(mock.patch.object(time, "time", return_value=123456))
 
         with stack:
             assert await client._connect() == (heartbeat_task, poll_events_task)
@@ -1241,8 +1329,9 @@ class TestGatewayShardImplAsync:
         )
         heartbeat.assert_called_once_with(0.01)
 
-        client._total_rate_limit.reset.assert_called_once_with()
-        client._non_priority_rate_limit.reset.assert_not_called()
+        client._total_rate_limit.move_window.assert_called_once_with(123456)
+        client._non_priority_rate_limit.move_window.assert_called_once_with(123456)
+        client._total_rate_limit.drop.assert_not_called()
         client._non_priority_rate_limit.drop.assert_not_called()
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
@@ -1322,7 +1411,6 @@ class TestGatewayShardImplAsync:
         client._resume_gateway_url = None
         client._user_id = None
         client._event_manager.consume_raw_event = mock.Mock(side_effect=[LookupError])
-        client._non_priority_rate_limit = mock.Mock()
         client._handshake_event = mock.Mock()
 
         with pytest.raises(RuntimeError):
@@ -1335,7 +1423,6 @@ class TestGatewayShardImplAsync:
         assert client._user_id == 123
         client._event_manager.consume_raw_event.assert_called_once_with("READY", client, data)
         client._handshake_event.set.assert_called_once_with()
-        client._non_priority_rate_limit.reset.assert_called_once_with()
 
     async def test__poll_events_on_dispatch_when_RESUMED(self, client):
         payload = {"op": 0, "t": "RESUMED", "d": {"some": "test"}, "s": 101}
@@ -1343,7 +1430,6 @@ class TestGatewayShardImplAsync:
         client._ws = mock.Mock(receive_json=mock.AsyncMock(side_effect=[payload, RuntimeError]))
         client._seq = 1000
         client._event_manager.consume_raw_event = mock.Mock(side_effect=[LookupError])
-        client._non_priority_rate_limit = mock.Mock()
         client._handshake_event = mock.Mock()
 
         with pytest.raises(RuntimeError):
@@ -1353,7 +1439,6 @@ class TestGatewayShardImplAsync:
         assert client._seq == 101
         client._event_manager.consume_raw_event.assert_called_once_with("RESUMED", client, {"some": "test"})
         client._handshake_event.set.assert_called_once_with()
-        client._non_priority_rate_limit.reset.assert_called_once_with()
 
     async def test__poll_events_on_dispatch_when_RATE_LIMITED(self, client):
         data = {"opcode": 8, "retry_after": 12.5, "meta": {"guild_id": "123123", "nonce": "anonce"}}

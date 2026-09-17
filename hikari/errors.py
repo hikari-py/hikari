@@ -129,8 +129,8 @@ class SessionInvalidatedError(ComponentStateConflictError):
     """Exception thrown when a payload could not be sent because the shard started a new session.
 
     This happens when the shard could not resume its previous session after
-    reconnecting. Anything that was still waiting to be sent on the old
-    session is discarded, as Discord will send the full guild state again.
+    reconnecting. Anything still waiting to be sent is discarded, as every
+    guild is sent again through `GUILD_CREATE` on the new session.
     """
 
 

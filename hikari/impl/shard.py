@@ -133,6 +133,10 @@ _RECONNECTABLE_CLOSE_CODES: frozenset[errors.ShardCloseCode] = frozenset(
 _CUSTOM_STATUS_NAME = "Custom Status"
 
 
+class _DisconnectedError(Exception):
+    """Raised into queued payloads when the connection drops."""
+
+
 def _log_filterer(token: bytes) -> typing.Callable[[bytes], bytes]:
     def filterer(entry: bytes) -> bytes:
         return entry.replace(token, b"**REDACTED TOKEN**")
@@ -597,7 +601,7 @@ class GatewayShardImpl(shard.GatewayShard):
         self._last_heartbeat_ack_received = float("nan")
         self._last_heartbeat_sent = float("nan")
         self._logger = logging.getLogger(f"hikari.gateway.{shard_id}")
-        self._non_priority_rate_limit = rate_limits.GatewayRateLimiter(
+        self._non_priority_rate_limit = rate_limits.WindowedBurstRateLimiter(
             f"shard {shard_id} non-priority rate limit", *_NON_PRIORITY_RATELIMIT
         )
         self._proxy_settings = proxy_settings
@@ -608,7 +612,9 @@ class GatewayShardImpl(shard.GatewayShard):
         self._shard_id = shard_id
         self._status = initial_status
         self._token = token
-        self._total_rate_limit = rate_limits.GatewayRateLimiter(f"shard {shard_id} total rate limit", *_TOTAL_RATELIMIT)
+        self._total_rate_limit = rate_limits.WindowedBurstRateLimiter(
+            f"shard {shard_id} total rate limit", *_TOTAL_RATELIMIT
+        )
         self._compression = compression
         self._dumps = dumps
         self._loads = loads
@@ -673,12 +679,6 @@ class GatewayShardImpl(shard.GatewayShard):
         self._is_closing = False
         self._logger.info("shard shutdown successfully")
 
-    def _on_keep_alive_done(self, _: asyncio.Task[None]) -> None:
-        # Nothing can be sent anymore, fail anything still waiting
-        exception = errors.ComponentStateConflictError(f"shard {self._shard_id} has shut down")
-        self._non_priority_rate_limit.drop(exception)
-        self._total_rate_limit.drop(exception)
-
     @typing_extensions.override
     def get_user_id(self) -> snowflakes.Snowflake:
         self._check_if_connected()
@@ -696,6 +696,9 @@ class GatewayShardImpl(shard.GatewayShard):
     def _new_session_error(self) -> errors.SessionInvalidatedError:
         return errors.SessionInvalidatedError(f"shard {self._shard_id} started a new session")
 
+    def _shut_down_error(self) -> errors.ComponentStateConflictError:
+        return errors.ComponentStateConflictError(f"shard {self._shard_id} has shut down")
+
     async def _send_json(self, data: data_binding.JSONObject, *, priority: bool = False) -> None:
         if priority:
             await self._total_rate_limit.acquire()
@@ -707,26 +710,31 @@ class GatewayShardImpl(shard.GatewayShard):
         session_id = self._session_id
 
         while True:
-            await self._non_priority_rate_limit.acquire()
-            await self._total_rate_limit.acquire()
-
-            if self.is_connected:
-                assert self._ws is not None
-                await self._ws.send_json(data)
-                return
+            try:
+                await self._non_priority_rate_limit.acquire()
+                await self._total_rate_limit.acquire()
+            except _DisconnectedError:
+                pass
+            else:
+                if self.is_connected:
+                    assert self._ws is not None
+                    await self._ws.send_json(data)
+                    return
 
             # Disconnected while waiting, retry once reconnected (or bail out if the shard shut down).
             # Not using `aio.first_completed` as it would propagate the keep alive task's exception
             assert self._handshake_event is not None
             if self._keep_alive_task is None or self._keep_alive_task.done():
-                msg = f"shard {self._shard_id} has shut down"
-                raise errors.ComponentStateConflictError(msg)
+                raise self._shut_down_error()
 
             handshake = asyncio.ensure_future(self._handshake_event.wait())
             try:
                 await asyncio.wait((handshake, self._keep_alive_task), return_when=asyncio.FIRST_COMPLETED)
             finally:
                 handshake.cancel()
+
+            if self._keep_alive_task.done():
+                raise self._shut_down_error()
 
             if self._session_id != session_id:
                 raise self._new_session_error()
@@ -800,7 +808,6 @@ class GatewayShardImpl(shard.GatewayShard):
 
         self._handshake_event = asyncio.Event()
         keep_alive_task = asyncio.create_task(self._keep_alive(), name=f"keep alive (shard {self._shard_id})")
-        keep_alive_task.add_done_callback(self._on_keep_alive_done)
 
         await aio.first_completed(self._handshake_event.wait(), asyncio.shield(keep_alive_task))
 
@@ -912,12 +919,10 @@ class GatewayShardImpl(shard.GatewayShard):
                         data["v"],
                     )
                     self._handshake_event.set()
-                    self._non_priority_rate_limit.reset()
 
                 elif name == _RESUMED:
                     self._logger.info("resumed session [session:%s, seq:%s]", self._session_id, self._seq)
                     self._handshake_event.set()
-                    self._non_priority_rate_limit.reset()
                 elif name == _RATE_LIMITED:
                     self._logger.warning(
                         "rate-limited on opcode %d for %.1fs [session:%s, metadata:%s]",
@@ -1026,14 +1031,13 @@ class GatewayShardImpl(shard.GatewayShard):
         )
         poll_events_task = asyncio.create_task(self._poll_events(), name=f"poll events (shard {self._shard_id})")
 
-        # Rate-limits are per connection. The non-priority one is reset once the handshake completes
-        self._total_rate_limit.reset()
+        # Rate-limits are per connection. Queues were drained on disconnect, so a fresh window is enough
+        now = time.time()
+        self._total_rate_limit.move_window(now)
+        self._non_priority_rate_limit.move_window(now)
 
         # Perform handshake
         if self._seq is None:
-            # A new session receives every GUILD_CREATE again, so anything queued is stale
-            self._non_priority_rate_limit.drop(self._new_session_error())
-
             self._logger.info("identifying with new session")
             await self._send_json(
                 {
@@ -1077,8 +1081,6 @@ class GatewayShardImpl(shard.GatewayShard):
         backoff = rate_limits.ExponentialBackOff(base=_BACKOFF_BASE, maximum=_BACKOFF_CAP)
 
         while True:
-            self._handshake_event.clear()
-
             if time.time() - last_started_at < _BACKOFF_WINDOW:
                 backoff_time = next(backoff)
                 self._logger.info("backing off reconnecting for %.2fs", backoff_time)
@@ -1144,8 +1146,6 @@ class GatewayShardImpl(shard.GatewayShard):
                 self._ws = None
                 was_connected = self._handshake_event.is_set()
                 self._handshake_event.clear()
-                self._total_rate_limit.pause()
-                self._non_priority_rate_limit.pause()
 
                 # Cancel any left-over tasks
                 for task in lifetime_tasks:
@@ -1156,6 +1156,10 @@ class GatewayShardImpl(shard.GatewayShard):
                             await task
                         except asyncio.CancelledError:
                             pass
+
+                # Rate-limits are per connection. Wake queued payloads so they wait for the next one (see `_send_json`)
+                self._total_rate_limit.drop(_DisconnectedError())
+                self._non_priority_rate_limit.drop(_DisconnectedError())
 
                 # Close the ws
                 if ws:

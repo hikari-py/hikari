@@ -29,7 +29,6 @@ __all__: typing.Sequence[str] = (
     "BaseRateLimiter",
     "BurstRateLimiter",
     "ExponentialBackOff",
-    "GatewayRateLimiter",
     "ManualRateLimiter",
     "WindowedBurstRateLimiter",
 )
@@ -461,64 +460,6 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
                 future.set_result(None)
 
         self.throttle_task = None
-
-
-@typing.final
-class GatewayRateLimiter(WindowedBurstRateLimiter):
-    """Windowed burst rate limiter for a gateway connection.
-
-    Gateway rate limits are imposed per websocket connection, so this adds the
-    ability to hold back queued futures while disconnected and to start a fresh
-    window once a new connection is ready, without dropping anything.
-    """
-
-    __slots__: typing.Sequence[str] = ("paused",)
-
-    throttle_task: asyncio.Task[typing.Any] | None
-    # <<inherited docstring from BurstRateLimiter>>.
-
-    paused: bool
-    """Whether queued futures are currently being held back.
-
-    See [`hikari.impl.rate_limits.GatewayRateLimiter.pause`][].
-    """
-
-    def __init__(self, name: str, period: float, limit: int) -> None:
-        super().__init__(name, period, limit)
-        self.paused = False
-
-    @typing_extensions.override
-    async def acquire(self) -> None:
-        if not self.paused:
-            await super().acquire()
-            return
-
-        future = asyncio.get_running_loop().create_future()
-        self.queue.append(future)
-        await future
-
-    def pause(self) -> None:
-        """Hold back all queued futures until [`hikari.impl.rate_limits.GatewayRateLimiter.reset`][] is called.
-
-        The queue and the current window are left untouched. Futures acquired
-        while paused are queued as well.
-        """
-        self.paused = True
-        self._cancel_throttle_task()
-
-    def reset(self) -> None:
-        """Start a fresh rate limit window without dropping the queue.
-
-        Unlike [`hikari.impl.rate_limits.GatewayRateLimiter.close`][], queued
-        futures are kept and released under the new window. This also lifts a
-        [`hikari.impl.rate_limits.GatewayRateLimiter.pause`][].
-        """
-        self._cancel_throttle_task()
-        self.paused = False
-        self.move_window(time.time())
-
-        if self.queue:
-            self.throttle_task = asyncio.get_running_loop().create_task(self.throttle())
 
 
 @typing.final
