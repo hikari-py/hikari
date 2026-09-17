@@ -29,6 +29,7 @@ import time
 import mock
 import pytest
 
+from hikari import errors
 from hikari.impl import rate_limits
 from tests.hikari import hikari_test_helpers
 
@@ -100,6 +101,32 @@ class TestBurstRateLimiter:
         mock_burst_limiter.close()
         assert mock_burst_limiter.throttle_task is None, "task was not overwritten with None"
         assert task.cancelled(), "throttle_task is not cancelled"
+
+    @pytest.mark.asyncio
+    async def test_drop_fails_all_futures_pending(self, mock_burst_limiter):
+        event_loop = asyncio.get_running_loop()
+        mock_burst_limiter.throttle_task = None
+        futures = [event_loop.create_future() for _ in range(10)]
+        mock_burst_limiter.queue = list(futures)
+
+        mock_burst_limiter.drop("some reason")
+
+        assert mock_burst_limiter.queue == []
+        for future in futures:
+            with pytest.raises(errors.ComponentStateConflictError, match="some reason"):
+                future.result()
+
+    @pytest.mark.asyncio
+    async def test_drop_cancels_throttle_task_if_running(self, mock_burst_limiter):
+        event_loop = asyncio.get_running_loop()
+        task = event_loop.create_future()
+        mock_burst_limiter.throttle_task = task
+        mock_burst_limiter.queue = []
+
+        mock_burst_limiter.drop("some reason")
+
+        assert mock_burst_limiter.throttle_task is None
+        assert task.cancelled()
 
     @pytest.mark.asyncio
     async def test_close_when_closed(self, mock_burst_limiter):

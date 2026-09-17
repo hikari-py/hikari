@@ -40,6 +40,7 @@ import math
 import random
 import typing
 
+from hikari import errors
 from hikari.internal import time
 from hikari.internal import typing_extensions
 
@@ -127,6 +128,25 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
             _LOGGER.debug("%s rate limiter closed with %s pending tasks!", self.name, failed_tasks)
         else:
             _LOGGER.debug("%s rate limiter closed", self.name)
+
+    def drop(self, reason: str) -> None:
+        """Drop all queued futures, failing them with a [`hikari.errors.ComponentStateConflictError`][].
+
+        Parameters
+        ----------
+        reason
+            The reason to attach to the raised error.
+        """
+        if self.throttle_task is not None:
+            self.throttle_task.cancel()
+            self.throttle_task = None
+
+        dropped = len(self.queue)
+        while self.queue:
+            self.queue.pop(0).set_exception(errors.ComponentStateConflictError(reason))
+
+        if dropped:
+            _LOGGER.debug("%s rate limiter dropped %s pending tasks: %s", self.name, dropped, reason)
 
     @property
     def is_empty(self) -> bool:

@@ -1001,6 +1001,9 @@ class GatewayShardImpl(shard.GatewayShard):
 
         # Perform handshake
         if self._seq is None:
+            # A new session will receive every GUILD_CREATE again, so anything queued for the old one is stale
+            self._non_priority_rate_limit.drop(f"shard {self._shard_id} started a new session")
+
             self._logger.info("identifying with new session")
             await self._send_json(
                 {

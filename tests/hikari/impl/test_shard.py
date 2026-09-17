@@ -1065,6 +1065,7 @@ class TestGatewayShardImplAsync:
 
         client._total_rate_limit.reset.assert_called_once_with()
         client._non_priority_rate_limit.reset.assert_not_called()
+        client._non_priority_rate_limit.drop.assert_called_once_with("shard 20 started a new session")
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {
@@ -1156,6 +1157,7 @@ class TestGatewayShardImplAsync:
 
         client._total_rate_limit.reset.assert_called_once_with()
         client._non_priority_rate_limit.reset.assert_not_called()
+        client._non_priority_rate_limit.drop.assert_not_called()
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {"op": 6, "d": {"token": "sometoken", "seq": 1234, "session_id": "some session id"}}, priority=True
