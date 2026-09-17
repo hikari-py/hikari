@@ -691,7 +691,12 @@ class GatewayShardImpl(shard.GatewayShard):
 
         await asyncio.wait_for(asyncio.shield(self._keep_alive_task), timeout=None)
 
+    def _new_session_error(self) -> errors.ComponentStateConflictError:
+        return errors.ComponentStateConflictError(f"shard {self._shard_id} started a new session")
+
     async def _send_json(self, data: data_binding.JSONObject, *, priority: bool = False) -> None:
+        session_id = self._session_id
+
         while True:
             if not priority:
                 await self._non_priority_rate_limit.acquire()
@@ -705,6 +710,9 @@ class GatewayShardImpl(shard.GatewayShard):
             # Disconnected while waiting on the rate limit, retry once the new connection is ready
             assert self._handshake_event is not None
             await self._handshake_event.wait()
+
+            if self._session_id != session_id:
+                raise self._new_session_error()
 
     def _check_if_connected(self) -> None:
         if not self.is_connected:
@@ -1002,7 +1010,7 @@ class GatewayShardImpl(shard.GatewayShard):
         # Perform handshake
         if self._seq is None:
             # A new session will receive every GUILD_CREATE again, so anything queued for the old one is stale
-            self._non_priority_rate_limit.drop(f"shard {self._shard_id} started a new session")
+            self._non_priority_rate_limit.drop(str(self._new_session_error()))
 
             self._logger.info("identifying with new session")
             await self._send_json(

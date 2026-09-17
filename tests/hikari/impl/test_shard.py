@@ -753,6 +753,25 @@ class TestGatewayShardImplAsync:
         assert client._total_rate_limit.acquire.await_count == 2
         ws.send_json.assert_awaited_once_with(data)
 
+    async def test__send_json_when_new_session_started_while_waiting(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._session_id = "old session"
+        client._shard_id = 20
+
+        async def wait():
+            client._ws = mock.AsyncMock()
+            client._session_id = "new session"
+            client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        with pytest.raises(errors.ComponentStateConflictError, match="shard 20 started a new session"):
+            await client._send_json(object())
+
+        client._ws.send_json.assert_not_called()
+
     async def test__send_json_when_connected_but_handshake_not_complete(self, client):
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
