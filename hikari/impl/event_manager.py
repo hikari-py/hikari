@@ -919,6 +919,21 @@ class EventManagerImpl(event_manager_base.EventManagerBase):
         """See https://discord.com/developers/docs/topics/gateway-events#entitlement-update for more info."""
         self.dispatch(self._event_factory.deserialize_entitlement_update_event(shard, payload))
 
+    @event_manager_base.filtered(monetization_events.SubscriptionCreateEvent)
+    def on_subscription_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://docs.discord.com/developers/events/gateway-events#subscription-create."""
+        self.dispatch(self._event_factory.deserialize_subscription_create_event(shard, payload))
+
+    @event_manager_base.filtered(monetization_events.SubscriptionUpdateEvent)
+    def on_subscription_update(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://docs.discord.com/developers/events/gateway-events#subscription-update."""
+        self.dispatch(self._event_factory.deserialize_subscription_update_event(shard, payload))
+
+    @event_manager_base.filtered(monetization_events.SubscriptionDeleteEvent)
+    def on_subscription_delete(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
+        """See https://docs.discord.com/developers/events/gateway-events#subscription-delete."""
+        self.dispatch(self._event_factory.deserialize_subscription_delete_event(shard, payload))
+
     @event_manager_base.filtered(stage_events.StageInstanceCreateEvent)
     def on_stage_instance_create(self, shard: gateway_shard.GatewayShard, payload: data_binding.JSONObject) -> None:
         self.dispatch(self._event_factory.deserialize_stage_instance_create_event(shard, payload))
