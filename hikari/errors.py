@@ -42,6 +42,7 @@ __all__: typing.Sequence[str] = (
     "MissingIntentWarning",
     "NotFoundError",
     "RateLimitTooLongError",
+    "SessionInvalidatedError",
     "ShardCloseCode",
     "UnauthorizedError",
     "UnrecognisedEntityError",
@@ -121,6 +122,16 @@ class ComponentStateConflictError(HikariError):
     @typing_extensions.override
     def __str__(self) -> str:
         return self.reason
+
+
+@attrs.define(auto_exc=True, repr=False, slots=False)
+class SessionInvalidatedError(ComponentStateConflictError):
+    """Exception thrown when a payload could not be sent because the shard started a new session.
+
+    This happens when the shard could not resume its previous session after
+    reconnecting. Anything that was still waiting to be sent on the old
+    session is discarded, as Discord will send the full guild state again.
+    """
 
 
 @attrs.define(auto_exc=True, repr=False, slots=False)

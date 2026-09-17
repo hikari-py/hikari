@@ -29,7 +29,6 @@ import time
 import mock
 import pytest
 
-from hikari import errors
 from hikari.impl import rate_limits
 from tests.hikari import hikari_test_helpers
 
@@ -109,12 +108,29 @@ class TestBurstRateLimiter:
         futures = [event_loop.create_future() for _ in range(10)]
         mock_burst_limiter.queue = list(futures)
 
-        mock_burst_limiter.drop("some reason")
+        exception = RuntimeError("some reason")
+
+        mock_burst_limiter.drop(exception)
 
         assert mock_burst_limiter.queue == []
         for future in futures:
-            with pytest.raises(errors.ComponentStateConflictError, match="some reason"):
-                future.result()
+            assert future.exception() is exception
+
+    @pytest.mark.asyncio
+    async def test_drop_skips_done_futures(self, mock_burst_limiter):
+        event_loop = asyncio.get_running_loop()
+        mock_burst_limiter.throttle_task = None
+        cancelled_future = event_loop.create_future()
+        cancelled_future.cancel()
+        pending_future = event_loop.create_future()
+        mock_burst_limiter.queue = [cancelled_future, pending_future]
+        exception = RuntimeError("some reason")
+
+        mock_burst_limiter.drop(exception)
+
+        assert mock_burst_limiter.queue == []
+        assert cancelled_future.cancelled()
+        assert pending_future.exception() is exception
 
     @pytest.mark.asyncio
     async def test_drop_cancels_throttle_task_if_running(self, mock_burst_limiter):
@@ -123,7 +139,7 @@ class TestBurstRateLimiter:
         mock_burst_limiter.throttle_task = task
         mock_burst_limiter.queue = []
 
-        mock_burst_limiter.drop("some reason")
+        mock_burst_limiter.drop(RuntimeError("some reason"))
 
         assert mock_burst_limiter.throttle_task is None
         assert task.cancelled()
@@ -252,51 +268,6 @@ class TestWindowedBurstRateLimiter:
         with contextlib.suppress(Exception):
             inst.close()
 
-    def test_reset_moves_window(self, ratelimiter):
-        ratelimiter.remaining = 0
-        ratelimiter.move_at = 5000
-        ratelimiter.throttle_task = None
-        ratelimiter.queue = []
-
-        with mock.patch.object(rate_limits.time, "time", return_value=1000):
-            ratelimiter.reset()
-
-        assert ratelimiter.remaining == 3
-        assert ratelimiter.move_at == 1003
-        assert ratelimiter.throttle_task is None
-
-    @pytest.mark.asyncio
-    async def test_reset_restarts_throttle_when_queue_not_empty(self, ratelimiter):
-        event_loop = asyncio.get_running_loop()
-        old_throttle_task = event_loop.create_future()
-        ratelimiter.throttle_task = old_throttle_task
-        ratelimiter.throttle = mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock())
-        ratelimiter.queue = [event_loop.create_future()]
-
-        with mock.patch.object(event_loop, "create_task") as create_task:
-            ratelimiter.reset()
-
-        assert old_throttle_task.cancelled()
-        ratelimiter.throttle.assert_called_once_with()
-        create_task.assert_called_once_with(ratelimiter.throttle.return_value)
-        assert ratelimiter.throttle_task is create_task.return_value
-        assert not ratelimiter.queue[0].cancelled()
-
-    @pytest.mark.asyncio
-    async def test_reset_releases_queued_futures_under_new_window(self, ratelimiter):
-        event_loop = asyncio.get_running_loop()
-        ratelimiter.remaining = 0
-        ratelimiter.move_at = time.time() + 100
-        futures = [event_loop.create_future() for _ in range(5)]
-        ratelimiter.queue = list(futures)
-        ratelimiter.throttle_task = event_loop.create_task(asyncio.sleep(100))
-
-        ratelimiter.reset()
-        await asyncio.sleep(0)
-
-        assert [f.done() for f in futures] == [True, True, True, False, False]
-        assert ratelimiter.remaining == 0
-
     @pytest.mark.asyncio
     async def test_drip_if_not_throttled_and_not_ratelimited(self, ratelimiter):
         event_loop = asyncio.get_running_loop()
@@ -412,6 +383,27 @@ class TestWindowedBurstRateLimiter:
             assert future.done(), f"future {i} was incomplete!"
 
     @pytest.mark.asyncio
+    async def test_throttle_skips_done_futures(self):
+        event_loop = asyncio.get_running_loop()
+        futures = [event_loop.create_future() for _ in range(4)]
+        futures[0].cancel()
+        futures[2].cancel()
+
+        with hikari_test_helpers.mock_class_namespace(rate_limits.WindowedBurstRateLimiter, slots_=False)(
+            __name__, 1, 2
+        ) as ratelimiter:
+            ratelimiter.queue = list(futures)
+            ratelimiter.remaining = 2
+            ratelimiter.move_at = time.time() + 1
+
+            await ratelimiter.throttle()
+
+        assert futures[1].result() is None
+        assert futures[3].result() is None
+        assert ratelimiter.remaining == 0
+        assert ratelimiter.queue == []
+
+    @pytest.mark.asyncio
     async def test_throttle_when_limited_sleeps_then_bursts_repeatedly(self):
         event_loop = asyncio.get_running_loop()
 
@@ -499,6 +491,113 @@ class TestWindowedBurstRateLimiter:
             rl.move_at = now + 69
             rl.remaining = remaining
             assert rl.is_rate_limited(now) is (remaining <= 0)
+
+
+class TestGatewayRateLimiter:
+    @pytest.fixture
+    def ratelimiter(self):
+        inst = hikari_test_helpers.mock_class_namespace(rate_limits.GatewayRateLimiter, slots_=False)(__name__, 3, 3)
+        yield inst
+        with contextlib.suppress(Exception):
+            inst.close()
+
+    def test_init_is_not_paused(self, ratelimiter):
+        assert ratelimiter.paused is False
+
+    @pytest.mark.asyncio
+    async def test_acquire_when_not_paused_delegates(self, ratelimiter):
+        with mock.patch.object(rate_limits.WindowedBurstRateLimiter, "acquire") as acquire:
+            await ratelimiter.acquire()
+
+        acquire.assert_awaited_once_with()
+        assert ratelimiter.queue == []
+
+    @pytest.mark.asyncio
+    async def test_pause_cancels_throttle_task_and_keeps_queue(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+        throttle_task = event_loop.create_future()
+        ratelimiter.throttle_task = throttle_task
+        futures = [event_loop.create_future() for _ in range(3)]
+        ratelimiter.queue = list(futures)
+        ratelimiter.remaining = 1
+        ratelimiter.move_at = 5000
+
+        ratelimiter.pause()
+
+        assert ratelimiter.paused is True
+        assert throttle_task.cancelled()
+        assert ratelimiter.throttle_task is None
+        assert ratelimiter.queue == futures
+        assert not any(future.done() for future in futures)
+        assert ratelimiter.remaining == 1
+        assert ratelimiter.move_at == 5000
+
+    @pytest.mark.asyncio
+    async def test_acquire_when_paused_queues_without_starting_throttle(self, ratelimiter):
+        ratelimiter.paused = True
+        ratelimiter.throttle_task = None
+        ratelimiter.remaining = 10
+        ratelimiter.is_rate_limited = mock.Mock(return_value=False)
+
+        task = asyncio.ensure_future(ratelimiter.acquire())
+        await asyncio.sleep(0)
+
+        assert len(ratelimiter.queue) == 1
+        assert not task.done()
+        assert ratelimiter.throttle_task is None
+        assert ratelimiter.remaining == 10
+        ratelimiter.is_rate_limited.assert_not_called()
+
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    def test_reset_moves_window(self, ratelimiter):
+        ratelimiter.remaining = 0
+        ratelimiter.move_at = 5000
+        ratelimiter.throttle_task = None
+        ratelimiter.paused = True
+        ratelimiter.queue = []
+
+        with mock.patch.object(rate_limits.time, "time", return_value=1000):
+            ratelimiter.reset()
+
+        assert ratelimiter.remaining == 3
+        assert ratelimiter.move_at == 1003
+        assert ratelimiter.throttle_task is None
+        assert ratelimiter.paused is False
+
+    @pytest.mark.asyncio
+    async def test_reset_restarts_throttle_when_queue_not_empty(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+        old_throttle_task = event_loop.create_future()
+        ratelimiter.throttle_task = old_throttle_task
+        ratelimiter.throttle = mock.Mock(return_value=hikari_test_helpers.AsyncContextManagerMock())
+        ratelimiter.queue = [event_loop.create_future()]
+
+        with mock.patch.object(event_loop, "create_task") as create_task:
+            ratelimiter.reset()
+
+        assert old_throttle_task.cancelled()
+        ratelimiter.throttle.assert_called_once_with()
+        create_task.assert_called_once_with(ratelimiter.throttle.return_value)
+        assert ratelimiter.throttle_task is create_task.return_value
+        assert not ratelimiter.queue[0].cancelled()
+
+    @pytest.mark.asyncio
+    async def test_reset_releases_queued_futures_under_new_window(self, ratelimiter):
+        event_loop = asyncio.get_running_loop()
+        ratelimiter.remaining = 0
+        ratelimiter.move_at = time.time() + 100
+        futures = [event_loop.create_future() for _ in range(5)]
+        ratelimiter.queue = list(futures)
+        ratelimiter.throttle_task = event_loop.create_task(asyncio.sleep(100))
+
+        ratelimiter.reset()
+        await asyncio.sleep(0)
+
+        assert [f.done() for f in futures] == [True, True, True, False, False]
+        assert ratelimiter.remaining == 0
 
 
 class TestExponentialBackOff:

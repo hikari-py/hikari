@@ -647,6 +647,20 @@ class TestGatewayShardImpl:
 
         check_if_alive.assert_called_once_with()
 
+    def test__on_keep_alive_done(self, client):
+        client._shard_id = 20
+        client._non_priority_rate_limit = mock.Mock()
+        client._total_rate_limit = mock.Mock()
+
+        client._on_keep_alive_done(mock.Mock())
+
+        client._non_priority_rate_limit.drop.assert_called_once()
+        client._total_rate_limit.drop.assert_called_once()
+        exception = client._non_priority_rate_limit.drop.call_args.args[0]
+        assert client._total_rate_limit.drop.call_args.args[0] is exception
+        assert isinstance(exception, errors.ComponentStateConflictError)
+        assert str(exception) == "shard 20 has shut down"
+
 
 @pytest.mark.asyncio
 class TestGatewayShardImplAsync:
@@ -698,8 +712,8 @@ class TestGatewayShardImplAsync:
         join.assert_not_called()
         cancel_async_mock.assert_called_once_with()
         keep_alive_task.assert_awaited_once()
-        client._non_priority_rate_limit.close.assert_called_once_with()
-        client._total_rate_limit.close.assert_called_once_with()
+        client._non_priority_rate_limit.close.assert_not_called()
+        client._total_rate_limit.close.assert_not_called()
 
     async def test_join_when_not_alive(self, client):
         client._keep_alive_task = None
@@ -731,65 +745,6 @@ class TestGatewayShardImplAsync:
         client._ws.send_json.assert_awaited_once_with(data)
         client._handshake_event.wait.assert_not_called()
 
-    @pytest.mark.parametrize("priority", [True, False])
-    async def test__send_json_when_disconnected_while_waiting(self, client, priority):
-        client._total_rate_limit = mock.AsyncMock()
-        client._non_priority_rate_limit = mock.AsyncMock()
-        client._ws = None
-        ws = mock.AsyncMock()
-        data = object()
-
-        async def wait():
-            # Simulate a reconnect finishing while we wait
-            client._ws = ws
-            client._handshake_event.is_set.return_value = True
-
-        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
-
-        await client._send_json(data, priority=priority)
-
-        client._handshake_event.wait.assert_called_once_with()
-        assert client._non_priority_rate_limit.acquire.await_count == (0 if priority else 2)
-        assert client._total_rate_limit.acquire.await_count == 2
-        ws.send_json.assert_awaited_once_with(data)
-
-    async def test__send_json_when_new_session_started_while_waiting(self, client):
-        client._total_rate_limit = mock.AsyncMock()
-        client._non_priority_rate_limit = mock.AsyncMock()
-        client._ws = None
-        client._session_id = "old session"
-        client._shard_id = 20
-
-        async def wait():
-            client._ws = mock.AsyncMock()
-            client._session_id = "new session"
-            client._handshake_event.is_set.return_value = True
-
-        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
-
-        with pytest.raises(errors.ComponentStateConflictError, match="shard 20 started a new session"):
-            await client._send_json(object())
-
-        client._ws.send_json.assert_not_called()
-
-    async def test__send_json_when_connected_but_handshake_not_complete(self, client):
-        client._total_rate_limit = mock.AsyncMock()
-        client._non_priority_rate_limit = mock.AsyncMock()
-        client._ws = mock.AsyncMock()
-        data = object()
-
-        async def wait():
-            client._handshake_event.is_set.return_value = True
-
-        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
-
-        await client._send_json(data)
-
-        client._handshake_event.wait.assert_called_once_with()
-        assert client._non_priority_rate_limit.acquire.await_count == 2
-        assert client._total_rate_limit.acquire.await_count == 2
-        client._ws.send_json.assert_awaited_once_with(data)
-
     async def test__send_json_when_priority(self, client):
         client._total_rate_limit = mock.AsyncMock()
         client._non_priority_rate_limit = mock.AsyncMock()
@@ -802,6 +757,103 @@ class TestGatewayShardImplAsync:
         client._non_priority_rate_limit.acquire.assert_not_called()
         client._total_rate_limit.acquire.assert_awaited_once_with()
         client._ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_disconnected_while_waiting(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = asyncio.get_running_loop().create_future()
+        ws = mock.AsyncMock()
+        data = object()
+
+        async def wait():
+            # Simulate a reconnect finishing while we wait
+            client._ws = ws
+            client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        await client._send_json(data)
+
+        client._handshake_event.wait.assert_called_once_with()
+        assert client._non_priority_rate_limit.acquire.await_count == 2
+        assert client._total_rate_limit.acquire.await_count == 2
+        ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_new_session_started_while_waiting(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = asyncio.get_running_loop().create_future()
+        client._session_id = "old session"
+        client._shard_id = 20
+
+        async def wait():
+            client._ws = mock.AsyncMock()
+            client._session_id = "new session"
+            client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        with pytest.raises(errors.SessionInvalidatedError, match="shard 20 started a new session"):
+            await client._send_json(object())
+
+        client._ws.send_json.assert_not_called()
+
+    async def test__send_json_when_shard_shuts_down_while_waiting(self, client):
+        event_loop = asyncio.get_running_loop()
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = event_loop.create_future()
+        event_loop.call_soon(client._keep_alive_task.set_result, None)
+
+        async def wait():
+            await asyncio.sleep(100)
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        with pytest.raises(errors.ComponentStateConflictError, match="has shut down"):
+            await client._send_json(object())
+
+        client._handshake_event.wait.assert_called_once_with()
+
+    async def test__send_json_when_disconnected_again_while_waiting(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = asyncio.get_running_loop().create_future()
+        ws = mock.AsyncMock()
+        data = object()
+        waits = 0
+
+        async def wait():
+            nonlocal waits
+            waits += 1
+            # The first reconnect drops again before we get to send, the second one sticks
+            if waits == 2:
+                client._ws = ws
+                client._handshake_event.is_set.return_value = True
+
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False), wait=mock.Mock(wraps=wait))
+
+        await client._send_json(data)
+
+        assert client._handshake_event.wait.call_count == 2
+        assert client._non_priority_rate_limit.acquire.await_count == 3
+        ws.send_json.assert_awaited_once_with(data)
+
+    async def test__send_json_when_shard_not_running(self, client):
+        client._total_rate_limit = mock.AsyncMock()
+        client._non_priority_rate_limit = mock.AsyncMock()
+        client._ws = None
+        client._keep_alive_task = None
+        client._handshake_event = mock.Mock(is_set=mock.Mock(return_value=False))
+
+        with pytest.raises(errors.ComponentStateConflictError, match="has shut down"):
+            await client._send_json(object())
+
+        client._handshake_event.wait.assert_not_called()
 
     async def test_request_guild_members_when_no_query_and_no_limit_and_GUILD_MEMBERS_not_enabled(self, client):
         client._intents = intents.Intents.GUILD_INTEGRATIONS
@@ -941,6 +993,7 @@ class TestGatewayShardImplAsync:
         assert client._keep_alive_task is keep_alive_task
 
         create_task.assert_called_once_with(keep_alive.return_value, name="keep alive (shard 20)")
+        keep_alive_task.add_done_callback.assert_called_once_with(client._on_keep_alive_done)
         shield.assert_called_once_with(create_task.return_value)
         first_completed.assert_awaited_once_with(handshake_event.wait.return_value, shield.return_value)
 
@@ -954,6 +1007,17 @@ class TestGatewayShardImplAsync:
 
         send_json.assert_awaited_once_with({"op": 3, "d": presence.return_value})
         check_if_alive.assert_called_once_with()
+
+    async def test_update_presence_when_session_invalidated(self, client):
+        # The presence is stored before sending, so IDENTIFY already carried it
+        with mock.patch.object(shard.GatewayShardImpl, "_serialize_and_store_presence_payload") as presence:
+            with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected"):
+                with mock.patch.object(
+                    shard.GatewayShardImpl, "_send_json", side_effect=errors.SessionInvalidatedError("nope")
+                ) as send_json:
+                    await client.update_presence(status=presences.Status.IDLE)
+
+        send_json.assert_awaited_once_with({"op": 3, "d": presence.return_value})
 
     async def test_update_voice_state(self, client):
         with mock.patch.object(shard.GatewayShardImpl, "_check_if_connected") as check_if_alive:
@@ -1084,7 +1148,10 @@ class TestGatewayShardImplAsync:
 
         client._total_rate_limit.reset.assert_called_once_with()
         client._non_priority_rate_limit.reset.assert_not_called()
-        client._non_priority_rate_limit.drop.assert_called_once_with("shard 20 started a new session")
+        client._non_priority_rate_limit.drop.assert_called_once()
+        dropped_with = client._non_priority_rate_limit.drop.call_args.args[0]
+        assert isinstance(dropped_with, errors.SessionInvalidatedError)
+        assert str(dropped_with) == "shard 20 started a new session"
         ws.receive_json.assert_awaited_once_with()
         send_json.assert_called_once_with(
             {

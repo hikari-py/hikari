@@ -29,6 +29,7 @@ __all__: typing.Sequence[str] = (
     "BaseRateLimiter",
     "BurstRateLimiter",
     "ExponentialBackOff",
+    "GatewayRateLimiter",
     "ManualRateLimiter",
     "WindowedBurstRateLimiter",
 )
@@ -40,7 +41,6 @@ import math
 import random
 import typing
 
-from hikari import errors
 from hikari.internal import time
 from hikari.internal import typing_extensions
 
@@ -110,12 +110,15 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         being rate limited.
         """
 
-    @typing_extensions.override
-    def close(self) -> None:
-        """Close the rate limiter, and shut down any pending tasks."""
+    def _cancel_throttle_task(self) -> None:
         if self.throttle_task is not None:
             self.throttle_task.cancel()
             self.throttle_task = None
+
+    @typing_extensions.override
+    def close(self) -> None:
+        """Close the rate limiter, and shut down any pending tasks."""
+        self._cancel_throttle_task()
 
         failed_tasks = 0
         while self.queue:
@@ -129,24 +132,26 @@ class BurstRateLimiter(BaseRateLimiter, abc.ABC):
         else:
             _LOGGER.debug("%s rate limiter closed", self.name)
 
-    def drop(self, reason: str) -> None:
-        """Drop all queued futures, failing them with a [`hikari.errors.ComponentStateConflictError`][].
+    def drop(self, exception: Exception) -> None:
+        """Drop all queued futures, failing them with the given exception.
 
         Parameters
         ----------
-        reason
-            The reason to attach to the raised error.
+        exception
+            The exception to fail the queued futures with.
         """
-        if self.throttle_task is not None:
-            self.throttle_task.cancel()
-            self.throttle_task = None
+        self._cancel_throttle_task()
 
         dropped = len(self.queue)
         while self.queue:
-            self.queue.pop(0).set_exception(errors.ComponentStateConflictError(reason))
+            future = self.queue.pop(0)
+
+            # The waiter may have been cancelled while queued
+            if not future.done():
+                future.set_exception(exception)
 
         if dropped:
-            _LOGGER.debug("%s rate limiter dropped %s pending tasks: %s", self.name, dropped, reason)
+            _LOGGER.debug("%s rate limiter dropped %s pending tasks: %s", self.name, dropped, exception)
 
     @property
     def is_empty(self) -> bool:
@@ -421,21 +426,6 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
         self.remaining = self.limit
         self.move_at = now + self.period
 
-    def reset(self) -> None:
-        """Start a fresh rate limit window without dropping the queue.
-
-        Unlike [`hikari.impl.rate_limits.WindowedBurstRateLimiter.close`][],
-        queued futures are kept and released under the new window.
-        """
-        if self.throttle_task is not None:
-            self.throttle_task.cancel()
-            self.throttle_task = None
-
-        self.move_window(time.time())
-
-        if self.queue:
-            self.throttle_task = asyncio.get_running_loop().create_task(self.throttle())
-
     async def throttle(self) -> None:
         """Perform the throttling rate limiter logic.
 
@@ -461,10 +451,74 @@ class WindowedBurstRateLimiter(BurstRateLimiter):
                 await asyncio.sleep(sleep_for)
 
             while self.remaining > 0 and self.queue:
+                future = self.queue.pop(0)
+
+                # The waiter may have been cancelled while queued
+                if future.done():
+                    continue
+
                 self.remaining -= 1
-                self.queue.pop(0).set_result(None)
+                future.set_result(None)
 
         self.throttle_task = None
+
+
+@typing.final
+class GatewayRateLimiter(WindowedBurstRateLimiter):
+    """Windowed burst rate limiter for a gateway connection.
+
+    Gateway rate limits are imposed per websocket connection, so this adds the
+    ability to hold back queued futures while disconnected and to start a fresh
+    window once a new connection is ready, without dropping anything.
+    """
+
+    __slots__: typing.Sequence[str] = ("paused",)
+
+    throttle_task: asyncio.Task[typing.Any] | None
+    # <<inherited docstring from BurstRateLimiter>>.
+
+    paused: bool
+    """Whether queued futures are currently being held back.
+
+    See [`hikari.impl.rate_limits.GatewayRateLimiter.pause`][].
+    """
+
+    def __init__(self, name: str, period: float, limit: int) -> None:
+        super().__init__(name, period, limit)
+        self.paused = False
+
+    @typing_extensions.override
+    async def acquire(self) -> None:
+        if not self.paused:
+            await super().acquire()
+            return
+
+        future = asyncio.get_running_loop().create_future()
+        self.queue.append(future)
+        await future
+
+    def pause(self) -> None:
+        """Hold back all queued futures until [`hikari.impl.rate_limits.GatewayRateLimiter.reset`][] is called.
+
+        The queue and the current window are left untouched. Futures acquired
+        while paused are queued as well.
+        """
+        self.paused = True
+        self._cancel_throttle_task()
+
+    def reset(self) -> None:
+        """Start a fresh rate limit window without dropping the queue.
+
+        Unlike [`hikari.impl.rate_limits.GatewayRateLimiter.close`][], queued
+        futures are kept and released under the new window. This also lifts a
+        [`hikari.impl.rate_limits.GatewayRateLimiter.pause`][].
+        """
+        self._cancel_throttle_task()
+        self.paused = False
+        self.move_window(time.time())
+
+        if self.queue:
+            self.throttle_task = asyncio.get_running_loop().create_task(self.throttle())
 
 
 @typing.final
