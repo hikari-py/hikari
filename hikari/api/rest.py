@@ -776,13 +776,14 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         target_users
             If provided, the users which should be allowed to see and accept
             this invite. These may be the objects or the IDs of existing users.
+            A maximum of 1000 users can be provided.
 
             Duplicate users are ignored by Discord.
 
             !!! note
-                The passed users are processed asynchronously by Discord. You can
-                keep track of the progress with
-                [`hikari.api.rest.RESTClient.fetch_invite_target_users_job`][].
+                To allow more than 1000 users, create the invite without this
+                parameter and then use
+                [`hikari.api.rest.RESTClient.set_invite_target_users`][].
         reason
             If provided, the reason that will be recorded in the audit logs.
             Maximum of 512 characters.
@@ -2908,10 +2909,17 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         """
 
     @abc.abstractmethod
-    async def edit_invite_target_users(
-        self, invite: invites.InviteCode | str, users: typing.Sequence[snowflakes.SnowflakeishOr[users_.PartialUser]]
+    async def set_invite_target_users(
+        self, invite: invites.InviteCode | str, users: snowflakes.SnowflakeishSequence[users_.PartialUser]
     ) -> None:
-        """Edit the users which are allowed to see and accept an invite.
+        """Set the users which are allowed to see and accept an invite.
+
+        !!! warning
+            This replaces the invite's target users. Any user which is currently
+            allowed to see and accept the invite and is not included in `users`
+            will no longer be able to. To change individual users instead, see
+            [`hikari.api.rest.RESTClient.add_invite_target_user`][] and
+            [`hikari.api.rest.RESTClient.remove_invite_target_user`][].
 
         !!! note
             The passed users are processed asynchronously by Discord. You can
@@ -2921,7 +2929,7 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         Parameters
         ----------
         invite
-            The invite to edit the target users of. This may be an invite
+            The invite to set the target users of. This may be an invite
             object or the code of an existing invite.
         users
             The users which should be allowed to see and accept the invite.
@@ -2931,6 +2939,175 @@ class RESTClient(traits.NetworkSettingsAware, abc.ABC):
         ------
         hikari.errors.BadRequestError
             If any of the passed users is not a valid user.
+        hikari.errors.ForbiddenError
+            If you are not the inviter and are missing the
+            [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission in the
+            guild the invite is from.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the invite is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def add_invite_target_user(
+        self, invite: invites.InviteCode | str, user: snowflakes.SnowflakeishOr[users_.PartialUser]
+    ) -> None:
+        """Add a user to the users which are allowed to see and accept an invite.
+
+        !!! note
+            This will fail while the invite's target users are still being
+            processed. See
+            [`hikari.api.rest.RESTClient.fetch_invite_target_users_job`][].
+
+        Parameters
+        ----------
+        invite
+            The invite to add the target user to. This may be an invite
+            object or the code of an existing invite.
+        user
+            The user which should be allowed to see and accept the invite.
+            This may be the object or the ID of an existing user.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the invite's target users are still being processed.
+        hikari.errors.ForbiddenError
+            If you are not the inviter and are missing the
+            [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission in the
+            guild the invite is from.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the invite or user is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def remove_invite_target_user(
+        self, invite: invites.InviteCode | str, user: snowflakes.SnowflakeishOr[users_.PartialUser]
+    ) -> None:
+        """Remove a user from the users which are allowed to see and accept an invite.
+
+        !!! note
+            This will fail while the invite's target users are still being
+            processed. See
+            [`hikari.api.rest.RESTClient.fetch_invite_target_users_job`][].
+
+        Parameters
+        ----------
+        invite
+            The invite to remove the target user from. This may be an invite
+            object or the code of an existing invite.
+        user
+            The user which should no longer be allowed to see and accept the
+            invite. This may be the object or the ID of an existing user.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If the invite's target users are still being processed.
+        hikari.errors.ForbiddenError
+            If you are not the inviter and are missing the
+            [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission in the
+            guild the invite is from.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the invite or user is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def bulk_add_invite_target_users(
+        self, invite: invites.InviteCode | str, users: snowflakes.SnowflakeishSequence[users_.PartialUser]
+    ) -> None:
+        """Add up to 1000 users to the users which are allowed to see and accept an invite.
+
+        This adds to the invite's existing target users. To replace them
+        instead, see [`hikari.api.rest.RESTClient.set_invite_target_users`][].
+
+        !!! note
+            This will fail while the invite's target users are still being
+            processed. See
+            [`hikari.api.rest.RESTClient.fetch_invite_target_users_job`][].
+
+        Parameters
+        ----------
+        invite
+            The invite to add the target users to. This may be an invite
+            object or the code of an existing invite.
+        users
+            The users which should be allowed to see and accept the invite.
+            These may be the objects or the IDs of existing users. A maximum
+            of 1000 users can be added at once.
+
+            Duplicate users are ignored by Discord.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the passed users is not a valid user, if more than 1000
+            users are passed or if the invite's target users are still being
+            processed.
+        hikari.errors.ForbiddenError
+            If you are not the inviter and are missing the
+            [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission in the
+            guild the invite is from.
+        hikari.errors.UnauthorizedError
+            If you are unauthorized to make the request (invalid/missing token).
+        hikari.errors.NotFoundError
+            If the invite is not found.
+        hikari.errors.RateLimitTooLongError
+            Raised in the event that a rate limit occurs that is
+            longer than `max_rate_limit` when making a request.
+        hikari.errors.InternalServerError
+            If an internal error occurs on Discord while handling the request.
+        """
+
+    @abc.abstractmethod
+    async def bulk_remove_invite_target_users(
+        self, invite: invites.InviteCode | str, users: snowflakes.SnowflakeishSequence[users_.PartialUser]
+    ) -> None:
+        """Remove up to 1000 users from the users which are allowed to see and accept an invite.
+
+        !!! note
+            This will fail while the invite's target users are still being
+            processed. See
+            [`hikari.api.rest.RESTClient.fetch_invite_target_users_job`][].
+
+        Parameters
+        ----------
+        invite
+            The invite to remove the target users from. This may be an invite
+            object or the code of an existing invite.
+        users
+            The users which should no longer be allowed to see and accept the
+            invite. These may be the objects or the IDs of existing users. A
+            maximum of 1000 users can be removed at once.
+
+            Duplicate users are ignored by Discord.
+
+        Raises
+        ------
+        hikari.errors.BadRequestError
+            If any of the passed users is not a valid user, if more than 1000
+            users are passed or if the invite's target users are still being
+            processed.
         hikari.errors.ForbiddenError
             If you are not the inviter and are missing the
             [`hikari.permissions.Permissions.MANAGE_GUILD`][] permission in the

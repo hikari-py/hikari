@@ -2942,57 +2942,37 @@ class TestRESTClientImplAsync:
 
     async def test_create_invite_with_target_users(self, rest_client):
         expected_route = routes.POST_CHANNEL_INVITES.compile(channel=123)
-        mock_resource = mock.Mock()
-        mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"ID": "NOOOOOOOOPOOOOOOOI!"})
 
-        with (
-            mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form),
-            mock.patch.object(rest, "_build_target_users_file", return_value=mock_resource) as build_target_users_file,
-        ):
-            result = await rest_client.create_invite(
-                StubModel(123), unique=True, target_users=[StubModel(456), StubModel(789)], reason="cause why not :)"
-            )
+        result = await rest_client.create_invite(
+            StubModel(123), unique=True, target_users=[StubModel(456), StubModel(789)], reason="cause why not :)"
+        )
 
         assert result is rest_client._entity_factory.deserialize_invite_with_metadata.return_value
         rest_client._entity_factory.deserialize_invite_with_metadata.assert_called_once_with(
             rest_client._request.return_value
         )
-        build_target_users_file.assert_called_once_with([StubModel(456), StubModel(789)])
-        mock_url_encoded_form.add_field.assert_called_once_with(
-            "payload_json", b'{"unique":true}', content_type="application/json"
-        )
-        mock_url_encoded_form.add_resource.assert_called_once_with("target_users_file", mock_resource)
         rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_url_encoded_form, reason="cause why not :)"
+            expected_route, json={"unique": True, "target_user_ids": ["456", "789"]}, reason="cause why not :)"
         )
 
     async def test_create_invite_with_target_users_and_role_ids(self, rest_client):
         expected_route = routes.POST_CHANNEL_INVITES.compile(channel=123)
-        mock_resource = mock.Mock()
-        mock_url_encoded_form = mock.Mock()
         rest_client._request = mock.AsyncMock(return_value={"ID": "NOOOOOOOOPOOOOOOOI!"})
 
-        with (
-            mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form),
-            mock.patch.object(rest, "_build_target_users_file", return_value=mock_resource) as build_target_users_file,
-        ):
-            result = await rest_client.create_invite(
-                StubModel(123),
-                unique=True,
-                role_ids=[StubModel(135), StubModel(246)],
-                target_users=[StubModel(456), StubModel(789)],
-                reason="cause why not :)",
-            )
+        result = await rest_client.create_invite(
+            StubModel(123),
+            unique=True,
+            role_ids=[StubModel(135), StubModel(246)],
+            target_users=[StubModel(456), StubModel(789)],
+            reason="cause why not :)",
+        )
 
         assert result is rest_client._entity_factory.deserialize_invite_with_metadata.return_value
-        build_target_users_file.assert_called_once_with([StubModel(456), StubModel(789)])
-        mock_url_encoded_form.add_field.assert_called_once_with(
-            "payload_json", b'{"unique":true,"role_ids":["135","246"]}', content_type="application/json"
-        )
-        mock_url_encoded_form.add_resource.assert_called_once_with("target_users_file", mock_resource)
         rest_client._request.assert_awaited_once_with(
-            expected_route, form_builder=mock_url_encoded_form, reason="cause why not :)"
+            expected_route,
+            json={"unique": True, "role_ids": ["135", "246"], "target_user_ids": ["456", "789"]},
+            reason="cause why not :)",
         )
 
     async def test_pin_message(self, rest_client):
@@ -4226,7 +4206,7 @@ class TestRESTClientImplAsync:
         rest_client._request.assert_awaited_once_with(expected_route, expect_json=False)
 
     @pytest.mark.parametrize("input_invite", [mock.Mock(code="Jx4cNGG"), "Jx4cNGG"])
-    async def test_edit_invite_target_users(self, rest_client, input_invite):
+    async def test_set_invite_target_users(self, rest_client, input_invite):
         expected_route = routes.PUT_INVITE_TARGET_USERS.compile(invite_code="Jx4cNGG")
         mock_resource = mock.Mock()
         mock_url_encoded_form = mock.Mock()
@@ -4236,11 +4216,47 @@ class TestRESTClientImplAsync:
             mock.patch.object(data_binding, "URLEncodedFormBuilder", return_value=mock_url_encoded_form),
             mock.patch.object(rest, "_build_target_users_file", return_value=mock_resource) as build_target_users_file,
         ):
-            await rest_client.edit_invite_target_users(input_invite, [StubModel(123), StubModel(456)])
+            await rest_client.set_invite_target_users(input_invite, [StubModel(123), StubModel(456)])
 
         build_target_users_file.assert_called_once_with([StubModel(123), StubModel(456)])
         mock_url_encoded_form.add_resource.assert_called_once_with("target_users_file", mock_resource)
         rest_client._request.assert_awaited_once_with(expected_route, form_builder=mock_url_encoded_form)
+
+    @pytest.mark.parametrize("input_invite", [mock.Mock(code="Jx4cNGG"), "Jx4cNGG"])
+    async def test_add_invite_target_user(self, rest_client, input_invite):
+        expected_route = routes.PUT_INVITE_TARGET_USER.compile(invite_code="Jx4cNGG", user=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.add_invite_target_user(input_invite, StubModel(123))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    @pytest.mark.parametrize("input_invite", [mock.Mock(code="Jx4cNGG"), "Jx4cNGG"])
+    async def test_remove_invite_target_user(self, rest_client, input_invite):
+        expected_route = routes.DELETE_INVITE_TARGET_USER.compile(invite_code="Jx4cNGG", user=123)
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.remove_invite_target_user(input_invite, StubModel(123))
+
+        rest_client._request.assert_awaited_once_with(expected_route)
+
+    @pytest.mark.parametrize("input_invite", [mock.Mock(code="Jx4cNGG"), "Jx4cNGG"])
+    async def test_bulk_add_invite_target_users(self, rest_client, input_invite):
+        expected_route = routes.POST_INVITE_TARGET_USERS_BULK_ADD.compile(invite_code="Jx4cNGG")
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.bulk_add_invite_target_users(input_invite, [StubModel(123), StubModel(456)])
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={"user_ids": ["123", "456"]})
+
+    @pytest.mark.parametrize("input_invite", [mock.Mock(code="Jx4cNGG"), "Jx4cNGG"])
+    async def test_bulk_remove_invite_target_users(self, rest_client, input_invite):
+        expected_route = routes.POST_INVITE_TARGET_USERS_BULK_DELETE.compile(invite_code="Jx4cNGG")
+        rest_client._request = mock.AsyncMock()
+
+        await rest_client.bulk_remove_invite_target_users(input_invite, [StubModel(123), StubModel(456)])
+
+        rest_client._request.assert_awaited_once_with(expected_route, json={"user_ids": ["123", "456"]})
 
     @pytest.mark.parametrize("input_invite", [mock.Mock(code="Jx4cNGG"), "Jx4cNGG"])
     async def test_fetch_invite_target_users_job(self, rest_client, input_invite):

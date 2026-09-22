@@ -523,8 +523,12 @@ def _to_searchable_snowflake_str(
     return str(int(value))
 
 
+def _invite_code(invite: invites.InviteCode | str, /) -> str:
+    return invite if isinstance(invite, str) else invite.code
+
+
 def _build_target_users_file(
-    users: typing.Sequence[snowflakes.SnowflakeishOr[users_.PartialUser]], /
+    users: snowflakes.SnowflakeishSequence[users_.PartialUser], /
 ) -> files.Resource[files.AsyncReader]:
     # Discord documents this as "a csv file with a single column of user IDs", so no header is written.
     buffer = io.StringIO(newline="")
@@ -1396,15 +1400,9 @@ class RESTClientImpl(rest_api.RESTClient):
         body.put_snowflake("target_user_id", target_user)
         body.put_snowflake("target_application_id", target_application)
         body.put_snowflake_array("role_ids", role_ids)
+        body.put_snowflake_array("target_user_ids", target_users)
 
-        if target_users is not undefined.UNDEFINED:
-            form_builder = data_binding.URLEncodedFormBuilder()
-            form_builder.add_field("payload_json", self._dumps(body), content_type=_APPLICATION_JSON)
-            form_builder.add_resource("target_users_file", _build_target_users_file(target_users))
-            response = await self._request(route, form_builder=form_builder, reason=reason)
-        else:
-            response = await self._request(route, json=body, reason=reason)
-
+        response = await self._request(route, json=body, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite_with_metadata(response)
 
@@ -2384,7 +2382,7 @@ class RESTClientImpl(rest_api.RESTClient):
             snowflakes.SnowflakeishOr[scheduled_events.ScheduledEvent]
         ] = undefined.UNDEFINED,
     ) -> invites.Invite:
-        route = routes.GET_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        route = routes.GET_INVITE.compile(invite_code=_invite_code(invite))
         query = data_binding.StringMapBuilder()
         query.put("with_counts", with_counts)
         query.put("guild_scheduled_event_id", scheduled_event)
@@ -2396,7 +2394,7 @@ class RESTClientImpl(rest_api.RESTClient):
     async def delete_invite(
         self, invite: invites.InviteCode | str, reason: undefined.UndefinedOr[str] = undefined.UNDEFINED
     ) -> invites.Invite:
-        route = routes.DELETE_INVITE.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        route = routes.DELETE_INVITE.compile(invite_code=_invite_code(invite))
         response = await self._request(route, reason=reason)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_invite(response)
@@ -2405,25 +2403,55 @@ class RESTClientImpl(rest_api.RESTClient):
     async def fetch_invite_target_user_ids(
         self, invite: invites.InviteCode | str
     ) -> typing.Sequence[snowflakes.Snowflake]:
-        route = routes.GET_INVITE_TARGET_USERS.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        route = routes.GET_INVITE_TARGET_USERS.compile(invite_code=_invite_code(invite))
         response = await self._request(route, expect_json=False)
         assert isinstance(response, bytes)
         return _parse_target_users_file(response)
 
     @typing_extensions.override
-    async def edit_invite_target_users(
-        self, invite: invites.InviteCode | str, users: typing.Sequence[snowflakes.SnowflakeishOr[users_.PartialUser]]
+    async def set_invite_target_users(
+        self, invite: invites.InviteCode | str, users: snowflakes.SnowflakeishSequence[users_.PartialUser]
     ) -> None:
-        route = routes.PUT_INVITE_TARGET_USERS.compile(invite_code=invite if isinstance(invite, str) else invite.code)
+        route = routes.PUT_INVITE_TARGET_USERS.compile(invite_code=_invite_code(invite))
         form_builder = data_binding.URLEncodedFormBuilder()
         form_builder.add_resource("target_users_file", _build_target_users_file(users))
         await self._request(route, form_builder=form_builder)
 
     @typing_extensions.override
+    async def add_invite_target_user(
+        self, invite: invites.InviteCode | str, user: snowflakes.SnowflakeishOr[users_.PartialUser]
+    ) -> None:
+        route = routes.PUT_INVITE_TARGET_USER.compile(invite_code=_invite_code(invite), user=user)
+        await self._request(route)
+
+    @typing_extensions.override
+    async def remove_invite_target_user(
+        self, invite: invites.InviteCode | str, user: snowflakes.SnowflakeishOr[users_.PartialUser]
+    ) -> None:
+        route = routes.DELETE_INVITE_TARGET_USER.compile(invite_code=_invite_code(invite), user=user)
+        await self._request(route)
+
+    @typing_extensions.override
+    async def bulk_add_invite_target_users(
+        self, invite: invites.InviteCode | str, users: snowflakes.SnowflakeishSequence[users_.PartialUser]
+    ) -> None:
+        route = routes.POST_INVITE_TARGET_USERS_BULK_ADD.compile(invite_code=_invite_code(invite))
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake_array("user_ids", users)
+        await self._request(route, json=body)
+
+    @typing_extensions.override
+    async def bulk_remove_invite_target_users(
+        self, invite: invites.InviteCode | str, users: snowflakes.SnowflakeishSequence[users_.PartialUser]
+    ) -> None:
+        route = routes.POST_INVITE_TARGET_USERS_BULK_DELETE.compile(invite_code=_invite_code(invite))
+        body = data_binding.JSONObjectBuilder()
+        body.put_snowflake_array("user_ids", users)
+        await self._request(route, json=body)
+
+    @typing_extensions.override
     async def fetch_invite_target_users_job(self, invite: invites.InviteCode | str) -> invites.TargetUsersJob:
-        route = routes.GET_INVITE_TARGET_USERS_JOB_STATUS.compile(
-            invite_code=invite if isinstance(invite, str) else invite.code
-        )
+        route = routes.GET_INVITE_TARGET_USERS_JOB_STATUS.compile(invite_code=_invite_code(invite))
         response = await self._request(route)
         assert isinstance(response, dict)
         return self._entity_factory.deserialize_target_users_job(response)

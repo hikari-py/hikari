@@ -527,6 +527,12 @@ GET_INVITE: typing.Final[Route] = Route(GET, "/invites/{invite_code}")
 DELETE_INVITE: typing.Final[Route] = Route(DELETE, "/invites/{invite_code}")
 GET_INVITE_TARGET_USERS: typing.Final[Route] = Route(GET, "/invites/{invite_code}/target-users")
 PUT_INVITE_TARGET_USERS: typing.Final[Route] = Route(PUT, "/invites/{invite_code}/target-users")
+PUT_INVITE_TARGET_USER: typing.Final[Route] = Route(PUT, "/invites/{invite_code}/target-users/{user}")
+DELETE_INVITE_TARGET_USER: typing.Final[Route] = Route(DELETE, "/invites/{invite_code}/target-users/{user}")
+POST_INVITE_TARGET_USERS_BULK_ADD: typing.Final[Route] = Route(POST, "/invites/{invite_code}/target-users/bulk-add")
+POST_INVITE_TARGET_USERS_BULK_DELETE: typing.Final[Route] = Route(
+    POST, "/invites/{invite_code}/target-users/bulk-delete"
+)
 GET_INVITE_TARGET_USERS_JOB_STATUS: typing.Final[Route] = Route(GET, "/invites/{invite_code}/target-users/job-status")
 
 # Users
